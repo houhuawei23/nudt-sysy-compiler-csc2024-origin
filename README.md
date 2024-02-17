@@ -27,9 +27,13 @@ src文件夹中存放源代码，这包括了antlr生成的源代码和我们要
 
 test文件夹与[sysy](https://gitee.com/xsu1989/sysy.git)中的test文件夹一致，存放sysY语言示例文件。
 
-脚本antlr4compile.sh将使用antlr对`./src/SysY.g4`分析并生成相关代码文件
+脚本antlr4compile.sh将使用antlr对`./src/SysY.g4`分析并生成相关代码文件，然后进行cmake和make命令。
 
-//edit position
+脚本antlr4run.sh只调用cmake和make命令进行编译。
+
+产生的可执行文件sysyc输出到当前文件夹。
+
+## code到AST的分析
 
 antlr4是一个编译器前端生成工具，可以生成多种目标语言的前端。本项目生成的目标语言是C++。
 ```shell
@@ -55,4 +59,7 @@ src中需要关注的文件有：
 - CMakeLists.txt
 - **SysY.g4**
 - SysYBaseVisitor.cpp
-- 
+- SysYBaseVisitor.h
+- **sysyc.cpp**
+- SysYParser.h
+- SysYParser.cpp
