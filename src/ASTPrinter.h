@@ -7,6 +7,4 @@
 
 class ASTPrinter : public SysYBaseVisitor {
 public:
-    std::any visitCompUnit(SysYParser::CompUnitContext *ctx) override;
-
 };

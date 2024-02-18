@@ -24,9 +24,10 @@ WHILEKEY: 'while';
 BREAKKEY: 'break';
 CONTINUEKEY: 'continue';
 RETURNKEY: 'return';
-UNARYOP: '+' | '-' | '!';
-MULOP: [*/%];
-ADDOP: [+-];
+ADDOP: '+';
+MINUSOP:'-';
+NOTOP:'!';
+MULOP: '*'|'/'|'%';
 RELOP: '>' | '<' | '>=' | '<=';
 EQOP: '==' | '!=';
 LANDOP: '&&';
@@ -43,8 +44,6 @@ fragment Digit: [0-9];
 // Identifier_nondigit|IDENTIFIER Digit;
 IDENTIFIER: Identifier_nondigit (Identifier_nondigit | Digit)*;
 
-
-
 /*sysy-2022-spec-P4 3.valueConst*/
 /*IntConst*/
 fragment Hexadecimal_prefix: '0x' | '0X';
@@ -56,7 +55,7 @@ fragment Hexadecimal_digit: [0-9a-fA-F];
 fragment Decimal_const: Nonzero_digit Digit*;
 
 //original version is left recursive OCTAL_CONST:'0'|OCTAL_CONST Octal_digit;
-fragment Octal_const: '0' Octal_digit+;
+fragment Octal_const: '0' Octal_digit*;
 
 //original version is left recursive HEXADECIMAL_CONST:Hexadecimal_prefix
 // Hexadecimal_digit|HEXADECIMAL_CONST Hexadecimal_digit;
@@ -127,7 +126,9 @@ constInitVal:
 varDecl: bType varDef (COMMA varDef)* SEMICOLON;
 // variable definition
 varDef:
-	IDENTIFIER (L_BRACKET constExp R_BRACKET)* (ASSIGNMARK initVal)?;
+	IDENTIFIER (L_BRACKET constExp R_BRACKET)* (
+		ASSIGNMARK initVal
+	)?;
 // initial value of variables
 initVal: exp | L_BRACE (initVal (COMMA initVal)*)? R_BRACE;
 // definitions of function
@@ -143,7 +144,7 @@ funcFParam:
 		L_BRACKET R_BRACKET (L_BRACKET exp R_BRACKET)*
 	)?;
 // block of statements
-block: L_BRACE (blockItem)* R_BRACE;
+block: L_BRACE blockItem* R_BRACE;
 // per item in a statement block
 blockItem: decl | stmt;
 // def of statement
@@ -169,16 +170,16 @@ number: INTEGER_CONST | FLOATING_CONST;
 // unary expression
 unaryExp:
 	primaryExp
-	| IDENTIFIER L_PARENTHESIS funcFParams? R_PARENTHESIS
+	| IDENTIFIER L_PARENTHESIS funcRParams? R_PARENTHESIS
 	| unaryOp unaryExp;
 // unary operator
-unaryOp: UNARYOP;
+unaryOp: ADDOP|MINUSOP|NOTOP;
 // real parameters of function
 funcRParams: exp (COMMA exp)*;
 // expression with * / %
 mulExp: unaryExp | mulExp MULOP unaryExp;
 // expression with + -
-addExp: mulExp | addExp ADDOP mulExp;
+addExp: mulExp | addExp (ADDOP|MINUSOP) mulExp;
 // expression with relation operator
 relExp: addExp | relExp RELOP addExp;
 // epression to judge equalty

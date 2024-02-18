@@ -16,9 +16,9 @@ public:
     L_PARENTHESIS = 6, R_PARENTHESIS = 7, L_BRACKET = 8, R_BRACKET = 9, 
     L_BRACE = 10, R_BRACE = 11, ASSIGNMARK = 12, VOIDTYPE = 13, IFKEY = 14, 
     ELSEKEY = 15, WHILEKEY = 16, BREAKKEY = 17, CONTINUEKEY = 18, RETURNKEY = 19, 
-    UNARYOP = 20, MULOP = 21, ADDOP = 22, RELOP = 23, EQOP = 24, LANDOP = 25, 
-    LOROP = 26, IDENTIFIER = 27, INTEGER_CONST = 28, FLOATING_CONST = 29, 
-    WS = 30, COMMENT = 31, LINE_COMMENT = 32
+    ADDOP = 20, MINUSOP = 21, NOTOP = 22, MULOP = 23, RELOP = 24, EQOP = 25, 
+    LANDOP = 26, LOROP = 27, IDENTIFIER = 28, INTEGER_CONST = 29, FLOATING_CONST = 30, 
+    WS = 31, COMMENT = 32, LINE_COMMENT = 33
   };
 
   enum {
@@ -454,7 +454,7 @@ public:
     antlr4::tree::TerminalNode *IDENTIFIER();
     antlr4::tree::TerminalNode *L_PARENTHESIS();
     antlr4::tree::TerminalNode *R_PARENTHESIS();
-    FuncFParamsContext *funcFParams();
+    FuncRParamsContext *funcRParams();
     UnaryOpContext *unaryOp();
     UnaryExpContext *unaryExp();
 
@@ -469,7 +469,9 @@ public:
   public:
     UnaryOpContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
-    antlr4::tree::TerminalNode *UNARYOP();
+    antlr4::tree::TerminalNode *ADDOP();
+    antlr4::tree::TerminalNode *MINUSOP();
+    antlr4::tree::TerminalNode *NOTOP();
 
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
@@ -516,6 +518,7 @@ public:
     MulExpContext *mulExp();
     AddExpContext *addExp();
     antlr4::tree::TerminalNode *ADDOP();
+    antlr4::tree::TerminalNode *MINUSOP();
 
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
