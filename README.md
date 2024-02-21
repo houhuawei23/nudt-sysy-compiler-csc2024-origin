@@ -5,7 +5,7 @@
 
 代码仓库: [SysYCompiler](https://gitee.com/triple-adventurer/sys-ycompiler.git)
 
-开发人员
+开发人员(按拼音):侯华玮 简泽鑫 汤翔晟 杨俯众 
 
 ## 项目基本结构和介绍
 项目目前的文件结构：
@@ -55,11 +55,11 @@ make
 
 src中需要关注的文件有：
 - ASTPrinter.cpp
-- ASTPrinter.h
+- **ASTPrinter.h**
 - CMakeLists.txt
 - **SysY.g4**
 - SysYBaseVisitor.cpp
-- SysYBaseVisitor.h
+- **SysYBaseVisitor.h**
 - **sysyc.cpp**
 - SysYParser.h
 - SysYParser.cpp
