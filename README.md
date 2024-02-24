@@ -41,7 +41,7 @@ antlr4是一个编译器前端生成工具，可以生成多种目标语言的�
 cd src
 java -jar ../antlr/antlr-4.12.0-complete.jar \
     -Dlanguage=Cpp -no-listener -visitor \
-    SysY.g4
+    SysY.g4 -o ./.antlr
 cd ..
 cmake -S . -B build
 cmake --build build

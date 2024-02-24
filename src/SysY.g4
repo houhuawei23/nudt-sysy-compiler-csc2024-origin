@@ -40,8 +40,10 @@ LOROP: '||';
 /*sysy-2022-spec-P3 1.Ident*/
 fragment Identifier_nondigit: [_a-zA-Z];
 fragment Digit: [0-9];
-//original version is left-recursive IDENTIFIER:Identifier_nondigit|IDENTIFIER
-// Identifier_nondigit|IDENTIFIER Digit;
+//original version is left-recursive 
+// IDENTIFIER:  Identifier_nondigit
+//			  | IDENTIFIER Identifier_nondigit
+// 			  | IDENTIFIER Digit;
 IDENTIFIER: Identifier_nondigit (Identifier_nondigit | Digit)*;
 
 /*sysy-2022-spec-P4 3.valueConst*/
