@@ -1,5 +1,7 @@
 **/build
 **/lib
+**/local
+**/.**
 /sysyc
 */.antlr
 
