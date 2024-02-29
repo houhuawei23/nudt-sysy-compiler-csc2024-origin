@@ -33,6 +33,28 @@ test文件夹与[sysy](https://gitee.com/xsu1989/sysy.git)中的test文件夹一
 
 产生的可执行文件sysyc输出到当前文件夹。
 
+## 安装
+```shell
+# 依赖
+sudo apt-get update
+sudo apt-get install -y build-essential uuid-dev libutfcpp-dev pkg-config make git cmake openjdk-11-jre
+
+## 文档自动生成工具 doxygen
+sudo apt-get install -y graphviz doxygen doxygen-gui
+# gui doxygen
+doxywizard
+# config file 
+doxygen Doxyfile
+
+## antlr4 
+sudo cp ./antlr/antlr-4.12.0-complete.jar /usr/local/lib/
+# add to ~/.bashrc
+export CLASSPATH=".:/usr/local/lib/antlr-4.12.0-complete.jar"
+alias antlr4="java -jar /usr/local/lib/antlr-4.12.0-complete.jar"
+alias grun="java org.antlr.v4.gui.TestRig"
+```
+
+
 ## code到AST的分析
 
 antlr4是一个编译器前端生成工具，可以生成多种目标语言的前端。本项目生成的目标语言是C++。
