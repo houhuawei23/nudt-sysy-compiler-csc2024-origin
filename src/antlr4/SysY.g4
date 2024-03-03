@@ -1,172 +1,166 @@
-/*===-------------------------------------------===*/
-/* SysY.g4 CREATED BY TXS 2024-2-16                */
-/*===-------------------------------------------===*/
 grammar SysY;
-import SysYLexerRules;
+
+/*===-------------------------------------------===*/
+/* Lexer rules                                     */
+/*===-------------------------------------------===*/
+
+// fragments
+
+// keywords
+CONST: 'const';
+INT: 'int';
+FLOAT: 'float';
+VOID: 'void';
+IF: 'if';
+ELSE: 'else';
+WHILE: 'while';
+BREAK: 'break';
+CONTINUE: 'continue';
+RETURN: 'return';
+
+// operators
+ASSIGN: '=';
+ADD: '+';
+SUB: '-';
+MUL: '*';
+DIV: '/';
+MODULO: '%';
+LT: '<';
+GT: '>';
+LE: '<=';
+GE: '>=';
+EQ: '==';
+NE: '!=';
+AND: '&&';
+OR: '||';
+NOT: '!';
+
+// punctuations
+LPAREN: '(';
+RPAREN: ')';
+LBRACKET: '[';
+RBRACKET: ']';
+LBRACE: '{';
+RBRACE: '}';
+COMMA: ',';
+SEMICOLON: ';';
+
+// identifier
+fragment ALPHA: [a-zA-Z];
+fragment ALPHANUM: [a-zA-Z0-9];
+fragment NONDIGIT: [a-zA-Z_];
+ID: NONDIGIT (ALPHANUM | '_')*;
+
+// literals
+fragment DecDigit: [0-9];
+fragment OctDigit: [0-7];
+fragment HexDigit: [0-9a-fA-F];
+fragment OctPrefix: '0';
+fragment HexPrefix: '0' [xX];
+fragment NonZeroDecDigit: [1-9];
+fragment Sign: [+-];
+fragment DecFractional: DecDigit* '.' DecDigit+ | DecDigit+ '.';
+fragment Exponent: [eE] Sign? DecDigit+;
+fragment DecFloat: DecFractional Exponent? | DecDigit+ Exponent;
+fragment HexFractional: HexDigit* '.' HexDigit+ | HexDigit+ '.';
+fragment BinExponent: [pP] Sign? DecDigit+;
+fragment HexFloat:
+	HexPrefix HexFractional BinExponent
+	| HexDigit+ BinExponent;
+
+ILITERAL:
+	NonZeroDecDigit DecDigit*
+	| OctPrefix OctDigit*
+	| HexPrefix HexDigit+;
+
+FLITERAL: DecFloat | HexFloat;
+
+// string
+fragment ESC: '\\"' | '\\\\';
+STRING: '"' (ESC | .)*? '"';
+
+// white space and comments
+WS: [ \t\r\n] -> skip;
+LINECOMMENT: '//' .*? '\r'? '\n' -> skip;
+BLOCKCOMMENT: '/*' .*? '*/' -> skip;
+
 /*===-------------------------------------------===*/
 /* Syntax rules                                    */
 /*===-------------------------------------------===*/
 
-/*Syntax Definitions sysy-spec-P2*/
-// Compile Unit
-/* CompUnit → [ CompUnit ] ( Decl | FuncDef ) */
-compUnit: (decl | funcDef)+ EOF;
+compUnit: (decl | func)+;
 
-// Declaration
-/* Decl → ConstDecl | VarDecl */
-decl: constDecl | varDecl;
+// constDecl and varDecl shares the same syntax structure, except that constDecl must have constant
+// initial values. We combine these two syntax rules, and ensure the constraint above at the
+// semantic check phase.
+decl: CONST? btype varDef (COMMA varDef)* SEMICOLON;
 
-// const value declarations
-/* ConstDecl → 'const' BType ConstDef { ',' ConstDef } ';' */
-constDecl:
-	CONSTLABEL bType constDef (COMMA constDef)* SEMICOLON;
+btype: INT | FLOAT;
 
-// basic type
-bType: INTTYPE | FLOATTYPE;
+varDef: lValue (ASSIGN initValue)?;
 
-// definitions of const value
-/* ConstDef → Ident { '[' ConstExp ']' } '=' ConstInitVal */
-constDef:
-	IDENTIFIER (L_BRACKET constExp R_BRACKET)* ASSIGNMARK constInitVal;
+initValue: exp | LBRACE (initValue (COMMA initValue)*)? RBRACE;
 
-// inital value of const
-/* 
-ConstInitVal -> 
-	ConstExp 
-	| '{' [ ConstInitVal { ',' ConstInitVal } ] '}'
- */
-constInitVal:
-	constExp
-	| L_BRACE (constInitVal (COMMA constInitVal)*)? R_BRACE;
+func: funcType ID LPAREN funcFParams? RPAREN blockStmt;
 
-// variable decl
-/* VarDecl → BType VarDef { ',' VarDef } ';' */
-varDecl: bType varDef (COMMA varDef)* SEMICOLON;
+funcType: VOID | INT | FLOAT;
 
-// variable definition
-/*
-VarDef ->
-	Ident { '[' ConstExp ']' }
-	| Ident { '[' ConstExp ']' } '=' InitVal
-*/
-varDef:
-	IDENTIFIER (L_BRACKET constExp R_BRACKET)* (ASSIGNMARK initVal)?;
-
-// initial value of variables
-/* InitVal -> Exp | '{' [ InitVal { ',' InitVal } ] '}' */
-initVal: exp | L_BRACE (initVal (COMMA initVal)*)? R_BRACE;
-
-// definitions of function
-/* FuncDef -> FuncType Ident '(' [FuncFParams] ')' Block */
-funcDef:
-	funcType IDENTIFIER L_PARENTHESIS (funcFParams)? R_PARENTHESIS block;
-
-// types of functions
-/* FuncType -> 'void' | 'int' | 'float' */
-funcType: INTTYPE | FLOATTYPE | VOIDTYPE;
-
-// formative parameters list of function
-/* FuncFParams -> FuncFParam { ',' FuncFParam } */
 funcFParams: funcFParam (COMMA funcFParam)*;
 
-// formative parameter of function
-/* FuncFParam -> BType Ident ['[' ']' { '[' Exp ']' }] */
 funcFParam:
-	bType IDENTIFIER (L_BRACKET R_BRACKET (L_BRACKET exp R_BRACKET)*)?;
+	btype ID (LBRACKET RBRACKET (LBRACKET exp RBRACKET)*)?;
 
-// block of statements
-/* Block -> '{' { BlockItem } '}' */
-block: L_BRACE blockItem* R_BRACE;
+blockStmt: LBRACE blockItem* RBRACE;
 
-// per item in a statement block
-/* BlockItem -> Decl | Stmt */
 blockItem: decl | stmt;
 
-// def of statement
-/* 
-Stmt -> 
-	  LVal '=' Exp ';' 
-	| [Exp] ';' 
-	| Block
-	| 'if' '( Cond ')' Stmt [ 'else' Stmt ]
-	| 'while' '(' Cond ')' Stmt
-	| 'break' ';' | 'continue' ';'
-	| 'return' [Exp] ';'
- */
 stmt:
-	lVal ASSIGNMARK exp SEMICOLON
-	| exp? SEMICOLON
-	| block
-	| IFKEY L_PARENTHESIS cond R_PARENTHESIS stmt (ELSEKEY stmt)?
-	| WHILEKEY L_PARENTHESIS cond R_PARENTHESIS stmt
-	| BREAKKEY SEMICOLON
-	| CONTINUEKEY SEMICOLON
-	| RETURNKEY exp? SEMICOLON;
+	assignStmt
+	| expStmt
+	| ifStmt
+	| whileStmt
+	| breakStmt
+	| continueStmt
+	| returnStmt
+	| blockStmt
+	| emptyStmt;
 
-// expression tip: in sysY, expressions are all integer or floating
-exp: addExp;
+assignStmt: lValue ASSIGN exp SEMICOLON;
 
-// condition expression
-cond: lOrExp;
+expStmt: exp SEMICOLON;
 
-// expression of left value
-/* LVal -> Ident {'[' Exp ']'} */
-lVal: IDENTIFIER (L_BRACKET exp R_BRACKET)*;
+ifStmt: IF LPAREN exp RPAREN stmt (ELSE stmt)?;
 
-// primary expressions
-/* PrimaryExp -> '(' Exp ')' | LVal | Number */
-primaryExp: L_PARENTHESIS exp R_PARENTHESIS | lVal | number;
+whileStmt: WHILE LPAREN exp RPAREN stmt;
 
-//number
-/* Number -> IntConst | floatConst */
-number: INTEGER_CONST | FLOATING_CONST;
+breakStmt: BREAK SEMICOLON;
 
-// unary expression
-/* 
-UnaryExp ->   PrimaryExp 
-			| Ident '(' [FuncRParams] ')' 
-			| UnaryOp UnaryEx
- */
-unaryExp:
-	primaryExp
-	| IDENTIFIER L_PARENTHESIS funcRParams? R_PARENTHESIS
-	| unaryOp unaryExp;
+continueStmt: CONTINUE SEMICOLON;
 
-// unary operator
-/* UnaryOp -> '+' | '−' | '!' */
-unaryOp: ADDOP | MINUSOP | NOTOP;
+returnStmt: RETURN exp? SEMICOLON;
 
-// real parameters of function
-/* FuncRParams -> Exp { ',' Exp } */
+emptyStmt: SEMICOLON;
+
+exp:
+	LPAREN exp RPAREN				# parenExp
+	| lValue						# lValueExp
+	| number						# numberExp
+	| string						# stringExp
+	| call							# callExp
+	| (ADD | SUB | NOT) exp			# unaryExp
+	| exp (MUL | DIV | MODULO) exp	# multiplicativeExp
+	| exp (ADD | SUB) exp			# additiveExp
+	| exp (LT | GT | LE | GE) exp	# relationExp
+	| exp (EQ | NE) exp				# equalExp
+	| exp AND exp					# andExp
+	| exp OR exp					# orExp;
+
+call: ID LPAREN funcRParams? RPAREN;
+
+lValue: ID (LBRACKET exp RBRACKET)*;
+
+number: ILITERAL | FLITERAL;
+
+string: STRING;
+
 funcRParams: exp (COMMA exp)*;
-
-// expression with * / %
-/* MulExp -> 
-	UnaryExp 
-	| MulExp ('*' | '/' | '%') UnaryExp 
-*/
-mulExp: unaryExp | mulExp MULOP unaryExp;
-
-// expression with + -
-/* AddExp -> MulExp | AddExp ('+' | '−') MulExp */
-addExp: mulExp | addExp (ADDOP | MINUSOP) mulExp;
-
-// expression with relation operator
-/* RelExp -> AddExp | RelExp ('<' | '>' | '<=' | '>=') AddExp */
-relExp: addExp | relExp RELOP addExp;
-
-// epression to judge equalty
-/* EqExp -> RelExp | EqExp ('==' | '!=') RelExp */
-eqExp: relExp | eqExp EQOP relExp;
-
-// logic and expression
-/* LAndExp -> EqExp | LAndExp '&&' EqExp */
-lAndExp: eqExp | lAndExp LANDOP eqExp;
-
-// logic or expression
-/* LOrExp -> LAndExp | LOrExp '||' LAndExp */
-lOrExp: lAndExp | lOrExp LOROP lAndExp;
-
-// const expressions all identifiers must be constant
-/* ConstExp -> AddExp  */
-constExp: addExp;

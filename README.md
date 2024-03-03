@@ -1,14 +1,17 @@
 # SysYCompiler Project
+
 创建于2024-2-17
 
 本项目基本结构改编自: [sysy](https://gitee.com/xsu1989/sysy.git)
 
 代码仓库: [SysYCompiler](https://gitee.com/triple-adventurer/sys-ycompiler.git)
 
-开发人员(按拼音):侯华玮 简泽鑫 汤翔晟 杨俯众 
+开发人员(按拼音):侯华玮 简泽鑫 汤翔晟 杨俯众
 
 ## 项目基本结构和介绍
+
 项目目前的文件结构：
+
 - antlr/
 - lib/
 - src/
@@ -34,6 +37,7 @@ test文件夹与[sysy](https://gitee.com/xsu1989/sysy.git)中的test文件夹一
 产生的可执行文件sysyc输出到当前文件夹。
 
 ## 安装
+
 ```shell
 # 依赖
 sudo apt-get update
@@ -54,28 +58,40 @@ alias antlr4="java -jar /usr/local/lib/antlr-4.12.0-complete.jar"
 alias grun="java org.antlr.v4.gui.TestRig"
 ```
 
+## cmake
+
+```shell
+./cmake.sh
+
+# runs
+cmake -S . -B build
+cmake --build build
+```
 
 ## code到AST的分析
 
 antlr4是一个编译器前端生成工具，可以生成多种目标语言的前端。本项目生成的目标语言是C++。
+
 ```shell
-# antlr4compile.sh
-cd src
-java -jar ../antlr/antlr-4.12.0-complete.jar \
+## antlr4cpp.sh
+#!/bin/bash
+main_path=$(pwd)
+
+cd $main_path/src/antlr4
+
+java -jar $main_path/antlr/antlr-4.12.0-complete.jar \
     -Dlanguage=Cpp -no-listener -visitor \
-    SysY.g4 -o ./.antlr
-cd ..
-cmake -S . -B build
-cmake --build build
-cd build
-make
+    SysY.g4 -o $main_path/src/.antlr4cpp
+
 ```
+
 要运行antlr4，只需要用java解释器运行antlr.jar包即可，即`java -jar ../antlr/antlr-4.12.0-complete.jar`命令
 其后紧跟的选项，都是antlr4工具的选项，可以在命令行中直接运行`java -jar ../antlr/antlr-4.12.0-complete.jar`命令查看帮助
 
 这一步antlr产生的C++代码可以通过`-o`选项指定目录，或默认在当前目录`./src`
 
 src中需要关注的文件有：
+
 - ASTPrinter.cpp
 - **ASTPrinter.h**
 - CMakeLists.txt
@@ -85,3 +101,12 @@ src中需要关注的文件有：
 - **sysyc.cpp**
 - SysYParser.h
 - SysYParser.cpp
+
+## logs
+
+- 2024.03.03:
+  - 初步构建了 ir 和 visitor 所需的数据结构。
+  - 暂时将 SysY.g4 更换成老师提供的版本。
+  - `./cmake.sh`, 得到 main 可执行文件，可以测试 `./main ./test/main.sy`
+  - 问题：visitor.hpp 无法 include ir 中的头文件，但是 visitCompUnit.cpp 可以引入？
+  - 待完成：继续补充完善 ir 数据结构，重载 visitor 函数。
