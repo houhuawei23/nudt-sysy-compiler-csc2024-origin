@@ -1,8 +1,8 @@
 #pragma once
 
 #include <stdlib.h>
+#include <string.h>
 #include <vector>
-// #include <string>
 // #include <memory>
 
 namespace ir {
@@ -10,9 +10,7 @@ class Type;
 class PointerType;
 class FunctionType;
 
-typedef enum
-  : size_t
-{
+typedef enum : size_t {
     VOID,
     // INT1,
     INT,
@@ -23,9 +21,7 @@ typedef enum
     FUNCTION,
     UNDEFINE
 } BType;
-typedef enum
-  : size_t
-{
+typedef enum : size_t {
     RET,
     JMP,
     BR,
@@ -75,29 +71,26 @@ typedef enum
     CALL,
 } IType;
 
-class Type
-{
+class Type {
   protected:
     BType _btype;
 
   public:
-    Type(BType btype)
-      : _btype(btype)
-    {
-    }
+    Type(BType btype) : _btype(btype) {}
     virtual ~Type();
     // static method for construct Type instance
-    static Type* void_type();
-    static Type* int_type();
-    static Type* float_type();
-    static Type* label_type();
-    static Type* pointer_type();
+    static Type *void_type();
+    static Type *int_type();
+    static Type *float_type();
+    static Type *label_type();
+    static Type *pointer_type(Type *baseType);
     // static Type *array
-    static Type* function_type();
+    static Type *function_type(Type *returnType,
+                               const std::vector<Type *> &paramTypes);
 
     // type check
-    bool is(Type* type);
-    bool isnot(Type* type);
+    bool is(Type *type);
+    bool isnot(Type *type);
     bool is_void();
     bool is_int();
     bool is_float();
@@ -110,24 +103,42 @@ class Type
     BType get_btype();
     size_t get_size();
 };
-
-class PointerType : public Type
-{
+/**
+ * @brief
+ *
+ */
+class PointerType : public Type {
+    //! inherit from Type
+    // BType _btype;
   protected:
-    Type* _base;
-    PointerType(Type* base);
+    Type *_base_type;
+    PointerType(Type *baseType) : Type(POINTER), _base_type(baseType) {}
 
   public:
-    static PointerType* get(Type* base);
+    //! Generate a pointer type from a given base type
+    static PointerType *gen(Type *baseType);
+
+    //! Get the base type of this pointer
+    Type *get_base_type() const { return _base_type; }
 };
 
-class FunctionType : public Type
-{
+class FunctionType : public Type {
+    //! inherit from Type
+    // BType _btype;
   protected:
-    Type* _ret_type;
-    std::vector<Type*> _args_types;
+    //! the return type of the function
+    Type *_ret_type;
+    //! the argument types of the function
+    std::vector<Type *> _arg_types;
+    //! the constructor for FunctionType
+    FunctionType(Type *ret_type, const std::vector<Type *> &arg_types = {})
+        : Type(FUNCTION), _ret_type(ret_type), _arg_types(arg_types) {}
 
   public:
-    FunctionType(Type* ret, const std::vector<Type*>& agrs_types);
+    //! Gen
+    static FunctionType *gen(Type *ret_type,
+                             const std::vector<Type *> &arg_types);
+    //! get the return type of the function
+    Type *get_ret_type() const { return _ret_type; }
 };
-}
+} // namespace ir

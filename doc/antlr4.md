@@ -30,7 +30,6 @@
             \- RuleContext <- ParserRuleContext <- CompUnitContext
 ```
 
-
 ### antlr4 api
 
 ```c++
@@ -115,16 +114,16 @@ antlr4::tree::ParseTree {
 
 ```C++
 Token
-    getType()	            // The token's type
-    getLine()	            // The number of the line containing the token
-    getText()	            // The text associated with the token
-    getCharPositionInLine()	// The line position of the token's first character
-    getTokenIndex()	        // The index of the token in the input stream
-    getChannel()	        // The channel that provides the token to the parser
-    getStartIndex()	        // The token's starting character index
-    getStopIndex()	        // The token's last character index
-    getTokenSource()	    // A pointer to the TokenSource that created the token
-    getInputStream()	    // A pointer to the CharStream that provided the token's characters
+    getType()             // The token's type
+    getLine()             // The number of the line containing the token
+    getText()             // The text associated with the token
+    getCharPositionInLine() // The line position of the token's first character
+    getTokenIndex()         // The index of the token in the input stream
+    getChannel()         // The channel that provides the token to the parser
+    getStartIndex()         // The token's starting character index
+    getStopIndex()         // The token's last character index
+    getTokenSource()     // A pointer to the TokenSource that created the token
+    getInputStream()     // A pointer to the CharStream that provided the token's characters
 
 IntStream
     consume()                   // Accesses and consumes the current element

@@ -10,6 +10,7 @@
 #include "type.hpp"
 #include "value.hpp"
 
+// #include "module.hpp"
 namespace ir {
 
 class Constant;
@@ -66,7 +67,10 @@ class Constant : public Value
     static Constant* get(float f);
     // operator
 };
-
+/**
+ * @brief Argument represents an incoming formal argument to a Function.
+ * 
+ */
 class Argument : public Value
 {
   protected:

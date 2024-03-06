@@ -10,11 +10,9 @@ namespace sysy {
  *
  * blockStmt: LBRACE blockItem* RBRACE;
  */
-std::any
-SysYIRGenerator::visitBlockStmt(SysYParser::BlockStmtContext* ctx)
-{
+std::any SysYIRGenerator::visitBlockStmt(SysYParser::BlockStmtContext *ctx) {
     std::cout << "visitBloclStmt" << std::endl;
     std::cout << ctx->getText() << std::endl;
     return 0;
 }
-}
+} // namespace sysy
