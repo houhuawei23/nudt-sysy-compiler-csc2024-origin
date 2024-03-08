@@ -1,7 +1,0 @@
-int main() {
-    int a = 2;
-    int b = 3;
-    float c = 2.35;
-    int arr[10] = {1, 2, 3};
-    return a + b;
-}

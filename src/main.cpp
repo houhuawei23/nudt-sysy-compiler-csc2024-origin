@@ -23,8 +23,8 @@ main(int argc, char** argv)
     SysYParser::CompUnitContext* astrootptr = parser.compUnit();
 
     // ir::Module baseModule;
-    sysy::SysYIRGenerator gen;
-    gen.visitCompUnit(astrootptr);
+    // sysy::SysYIRGenerator gen;
+    // gen.visitCompUnit(astrootptr);
 
     return EXIT_SUCCESS;
 }
