@@ -1,5 +1,9 @@
 # Visit
 
+对所有的局部变量/变量生成alloca指令
+使用时，生成load指令
+实际上，声明一个变量，就是要求为其分配内存空间，存入相应的值，并在符号标表里登记
+
 - visitFunc:
   - func: funcType ID LPAREN funcFParams? RPAREN blockStmt;
   - Function:
@@ -103,12 +107,20 @@
 
   - else: array
     - visit(initValue) to get the array
-    - 
+    -
 
 - AllocaInst(type, dims, name, isconst)
 
 - visitLValueExp
   - lValue: ID (LBRACKET exp RBRACKET)*;
+  - value = symbols.lookup(name)
+  - indiceis (`int a[2][3]`)
+  - if global value
+    - create load inst based on type
+  - if alloca inst
+    - create load inst based on type
+  - if argument
+    - create load inst based on type ???
 
 - User: Value
   - vector<Use> operands; // 操作数 vector
@@ -122,3 +134,30 @@
     std::set<Instruction*> back_live;  // 该指令后面点的活跃变量
     std::set<Value *> front_vlive;      // 该指令前面点的活跃变量
     std::set<Value*> back_vlive;       // 该指令后面点的活跃变量
+
+- visitAssignStmt:
+  - assignStmt: lValue ASSIGN exp SEMICOLON;
+  - generate rhs expression
+  - get the address of lhs variable ?
+    - pointer = symbols.lookup(name)
+  - if rhs is constant, convert it into the same type with pointer
+  - else: create cast instruction
+  - update the variable?
+    - builder create store  inst(rhs, pointer, indices)
+
+- visitNumberExp:
+  - number: ILITERAL | FLITERAL;
+    - ILITERAL: NonZeroDecDigit DecDigit*| OctPrefix OctDigit* | HexPrefix HexDigit+;
+    - FLITERAL: DecFloat | HexFloat;
+  - check int/float
+  - check hex/oct/dec
+  - create const value
+
+- visitAdditiveExp:
+  - additiveExp: exp (ADD | SUB) exp
+  - generate the operands
+  - rhs is CallInst and lhs is not a const:
+    - 将lhs设为保护变量,偏移为0 ??
+    - rhs 要调用，在visit(rhs)事，可能影响lhs?
+  - 
+  
