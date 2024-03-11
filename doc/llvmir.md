@@ -92,7 +92,34 @@ IfUnequal:
 - load
 - store
 
+```llvm
+<result> = alloca [inalloca] <type> [, <ty> <NumElements>] [, align <alignment>] [, addrspace(<num>)]     
+; yields type addrspace(num)*:result
+%ptr = alloca i32                             ; yields ptr
+%ptr = alloca i32, i32 4                      ; yields ptr
+%ptr = alloca i32, i32 4, align 1024          ; yields ptr
+%ptr = alloca i32, align 1024                 ; yields ptr
 
+%ptr = alloca i32                               ; yields ptr
+store i32 3, ptr %ptr                           ; yields void
+%val = load i32, ptr %ptr                       ; yields i32:val = i32 3
+
+<result> = load [volatile] <ty>, ptr <pointer>[, align <alignment>][, !nontemporal !<nontemp_node>][, !invariant.load !<empty_node>][, !invariant.group !<empty_node>][, !nonnull !<empty_node>][, !dereferenceable !<deref_bytes_node>][, !dereferenceable_or_null !<deref_bytes_node>][, !align !<align_node>][, !noundef !<empty_node>]
+<result> = load atomic [volatile] <ty>, ptr <pointer> [syncscope("<target-scope>")] <ordering>, align <alignment> [, !invariant.group !<empty_node>]
+!<nontemp_node> = !{ i32 1 }
+!<empty_node> = !{}
+!<deref_bytes_node> = !{ i64 <dereferenceable_bytes> }
+!<align_node> = !{ i64 <value_alignment> }
+
+
+store [volatile] <ty> <value>, ptr <pointer>[, align <alignment>][, !nontemporal !<nontemp_node>][, !invariant.group !<empty_node>]        ; yields void
+store atomic [volatile] <ty> <value>, ptr <pointer> [syncscope("<target-scope>")] <ordering>, align <alignment> [, !invariant.group !<empty_node>] ; yields void
+!<nontemp_node> = !{ i32 1 }
+!<empty_node> = !{}
+
+
+
+```
 ### Conversion Operations
 
 - `trunc .. to`

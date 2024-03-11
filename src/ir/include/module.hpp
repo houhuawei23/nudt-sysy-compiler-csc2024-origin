@@ -1,12 +1,13 @@
+#pragma once
 #include <map>
 #include <set>
 #include <unordered_map>
+#include <vector>
 // #include <unordered_set>
+#include <memory>
 #include <variant>
 
-#include "infrast.hpp"
-#include "table.hpp"
-#include "type.hpp"
+#include "function.hpp"
 #include "value.hpp"
 namespace ir {
 //! IR Unit for representing a SysY compile unit
@@ -36,18 +37,16 @@ class Module {
     using str_val_map = std::map<std::string, Value *>;
     using const_str_ref = const std::string &;
     // using value
-  protected:
-    value_vector _values;
+    // friend class Module;
+  public:
+    std::vector<Value *> _values;
     str_fun_map _functions;
     str_val_map _globals;
-
-    SymbolTable _stable;
-    int _test;
+    // SymbolTable _stable;
 
   public:
-    Module(){};
-    Module(int test) : _test(test){};
-    // ~Module() = default;
+    Module() = default;
+    ~Module() = default;
 
     //! get
     // return the ref, avoid generate temp var
@@ -55,7 +54,7 @@ class Module {
     // using ref type to receive, they point to same obj
     // directly using, point to same: get_values().push xxx
     // how about use iterator to access?
-    value_vector &get_values() { return _values; }
+    std::vector<Value *> &get_values() { return _values; }
     str_fun_map &get_functions() { return _functions; }
     str_val_map &get_globals() { return _globals; }
 
@@ -66,7 +65,7 @@ class Module {
     // Value *get_val(const_str_ref name);
     // Value *add_val(const_str_ref name, Value *addr);
 
-    void add_gvalue(const_str_ref name, Value*init);
-    Value *lookup_gvalue(const_str_ref name);
+    // void add_gvalue(const_str_ref name, Value*init);
+    // Value *lookup_gvalue(const_str_ref name);
 };
 } // namespace ir

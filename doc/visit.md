@@ -1,6 +1,6 @@
 # Visit
 
-对所有的局部变量/变量生成alloca指令
+对所有的局部变量/变量生成 alloca 指令
 使用时，生成load指令
 实际上，声明一个变量，就是要求为其分配内存空间，存入相应的值，并在符号标表里登记
 
@@ -50,9 +50,38 @@
     - s
     - get dims
 
+```c
+int main() {
+  int g = 5;
+  return g;
+}
+```
+- compUnit
+- visit funcdef
+- visit blockstmt
+  - visit blockitem
+    - visit local decl  
+      - visit vardef
+        - visit lvalue
+        - visit initvalue
+  - visit blockitem
+    - visit stmt -> visit return stmt
+      - visit rexp - lvalue
+- sd
+```llvm
+define i32 @main() {
+  %1 = alloca i32         ; int* g_ptr
+  store i32 5, i32* %1    ; *g_ptr = 5
+  %2 = load i32, i32* %1  ; %2 = *g_ptr
+  ret i32 %2              ; ret %2
+}
+
+```
+
+
 - **visitLocalDecl**:
-  - decl: CONST? btype varDef (COMMA varDef)* SEMICOLON;
-  - vector<Value *> values
+  - `decl: CONST? btype varDef (COMMA varDef)* SEMICOLON;`
+  - `vector<Value *> values`
   - create pointer type point to btype, as alloca inst type?
     - type: PointerType(btype)
   - for each varDef:
@@ -65,9 +94,10 @@
         - cast dim to value
         - dims.push_back(dim)
         - `dims = vector({1, 2})` in value type
-    - builder create alloca inst: alloca (type, dims, name, isconst)
+    - **builder create alloca inst: alloca (type, dims, name, isconst)**
       - [return] type: type ？
       - operands: dims
+    - `symbols.insert(name, alloca)`
     - if has assign stmt:
       - if scalar:
         - create value by type

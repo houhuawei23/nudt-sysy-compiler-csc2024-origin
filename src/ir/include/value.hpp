@@ -12,6 +12,14 @@ class Use;
 class User;
 class Value;
 
+class Constant;
+class Instruction;
+class BasicBlock;
+class Argument;
+
+class Function;
+class Module;
+
 class Use {
     // friend class Value;
     // friend class
@@ -61,6 +69,9 @@ class Value {
     void add_use(std::shared_ptr<Use> use);
     void del_use(std::shared_ptr<Use> use);
     void replace_all_use_with(Value *_value);
+
+  public:
+    virtual void print(std::ostream &os) const {};
 };
 
 class User : public Value {
@@ -76,7 +87,11 @@ class User : public Value {
     void add_operand(Value *value);
     void set_operand(size_t index, Value *value);
 
-    template <typename Container> void add_operands(const Container &operands);
+    template <typename Container> void add_operands(const Container &operands){
+      for (auto value: operands) {
+        add_operand(value);
+      }
+    }
 
     void unuse_allvalue();
     void replace_operand_with(size_t index, Value *value);

@@ -6,7 +6,7 @@ Type *Type::void_type() {
     static Type voidType(VOID);
     return &voidType;
 }
-
+// return static Type instance of int
 Type *Type::int_type() {
     static Type intType(INT);
     return &intType;

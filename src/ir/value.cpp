@@ -33,4 +33,6 @@ void User::set_operand(size_t index, Value *value) {
     _operands[index]->set_value(value);
     value->add_use(_operands[index]);
 }
+
+
 } // namespace ir

@@ -77,7 +77,7 @@ class Type {
 
   public:
     Type(BType btype) : _btype(btype) {}
-    virtual ~Type();
+    virtual ~Type() = default; // default deconstructor
     // static method for construct Type instance
     static Type *void_type();
     static Type *int_type();
@@ -102,6 +102,11 @@ class Type {
     // Type* btype();
     BType get_btype();
     size_t get_size();
+
+    // template <typename T>
+    // std::enable_if_t<std::is_base_of_v<Type, T>, T *> as() const {
+    //     return dynamic_cast<T *>(const_cast<Type *>(this));
+    // }
 };
 /**
  * @brief

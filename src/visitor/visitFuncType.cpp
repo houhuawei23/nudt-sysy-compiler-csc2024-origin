@@ -9,9 +9,7 @@ namespace sysy {
  *
  * funcType: VOID | INT | FLOAT;
  */
-std::any
-SysYIRGenerator::visitFuncType(SysYParser::FuncTypeContext* ctx)
-{
+std::any SysYIRGenerator::visitFuncType(SysYParser::FuncTypeContext *ctx) {
     std::cout << "visitFuncType" << std::endl;
     std::cout << ctx->getText() << std::endl;
 
@@ -19,6 +17,14 @@ SysYIRGenerator::visitFuncType(SysYParser::FuncTypeContext* ctx)
     std::cout << "int: " << ctx->INT() << std::endl;
     std::cout << "float: " << ctx->FLOAT() << std::endl;
 
+    if (ctx->INT()) {
+        return ir::Type::int_type();
+    } else if (ctx->FLOAT()) {
+        return ir::Type::float_type();
+    } else if (ctx->VOID()) {
+        return ir::Type::void_type();
+    }
+    assert(false);
     return 0;
 }
 

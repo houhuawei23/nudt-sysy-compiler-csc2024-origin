@@ -17,11 +17,11 @@ add_executable(main
     main.cpp
 )
 # antlr4 include
-target_include_directories(main PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/antlr4)
-target_link_libraries(main PRIVATE SysYParser)
+target_include_directories(main PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/antlr4)
+target_link_libraries(main PUBLIC SysYParser)
 # visitor include
-target_include_directories(main PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/visitor)
-target_link_libraries(main PRIVATE lib_visitor)
+target_include_directories(main PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/visitor)
+target_link_libraries(main PUBLIC visitor)
 
 
 
