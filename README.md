@@ -110,3 +110,50 @@ src中需要关注的文件有：
   - `./cmake.sh`, 得到 main 可执行文件，可以测试 `./main ./test/main.sy`
   - 问题：visitor.hpp 无法 include ir 中的头文件，但是 visitCompUnit.cpp 可以引入？
   - 待完成：继续补充完善 ir 数据结构，重载 visitor 函数。
+- 2024.03.12:
+  - 整合了 ir 和 visitor 的数据结构
+  - 生成 ir 的基本流程已打通，需要逐步细化
+  - 实现了:
+    - visit:
+      - `visitFun.cpp`: vist func type, func
+      - `visitDecl.cpp`: visit local decl scalar 
+      - `visitStmt.cpp`: visit block, return stmt
+      - `visitExp.cpp`: visit number exp
+    - ir:
+      - `builder.hpp`: create alloca, store, load, ret inst
+      - `instructions.hpp`: AllocaInst, LoadInst, StoreInst, ReturnInst
+        - but the print methods need to be modified 
+      - `utils.hpp`: overload `<<` for convenience
+      - nearly each class need to implement `print` method for print the readable ir
+  - `test/steps/`: 逐步细化的测试用例，起初都是非常简单的用例，先跑起来！
+  - **目前效果**：
+
+```C
+// test/steps/00_local.c
+int main() {
+    int l = 3;
+    return 0;
+}
+```
+
+```llvm
+; test/steps/00_local_gen.ll
+; main 生成的可读的 llvm ir 
+; 可使用 > lli 00_local_gen.ll 运行, echo $? 查看返回值 (0)
+define i32 @main() {
+    %l = alloca i32
+    store i32 3, i32* %l
+    ret i32 0
+
+}
+
+; test/steps/00_local.ll
+; clang -S -emit-llvm ./00_local.c 生成的 llvm ir (节选)
+define dso_local i32 @main() #0 {
+  %1 = alloca i32, align 4
+  %2 = alloca i32, align 4
+  store i32 0, i32* %1, align 4
+  store i32 3, i32* %2, align 4
+  ret i32 0
+}
+```

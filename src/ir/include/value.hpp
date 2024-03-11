@@ -82,15 +82,15 @@ class User : public Value {
     User(Type *type, const std::string &name) : Value(type, name) {}
     // get
     std::vector<std::shared_ptr<Use>> &get_operands();
-    Value *get_operand(size_t index);
+    Value *get_operand(size_t index) const;
 
     void add_operand(Value *value);
     void set_operand(size_t index, Value *value);
 
-    template <typename Container> void add_operands(const Container &operands){
-      for (auto value: operands) {
-        add_operand(value);
-      }
+    template <typename Container> void add_operands(const Container &operands) {
+        for (auto value : operands) {
+            add_operand(value);
+        }
     }
 
     void unuse_allvalue();

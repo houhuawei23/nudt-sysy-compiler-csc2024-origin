@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <stdlib.h>
 #include <string.h>
 #include <vector>
@@ -100,13 +101,30 @@ class Type {
 
     // get attribute
     // Type* btype();
-    BType get_btype();
-    size_t get_size();
+    BType get_btype() const { return _btype; };
+    size_t get_size() const {
+        switch (_btype) {
+        case INT:
+            return 4;
+            break;
+        case FLOAT:
+            return 4;
+        case LABEL:
+        case POINTER:
+        case FUNCTION:
+            return 8;
+        case VOID:
+            return 0;
+        default:
+            break;
+        }
+    };
 
     // template <typename T>
     // std::enable_if_t<std::is_base_of_v<Type, T>, T *> as() const {
     //     return dynamic_cast<T *>(const_cast<Type *>(this));
     // }
+    void print(std::ostream &os) const;
 };
 /**
  * @brief
@@ -125,6 +143,8 @@ class PointerType : public Type {
 
     //! Get the base type of this pointer
     Type *get_base_type() const { return _base_type; }
+
+    // void print(std::ostream &os) const
 };
 
 class FunctionType : public Type {
@@ -145,5 +165,9 @@ class FunctionType : public Type {
                              const std::vector<Type *> &arg_types);
     //! get the return type of the function
     Type *get_ret_type() const { return _ret_type; }
+    std::vector<Type *> get_param_type() const { // ?? return what type?
+        // make_range(paramTypes)
+        return _arg_types;
+    }
 };
 } // namespace ir

@@ -10,6 +10,33 @@ namespace sysy {
  * @param ctx
  * @return std::any
  *
+ * funcType: VOID | INT | FLOAT;
+ */
+std::any SysYIRGenerator::visitFuncType(SysYParser::FuncTypeContext *ctx) {
+    // std::cout << "visitFuncType" << std::endl;
+    // std::cout << ctx->getText() << std::endl;
+
+    // std::cout << "void: " << ctx->VOID() << std::endl;
+    // std::cout << "int: " << ctx->INT() << std::endl;
+    // std::cout << "float: " << ctx->FLOAT() << std::endl;
+
+    if (ctx->INT()) {
+        return ir::Type::int_type();
+    } else if (ctx->FLOAT()) {
+        return ir::Type::float_type();
+    } else if (ctx->VOID()) {
+        return ir::Type::void_type();
+    }
+    assert(false);
+    return 0;
+}
+
+/**
+ * @brief
+ *
+ * @param ctx
+ * @return std::any
+ *
  * func: funcType ID LPAREN funcFParams? RPAREN blockStmt;
  * ```
  * int func();
@@ -20,9 +47,9 @@ namespace sysy {
  * ```
  */
 std::any SysYIRGenerator::visitFunc(SysYParser::FuncContext *ctx) {
-    std::cout << "visitFunc" << std::endl;
-    std::cout << ctx->getText() << std::endl;
-    std::cout << ctx->ID()->getText() << std::endl;
+    // std::cout << "visitFunc" << std::endl;
+    // std::cout << ctx->getText() << std::endl;
+    // std::cout << ctx->ID()->getText() << std::endl;
     // visitChildren(ctx);
     _builder.func_add();
     std::string func_name = ctx->ID()->getText();

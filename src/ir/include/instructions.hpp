@@ -46,6 +46,9 @@ class StoreInst : public Instruction {
         add_operands(indices);
     }
 
+    Value *get_value() const { return get_operand(0); }
+    Value *get_ptr() const { return get_operand(1); }
+
   public:
     void print(std::ostream &os) const override;
 };
@@ -82,9 +85,9 @@ class ReturnInst : public Instruction {
         add_operand(value);
     }
 
-    bool has_ReturnValue() const { return not _operands.empty(); }
-    Value* get_ReturnValue() {
-      return has_ReturnValue() ? get_operand(0) : nullptr;
+    bool has_return_value() const { return not _operands.empty(); }
+    Value *get_return_value() const{
+        return has_return_value() ? get_operand(0) : nullptr;
     }
 
   public:

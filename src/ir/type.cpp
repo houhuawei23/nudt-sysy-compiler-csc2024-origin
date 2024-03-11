@@ -1,5 +1,7 @@
 #include "include/type.hpp"
 
+#include <variant> // dynamic_cast
+
 namespace ir {
 /// Type instance construct functions BEGIN
 Type *Type::void_type() {
@@ -39,6 +41,36 @@ bool Type::is_float() { return _btype == FLOAT; }
 bool Type::is_label() { return _btype == LABEL; }
 bool Type::is_pointer() { return _btype == POINTER; }
 bool Type::is_function() { return _btype == FUNCTION; }
+
+void Type::print(std::ostream &os) const {
+    auto btype = get_btype();
+    switch (btype) {
+    case INT:
+        // os << "int";
+        os << "i32";
+        break;
+    case FLOAT:
+        os << "float";
+        break;
+    case VOID:
+        os << "void";
+        break;
+    case FUNCTION:
+        os << "function";
+        // to cdo
+        break;
+    case POINTER:
+        // os << "pointer";
+        static_cast<const PointerType *>(this)->get_base_type()->print(os);
+        os << "*";
+        break;
+    case LABEL:
+        break;
+    default:
+        // error
+        break;
+    }
+}
 
 /// Type check functions END
 /// PointerType

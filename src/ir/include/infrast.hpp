@@ -54,7 +54,12 @@ class Constant : public Value {
         return c; // res.first->second; ??
     }
     static Constant *get(float f);
+
+    int get_int() const { return _i; } // assert
+    float get_float() const { return _f; }
+
     // operator
+    void print(std::ostream &os) const override;
 };
 /**
  * @brief Argument represents an incoming formal argument to a Function.
@@ -103,6 +108,8 @@ class BasicBlock : public Value {
     // to be complete
     inst_iterator begin() { return _instructions.begin(); }
     inst_iterator end() { return _instructions.end(); }
+
+    void print(std::ostream &os) const override;
 };
 
 class Instruction : public User {

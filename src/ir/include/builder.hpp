@@ -42,11 +42,15 @@ class IRBuilder {
 
     void func_add() { func_cnt++; }
 
+    // get
+    BasicBlock *get_block() const { return _block; }
+    inst_iterator get_position() const { return _position; }
+
     void set_position(BasicBlock *bb, inst_iterator pos) {
         _block = bb;
         _position = pos;
     }
-    int func() { return 44; }
+
     AllocaInst *create_alloca_inst(Type *ret_type,
                                    const std::vector<Value *> &dims = {},
                                    const std::string &name = "",
@@ -64,6 +68,13 @@ class IRBuilder {
         auto inst = new StoreInst(value, pointer, _block, indices, name);
         _block->get_insts().emplace(_position, inst);
         return inst;
+    }
+
+    ReturnInst *create_return_inst(Value *value = nullptr,
+                                   BasicBlock *parent = nullptr) {
+        auto inst = new ReturnInst(value, parent);
+        _block->get_insts().emplace(_position, inst);
+        return inst; 
     }
 };
 

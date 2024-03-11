@@ -33,6 +33,15 @@ class Function : public Value {
         return dynamic_cast<FunctionType *>(this->get_type())->get_ret_type();
     }
 
+    // arg_list get_param_type()const {
+    //   return dynamic_cast<FunctionType *>(this->get_type())->get_param_type();
+    // }
     BasicBlock *add_bblock(const std::string &name);
+    block_list& get_blocks() {
+        return _blocks;
+    }
+
+
+    void print(std::ostream &os) const override;
 };
 } // namespace ir

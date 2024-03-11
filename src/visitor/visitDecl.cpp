@@ -1,6 +1,6 @@
 #include "value.hpp"
 #include "visitor.hpp"
-#include <any>
+#include <any> // any_cast
 #include <vector>
 namespace sysy {
 std::any SysYIRGenerator::visitDecl(SysYParser::DeclContext *ctx) {
@@ -17,7 +17,7 @@ std::any SysYIRGenerator::visitDecl(SysYParser::DeclContext *ctx) {
  * @return std::any
  */
 std::any SysYIRGenerator::visitDeclLocal(SysYParser::DeclContext *ctx) {
-    std::cout << ctx->getText() << std::endl;
+    // std::cout << ctx->getText() << std::endl;
     auto btype = ir::Type::pointer_type(
         std::any_cast<ir::Type *>(visitBtype(ctx->btype())));
 

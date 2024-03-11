@@ -20,7 +20,9 @@ void Value::del_use(std::shared_ptr<Use> use) { _uses.remove(use); } // ?
 
 /// User: public Value
 std::vector<std::shared_ptr<Use>> &User::get_operands() { return _operands; }
-Value *User::get_operand(size_t index) { return _operands[index]->get_value(); }
+Value *User::get_operand(size_t index) const {
+    return _operands[index]->get_value();
+}
 
 void User::add_operand(Value *value) {
     // call Use(index, user, value) to construct.
@@ -33,6 +35,5 @@ void User::set_operand(size_t index, Value *value) {
     _operands[index]->set_value(value);
     value->add_use(_operands[index]);
 }
-
 
 } // namespace ir

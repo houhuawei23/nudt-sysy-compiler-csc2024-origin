@@ -67,5 +67,8 @@ class Module {
 
     // void add_gvalue(const_str_ref name, Value*init);
     // Value *lookup_gvalue(const_str_ref name);
+
+    // readable ir print
+    void print(std::ostream &os) const;
 };
 } // namespace ir
