@@ -4,6 +4,10 @@
 **/.**
 /sysyc
 */.antlr
+./Doxyfile
+./main
+./mytest.sh
+./doc/html
 
 # Prerequisites
 *.d
