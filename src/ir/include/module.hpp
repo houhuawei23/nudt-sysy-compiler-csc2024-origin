@@ -52,13 +52,13 @@ class Module {
     // return the ref, avoid generate temp var
     // using original type to recieve, point to new?
     // using ref type to receive, they point to same obj
-    // directly using, point to same: get_values().push xxx
+    // directly using, point to same: values().push xxx
     // how about use iterator to access?
-    std::vector<Value *> &get_values() { return _values; }
-    str_fun_map &get_functions() { return _functions; }
-    str_val_map &get_globals() { return _globals; }
+    std::vector<Value *> &values() { return _values; }
+    str_fun_map &functions() { return _functions; }
+    str_val_map &globals() { return _globals; }
 
-    Function *get_function(const_str_ref name);
+    Function *function(const_str_ref name);
     Function *add_function(bool is_decl, Type *type, const_str_ref name);
 
     // Value *register_val(const_str_ref name);

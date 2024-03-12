@@ -11,10 +11,10 @@ void BasicBlock::print(std::ostream &os) const {
 }
 
 void Constant::print(std::ostream &os) const {
-    if (get_type()->is_int()) {
-        os << get_int();
-    } else if (get_type()->is_float()) {
-        os << get_float();
+    if (type()->is_int()) {
+        os << i();
+    } else if (type()->is_float()) {
+        os << f();
     } else {
         // assert
     }

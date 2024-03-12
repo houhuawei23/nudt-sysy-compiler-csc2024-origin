@@ -3,20 +3,20 @@
 #include <cassert>
 #include <iostream>
 namespace ir {
-Function *Module::get_function(const_str_ref name) {
-    // get_functions().find(name);
-    // if (auto iter = get_functions().find(name); iter !=
-    // get_functions().end()) {
+Function *Module::function(const_str_ref name) {
+    // functions().find(name);
+    // if (auto iter = functions().find(name); iter !=
+    // functions().end()) {
     //     return iter->second; // Funciton*
     // }
     return nullptr;
 }
 Function *Module::add_function(bool is_decl, Type *type, const_str_ref name) {
-    if (get_function(name)) {
+    if (function(name)) {
         assert(0); // re-def name
     }
-    ir::Function *func = new Function(this, type, name);
-    // auto func = new Function(this, type, name);
+    ir::Function *func = new Function(type, name, this);
+    
     // _functions.insert({ name, func });
     _values.emplace_back(func);
     _functions.emplace(name, func);
@@ -25,7 +25,7 @@ Function *Module::add_function(bool is_decl, Type *type, const_str_ref name) {
 }
 
 // Value *Module::register_val(const_str_ref name) {}
-// Value *Module::get_val(const_str_ref name) {}
+// Value *Module::val(const_str_ref name) {}
 // Value *Module::add_val(const_str_ref name, Value *addr) {}
 
 // readable ir print

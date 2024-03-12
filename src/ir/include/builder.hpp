@@ -43,37 +43,37 @@ class IRBuilder {
     void func_add() { func_cnt++; }
 
     // get
-    BasicBlock *get_block() const { return _block; }
-    inst_iterator get_position() const { return _position; }
+    BasicBlock *block() const { return _block; }
+    inst_iterator position() const { return _position; }
 
     void set_position(BasicBlock *bb, inst_iterator pos) {
         _block = bb;
         _position = pos;
     }
 
-    AllocaInst *create_alloca_inst(Type *ret_type,
+    AllocaInst *create_alloca(Type *ret_type,
                                    const std::vector<Value *> &dims = {},
                                    const std::string &name = "",
                                    const bool is_const = false) {
         auto inst = new AllocaInst(ret_type, _block, dims, name, is_const);
         // // assert(inst);
-        _block->get_insts().emplace(_position, inst);
+        _block->insts().emplace(_position, inst);
         return inst;
         // return nullptr;
     }
 
-    StoreInst *create_store_inst(Value *value, Value *pointer,
+    StoreInst *create_store(Value *value, Value *pointer,
                                  const std::vector<Value *> &indices = {},
                                  const std::string &name = "") {
         auto inst = new StoreInst(value, pointer, _block, indices, name);
-        _block->get_insts().emplace(_position, inst);
+        _block->insts().emplace(_position, inst);
         return inst;
     }
 
-    ReturnInst *create_return_inst(Value *value = nullptr,
+    ReturnInst *create_return(Value *value = nullptr,
                                    BasicBlock *parent = nullptr) {
         auto inst = new ReturnInst(value, parent);
-        _block->get_insts().emplace(_position, inst);
+        _block->insts().emplace(_position, inst);
         return inst; 
     }
 };

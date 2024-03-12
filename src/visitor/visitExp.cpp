@@ -9,7 +9,7 @@ SysYIRGenerator::visitNumberExp(SysYParser::NumberExpContext *ctx) {
     if (auto iLiteral = ctx->number()->ILITERAL()) {
         std::string text = iLiteral->getText(); 
         int base = 10;
-        res = ir::Constant::get(std::stoi(text, 0, base));
+        res = ir::Constant::gen(std::stoi(text, 0, base));
     }
     else{
         // float

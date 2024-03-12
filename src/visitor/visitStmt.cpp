@@ -26,18 +26,17 @@ std::any SysYIRGenerator::visitBlockStmt(SysYParser::BlockStmtContext *ctx) {
 std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext *ctx) {
     // returnStmt: RETURN exp? SEMICOLON;
 
-    auto value =
-        ctx->exp() ? std::any_cast<ir::Value *>(visit(ctx->exp())) : nullptr;
-    auto curr_block = _builder.get_block();
-    auto func = curr_block->get_parent();
+    auto value = ctx->exp() ? any_cast_Value(visit(ctx->exp())) : nullptr;
+    auto curr_block = _builder.block();
+    auto func = curr_block->parent();
 
     if (value) {
         // just for `ret i32 0`
         // value = ir::Constant::get((int)(dynamic_cast<Constant
-        // *>(value)->get_int()))
+        // *>(value)->int()))
         value = value;
     }
-    ir::Value *res = _builder.create_return_inst(value);
+    ir::Value *res = _builder.create_return(value, curr_block);
     return res;
 }
 

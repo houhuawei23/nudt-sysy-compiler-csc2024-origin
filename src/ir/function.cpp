@@ -2,18 +2,18 @@
 #include "include/utils.hpp"
 
 namespace ir {
-BasicBlock *Function::add_bblock(const std::string &name) {
+BasicBlock *Function::add_block(const std::string &name) {
     auto nb = new BasicBlock(this, name);
     _blocks.emplace_back(nb);
     return nb;
 }
 void Function::print(std::ostream &os) const {
-    auto ret_type = get_ret_type();
-    // auto param_types = get_param_type();
-    os << "define " << *ret_type << " @" << get_name() << "(";
+    auto return_type = ret_type();
+    // auto param_types = param_type();
+    os << "define " << *return_type << " @" << name() << "(";
     // print fparams
     //! to do
-    // for (auto &p : get_params()) {
+    // for (auto &p : params()) {
     //     //
     // }
     os << ") {\n";

@@ -5,6 +5,7 @@
 #include <string.h>
 #include <vector>
 // #include <memory>
+#include <any>
 
 namespace ir {
 class Type;
@@ -13,12 +14,10 @@ class FunctionType;
 
 typedef enum : size_t {
     VOID,
-    // INT1,
     INT,
     FLOAT,
     LABEL,
     POINTER,
-    // ARRAY,
     FUNCTION,
     UNDEFINE
 } BType;
@@ -86,8 +85,8 @@ class Type {
     static Type *label_type();
     static Type *pointer_type(Type *baseType);
     // static Type *array
-    static Type *function_type(Type *returnType,
-                               const std::vector<Type *> &paramTypes);
+    static Type *function_type(Type *ret_type,
+                               const std::vector<Type *> &param_types);
 
     // type check
     bool is(Type *type);
@@ -101,8 +100,8 @@ class Type {
 
     // get attribute
     // Type* btype();
-    BType get_btype() const { return _btype; };
-    size_t get_size() const {
+    BType btype() const { return _btype; };
+    size_t size() const {
         switch (_btype) {
         case INT:
             return 4;
@@ -119,11 +118,15 @@ class Type {
             break;
         }
     };
-
-    // template <typename T>
-    // std::enable_if_t<std::is_base_of_v<Type, T>, T *> as() const {
-    //     return dynamic_cast<T *>(const_cast<Type *>(this));
-    // }
+    // 类型提升: Type* ->
+    template <typename T>
+    std::enable_if_t<std::is_base_of_v<Type, T>, T *> as() const {
+        return dynamic_cast<T *>(const_cast<Type *>(this));
+    }
+    template <typename T>
+    std::enable_if_t<std::is_base_of_v<Type, T>, T *> any_as() const {
+        return std::any_cast<T *>(const_cast<Type *>(this));
+    }
     void print(std::ostream &os) const;
 };
 /**
@@ -142,7 +145,7 @@ class PointerType : public Type {
     static PointerType *gen(Type *baseType);
 
     //! Get the base type of this pointer
-    Type *get_base_type() const { return _base_type; }
+    Type *base_type() const { return _base_type; }
 
     // void print(std::ostream &os) const
 };
@@ -164,8 +167,8 @@ class FunctionType : public Type {
     static FunctionType *gen(Type *ret_type,
                              const std::vector<Type *> &arg_types);
     //! get the return type of the function
-    Type *get_ret_type() const { return _ret_type; }
-    std::vector<Type *> get_param_type() const { // ?? return what type?
+    Type *ret_type() const { return _ret_type; }
+    std::vector<Type *> param_type() const { // ?? return what type?
         // make_range(paramTypes)
         return _arg_types;
     }

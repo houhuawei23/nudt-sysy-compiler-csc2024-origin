@@ -7,6 +7,8 @@
 #include "module.hpp"
 #include "table_beta.hpp"
 
+#include "utils.hpp"
+
 namespace sysy {
 class SysYIRGenerator : public SysYBaseVisitor {
   private:
@@ -19,8 +21,8 @@ class SysYIRGenerator : public SysYBaseVisitor {
     SysYIRGenerator(ir::Module *module) : _module(module) {}
     // 'get' means get the same obj int the class
     // 'copy' means get the copy of obj
-    ir::Module *get_module() { return _module; }
-    ir::IRBuilder &get_builder() { return _builder; }
+    ir::Module *module() { return _module; }
+    ir::IRBuilder &builder() { return _builder; }
 
     virtual std::any visitCompUnit(SysYParser::CompUnitContext *ctx) override;
 

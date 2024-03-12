@@ -14,7 +14,7 @@ class AllocaInst : public Instruction {
     AllocaInst(Type *type, BasicBlock *parent = nullptr,
                const std::vector<Value *> &dims = {},
                const std::string &name = "", bool is_const = false)
-        : Instruction(ALLOCA, type, parent, name), _is_const(is_const) {
+        : Instruction(ALLOCA, type, name, parent), _is_const(is_const) {
         add_operands(dims);
         // more if (is_const and arr)
     }
@@ -40,14 +40,14 @@ class StoreInst : public Instruction {
     StoreInst(Value *value, Value *ptr, BasicBlock *parent = nullptr,
               const std::vector<Value *> &indices = {},
               const std::string &name = "")
-        : Instruction(STORE, Type::void_type(), parent, name) {
+        : Instruction(STORE, Type::void_type(), name, parent) {
         add_operand(value);
         add_operand(ptr);
         add_operands(indices);
     }
 
-    Value *get_value() const { return get_operand(0); }
-    Value *get_ptr() const { return get_operand(1); }
+    Value *value() const { return operand(0); }
+    Value *ptr() const { return operand(1); }
 
   public:
     void print(std::ostream &os) const override;
@@ -61,10 +61,8 @@ class LoadInst : public Instruction {
     LoadInst(Value *ptr, BasicBlock *parent,
              const std::vector<Value *> &indices = {},
              const std::string &name = "")
-        : Instruction(
-              LOAD,
-              dynamic_cast<PointerType *>(ptr->get_type())->get_base_type(),
-              parent, name) {
+        : Instruction(LOAD, ptr->type()->as<PointerType>()->base_type(),
+                      name, parent) {
         // Instruction type?? should be what?
         add_operand(ptr);
         add_operands(indices);
@@ -81,13 +79,13 @@ class ReturnInst : public Instruction {
     // ret <type> <value>
     // ret void
     ReturnInst(Value *value = nullptr, BasicBlock *parent = nullptr)
-        : Instruction(RET, Type::void_type(), parent, "ret") {
+        : Instruction(RET, Type::void_type(), "ret", parent) {
         add_operand(value);
     }
 
     bool has_return_value() const { return not _operands.empty(); }
-    Value *get_return_value() const{
-        return has_return_value() ? get_operand(0) : nullptr;
+    Value *return_value() const {
+        return has_return_value() ? operand(0) : nullptr;
     }
 
   public:

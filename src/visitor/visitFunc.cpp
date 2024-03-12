@@ -46,18 +46,17 @@ std::any SysYIRGenerator::visitFuncType(SysYParser::FuncTypeContext *ctx) {
  * }
  * ```
  */
+
+
 std::any SysYIRGenerator::visitFunc(SysYParser::FuncContext *ctx) {
-    // std::cout << "visitFunc" << std::endl;
-    // std::cout << ctx->getText() << std::endl;
-    // std::cout << ctx->ID()->getText() << std::endl;
-    // visitChildren(ctx);
     _builder.func_add();
     std::string func_name = ctx->ID()->getText();
-    // std::vector<Type*> paramTypes;
-    // std::vector<std::string> paramNames;
+    std::vector<ir::Type *> param_types;
+    std::vector<std::string> param_names;
 
     // if have formal params
     if (ctx->funcFParams()) {
+        // funcFParams: funcFParam (COMMA funcFParam)*;
         auto params = ctx->funcFParams()->funcFParam();
         // cout << params->getText() << endl;
         // std::cout << typeid(params).name() << std::endl;
@@ -66,22 +65,20 @@ std::any SysYIRGenerator::visitFunc(SysYParser::FuncContext *ctx) {
         }
     }
     // any_cast: cast any to whated type
-    ir::Type *ret_type =
-        std::any_cast<ir::Type *>(visitFuncType(ctx->funcType()));
-    // ir::Type * ret_type = visitFuncType(ctx->funcType());
+    ir::Type *ret_type = any_cast_Type(visit(ctx->funcType()));
+
     // empty param types
     ir::Type *func_type = ir::Type::function_type(ret_type, {});
     // add func to module
-    ir::Function *func =
-        this->get_module()->add_function(true, func_type, func_name);
+    ir::Function *func = module()->add_function(true, func_type, func_name);
 
-    // this->get_module()->insert??
+    // this->module()->insert??
 
     // create and enter function scope
     // it will be automatically destroyed when return from this visitFfunc
     ir::SymbolTableBeta::FunctionScope scope(_tables);
     // create entry block with the same params of func
-    ir::BasicBlock *entry = func->add_bblock("entry_main");
+    ir::BasicBlock *entry = func->add_block("entry_main");
 
     if (ctx->funcFParams()) { // has formal params
         // pass

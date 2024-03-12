@@ -43,8 +43,8 @@ bool Type::is_pointer() { return _btype == POINTER; }
 bool Type::is_function() { return _btype == FUNCTION; }
 
 void Type::print(std::ostream &os) const {
-    auto btype = get_btype();
-    switch (btype) {
+    auto basetype = btype();
+    switch (basetype) {
     case INT:
         // os << "int";
         os << "i32";
@@ -61,7 +61,7 @@ void Type::print(std::ostream &os) const {
         break;
     case POINTER:
         // os << "pointer";
-        static_cast<const PointerType *>(this)->get_base_type()->print(os);
+        static_cast<const PointerType *>(this)->base_type()->print(os);
         os << "*";
         break;
     case LABEL:

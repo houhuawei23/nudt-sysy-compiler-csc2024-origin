@@ -1,9 +1,8 @@
 #pragma once
-
-#include "value.hpp"
+#include "type.hpp"
 #include "infrast.hpp"
 #include "module.hpp"
-
+#include "value.hpp"
 
 namespace ir {
 // using inst_list = std::list<std::unique_ptr<Instruction>>; // list
@@ -15,7 +14,8 @@ using block_list = std::list<std::unique_ptr<BasicBlock>>; // vector -> list
 
 // Value: _type, _name, _uses
 class Function : public Value {
-  friend class Module;
+    friend class Module;
+    // _type = FUNCTION
   protected:
     Module *_parent; // parent Module
 
@@ -24,23 +24,24 @@ class Function : public Value {
     arg_list _arguments;
 
   public:
-    Function(Module *parent, Type *type, const std::string &name)
-        : Value(type, name), _parent(parent) {}
+    Function(Type *func_type, const std::string &name = "",
+             Module *parent = nullptr)
+        : Value(func_type, name), _parent(parent) {}
 
-    Type *get_ret_type() const {
-        // this->get_type() return Type*
-        // need cast to FunctionType* to call get_ret_type()
-        return dynamic_cast<FunctionType *>(this->get_type())->get_ret_type();
+    Type *ret_type() const {
+        // this->type() return Type*
+        // need cast to FunctionType* to call ret_type()
+        // FunctionType *ftype = dynamic_cast<FunctionType *>(this->type());
+        FunctionType *ftype = this->type()->as<FunctionType>();
+        return ftype->ret_type();
     }
 
-    // arg_list get_param_type()const {
-    //   return dynamic_cast<FunctionType *>(this->get_type())->get_param_type();
+    // arg_list param_type()const {
+    //   return dynamic_cast<FunctionType
+    //   *>(this->type())->param_type();
     // }
-    BasicBlock *add_bblock(const std::string &name);
-    block_list& get_blocks() {
-        return _blocks;
-    }
-
+    BasicBlock *add_block(const std::string &name);
+    block_list &blocks() { return _blocks; }
 
     void print(std::ostream &os) const override;
 };

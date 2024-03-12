@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
     sysy::SysYIRGenerator gen(&baseModule); // forget to pass module
     gen.visitCompUnit(astrootptr);
 
-    auto module_ir = gen.get_module();
+    auto module_ir = gen.module();
     bool genir = true;
     if (genir) {
         module_ir->print(std::cout);

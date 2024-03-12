@@ -12,20 +12,20 @@ namespace ir {
  */
 void AllocaInst::print(std::ostream &os) const {
     // print var name
-    os << "%" << get_name() << " = ";
+    os << "%" << name() << " = ";
     os << "alloca ";
     // just for int scalar
-    Type *base_type = dynamic_cast<PointerType *>(get_type())->get_base_type();
+    Type *base_type = dynamic_cast<PointerType *>(type())->base_type();
     os << *base_type;
 }
 
 void StoreInst::print(std::ostream &os) const {
     // store i32 5, i32* %1
     os << "store ";
-    os << *(get_value()->get_type()) << " ";
-    os << *get_value() << ", "; // constant worked
-    os << *get_ptr()->get_type() << " ";
-    os << "%" << get_ptr()->get_name();
+    os << *(value()->type()) << " ";
+    os << *value() << ", "; // constant worked
+    os << *ptr()->type() << " ";
+    os << "%" << ptr()->name();
 }
 
 void LoadInst::print(std::ostream &os) const {
@@ -37,11 +37,12 @@ void ReturnInst::print(std::ostream &os) const {
     // ret i32 %2
     //! to do
     os << "ret ";
-    // if (auto value = get_return_value()) {
-    //     os << 
+    // if (auto value = return_value()) {
+    //     os <<
     // }
 
-    // just for simplest, return 0
-    os << "i32 0";
+    // Type* ty
+    os << *return_value()->type() << " ";
+    os << *return_value();
 }
 } // namespace ir

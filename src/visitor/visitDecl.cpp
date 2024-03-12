@@ -18,8 +18,7 @@ std::any SysYIRGenerator::visitDecl(SysYParser::DeclContext *ctx) {
  */
 std::any SysYIRGenerator::visitDeclLocal(SysYParser::DeclContext *ctx) {
     // std::cout << ctx->getText() << std::endl;
-    auto btype = ir::Type::pointer_type(
-        std::any_cast<ir::Type *>(visitBtype(ctx->btype())));
+    auto btype = ir::Type::pointer_type(any_cast_Type(visit(ctx->btype())));
 
     bool is_const = ctx->CONST();
 
@@ -29,18 +28,16 @@ std::any SysYIRGenerator::visitDeclLocal(SysYParser::DeclContext *ctx) {
         // if arr need to get dims
         std::vector<ir::Value *> dims;
 
-        auto alloca_ptr =
-            _builder.create_alloca_inst(btype, dims, name, is_const);
+        auto alloca_ptr = _builder.create_alloca(btype, dims, name, is_const);
         // _builder.func();
         // _tables.insert(name, alloca); // check re decl err
         if (varDef->ASSIGN()) { // parse initValue
             // just scalar
-            auto init_value =
-                std::any_cast<ir::Value *>(visit(varDef->initValue()->exp()));
+            auto init_value = any_cast_Value(visit(varDef->initValue()->exp()));
             // int l = 5; 5 is a const value
             // inot_value =
             auto store =
-                _builder.create_store_inst(init_value, alloca_ptr, {}, "store");
+                _builder.create_store(init_value, alloca_ptr, {}, "store");
             return 0;
         }
     }
