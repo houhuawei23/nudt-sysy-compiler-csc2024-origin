@@ -1,5 +1,6 @@
 #pragma once
 #include "infrast.hpp"
+#include "utils.hpp"
 #include "value.hpp"
 
 #include <vector>
@@ -44,7 +45,9 @@ class AllocaInst : public Instruction {
         // more if (is_const and arr)
     }
 
-    Type* base_type() const { return type()->as<PointerType>()->base_type(); }
+    Type* base_type() const {
+        return dyn_cast<PointerType>(type())->base_type();
+    }
 
     static bool classof(const Value* v) { return v->scid() == vALLOCA; }
 
@@ -91,7 +94,7 @@ class LoadInst : public Instruction {
              const_value_ptr_vector& indices = {},
              const_str& name = "")
         : Instruction(vLOAD,
-                      ptr->type()->as<PointerType>()->base_type(),
+                      dyn_cast<PointerType>(ptr->type())->base_type(),
                       parent,
                       name) {
         // Instruction type?? should be what?

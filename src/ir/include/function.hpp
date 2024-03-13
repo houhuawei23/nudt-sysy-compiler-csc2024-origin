@@ -3,7 +3,7 @@
 #include "module.hpp"
 #include "type.hpp"
 #include "value.hpp"
-
+#include "utils.hpp"
 namespace ir {
 // using inst_list = std::list<std::unique_ptr<Instruction>>; // list
 // using iterator = inst_list::iterator;
@@ -32,8 +32,8 @@ class Function : public Value {
     Type* ret_type() const {
         // this->type() return Type*
         // need cast to FunctionType* to call ret_type()
-        // FunctionType *ftype = dynamic_cast<FunctionType *>(this->type());
-        FunctionType* ftype = this->type()->as<FunctionType>();
+        FunctionType* ftype = dyn_cast<FunctionType>(this->type());
+
         return ftype->ret_type();
     }
 

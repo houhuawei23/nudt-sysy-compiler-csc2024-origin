@@ -73,7 +73,7 @@ void SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
             // init is Constant
             //! if init is Constant, do dynamic_cast; else return nullptr
             //! if init is not Constant, generate i2f/f2i inst
-            if (auto cinit = dyn_cast<ir::Constant>(init)) {
+            if (auto cinit = ir::dyn_cast<ir::Constant>(init)) {
                 // if const, may do implicit conversion
                 if (btype->is_int() && init->is_float()) {  // f2i
                     init = ir::Constant::gen((int)cinit->f());
@@ -90,7 +90,6 @@ void SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
         }
 
         auto store = _builder.create_store(init, alloca_ptr, {}, "store");
-
     }
 }
 

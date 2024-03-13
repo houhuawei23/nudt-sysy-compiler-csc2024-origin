@@ -68,11 +68,6 @@ class Type {
             break;
         }
     };
-    // 类型提升: Type* ->
-    template <typename T>
-    std::enable_if_t<std::is_base_of_v<Type, T>, T *> as() const {
-        return dynamic_cast<T *>(const_cast<Type *>(this));
-    }
     void print(std::ostream &os) const;
 };
 /**

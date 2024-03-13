@@ -111,6 +111,7 @@ class IRBuilder {
     LoadInst* create_load() {
         //! TODO
         assert(false && "not implemented");
+        // static_assert()
     }
     UnaryInst* create_unary() {
         //! TODO
