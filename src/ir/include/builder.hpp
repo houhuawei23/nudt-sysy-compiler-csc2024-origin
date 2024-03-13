@@ -69,6 +69,17 @@ class IRBuilder {
     void rhs_inc() { _rhs_cnt++; }
     void func_inc() { _func_cnt++; }
 
+    int if_cnt() const { return _if_cnt; }
+    int while_cnt() const { return _while_cnt; }
+    int rhs_cnt() const { return _rhs_cnt; }
+    int func_cnt() const { return _func_cnt; }
+
+    void push_true_target(BasicBlock* block) { _true_targets.push(block); }
+    void push_false_target(BasicBlock* block) { _false_targets.push(block); }
+
+    BasicBlock* true_target() { return _true_targets.top(); }
+    BasicBlock* false_target() { return _false_targets.top(); }
+    
     //! create
     AllocaInst* create_alloca(Type* ret_type,
                               const_vector_Value_ptr& dims = {},

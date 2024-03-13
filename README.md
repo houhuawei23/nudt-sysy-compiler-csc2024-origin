@@ -102,6 +102,12 @@ src中需要关注的文件有：
 - SysYParser.h
 - SysYParser.cpp
 
+## TO DO
+- [] 环境配置 cmake 版本更新解决脚本
+- 
+
+
+
 ## logs
 
 - 2024.03.03:
@@ -157,3 +163,12 @@ define dso_local i32 @main() #0 {
   ret i32 0
 }
 ```
+
+- 2024.3.14:
+  1. create instructions empty class, add a lot method to implement
+  2. modified the builder, add a lot help attributes and methods
+  3. Constant gen method changed to template method
+  4. delete IType enum,  add ValueId enum to Value, which specifies all subclasses of Value
+  5. !!! add dyn_cast template function, very useful
+  6. modified visitVarDef_beta, can deal with type cast and const
+  7. modified visitNumberExp, can deal with float and int (hex/dec/oct)
