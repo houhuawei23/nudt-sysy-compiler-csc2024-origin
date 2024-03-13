@@ -30,7 +30,7 @@ class IRBuilder {
     BasicBlock* _block;
     inst_iterator _position;
     block_stack _headers, _exits;
-    int _if_cnt, _while_cnt, _rhs_cnt, _func_cnt;
+    int _if_cnt, _while_cnt, _rhs_cnt, _func_cnt, _var_cnt;
     block_stack _true_targets, _false_targets;
 
    public:
@@ -39,6 +39,7 @@ class IRBuilder {
         _while_cnt = 0;
         _rhs_cnt = 0;
         _func_cnt = 0;
+        _var_cnt=0;
     }
 
     //! get
@@ -108,10 +109,12 @@ class IRBuilder {
         _block->insts().emplace(_position, inst);
         return inst;
     }
-    LoadInst* create_load() {
-        //! TODO
-        assert(false && "not implemented");
-        // static_assert()
+    LoadInst* create_load(Value* ptr,
+                          const_value_ptr_vector& indices = {},
+                          const_str& name = "") {
+        auto inst = new LoadInst(ptr,_block,indices,name);
+        _block->insts().emplace(_position, inst);
+        return inst;
     }
     UnaryInst* create_unary() {
         //! TODO
@@ -128,6 +131,16 @@ class IRBuilder {
     BranchInst* create_branch() {
         //! TODO
         assert(false && "not implemented");
+    }
+
+    std::string getvarname(){
+        // temporary realization
+        _var_cnt++;
+        std::string res=std::to_string(_var_cnt);
+        
+        return "%"+res;
+        //TODO!
+        //all counting of local variables should be with funcScope
     }
 };
 

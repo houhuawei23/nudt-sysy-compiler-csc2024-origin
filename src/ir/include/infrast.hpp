@@ -39,8 +39,8 @@ class Constant : public Value {
     Constant(Type* type, const_str_ref name = "")
         : Value(type, vCONSTANT, name) {}
     // Constant(bool b) : Value(Type::)
-    Constant(int i) : Value(Type::int_type(), vCONSTANT, "int"), _i(i) {}
-    Constant(float f) : Value(Type::float_type(), vCONSTANT, "float"), _f(f) {}
+    Constant(int i) : Value(Type::int_type(), vCONSTANT, std::to_string(i)), _i(i) {}
+    Constant(float f) : Value(Type::float_type(), vCONSTANT, std::to_string(f)), _f(f) {}
 
     Constant(int i, const_str_ref name)
         : Value(Type::int_type(), vCONSTANT, name), _i(i) {}

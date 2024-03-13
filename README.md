@@ -172,3 +172,55 @@ define dso_local i32 @main() #0 {
   5. !!! add dyn_cast template function, very useful
   6. modified visitVarDef_beta, can deal with type cast and const
   7. modified visitNumberExp, can deal with float and int (hex/dec/oct)
+
+- 2024.3.14:
+- 1. change construc func in Constant, a constant's name is its value string
+- 2. change name in Value, a variable's value is now in form:"%<number>"
+- 3. realize visitVarExp (scalar)
+- 4. realize create_load, LoadInst::print()
+- 5. change SysY.g4, same with branch dev_frontend
+- 6. realize IRBuilder::getvarname() (temp ver.)
+- 7. change instruction.cpp:print(), use name() method to print variable name afterwards
+**目前效果**
+```C
+// test/steps/00_local.c
+int main() {
+    int l = 3;
+    float f=1.300;
+    int g=l;
+    float b=f;
+    return b;
+}
+```
+
+```llvm
+; test/steps/00_local_gen.ll
+; main 生成的可读的 llvm ir 
+; 可使用 > lli 00_local_gen.ll 运行, echo $? 查看返回值 (0)
+define i32 @main() {
+    %1 = alloca i32
+    store i32 5, i32* %1
+    %2 = alloca float
+    %3 = alloca i32
+    %4 = load i32, i32* %1
+    store i32 %4, i32* %3
+    %5 = load i32, i32* %3
+    ret i32 %5
+
+}
+
+; test/steps/00_local.ll
+; clang -S -emit-llvm ./00_local.c 生成的 llvm ir (节选)
+define dso_local i32 @main() #0 {
+  %1 = alloca i32, align 4
+  %2 = alloca i32, align 4
+  %3 = alloca float, align 4
+  %4 = alloca i32, align 4
+  store i32 0, i32* %1, align 4
+  store i32 5, i32* %2, align 4
+  %5 = load i32, i32* %2, align 4
+  store i32 %5, i32* %4, align 4
+  %6 = load i32, i32* %4, align 4
+  ret i32 %6
+}
+```

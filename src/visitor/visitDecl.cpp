@@ -37,7 +37,7 @@ std::any SysYIRGenerator::visitDeclLocal(SysYParser::DeclContext* ctx) {
 /*
 exp:
     LPAREN exp RPAREN				# parenExp
-    | lValue						# lValueExp
+    | var						# varExp
     | number						# numberExp
     | string						# stringExp
     | call							# callExp
@@ -61,7 +61,7 @@ void SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
     }
     //! create alloca inst
     auto ptr_type = ir::Type::pointer_type(btype);
-    auto alloca_ptr = _builder.create_alloca(btype, dims, name, is_const);
+    auto alloca_ptr = _builder.create_alloca(btype, dims, _builder.getvarname(), is_const);
     // _builder.func();
     _tables.insert(name, alloca_ptr);  // check re decl err
 

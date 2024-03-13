@@ -102,6 +102,8 @@ class LoadInst : public Instruction {
         add_operands(indices);
     }
 
+    Value* ptr() const { return operand(0); }
+
    public:
     static bool classof(const Value* v) { return v->scid() == vLOAD; }
     void print(std::ostream& os) const override;

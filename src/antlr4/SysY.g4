@@ -143,7 +143,7 @@ emptyStmt: SEMICOLON;
 
 exp:
 	LPAREN exp RPAREN				# parenExp
-	| lValue						# lValueExp
+	| var							# varExp
 	| number						# numberExp
 	| string						# stringExp
 	| call							# callExp
@@ -156,6 +156,8 @@ exp:
 	| exp OR exp					# orExp;
 
 call: ID LPAREN funcRParams? RPAREN;
+
+var: ID (LBRACKET exp RBRACKET)*;
 
 lValue: ID (LBRACKET exp RBRACKET)*;
 
