@@ -15,14 +15,16 @@ std::any SysYIRGenerator::visitDecl(SysYParser::DeclContext* ctx) {
  */
 std::any SysYIRGenerator::visitDeclLocal(SysYParser::DeclContext* ctx) {
     // std::cout << ctx->getText() << std::endl;
-    auto btype = ir::Type::pointer_type(any_cast_Type(visit(ctx->btype())));
+    // auto btype_pointer_type =
+    // ir::Type::pointer_type(any_cast_Type(visit(ctx->btype())));
+    auto btype = any_cast_Type(visit(ctx->btype()));
 
     bool is_const = ctx->CONST();
 
     for (auto varDef : ctx->varDef()) {
         visitVarDef_beta(varDef, btype, is_const);
     }
-    return 0;
+    return nullptr;
 }
 
 // varDef: lValue (ASSIGN initValue)?;
@@ -58,30 +60,51 @@ void SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
         dims.push_back(any_cast_Value(visit(dim)));
     }
     //! create alloca inst
+    auto ptr_type = ir::Type::pointer_type(btype);
     auto alloca_ptr = _builder.create_alloca(btype, dims, name, is_const);
     // _builder.func();
     _tables.insert(name, alloca_ptr);  // check re decl err
 
     /// initValue
-    ir::Value* init_value = nullptr;
+    ir::Value* init = nullptr;
     if (ctx->ASSIGN()) {         // parse initValue
         if (dims.size() == 0) {  // scalar
-            init_value = any_cast_Value(visit(ctx->initValue()->exp()));
-            // is Constant
-            if (ir::isa<ir::Constant>(init_value)) {
-                // assert(false);
-                std::cout << "is const" << std::endl;
-                assert(true);
+            init = any_cast_Value(visit(ctx->initValue()->exp()));
+            // init is Constant
+            //! if init is Constant, do dynamic_cast; else return nullptr
+            //! if init is not Constant, generate i2f/f2i inst
+            if (auto cinit = dyn_cast<ir::Constant>(init)) {
+                // if const, may do implicit conversion
+                if (btype->is_int() && init->is_float()) {  // f2i
+                    init = ir::Constant::gen((int)cinit->f());
+                } else if (btype->is_float() && init->is_int()) {  // i2f
+                    init = ir::Constant::gen((float)cinit->i());
+                }
+            } else if (btype->is_float() && init->is_int()) {  // i2f
+                //! TODO
+                // init = _builder.create_i2f(init);
+            } else if (btype->is_int() && init->is_float()) {  // f2i
+                //! TODO
+                // init = _builder.create_f2i(init);
             }
         }
-        // int l = 5; 5 is a const value
-        // inot_value =
-        auto store = _builder.create_store(init_value, alloca_ptr, {}, "store");
-        // return 0;
+
+        auto store = _builder.create_store(init, alloca_ptr, {}, "store");
+
     }
 }
 
+// decl: CONST? btype varDef (COMMA varDef)* SEMICOLON;
 std::any SysYIRGenerator::visitDeclGlobal(SysYParser::DeclContext* ctx) {
+    // std::cout << ctx->getText() << std::endl;
+    auto btype = ir::Type::pointer_type(any_cast_Type(visit(ctx->btype())));
+
+    bool is_const = ctx->CONST();
+
+    for (auto varDef : ctx->varDef()) {
+        visitVarDef_beta(varDef, btype, is_const);
+    }
+
     return 0;
 }
 

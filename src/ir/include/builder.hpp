@@ -10,9 +10,9 @@
  */
 #pragma once
 
+#include <stack>
 #include "infrast.hpp"
 #include "instructions.hpp"
-#include <stack>
 
 namespace ir {
 
@@ -29,29 +29,47 @@ class IRBuilder {
    private:
     BasicBlock* _block;
     inst_iterator _position;
-    // block_stack headers, exits;
-    int if_cnt, while_cnt, rhs_cnt, func_cnt;
-    // block_stack truetargets, falsetargets;
+    block_stack _headers, _exits;
+    int _if_cnt, _while_cnt, _rhs_cnt, _func_cnt;
+    block_stack _true_targets, _false_targets;
 
    public:
     IRBuilder() {
-        if_cnt = 0;
-        while_cnt = 0;
-        rhs_cnt = 0;
-        func_cnt = 0;
+        _if_cnt = 0;
+        _while_cnt = 0;
+        _rhs_cnt = 0;
+        _func_cnt = 0;
     }
 
-    void func_add() { func_cnt++; }
-
-    // get
+    //! get
     BasicBlock* block() const { return _block; }
     inst_iterator position() const { return _position; }
 
-    void set_position(BasicBlock* bb, inst_iterator pos) {
-        _block = bb;
+    BasicBlock* header() { return _headers.top(); }
+    BasicBlock* exit() { return _exits.top(); }
+
+    //! manage attributes
+    void set_position(BasicBlock* block, inst_iterator pos) {
+        _block = block;
         _position = pos;
     }
 
+    void push_header(BasicBlock* block) { _headers.push(block); }
+    void push_exit(BasicBlock* block) { _exits.push(block); }
+
+    void pop_loop() {
+        //! Why?
+        _headers.pop();
+        _exits.pop();
+        assert(false && "not understand!");
+    }
+
+    void if_inc() { _if_cnt++; }
+    void while_inc() { _while_cnt++; }
+    void rhs_inc() { _rhs_cnt++; }
+    void func_inc() { _func_cnt++; }
+
+    //! create
     AllocaInst* create_alloca(Type* ret_type,
                               const_vector_Value_ptr& dims = {},
                               const_str_ref name = "",
@@ -78,6 +96,26 @@ class IRBuilder {
         auto inst = new ReturnInst(value, parent);
         _block->insts().emplace(_position, inst);
         return inst;
+    }
+    LoadInst* create_load() {
+        //! TODO
+        assert(false && "not implemented");
+    }
+    UnaryInst* create_unary() {
+        //! TODO
+        assert(false && "not implemented");
+    }
+    BinaryInst* create_binary() {
+        //! TODO
+        assert(false && "not implemented");
+    }
+    CallInst* create_call() {
+        //! TODO
+        assert(false && "not implemented");
+    }
+    BranchInst* create_branch() {
+        //! TODO
+        assert(false && "not implemented");
     }
 };
 

@@ -1,9 +1,8 @@
 #pragma once
-#include "type.hpp"
-#include "value.hpp"
 #include "infrast.hpp"
 #include "module.hpp"
-
+#include "type.hpp"
+#include "value.hpp"
 
 namespace ir {
 // using inst_list = std::list<std::unique_ptr<Instruction>>; // list
@@ -44,6 +43,8 @@ class Function : public Value {
     // }
     BasicBlock* add_block(const std::string& name);
     block_list& blocks() { return _blocks; }
+
+    static bool classof(const Value* v) { return v->scid() == vFUNCTION; }
 
     void print(std::ostream& os) const override;
 };

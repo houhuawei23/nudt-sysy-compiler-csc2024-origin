@@ -4,12 +4,13 @@
 #include <cassert>
 #include <map>
 #include <set>
+#include <type_traits>
 #include <unordered_map>
 #include <variant>
 // #include <unordered_set>
+#include "function.hpp"
 #include "type.hpp"
 #include "value.hpp"
-#include "function.hpp"
 
 // #include "module.hpp"
 namespace ir {
@@ -46,38 +47,34 @@ class Constant : public Value {
     Constant(float f, const_str_ref name)
         : Value(Type::float_type(), vCONSTANT, name), _f(f) {}
 
-    static bool classof(const Value* value) { return true; }
     // gen Const from int or float
-    static Constant* gen(int i) {
-        static std::map<int, Constant*> cache;
-        auto iter = cache.find(i);
+
+    template <typename T>
+    static Constant* gen(T v) {
+        static std::map<T, Constant*> cache;
+        assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
+        auto iter = cache.find(v);
         if (iter != cache.end()) {
             return iter->second;
         }
-
-        Constant* c = new Constant(i);
-        auto res = cache.emplace(i, c);
-        return c;  // res.first->second; ??
-    }
-    static Constant* gen(float f) {
-        static std::map<float, Constant*> cache;
-        auto iter = cache.find(f);
-        if (iter != cache.end()) {
-            return iter->second;
-        }
-
-        Constant* c = new Constant(f);
-        auto res = cache.emplace(f, c);
+        Constant* c = new Constant(v);
+        auto res = cache.emplace(v, c);
         return c;  // res.first->second; ??
     }
 
     int i() const {
-        assert(is_int());
+        assert(is_int());  // assert
         return _i;
-    }  // assert
-    float f() const { return _f; }
+    }
+    float f() const {
+        assert(is_float());
+        return _f;
+    }
 
-    // operator
+    // isa
+    static bool classof(const Value* v) { return v->scid() == vCONSTANT; }
+
+    // ir print
     void print(std::ostream& os) const override;
 };
 /**
@@ -102,8 +99,9 @@ class Argument : public Value {
     std::vector<int>& dims() { return _dims; }  // get ref?
     int dim_num() const { return _dims.size(); }
     int dim(int i) const { return _dims[i]; }
+
     // for isa<>
-    static bool classof(const Value* value) { return true; }
+    static bool classof(const Value* v) { return v->scid() == vARGUMENT; }
 
     // ir print
     void print(std::ostream& os) const override;
@@ -150,38 +148,33 @@ class BasicBlock : public Value {
 
     // manage
     void set_depth(int d) { _depth = d; }  // ?
+
     // for isa<>
-    static bool classof(const Value* value) { return true; }
+    static bool classof(const Value* v) { return v->scid() == vBASIC_BLOCK; }
+
     // ir print
     void print(std::ostream& os) const override;
 };
-
+// Instuction 的类型也通过 _scid
 class Instruction : public User {
    protected:
     BasicBlock* _parent;
-    IType _itype;
 
    public:
     /**
      * @brief Construct a new Instruction object
      *
-     * @param itype
-     * @param ret_type
-     * @param name
-     * @param pblock
      */
-    Instruction(IType itype,
+    Instruction(ValueId itype = vINSTRUCTION,
                 Type* ret_type = Type::void_type(),
-                const_str_ref name = "",
-                BasicBlock* pblock = nullptr)
-        : User(ret_type, vINSTRUCTION, name), _parent(pblock), _itype(itype) {}
+                BasicBlock* pblock = nullptr,
+                const_str_ref name = "")
+        : User(ret_type, itype, name), _parent(pblock) {}
     // get
     BasicBlock* parent() { return _parent; };
-    IType itype() { return _itype; };
 
     // set
     void set_parent(BasicBlock* parent) { _parent = parent; }
-    void set_itype(IType itype) { _itype = itype; }
 
     // inst type check
     bool is_terminator();
@@ -195,6 +188,11 @@ class Instruction : public User {
     bool is_icmp();
     bool is_fcmp();
     bool is_math();
+
+    // for isa, cast and dyn_cast
+    static bool classof(const Value* v) {
+        return v->scid() >= vINSTRUCTION;  // <= ?
+    }
 };
 
 }  // namespace ir

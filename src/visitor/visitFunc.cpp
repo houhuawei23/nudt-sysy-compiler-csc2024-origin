@@ -11,14 +11,7 @@ namespace sysy {
  *
  * funcType: VOID | INT | FLOAT;
  */
-std::any SysYIRGenerator::visitFuncType(SysYParser::FuncTypeContext *ctx) {
-    // std::cout << "visitFuncType" << std::endl;
-    // std::cout << ctx->getText() << std::endl;
-
-    // std::cout << "void: " << ctx->VOID() << std::endl;
-    // std::cout << "int: " << ctx->INT() << std::endl;
-    // std::cout << "float: " << ctx->FLOAT() << std::endl;
-
+std::any SysYIRGenerator::visitFuncType(SysYParser::FuncTypeContext* ctx) {
     if (ctx->INT()) {
         return ir::Type::int_type();
     } else if (ctx->FLOAT()) {
@@ -46,11 +39,10 @@ std::any SysYIRGenerator::visitFuncType(SysYParser::FuncTypeContext *ctx) {
  * ```
  */
 
-
-std::any SysYIRGenerator::visitFunc(SysYParser::FuncContext *ctx) {
-    _builder.func_add();
+std::any SysYIRGenerator::visitFunc(SysYParser::FuncContext* ctx) {
+    _builder.func_inc();
     std::string func_name = ctx->ID()->getText();
-    std::vector<ir::Type *> param_types;
+    std::vector<ir::Type*> param_types;
     std::vector<std::string> param_names;
 
     // if have formal params
@@ -64,12 +56,12 @@ std::any SysYIRGenerator::visitFunc(SysYParser::FuncContext *ctx) {
         }
     }
     // any_cast: cast any to whated type
-    ir::Type *ret_type = any_cast_Type(visit(ctx->funcType()));
+    ir::Type* ret_type = any_cast_Type(visit(ctx->funcType()));
 
     // empty param types
-    ir::Type *func_type = ir::Type::function_type(ret_type, {});
+    ir::Type* func_type = ir::Type::function_type(ret_type, {});
     // add func to module
-    ir::Function *func = module()->add_function(true, func_type, func_name);
+    ir::Function* func = module()->add_function(true, func_type, func_name);
 
     // this->module()->insert??
 
@@ -77,9 +69,9 @@ std::any SysYIRGenerator::visitFunc(SysYParser::FuncContext *ctx) {
     // it will be automatically destroyed when return from this visitFfunc
     ir::SymbolTableBeta::FunctionScope scope(_tables);
     // create entry block with the same params of func
-    ir::BasicBlock *entry = func->add_block("entry_main");
+    ir::BasicBlock* entry = func->add_block("entry_main");
 
-    if (ctx->funcFParams()) { // has formal params
+    if (ctx->funcFParams()) {  // has formal params
         // pass
     }
 
@@ -88,4 +80,4 @@ std::any SysYIRGenerator::visitFunc(SysYParser::FuncContext *ctx) {
     return func;
 }
 
-} // namespace sysy
+}  // namespace sysy

@@ -39,7 +39,12 @@ class Value {
         vCONSTANT,
         vARGUMENT,
         vBASIC_BLOCK,
+        // instructions class id
         vINSTRUCTION,
+        vALLOCA,
+        vLOAD,
+        vSTORE,
+        vRETURN,
     };
     // for isa<> type check
     // each subclass of Value has different _scid
@@ -73,8 +78,16 @@ class Value {
 
     // check
     bool is_int() const { return _type->is_int(); }
+    bool is_float() const { return _type->is_float(); }
+
+    template <typename T>
+    std::enable_if_t<std::is_base_of_v<Value, T>, T*> as() const {
+        return dynamic_cast<T*>(const_cast<Value*>(this));
+    }
+
 
    public:
+    ValueId scid() const { return _scid; }
     // each derived class must implement 'print' to print readable IR
     virtual void print(std::ostream& os) const {};
 };

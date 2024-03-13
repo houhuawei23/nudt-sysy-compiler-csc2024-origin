@@ -42,7 +42,7 @@ define void @f() #0 #1 { ... }
 ```
 
 ## Instruction Reference
-
+[docs-llvmir-reference](https://llvm.org/docs/LangRef.html#instruction-reference)
 ### Terminator Instruction
 
 Every basic block ends with a terminator instruction, which indicates which block should be executed next after the current block.
@@ -154,26 +154,176 @@ store atomic [volatile] <ty> <value>, ptr <pointer> [syncscope("<target-scope>")
 ```
 ### Conversion Operations
 
-- `trunc .. to`
-- `zext .. to`
-- `sext .. to`
+- `trunc .. to`:  truncates its operand to the type ty2.
+  - `<result> = trunc <ty> <value> to <ty2>`  yields ty2
+- `zext .. to`: zero extends its operand to type ty2.
+  - `<result> = zext <ty> <value> to <ty2>   `
+- `sext .. to`: sign extends value to the type ty2.
+  - `<result> = sext <ty> <value> to <ty2>`
 - `fptrunc .. to`
+  - `<result> = fptrunc <ty> <value> to <ty2>`
 - `fpext .. to`
-- `fptoui .. to`
-- `fptosi .. to`
-- `uitofp .. to`
-- `sitofp .. to`
+- `fptoui .. to`: converts a floating-point value to its unsigned integer equivalent of type ty2.
+  - `<result> = fptoui <ty> <value> to <ty2>`
+- `fptosi .. to`: converts floating-point value to type ty2
+  - `<result> = fptosi <ty> <value> to <ty2>`
+- `uitofp .. to`: regards value as an unsigned integer and converts that value to the ty2 type.
+- `sitofp .. to`: regards value as a signed integer and converts that value to the ty2 type.
 - `ptrtoint .. to`
 - `inttoptr .. to`
-- `bitcast .. to`
+- `bitcast .. to`: converts value to type ty2 without changing any bits.
 - `addrspacecast .. to`
 
+```LLVM
+; trunc .. to 
+; trunc 接受一个要截断的值和一个截断到的类型。
+; 两种类型都必须是整数类型，或者是具有相同数量整数的向量。 
+; value 的位大小必须大于目标类型 ty2 的位大小。
+; 不允许使用相同大小的类型。
 
+; 截断 value 中的高位并将剩余位转换为 ty2 。
+; 由于源大小必须大于目标大小，因此 trunc 不能是无操作强制转换。它总是会截断位。
+; <result> = trunc <ty> <value> to <ty2>        ; yields ty2
+%X = trunc i32 257 to i8                        ; yields i8:1
+%Y = trunc i32 123 to i1                        ; yields i1:true
+%Z = trunc i32 122 to i1                        ; yields i1:false
+%W = trunc <2 x i16> <i16 8, i16 7> to <2 x i8> ; yields <i8 8, i8 7>
+
+
+; <result> = zext <ty> <value> to <ty2>   
+; 将其操作数零扩展为类型 ty2 。
+%X = zext i32 257 to i64              ; yields i64:257
+%Y = zext i1 true to i32              ; yields i32:1
+%Z = zext <2 x i16> <i16 8, i16 7> to <2 x i32> ; yields <i32 8, i32 7>
+
+%a = zext nneg i8 127 to i16 ; yields i16 127
+%b = zext nneg i8 -1 to i16  ; yields i16 poison
+
+; <result> = sext <ty> <value> to <ty2>
+%X = sext i8  -1 to i16              ; yields i16   :65535
+%Y = sext i1 true to i32             ; yields i32:-1
+%Z = sext <2 x i16> <i16 8, i16 7> to <2 x i32> ; yields <i32 8, i32 7>
+
+; <result> = fptrunc <ty> <value> to <ty2> 
+; 将 value 从较大的浮点类型转换为较小的浮点类型。假定该指令在默认浮点环境中执行。
+%X = fptrunc double 16777217.0 to float    ; yields float:16777216.0
+%Y = fptrunc double 1.0E+300 to half       ; yields half:+infinity
+
+
+; <result> = fpext <ty> <value> to <ty2> 
+%X = fpext float 3.125 to double         ; yields double:3.125000e+00
+%Y = fpext double %X to fp128            ; yields fp128:0xL00000000000000004000900000000000
+
+
+; <result> = fptoui <ty> <value> to <ty2>
+; 将其浮点操作数转换为最接近的（向零舍入）无符号整数值。
+; 如果该值无法放入 ty2 中，则结果是有毒值 poison value。
+
+%X = fptoui double 123.0 to i32      ; yields i32:123
+%Y = fptoui float 1.0E+300 to i1     ; yields undefined:1
+%Z = fptoui float 1.04E+17 to i8     ; yields undefined:1
+
+; <result> = fptosi <ty> <value> to <ty2>
+; 将其浮点操作数转换为最接近的（向零舍入）有符号整数值。
+; 如果该值无法放入 ty2 中，则结果是有毒值。
+%X = fptosi double -123.0 to i32      ; yields i32:-123
+%Y = fptosi float 1.0E-247 to i1      ; yields undefined:1
+%Z = fptosi float 1.04E+17 to i8      ; yields undefined:1
+
+; 接受一个要转换的值，该值必须是标量或向量整数值，以及将其转换为 ty2 的类型，该类型必须是浮点类型。
+; 如果 ty 是向量整数类型，则 ty2 必须是向量浮点类型，且元素数量与 ty 相同
+; 将其操作数解释为无符号整数，并将其转换为相应的浮点值。
+; 如果无法精确表示该值，则使用默认舍入模式对其进行舍入。
+%X = uitofp i32 257 to float         ; yields float:257.0
+%Y = uitofp i8 -1 to double          ; yields double:255.0
+
+; <result> = sitofp <ty> <value> to <ty2>
+; 将其操作数解释为有符号整数，并将其转换为相应的浮点值。
+; 如果无法精确表示该值，则使用默认舍入模式对其进行舍入。
+%X = sitofp i32 257 to float         ; yields float:257.0
+%Y = sitofp i8 -1 to double          ; yields double:-1.0
+
+
+%X = bitcast i8 255 to i8         ; yields i8 :-1
+%Y = bitcast i32* %x to i16*      ; yields i16*:%x
+%Z = bitcast <2 x i32> %V to i64; ; yields i64: %V (depends on endianness)
+%Z = bitcast <2 x i32*> %V to <2 x i64*> ; yields <2 x i64*>
+
+
+
+```
 
 ### Other Operations
 
-- `icmp`
-- `fcmp`
+- `icmp`: returns a boolean value or a vector of boolean values based on comparison of its two integer, integer vector, pointer, or pointer vector operands.
+- `fcmp`: float comparison
 - `phi`
 - `call`
 
+1. `eq`: yields `true` if the operands are equal, `false` otherwise. No sign interpretation is necessary or performed.
+2. `ne`: yields `true` if the operands are unequal, `false` otherwise. No sign interpretation is necessary or performed.
+3. `ugt`: interprets the operands as unsigned values and yields `true` if `op1` is greater than `op2`.
+4. `uge`: interprets the operands as unsigned values and yields `true` if `op1` is greater than or equal to `op2`.
+5. `ult`: interprets the operands as unsigned values and yields `true` if `op1` is less than `op2`.
+6. `ule`: interprets the operands as unsigned values and yields `true` if `op1` is less than or equal to `op2`.
+7. `sgt`: interprets the operands as signed values and yields `true` if `op1` is greater than `op2`.
+8. `sge`: interprets the operands as signed values and yields `true` if `op1` is greater than or equal to `op2`.
+9. `slt`: interprets the operands as signed values and yields `true` if `op1` is less than `op2`.
+10. `sle`: interprets the operands as signed values and yields `true` if `op1` is less than or equal to `op2`.
+```LLVM
+; <result> = icmp <cond> <ty> <op1>, <op2>   ; yields i1 or <N x i1>:result
+
+<result> = icmp eq i32 4, 5          ; yields: result=false
+<result> = icmp ne ptr %X, %X        ; yields: result=false
+<result> = icmp ult i16  4, 5        ; yields: result=true
+<result> = icmp sgt i16  4, 5        ; yields: result=false
+<result> = icmp ule i16 -4, 5        ; yields: result=false
+<result> = icmp sge i16  4, 5        ; yields: result=false
+
+; fcmp
+<result> = fcmp oeq float 4.0, 5.0    ; yields: result=false
+<result> = fcmp one float 4.0, 5.0    ; yields: result=true
+<result> = fcmp olt float 4.0, 5.0    ; yields: result=true
+<result> = fcmp ueq double 1.0, 2.0   ; yields: result=false
+
+; phi
+; <result> = phi [fast-math-flags] <ty> [ <val0>, <label0>], ...
+; implement the phi node in the SSA graph representing the function.
+; 在运行时，“ phi ”指令逻辑上采用与在当前块之前执行的前驱基本块相对应的对指定的值。
+
+Loop:       ; Infinite loop that counts from 0 on up...
+  %indvar = phi i32 [ 0, %LoopHeader ], [ %nextindvar, %Loop ]
+  %nextindvar = add i32 %indvar, 1
+  br label %Loop
+
+
+; call
+<result> = [tail | musttail | notail ] call [fast-math flags] [cconv] [ret attrs] [addrspace(<num>)]
+           <ty>|<fnty> <fnptrval>(<function args>) [fn attrs] [ operand bundles ]
+
+%retval = call i32 @test(i32 %argc)
+call i32 (ptr, ...) @printf(ptr %msg, i32 12, i8 42)        ; yields i32
+%X = tail call i32 @foo()                                    ; yields i32
+%Y = tail call fastcc i32 @foo()  ; yields i32
+call void %foo(i8 signext 97)
+
+%struct.A = type { i32, i8 }
+%r = call %struct.A @foo()                        ; yields { i32, i8 }
+%gr = extractvalue %struct.A %r, 0                ; yields i32
+%gr1 = extractvalue %struct.A %r, 1               ; yields i8
+%Z = call void @foo() noreturn                    ; indicates that %foo never returns normally
+%ZZ = call zeroext i32 @bar()                     ; Return value is %zero extended
+
+```
+
+The type of the incoming values is specified with the first type field. After this, the ‘phi’ instruction takes a list of pairs as arguments, with one pair for each predecessor basic block of the current block. Only values of first class type may be used as the value arguments to the PHI node. Only labels may be used as the label arguments.
+传入值的类型由第一个类型字段指定。此后，“ phi ”指令将一系列对作为参数，当前块的每个前驱基本块都有一对。只有第一类类型的值可以用作 PHI 节点的值参数。只有标签可以用作标签参数。
+
+There must be no non-phi instructions between the start of a basic block and the PHI instructions: i.e. PHI instructions must be first in a basic block.
+基本块的开始和 PHI 指令之间不得有非 phi 指令：即 PHI 指令必须位于基本块中的第一个。
+
+For the purposes of the SSA form, the use of each incoming value is deemed to occur on the edge from the corresponding predecessor block to the current block (but after any definition of an ‘invoke’ instruction’s return value on the same edge).
+出于 SSA 形式的目的，每个传入值的使用被视为发生在从相应前驱块到当前块的边缘上（但在“ invoke ”指令的返回值的任何定义之后）相同的边）。
+
+The optional fast-math-flags marker indicates that the phi has one or more fast-math-flags. These are optimization hints to enable otherwise unsafe floating-point optimizations. Fast-math-flags are only valid for phis that return a floating-point scalar or vector type, or an array (nested to any depth) of floating-point scalar or vector types.
+可选的 fast-math-flags 标记表示 phi 有一个或多个快速数学标志。这些是优化提示，用于启用其他不安全的浮点优化。 Fast-math-flags 仅对返回浮点标量或向量类型，或浮点标量或向量类型的数组（嵌套到任意深度）的 phi 有效。

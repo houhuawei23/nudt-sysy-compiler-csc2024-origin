@@ -46,7 +46,6 @@ void Type::print(std::ostream &os) const {
     auto basetype = btype();
     switch (basetype) {
     case INT:
-        // os << "int";
         os << "i32";
         break;
     case FLOAT:

@@ -21,56 +21,6 @@ typedef enum : size_t {
     FUNCTION,
     UNDEFINE
 } BType;
-typedef enum : size_t {
-    RET,
-    JMP,
-    BR,
-    FNEG,
-    ADD,
-    FADD,
-    SUB,
-    FSUB,
-    MUL,
-    FMUL,
-    SDIV,
-    FDIV,
-    SREM,
-    SHL,
-    LSHR,
-    ASHR,
-    AND,
-    OR,
-    XOR,
-    ALLOCA,
-    LOAD,
-    STORE,
-    ADDRADD,
-    ADDRDEREFADD,
-    TRUNC,
-    ZEXT,
-    SEXT,
-    FPTRUNC,
-    FPEXT,
-    FPTOSI,
-    SITOFP,
-    PTRTOINT,
-    INTTOPTR,
-    IEQ,
-    INE,
-    ISGT,
-    ISGE,
-    ISLT,
-    ISLE,
-    FOEQ,
-    FONE,
-    FOGT,
-    FOGE,
-    FOLT,
-    FOLE,
-    PHI,
-    CALL,
-} IType;
-
 class Type {
   protected:
     BType _btype;
@@ -122,10 +72,6 @@ class Type {
     template <typename T>
     std::enable_if_t<std::is_base_of_v<Type, T>, T *> as() const {
         return dynamic_cast<T *>(const_cast<Type *>(this));
-    }
-    template <typename T>
-    std::enable_if_t<std::is_base_of_v<Type, T>, T *> any_as() const {
-        return std::any_cast<T *>(const_cast<Type *>(this));
     }
     void print(std::ostream &os) const;
 };
