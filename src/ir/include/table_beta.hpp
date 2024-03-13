@@ -1,56 +1,58 @@
-#include "value.hpp"
+#pragma once
 #include <cassert>
 #include <forward_list>
 #include <unordered_map>
+#include "value.hpp"
 
 namespace ir {
 //! SymbolTableBeta
 class SymbolTableBeta {
-  private:
+   private:
     enum Kind {
         _Module,
         _Function,
         _Block,
     };
 
-  public:
+   public:
+    
     /*
      * @brief 符号表作用域 (Module, Function, Block)
      */
     struct ModuleScope {
-        SymbolTableBeta &tables_ref;
-        ModuleScope(SymbolTableBeta &tables) : tables_ref(tables) {
+        SymbolTableBeta& tables_ref;
+        ModuleScope(SymbolTableBeta& tables) : tables_ref(tables) {
             tables.enter(_Module);
         }
         ~ModuleScope() { tables_ref.exit(); }
     };
     struct FunctionScope {
-        SymbolTableBeta &tables_ref;
-        FunctionScope(SymbolTableBeta &tables) : tables_ref(tables) {
+        SymbolTableBeta& tables_ref;
+        FunctionScope(SymbolTableBeta& tables) : tables_ref(tables) {
             tables.enter(_Function);
         }
         ~FunctionScope() { tables_ref.exit(); }
     };
     struct BlockScope {
-        SymbolTableBeta &tables_ref;
-        BlockScope(SymbolTableBeta &tables) : tables_ref(tables) {
+        SymbolTableBeta& tables_ref;
+        BlockScope(SymbolTableBeta& tables) : tables_ref(tables) {
             tables.enter(_Block);
         }
         ~BlockScope() { tables_ref.exit(); }
     };
 
-  private:
+   private:
     /*
      * @brief 按照作用域范围建立符号表 (作用域小的符号表 -> 作用域大的符号表,
      * forward_list组织, 每个作用域使用map建立符号表)
      */
-    std::forward_list<std::pair<Kind, std::unordered_map<std::string, Value *>>>
+    std::forward_list<std::pair<Kind, std::unordered_map<std::string, Value*>>>
         symbols;
 
-  public:
+   public:
     SymbolTableBeta() = default;
 
-  private:
+   private:
     /*
      * @brief 创造 or 销毁 某一作用域的符号表
      */
@@ -60,7 +62,7 @@ class SymbolTableBeta {
     }
     void exit() { symbols.pop_front(); }
 
-  public:
+   public:
     /*
      * @brief 判断属于哪部分的作用域
      */
@@ -71,8 +73,8 @@ class SymbolTableBeta {
     /*
      * @brief 查表 (从当前作用域开始查, 直至查到全局作用域范围)
      */
-    Value *lookup(const std::string &name) const {
-        for (auto &scope : symbols) {
+    Value* lookup(const std::string& name) const {
+        for (auto& scope : symbols) {
             auto iter = scope.second.find(name);
             if (iter != scope.second.end())
                 return iter->second;
@@ -84,9 +86,9 @@ class SymbolTableBeta {
      * @brief 为当前作用域插入表项
      *   Return: pair<map<string, Value*>::iterator, bool>
      */
-    auto insert(const std::string &name, Value *value) {
+    auto insert(const std::string& name, Value* value) {
         assert(not symbols.empty());
         return symbols.front().second.emplace(name, value);
     }
 };
-} // namespace ir
+}  // namespace ir

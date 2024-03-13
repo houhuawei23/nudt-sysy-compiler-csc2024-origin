@@ -12,9 +12,8 @@
 
 #include "infrast.hpp"
 #include "instructions.hpp"
-
-// #include <utility>
 #include <stack>
+
 namespace ir {
 
 /**
@@ -23,16 +22,18 @@ namespace ir {
  *
  */
 class IRBuilder {
-    using block_stack = std::stack<BasicBlock *>;
+    using block_stack = std::stack<BasicBlock*>;
+    using const_vector_Value_ptr = const std::vector<Value*>;
+    using const_str_ref = const std::string&;
 
-  private:
-    BasicBlock *_block;
+   private:
+    BasicBlock* _block;
     inst_iterator _position;
     // block_stack headers, exits;
     int if_cnt, while_cnt, rhs_cnt, func_cnt;
     // block_stack truetargets, falsetargets;
 
-  public:
+   public:
     IRBuilder() {
         if_cnt = 0;
         while_cnt = 0;
@@ -43,18 +44,18 @@ class IRBuilder {
     void func_add() { func_cnt++; }
 
     // get
-    BasicBlock *block() const { return _block; }
+    BasicBlock* block() const { return _block; }
     inst_iterator position() const { return _position; }
 
-    void set_position(BasicBlock *bb, inst_iterator pos) {
+    void set_position(BasicBlock* bb, inst_iterator pos) {
         _block = bb;
         _position = pos;
     }
 
-    AllocaInst *create_alloca(Type *ret_type,
-                                   const std::vector<Value *> &dims = {},
-                                   const std::string &name = "",
-                                   const bool is_const = false) {
+    AllocaInst* create_alloca(Type* ret_type,
+                              const_vector_Value_ptr& dims = {},
+                              const_str_ref name = "",
+                              const bool is_const = false) {
         auto inst = new AllocaInst(ret_type, _block, dims, name, is_const);
         // // assert(inst);
         _block->insts().emplace(_position, inst);
@@ -62,20 +63,22 @@ class IRBuilder {
         // return nullptr;
     }
 
-    StoreInst *create_store(Value *value, Value *pointer,
-                                 const std::vector<Value *> &indices = {},
-                                 const std::string &name = "") {
-        auto inst = new StoreInst(value, pointer, _block, indices, name);
+    StoreInst* create_store(Value* value,
+                            Value* pointer,
+                            const_vector_Value_ptr& dims = {},
+                            const_str_ref name = "") {
+        auto inst = new StoreInst(value, pointer, _block, dims, name);
         _block->insts().emplace(_position, inst);
         return inst;
     }
 
-    ReturnInst *create_return(Value *value = nullptr,
-                                   BasicBlock *parent = nullptr) {
+    ReturnInst* create_return(Value* value = nullptr,
+                              //   const_str_ref name = "",
+                              BasicBlock* parent = nullptr) {
         auto inst = new ReturnInst(value, parent);
         _block->insts().emplace(_position, inst);
-        return inst; 
+        return inst;
     }
 };
 
-} // namespace ir
+}  // namespace ir

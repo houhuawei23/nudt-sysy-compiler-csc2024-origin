@@ -1,11 +1,42 @@
-### list
+
+
+### Type Conversion
+
+
+-  `dynamic_cast<xxType>(...)` 运算符用于将引用或指针向下转换为类层次结构中更具体的类型(运行时)。
+  - dynamic_cast 的目标必须是类的指针或引用。
+  - 类型安全检查是在**运行时**执行的。
+  - 如果类型不兼容，则会抛出异常（处理引用时）或返回空指针（处理指针时）。
+  - ir 中用于类型 downcast，也就是转换成更具体的类型。因为更具体的类型实现了更多的接口，所以可以调用这些接口。
+    - `Type *base_type = dynamic_cast<PointerType *>(type())->base_type();`
+    - Type* -> FunctionType*
+    - Value* -> Function* / Constant*
+  - Run-Time Type Information 运行时类型信息
+
+
+- `static_cast<xxType>(...)` 是执行显式类型转换 (Explicit type conversion) 的运算符。
+  - `static_cast<type> (object);`
+  - 类型参数必须是可以通过已知方法将对象转换为的数据类型，无论是内置方法还是强制转换。该类型可以是引用或枚举器。编译器明确定义并允许的所有类型的转换均使用 static_cast 执行。 
+  - converting a pointer of a base class to a pointer of a non-virtual derived class (downcasting); 将基类的指针转换为非虚派生类的指针（向下转型）；
+  - converting numeric data types such as enums to ints or floats. 将数字数据类型（例如枚举）转换为整数或浮点数。
+
+- `any_cast` 用于从 `std::any` 对象提取值。
+
+- `isa<XXX>` is an instance of XXX,用于数据类型判断
+  - `isa<Constant>(V)`
+- 
 
 ```CPP
 std::any_cast
+any -> Type*
 // Performs type-safe access to the contained object.
 // Throws std::bad_any_cast if the typeid of the requested T does not match that of the contents of operand.
 
 ```
+
+### list
+
+
 
 ```CPP
 std::list

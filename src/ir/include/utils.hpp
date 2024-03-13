@@ -1,17 +1,26 @@
+#pragma once
+
+#include <iostream>
 #include "type.hpp"
 #include "value.hpp"
-#include <iostream>
 
 namespace ir {
 
 // for simple use <<
-inline std::ostream &operator<<(std::ostream &os, const Type &type) {
+inline std::ostream& operator<<(std::ostream& os, const Type& type) {
     type.print(os);
     return os;
 }
 
-inline std::ostream &operator<<(std::ostream &os, const Value &value) {
+inline std::ostream& operator<<(std::ostream& os, const Value& value) {
     value.print(os);
     return os;
 }
-} // namespace ir
+
+template <typename T>
+inline std::enable_if_t<std::is_base_of_v<Value, T>, bool> isa(
+    const Value* value) {
+    return T::classof(value);
+}
+
+}  // namespace ir

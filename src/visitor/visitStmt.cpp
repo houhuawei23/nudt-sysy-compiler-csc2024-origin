@@ -1,5 +1,4 @@
 #include "visitor.hpp"
-#include <any> // any_cast
 
 namespace sysy {
 

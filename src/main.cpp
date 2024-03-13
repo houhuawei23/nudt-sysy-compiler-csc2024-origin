@@ -18,11 +18,11 @@ int main(int argc, char **argv) {
     antlr4::CommonTokenStream tokens(&lexer);
     SysYParser parser(&tokens);
 
-    SysYParser::CompUnitContext *astrootptr = parser.compUnit();
+    SysYParser::CompUnitContext *ast_root = parser.compUnit();
 
-    ir::Module baseModule;
-    sysy::SysYIRGenerator gen(&baseModule); // forget to pass module
-    gen.visitCompUnit(astrootptr);
+    ir::Module *base_module = new ir::Module();
+    sysy::SysYIRGenerator gen(base_module, ast_root); // forget to pass module
+    gen.build_ir();
 
     auto module_ir = gen.module();
     bool genir = true;

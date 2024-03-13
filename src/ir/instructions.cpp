@@ -15,8 +15,8 @@ void AllocaInst::print(std::ostream &os) const {
     os << "%" << name() << " = ";
     os << "alloca ";
     // just for int scalar
-    Type *base_type = dynamic_cast<PointerType *>(type())->base_type();
-    os << *base_type;
+
+    os << *(base_type());
 }
 
 void StoreInst::print(std::ostream &os) const {

@@ -3,7 +3,7 @@
 
 namespace ir {
 BasicBlock *Function::add_block(const std::string &name) {
-    auto nb = new BasicBlock(this, name);
+    auto nb = new BasicBlock(name, this);
     _blocks.emplace_back(nb);
     return nb;
 }

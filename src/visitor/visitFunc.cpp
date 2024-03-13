@@ -1,6 +1,5 @@
 #include "visitor.hpp"
-#include <any>
-#include <typeinfo>
+
 using namespace std;
 
 namespace sysy {
