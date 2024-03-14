@@ -27,18 +27,23 @@ std::any SysYIRGenerator::visitNumberExp(SysYParser::NumberExpContext* ctx) {
 }
 
 std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx){
+    ir::Value* res=nullptr;
     bool isarray=not ctx->var()->LBRACKET().empty();
     std::string varname=ctx->var()->ID()->getText();
     auto valueptr=_tables.lookup(varname);
+    if(valueptr==nullptr){
+        std::cerr<<"Use undefined variable: \""<<varname<<"\""<<std::endl;
+        exit(EXIT_FAILURE);
+    }
     if(not isarray){//scalar
-        ir::Value* res=_builder.create_load(valueptr,{},_builder.getvarname());
-        return res;
+        res=_builder.create_load(valueptr,{},_builder.getvarname());
     }
     else{//array element
         //pass
-        auto res=nullptr;
-        return res;
     }
+    return res;
 }
+
+
 
 }  // namespace sysy
