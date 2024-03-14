@@ -23,7 +23,7 @@ using arg_list = std::list<std::unique_ptr<Argument>>;      // vector -> list
 using block_list = std::list<std::unique_ptr<BasicBlock>>;  // vector -> list
 using const_str_ref = const std::string&;
 //  _type, _name, _uses
-class Constant : public Value {
+class Constant : public User {
    protected:
     // std::variant<bool, int32_t, float> _field;
     union {
@@ -37,15 +37,20 @@ class Constant : public Value {
    public:
     Constant();
     Constant(Type* type, const_str_ref name = "")
-        : Value(type, vCONSTANT, name) {}
-    // Constant(bool b) : Value(Type::)
-    Constant(int i) : Value(Type::int_type(), vCONSTANT, std::to_string(i)), _i(i) {}
-    Constant(float f) : Value(Type::float_type(), vCONSTANT, std::to_string(f)), _f(f) {}
+        : User(type, vCONSTANT, name) {}
+    Constant(Type* type, ValueId scid = vCONSTANT, const_str_ref name = "")
+        : User(type, scid, name) {}
+
+    Constant(int i)
+        : User(Type::int_type(), vCONSTANT, std::to_string(i)), _i(i) {}
+    //! TODO: float to string? is that ok?
+    Constant(float f)
+        : User(Type::float_type(), vCONSTANT, std::to_string(f)), _f(f) {}
 
     Constant(int i, const_str_ref name)
-        : Value(Type::int_type(), vCONSTANT, name), _i(i) {}
+        : User(Type::int_type(), vCONSTANT, name), _i(i) {}
     Constant(float f, const_str_ref name)
-        : Value(Type::float_type(), vCONSTANT, name), _f(f) {}
+        : User(Type::float_type(), vCONSTANT, name), _f(f) {}
 
     // gen Const from int or float
 
@@ -58,6 +63,66 @@ class Constant : public Value {
             return iter->second;
         }
         Constant* c = new Constant(v);
+        auto res = cache.emplace(v, c);
+        return c;  // res.first->second; ??
+    }
+
+    int i() const {
+        assert(is_int());  // assert
+        return _i;
+    }
+    float f() const {
+        assert(is_float());
+        return _f;
+    }
+
+    // isa
+    static bool classof(const Value* v) { return v->scid() == vCONSTANT; }
+
+    // ir print
+    void print(std::ostream& os) const override;
+};
+
+class ConstantBeta : public User {
+   protected:
+    // std::variant<bool, int32_t, float> _field;
+    union {
+        /* data */
+        // bool _b;
+        int _i;
+        float _f;
+        // double _d;
+    };
+
+   public:
+    ConstantBeta();
+    ConstantBeta(Type* type, const_str_ref name = "")
+        : User(type, vCONSTANT, name) {}
+    ConstantBeta(Type* type, ValueId scid = vCONSTANT, const_str_ref name = "")
+        : User(type, scid, name) {}
+
+    ConstantBeta(int i)
+        : User(Type::int_type(), vCONSTANT, std::to_string(i)), _i(i) {}
+    //! TODO: float to string? is that ok?
+    ConstantBeta(float f)
+        : User(Type::float_type(), vCONSTANT, std::to_string(f)), _f(f) {}
+
+    ConstantBeta(int i, const_str_ref name)
+        : User(Type::int_type(), vCONSTANT, name), _i(i) {}
+    ConstantBeta(float f, const_str_ref name)
+        : User(Type::float_type(), vCONSTANT, name), _f(f) {}
+
+    // gen Const from int or float
+
+    template <typename T>
+    static ConstantBeta* gen(T v) {
+        static std::map<T, ConstantBeta*> cache;
+        assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
+        auto iter = cache.find(v);
+        if (iter != cache.end()) {
+            return iter->second;
+        }
+        ConstantBeta* c = new ConstantBeta(v);
         auto res = cache.emplace(v, c);
         return c;  // res.first->second; ??
     }

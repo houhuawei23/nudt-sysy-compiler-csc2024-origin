@@ -223,23 +223,28 @@ User 类以两种方式公开操作数列表：通过索引访问接口和通过
 
 
 
-## Constant
+## class Constant
 LLVM Constant Representation
+
+
+Constant represents a base class for different types of constants. It is subclassed by ConstantInt, ConstantArray, etc. for representing the various types of Constants. GlobalValue is also a subclass, which represents the address of a global variable or function.
+
+Constant代表不同类型常量的基类。它是 ConstantInt、ConstantArray 等的子类，用于表示各种类型的常量。 GlobalValue也是一个子类，它表示全局变量或函数的地址。
 
 This is an important base class in LLVM.
 这是LLVM中重要的基类。
 
-It provides the common facilities of all constant values in an LLVM program. A constant is a value that is immutable at runtime. Functions are constants because their address is immutable. Same with global variables.
+It provides the common facilities of all constant values in an LLVM program. A constant is a value that is **immutable** at runtime. **Functions** are constants because their address is immutable. Same with **global variables**.
 
 它提供了 LLVM 程序中所有常量值的通用设施。**常量是在运行时不可变的值**。函数是常量，因为它们的地址是不可变的。与全局变量相同。
 
-All constants share the capabilities provided in this class. All constants can have a null value. They can have an operand list. Constants can be simple (integer and floating point values), complex (arrays and structures), or expression based (computations yielding a constant value composed of only certain operators and other constant values).
+All constants share the capabilities provided in this class. All constants can have a **null** value. They can have an **operand list**. Constants can be **simple** (integer and floating point values), **complex** (arrays and structures), or **expression** based (computations yielding a constant value composed of only certain operators and other constant values).
 
 所有常量共享此类中提供的功能。所有常量都可以有空值null value。他们可以有一个操作数列表。常量可以是简单的（整数和浮点值）、复杂的（数组和结构）或基于表达式的（产生仅由某些运算符和其他常量值组成的常量值的计算）。
 
-Note that Constants are immutable (once created they never change) and are fully shared by structural equivalence. This means that two structurally equivalent constants will always have the same address. Constants are created on demand as needed and never deleted: thus clients don't have to worry about the lifetime of the objects.
+Note that Constants are **immutable** (**once created they never change**) and are fully shared by structural equivalence. This means that **two structurally equivalent constants will always have the same address**. Constants are created on demand as needed and never deleted: thus clients don't have to worry about the lifetime of the objects.
 
-请注意，常量是不可变的（一旦创建就永远不会改变）并且由**结构等效性**完全共享。这意味着两个结构上等效的常量将始终具有相同的地址。常量根据需要按需创建，并且永远不会被删除：因此客户端不必担心对象的生命周期。
+请注意，常量是不可变的（一旦创建就永远不会改变）并且由**结构等效性**完全共享。这意味着**两个结构上等效的常量将始终具有相同的地址**。常量根据需要按需创建，并且永远不会被删除：因此客户端不必担心对象的生命周期。
 
 ```CPP
   //// Methods for support type inquiry through isa, cast, and dyn_cast:
@@ -274,17 +279,23 @@ This represents either a global variable or a function. In either case, the valu
 
 ## class GlobalValue
 
-Global values ( GlobalVariables or Functions) are the only LLVM values that are visible in the bodies of all Functions. Because they are visible at global scope, they are also subject to linking with other globals defined in different translation units. To control the linking process, GlobalValues know their linkage rules. Specifically, GlobalValues know whether they have internal or external linkage, as defined by the LinkageTypes enumeration.
+Global values ( GlobalVariables or Functions) are the only LLVM values that are visible in the bodies of all Functions. Because they are visible at global scope, they are also subject to linking with other globals defined in different translation units. To control the linking process, GlobalValues know their linkage rules. Specifically, GlobalValues know whether they have **internal or external linkage**, as defined by the `LinkageTypes` enumeration.
 
-全局值（全局变量或函数）是唯一在所有函数体内可见的 LLVM 值。因为它们在全局范围内可见，所以它们还可以与不同翻译单元中定义的其他全局变量链接。为了控制链接过程， GlobalValue 知道它们的链接规则。具体来说， GlobalValue 知道它们是否具有内部或外部链接，如 LinkageTypes 枚举所定义。
+全局值 `Global values`（全局变量 `GlobalVariables` 或函数 `Functions`）是唯一在所有函数体内可见的 LLVM 值。因为它们在全局范围内可见，所以它们还可以与不同翻译单元中定义的其他全局变量链接。为了控制链接过程， `GlobalValue` 知道它们的链接规则。具体来说， GlobalValue 知道它们是否具有**内部或外部链接**，如 `LinkageTypes` 枚举所定义。
 
-If a GlobalValue has internal linkage (equivalent to being static in C), it is not visible to code outside the current translation unit, and does not participate in linking. If it has external linkage, it is visible to external code, and does participate in linking. In addition to linkage information, GlobalValues keep track of which Module they are currently part of.
+If a GlobalValue has **internal linkage** (equivalent to being `static` in C), it is not visible to code outside the current translation unit, and does not participate in linking. 
 
-如果 GlobalValue 具有内部链接（相当于 C 中的 static ），则它对于当前翻译单元之外的代码不可见，并且不参与链接。如果它具有外部链接，则它对外部代码可见，并且确实参与链接。除了链接信息之外， GlobalValue 还跟踪它们当前属于哪个模块。
+If it has **external linkage**, it is visible to external code, and does participate in linking. In addition to linkage information, **GlobalValues keep track of which Module they are currently part of**.
 
-Because GlobalValues are memory objects, they are always referred to by their address. As such, the Type of a global is always a pointer to its contents. It is important to remember this when using the GetElementPtrInst instruction because this pointer must be dereferenced first. For example, if you have a GlobalVariable (a subclass of GlobalValue) that is an array of 24 ints, type [24 x i32], then the GlobalVariable is a pointer to that array. Although the address of the first element of this array and the value of the GlobalVariable are the same, they have different types. The GlobalVariable’s type is [24 x i32]. The first element’s type is i32. Because of this, accessing a global value requires you to dereference the pointer with GetElementPtrInst first, then its elements can be accessed. This is explained in the LLVM Language Reference Manual.
+如果 `GlobalValue` 具有内部链接（相当于 C 中的 `static` ），则它对于当前翻译单元之外的代码不可见，并且不参与链接。如果它具有外部链接，则它对外部代码可见，并且确实参与链接。除了链接信息之外， `GlobalValue` 还跟踪它们当前属于哪个模块。
 
-由于 GlobalValue 是内存对象，因此始终通过其地址来引用它们。因此，全局变量的类型始终是指向其内容的指针。使用 GetElementPtrInst 指令时记住这一点很重要，因为必须首先取消引用该指针。例如，如果您有一个 GlobalVariable （ GlobalValue) 的子类，它是一个 24 个整数的数组，请键入 [24 x i32] ，然后 GlobalVariable 是指向该数组的指针。虽然该数组的第一个元素的地址和 GlobalVariable 的值相同，但它们具有不同的类型。 GlobalVariable 的类型是 [24 x i32] 。第一个元素的类型是 i32. 因此，访问全局值需要先用 GetElementPtrInst 取消引用指针，然后它的元素可以是LLVM 语言参考手册对此进行了解释。??
+Because `GlobalValues` are memory objects, **they are always referred to by their address**. As such, **the Type of a global is always a pointer to its contents**. It is important to remember this when using the `GetElementPtrInst` instruction because this pointer must be **dereferenced** first. 
+
+For example, if you have a `GlobalVariable` (a subclass of `GlobalValue`) that is an array of **24 ints**, type `[24 x i32]`, then the `GlobalVariable` is a pointer to that array. Although the address of the first element of this array and the value of the `GlobalVariable` are the same, they have different types. The `GlobalVariable`’s type is `[24 x i32]`. The first element’s type is `i32`. 
+
+Because of this, accessing a global value requires you to dereference the pointer with `GetElementPtrInst` first, then its elements can be accessed. This is explained in the **LLVM Language Reference Manual**.
+
+由于 GlobalValue 是内存对象，因此始终通过其地址来引用它们。因此，全局变量的类型始终是指向其内容的指针。使用 GetElementPtrInst 指令时记住这一点很重要，因为必须首先取消引用该指针。例如，如果您有一个 `GlobalVariable` （ `GlobalValue`) 的子类，它是一个 24 个整数的数组，请键入 [24 x i32] ，然后 `GlobalVariable` 是指向该数组的指针。虽然该数组的第一个元素的地址和 `GlobalVariable` 的值相同，但它们具有不同的类型。 `GlobalVariable` 的类型是 [24 x i32] 。第一个元素的类型是 i32. 因此，访问全局值需要先用 `GetElementPtrInst` 取消引用指针，然后它的元素可以是LLVM 语言参考手册对此进行了解释。??
 
 操纵 GlobalValue 的链接特征
     bool hasInternalLinkage() const
@@ -298,32 +309,27 @@ Because GlobalValues are memory objects, they are always referred to by their ad
 
 ## class Function
 
-The Function class represents a single procedure in LLVM. It is actually one of the more complex classes in the LLVM hierarchy because it must keep track of a large amount of data. The Function class keeps track of a list of BasicBlocks, a list of formal Arguments, and a SymbolTable.
+The Function class represents a single procedure in LLVM. It is actually one of the more complex classes in the LLVM hierarchy because it must keep track of a large amount of data. The Function class keeps track of a list of `BasicBlocks`, a list of `formal Arguments`, and a `SymbolTable`.
 
-Function 类代表 LLVM 中的单个过程。它实际上是 LLVM 层次结构中更复杂的类之一，因为它必须跟踪大量数据。 Function 类跟踪 BasicBlocks 列表、形式参数列表和 SymbolTable。
+Function 类代表 LLVM 中的单个过程。它实际上是 LLVM 层次结构中更复杂的类之一，因为它必须跟踪大量数据。 Function 类跟踪 `BasicBlocks` 列表、形式参数列表和 `SymbolTable`。
 
-The list of BasicBlocks is the most commonly used part of Function objects. The list imposes an implicit ordering of the blocks in the function, which indicate how the code will be laid out by the backend. Additionally, the first BasicBlock is the implicit entry node for the Function. It is not legal in LLVM to explicitly branch to this initial block. There are no implicit exit nodes, and in fact there may be multiple exit nodes from a single Function. If the BasicBlock list is empty, this indicates that the Function is actually a function declaration: the actual body of the function hasn’t been linked in yet.
+The list of `BasicBlocks` is the most commonly used part of Function objects. The list imposes an implicit ordering of the blocks in the function, which indicate how the code will be laid out by the backend. Additionally, the first BasicBlock is the implicit **entry** node for the Function. It is not legal in LLVM to explicitly branch to this initial block. There are no implicit exit nodes, and in fact there may be **multiple exit nodes** from a single Function. If the BasicBlock list is empty, this indicates that the Function is actually a function **declaration**: the actual body of the function hasn’t been linked in yet.
 
 BasicBlocks 列表是 Function 对象中最常用的部分。该列表对函数中的块施加了隐式排序，这表明后端将如何布局代码。此外，第一个 BasicBlock 是 Function 的隐式入口节点。在 LLVM 中显式分支到此初始块是不合法的。不存在隐式退出节点，实际上单个 Function 可能有多个退出节点。如果BasicBlock列表为空，则表明 Function 实际上是一个函数声明：函数的实际主体尚未链接进来。
 
-In addition to a list of BasicBlocks, the Function class also keeps track of the list of formal Arguments that the function receives. This container manages the lifetime of the Argument nodes, just like the BasicBlock list does for the BasicBlocks.
+In addition to a list of `BasicBlocks`, the `Function` class also keeps track of the list of `formal Arguments` that the function receives. This container manages the lifetime of the Argument nodes, just like the `BasicBlock` list does for the `BasicBlock`s.
 
 除了 BasicBlock 列表之外， Function 类还跟踪函数接收的形式参数列表。该容器管理 Argument 节点的生命周期，就像 BasicBlock 列表对 BasicBlock 所做的那样。
 
-The SymbolTable is a very rarely used LLVM feature that is only used when you have to look up a value by name. Aside from that, the SymbolTable is used internally to make sure that there are not conflicts between the names of Instructions, BasicBlocks, or Arguments in the function body.
+The `SymbolTable` is a very rarely used LLVM feature that is only used when you have to **look up a value by name**. Aside from that, the `SymbolTable` is used internally to make sure that there are not **conflicts** between the names of Instructions, BasicBlocks, or Arguments in the function body.
 
 SymbolTable 是一个很少使用的 LLVM 功能，仅在必须按名称查找值时使用。除此之外，符号表在内部使用，以确保函数体中的指令、基本块或参数的名称之间不存在冲突。
 
-Note that Function is a GlobalValue and therefore also a Constant. The value of the function is its address (after linking) which is guaranteed to be constant.
+Note that `Function` is a `GlobalValue` and therefore also a `Constant`. **The value of the function is its address (after linking) which is guaranteed to be constant.**
 
 请注意， Function 是一个 GlobalValue，因此也是一个常量。函数的值是它的地址（链接后），保证是常量。
 
 ```CPP
-Function(const FunctionType *Ty, 
-        LinkageTypes Linkage, 
-        const std::string &N = "",
-        Module* Parent = 0)
-
 /* 
 Constructor used when you need to create new Functions to add the program. 
 The constructor must specify the type of the function to create and what type 
@@ -333,6 +339,12 @@ can be used to create multiple functions. The Parent argument specifies the
 Module in which the function is defined. If this argument is provided, the function 
 will automatically be inserted into that module’s list of functions.
 */
+Function(const FunctionType *Ty, 
+        LinkageTypes Linkage, 
+        const std::string &N = "",
+        Module* Parent = 0)
+
+
 
 bool isDeclaration()
 
@@ -482,3 +494,60 @@ This subclass represents the two comparison instructions, ICmpInst (integer oper
 `Instruction *clone() const`
 - Returns another instance of the specified instruction, identical in all ways to the original except that the instruction has no parent (i.e. it’s not embedded into a BasicBlock), and it has no name.
 - 返回指定指令的另一个实例，除了该指令没有父级（即它没有嵌入到 BasicBlock 中）并且没有名称之外，在所有方面都与原始指令相同。
+
+## APInt: Arbitrary Precision Integers
+
+Class for arbitrary precision integers.
+任意精度整数的类。
+
+APInt is a functional replacement for common case unsigned integer type like "unsigned", "unsigned long" or "uint64_t", but also allows non-byte-width integer sizes and large integer value types such as 3-bits, 15-bits, or more than 64-bits of precision. APInt provides a variety of arithmetic operators and methods to manipulate integer values of any bit-width. It supports both the typical integer arithmetic and comparison operations as well as bitwise manipulation.
+
+APInt 是常见无符号整数类型（如“unsigned”、“unsigned long”或“uint64_t”）的功能替代，但也允许非字节宽度整数大小和大整数值类型，如 3 位、15 位、或超过 64 位精度。 APInt 提供了各种算术运算符和方法来操作任何位宽的整数值。它支持典型的整数算术和比较运算以及按位操作。
+
+The class has several invariants worth noting:
+
+该类有几个值得注意的不变量：
+
+- All bit, byte, and word positions are zero-based.
+  - 所有位、字节和字位置都是从零开始的。
+- Once the bit width is set, it doesn't change except by the Truncate, SignExtend, or ZeroExtend operations.
+  - 位宽一旦设置，除了通过 Truncate、SignExtend 或 ZeroExtend 操作之外，它不会改变。
+
+- All binary operators must be on APInt instances of the same bit width. Attempting to use these operators on instances with different bit widths will yield an assertion.
+  - 所有二元运算符必须位于相同位宽的 APInt 实例上。尝试在具有不同位宽度的实例上使用这些运算符将产生断言。
+
+- The value is stored canonically as an unsigned value. For operations where it makes a difference, there are both signed and unsigned variants of the operation. For example, sdiv and udiv. However, because the bit widths must be the same, operations such as Mul and Add produce the same results regardless of whether the values are interpreted as signed or not.  
+  - 该值被规范地存储为无符号值。对于有影响的操作，有符号和无符号的操作变体。例如，sdiv 和 udiv。但是，由于位宽必须相同，因此无论值是否被解释为带符号的，Mul 和 Add 等操作都会产生相同的结果。
+
+- In general, the class tries to follow the style of computation that LLVM uses in its IR. This simplifies its use for LLVM.  
+  - 一般来说，该类尝试遵循 LLVM 在其 IR 中使用的计算风格。这简化了 LLVM 的使用。
+
+- APInt supports zero-bit-width values, but operations that require bits are not defined on it (e.g. you cannot ask for the sign of a zero-bit integer). This means that operations like zero extension and logical shifts are defined, but sign extension and ashr is not. Zero bit values compare and hash equal to themselves, and countLeadingZeros returns 0.  
+  - APInt 支持零位宽度值，但需要位的操作并未在其上定义（例如，您不能要求零位整数的符号）。这意味着定义了零扩展和逻辑移位等操作，但没有定义符号扩展和 ashr。零位值比较并散列等于它们自己，并且 countLeadingZeros 返回 0。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -21,7 +21,8 @@ void Value::del_use(std::shared_ptr<Use> use) { _uses.remove(use); } // ?
 /// User: public Value
 std::vector<std::shared_ptr<Use>> &User::operands() { return _operands; }
 Value *User::operand(size_t index) const {
-    return _operands[index]->value();
+    return _operands[index]->value(); 
+    //! TODO: need ->value ? 
 }
 
 void User::add_operand(Value *value) {

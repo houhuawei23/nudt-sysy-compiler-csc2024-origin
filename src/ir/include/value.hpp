@@ -39,6 +39,7 @@ class Value {
         vCONSTANT,
         vARGUMENT,
         vBASIC_BLOCK,
+        vGLOBAL_VAR,
         // instructions class id
         vINSTRUCTION,
         vALLOCA,
