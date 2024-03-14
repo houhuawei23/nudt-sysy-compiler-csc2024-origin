@@ -35,6 +35,7 @@ using use_ptr_list = std::list<std::shared_ptr<Use>>;
 class Value {
    public:
     enum ValueId {
+        vValue,
         vFUNCTION,
         vCONSTANT,
         vARGUMENT,
@@ -61,7 +62,7 @@ class Value {
     use_ptr_list _uses;  // uses list
 
    public:
-    Value(Type* type, ValueId scid, const_str_ref name = "")
+    Value(Type* type, ValueId scid = vValue, const_str_ref name = "")
         : _type(type), _scid(scid), _name(name), _uses() {}
     virtual ~Value() = default;
     // Value is all base, return true

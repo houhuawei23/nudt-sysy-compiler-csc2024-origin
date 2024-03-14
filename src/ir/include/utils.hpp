@@ -16,7 +16,8 @@ inline std::ostream& operator<<(std::ostream& os, const Value& value) {
     value.print(os);
     return os;
 }
-
+// type check, eg:
+// ir::isa<ir::Function>(func)
 template <typename T>
 inline std::enable_if_t<std::is_base_of_v<Value, T>, bool> isa(
     const Value* value) {

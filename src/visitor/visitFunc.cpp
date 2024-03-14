@@ -72,7 +72,7 @@ std::any SysYIRGenerator::visitFunc(SysYParser::FuncContext* ctx) {
     ir::BasicBlock* entry = func->add_block("entry_main");
 
     if (ctx->funcFParams()) {  // has formal params
-        // pass
+        //! TODO: add fparams to entry block
     }
 
     _builder.set_position(entry, entry->end());

@@ -190,8 +190,9 @@ class BasicBlock : public Value {
 
    public:
     BasicBlock(const std::string& name = "", Function* parent = nullptr)
-        : Value(Type::label_type(), vBASIC_BLOCK, name){
-
+        : Value(Type::label_type(), vBASIC_BLOCK, name),
+          _parent(parent) {
+            
           };
 
     // get
