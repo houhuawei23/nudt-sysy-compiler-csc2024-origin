@@ -20,7 +20,14 @@ std::any SysYIRGenerator::visitNumberExp(SysYParser::NumberExpContext* ctx) {
         res = ir::Constant::gen(std::stoi(s, 0, base));
     } else if (auto fctx = ctx->number()->FLITERAL()) {  // float
         std::string s = fctx->getText();
-        res = ir::Constant::gen(std::stof(s)); // stod?
+        float f=std::stof(s);
+        // store machine code floating numbers
+        unsigned int mrf=*reinterpret_cast<unsigned int*>(&f);
+        std::stringstream ss;
+        ss << std::hex << std::uppercase << std::setfill('0') << std::setw(8) << mrf;
+
+        res = ir::Constant::gen(f,"0X"+ss.str()+"00000000"); // stod?
+        // change to machine code when print
         // didn't realize hexadecimal floating numbers
     }
     return res;

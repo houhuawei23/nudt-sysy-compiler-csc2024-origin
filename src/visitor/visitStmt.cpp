@@ -54,8 +54,17 @@ std::any SysYIRGenerator::visitAssignStmt(SysYParser::AssignStmtContext* ctx) {
     ir::Value* lvalueptr = any_cast_Value(visit(ctx->lValue()));
     ir::Value* expptr = any_cast_Value(visit(ctx->exp()));
     ir::Value* res = nullptr;
-    res = _builder.create_store(expptr, lvalueptr);  // didn'e realize type
-                                                     // check
+    if(lvalueptr->is_int() && expptr->is_float()){
+        //!TODO f2i
+    }
+    else if(lvalueptr->is_float() && expptr->is_int()){
+        //!TODO i2f
+    }
+    else if(ir::dyn_cast<ir::PointerType>(lvalueptr->type())->base_type()!=expptr->type()){
+        std::cerr<<"Type "<<*expptr->type()<<" can not convert to type "<<*lvalueptr->type()<<std::endl;
+        exit(EXIT_FAILURE);
+    }
+    res = _builder.create_store(expptr, lvalueptr);  
 
     return res;
 }

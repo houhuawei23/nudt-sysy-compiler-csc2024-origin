@@ -3,12 +3,14 @@
 #include <any>  // any_cast
 #include <typeinfo>
 #include <vector>
+#include <sstream>
+#include <iomanip>
 
 #include "SysYBaseVisitor.h"
 #include "ir.hpp"
 
 #include "utils_visit.hpp"
-
+#include "utils.hpp"
 namespace sysy {
 class SysYIRGenerator : public SysYBaseVisitor {
    private:

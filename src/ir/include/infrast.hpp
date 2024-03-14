@@ -55,14 +55,18 @@ class Constant : public User {
     // gen Const from int or float
 
     template <typename T>
-    static Constant* gen(T v) {
+    static Constant* gen(T v,std::string name="") {
         static std::map<T, Constant*> cache;
         assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
         auto iter = cache.find(v);
         if (iter != cache.end()) {
             return iter->second;
         }
-        Constant* c = new Constant(v);
+        Constant*c;
+        if(name=="")
+            c = new Constant(v);
+        else
+            c = new Constant(v,name);
         auto res = cache.emplace(v, c);
         return c;  // res.first->second; ??
     }
