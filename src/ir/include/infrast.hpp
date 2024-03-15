@@ -85,6 +85,7 @@ class Constant : public User {
 
     // ir print
     void print(std::ostream& os) const override;
+
 };
 
 class ConstantBeta : public User {

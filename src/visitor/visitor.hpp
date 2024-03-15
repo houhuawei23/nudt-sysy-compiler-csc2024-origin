@@ -58,6 +58,10 @@ class SysYIRGenerator : public SysYBaseVisitor {
     virtual std::any visitVarExp(SysYParser::VarExpContext* ctx) override;
     virtual std::any visitAssignStmt(SysYParser::AssignStmtContext* ctx) override;
     virtual std::any visitLValue(SysYParser::LValueContext* ctx) override;
+    virtual std::any visitAdditiveExp(SysYParser::AdditiveExpContext* ctx) override;
+    virtual std::any visitMultiplicativeExp(SysYParser::MultiplicativeExpContext*ctx) override;
+    virtual std::any visitUnaryExp(SysYParser::UnaryExpContext* ctx) override;
+    virtual std::any visitParenExp(SysYParser::ParenExpContext* ctx) override;
     // virtual std::any visitBlockItem(SysYParser::BlockItemContext *ctx)
     // override; virtual std::any visitDecl(SysYParser::DeclContext *ctx)
     // override;

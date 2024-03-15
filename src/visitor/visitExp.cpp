@@ -21,12 +21,8 @@ std::any SysYIRGenerator::visitNumberExp(SysYParser::NumberExpContext* ctx) {
     } else if (auto fctx = ctx->number()->FLITERAL()) {  // float
         std::string s = fctx->getText();
         float f=std::stof(s);
-        // store machine code floating numbers
-        unsigned int mrf=*reinterpret_cast<unsigned int*>(&f);
-        std::stringstream ss;
-        ss << std::hex << std::uppercase << std::setfill('0') << std::setw(8) << mrf;
 
-        res = ir::Constant::gen(f,"0X"+ss.str()+"00000000"); // stod?
+        res = ir::Constant::gen(f,ir::getMC(f)); // stod?
         // change to machine code when print
         // didn't realize hexadecimal floating numbers
     }
@@ -51,6 +47,104 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx){
     return res;
 }
 
+std::any SysYIRGenerator::visitParenExp(SysYParser::ParenExpContext* ctx){
+    return any_cast_Value(visit(ctx->exp()));
+}
 
+std::any SysYIRGenerator::visitUnaryExp(SysYParser::UnaryExpContext* ctx){
+    ir::Value* op1=any_cast_Value(visit(ctx->exp()));
+    ir::Value* res;
+    if(ir::isa<ir::Constant>(op1)){
+        ir::Constant* cop1=ir::dyn_cast<ir::Constant>(op1);
+        if(ctx->ADD()){
+            res=cop1;
+        }
+        else if(ctx->SUB()){
+            if(cop1->is_float())res=ir::Constant::gen(cop1->f(),ir::getMC(cop1->f()));
+            else res=ir::Constant::gen(-cop1->i());
+        }
+        else{//NOT
+            //pass
+
+        }
+    }
+    else{
+        //unary inst create
+    }
+    return res;
+}
+
+std::any SysYIRGenerator::visitMultiplicativeExp(SysYParser::MultiplicativeExpContext*ctx){
+    ir::Value* op1=any_cast_Value(visit(ctx->exp()[0]));
+    ir::Value* op2=any_cast_Value(visit(ctx->exp()[1]));
+    ir::Value* res;
+    if(ir::isa<ir::Constant>(op1) && ir::isa<ir::Constant>(op2)){//constant folding
+        ir::Constant* cop1=ir::dyn_cast<ir::Constant>(op1);
+        ir::Constant* cop2=ir::dyn_cast<ir::Constant>(op2);
+        if(ctx->DIV()){
+            auto ans=(cop1->is_float()?cop1->f():cop1->i())/(cop2->is_float()?cop2->f():cop2->i());
+            if(typeid(ans)==typeid(float))
+                res=ir::Constant::gen(ans,ir::getMC(ans));
+            else
+                res=ir::Constant::gen(ans);
+        }
+        else if(ctx->MUL()){
+            auto ans=(cop1->is_float()?cop1->f():cop1->i())*(cop2->is_float()?cop2->f():cop2->i());
+            if(typeid(ans)==typeid(float))
+                res=ir::Constant::gen(ans,ir::getMC(ans));
+            else
+                res=ir::Constant::gen(ans);
+        }
+        else{//MODULO
+            if(cop1->is_int() && cop2->is_int()){
+                int ans=cop1->i()%cop2->i();
+                res=ir::Constant::gen(ans);
+            }
+            else{
+                std::cerr<<"Operands of modulo must be integer!"<<std::endl;
+                exit(EXIT_FAILURE);
+            }
+        }
+    }
+    else{
+        //res=_builder.create_binary()
+    }
+    return res;
+}
+
+std::any SysYIRGenerator::visitAdditiveExp(SysYParser::AdditiveExpContext* ctx){
+    ir::Value* adder1=any_cast_Value(visit(ctx->exp()[0]));
+    ir::Value* adder2=any_cast_Value(visit(ctx->exp()[1]));
+    ir::Value* res;
+    bool issub=ctx->SUB()!=nullptr;
+    if(ir::isa<ir::Constant>(adder1) && ir::isa<ir::Constant>(adder2)){
+        ir::Constant* cadder1=ir::dyn_cast<ir::Constant>(adder1);
+        ir::Constant* cadder2=ir::dyn_cast<ir::Constant>(adder2);
+        if(cadder1->is_float() || cadder2->is_float()){
+            //if one adder is floating, we should transform them to floating and calculate
+            //constant folding
+            float sum;
+            float f1,f2;
+            if(cadder1->is_int())f1=float(cadder1->i());
+            else f1=cadder1->f();
+            if(cadder2->is_int())f2=float(cadder2->i());
+            else f2=cadder2->f();
+            sum=f1+f2;
+            if(issub)sum=f1-f2;
+
+            res=ir::Constant::gen(sum,ir::getMC(sum));
+        }
+        else{// just int
+            int sum;
+            sum=cadder1->i()+cadder2->i();
+            if(issub)sum=cadder1->i()-cadder2->i();
+            res=ir::Constant::gen(sum);
+        }
+    }
+    else{
+        //res=_builder.create_binary(add)
+    }
+    return res;
+}
 
 }  // namespace sysy
