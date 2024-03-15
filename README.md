@@ -181,6 +181,7 @@ define dso_local i32 @main() #0 {
 - 5. change SysY.g4, same with branch dev_frontend
 - 6. realize IRBuilder::getvarname() (temp ver.)
 - 7. change instruction.cpp:print(), use name() method to print variable name afterwards
+
 **目前效果**
 ```C
 // test/steps/00_local.c
@@ -220,6 +221,57 @@ define dso_local i32 @main() #0 {
   store i32 5, i32* %2, align 4
   %5 = load i32, i32* %2, align 4
   store i32 %5, i32* %4, align 4
+  %6 = load i32, i32* %4, align 4
+  ret i32 %6
+}
+```
+- 2024-3-15
+  - 1.realize costant folding concerning addtion,substraction,multiplication,division and modulo
+  - 2.realize visitParenExp
+  - 3.realize ir::getMC(float f) in utils.hpp which is used to transform floating number to its machine code representaion
+
+**当前效果**
+```C
+int main() {
+    float b=2.0*3.0+4.0;
+    int i=10%3;
+    int c=10*(-9);
+    int g=(2+3)*5.5;
+    return c;
+}
+```
+
+```llvm
+; test/steps/00_local_gen.ll
+; main 生成的可读的 llvm ir 
+; 可使用 > lli 00_local_gen.ll 运行, echo $? 查看返回值 (0)
+define i32 @main() {
+    %1 = alloca float
+    store float 0X4120000000000000, float* %1
+    %2 = alloca i32
+    store i32 1, i32* %2
+    %3 = alloca i32
+    store i32 -90, i32* %3
+    %4 = alloca i32
+    store i32 27, i32* %4
+    %5 = load i32, i32* %3
+    ret i32 %5
+
+}
+
+; test/steps/00_local.ll
+; clang -S -emit-llvm ./00_local.c 生成的 llvm ir (节选)
+define dso_local i32 @main() #0 {
+  %1 = alloca i32, align 4
+  %2 = alloca float, align 4
+  %3 = alloca i32, align 4
+  %4 = alloca i32, align 4
+  %5 = alloca i32, align 4
+  store i32 0, i32* %1, align 4
+  store float 1.000000e+01, float* %2, align 4
+  store i32 1, i32* %3, align 4
+  store i32 -90, i32* %4, align 4
+  store i32 27, i32* %5, align 4
   %6 = load i32, i32* %4, align 4
   ret i32 %6
 }
