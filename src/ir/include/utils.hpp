@@ -31,12 +31,12 @@ template <typename To, typename From>
 [[nodiscard]] inline decltype(auto) dyn_cast(From *Val) {
   return dynamic_cast<To *>(Val);
 }
-
+// get machine code
 inline std::string getMC(float f){
     unsigned int mrf=*reinterpret_cast<unsigned int*>(&f);
     std::stringstream ss;
     ss << std::hex << std::uppercase << std::setfill('0') << std::setw(8) << mrf;
-    std::string res="0X"+ss.str()+"00000000";
+    std::string res="0x"+ss.str()+"00000000";
     return res;
 }
 
