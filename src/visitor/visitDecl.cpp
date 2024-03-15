@@ -78,7 +78,7 @@ void SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
                 if (btype->is_int() && init->is_float()) {  // f2i
                     init = ir::Constant::gen((int)cinit->f());
                 } else if (btype->is_float() && init->is_int()) {  // i2f
-                    init = ir::Constant::gen((float)cinit->i());
+                    init = ir::Constant::gen((float)cinit->i(),ir::getMC((float)cinit->i()));
                 }
             } else if (btype->is_float() && init->is_int()) {  // i2f
                 //! TODO

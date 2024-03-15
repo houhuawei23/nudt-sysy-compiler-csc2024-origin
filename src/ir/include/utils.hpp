@@ -33,10 +33,11 @@ template <typename To, typename From>
 }
 // get machine code
 inline std::string getMC(float f){
+    double d=f;
     unsigned int mrf=*reinterpret_cast<unsigned int*>(&f);
     std::stringstream ss;
-    ss << std::hex << std::uppercase << std::setfill('0') << std::setw(8) << mrf;
-    std::string res="0x"+ss.str()+"00000000";
+    ss << std::hex << std::uppercase << std::setfill('0') << std::setw(16) << mrf;
+    std::string res="0x"+ss.str();
     return res;
 }
 

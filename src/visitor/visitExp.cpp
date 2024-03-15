@@ -46,32 +46,6 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
     }
     return res;
 }
-/* 汤： 尚未merge
-
-*/
-// std::any SysYIRGenerator::visitUnaryExp(SysYParser::UnaryExpContext* ctx){
-//     ir::Value* op1=any_cast_Value(visit(ctx->exp()));
-//     ir::Value* res;
-//     if(ir::isa<ir::Constant>(op1)){
-//         ir::Constant* cop1=ir::dyn_cast<ir::Constant>(op1);
-//         if(ctx->ADD()){
-//             res=cop1;
-//         }
-//         else if(ctx->SUB()){
-//             if(cop1->is_float())res=ir::Constant::gen(cop1->f(),ir::getMC(cop1->f()));
-//             else res=ir::Constant::gen(-cop1->i());
-//         }
-//         else{//NOT
-//             //pass
-
-//         }
-//     }
-//     else{
-//         //unary inst create
-//     }
-//     return res;
-// }
-//! (ADD | SUB | NOT) exp
 /*
 SUB: 如果 exp：
 - 为常量 Constant：生成 Constant(-exp)
@@ -88,9 +62,7 @@ std::any SysYIRGenerator::visitUnaryExp(SysYParser::UnaryExpContext* ctx) {
             if (exp->is_int()) {
                 res = ir::Constant::gen(-cexp->i());
             } else if (exp->is_float()) {
-                // res = ir::Constant::gen(-cexp->f());
-                //！ TODO: 是否需要取负？
-                res = ir::Constant::gen(cexp->f(), ir::getMC(cexp->f())); //! 汤
+                res = ir::Constant::gen(-cexp->f(), ir::getMC(-cexp->f()));
             }
         } else if (ir::isa<ir::AllocaInst>(exp) &&
                    ir::dyn_cast<ir::AllocaInst>(exp)->is_scalar()) {
