@@ -55,6 +55,23 @@ void ReturnInst::print(std::ostream& os) const {
     }
 }
 
+void BinaryInst::print(std::ostream& os) const {
+    os << name() << " = ";
+    switch (scid())
+    {
+    case vADD:
+        os << "add ";
+        break;
+    default:
+        break;
+    }
+    // op1
+    os << get_lvalue()->name() << ", ";
+
+    // op2
+    os << get_rvalue()->name() << " : " << *type();
+}
+
 void ICmpInst::print(std::ostream& os) const {
     // <result> = icmp <cond> <ty> <op1>, <op2>   ; yields i1 or <N x i1>:result
     // %res = icmp eq i32, 1, 2

@@ -159,21 +159,36 @@ class UnaryInst : public Instruction {
     void print(std::ostream& os) const override;  //! TODO
 };
 
-//! Binary instruction, e.g., arithmatic, relation, logic, etc.
+/*
+ * @brief Binary Instruction
+ * @details: 
+ *      1. exp (MUL | DIV | MODULO) exp
+ *      2. exp (ADD | SUB) exp
+ *      3. exp (LT | GT | LE | GE) exp
+ *      4. exp (EQ | NE) exp
+ *      5. exp AND exp
+ *      6. exp OR exp
+ */
 class BinaryInst : public Instruction {
-    //! TODO
-   protected:
-    BinaryInst() {
-        //! TODO
-        assert(false && "not implemented");
+   public:
+    BinaryInst(ValueId kind, Type* type, Value* lvalue, Value* rvalue, BasicBlock* parent, const std::string name="") 
+     : Instruction(kind, type, parent, name) {
+        add_operand(lvalue);
+        add_operand(rvalue);
     }
 
    public:
     static bool classof(const Value* v) {
-        //! TODO
+        // TODO
         assert(false && "not implemented");
     }
-    void print(std::ostream& os) const override;  //! TODO
+
+    public:
+    Value* get_lvalue() const { return operand(0); }
+    Value* get_rvalue() const { return operand(1); }
+
+
+    void print(std::ostream& os) const override;
 };
 
 class CallInst : public Instruction {

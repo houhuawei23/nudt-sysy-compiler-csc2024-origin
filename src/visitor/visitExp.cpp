@@ -126,39 +126,45 @@ std::any SysYIRGenerator::visitMultiplicativeExp(
     return res;
 }
 
-std::any SysYIRGenerator::visitAdditiveExp(
-    SysYParser::AdditiveExpContext* ctx) {
+/*
+ * @brief Visit Additive Expression
+ *      exp ADD exp
+ */
+std::any SysYIRGenerator::visitAdditiveExp(SysYParser::AdditiveExpContext* ctx) {
+    //! Generate operand (得到操作数)
     ir::Value* adder1 = any_cast_Value(visit(ctx->exp()[0]));
     ir::Value* adder2 = any_cast_Value(visit(ctx->exp()[1]));
     ir::Value* res;
-    bool issub = ctx->SUB() != nullptr;
+
+    bool isAdd = ctx->ADD() != nullptr;
+
     if (ir::isa<ir::Constant>(adder1) && ir::isa<ir::Constant>(adder2)) {
         ir::Constant* cadder1 = ir::dyn_cast<ir::Constant>(adder1);
         ir::Constant* cadder2 = ir::dyn_cast<ir::Constant>(adder2);
         if (cadder1->is_float() || cadder2->is_float()) {
-            // if one adder is floating, we should transform them to floating
-            // and calculate constant folding
             float sum;
             float f1, f2;
-            if (cadder1->is_int())
-                f1 = float(cadder1->i());
-            else
-                f1 = cadder1->f();
-            if (cadder2->is_int())
-                f2 = float(cadder2->i());
-            else
-                f2 = cadder2->f();
+            
+            if (cadder1->is_int()) f1 = float(cadder1->i());
+            else f1 = cadder1->f();
+            
+            if (cadder2->is_int()) f2 = float(cadder2->i());
+            else f2 = cadder2->f();
+            
             sum = f1 + f2;
-            if (issub)
-                sum = f1 - f2;
+            
+            if (isAdd) sum = f1 + f2;
 
             res = ir::Constant::gen(sum, ir::getMC(sum));
+
+            // auto sub = _builder.create_binary()
         } else {  // just int
             int sum;
             sum = cadder1->i() + cadder2->i();
-            if (issub)
-                sum = cadder1->i() - cadder2->i();
+            if (isAdd) sum = cadder1->i() + cadder2->i();
             res = ir::Constant::gen(sum);
+
+            auto add = _builder.create_add(cadder1, cadder2);
         }
     } else {
         // res=_builder.create_binary(add)

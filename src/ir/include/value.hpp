@@ -55,7 +55,10 @@ class Value {
         // fcmp
         vFCMP,
         vFOEQ,
-        vFONE
+        vFONE, 
+
+        // Binary Instruction
+        vADD, 
     };
     // for isa<> type check
     // each subclass of Value has different _scid

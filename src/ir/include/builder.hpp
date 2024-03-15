@@ -133,10 +133,19 @@ class IRBuilder {
         //! TODO
         assert(false && "not implemented");
     }
-    BinaryInst* create_binary() {
-        //! TODO
-        assert(false && "not implemented");
+
+    BinaryInst* create_binary(Value::ValueId kind, Type* type, Value* lvalue, Value* rvalue, const_str& name="") {
+        auto inst = new BinaryInst(kind, type, lvalue, rvalue, _block, name);
+        block()->emplace_back_inst(inst); // _pos++
+        return inst;
     }
+
+    BinaryInst* create_add(Value* lvalue, Value* rvalue, const_str& name="") {
+        auto inst = new BinaryInst(Value::ValueId::vADD, Type::int_type(), lvalue, rvalue, _block, name);
+        block()->emplace_back_inst(inst); // _pos++
+        return inst;
+    }
+    
     CallInst* create_call() {
         //! TODO
         assert(false && "not implemented");

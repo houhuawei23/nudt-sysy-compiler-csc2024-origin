@@ -1,5 +1,3 @@
-int g = 5;
-
 int main() {
-    return g;
+    int a = 2 + 3;
 }
