@@ -46,7 +46,7 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
         assert(false && "return type check err!");
     }
 
-    ir::Value* res = _builder.create_return(value, curr_block);
+    ir::Value* res = _builder.create_return(value);
     return res;
 }
 
@@ -67,6 +67,92 @@ std::any SysYIRGenerator::visitAssignStmt(SysYParser::AssignStmtContext* ctx) {
     res = _builder.create_store(expptr, lvalueptr);  
 
     return res;
+}
+
+//! ifStmt: IF LPAREN exp RPAREN stmt (ELSE stmt)?;
+/*
+if(exp) {} else {}
+if(exp) {}
+create true_block, false_block or
+       then_block, else_block
+如果是 exp = !exp, 则调换 true_block 和 false_block
+的指针，正常地访问!右边的exp, 实际上实现了 ! NOT 操作。
+*/
+std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
+    //! TODO
+    builder().if_inc();
+    auto cur_block = builder().block();
+    auto cur_func = cur_block->parent();
+
+    auto then_block = cur_func->add_block();
+    auto else_block = cur_func->add_block();
+
+    // link the basic block
+    cur_block->add_next_block(then_block);
+    cur_block->add_next_block(else_block);
+
+    then_block->add_pre_block(cur_block);
+    else_block->add_pre_block(cur_block);
+
+    //! push the then and else block to the stack
+    builder().push_true_target(then_block);
+    builder().push_false_target(else_block);
+
+    auto merge_block = cur_func->add_block();
+
+    //! visit cond, create icmp and br inst
+    builder().reset_not();
+    auto cond = any_cast_Value(visit(ctx->exp()));  // load
+    if (cond) {                                     //! visit
+        if (cond->is_int()) {
+            cond = builder().create_ine(cond, ir::Constant::gen(0),
+                                        builder().getvarname());  // cur_block
+        }
+        if (cond->is_float()) {
+            cond = builder().create_fone(cond, ir::Constant::gen(0.0),
+                                         builder().getvarname());  // cur_block
+        }
+        if (builder().is_not()) {
+            builder().create_br(cond, else_block, then_block);  // cur_block
+        } else {
+            builder().create_br(cond, then_block, else_block);  // cur_block
+        }
+    }
+    
+    //! then block
+    builder().set_pos(then_block, then_block->end());
+    then_block->set_name(builder().getvarname());
+    visit(ctx->stmt(0));               // may change the basic block
+    builder().create_br(merge_block);  
+
+    //! else block
+    builder().set_pos(else_block, else_block->end());
+    else_block->set_name(builder().getvarname());
+    if (auto elsestmt = ctx->stmt(1))
+        visit(elsestmt);
+    builder().create_br(merge_block);  
+
+    //! merge block
+    builder().set_pos(merge_block, merge_block->end());
+    merge_block->set_name(builder().getvarname());
+    // builder().
+    return nullptr;
+}
+
+std::any SysYIRGenerator::visitWhileStmt(SysYParser::WhileStmtContext* ctx) {
+    //! TODO
+    return nullptr;
+}
+
+std::any SysYIRGenerator::visitBreakStmt(SysYParser::BreakStmtContext* ctx) {
+    //! TODO
+    return nullptr;
+}
+
+std::any SysYIRGenerator::visitContinueStmt(
+    SysYParser::ContinueStmtContext* ctx) {
+    //! TODO
+    return nullptr;
 }
 
 std::any SysYIRGenerator::visitLValue(SysYParser::LValueContext* ctx) {

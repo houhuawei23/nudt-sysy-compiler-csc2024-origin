@@ -5,7 +5,12 @@ namespace ir {
 void BasicBlock::print(std::ostream &os) const {
     // os <<
     // print all instructions
-    for (auto &inst : _instructions) {
+    std::string n = name();
+    if (n.size() > 0) {
+        n = n.substr(1);
+    }
+    os << n << ":" << "     " << "; block" << std::endl;
+    for (auto &inst : _insts) {
         os << "    " << *inst << std::endl;
     }
 }

@@ -47,6 +47,15 @@ class Value {
         vLOAD,
         vSTORE,
         vRETURN,
+        vBR,
+        // icmp
+        vICMP,
+        vIEQ,
+        vINE,
+        // fcmp
+        vFCMP,
+        vFOEQ,
+        vFONE
     };
     // for isa<> type check
     // each subclass of Value has different _scid
@@ -78,6 +87,7 @@ class Value {
     void del_use(std::shared_ptr<Use> use);
     void replace_all_use_with(Value* _value);
 
+    void set_name(const_str_ref name) { _name = name; }
     // check
     bool is_int() const { return _type->is_int(); }
     bool is_float() const { return _type->is_float(); }
@@ -137,7 +147,7 @@ class User : public Value {
     // get
     use_ptr_vector& operands();
     Value* operand(size_t index) const;
-
+    int operands_cnt() const { return _operands.size(); }
     // manage
     void add_operand(Value* value);
     void set_operand(size_t index, Value* value);

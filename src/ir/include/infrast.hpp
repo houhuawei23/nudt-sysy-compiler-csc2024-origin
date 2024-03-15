@@ -15,12 +15,12 @@
 // #include "module.hpp"
 namespace ir {
 
-using inst_list = std::list<std::unique_ptr<Instruction>>;  // list
+using inst_list = std::list<Instruction*>;  // list
 using inst_iterator = inst_list::iterator;
 using reverse_iterator = inst_list::reverse_iterator;
 
-using arg_list = std::list<std::unique_ptr<Argument>>;      // vector -> list
-using block_list = std::list<std::unique_ptr<BasicBlock>>;  // vector -> list
+using arg_list = std::list<Argument*>;      // vector -> list
+using block_list = std::list<BasicBlock*>;  // vector -> list
 using const_str_ref = const std::string&;
 //  _type, _name, _uses
 class Constant : public User {
@@ -36,26 +36,34 @@ class Constant : public User {
 
    public:
     Constant();
-    Constant(Type* type, const_str_ref name = "")
-        : User(type, vCONSTANT, name) {}
+    // Constant(Type* type, const_str_ref name = "")
+    //     : User(type, vCONSTANT, name) {}
     Constant(Type* type, ValueId scid = vCONSTANT, const_str_ref name = "")
         : User(type, scid, name) {}
 
     Constant(int i)
         : User(Type::int_type(), vCONSTANT, std::to_string(i)), _i(i) {}
+
     //! TODO: float to string? is that ok?
     Constant(float f)
+        : User(Type::float_type(), vCONSTANT, std::to_string(f)), _f(f) {}
+        
+    Constant(double f)
         : User(Type::float_type(), vCONSTANT, std::to_string(f)), _f(f) {}
 
     Constant(int i, const_str_ref name)
         : User(Type::int_type(), vCONSTANT, name), _i(i) {}
+
     Constant(float f, const_str_ref name)
         : User(Type::float_type(), vCONSTANT, name), _f(f) {}
+
+    Constant(double f, const_str_ref name)
+        : User(Type::float_type(), vCONSTANT, std::to_string(f)), _f(f) {}
 
     // gen Const from int or float
 
     template <typename T>
-    static Constant* gen(T v,std::string name="") {
+    static Constant* gen(T v, const_str_ref name="") {
         static std::map<T, Constant*> cache;
         assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
         auto iter = cache.find(v);
@@ -66,7 +74,7 @@ class Constant : public User {
         if(name=="")
             c = new Constant(v);
         else
-            c = new Constant(v,name);
+            c = new Constant(v, name);
         auto res = cache.emplace(v, c);
         return c;  // res.first->second; ??
     }
@@ -187,8 +195,8 @@ class BasicBlock : public Value {
 
    protected:
     Function* _parent;
-    inst_list _instructions;
-    arg_list _arguments;
+    inst_list _insts;
+    arg_list _args; // ?
     block_list _next_blocks;
     block_list _pre_blocks;
     int _depth = 0;
@@ -196,29 +204,40 @@ class BasicBlock : public Value {
    public:
     BasicBlock(const std::string& name = "", Function* parent = nullptr)
         : Value(Type::label_type(), vBASIC_BLOCK, name),
-          _parent(parent) {
-            
+          _parent(parent){
+
           };
 
     // get
     int depth() const { return _depth; }
-    int insts_num() const { return _instructions.size(); }
-    int args_num() const { return _arguments.size(); }
+    int insts_num() const { return _insts.size(); }
+    int args_num() const { return _args.size(); }
     int next_num() const { return _next_blocks.size(); }
     int pre_num() const { return _pre_blocks.size(); }
 
     Function* parent() const { return _parent; }
-    inst_list& insts() { return _instructions; }
-    arg_list& args() { return _arguments; }
+    inst_list& insts() { return _insts; }
+    arg_list& args() { return _args; }
     block_list& next_blocks() { return _next_blocks; }
     block_list& pre_blocks() { return _pre_blocks; }
 
-    // to be complete
-    inst_iterator begin() { return _instructions.begin(); }
-    inst_iterator end() { return _instructions.end(); }
+    // inst iter of the block
+    inst_iterator begin() { return _insts.begin(); }
+    inst_iterator end() { return _insts.end(); }
 
     // manage
     void set_depth(int d) { _depth = d; }  // ?
+
+    void emplace_back_inst(Instruction* i) {
+        _insts.emplace_back(i);
+    }
+    void emplace_inst(inst_iterator pos, Instruction* i) {
+        _insts.emplace(pos, i);
+    }
+
+    // for CFG ?
+    void add_next_block(BasicBlock* b) { _next_blocks.push_back(b); }
+    void add_pre_block(BasicBlock* b) { _pre_blocks.push_back(b); }
 
     // for isa<>
     static bool classof(const Value* v) { return v->scid() == vBASIC_BLOCK; }
@@ -226,8 +245,9 @@ class BasicBlock : public Value {
     // ir print
     void print(std::ostream& os) const override;
 };
-// Instuction 的类型也通过 _scid
+
 class Instruction : public User {
+    // Instuction 的类型也通过 _scid
    protected:
     BasicBlock* _parent;
 

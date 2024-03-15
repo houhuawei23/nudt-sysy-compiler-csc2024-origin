@@ -24,15 +24,8 @@ namespace ir {
  *
  */
 class Module {
-    // using inst_list = std::list<std::unique_ptr<Instruction>>; // list
-    // using iterator = inst_list::iterator;
-    // using reverse_iterator = inst_list::reverse_iterator;
 
-    // using arg_list = std::list<std::unique_ptr<Argument>>;     // vector ->
-    // list using block_list = std::list<std::unique_ptr<BasicBlock>>; // vector
-    // -> list
-
-    using value_vector = std::vector<std::unique_ptr<Value>>;
+    using value_vector = std::vector<Value*>;
     using str_fun_map = std::map<std::string, Function *>;
     using str_val_map = std::map<std::string, Value *>;
     using const_str_ref = const std::string &;

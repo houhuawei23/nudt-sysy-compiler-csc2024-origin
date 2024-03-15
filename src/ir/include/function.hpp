@@ -2,15 +2,12 @@
 #include "infrast.hpp"
 #include "module.hpp"
 #include "type.hpp"
-#include "value.hpp"
 #include "utils.hpp"
+#include "value.hpp"
 namespace ir {
-// using inst_list = std::list<std::unique_ptr<Instruction>>; // list
-// using iterator = inst_list::iterator;
-// using reverse_iterator = inst_list::reverse_iterator;
 
-using arg_list = std::list<std::unique_ptr<Argument>>;      // vector -> list
-using block_list = std::list<std::unique_ptr<BasicBlock>>;  // vector -> list
+using arg_list = std::list<Argument*>;      // vector -> list
+using block_list = std::list<BasicBlock*>;  // vector -> list
 
 // Value: _type, _name, _uses
 class Function : public Value {
@@ -21,7 +18,7 @@ class Function : public Value {
 
     block_list _blocks;       // blocks of the function
     block_list _exit_blocks;  // exit blocks
-    arg_list _arguments;
+    arg_list _args;
 
    public:
     Function(Type* func_type,
@@ -41,7 +38,7 @@ class Function : public Value {
     //   return dynamic_cast<FunctionType
     //   *>(this->type())->param_type();
     // }
-    BasicBlock* add_block(const std::string& name);
+    BasicBlock* add_block();
     block_list& blocks() { return _blocks; }
 
     static bool classof(const Value* v) { return v->scid() == vFUNCTION; }
