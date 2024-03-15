@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include <variant>
 // #include <unordered_set>
-#include "function.hpp"
+// #include "function.hpp"
 #include "type.hpp"
 #include "value.hpp"
 
@@ -22,6 +22,7 @@ using reverse_iterator = inst_list::reverse_iterator;
 using arg_list = std::list<Argument*>;      // vector -> list
 using block_list = std::list<BasicBlock*>;  // vector -> list
 using const_str_ref = const std::string&;
+
 //  _type, _name, _uses
 class Constant : public User {
    protected:
@@ -47,7 +48,7 @@ class Constant : public User {
     //! TODO: float to string? is that ok?
     Constant(float f)
         : User(Type::float_type(), vCONSTANT, std::to_string(f)), _f(f) {}
-        
+
     Constant(double f)
         : User(Type::float_type(), vCONSTANT, std::to_string(f)), _f(f) {}
 
@@ -63,15 +64,15 @@ class Constant : public User {
     // gen Const from int or float
 
     template <typename T>
-    static Constant* gen(T v, const_str_ref name="") {
+    static Constant* gen(T v, const_str_ref name = "") {
         static std::map<T, Constant*> cache;
         assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
         auto iter = cache.find(v);
         if (iter != cache.end()) {
             return iter->second;
         }
-        Constant*c;
-        if(name=="")
+        Constant* c;
+        if (name == "")
             c = new Constant(v);
         else
             c = new Constant(v, name);
@@ -93,7 +94,6 @@ class Constant : public User {
 
     // ir print
     void print(std::ostream& os) const override;
-
 };
 
 class ConstantBeta : public User {
@@ -196,7 +196,7 @@ class BasicBlock : public Value {
    protected:
     Function* _parent;
     inst_list _insts;
-    arg_list _args; // ?
+    arg_list _args;  // ?
     block_list _next_blocks;
     block_list _pre_blocks;
     int _depth = 0;
@@ -215,6 +215,8 @@ class BasicBlock : public Value {
     int next_num() const { return _next_blocks.size(); }
     int pre_num() const { return _pre_blocks.size(); }
 
+    bool empty() const { return _insts.empty(); }
+
     Function* parent() const { return _parent; }
     inst_list& insts() { return _insts; }
     arg_list& args() { return _args; }
@@ -228,9 +230,7 @@ class BasicBlock : public Value {
     // manage
     void set_depth(int d) { _depth = d; }  // ?
 
-    void emplace_back_inst(Instruction* i) {
-        _insts.emplace_back(i);
-    }
+    void emplace_back_inst(Instruction* i) { _insts.emplace_back(i); }
     void emplace_inst(inst_iterator pos, Instruction* i) {
         _insts.emplace(pos, i);
     }
@@ -244,7 +244,31 @@ class BasicBlock : public Value {
 
     // ir print
     void print(std::ostream& os) const override;
+
+    //! for pq
+    // bool operator<(const BasicBlock& other) const {
+    //     return std::stoi(name().substr(1)) >
+    //     std::stoi(other.name().substr(1));
+    // }
+    // bool operator<(const BasicBlock* other) const {
+    //     return std::stoi(name().substr(1)) >
+    //     std::stoi(other->name().substr(1));
+    // }
+    friend bool operator<(BasicBlock& a, BasicBlock& other) {
+        return std::stoi(a.name().substr(1)) >
+               std::stoi(other.name().substr(1));
+    }
 };
+
+inline bool compareBB(const BasicBlock* a1, const BasicBlock* a2) {
+    // return a1->priority < a2->priority;
+    if (a1->name().size() >0 && a2->name().size() >0) 
+        return std::stoi(a1->name().substr(1)) < std::stoi(a2->name().substr(1));  
+    else {
+        // std::
+        assert(false && "compareBB error");
+    }
+}
 
 class Instruction : public User {
     // Instuction 的类型也通过 _scid

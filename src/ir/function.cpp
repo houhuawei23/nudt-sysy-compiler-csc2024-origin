@@ -2,7 +2,7 @@
 #include "include/utils.hpp"
 
 namespace ir {
-BasicBlock* Function::add_block() {
+BasicBlock* Function::new_block() {
     auto nb = new BasicBlock("", this);
     _blocks.emplace_back(nb);
     return nb;
@@ -18,8 +18,11 @@ void Function::print(std::ostream& os) const {
     // }
     os << ") {\n";
     // print bbloks
+
     for (auto& bb : _blocks) {
-        os << *bb << std::endl;
+        if (!bb->empty()) {
+            os << *bb << std::endl;
+        }
     }
     os << "}";
 }

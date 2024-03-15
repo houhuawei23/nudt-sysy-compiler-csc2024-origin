@@ -69,7 +69,7 @@ std::any SysYIRGenerator::visitFunc(SysYParser::FuncContext* ctx) {
     // it will be automatically destroyed when return from this visitFfunc
     ir::SymbolTableBeta::FunctionScope scope(_tables);
     // create entry block with the same params of func
-    ir::BasicBlock* entry = func->add_block();
+    ir::BasicBlock* entry = func->new_block();
     entry->set_name(builder().getvarname());
     if (ctx->funcFParams()) {  // has formal params
         //! TODO: add fparams to entry block
@@ -77,6 +77,7 @@ std::any SysYIRGenerator::visitFunc(SysYParser::FuncContext* ctx) {
 
     _builder.set_pos(entry, entry->end());
     visitBlockStmt(ctx->blockStmt());
+    func->sort_blocks();
     return func;
 }
 

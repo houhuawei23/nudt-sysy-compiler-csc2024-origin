@@ -43,7 +43,7 @@ class IRBuilder {
         _is_not = false;
     }
 
-    void set_not() { _is_not = true;}
+    void flip_not() { _is_not = true;}
     void reset_not() {
         _is_not = false;
     }
@@ -85,9 +85,19 @@ class IRBuilder {
 
     void push_true_target(BasicBlock* block) { _true_targets.push(block); }
     void push_false_target(BasicBlock* block) { _false_targets.push(block); }
-
+    void push_tf(BasicBlock* true_block, BasicBlock* false_block) {
+        _true_targets.push(true_block);
+        _false_targets.push(false_block);
+    }
+    // current stmt or exp 's true/false_target
     BasicBlock* true_target() { return _true_targets.top(); }
     BasicBlock* false_target() { return _false_targets.top(); }
+
+    void pop_tf() { 
+        _true_targets.pop(); 
+        _false_targets.pop(); 
+    }
+
 
     //! create
     AllocaInst* create_alloca(Type* ret_type,
@@ -273,6 +283,7 @@ class IRBuilder {
         // temporary realization
         std::string res = std::to_string(_var_cnt);
         _var_cnt++;
+
 
         return "%" + res;
         // TODO!

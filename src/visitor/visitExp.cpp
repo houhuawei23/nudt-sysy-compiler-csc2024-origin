@@ -75,10 +75,12 @@ std::any SysYIRGenerator::visitUnaryExp(SysYParser::UnaryExpContext* ctx) {
         //! TODO
     } else if (ctx->NOT()) {
         //! TODO: if else, then is used
+        auto true_target = builder().false_target();
+        auto false_target = builder().true_target();
+        builder().pop_tf();
+        builder().push_tf(true_target, false_target);
         res = exp;
-        builder().set_not();
     } else if (ctx->ADD()) {
-        //
         res = exp;
     }
     return res;
@@ -183,17 +185,129 @@ std::any SysYIRGenerator::visitEqualExp(SysYParser::EqualExpContext* ctx) {
     //! TODO
     return nullptr;
 }
+/*
+- before you visit one exp, you must prepare its true and false target
+1. push the thing you protect
+2. call the function
+3. pop to reuse OR use tmp var to log
+*/
+//! exp : exp AND exp
+// exp: lhs AND rhs
 
-//! exp AND exp
 std::any SysYIRGenerator::visitAndExp(SysYParser::AndExpContext* ctx) {
     //! TODO
-    return nullptr;
+    // know exp's true/false target block
+    // lhs's true target = rhs block
+    // lhs's false target = exp false target
+    // rhs's true target = exp true target
+    // rhs's false target = exp false target
+    auto cur_block = builder().block();
+    auto cur_func = cur_block->parent();
+
+    // create rhs block as lhs's true target
+    // lhs's false target is exp false target
+    auto rhs_block = cur_func->new_block();
+
+    builder().push_tf(rhs_block, builder().false_target());  //! diff with OrExp
+    // builder().push_true_target(rhs_block);
+    // builder().push_false_target(builder().false_target());
+
+    //! visit lhs exp to get its value
+    auto lhs_value = any_cast_Value(visit(ctx->exp(0)));  // recursively visit
+    //* cast to i1
+    if (lhs_value->is_int()) {
+        lhs_value = builder().create_ine(lhs_value, ir::Constant::gen(0),
+                                         builder().getvarname());
+    } else if (lhs_value->is_float()) {
+        lhs_value = builder().create_fone(lhs_value, ir::Constant::gen(0.0),
+                                          builder().getvarname());
+    }
+    rhs_block->set_name(builder().getvarname());
+    // pop to get lhs t/f target
+    auto lhs_t_target = builder().true_target();
+    auto lhs_f_target = builder().false_target();
+    builder().pop_tf();  // match with push_tf
+
+    // create cond br inst
+    auto cond_br = builder().create_br(lhs_value, lhs_t_target, lhs_f_target);
+
+    //! [for CFG] link cur_block and target
+    // visit may change the cur_block, so need to reload the cur block
+    cur_block = builder().block();  // after block
+    // link cur_block and target
+    cur_block->add_next_block(lhs_t_target);
+    cur_block->add_next_block(lhs_f_target);
+
+    lhs_t_target->add_pre_block(cur_block);
+    lhs_f_target->add_pre_block(cur_block);
+    //! [for CFG] link over
+
+    //! visit and generate code for rhs block
+    builder().set_pos(rhs_block, rhs_block->begin());
+
+    auto rhs_value = visit(ctx->exp(1));
+
+    return rhs_value;
 }
 
 //! exp OR exp
+// lhs OR rhs
 std::any SysYIRGenerator::visitOrExp(SysYParser::OrExpContext* ctx) {
     //! TODO
-    return nullptr;
+    // know exp's true/false target block (already in builder's stack)
+    // lhs true target = exp true target
+    // lhs false target = rhs block
+    // rhs true target = exp true target
+    // rhs false target = exp false target
+    auto cur_block = builder().block();  // pre block
+    auto cur_func = cur_block->parent();
+
+    // create rhs block as lhs's false target
+    // lhs's true target is exp true target
+    auto rhs_block = cur_func->new_block();
+    //! push target
+    // builder().push_true_target(builder().true_target());
+    // builder().push_false_target(rhs_block);
+    builder().push_tf(builder().true_target(), rhs_block);  // match with pop_tf
+
+    //! visit lhs exp to get its value
+    auto lhs_value = any_cast_Value(visit(ctx->exp(0)));  // recursively visit
+    //* cast to i1
+    if (lhs_value->is_int()) {
+        lhs_value = builder().create_ine(lhs_value, ir::Constant::gen(0),
+                                         builder().getvarname());
+    } else if (lhs_value->is_float()) {
+        lhs_value = builder().create_fone(lhs_value, ir::Constant::gen(0.0),
+                                          builder().getvarname());
+    }
+    rhs_block->set_name(builder().getvarname());
+
+    //! pop to get lhs t/f target
+    auto lhs_t_target = builder().true_target();
+    auto lhs_f_target = builder().false_target();
+    builder().pop_tf();  // match with push_tf
+
+    // create condbr
+    builder().create_br(lhs_value, lhs_t_target, lhs_f_target);
+    //! lhs is finished,
+
+    //! [for CFG] link cur_block and target
+    // visit may change the cur_block, so need to reload the cur block
+    cur_block = builder().block();  // after block
+
+    cur_block->add_next_block(lhs_t_target);
+    cur_block->add_next_block(lhs_f_target);
+
+    lhs_t_target->add_pre_block(cur_block);
+    lhs_f_target->add_pre_block(cur_block);
+    //! [for CFG] link over
+
+    //! visit and generate code for rhs block
+    builder().set_pos(rhs_block, rhs_block->begin());
+
+    auto rhs_value = visit(ctx->exp(1));
+
+    return rhs_value;
 }  // namespace sysy
 
 }  // namespace sysy

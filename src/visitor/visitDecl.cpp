@@ -18,13 +18,15 @@ std::any SysYIRGenerator::visitDeclLocal(SysYParser::DeclContext* ctx) {
     // auto btype_pointer_type =
     // ir::Type::pointer_type(any_cast_Type(visit(ctx->btype())));
     auto btype = any_cast_Type(visit(ctx->btype()));
-
+    // auto test = safe_any_cast<ir::Type>(visit(ctx->btype()));
+    // assert(test == btype);
     bool is_const = ctx->CONST();
+    ir::Value* res = nullptr;
 
     for (auto varDef : ctx->varDef()) {
-        visitVarDef_beta(varDef, btype, is_const);
+        res = visitVarDef_beta(varDef, btype, is_const);
     }
-    return nullptr;
+    return res;
 }
 
 // varDef: lValue (ASSIGN initValue)?;
@@ -49,9 +51,9 @@ exp:
     | exp AND exp					# andExp
     | exp OR exp					# orExp;
 */
-void SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
-                                       ir::Type* btype,
-                                       bool is_const) {
+ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
+                                             ir::Type* btype,
+                                             bool is_const) {
     /// lValue
     auto name = ctx->lValue()->ID()->getText();
     // if arr need to get dims
@@ -61,7 +63,8 @@ void SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
     }
     //! create alloca inst
     auto ptr_type = ir::Type::pointer_type(btype);
-    auto alloca_ptr = _builder.create_alloca(btype, dims, _builder.getvarname(), is_const);
+    auto alloca_ptr =
+        _builder.create_alloca(btype, dims, _builder.getvarname(), is_const);
     // _builder.func();
     _tables.insert(name, alloca_ptr);  // check re decl err
 
@@ -78,7 +81,8 @@ void SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
                 if (btype->is_int() && init->is_float()) {  // f2i
                     init = ir::Constant::gen((int)cinit->f());
                 } else if (btype->is_float() && init->is_int()) {  // i2f
-                    init = ir::Constant::gen((float)cinit->i(),ir::getMC((float)cinit->i()));
+                    init = ir::Constant::gen((float)cinit->i(),
+                                             ir::getMC((float)cinit->i()));
                 }
             } else if (btype->is_float() && init->is_int()) {  // i2f
                 //! TODO
@@ -91,6 +95,7 @@ void SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
 
         auto store = _builder.create_store(init, alloca_ptr, {}, "store");
     }
+    return alloca_ptr;
 }
 
 // decl: CONST? btype varDef (COMMA varDef)* SEMICOLON;
@@ -99,12 +104,12 @@ std::any SysYIRGenerator::visitDeclGlobal(SysYParser::DeclContext* ctx) {
     auto btype = ir::Type::pointer_type(any_cast_Type(visit(ctx->btype())));
 
     bool is_const = ctx->CONST();
-
+    ir::Value* res = nullptr;
     for (auto varDef : ctx->varDef()) {
-        visitVarDef_beta(varDef, btype, is_const);
+        res = visitVarDef_beta(varDef, btype, is_const);
     }
 
-    return 0;
+    return res;
 }
 
 std::any SysYIRGenerator::visitBtype(SysYParser::BtypeContext* ctx) {
