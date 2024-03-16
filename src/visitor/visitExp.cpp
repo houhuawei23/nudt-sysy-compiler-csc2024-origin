@@ -392,16 +392,14 @@ namespace sysy
         // create cond br inst
         auto cond_br = builder().create_br(lhs_value, lhs_t_target, lhs_f_target);
 
-        //! [for CFG] link cur_block and target
-        // visit may change the cur_block, so need to reload the cur block
-        cur_block = builder().block(); // after block
-        // link cur_block and target
-        cur_block->add_next_block(lhs_t_target);
-        cur_block->add_next_block(lhs_f_target);
+    //! [for CFG] link cur_block and target
+    // visit may change the cur_block, so need to reload the cur block
+    cur_block = builder().block();  
 
-        lhs_t_target->add_pre_block(cur_block);
-        lhs_f_target->add_pre_block(cur_block);
-        //! [for CFG] link over
+    ir::BasicBlock::block_link(cur_block, lhs_t_target);
+    ir::BasicBlock::block_link(cur_block, lhs_f_target);
+
+    //! [for CFG] link over
 
         //! visit and generate code for rhs block
         builder().set_pos(rhs_block, rhs_block->begin());
@@ -424,13 +422,12 @@ namespace sysy
         auto cur_block = builder().block(); // pre block
         auto cur_func = cur_block->parent();
 
-        // create rhs block as lhs's false target
-        // lhs's true target is exp true target
-        auto rhs_block = cur_func->new_block();
-        //! push target
-        // builder().push_true_target(builder().true_target());
-        // builder().push_false_target(rhs_block);
-        builder().push_tf(builder().true_target(), rhs_block); // match with pop_tf
+    // create rhs block as lhs's false target
+    // lhs's true target is exp true target
+    auto rhs_block = cur_func->new_block();
+
+    //! push target
+    builder().push_tf(builder().true_target(), rhs_block);  // match with pop_tf
 
         //! visit lhs exp to get its value
         auto lhs_value = any_cast_Value(visit(ctx->exp(0))); // recursively visit
@@ -460,12 +457,10 @@ namespace sysy
         // visit may change the cur_block, so need to reload the cur block
         cur_block = builder().block(); // after block
 
-        cur_block->add_next_block(lhs_t_target);
-        cur_block->add_next_block(lhs_f_target);
+    ir::BasicBlock::block_link(cur_block, lhs_t_target);
+    ir::BasicBlock::block_link(cur_block, lhs_f_target);
 
-        lhs_t_target->add_pre_block(cur_block);
-        lhs_f_target->add_pre_block(cur_block);
-        //! [for CFG] link over
+    //! [for CFG] link over
 
         //! visit and generate code for rhs block
         builder().set_pos(rhs_block, rhs_block->begin());

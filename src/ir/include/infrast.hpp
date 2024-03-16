@@ -245,6 +245,11 @@ class BasicBlock : public Value {
     // ir print
     void print(std::ostream& os) const override;
 
+    static void block_link(ir::BasicBlock* pre, ir::BasicBlock* next) {
+        pre->add_next_block(next);
+        next->add_pre_block(pre);
+    }
+
     //! for pq
     // bool operator<(const BasicBlock& other) const {
     //     return std::stoi(name().substr(1)) >
@@ -262,8 +267,9 @@ class BasicBlock : public Value {
 
 inline bool compareBB(const BasicBlock* a1, const BasicBlock* a2) {
     // return a1->priority < a2->priority;
-    if (a1->name().size() >0 && a2->name().size() >0) 
-        return std::stoi(a1->name().substr(1)) < std::stoi(a2->name().substr(1));  
+    if (a1->name().size() > 0 && a2->name().size() > 0)
+        return std::stoi(a1->name().substr(1)) <
+               std::stoi(a2->name().substr(1));
     else {
         // std::
         assert(false && "compareBB error");

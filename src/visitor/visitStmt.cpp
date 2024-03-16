@@ -113,10 +113,7 @@ create true_block, false_block or
 如果是 exp = !exp, 则调换 true_block 和 false_block
 的指针，正常地访问!右边的exp, 实际上实现了 ! NOT 操作。
 */
-void block_link(ir::BasicBlock* pre, ir::BasicBlock* next) {
-    pre->add_next_block(next);
-    next->add_pre_block(pre);
-}
+
 // 短路求值？
 // cond = 
 std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
@@ -128,9 +125,9 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
     auto else_block = cur_func->new_block();
     auto merge_block = cur_func->new_block();
 
-    //* link the basic block
-    // block_link(cur_block, then_block);
-    // block_link(cur_block, else_block);
+    // //* link the basic block
+    // ir::BasicBlock::block_link(cur_block, then_block);
+    // ir::BasicBlock::block_link(cur_block, else_block);
 
     //! VISIT cond
     //* push the then and else block to the stack
@@ -156,19 +153,27 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
     builder().create_br(cond, lhs_t_target, lhs_f_target);
     //! VISIT cond end
 
+    //* link the basic block
+    cur_block = builder().block();
+    ir::BasicBlock::block_link(cur_block, lhs_t_target);
+    ir::BasicBlock::block_link(cur_block, lhs_t_target);
+
     //! VISIT then block
     then_block->set_name(builder().getvarname());
     builder().set_pos(then_block, then_block->begin());
     visit(ctx->stmt(0));  //* may change the basic block
-    builder().create_br(merge_block);
 
+    builder().create_br(merge_block);
+    ir::BasicBlock::block_link(then_block, merge_block);
+    
     //! VISIT else block
     else_block->set_name(builder().getvarname());
     builder().set_pos(else_block, else_block->begin());
     if (auto elsestmt = ctx->stmt(1))
         visit(elsestmt);
-    builder().create_br(merge_block);
 
+    builder().create_br(merge_block);
+    ir::BasicBlock::block_link(else_block, merge_block);
     //! SETUP builder fo merge block
     builder().set_pos(merge_block, merge_block->begin());
     merge_block->set_name(builder().getvarname());
