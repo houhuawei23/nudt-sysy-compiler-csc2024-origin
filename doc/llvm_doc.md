@@ -406,14 +406,25 @@ Constant *getInitializer()
 
 ## class BasicBlock: public Value
 
-This class represents a single entry single exit section of the code, commonly known as a basic block by the compiler community. The BasicBlock class maintains a list of Instructions, which form the body of the block. Matching the language definition, the last element of this list of instructions is always a terminator instruction.
+This class represents a **single entry single exit section** of the code, commonly known as a basic block by the compiler community. The BasicBlock class maintains a list of Instructions, which form the body of the block. Matching the language definition, the last element of this list of instructions is always a terminator instruction.
+
 此类表示代码的单入口单出口部分，通常被编译器社区称为基本块。 BasicBlock 类维护一个指令列表，这些指令构成了块的主体。与语言定义相匹配，该指令列表的最后一个元素始终是终止符指令。
 
 In addition to tracking the list of instructions that make up the block, the BasicBlock class also keeps track of the Function that it is embedded into.
+
 除了跟踪组成块的指令列表之外， BasicBlock 类还跟踪它嵌入的 Function。
 
 Note that BasicBlocks themselves are Values, because they are referenced by instructions like branches and can go in the switch tables. BasicBlocks have type label.
+
 请注意， BasicBlock 本身是值，因为它们由分支等指令引用，并且可以进入切换表。 BasicBlock 的类型为 label 。
+
+This represents a single basic block in LLVM. A basic block is simply **a container of instructions that execute sequentially**. Basic blocks are Values because they are referenced by instructions such as branches and switch tables. The type of a BasicBlock is "Type::LabelTy" because the basic block represents a label to which a branch can jump.
+
+这代表 LLVM 中的单个基本块。基本块只是顺序执行的指令的容器。基本块是值，因为它们被分支和开关表等指令引用。 BasicBlock 的类型是“Type::LabelTy”，因为基本块表示分支可以跳转到的标签。
+
+A well formed basic block is formed of a list of **non-terminating instructions** followed by a single **terminator instruction**. Terminator instructions may not occur in the middle of basic blocks, and must terminate the blocks. The BasicBlock class allows malformed basic blocks to occur because it may be useful in the intermediate stage of constructing or modifying a program. However, the verifier will ensure that basic blocks are "well formed".
+
+格式良好的基本块由一系列非终止指令组成，后跟单个终止指令。终止符指令不能出现在基本块的中间，并且必须终止块。 BasicBlock 类允许出现格式错误的基本块，因为它在构造或修改程序的中间阶段可能很有用。然而，验证者将确保基本块“结构良好”。
 
 ```CPP
 BasicBlock(const std::string &Name = "", Function *Parent = 0)

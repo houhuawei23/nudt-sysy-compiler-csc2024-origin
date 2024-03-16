@@ -290,3 +290,153 @@ define i32 @main() {
     ret i32 0
 
 }
+- 3.15: 
+  - 实现了单层 if-else 语句
+  - 添加了 IcmpInst (ieq, ine), BranchInst (cond, no cond)
+  - Builder 添加 _is_not 用于在if-else 中记录 cond 中是否有 NOT
+    - 感觉还是有问题，应该直接拿到 auto v = visit(exp)，直接判断 v，而不是借助 Builder，因为多层嵌套对 Builder _is_not 的维护有问题
+  - 改 `unique_ptr` 为 `*`, 为了方便，以后有需要再调整
+
+目前可实现示例：
+
+```C
+int main() {
+    int a = 0;
+    if (!a) {
+        a = 2;
+    } else {
+        a = 4;
+    }
+    return a;
+}
+```
+
+```LLVM
+define i32 @main() {
+0:     ; block
+    %1 = alloca i32
+    store i32 0, i32* %1
+    %2 = load i32, i32* %1
+    %3 = icmp ne i32 0, %2
+    br i1 %3, label %5, label %4
+
+4:     ; block
+    store i32 2, i32* %1
+    br label %6
+
+5:     ; block
+    store i32 4, i32* %1
+    br label %6
+
+6:     ; block
+    %7 = load i32, i32* %1
+    ret i32 %7
+}
+```
+
+- 3.16:
+  - if-else 语句的实现
+  - visitUnaryExp
+  - visitAndExp
+  - visitOrExp
+  - add detailed comments to them
+  - safe_any_cast 实现类型判断，更加安全，避免出现 bad_any_cast
+示例：
+```C
+int main() {
+    int a = 1;
+    int b = 2;
+    if (!a) {
+        if (!a) {
+            a = 3;
+        }
+    } else {
+        a = 4;
+    }
+
+    if (a || !b) {
+        a = 5;
+    } else {
+        a = 6;
+    }
+    
+    if (!a && !b) {
+        a = 7;
+    }
+
+    return a;
+}
+
+```
+```LLVM
+define i32 @main() {
+0:     ; block
+    %1 = alloca i32
+    store i32 1, i32* %1
+    %2 = alloca i32
+    store i32 2, i32* %2
+    %3 = load i32, i32* %1
+    %4 = icmp ne i32 0, %3
+    br i1 %4, label %11, label %5
+
+5:     ; block
+    %6 = load i32, i32* %1
+    %7 = icmp ne i32 0, %6
+    br i1 %7, label %9, label %8
+
+8:     ; block
+    store i32 3, i32* %1
+    br label %10
+
+9:     ; block
+    br label %10
+
+10:     ; block
+    br label %12
+
+11:     ; block
+    store i32 4, i32* %1
+    br label %12
+
+12:     ; block
+    %13 = load i32, i32* %1
+    %14 = icmp ne i32 0, %13
+    br i1 %14, label %18, label %15
+
+15:     ; block
+    %16 = load i32, i32* %2
+    %17 = icmp ne i32 0, %16
+    br i1 %17, label %19, label %18
+
+18:     ; block
+    store i32 5, i32* %1
+    br label %20
+
+19:     ; block
+    store i32 6, i32* %1
+    br label %20
+
+20:     ; block
+    %21 = load i32, i32* %1
+    %22 = icmp ne i32 0, %21
+    br i1 %22, label %27, label %23
+
+23:     ; block
+    %24 = load i32, i32* %2
+    %25 = icmp ne i32 0, %24
+    br i1 %25, label %27, label %26
+
+26:     ; block
+    store i32 7, i32* %1
+    br label %28
+
+27:     ; block
+    br label %28
+
+28:     ; block
+    %29 = load i32, i32* %1
+    ret i32 %29
+
+}
+
+```

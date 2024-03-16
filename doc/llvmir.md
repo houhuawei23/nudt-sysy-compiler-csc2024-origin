@@ -55,6 +55,18 @@ Yield a 'void' type: produce control flow not values. (except invoke)
   - `br i1 <cond>, label <iftrue>, label <iffalse>`
 - invoke
 
+
+#### BR
+The conditional branch form of the ‘br’ instruction takes a single ‘i1’ value and two ‘label’ values. 
+The unconditional form of the ‘br’ instruction takes a single ‘label’ value as a target.
+“ br ”指令的条件分支形式采用单个“ i1 ”值和两个“ label ”值。 
+“ br ”指令的无条件形式采用单个“ label ”值作为目标。
+
+执行条件“ br ”指令后，将对“ i1 ”参数进行求值。
+如果值为 true ，控制流向“ iftrue ” label 参数。
+如果“cond”为 false ，控制流向‘ iffalse ’ label 参数。
+如果“ cond ”是 poison 或 undef ，则该指令具有未定义的行为。
+
 ```llvm
 ; ret <type> <value>
 ; ret void
@@ -255,10 +267,13 @@ store atomic [volatile] <ty> <value>, ptr <pointer> [syncscope("<target-scope>")
 
 ### Other Operations
 
-- `icmp`: returns a boolean value or a vector of boolean values based on comparison of its two integer, integer vector, pointer, or pointer vector operands.
+- `icmp`: returns a boolean value or a vector of boolean values based on comparison of its 
+  - two integer, integer vector, pointer, or pointer vector operands.
 - `fcmp`: float comparison
 - `phi`
 - `call`
+
+#### ICMP
 
 1. `eq`: yields `true` if the operands are equal, `false` otherwise. No sign interpretation is necessary or performed.
 2. `ne`: yields `true` if the operands are unequal, `false` otherwise. No sign interpretation is necessary or performed.
@@ -270,6 +285,31 @@ store atomic [volatile] <ty> <value>, ptr <pointer> [syncscope("<target-scope>")
 8. `sge`: interprets the operands as signed values and yields `true` if `op1` is greater than or equal to `op2`.
 9. `slt`: interprets the operands as signed values and yields `true` if `op1` is less than `op2`.
 10. `sle`: interprets the operands as signed values and yields `true` if `op1` is less than or equal to `op2`.
+
+
+#### FCMP
+
+1. `false`: no comparison, always returns false
+2. `oeq`: ordered and equal
+3. `ogt`: ordered and greater than
+4. `oge`: ordered and greater than or equal
+5. `olt`: ordered and less than
+6. `ole`: ordered and less than or equal
+7. `one`: ordered and not equal
+8. `ord`: ordered (no nans)
+9. `ueq`: unordered or equal
+10. `ugt`: unordered or greater than
+11. `uge`: unordered or greater than or equal
+12. `ult`: unordered or less than
+13. `ule`: unordered or less than or equal
+14. `une`: unordered or not equal
+15. `uno`: unordered (either nans)
+16. `true`: no comparison, always returns true
+
+#### PHI
+
+
+#### CALL
 ```LLVM
 ; <result> = icmp <cond> <ty> <op1>, <op2>   ; yields i1 or <N x i1>:result
 

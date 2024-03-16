@@ -28,6 +28,7 @@ class Type {
   public:
     Type(BType btype) : _btype(btype) {}
     virtual ~Type() = default; // default deconstructor
+    
     // static method for construct Type instance
     static Type *void_type();
     static Type *int_type();
@@ -67,6 +68,7 @@ class Type {
         default:
             break;
         }
+        return -1;
     };
     void print(std::ostream &os) const;
 };
@@ -76,7 +78,6 @@ class Type {
  */
 class PointerType : public Type {
     //! inherit from Type
-    // BType _btype;
   protected:
     Type *_base_type;
     PointerType(Type *baseType) : Type(POINTER), _base_type(baseType) {}

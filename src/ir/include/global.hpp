@@ -9,7 +9,7 @@ using const_value_vector = const std::vector<Value*>;
 全局变量类型
 
 */
-class GlobalVariable : public Constant {
+class GlobalVariable : public User {
     // _type, _uses, _name
     // _operands
    protected:
@@ -27,7 +27,7 @@ class GlobalVariable : public Constant {
                    Module* parent = nullptr,
                    bool is_const = false,
                    const_str& name = "")
-        : Constant(base_type, vGLOBAL_VAR, name),
+        : User(base_type, vGLOBAL_VAR, name),
           _parent(parent),
           _is_const(is_const),
           _is_init(init != nullptr) {

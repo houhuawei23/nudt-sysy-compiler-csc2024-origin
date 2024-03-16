@@ -46,37 +46,45 @@ class SysYIRGenerator : public SysYBaseVisitor {
     std::any visitDeclGlobal(SysYParser::DeclContext* ctx);
 
     // virtual std::any visitVarDef(SysYParser::VarDefContext* ctx) override;
-    void visitVarDef_beta(SysYParser::VarDefContext* ctx,
+    ir::Value* visitVarDef_beta(SysYParser::VarDefContext* ctx,
                           ir::Type* type,
                           bool is_const);
 
     virtual std::any visitBtype(SysYParser::BtypeContext* ctx) override;
-    virtual std::any visitNumberExp(SysYParser::NumberExpContext* ctx) override;
-    virtual std::any visitReturnStmt(
-        SysYParser::ReturnStmtContext* ctx) override;
 
-    virtual std::any visitVarExp(SysYParser::VarExpContext* ctx) override;
-    virtual std::any visitAssignStmt(SysYParser::AssignStmtContext* ctx) override;
     virtual std::any visitLValue(SysYParser::LValueContext* ctx) override;
-    virtual std::any visitAdditiveExp(SysYParser::AdditiveExpContext* ctx) override;
-    virtual std::any visitMultiplicativeExp(SysYParser::MultiplicativeExpContext*ctx) override;
-    virtual std::any visitUnaryExp(SysYParser::UnaryExpContext* ctx) override;
+
+    //! visit Stmt
+    virtual std::any visitReturnStmt(SysYParser::ReturnStmtContext* ctx) override;
+
+    virtual std::any visitAssignStmt(SysYParser::AssignStmtContext* ctx) override;
+
+    virtual std::any visitIfStmt(SysYParser::IfStmtContext* ctx) override;
+
+    virtual std::any visitWhileStmt(SysYParser::WhileStmtContext* ctx) override;
+
+    virtual std::any visitBreakStmt(SysYParser::BreakStmtContext* ctx) override;
+
+    virtual std::any visitContinueStmt(SysYParser::ContinueStmtContext* ctx) override;
+
+    //! visit EXP
+    virtual std::any visitVarExp(SysYParser::VarExpContext* ctx) override;
     virtual std::any visitParenExp(SysYParser::ParenExpContext* ctx) override;
-    // virtual std::any visitBlockItem(SysYParser::BlockItemContext *ctx)
-    // override; virtual std::any visitDecl(SysYParser::DeclContext *ctx)
-    // override;
 
-    // // visitVarDef
-    // virtual std::any visitVarDef(SysYParser::VarDefContext *ctx) override;
+    virtual std::any visitNumberExp(SysYParser::NumberExpContext* ctx) override;
 
-    // // lValue
-    // virtual std::any visitLValue(SysYParser::LValueContext *ctx) override;
-    // // initVAlue
-    // virtual std::any visitInitValue(SysYParser::InitValueContext *ctx)
-    // override;
-    // // exp
+    virtual std::any visitUnaryExp(SysYParser::UnaryExpContext* ctx) override;
 
-    // // visitNumber
-    // virtual std::any visitNumber(SysYParser::NumberContext *ctx) override;
+    virtual std::any visitMultiplicativeExp(SysYParser::MultiplicativeExpContext* ctx) override;
+
+    virtual std::any visitAdditiveExp(SysYParser::AdditiveExpContext* ctx) override;
+
+    virtual std::any visitRelationExp(SysYParser::RelationExpContext* ctx) override;
+
+    virtual std::any visitEqualExp(SysYParser::EqualExpContext* ctx) override;
+
+    virtual std::any visitAndExp(SysYParser::AndExpContext* ctx) override;
+
+    virtual std::any visitOrExp(SysYParser::OrExpContext* ctx) override;
 };
 }  // namespace sysy
