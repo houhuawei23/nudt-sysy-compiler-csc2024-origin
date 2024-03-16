@@ -57,8 +57,28 @@ class Value {
         vFOEQ,
         vFONE, 
 
+        // Unary Instruction
+        vFNEG, 
+        
+        vFTOI, 
+        vITOF, 
+
         // Binary Instruction
         vADD, 
+        vFADD, 
+        vSUB, 
+        vFSUB, 
+
+        vMUL, 
+        vFMUL, 
+        
+        vUDIV, 
+        vSDIV, 
+        vFDIV, 
+        
+        vUREM, 
+        vSREM, 
+        vFREM, 
     };
     // for isa<> type check
     // each subclass of Value has different _scid

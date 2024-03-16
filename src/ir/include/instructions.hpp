@@ -135,28 +135,32 @@ class ReturnInst : public Instruction {
     void print(std::ostream& os) const override;
 };
 
-//! Unary instruction, includes '!', '-' and type conversion.
+/*
+ * @brief Unary Instruction
+ * @details: 
+ *      <result> = sitofp <ty> <value> to <ty2>
+ *      <result> = fptosi <ty> <value> to <ty2>
+ * 
+ *      <result> = fneg [fast-math flags]* <ty> <op1>
+ */
 class UnaryInst : public Instruction {
-    //! TODO
+    friend class IRBuilder;
+
    protected:
-    // Constructor
-    UnaryInst(ValueId itype,
-              Value* operand,
-              BasicBlock* parent = nullptr,
-              const_str& name = "")
-        : Instruction(itype,
-                      Type::void_type(),  //! TODO: modified ret_type
-                      parent,
-                      name) {
+    UnaryInst(Value::ValueId kind, Type* type, Value* operand, BasicBlock* parent = nullptr, const_str& name = "")
+        : Instruction(kind, type, parent, name) {
         add_operand(operand);
     }
 
    public:
-    static bool classof(const Value* v) {
-        //! TODO
-        assert(false && "not implemented");
-    }
-    void print(std::ostream& os) const override;  //! TODO
+    static bool classof(const Value* v) { return v->scid() == vFTOI || v->scid() == vITOF || 
+                                                 v->scid() == vFNEG; }
+
+    public:
+    Value* get_value() const { return operand(0); }
+
+    public:
+    void print(std::ostream& os) const override;
 };
 
 /*
@@ -164,30 +168,29 @@ class UnaryInst : public Instruction {
  * @details: 
  *      1. exp (MUL | DIV | MODULO) exp
  *      2. exp (ADD | SUB) exp
- *      3. exp (LT | GT | LE | GE) exp
- *      4. exp (EQ | NE) exp
- *      5. exp AND exp
- *      6. exp OR exp
  */
 class BinaryInst : public Instruction {
-   public:
+    friend class IRBuilder;
+
+    public:
     BinaryInst(ValueId kind, Type* type, Value* lvalue, Value* rvalue, BasicBlock* parent, const std::string name="") 
      : Instruction(kind, type, parent, name) {
         add_operand(lvalue);
         add_operand(rvalue);
     }
 
-   public:
-    static bool classof(const Value* v) {
-        // TODO
-        assert(false && "not implemented");
-    }
+    public:
+    static bool classof(const Value* v) { return v->scid() == vADD || v->scid() == vFADD || 
+                                                 v->scid() == vSUB || v->scid() == vFSUB ||
+                                                 v->scid() == vMUL || v->scid() == vFMUL || 
+                                                 v->scid() == vSDIV || v->scid() == vFDIV || 
+                                                 v->scid() == vSREM || v->scid() == vFREM; }
 
     public:
     Value* get_lvalue() const { return operand(0); }
     Value* get_rvalue() const { return operand(1); }
 
-
+    public:
     void print(std::ostream& os) const override;
 };
 

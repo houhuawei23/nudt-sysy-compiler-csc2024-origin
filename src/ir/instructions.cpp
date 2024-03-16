@@ -11,7 +11,6 @@ namespace ir {
  * %1 = alloca i32
  */
 void AllocaInst::print(std::ostream& os) const {
-    // print var name
     os << name() << " = ";
     os << "alloca ";
     // just for int scalar
@@ -55,6 +54,10 @@ void ReturnInst::print(std::ostream& os) const {
     }
 }
 
+/*
+ * @brief Binary Instruction Output
+ *      <result> = add <ty> <op1>, <op2>
+ */
 void BinaryInst::print(std::ostream& os) const {
     os << name() << " = ";
     switch (scid())
@@ -62,14 +65,80 @@ void BinaryInst::print(std::ostream& os) const {
     case vADD:
         os << "add ";
         break;
+    case vFADD:
+        os << "fadd ";
+        break;
+    
+    case vSUB:
+        os << "sub ";
+        break;
+    case vFSUB:
+        os << "fsub ";
+        break;
+    
+    case vMUL: 
+        os << "mul ";
+        break;
+    case vFMUL:
+        os << "fmul ";
+        break;
+    
+    case vSDIV:
+        os << "sdiv ";
+        break;
+    case vFDIV:
+        os << "fdiv ";
+        break;
+
+    case vSREM:
+        os << "srem ";
+        break;
+    case vFREM:
+        os << "frem ";
+        break;
+
     default:
         break;
     }
-    // op1
+    // <type>
+    os << *type() << " ";
+    // <op1>
     os << get_lvalue()->name() << ", ";
+    // <op2>
+    os << get_rvalue()->name();
+}
 
-    // op2
-    os << get_rvalue()->name() << " : " << *type();
+/*
+ * @brief Unary Instruction Output
+ *      <result> = sitofp <ty> <value> to <ty2>
+ *      <result> = fptosi <ty> <value> to <ty2>
+ * 
+ *      <result> = fneg [fast-math flags]* <ty> <op1>
+ */
+void UnaryInst::print(std::ostream& os) const {
+    os << name() << " = ";
+    switch (scid())
+    {
+    case vFTOI:
+        os << "fptosi ";
+        
+        if (is_int()) os << "float ";
+        else os << "i32 ";
+        os << get_value()->name() << " to " << *type();
+        break;
+    case vITOF:
+        os << "sitofp ";
+
+        if (is_int()) os << "float ";
+        else os << "i32 ";
+        os << get_value()->name() << " to " << *type();
+        break;
+    case vFNEG:
+        os << "fneg " << *type() << " " << get_value()->name();
+        break;
+    default:
+        break;
+    }
 }
 
 void ICmpInst::print(std::ostream& os) const {

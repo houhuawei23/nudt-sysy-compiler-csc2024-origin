@@ -56,44 +56,43 @@ ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
                                              bool is_const) {
     /// lValue
     auto name = ctx->lValue()->ID()->getText();
-    // if arr need to get dims
+    
+    // array
     std::vector<ir::Value*> dims;
     for (auto dim : ctx->lValue()->exp()) {
         dims.push_back(any_cast_Value(visit(dim)));
     }
+    
     //! create alloca inst
     auto ptr_type = ir::Type::pointer_type(btype);
-    auto alloca_ptr =
-        _builder.create_alloca(btype, dims, _builder.getvarname(), is_const);
+    auto alloca_ptr = _builder.create_alloca(btype, dims, _builder.getvarname(), is_const);
     // _builder.func();
     _tables.insert(name, alloca_ptr);  // check re decl err
 
-    /// initValue
+    //! create store inst
     ir::Value* init = nullptr;
-    if (ctx->ASSIGN()) {         // parse initValue
-        if (dims.size() == 0) {  // scalar
+    if (ctx->ASSIGN()) {
+        if (dims.size() == 0) {  //! 1. scalar
             init = any_cast_Value(visit(ctx->initValue()->exp()));
-            // init is Constant
-            //! if init is Constant, do dynamic_cast; else return nullptr
-            //! if init is not Constant, generate i2f/f2i inst
-            if (auto cinit = ir::dyn_cast<ir::Constant>(init)) {
-                // if const, may do implicit conversion
-                if (btype->is_int() && init->is_float()) {  // f2i
+            if (auto cinit = ir::dyn_cast<ir::Constant>(init)) {  //! 1.1 常量
+                if (btype->is_int() && init->is_float()) {
                     init = ir::Constant::gen((int)cinit->f());
                 } else if (btype->is_float() && init->is_int()) {  // i2f
-                    init = ir::Constant::gen((float)cinit->i(),
-                                             ir::getMC((float)cinit->i()));
+                    init = ir::Constant::gen((float)cinit->i(),ir::getMC((float)cinit->i()));
                 }
-            } else if (btype->is_float() && init->is_int()) {  // i2f
-                //! TODO
-                // init = _builder.create_i2f(init);
-            } else if (btype->is_int() && init->is_float()) {  // f2i
-                //! TODO
-                // init = _builder.create_f2i(init);
+                auto store = _builder.create_store(init, alloca_ptr, {}, "store");
+            } else {  //! 1.2 变量
+                if (init->is_float() && btype->is_int()) {
+                    auto ftosi = _builder.create_ftosi(ir::Type::int_type(), init, _builder.getvarname());
+                    auto stroe = _builder.create_store(ftosi, alloca_ptr, {}, "store");
+                } else if (init->is_int() && btype->is_float()) {
+                    auto sitof = _builder.create_sitof(ir::Type::float_type(), init, _builder.getvarname());
+                    auto store = _builder.create_store(sitof, alloca_ptr, {}, "store");
+                }
             }
+        } else {  //! 2. array
+            // TODO
         }
-
-        auto store = _builder.create_store(init, alloca_ptr, {}, "store");
     }
     return alloca_ptr;
 }

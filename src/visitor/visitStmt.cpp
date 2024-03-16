@@ -118,6 +118,7 @@ void block_link(ir::BasicBlock* pre, ir::BasicBlock* next) {
     next->add_pre_block(pre);
 }
 // 短路求值？
+// cond = 
 std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
     builder().if_inc();
     auto cur_block = builder().block();
