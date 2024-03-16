@@ -276,3 +276,17 @@ define dso_local i32 @main() #0 {
   ret i32 %6
 }
 ```
+-2024-3-15
+对于常量声明，如果右值直接可计算，不需要alloca和store，直接将该变量的name和值的地址插入符号表，支持声明时的类型转换 int->float float->int
+int main()
+{
+    int a = 1;
+    const int b = 2 + 1;
+    return 0;
+}
+define i32 @main() {
+    %1 = alloca i32
+    store i32 1, i32* %1
+    ret i32 0
+
+}

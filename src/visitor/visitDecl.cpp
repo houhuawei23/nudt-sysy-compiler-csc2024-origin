@@ -54,15 +54,47 @@ void SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
                                        bool is_const) {
     /// lValue
     auto name = ctx->lValue()->ID()->getText();
+    // auto repeat = _tables.lookup(name);
+
     // if arr need to get dims
     std::vector<ir::Value*> dims;
     for (auto dim : ctx->lValue()->exp()) {
         dims.push_back(any_cast_Value(visit(dim)));
     }
     //! create alloca inst
+    if(is_const){
+        if (dims.size() == 0){
+            ir::Value* constinit = nullptr;
+            if(ctx->ASSIGN())
+            {
+                constinit = any_cast_Value(visit(ctx->initValue()->exp()));
+                if(ir::isa<ir::Constant>(constinit)){
+                    auto Cconstinit = ir::dyn_cast<ir::Constant>(constinit);
+                    if (btype->is_int() && constinit->is_float()) {  // f2i
+                        constinit = ir::Constant::gen((int)Cconstinit->f());
+                    } 
+                    else if (btype->is_float() && constinit->is_int()) {  // i2f
+                        constinit = ir::Constant::gen((float)Cconstinit->i());
+                    }
+                    auto consinitptr = ir::dyn_cast<ir::Constant>(constinit);
+                    _tables.insert(name,consinitptr);
+                    return ;
+                }
+                else{
+                    //TODO
+                }
+            }
+            else{
+                std::cerr<<"const without initialization!"<<std::endl;
+                exit(EXIT_FAILURE);
+            }
+        }
+
+    }
     auto ptr_type = ir::Type::pointer_type(btype);
     auto alloca_ptr = _builder.create_alloca(btype, dims, _builder.getvarname(), is_const);
     // _builder.func();
+
     _tables.insert(name, alloca_ptr);  // check re decl err
 
     /// initValue
