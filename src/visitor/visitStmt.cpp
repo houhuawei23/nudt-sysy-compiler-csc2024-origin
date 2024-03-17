@@ -96,17 +96,27 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
 
 std::any SysYIRGenerator::visitAssignStmt(SysYParser::AssignStmtContext* ctx) {
     ir::Value* lvalueptr = any_cast_Value(visit(ctx->lValue()));
-    ir::Value* expptr = any_cast_Value(visit(ctx->exp()));
+    auto expptr = any_cast_Value(visit(ctx->exp()));
     ir::Value* res = nullptr;
-    if (lvalueptr->is_int() && expptr->is_float()) {
-        //! TODO f2i
-    } else if (lvalueptr->is_float() && expptr->is_int()) {
-        //! TODO i2f
-    } else if (ir::dyn_cast<ir::PointerType>(lvalueptr->type())->base_type() !=
-               expptr->type()) {
-        std::cerr << "Type " << *expptr->type() << " can not convert to type "
-                  << *lvalueptr->type() << std::endl;
-        exit(EXIT_FAILURE);
+
+    if (auto res = ir::dyn_cast<ir::Constant>(expptr)) {
+        if (lvalueptr->is_int() && res->is_float()) {
+            expptr = ir::Constant::gen((int)res->f());
+        } else if (lvalueptr->is_float() && res->is_int()) {
+            expptr = ir::Constant::gen((float)res->i());
+        } else if (ir::dyn_cast<ir::PointerType>(lvalueptr->type())->base_type() != res->type()) {
+            std::cerr << "Type " << *res->type() << " can not convert to type " << *res->type() << std::endl;
+            assert(false);
+        }
+    } else {
+        if (lvalueptr->is_int() && expptr->is_float()) {
+            expptr = _builder.create_ftosi(ir::Type::int_type(), expptr, _builder.getvarname());
+        } else if (lvalueptr->is_float() && expptr->is_int()) {
+            expptr = _builder.create_sitof(ir::Type::float_type(), expptr, _builder.getvarname());
+        } else if (ir::dyn_cast<ir::PointerType>(lvalueptr->type())->base_type() != expptr->type()) {
+            std::cerr << "Type " << *expptr->type() << " can not convert to type " << *lvalueptr->type() << std::endl;
+            assert(false);
+        }
     }
     res = builder().create_store(expptr, lvalueptr);
 

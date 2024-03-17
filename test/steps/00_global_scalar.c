@@ -1,4 +1,5 @@
 float main() {
     int a = 3;
-    return a;
+    float g = a;
+    return g;
 }
