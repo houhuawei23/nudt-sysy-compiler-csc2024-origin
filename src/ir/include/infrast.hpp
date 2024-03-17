@@ -157,20 +157,21 @@ class ConstantBeta : public User {
 };
 /**
  * @brief Argument represents an incoming formal argument to a Function.
- *
+ * 形式参数，因为它是“形式的”，所以不包含实际值，而是表示特定函数的参数的类型、参数编号和属性。
+ * 当在所述函数体中使用时，参数当然代表调用该函数的实际参数的值。
  */
 class Argument : public Value {
    protected:
-    BasicBlock* _parent;
+    Function* _parent;
     int _index;
     std::vector<int> _dims;  // 维数信息
 
    public:
     Argument(Type* type,
-             const std::string& name,
              size_t index,
-             BasicBlock* pblock = nullptr)
-        : Value(type, vARGUMENT, name), _index(index), _parent(pblock) {}
+             Function* parent = nullptr,
+             const std::string& name = "")
+        : Value(type, vARGUMENT, name), _index(index), _parent(parent) {}
 
     BasicBlock* parent() const { return _parent; }
     int index() const { return _index; }
