@@ -1,12 +1,16 @@
 #pragma once
-
+#include <cassert>
 #include <list>
-#include <string>
-// #include <cassert>
+#include <map>
 #include <memory>
-
+#include <set>
+#include <stack>
+#include <string>
+#include <unordered_map>
+#include <vector>
 #include "type.hpp"
-
+// #include <queue>      // for block list priority queue
+// #include <algorithm>  // for block list sort
 namespace ir {
 class Use;
 class User;
@@ -20,8 +24,44 @@ class Argument;
 class Function;
 class Module;
 
+//* string
+// use as function formal param type for name
 using const_str_ref = const std::string&;
-using use_ptr_list = std::list<std::shared_ptr<Use>>;
+
+//* Value
+using value_ptr_vector = std::vector<Value*>;
+
+// use as function formal param for dims or indices
+using const_value_ptr_vector = const std::vector<Value*>;
+
+// symbol table, look up value based on name
+using str_value_map = std::map<std::string, Value*>;
+
+//* Use
+// Value _uses
+using use_ptr_list = std::list<Use*>;
+using use_ptr_vector = std::vector<Use*>;
+
+//* BasicBlock
+using block_ptr_list = std::list<BasicBlock*>;
+// true or false targets stack
+using block_ptr_stack = std::stack<BasicBlock*>;
+
+//* Argument
+// function args
+using arg_ptr_list = std::list<Argument*>;
+
+//* Instruction
+// basicblock insts
+using inst_list = std::list<Instruction*>;
+// iterator for add/del/traverse inst list
+using inst_iterator = inst_list::iterator;
+using reverse_iterator = inst_list::reverse_iterator;
+
+//* Function
+// look up function in function table
+using str_fun_map = std::map<std::string, Function*>;
+
 // type, name
 /**
  * @brief Base Class for all classes having 'value' to be used.?
@@ -60,34 +100,34 @@ class Value {
         // fcmp
         vFCMP,
         vFOEQ,
-        vFONE, 
+        vFONE,
         vFOGT,
         vFOGE,
         vFOLT,
         vFOLE,
         vFCMP_END,
         // Unary Instruction
-        vFNEG, 
-        
-        vFTOI, 
-        vITOF, 
+        vFNEG,
+
+        vFTOI,
+        vITOF,
 
         // Binary Instruction
-        vADD, 
-        vFADD, 
-        vSUB, 
-        vFSUB, 
+        vADD,
+        vFADD,
+        vSUB,
+        vFSUB,
 
-        vMUL, 
-        vFMUL, 
-        
-        vUDIV, 
-        vSDIV, 
-        vFDIV, 
-        
-        vUREM, 
-        vSREM, 
-        vFREM, 
+        vMUL,
+        vFMUL,
+
+        vUDIV,
+        vSDIV,
+        vFDIV,
+
+        vUREM,
+        vSREM,
+        vFREM,
     };
     // for isa<> type check
     // each subclass of Value has different _scid
@@ -109,18 +149,19 @@ class Value {
     // Value is all base, return true
     static bool classof(const Value*) { return true; }
 
-    // get
+    //* get
     Type* type() const { return _type; }
     std::string name() const { return _name; }
     use_ptr_list& uses() { return _uses; }
 
-    // manage
-    void add_use(std::shared_ptr<Use> use);
-    void del_use(std::shared_ptr<Use> use);
+    //* manage
+    void add_use(Use* use);
+    void del_use(Use* use);
     void replace_all_use_with(Value* _value);
 
     void set_name(const_str_ref name) { _name = name; }
-    // check
+
+    //* check
     bool is_int() const { return _type->is_int(); }
     bool is_float() const { return _type->is_float(); }
 
@@ -157,8 +198,7 @@ class Use {
     void set_value(Value* value);
     void set_user(User* user);
 };
-using use_ptr = std::shared_ptr<Use>;
-using use_ptr_vector = std::vector<use_ptr>;
+
 /**
  * @brief 使用“值”，既要使用值，又有返回值，所以继承自 Value
  * @attention _operands

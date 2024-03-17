@@ -24,7 +24,7 @@ Type *Type::label_type() {
 }
 Type *Type::pointer_type(Type *baseType) { return PointerType::gen(baseType); }
 Type *Type::function_type(Type *ret_type,
-                          const std::vector<Type *> &arg_types) {
+                          const type_ptr_vector &arg_types) {
     return FunctionType::gen(ret_type, arg_types);
 }
 /// Type instance construct functions END
@@ -80,7 +80,7 @@ PointerType *PointerType::gen(Type *base_type) {     // to be complete
 
 /// FunctionType
 FunctionType *FunctionType::gen(Type *ret_type,
-                                const std::vector<Type *> &arg_types) {
+                                const type_ptr_vector &arg_types) {
     // to be complete
     FunctionType *ftype =
         new FunctionType(ret_type, arg_types); // FunctionType*

@@ -3,12 +3,8 @@
 #include "utils.hpp"
 #include "value.hpp"
 
-#include <vector>
-namespace ir {
 
-using const_value_ptr_vector = const std::vector<Value*>;
-using value_ptr_vector = std::vector<Value*>;
-using const_str = const std::string;
+namespace ir {
 
 class AllocaInst;
 class StoreInst;
@@ -25,7 +21,6 @@ class FCmpInst;
 class CastInst;
 
 class AllocaInst : public Instruction {
-    // using
     friend class IRBuilder;
 
    protected:
@@ -38,7 +33,7 @@ class AllocaInst : public Instruction {
     AllocaInst(Type* base_type,  // i32 type
                BasicBlock* parent = nullptr,
                const_value_ptr_vector& dims = {},
-               const_str& name = "",
+               const_str_ref name = "",
                bool is_const = false)
         : Instruction(vALLOCA, ir::Type::pointer_type(base_type), parent, name),
           _is_const(is_const) {
@@ -71,7 +66,7 @@ class StoreInst : public Instruction {
               Value* ptr,
               BasicBlock* parent = nullptr,
               const_value_ptr_vector& indices = {},
-              const_str& name = "")
+              const_str_ref name = "")
         : Instruction(vSTORE, Type::void_type(), parent, name) {
         add_operand(value);
         add_operand(ptr);
@@ -95,7 +90,7 @@ class LoadInst : public Instruction {
     LoadInst(Value* ptr,
              BasicBlock* parent,
              const_value_ptr_vector& indices = {},
-             const_str& name = "")
+             const_str_ref name = "")
         : Instruction(vLOAD,
                       dyn_cast<PointerType>(ptr->type())->base_type(),
                       parent,
@@ -123,7 +118,7 @@ class ReturnInst : public Instruction {
     friend class IRBuilder;
 
    public:
-    ReturnInst(Value* value = nullptr, BasicBlock* parent = nullptr, const_str& name = "")
+    ReturnInst(Value* value = nullptr, BasicBlock* parent = nullptr, const_str_ref name = "")
         : Instruction(vRETURN, Type::void_type(), parent, name) {
         add_operand(value);
         std::cout << _operands.size() << std::endl;
@@ -150,7 +145,7 @@ class UnaryInst : public Instruction {
     friend class IRBuilder;
 
    protected:
-    UnaryInst(Value::ValueId kind, Type* type, Value* operand, BasicBlock* parent = nullptr, const_str& name = "")
+    UnaryInst(Value::ValueId kind, Type* type, Value* operand, BasicBlock* parent = nullptr, const_str_ref name = "")
         : Instruction(kind, type, parent, name) {
         add_operand(operand);
     }
@@ -225,7 +220,7 @@ class BranchInst : public Instruction {
                BasicBlock* iftrue,
                BasicBlock* iffalse,
                BasicBlock* parent = nullptr,
-               const_str& name = "")
+               const_str_ref name = "")
         : Instruction(vBR, Type::void_type(), parent, name), _is_cond(true) {
         //! TODO
         // assert(false && "not implemented");
@@ -234,7 +229,7 @@ class BranchInst : public Instruction {
         add_operand(iffalse);
     }
     // UnCondition Branch
-    BranchInst(BasicBlock* dest, BasicBlock* parent = nullptr, const_str& name="")
+    BranchInst(BasicBlock* dest, BasicBlock* parent = nullptr, const_str_ref name="")
         : Instruction(vBR, Type::void_type(), parent, name), _is_cond(false) {
         add_operand(dest);
     }
@@ -284,7 +279,7 @@ class ICmpInst : public Instruction {
              Value* lhs,
              Value* rhs,
              BasicBlock* parent,
-             const_str& name = "")
+             const_str_ref name = "")
         : Instruction(itype, Type::int_type(), parent, name) {
         add_operand(lhs);
         add_operand(rhs);
@@ -313,7 +308,7 @@ class FCmpInst : public Instruction {
              Value* lhs,
              Value* rhs,
              BasicBlock* parent,
-             const_str& name = "")
+             const_str_ref name = "")
         : Instruction(itype, Type::float_type(), parent, name) {
         add_operand(lhs);
         add_operand(rhs);

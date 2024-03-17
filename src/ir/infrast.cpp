@@ -24,4 +24,9 @@ void Constant::print(std::ostream &os) const {
         // assert
     }
 }
+
+void Argument::print(std::ostream &os) const {
+    os << *type() << " " << name();
+}
+
 } // namespace ir

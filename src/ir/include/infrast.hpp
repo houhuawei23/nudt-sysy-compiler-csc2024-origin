@@ -1,27 +1,10 @@
 #pragma once
 
-// #include <functional>
-#include <cassert>
-#include <map>
-#include <set>
-#include <type_traits>
-#include <unordered_map>
-#include <variant>
-// #include <unordered_set>
-// #include "function.hpp"
 #include "type.hpp"
 #include "value.hpp"
 
 // #include "module.hpp"
 namespace ir {
-
-using inst_list = std::list<Instruction*>;  // list
-using inst_iterator = inst_list::iterator;
-using reverse_iterator = inst_list::reverse_iterator;
-
-using arg_list = std::list<Argument*>;      // vector -> list
-using block_list = std::list<BasicBlock*>;  // vector -> list
-using const_str_ref = const std::string&;
 
 //  _type, _name, _uses
 class Constant : public User {
@@ -170,10 +153,10 @@ class Argument : public Value {
     Argument(Type* type,
              size_t index,
              Function* parent = nullptr,
-             const std::string& name = "")
+             const_str_ref name = "")
         : Value(type, vARGUMENT, name), _index(index), _parent(parent) {}
 
-    BasicBlock* parent() const { return _parent; }
+    Function* parent() const { return _parent; }
     int index() const { return _index; }
     std::vector<int>& dims() { return _dims; }  // get ref?
     int dim_num() const { return _dims.size(); }
@@ -197,13 +180,13 @@ class BasicBlock : public Value {
    protected:
     Function* _parent;
     inst_list _insts;
-    arg_list _args;  // ?
-    block_list _next_blocks;
-    block_list _pre_blocks;
+    // arg_ptr_list _args;  // ?
+    block_ptr_list _next_blocks;
+    block_ptr_list _pre_blocks;
     int _depth = 0;
 
    public:
-    BasicBlock(const std::string& name = "", Function* parent = nullptr)
+    BasicBlock(const_str_ref name = "", Function* parent = nullptr)
         : Value(Type::label_type(), vBASIC_BLOCK, name),
           _parent(parent){
 
@@ -212,7 +195,7 @@ class BasicBlock : public Value {
     // get
     int depth() const { return _depth; }
     int insts_num() const { return _insts.size(); }
-    int args_num() const { return _args.size(); }
+    // int args_num() const { return _args.size(); }
     int next_num() const { return _next_blocks.size(); }
     int pre_num() const { return _pre_blocks.size(); }
 
@@ -220,9 +203,9 @@ class BasicBlock : public Value {
 
     Function* parent() const { return _parent; }
     inst_list& insts() { return _insts; }
-    arg_list& args() { return _args; }
-    block_list& next_blocks() { return _next_blocks; }
-    block_list& pre_blocks() { return _pre_blocks; }
+    // arg_ptr_list& args() { return _args; }
+    block_ptr_list& next_blocks() { return _next_blocks; }
+    block_ptr_list& pre_blocks() { return _pre_blocks; }
 
     // inst iter of the block
     inst_iterator begin() { return _insts.begin(); }

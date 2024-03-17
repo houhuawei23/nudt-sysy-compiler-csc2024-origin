@@ -1,11 +1,4 @@
 #pragma once
-#include <map>
-#include <set>
-#include <unordered_map>
-#include <vector>
-// #include <unordered_set>
-#include <memory>
-#include <variant>
 
 #include "function.hpp"
 #include "value.hpp"
@@ -24,20 +17,13 @@ namespace ir {
  *
  */
 class Module {
-
-    using value_vector = std::vector<Value*>;
-    using str_fun_map = std::map<std::string, Function *>;
-    using str_val_map = std::map<std::string, Value *>;
-    using const_str_ref = const std::string &;
-    // using value
-    // friend class Module;
-  public:
-    std::vector<Value *> _values;
+   public:
+    value_ptr_vector _values;
     str_fun_map _functions;
-    str_val_map _globals;
+    str_value_map _globals;
     // SymbolTable _stable;
 
-  public:
+   public:
     Module() = default;
     ~Module() = default;
 
@@ -47,12 +33,12 @@ class Module {
     // using ref type to receive, they point to same obj
     // directly using, point to same: values().push xxx
     // how about use iterator to access?
-    std::vector<Value *> &values() { return _values; }
-    str_fun_map &functions() { return _functions; }
-    str_val_map &globals() { return _globals; }
+    value_ptr_vector& values() { return _values; }
+    str_fun_map& functions() { return _functions; }
+    str_value_map& globals() { return _globals; }
 
-    Function *function(const_str_ref name);
-    Function *add_function(bool is_decl, Type *type, const_str_ref name);
+    Function* function(const_str_ref name);
+    Function* add_function(bool is_decl, Type* type, const_str_ref name);
 
     // Value *register_val(const_str_ref name);
     // Value *get_val(const_str_ref name);
@@ -62,6 +48,6 @@ class Module {
     // Value *lookup_gvalue(const_str_ref name);
 
     // readable ir print
-    void print(std::ostream &os) const;
+    void print(std::ostream& os) const;
 };
-} // namespace ir
+}  // namespace ir

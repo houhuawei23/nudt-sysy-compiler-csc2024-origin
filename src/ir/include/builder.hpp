@@ -1,16 +1,9 @@
 /**
  * @file builder.hpp
- * @author your name (you@domain.com)
- * @brief
- * @version 0.1
- * @date 2024-03-03
- *
- * @copyright Copyright (c) 2024
  *
  */
 #pragma once
 
-#include <stack>
 #include "infrast.hpp"
 #include "instructions.hpp"
 
@@ -18,21 +11,20 @@ namespace ir {
 
 /**
  * @brief IR Builder for Module.
- * @class IRBuilder
  *
  */
 class IRBuilder {
-    using block_stack = std::stack<BasicBlock*>;
-    using const_vector_Value_ptr = const std::vector<Value*>;
-    using const_str_ref = const std::string&;
-
    private:
-    BasicBlock* _block;
-    inst_iterator _pos;
-    block_stack _headers, _exits;
+    BasicBlock* _block;   // current basic block for insert instruction
+    inst_iterator _pos;   // insert pos for cur block
+    block_ptr_stack _headers, _exits;
     int _if_cnt, _while_cnt, _rhs_cnt, _func_cnt, _var_cnt;
-    block_stack _true_targets, _false_targets;
-    bool _is_not;
+
+    // true/false br targets stack for if-else Short-circuit evaluation
+    // the top the deeper nest
+    block_ptr_stack _true_targets, _false_targets; 
+
+
    public:
     IRBuilder() {
         _if_cnt = 0;
@@ -40,16 +32,9 @@ class IRBuilder {
         _rhs_cnt = 0;
         _func_cnt = 0;
         _var_cnt = 0;
-        _is_not = false;
+
     }
 
-    void flip_not() { _is_not = true;}
-    void reset_not() {
-        _is_not = false;
-    }
-    bool is_not() {
-        return _is_not;
-    }
     //! get
     BasicBlock* block() const { return _block; }
     inst_iterator position() const { return _pos; }
@@ -89,6 +74,7 @@ class IRBuilder {
         _true_targets.push(true_block);
         _false_targets.push(false_block);
     }
+
     // current stmt or exp 's true/false_target
     BasicBlock* true_target() { return _true_targets.top(); }
     BasicBlock* false_target() { return _false_targets.top(); }
@@ -101,7 +87,7 @@ class IRBuilder {
 
     //! create
     AllocaInst* create_alloca(Type* ret_type,
-                              const_vector_Value_ptr& dims = {},
+                              const_value_ptr_vector& dims = {},
                               const_str_ref name = "",
                               const bool is_const = false) {
         auto inst = new AllocaInst(ret_type, _block, dims, name, is_const);
@@ -115,7 +101,7 @@ class IRBuilder {
 
     StoreInst* create_store(Value* value,
                             Value* pointer,
-                            const_vector_Value_ptr& dims = {},
+                            const_value_ptr_vector& dims = {},
                             const_str_ref name = "") {
         auto inst = new StoreInst(value, pointer, _block, dims, name);
         // _block->insts().emplace(_pos, inst);
@@ -130,48 +116,52 @@ class IRBuilder {
         block()->emplace_back_inst(inst);
         return inst;
     }
+
     LoadInst* create_load(Value* ptr,
                           const_value_ptr_vector& indices = {},
-                          const_str& name = "") {
+                          const_str_ref name = "") {
         auto inst = new LoadInst(ptr, _block, indices, name);
         // _block->insts().emplace(_pos, inst);
         block()->emplace_back_inst(inst); // _pos++
         return inst;
     }
 
-    UnaryInst* create_unary(Value::ValueId kind, Type* type, Value* value, const_str& name="") {
+    UnaryInst* create_unary(Value::ValueId kind, 
+                            Type* type, 
+                            Value* value, 
+                            const_str_ref name="") {
         auto inst = new UnaryInst(kind, type, value, _block, name);
         block()->emplace_back_inst(inst);
         return inst;
     }
-    UnaryInst* create_sitof(Type* type, Value* value, const_str& name="") {
+    UnaryInst* create_sitof(Type* type, Value* value, const_str_ref name="") {
         return create_unary(Value::ValueId::vITOF, type, value, name);
     }
-    UnaryInst* create_ftosi(Type* type, Value* value, const_str& name="") {
+    UnaryInst* create_ftosi(Type* type, Value* value, const_str_ref name="") {
         return create_unary(Value::ValueId::vFTOI, type, value, name);
     }
-    UnaryInst* create_fneg(Type* type, Value* value, const_str& name="") {
+    UnaryInst* create_fneg(Type* type, Value* value, const_str_ref name="") {
         return create_unary(Value::ValueId::vFNEG, type, value, name);
     }
 
-    BinaryInst* create_binary(Value::ValueId kind, Type* type, Value* lvalue, Value* rvalue, const_str& name="") {
+    BinaryInst* create_binary(Value::ValueId kind, Type* type, Value* lvalue, Value* rvalue, const_str_ref name="") {
         auto inst = new BinaryInst(kind, type, lvalue, rvalue, _block, name);
         block()->emplace_back_inst(inst); // _pos++
         return inst;
     }
-    BinaryInst* create_add(Type* type, Value* lvalue, Value* rvalue, const_str& name="") {
+    BinaryInst* create_add(Type* type, Value* lvalue, Value* rvalue, const_str_ref name="") {
         return type->is_int() ? create_binary(Value::ValueId::vADD, type, lvalue, rvalue, name) : create_binary(Value::ValueId::vFADD, type, lvalue, rvalue, name);
     }
-    BinaryInst* create_sub(Type* type, Value* lvalue, Value* rvalue, const_str& name="") {
+    BinaryInst* create_sub(Type* type, Value* lvalue, Value* rvalue, const_str_ref name="") {
         return type->is_int() ? create_binary(Value::ValueId::vSUB, type, lvalue, rvalue, name) : create_binary(Value::ValueId::vFSUB, type, lvalue, rvalue, name);
     }
-    BinaryInst* create_mul(Type* type, Value* lvalue, Value* rvalue, const_str& name="") {
+    BinaryInst* create_mul(Type* type, Value* lvalue, Value* rvalue, const_str_ref name="") {
         return type->is_int() ? create_binary(Value::ValueId::vMUL, type, lvalue, rvalue, name) : create_binary(Value::ValueId::vFMUL, type, lvalue, rvalue, name);
     }
-    BinaryInst* create_div(Type* type, Value* lvalue, Value* rvalue, const_str& name="") {
+    BinaryInst* create_div(Type* type, Value* lvalue, Value* rvalue, const_str_ref name="") {
         return type->is_int() ? create_binary(Value::ValueId::vSDIV, type, lvalue, rvalue, name) : create_binary(Value::ValueId::vFDIV, type, lvalue, rvalue, name);
     }
-    BinaryInst* create_rem(Type* type, Value* lvalue, Value* rvalue, const_str& name="") {
+    BinaryInst* create_rem(Type* type, Value* lvalue, Value* rvalue, const_str_ref name="") {
         return type->is_int() ? create_binary(Value::ValueId::vSREM, type, lvalue, rvalue, name) : create_binary(Value::ValueId::vFREM, type, lvalue, rvalue, name);
     }
     
@@ -208,7 +198,7 @@ class IRBuilder {
         Value::ValueId itype,
         Value* lhs,
         Value* rhs,
-        const_str& name = ""
+        const_str_ref name = ""
     ) {
         //! TODO
         // assert(false && "not implemented");
@@ -220,7 +210,7 @@ class IRBuilder {
     ICmpInst* create_ieq(
         Value* lhs,
         Value* rhs,
-        const_str& name = ""
+        const_str_ref name = ""
 
     ) {
         //! TODO
@@ -231,7 +221,7 @@ class IRBuilder {
     ICmpInst* create_ine(
         Value* lhs,
         Value* rhs,
-        const_str& name = ""
+        const_str_ref name = ""
     ) {
         //! TODO
         // assert(false && "not implemented");
@@ -240,7 +230,7 @@ class IRBuilder {
     ICmpInst* create_isgt(
         Value* lhs,
         Value* rhs,
-        const_str& name = ""
+        const_str_ref name = ""
     ) {
         //! TODO
         // assert(false && "not implemented");
@@ -249,7 +239,7 @@ class IRBuilder {
     ICmpInst* create_isge(
         Value* lhs,
         Value* rhs,
-        const_str& name = ""
+        const_str_ref name = ""
     ) {
         //! TODO
         // assert(false && "not implemented");
@@ -258,7 +248,7 @@ class IRBuilder {
     ICmpInst* create_islt(
         Value* lhs,
         Value* rhs,
-        const_str& name = ""
+        const_str_ref name = ""
     ) {
         //! TODO
         // assert(false && "not implemented");
@@ -267,7 +257,7 @@ class IRBuilder {
     ICmpInst* create_isle(
         Value* lhs,
         Value* rhs,
-        const_str& name = ""
+        const_str_ref name = ""
     ) {
         //! TODO
         // assert(false && "not implemented");
@@ -278,7 +268,7 @@ class IRBuilder {
         Value::ValueId itype,
         Value* lhs,
         Value* rhs,
-        const_str& name = ""
+        const_str_ref name = ""
     ) {
         //! TODO: base fcmp
         // assert(false && "not implemented");
@@ -292,7 +282,7 @@ class IRBuilder {
     FCmpInst* create_foeq(
         Value* lhs,
         Value* rhs,
-        const_str& name = ""
+        const_str_ref name = ""
     ) {
         //! TODO
         // assert(false && "not implemented");
@@ -303,7 +293,7 @@ class IRBuilder {
     FCmpInst* create_fone(
         Value* lhs,
         Value* rhs,
-        const_str& name = ""
+        const_str_ref name = ""
     ) {
         //! TODO
         // assert(false && "not implemented");
@@ -312,7 +302,7 @@ class IRBuilder {
     FCmpInst* create_fogt(
         Value* lhs,
         Value* rhs,
-        const_str& name = ""
+        const_str_ref name = ""
     ) {
         //! TODO
         // assert(false && "not implemented");
@@ -321,7 +311,7 @@ class IRBuilder {
     FCmpInst* create_foge(
         Value* lhs,
         Value* rhs,
-        const_str& name = ""
+        const_str_ref name = ""
     ) {
         //! TODO
         // assert(false && "not implemented");
@@ -330,7 +320,7 @@ class IRBuilder {
     FCmpInst* create_folt(
         Value* lhs,
         Value* rhs,
-        const_str& name = ""
+        const_str_ref name = ""
     ) {
         //! TODO
         // assert(false && "not implemented");
@@ -339,7 +329,7 @@ class IRBuilder {
     FCmpInst* create_fole(
         Value* lhs,
         Value* rhs,
-        const_str& name = ""
+        const_str_ref name = ""
     ) {
         //! TODO
         // assert(false && "not implemented");

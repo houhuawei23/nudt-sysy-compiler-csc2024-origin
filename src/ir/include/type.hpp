@@ -1,16 +1,18 @@
 #pragma once
 
-#include <iostream>
 #include <stdlib.h>
-#include <string.h>
+#include <iostream>
+
 #include <vector>
-// #include <memory>
-#include <any>
 
 namespace ir {
 class Type;
 class PointerType;
 class FunctionType;
+
+using type_ptr_vector = std::vector<Type*>;
+
+// using const_vector_type = const std::vector<Type*>;
 
 typedef enum : size_t {
     VOID,
@@ -22,26 +24,26 @@ typedef enum : size_t {
     UNDEFINE
 } BType;
 class Type {
-  protected:
+   protected:
     BType _btype;
 
-  public:
+   public:
     Type(BType btype) : _btype(btype) {}
-    virtual ~Type() = default; // default deconstructor
-    
+    virtual ~Type() = default;  // default deconstructor
+
     // static method for construct Type instance
-    static Type *void_type();
-    static Type *int_type();
-    static Type *float_type();
-    static Type *label_type();
-    static Type *pointer_type(Type *baseType);
+    static Type* void_type();
+    static Type* int_type();
+    static Type* float_type();
+    static Type* label_type();
+    static Type* pointer_type(Type* baseType);
     // static Type *array
-    static Type *function_type(Type *ret_type,
-                               const std::vector<Type *> &param_types);
+    static Type* function_type(Type* ret_type,
+                               const type_ptr_vector& param_types);
 
     // type check
-    bool is(Type *type);
-    bool isnot(Type *type);
+    bool is(Type* type);
+    bool isnot(Type* type);
     bool is_void();
     bool is_int();
     bool is_float();
@@ -54,23 +56,23 @@ class Type {
     BType btype() const { return _btype; };
     size_t size() const {
         switch (_btype) {
-        case INT:
-            return 4;
-            break;
-        case FLOAT:
-            return 4;
-        case LABEL:
-        case POINTER:
-        case FUNCTION:
-            return 8;
-        case VOID:
-            return 0;
-        default:
-            break;
+            case INT:
+                return 4;
+                break;
+            case FLOAT:
+                return 4;
+            case LABEL:
+            case POINTER:
+            case FUNCTION:
+                return 8;
+            case VOID:
+                return 0;
+            default:
+                break;
         }
         return -1;
     };
-    void print(std::ostream &os) const;
+    void print(std::ostream& os) const;
 };
 /**
  * @brief
@@ -78,16 +80,16 @@ class Type {
  */
 class PointerType : public Type {
     //! inherit from Type
-  protected:
-    Type *_base_type;
-    PointerType(Type *baseType) : Type(POINTER), _base_type(baseType) {}
+   protected:
+    Type* _base_type;
+    PointerType(Type* baseType) : Type(POINTER), _base_type(baseType) {}
 
-  public:
+   public:
     //! Generate a pointer type from a given base type
-    static PointerType *gen(Type *baseType);
+    static PointerType* gen(Type* baseType);
 
     //! Get the base type of this pointer
-    Type *base_type() const { return _base_type; }
+    Type* base_type() const { return _base_type; }
 
     // void print(std::ostream &os) const
 };
@@ -95,24 +97,23 @@ class PointerType : public Type {
 class FunctionType : public Type {
     //! inherit from Type
     // BType _btype;
-  protected:
-    //! the return type of the function
-    Type *_ret_type;
-    //! the argument types of the function
-    std::vector<Type *> _arg_types;
-    //! the constructor for FunctionType
-    FunctionType(Type *ret_type, const std::vector<Type *> &arg_types = {})
+   protected:
+    // the return type of the function
+    Type* _ret_type;
+    // the argument types of the function
+    std::vector<Type*> _arg_types;
+    // the constructor for FunctionType
+    FunctionType(Type* ret_type, const type_ptr_vector& arg_types = {})
         : Type(FUNCTION), _ret_type(ret_type), _arg_types(arg_types) {}
 
-  public:
+   public:
     //! Gen
-    static FunctionType *gen(Type *ret_type,
-                             const std::vector<Type *> &arg_types);
+    static FunctionType* gen(Type* ret_type, const type_ptr_vector& arg_types);
     //! get the return type of the function
-    Type *ret_type() const { return _ret_type; }
-    std::vector<Type *> param_type() const { // ?? return what type?
-        // make_range(paramTypes)
+    Type* ret_type() const { return _ret_type; }
+    type_ptr_vector& arg_types() {
+        // ?? return what type?
         return _arg_types;
     }
 };
-} // namespace ir
+}  // namespace ir

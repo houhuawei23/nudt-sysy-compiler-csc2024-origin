@@ -73,7 +73,7 @@ class SymbolTableBeta {
     /*
      * @brief 查表 (从当前作用域开始查, 直至查到全局作用域范围)
      */
-    Value* lookup(const std::string& name) const {
+    Value* lookup(const_str_ref name) const {
         for (auto& scope : symbols) {
             auto iter = scope.second.find(name);
             if (iter != scope.second.end())
@@ -86,7 +86,7 @@ class SymbolTableBeta {
      * @brief 为当前作用域插入表项
      *   Return: pair<map<string, Value*>::iterator, bool>
      */
-    auto insert(const std::string& name, Value* value) {
+    auto insert(const_str_ref name, Value* value) {
         assert(not symbols.empty());
         return symbols.front().second.emplace(name, value);
     }

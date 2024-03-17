@@ -1,11 +1,10 @@
 #pragma once
 #include "infrast.hpp"
 #include "type.hpp"
-#include "value.hpp"
 #include "utils.hpp"
+#include "value.hpp"
 namespace ir {
-using const_str = const std::string;
-using const_value_vector = const std::vector<Value*>;
+
 /*
 全局变量类型
 
@@ -22,16 +21,16 @@ class GlobalVariable : public User {
     // where the global value store?
     // operand
     GlobalVariable(Type* type,
-                   const_value_vector& dims = {},
+                   const_value_ptr_vector& dims = {},
                    Value* init = nullptr,
                    Module* parent = nullptr,
-                   const_str& name = "")
+                   const_str_ref name = "")
         : User(type, vGLOBAL_VAR, name),
           _parent(parent),
           _is_init(init != nullptr) {
         add_operands(dims);
-        // TODO: 
-        // if (ir:) 
+        // TODO:
+        // if (ir:)
         // if(dyn_cast<Constant>(init))
         assert(isa<Constant>(init) && "init must be constant");
         if (init) {

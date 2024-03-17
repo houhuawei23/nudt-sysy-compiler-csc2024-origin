@@ -1,14 +1,34 @@
 ## Container Choose
-a map-like container if you need efficient look-up of a value based on another value. Map-like containers also support efficient queries for containment (whether a key is in the map). Map-like containers generally do not support efficient reverse mapping (values to keys). If you need that, use two maps. Some map-like containers also support efficient iteration through the keys in sorted order. Map-like containers are the most expensive sort, only use them if you need one of these capabilities.
 
-a set-like container if you need to put a bunch of stuff into a container that automatically eliminates duplicates. Some set-like containers support efficient iteration through the elements in sorted order. Set-like containers are more expensive than sequential containers.
+### map-like container 映射容器
 
-a sequential container provides the most efficient way to add elements and keeps track of the order they are added to the collection. They permit duplicates and support efficient iteration, but do not support efficient look-up based on a key.
+If you need efficient look-up of a value based on another value. Map-like containers also support efficient queries for containment (whether a key is in the map). Map-like containers generally do not support efficient reverse mapping (values to keys). If you need that, use two maps. Some map-like containers also support efficient iteration through the keys in sorted order. Map-like containers are the most expensive sort, only use them if you need one of these capabilities.
 
-a string container is a specialized sequential container or reference structure that is used for character or byte arrays.
+用于根据一个值查找另一个值。类似于映射的容器也支持高效地查询是否包含某个键（即某个键是否在容器中）。通常，类似于映射的容器不支持高效的反向映射（即值到键的映射）。如果你需要这样的功能，可以使用两个映射。一些类似于映射的容器还支持按排序顺序高效地迭代键。类似于映射的容器是最昂贵的一种，只有在你需要这些功能之一时才使用它们。
 
-a bit container provides an efficient way to store and perform set operations on sets of numeric id’s, while automatically eliminating duplicates. Bit containers require a maximum of 1 bit for each identifier you want to store.
+### set-like container 集合容器
 
+if you need to put a bunch of stuff into a container that automatically eliminates duplicates. Some set-like containers support efficient iteration through the elements in sorted order. Set-like containers are more expensive than sequential containers.
+
+如果你需要将一堆东西放入一个容器中，并自动消除重复项，可以使用类似于集合的容器。一些类似于集合的容器支持按排序顺序高效地迭代元素。类似于集合的容器比顺序容器更昂贵。
+
+### sequential container 顺序容器
+
+It provides the most efficient way to add elements and keeps track of the order they are added to the collection. They permit duplicates and support efficient iteration, but do not support efficient look-up based on a key.
+
+它提供了添加元素的最有效方法，并跟踪它们被添加到集合中的顺序。它们允许重复项，并支持高效的迭代，但不支持基于键的高效查找。
+
+### string container 字符串容器
+
+It is a specialized sequential container or reference structure that is used for character or byte arrays.
+
+它是一种专门的顺序容器或引用结构，用于存储字符或字节数组。
+
+###  bit container 位容器
+
+It provides an efficient way to store and perform set operations on sets of numeric id’s, while automatically eliminating duplicates. Bit containers require a maximum of 1 bit for each identifier you want to store.
+
+它提供了一种高效的方式来存储和对数值 ID 集合执行集合操作，同时自动消除重复项。位容器需要每个要存储的标识符最多 1 位。
 # Class Hierarchy
 ## class Type
 
