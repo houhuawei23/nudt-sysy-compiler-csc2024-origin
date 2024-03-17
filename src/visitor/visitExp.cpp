@@ -1,32 +1,32 @@
 #include "visitor.hpp"
 
-namespace sysy {
-std::any SysYIRGenerator::visitNumberExp(SysYParser::NumberExpContext* ctx) {
-    // number: ILITERAL | FLITERAL;
+namespace sysy
+{
+    /*
+     * @brief Visit Number Expression
+     *      exp (MUL | DIV | MODULO) exp
+     * @details
+     *      number: ILITERAL | FLITERAL; (即: int or float)
+     */
+    std::any SysYIRGenerator::visitNumberExp(SysYParser::NumberExpContext *ctx) {
+        ir::Value *res = nullptr;
+        if (auto iLiteral = ctx->number()->ILITERAL()) {  //! int
+            std::string s = iLiteral->getText();
+            
+            //! 基数 (8, 10, 16)
+            int base = 10;
+            if (s.length() > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) base = 16;
+            else if (s[0] == '0') base = 8;
 
-    ir::Value* res = nullptr;
-    if (auto iLiteral = ctx->number()->ILITERAL()) {  // int
-        std::string s = iLiteral->getText();
-        // dec
-        int base = 10;
-        // hex
-        if (s.length() > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) {
-            base = 16;
-        } else if (s[0] == '0') {  // oct
-            base = 8;
+            res = ir::Constant::gen(std::stoi(s, 0, base));
         }
-
-        res = ir::Constant::gen(std::stoi(s, 0, base));
-    } else if (auto fctx = ctx->number()->FLITERAL()) {  // float
-        std::string s = fctx->getText();
-        float f = std::stof(s);
-
-        res = ir::Constant::gen(f, ir::getMC(f));  // stod?
-        // change to machine code when print
-        // didn't realize hexadecimal floating numbers
+        else if (auto fctx = ctx->number()->FLITERAL()) {  //! float
+            std::string s = fctx->getText();
+            float f = std::stof(s);
+            res = ir::Constant::gen(f, ir::getMC(f));
+        }
+        return res;
     }
-    return res;
-}
 
 std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
     ir::Value* res = nullptr;

@@ -113,23 +113,25 @@ class LoadInst : public Instruction {
     void print(std::ostream& os) const override;
 };
 
+/*
+ * @brief Return Instruction
+ * @details: 
+ *      ret <type> <value>
+ *      ret void
+ */
 class ReturnInst : public Instruction {
     friend class IRBuilder;
 
    public:
-    // ret <type> <value>
-    // ret void
-    ReturnInst(Value* value = nullptr,
-               BasicBlock* parent = nullptr,
-               const_str& name = "")
+    ReturnInst(Value* value = nullptr, BasicBlock* parent = nullptr, const_str& name = "")
         : Instruction(vRETURN, Type::void_type(), parent, name) {
         add_operand(value);
+        std::cout << _operands.size() << std::endl;
     }
 
+    public:
     bool has_return_value() const { return not _operands.empty(); }
-    Value* return_value() const {
-        return has_return_value() ? operand(0) : nullptr;
-    }
+    Value* return_value() const { return has_return_value() ? operand(0) : nullptr; }
 
    public:
     static bool classof(const Value* v) { return v->scid() == vRETURN; }

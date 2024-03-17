@@ -123,12 +123,11 @@ class IRBuilder {
         return inst;
     }
 
-    ReturnInst* create_return(Value* value = nullptr,
-                            const_str_ref name = "") 
-                            {
+    ReturnInst* create_return(Value* value = nullptr, const_str_ref name = "") {
+        std::cout << "enter create_return" << std::endl;
         auto inst = new ReturnInst(value, _block);
-        // _block->insts().emplace(_pos, inst);
-        block()->emplace_back_inst(inst); // _pos++
+        std::cout << "return instruction init" << std::endl;
+        block()->emplace_back_inst(inst);
         return inst;
     }
     LoadInst* create_load(Value* ptr,

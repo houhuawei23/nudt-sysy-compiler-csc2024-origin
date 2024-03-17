@@ -37,18 +37,10 @@ void LoadInst::print(std::ostream& os) const {
 }
 
 void ReturnInst::print(std::ostream& os) const {
-    // ret i32 %2
-    //! to do
     os << "ret ";
-    // if (auto value = return_value()) {
-    //     os <<
-    // }
-
-    // Type* ty
     auto ret = return_value();
     if (ret) {
-        os << *ret->type() << " ";
-        os << ret->name();
+        os << *ret->type() << " " << ret->name();
     } else {
         os << "void";
     }
