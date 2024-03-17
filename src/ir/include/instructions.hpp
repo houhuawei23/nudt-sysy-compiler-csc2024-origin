@@ -20,7 +20,8 @@ class UnaryInst;
 class BinaryInst;
 class BranchInst;
 
-class CmpInst;
+class ICmpInst;
+class FCmpInst;
 class CastInst;
 
 class AllocaInst : public Instruction {
@@ -303,6 +304,29 @@ class ICmpInst : public Instruction {
 //! FCmpInst
 class FCmpInst : public Instruction {
     //! TODO
+        //! TODO
+   public:
+    FCmpInst(ValueId itype,
+             Value* lhs,
+             Value* rhs,
+             BasicBlock* parent,
+             const_str& name = "")
+        : Instruction(itype, Type::float_type(), parent, name) {
+        add_operand(lhs);
+        add_operand(rhs);
+    }
+
+   public:
+    Value* lhs() const { return operand(0); }
+    Value* rhs() const { return operand(1); }
+
+   public:
+    static bool classof(const Value* v) {
+        //! TODO
+        // assert(false && "not implemented");
+        return v->scid() != vFCMP;
+    }
+    void print(std::ostream& os) const override;  //! TODO
 };
 
 //! CastInst

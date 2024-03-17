@@ -135,7 +135,11 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
     builder().pop_tf();  // match with push_tf
 
     //* cast to i1
-    if (cond->is_int()) {
+    if(ir::isa<ir::ICmpInst>(cond)||ir::isa<ir::FCmpInst>(cond)){
+        // pass
+        // do nothing
+    }
+    else if (cond->is_int()) {
         cond = builder().create_ine(cond, ir::Constant::gen(0),
                                     builder().getvarname());
     } else if (cond->is_float()) {

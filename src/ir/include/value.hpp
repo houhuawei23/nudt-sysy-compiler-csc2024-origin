@@ -52,11 +52,18 @@ class Value {
         vICMP,
         vIEQ,
         vINE,
+        vISGT,
+        vISGE,
+        vISLT,
+        vISLE,
         // fcmp
         vFCMP,
         vFOEQ,
         vFONE, 
-
+        vFOGT,
+        vFOGE,
+        vFOLT,
+        vFOLE,
         // Unary Instruction
         vFNEG, 
         

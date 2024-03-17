@@ -333,15 +333,82 @@ namespace sysy
     std::any SysYIRGenerator::visitRelationExp(
         SysYParser::RelationExpContext *ctx)
     {
+        auto lhsptr=any_cast_Value(visit(ctx->exp()[0]));
+        auto rhsptr=any_cast_Value(visit(ctx->exp()[1]));
+        ir::Value* res;
+        bool isfloat=lhsptr->is_float() || rhsptr->is_float();
+        if(isfloat){
+            if(lhsptr->is_int())
+                lhsptr=_builder.create_sitof(ir::Type::float_type(),lhsptr,_builder.getvarname());
+            if(rhsptr->is_int())
+                rhsptr=_builder.create_sitof(ir::Type::float_type(),rhsptr,_builder.getvarname());
+        }
         //! TODO
-        return nullptr;
+        if(ctx->GT()){
+            if(isfloat){
+                res=_builder.create_fogt(lhsptr,rhsptr,_builder.getvarname());
+            }
+            else{
+                res=_builder.create_isgt(lhsptr,rhsptr,_builder.getvarname());
+            }
+        }
+        else if(ctx->GE()){
+            if(isfloat){
+                res=_builder.create_foge(lhsptr,rhsptr,_builder.getvarname());
+            }
+            else{
+                res=_builder.create_isge(lhsptr,rhsptr,_builder.getvarname());
+            }
+        }
+        else if(ctx->LT()){
+            if(isfloat){
+                res=_builder.create_folt(lhsptr,rhsptr,_builder.getvarname());
+            }
+            else{
+                res=_builder.create_islt(lhsptr,rhsptr,_builder.getvarname());
+            }
+        }
+        else if(ctx->LE()){
+            if(isfloat){
+                res=_builder.create_fole(lhsptr,rhsptr,_builder.getvarname());
+            }
+            else{
+                res=_builder.create_isle(lhsptr,rhsptr,_builder.getvarname());
+            }
+        }
+        return res;
     }
 
     //! exp (EQ | NE) exp
     std::any SysYIRGenerator::visitEqualExp(SysYParser::EqualExpContext *ctx)
     {
         //! TODO
-        return nullptr;
+        auto lhsptr=any_cast_Value(visit(ctx->exp()[0]));
+        auto rhsptr=any_cast_Value(visit(ctx->exp()[1]));
+        ir::Value* res;
+        bool isfloat=lhsptr->is_float() || rhsptr->is_float();
+        if(isfloat)
+            if(lhsptr->is_int())
+                lhsptr=_builder.create_sitof(ir::Type::float_type(),lhsptr,_builder.getvarname());
+            if(rhsptr->is_int())
+                rhsptr=_builder.create_sitof(ir::Type::float_type(),rhsptr,_builder.getvarname());
+        if(ctx->EQ()){
+            if(isfloat){
+                res=_builder.create_foeq(lhsptr,rhsptr,_builder.getvarname());
+            }
+            else{
+                res=_builder.create_ieq(lhsptr,rhsptr,_builder.getvarname());
+            }
+        }
+        else if(ctx->NE()){
+            if(isfloat){
+                res=_builder.create_fone(lhsptr,rhsptr,_builder.getvarname());
+            }
+            else{
+                res=_builder.create_ine(lhsptr,rhsptr,_builder.getvarname());
+            }            
+        }
+        return res;
     }
     /*
     - before you visit one exp, you must prepare its true and false target
@@ -374,7 +441,11 @@ namespace sysy
         //! visit lhs exp to get its value
         auto lhs_value = any_cast_Value(visit(ctx->exp(0))); // recursively visit
         //* cast to i1
-        if (lhs_value->is_int())
+        if(ir::isa<ir::ICmpInst>(lhs_value)||ir::isa<ir::FCmpInst>(lhs_value)){
+        // pass
+        // do nothing
+        }
+        else if (lhs_value->is_int())
         {
             lhs_value = builder().create_ine(lhs_value, ir::Constant::gen(0),
                                              builder().getvarname());
@@ -433,7 +504,11 @@ namespace sysy
         //! visit lhs exp to get its value
         auto lhs_value = any_cast_Value(visit(ctx->exp(0))); // recursively visit
         //* cast to i1
-        if (lhs_value->is_int())
+        if(ir::isa<ir::ICmpInst>(lhs_value)||ir::isa<ir::FCmpInst>(lhs_value)){
+        // pass
+        // do nothing
+        }
+        else if (lhs_value->is_int())
         {
             lhs_value = builder().create_ine(lhs_value, ir::Constant::gen(0),
                                              builder().getvarname());
