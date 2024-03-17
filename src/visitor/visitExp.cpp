@@ -41,20 +41,21 @@ namespace sysy
         ir::Value *res = nullptr;
         bool isarray = not ctx->var()->LBRACKET().empty();
         std::string varname = ctx->var()->ID()->getText();
+        
         auto valueptr = _tables.lookup(varname);
-        if (valueptr == nullptr)
-        {
-            std::cerr << "Use undefined variable: \"" << varname << "\""
-                      << std::endl;
+        if (valueptr == nullptr) {
+            std::cerr << "Use undefined variable: \"" << varname << "\"" << std::endl;
             exit(EXIT_FAILURE);
         }
-        if (not isarray)
-        { // scalar
-            res = _builder.create_load(valueptr, {}, _builder.getvarname());
+
+        if (!isarray) {  //! scalar
+            if (res = ir::dyn_cast<ir::Constant>(valueptr)) {
+            } else {
+                res = _builder.create_load(valueptr, {}, _builder.getvarname());
+            }
         }
-        else
-        { // array element
-            // pass
+        else {  //! array
+            // TODO
         }
         return res;
     }

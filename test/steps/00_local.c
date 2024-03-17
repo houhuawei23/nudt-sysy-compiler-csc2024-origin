@@ -1,4 +1,4 @@
 int main() {
-    float f=1.300;
-    return 0;
+    int f = 1;
+    return f;
 }

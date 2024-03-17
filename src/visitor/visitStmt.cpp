@@ -19,19 +19,13 @@ std::any SysYIRGenerator::visitBlockStmt(SysYParser::BlockStmtContext* ctx) {
     ir::Value* res = nullptr;
     
     for (auto item : ctx->blockItem()) {
-        // visit(item);
         // res = any_cast_Value(visit(item));
         if(res = safe_any_cast<ir::Value>(visit(item))) {
             if(ir::isa<ir::ReturnInst>(res)) {
-                // std::cout<< "Returninst!" << std::endl;
                 break;
             } else {
-            // std::cout<< "INNNN!" << std::endl;
-
+                // TODO
             }
-
-            // int a = 5;
-            // int b = 5;
         }
         // if (ir::isa<ir::Value>(visit(item))) {
         //     res = any_cast_Value(visit(item));
@@ -51,7 +45,6 @@ std::any SysYIRGenerator::visitBlockStmt(SysYParser::BlockStmtContext* ctx) {
         //     }
         // }
     }
-    //
     return res;
 }
 std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
