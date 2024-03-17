@@ -15,7 +15,7 @@ using block_list = std::list<BasicBlock*>;  // vector -> list
 // // 比较函数，按照A对象的priority属性从小到大排序
 
 // Value: _type, _name, _uses
-class Function : public Value {
+class Function : public User {
     friend class Module;
     // _type = FUNCTION
    protected:
@@ -29,7 +29,7 @@ class Function : public Value {
     Function(Type* func_type,
              const std::string& name = "",
              Module* parent = nullptr)
-        : Value(func_type, vFUNCTION, name), _parent(parent) {}
+        : User(func_type, vFUNCTION, name), _parent(parent) {}
 
     Type* ret_type() const {
         // this->type() return Type*

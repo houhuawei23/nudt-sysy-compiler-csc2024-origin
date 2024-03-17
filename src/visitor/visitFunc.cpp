@@ -44,14 +44,24 @@ std::any SysYIRGenerator::visitFunc(SysYParser::FuncContext* ctx) {
     std::string func_name = ctx->ID()->getText();
     std::vector<ir::Type*> param_types;
     std::vector<std::string> param_names;
-
+    int length = 0;
     // if have formal params
     if (ctx->funcFParams()) {
         // funcFParams: funcFParam (COMMA funcFParam)*;
         auto params = ctx->funcFParams()->funcFParam();
         // cout << params->getText() << endl;
         // std::cout << typeid(params).name() << std::endl;
+        
         for (auto param : params) {
+            if(param->btype()->INT())
+                param_types.push_back(ir::Type::int_type());
+            else
+                param_types.push_back(ir::Type::float_type());
+            param_names.push_back(param->ID()->getText());
+            length++;
+            //!TODO 
+            // up to realize array version
+
             // std::cout << param->getText() << std::endl;
         }
     }
@@ -59,7 +69,7 @@ std::any SysYIRGenerator::visitFunc(SysYParser::FuncContext* ctx) {
     ir::Type* ret_type = any_cast_Type(visit(ctx->funcType()));
 
     // empty param types
-    ir::Type* func_type = ir::Type::function_type(ret_type, {});
+    ir::Type* func_type = ir::Type::function_type(ret_type, param_types);
     // add func to module
     ir::Function* func = module()->add_function(true, func_type, func_name);
 
@@ -73,6 +83,13 @@ std::any SysYIRGenerator::visitFunc(SysYParser::FuncContext* ctx) {
     entry->set_name(builder().getvarname());
     if (ctx->funcFParams()) {  // has formal params
         //! TODO: add fparams to entry block
+        // add insert to symbol table
+        for(int i = 0;i < length;i++)
+        {//TODO
+            auto alloca_ptr = builder().create_alloca(param_types[i],{},_builder.getvarname(),false);
+            _tables.insert(param_names[i], alloca_ptr);
+        }
+        
     }
 
     _builder.set_pos(entry, entry->end());
