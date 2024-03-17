@@ -56,6 +56,7 @@ class Value {
         vISGE,
         vISLT,
         vISLE,
+        vICMP_END,
         // fcmp
         vFCMP,
         vFOEQ,
@@ -64,6 +65,7 @@ class Value {
         vFOGE,
         vFOLT,
         vFOLE,
+        vFCMP_END,
         // Unary Instruction
         vFNEG, 
         

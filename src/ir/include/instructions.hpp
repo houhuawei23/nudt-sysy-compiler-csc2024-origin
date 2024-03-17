@@ -296,7 +296,8 @@ class ICmpInst : public Instruction {
     static bool classof(const Value* v) {
         //! TODO
         // assert(false && "not implemented");
-        return v->scid() != vICMP;
+        return v->scid() >= vICMP && v->scid() <= vICMP_END;
+        // return v->scid() == vICMP;
     }
     void print(std::ostream& os) const override;  //! TODO
 };
@@ -324,7 +325,8 @@ class FCmpInst : public Instruction {
     static bool classof(const Value* v) {
         //! TODO
         // assert(false && "not implemented");
-        return v->scid() != vFCMP;
+        // return v->scid() == vFCMP;
+        return v->scid() >= vFCMP && v->scid() <= vFCMP_END;
     }
     void print(std::ostream& os) const override;  //! TODO
 };
