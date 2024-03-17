@@ -1,5 +1,5 @@
-
-int main() {
-    const int a = 2.3;
-    return a;
+float main() {
+    int a = 3;
+    float g = a;
+    return g;
 }

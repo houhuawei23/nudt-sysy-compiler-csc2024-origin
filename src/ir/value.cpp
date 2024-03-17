@@ -26,7 +26,7 @@ Value *User::operand(size_t index) const {
 }
 
 void User::add_operand(Value *value) {
-    // call Use(index, user, value) to construct.
+    if (value == nullptr) return;
     auto nptr = std::make_shared<Use>(_operands.size(), this, value);
     _operands.emplace_back(nptr);
     value->add_use(nptr); //

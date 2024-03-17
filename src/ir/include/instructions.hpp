@@ -20,7 +20,8 @@ class UnaryInst;
 class BinaryInst;
 class BranchInst;
 
-class CmpInst;
+class ICmpInst;
+class FCmpInst;
 class CastInst;
 
 class AllocaInst : public Instruction {
@@ -112,23 +113,25 @@ class LoadInst : public Instruction {
     void print(std::ostream& os) const override;
 };
 
+/*
+ * @brief Return Instruction
+ * @details: 
+ *      ret <type> <value>
+ *      ret void
+ */
 class ReturnInst : public Instruction {
     friend class IRBuilder;
 
    public:
-    // ret <type> <value>
-    // ret void
-    ReturnInst(Value* value = nullptr,
-               BasicBlock* parent = nullptr,
-               const_str& name = "")
+    ReturnInst(Value* value = nullptr, BasicBlock* parent = nullptr, const_str& name = "")
         : Instruction(vRETURN, Type::void_type(), parent, name) {
         add_operand(value);
+        std::cout << _operands.size() << std::endl;
     }
 
+    public:
     bool has_return_value() const { return not _operands.empty(); }
-    Value* return_value() const {
-        return has_return_value() ? operand(0) : nullptr;
-    }
+    Value* return_value() const { return has_return_value() ? operand(0) : nullptr; }
 
    public:
     static bool classof(const Value* v) { return v->scid() == vRETURN; }
@@ -295,7 +298,8 @@ class ICmpInst : public Instruction {
     static bool classof(const Value* v) {
         //! TODO
         // assert(false && "not implemented");
-        return v->scid() != vICMP;
+        return v->scid() >= vICMP && v->scid() <= vICMP_END;
+        // return v->scid() == vICMP;
     }
     void print(std::ostream& os) const override;  //! TODO
 };
@@ -303,6 +307,30 @@ class ICmpInst : public Instruction {
 //! FCmpInst
 class FCmpInst : public Instruction {
     //! TODO
+        //! TODO
+   public:
+    FCmpInst(ValueId itype,
+             Value* lhs,
+             Value* rhs,
+             BasicBlock* parent,
+             const_str& name = "")
+        : Instruction(itype, Type::float_type(), parent, name) {
+        add_operand(lhs);
+        add_operand(rhs);
+    }
+
+   public:
+    Value* lhs() const { return operand(0); }
+    Value* rhs() const { return operand(1); }
+
+   public:
+    static bool classof(const Value* v) {
+        //! TODO
+        // assert(false && "not implemented");
+        // return v->scid() == vFCMP;
+        return v->scid() >= vFCMP && v->scid() <= vFCMP_END;
+    }
+    void print(std::ostream& os) const override;  //! TODO
 };
 
 //! CastInst

@@ -123,12 +123,11 @@ class IRBuilder {
         return inst;
     }
 
-    ReturnInst* create_return(Value* value = nullptr,
-                            const_str_ref name = "") 
-                            {
+    ReturnInst* create_return(Value* value = nullptr, const_str_ref name = "") {
+        std::cout << "enter create_return" << std::endl;
         auto inst = new ReturnInst(value, _block);
-        // _block->insts().emplace(_pos, inst);
-        block()->emplace_back_inst(inst); // _pos++
+        std::cout << "return instruction init" << std::endl;
+        block()->emplace_back_inst(inst);
         return inst;
     }
     LoadInst* create_load(Value* ptr,
@@ -219,8 +218,8 @@ class IRBuilder {
         return inst;
     }
     ICmpInst* create_ieq(
-        Value* rhs,
         Value* lhs,
+        Value* rhs,
         const_str& name = ""
 
     ) {
@@ -230,67 +229,121 @@ class IRBuilder {
     }
     // icmp ne i32 4, 5
     ICmpInst* create_ine(
-        Value* rhs,
         Value* lhs,
+        Value* rhs,
         const_str& name = ""
     ) {
         //! TODO
         // assert(false && "not implemented");
         return create_icmp(Value::vINE, lhs, rhs, name);
     }
-    ICmpInst* create_isgt() {
+    ICmpInst* create_isgt(
+        Value* lhs,
+        Value* rhs,
+        const_str& name = ""
+    ) {
         //! TODO
-        assert(false && "not implemented");
+        // assert(false && "not implemented");
+        return create_icmp(Value::vISGT, lhs, rhs, name);
     }
-    ICmpInst* create_isge() {
+    ICmpInst* create_isge(
+        Value* lhs,
+        Value* rhs,
+        const_str& name = ""
+    ) {
         //! TODO
-        assert(false && "not implemented");
+        // assert(false && "not implemented");
+        return create_icmp(Value::vISGE, lhs, rhs, name);
     }
-    ICmpInst* create_islt() {
+    ICmpInst* create_islt(
+        Value* lhs,
+        Value* rhs,
+        const_str& name = ""
+    ) {
         //! TODO
-        assert(false && "not implemented");
+        // assert(false && "not implemented");
+        return create_icmp(Value::vISLT, lhs, rhs, name);
     }
-    ICmpInst* create_isle() {
+    ICmpInst* create_isle(
+        Value* lhs,
+        Value* rhs,
+        const_str& name = ""
+    ) {
         //! TODO
-        assert(false && "not implemented");
+        // assert(false && "not implemented");
+        return create_icmp(Value::vISLE, lhs, rhs, name);
     }
     //! FCMP inst family
-    FCmpInst* create_fcmp() {
+    FCmpInst* create_fcmp(
+        Value::ValueId itype,
+        Value* lhs,
+        Value* rhs,
+        const_str& name = ""
+    ) {
         //! TODO: base fcmp
-        //! TODO
-        assert(false && "not implemented");
+        // assert(false && "not implemented");
+        auto inst = new FCmpInst(itype, lhs, rhs, _block, name);
+        // _block->insts().emplace(_pos, inst);
+        block()->emplace_back_inst(inst); // _pos++
+        return inst;
     }
     //! <result> = fcmp oeq float 4.0, 5.0   
     //! yields: result=false
-    FCmpInst* create_foeq() {
+    FCmpInst* create_foeq(
+        Value* lhs,
+        Value* rhs,
+        const_str& name = ""
+    ) {
         //! TODO
-        assert(false && "not implemented");
+        // assert(false && "not implemented");
+        return create_fcmp(Value::vFOEQ,lhs,rhs,name);
     }
     // <result> = fcmp one float 4.0, 5.0    
     // yields: result=true
     FCmpInst* create_fone(
-        Value* rhs,
         Value* lhs,
+        Value* rhs,
         const_str& name = ""
     ) {
         //! TODO
-        assert(false && "not implemented");
+        // assert(false && "not implemented");
+        return create_fcmp(Value::vFONE,lhs,rhs,name);
     }
-    FCmpInst* create_fogt() {
+    FCmpInst* create_fogt(
+        Value* lhs,
+        Value* rhs,
+        const_str& name = ""
+    ) {
         //! TODO
-        assert(false && "not implemented");
+        // assert(false && "not implemented");
+        return create_fcmp(Value::vFOGT,lhs,rhs,name);
     }
-    FCmpInst* create_foge() {
+    FCmpInst* create_foge(
+        Value* lhs,
+        Value* rhs,
+        const_str& name = ""
+    ) {
         //! TODO
-        assert(false && "not implemented");
+        // assert(false && "not implemented");
+         return create_fcmp(Value::vFOGE,lhs,rhs,name);
     }
-    FCmpInst* create_folt() {
+    FCmpInst* create_folt(
+        Value* lhs,
+        Value* rhs,
+        const_str& name = ""
+    ) {
         //! TODO
-        assert(false && "not implemented");
+        // assert(false && "not implemented");
+         return create_fcmp(Value::vFOLT,lhs,rhs,name);
     }
-    FCmpInst* create_fole() {
+    FCmpInst* create_fole(
+        Value* lhs,
+        Value* rhs,
+        const_str& name = ""
+    ) {
         //! TODO
-        assert(false && "not implemented");
+        // assert(false && "not implemented");
+         return create_fcmp(Value::vFOLE,lhs,rhs,name);
     }
 
 

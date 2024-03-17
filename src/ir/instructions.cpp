@@ -37,18 +37,10 @@ void LoadInst::print(std::ostream& os) const {
 }
 
 void ReturnInst::print(std::ostream& os) const {
-    // ret i32 %2
-    //! to do
     os << "ret ";
-    // if (auto value = return_value()) {
-    //     os <<
-    // }
-
-    // Type* ty
     auto ret = return_value();
     if (ret) {
-        os << *ret->type() << " ";
-        os << ret->name();
+        os << *ret->type() << " " << ret->name();
     } else {
         os << "void";
     }
@@ -155,8 +147,62 @@ void ICmpInst::print(std::ostream& os) const {
         case vINE:
             os << "ne ";
             break;
+        case vISGT:
+            os << "sgt ";
+            break;
+        case vISGE:
+            os << "sge ";
+            break;
+        case vISLT:
+            os << "slt ";
+            break;
+        case vISLE:
+            os << "sle ";
+            break;
         default:
-            assert(false && "unimplemented");
+            // assert(false && "unimplemented");
+            std::cerr<<"Error from ICmpInst::print(), wrong Inst Type!"<<std::endl;
+            exit(EXIT_FAILURE);
+            break;
+    }
+    // type
+    os << *lhs()->type() << " ";
+    // op1
+    os << lhs()->name() << ", ";
+    // op2
+    os << rhs()->name();
+}
+
+void FCmpInst::print(std::ostream& os) const {
+    // <result> = icmp <cond> <ty> <op1>, <op2>   ; yields i1 or <N x i1>:result
+    // %res = icmp eq i32, 1, 2
+    os << name() << " = ";
+
+    os << "fcmp ";
+    // cond code
+    switch (scid()) {
+        case vFOEQ:
+            os << "eq ";
+            break;
+        case vFONE:
+            os << "ne ";
+            break;
+        case vFOGT:
+            os << "sgt ";
+            break;
+        case vFOGE:
+            os << "sge ";
+            break;
+        case vFOLT:
+            os << "slt ";
+            break;
+        case vFOLE:
+            os << "sle ";
+            break;
+        default:
+            // assert(false && "unimplemented");
+            std::cerr<<"Error from FCmpInst::print(), wrong Inst Type!"<<std::endl;
+            exit(EXIT_FAILURE);
             break;
     }
     // type

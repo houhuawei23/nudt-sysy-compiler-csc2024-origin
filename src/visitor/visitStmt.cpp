@@ -47,50 +47,76 @@ std::any SysYIRGenerator::visitBlockStmt(SysYParser::BlockStmtContext* ctx) {
     }
     return res;
 }
+
+/*
+ * @brief Visit ReturnStmt
+ *      returnStmt: RETURN exp? SEMICOLON;
+ */
 std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
-    // returnStmt: RETURN exp? SEMICOLON;
-    // TODO: return stmt terminate a block!! what does following code for?
     auto value = ctx->exp() ? any_cast_Value(visit(ctx->exp())) : nullptr;
     auto curr_block = builder().block();
     auto func = curr_block->parent();
 
     assert(ir::isa<ir::Function>(func) && "ret stmt block parent err!");
 
-    // need type check and type transformation
-    if (func->ret_type()->is_int() && value->is_float()) {
-        //! TODO: : %r = fptosi float %v to i32
-        // value = builder().create_float2int(value);
-        assert(false && "not implement!");
-    } else if (func->ret_type()->is_float() && value->is_int()) {
-        //! TODO: create
-        // value = builder().create_int2float(value);
-        assert(false && "not implement!");
-
-    } else if (func->ret_type() != value->type()) {
-        //! TODO: type check
-        assert(false && "return type check err!");
+    // 匹配 返回值类型 与 函数定义类型
+    if (func->ret_type()->is_void()) {
+        if (ctx->exp()) assert(false);
+        else {
+            std::cout << "void return" << std::endl;
+            auto res = builder().create_return(value);
+            return res;
+        }
+    } else {
+        if (ctx->exp()) {
+            if (auto cvalue = ir::dyn_cast<ir::Constant>(value)) {
+                if (func->ret_type()->is_int() && cvalue->is_float()) {
+                    value = ir::Constant::gen((int)cvalue->f());
+                } else if (func->ret_type()->is_float() && cvalue->is_int()) {
+                    value = ir::Constant::gen((float)cvalue->i(), ir::getMC((float)cvalue->i()));
+                } else if (func->ret_type() != value->type()) {
+                    assert(false);
+                }
+            } else {
+                if (func->ret_type()->is_int() && value->is_float()) {
+                    value = _builder.create_ftosi(ir::Type::int_type(), value, _builder.getvarname());
+                } else if (func->ret_type()->is_float() && value->is_int()) {
+                    value = _builder.create_sitof(ir::Type::float_type(), value, _builder.getvarname());
+                } else if (func->ret_type() != value->type()) {
+                    assert(false);
+                }
+            }
+        } else {
+            assert(false);
+        }
+        auto res = builder().create_return(value);
+        return res;
     }
-
-    ir::Value* res = builder().create_return(value);
-    // auto new_block = func->new_block();
-    // new_block->set_name(builder().getvarname());
-    // builder().set_pos(new_block, new_block->begin());
-    return res;
 }
 
 std::any SysYIRGenerator::visitAssignStmt(SysYParser::AssignStmtContext* ctx) {
     ir::Value* lvalueptr = any_cast_Value(visit(ctx->lValue()));
-    ir::Value* expptr = any_cast_Value(visit(ctx->exp()));
+    auto expptr = any_cast_Value(visit(ctx->exp()));
     ir::Value* res = nullptr;
-    if (lvalueptr->is_int() && expptr->is_float()) {
-        //! TODO f2i
-    } else if (lvalueptr->is_float() && expptr->is_int()) {
-        //! TODO i2f
-    } else if (ir::dyn_cast<ir::PointerType>(lvalueptr->type())->base_type() !=
-               expptr->type()) {
-        std::cerr << "Type " << *expptr->type() << " can not convert to type "
-                  << *lvalueptr->type() << std::endl;
-        exit(EXIT_FAILURE);
+
+    if (auto res = ir::dyn_cast<ir::Constant>(expptr)) {
+        if (lvalueptr->is_int() && res->is_float()) {
+            expptr = ir::Constant::gen((int)res->f());
+        } else if (lvalueptr->is_float() && res->is_int()) {
+            expptr = ir::Constant::gen((float)res->i());
+        } else if (ir::dyn_cast<ir::PointerType>(lvalueptr->type())->base_type() != res->type()) {
+            std::cerr << "Type " << *res->type() << " can not convert to type " << *res->type() << std::endl;
+            assert(false);
+        }
+    } else {
+        if (lvalueptr->is_int() && expptr->is_float()) {
+            expptr = _builder.create_ftosi(ir::Type::int_type(), expptr, _builder.getvarname());
+        } else if (lvalueptr->is_float() && expptr->is_int()) {
+            expptr = _builder.create_sitof(ir::Type::float_type(), expptr, _builder.getvarname());
+        } else if (ir::dyn_cast<ir::PointerType>(lvalueptr->type())->base_type() != expptr->type()) {
+            std::cerr << "Type " << *expptr->type() << " can not convert to type " << *lvalueptr->type() << std::endl;
+            assert(false);
+        }
     }
     res = builder().create_store(expptr, lvalueptr);
 
@@ -135,7 +161,11 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
     builder().pop_tf();  // match with push_tf
 
     //* cast to i1
-    if (cond->is_int()) {
+    if(ir::isa<ir::ICmpInst>(cond)||ir::isa<ir::FCmpInst>(cond)){
+        // pass
+        // do nothing
+    }
+    else if (cond->is_int()) {
         cond = builder().create_ine(cond, ir::Constant::gen(0),
                                     builder().getvarname());
     } else if (cond->is_float()) {
