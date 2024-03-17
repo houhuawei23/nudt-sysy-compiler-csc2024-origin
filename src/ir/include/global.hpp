@@ -2,6 +2,7 @@
 #include "infrast.hpp"
 #include "type.hpp"
 #include "value.hpp"
+#include "utils.hpp"
 namespace ir {
 using const_str = const std::string;
 using const_value_vector = const std::vector<Value*>;
@@ -14,24 +15,25 @@ class GlobalVariable : public User {
     // _operands
    protected:
     Module* _parent;
-    bool _is_const;
     bool _is_init;
 
    public:
     // ValueId scid,
     // where the global value store?
     // operand
-    GlobalVariable(Type* base_type,
+    GlobalVariable(Type* type,
                    const_value_vector& dims = {},
                    Value* init = nullptr,
                    Module* parent = nullptr,
-                   bool is_const = false,
                    const_str& name = "")
-        : User(base_type, vGLOBAL_VAR, name),
+        : User(type, vGLOBAL_VAR, name),
           _parent(parent),
-          _is_const(is_const),
           _is_init(init != nullptr) {
         add_operands(dims);
+        // TODO: 
+        // if (ir:) 
+        // if(dyn_cast<Constant>(init))
+        assert(isa<Constant>(init) && "init must be constant");
         if (init) {
             add_operand(init);
         }
