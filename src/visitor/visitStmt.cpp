@@ -17,42 +17,24 @@ std::any SysYIRGenerator::visitBlockStmt(SysYParser::BlockStmtContext* ctx) {
     ir::SymbolTableBeta::BlockScope scope(_tables);
     // visit children item
     ir::Value* res = nullptr;
-    
+
     for (auto item : ctx->blockItem()) {
         // res = any_cast_Value(visit(item));
-        if(res = safe_any_cast<ir::Value>(visit(item))) {
-            if(ir::isa<ir::ReturnInst>(res)) {
+        if (res = safe_any_cast<ir::Value>(visit(item))) {
+            if (ir::isa<ir::ReturnInst>(res)) {
                 break;
             } else {
                 // TODO
             }
         }
-        // auto teststmt=item->stmt();
-        // if(teststmt){
-        //     auto bktest=teststmt->breakStmt();
-        //     auto cttest=teststmt->continueStmt();
-        //     if(bktest||cttest)
-        //         break;
-        // }
-        //如果一个block中的stmt是break或者continue,那么后面的语句就可以不被翻译了
-
-        // if (ir::isa<ir::Value>(visit(item))) {
-        //     res = any_cast_Value(visit(item));
-        //     if (auto ires = ir::dyn_cast<ir::ReturnInst>(res)) {
-        //         break;  // do not visit block item following return stmt
-        //     }
-        // }
-        // auto res = any_cast_Value(visit(item));
-        // if(auto ires = ir::dyn_cast<ir::ReturnInst>(res)) {
-        //     break; // do not visit block item following return stmt
-        // }
-
-        // if (ir::isa<ir::Instruction>(res)) {
-        //     auto ires = ir::dyn_cast<ir::Instruction>(res);
-        //     if (ires->is_terminal()) {
-        //         // pass?
-        //     }
-        // }
+        auto teststmt = item->stmt();
+        if (teststmt) {
+            auto bktest = teststmt->breakStmt();
+            auto cttest = teststmt->continueStmt();
+            if (bktest || cttest)
+                break;
+        }
+        // 如果一个block中的stmt是break或者continue,那么后面的语句就可以不被翻译了
     }
     return res;
 }
@@ -65,16 +47,16 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
     auto value = ctx->exp() ? any_cast_Value(visit(ctx->exp())) : nullptr;
     auto curr_block = builder().block();
     auto func = curr_block->parent();
-
+    ir::Value* res = nullptr;
     assert(ir::isa<ir::Function>(func) && "ret stmt block parent err!");
 
     // 匹配 返回值类型 与 函数定义类型
     if (func->ret_type()->is_void()) {
-        if (ctx->exp()) assert(false);
+        if (ctx->exp())
+            assert(false);
         else {
             std::cout << "void return" << std::endl;
-            auto res = builder().create_return(value);
-            return res;
+            res = builder().create_return(value);
         }
     } else {
         if (ctx->exp()) {
@@ -88,9 +70,11 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
                 }
             } else {
                 if (func->ret_type()->is_i32() && value->is_float()) {
-                    value = _builder.create_ftosi(ir::Type::i32_type(), value, _builder.getvarname());
+                    value = _builder.create_ftosi(ir::Type::i32_type(), value,
+                                                  _builder.getvarname());
                 } else if (func->ret_type()->is_float() && value->is_i32()) {
-                    value = _builder.create_sitof(ir::Type::float_type(), value, _builder.getvarname());
+                    value = _builder.create_sitof(ir::Type::float_type(), value,
+                                                  _builder.getvarname());
                 } else if (func->ret_type() != value->type()) {
                     assert(false);
                 }
@@ -98,9 +82,14 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
         } else {
             assert(false);
         }
-        auto res = builder().create_return(value);
-        return res;
+        res = builder().create_return(value);
     }
+    //* 生成 return 语句后立马创建一个新块，并设置 builder
+    auto new_block = func->new_block();
+    new_block->set_name(builder().getvarname());
+    builder().set_pos(new_block, new_block->begin());
+    //* END
+    return res;
 }
 
 std::any SysYIRGenerator::visitAssignStmt(SysYParser::AssignStmtContext* ctx) {
@@ -113,17 +102,24 @@ std::any SysYIRGenerator::visitAssignStmt(SysYParser::AssignStmtContext* ctx) {
             expptr = ir::Constant::gen_i32(res->f64());
         } else if (lvalueptr->is_float() && res->is_i32()) {
             expptr = ir::Constant::gen_f64(res->i32());
-        } else if (ir::dyn_cast<ir::PointerType>(lvalueptr->type())->base_type() != res->type()) {
-            std::cerr << "Type " << *res->type() << " can not convert to type " << *res->type() << std::endl;
+        } else if (ir::dyn_cast<ir::PointerType>(lvalueptr->type())
+                       ->base_type() != res->type()) {
+            std::cerr << "Type " << *res->type() << " can not convert to type "
+                      << *res->type() << std::endl;
             assert(false);
         }
     } else {
         if (lvalueptr->is_i32() && expptr->is_float()) {
-            expptr = _builder.create_ftosi(ir::Type::i32_type(), expptr, _builder.getvarname());
+            expptr = _builder.create_ftosi(ir::Type::i32_type(), expptr,
+                                           _builder.getvarname());
         } else if (lvalueptr->is_float() && expptr->is_i32()) {
-            expptr = _builder.create_sitof(ir::Type::float_type(), expptr, _builder.getvarname());
-        } else if (ir::dyn_cast<ir::PointerType>(lvalueptr->type())->base_type() != expptr->type()) {
-            std::cerr << "Type " << *expptr->type() << " can not convert to type " << *lvalueptr->type() << std::endl;
+            expptr = _builder.create_sitof(ir::Type::float_type(), expptr,
+                                           _builder.getvarname());
+        } else if (ir::dyn_cast<ir::PointerType>(lvalueptr->type())
+                       ->base_type() != expptr->type()) {
+            std::cerr << "Type " << *expptr->type()
+                      << " can not convert to type " << *lvalueptr->type()
+                      << std::endl;
             assert(false);
         }
     }
@@ -143,7 +139,7 @@ create true_block, false_block or
 */
 
 // 短路求值？
-// cond = 
+// cond =
 std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
     builder().if_inc();
     auto cur_block = builder().block();
@@ -172,11 +168,13 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
     //* cast to i1
 
     // if ()
-    if(not cond->is_i1()) {
+    if (not cond->is_i1()) {
         if (cond->is_i32()) {
-            cond = builder().create_ine(cond, ir::Constant::gen_i32(0), builder().getvarname());
+            cond = builder().create_ine(cond, ir::Constant::gen_i32(0),
+                                        builder().getvarname());
         } else if (cond->is_float()) {
-            cond = builder().create_fone(cond, ir::Constant::gen_f64(0.0), builder().getvarname());
+            cond = builder().create_fone(cond, ir::Constant::gen_f64(0.0),
+                                         builder().getvarname());
         }
     }
 
@@ -196,7 +194,7 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
 
     builder().create_br(merge_block);
     ir::BasicBlock::block_link(then_block, merge_block);
-    
+
     //! VISIT else block
     else_block->set_name(builder().getvarname());
     builder().set_pos(else_block, else_block->begin());
@@ -212,7 +210,6 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
     return merge_block;
 }
 
-
 /*
 这里的while的翻译:
 while(judge_block){loop_block}
@@ -222,86 +219,79 @@ std::any SysYIRGenerator::visitWhileStmt(SysYParser::WhileStmtContext* ctx) {
     //! TODO
     builder().while_inc();
     auto cur_block = builder().block();
-    auto cur_func=cur_block->parent();
-    //create new blocks
-    auto next_block=cur_func->new_block();
-    auto loop_block=cur_func->new_block();
-    auto judge_block=cur_func->new_block();
-    
-    //set header and exit block
-    builder().push_loop(judge_block,next_block);
+    auto cur_func = cur_block->parent();
+    // create new blocks
+    auto next_block = cur_func->new_block();
+    auto loop_block = cur_func->new_block();
+    auto judge_block = cur_func->new_block();
 
+    // set header and exit block
+    builder().push_loop(judge_block, next_block);
 
     // jump without cond, directly jump to judge block
     builder().create_br(judge_block);
     judge_block->set_name(builder().getvarname());
-    builder().set_pos(judge_block,judge_block->begin());
+    builder().set_pos(judge_block, judge_block->begin());
 
+    builder().push_tf(loop_block, next_block);
+    auto cond = any_cast_Value((visit(ctx->exp())));
 
-    builder().push_tf(loop_block,next_block);
-    auto cond=any_cast_Value((visit(ctx->exp())));
-
-    auto tTarget=builder().true_target();
-    auto fTarget=builder().false_target();
+    auto tTarget = builder().true_target();
+    auto fTarget = builder().false_target();
     builder().pop_tf();
 
-
-    if(not cond->is_i1()) {
+    if (not cond->is_i1()) {
         if (cond->is_i32()) {
-            cond = builder().create_ine(cond, 
-                                            ir::Constant::gen_i32(0),
-                                            builder().getvarname());
+            cond = builder().create_ine(cond, ir::Constant::gen_i32(0),
+                                        builder().getvarname());
         } else if (cond->is_float()) {
-            cond = builder().create_fone(cond, 
-                                            ir::Constant::gen_f64(0.0),
-                                            builder().getvarname());
+            cond = builder().create_fone(cond, ir::Constant::gen_f64(0.0),
+                                         builder().getvarname());
         }
     }
 
     builder().create_br(cond, tTarget, fTarget);
 
-    cur_block=builder().block();
+    cur_block = builder().block();
     ir::BasicBlock::block_link(cur_block, tTarget);
     ir::BasicBlock::block_link(cur_block, fTarget);
 
-    //visit loop block
+    // visit loop block
     loop_block->set_name(builder().getvarname());
-    builder().set_pos(loop_block,loop_block->begin());
+    builder().set_pos(loop_block, loop_block->begin());
     visit(ctx->stmt());
     builder().create_br(judge_block);
-    
-    ir::BasicBlock::block_link(loop_block,judge_block);
 
-    //pop header and exit block
+    ir::BasicBlock::block_link(loop_block, judge_block);
+
+    // pop header and exit block
     builder().pop_loop();
 
-    //visit next block
+    // visit next block
     next_block->set_name(builder().getvarname());
-    builder().set_pos(next_block,next_block->begin());
-    
+    builder().set_pos(next_block, next_block->begin());
+
     return next_block;
 }
 
 std::any SysYIRGenerator::visitBreakStmt(SysYParser::BreakStmtContext* ctx) {
-    
-    auto breakDest=builder().exit();
-    if(not breakDest){
-        std::cerr<<"Break stmt is not in a loop!"<<std::endl;
+    auto breakDest = builder().exit();
+    if (not breakDest) {
+        std::cerr << "Break stmt is not in a loop!" << std::endl;
         exit(EXIT_FAILURE);
     }
-    auto res=builder().create_br(breakDest);
+    auto res = builder().create_br(breakDest);
     return res;
 }
 
 std::any SysYIRGenerator::visitContinueStmt(
     SysYParser::ContinueStmtContext* ctx) {
-    
-    auto continueDest=builder().header();
-    if(not continueDest){
-        std::cerr<<"Break stmt is not in a loop!"<<std::endl;
+    auto continueDest = builder().header();
+    if (not continueDest) {
+        std::cerr << "Break stmt is not in a loop!" << std::endl;
         exit(EXIT_FAILURE);
     }
-    auto res=builder().create_br(continueDest);
+    auto res = builder().create_br(continueDest);
     return res;
 }
 
