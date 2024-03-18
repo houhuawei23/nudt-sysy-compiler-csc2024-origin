@@ -370,24 +370,13 @@ std::any SysYIRGenerator::visitAndExp(SysYParser::AndExpContext* ctx) {
 
     if(not lhs_value->is_i1()) {
         if (lhs_value->is_i32()) {
-            lhs_value = builder().create_ine(lhs_value, ir::Constant::gen_i32(0),
-                                            builder().getvarname());
+            // better wrap it to a simple method
+            lhs_value = builder().create_ine(lhs_value, ir::Constant::gen_i32(0), builder().getvarname());
         } else if (lhs_value->is_float()) {
-            lhs_value = builder().create_fone(lhs_value, ir::Constant::gen_f64(0.0),
-                                            builder().getvarname());
+            lhs_value = builder().create_fone(lhs_value, ir::Constant::gen_f64(0.0), builder().getvarname());
         }
     }
 
-    // if (ir::isa<ir::ICmpInst>(lhs_value) || ir::isa<ir::FCmpInst>(lhs_value)) {
-    //     // pass
-    //     // do nothing
-    // } else if (lhs_value->is_i32()) {
-    //     lhs_value = builder().create_ine(lhs_value, ir::Constant::gen_i32(0),
-    //                                      builder().getvarname());
-    // } else if (lhs_value->is_float()) {
-    //     lhs_value = builder().create_fone(lhs_value, ir::Constant::gen_f64(0.0),
-    //                                       builder().getvarname());
-    // }
     rhs_block->set_name(builder().getvarname());
     // pop to get lhs t/f target
     auto lhs_t_target = builder().true_target();
@@ -436,26 +425,16 @@ std::any SysYIRGenerator::visitOrExp(SysYParser::OrExpContext* ctx) {
     //! visit lhs exp to get its value
     auto lhs_value = any_cast_Value(visit(ctx->exp(0)));  // recursively visit
     //* cast to i1
-
+    
     if(not lhs_value->is_i1()) {
         if (lhs_value->is_i32()) {
-            lhs_value = builder().create_ine(lhs_value, ir::Constant::gen_i32(0),
-                                            builder().getvarname());
+            // better wrap it to a simple method
+            lhs_value = builder().create_ine(lhs_value, ir::Constant::gen_i32(0), builder().getvarname());
         } else if (lhs_value->is_float()) {
-            lhs_value = builder().create_fone(lhs_value, ir::Constant::gen_f64(0.0),
-                                            builder().getvarname());
+            lhs_value = builder().create_fone(lhs_value, ir::Constant::gen_f64(0.0), builder().getvarname());
         }
     }
-    // if (ir::isa<ir::ICmpInst>(lhs_value) || ir::isa<ir::FCmpInst>(lhs_value)) {
-    //     // pass
-    //     // do nothing
-    // } else if (lhs_value->is_i32()) {
-    //     lhs_value = builder().create_ine(lhs_value, ir::Constant::gen_i32(0),
-    //                                      builder().getvarname());
-    // } else if (lhs_value->is_float()) {
-    //     lhs_value = builder().create_fone(lhs_value, ir::Constant::gen_f64(0.0),
-    //                                       builder().getvarname());
-    // }
+
     rhs_block->set_name(builder().getvarname());
 
     //! pop to get lhs t/f target

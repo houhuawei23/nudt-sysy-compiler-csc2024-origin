@@ -182,22 +182,22 @@ void FCmpInst::print(std::ostream& os) const {
     // cond code
     switch (scid()) {
         case vFOEQ:
-            os << "eq ";
+            os << "oeq ";
             break;
         case vFONE:
-            os << "ne ";
+            os << "one ";
             break;
         case vFOGT:
-            os << "sgt ";
+            os << "ogt ";
             break;
         case vFOGE:
-            os << "sge ";
+            os << "oge ";
             break;
         case vFOLT:
-            os << "slt ";
+            os << "olt ";
             break;
         case vFOLE:
-            os << "sle ";
+            os << "ole ";
             break;
         default:
             // assert(false && "unimplemented");

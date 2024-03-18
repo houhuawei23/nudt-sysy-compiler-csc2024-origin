@@ -163,18 +163,14 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
     //* cast to i1
 
     // if ()
+    if(not cond->is_i1()) {
+        if (cond->is_i32()) {
+            cond = builder().create_ine(cond, ir::Constant::gen_i32(0), builder().getvarname());
+        } else if (cond->is_float()) {
+            cond = builder().create_fone(cond, ir::Constant::gen_f64(0.0), builder().getvarname());
+        }
+    }
 
-    if(ir::isa<ir::ICmpInst>(cond)||ir::isa<ir::FCmpInst>(cond)){
-        // pass
-        // do nothing
-    }
-    else if (cond->is_i32()) {
-        cond = builder().create_ine(cond, ir::Constant::gen_i32(0),
-                                    builder().getvarname());
-    } else if (cond->is_float()) {
-        cond = builder().create_fone(cond, ir::Constant::gen_f64(0.0),
-                                     builder().getvarname());
-    }
     //* create cond br inst
     builder().create_br(cond, lhs_t_target, lhs_f_target);
     //! VISIT cond end
@@ -236,16 +232,18 @@ std::any SysYIRGenerator::visitWhileStmt(SysYParser::WhileStmtContext* ctx) {
     auto tTarget=builder().true_target();
     auto fTarget=builder().false_target();
     builder().pop_tf();
-    if(ir::isa<ir::ICmpInst>(cond)||ir::isa<ir::FCmpInst>(cond)){
-        // pass
-        // do nothing
-    }
-    else if (cond->is_int()) {
-        cond = builder().create_ine(cond, ir::Constant::gen(0),
-                                    builder().getvarname());
-    } else if (cond->is_float()) {
-        cond = builder().create_fone(cond, ir::Constant::gen(0.0),
-                                     builder().getvarname());
+
+
+    if(not cond->is_i1()) {
+        if (cond->is_i32()) {
+            cond = builder().create_ine(cond, 
+                                            ir::Constant::gen_i32(0),
+                                            builder().getvarname());
+        } else if (cond->is_float()) {
+            cond = builder().create_fone(cond, 
+                                            ir::Constant::gen_f64(0.0),
+                                            builder().getvarname());
+        }
     }
 
     builder().create_br(cond, tTarget, fTarget);
