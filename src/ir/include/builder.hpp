@@ -159,7 +159,7 @@ class IRBuilder {
 
     BinaryInst* create_binary(Value::ValueId kind, Type* type, Value* lvalue, Value* rvalue, const_str_ref name="") {
         auto inst = new BinaryInst(kind, type, lvalue, rvalue, _block, name);
-        block()->emplace_back_inst(inst); // _pos++
+        block()->emplace_back_inst(inst);
         return inst;
     }
     BinaryInst* create_add(Type* type, Value* lvalue, Value* rvalue, const_str_ref name="") {

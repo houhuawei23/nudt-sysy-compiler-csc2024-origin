@@ -306,9 +306,7 @@ std::any SysYIRGenerator::visitLValue(SysYParser::LValueContext* ctx) {
     if (isscalar)
         return res;
     else {
-        // if lvalue is not a scalar
-        // TODO!
-        // pass
+        // TODO
         return res;
     }
 }

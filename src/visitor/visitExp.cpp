@@ -2,21 +2,21 @@
 
 namespace sysy
 {
-    /*
-     * @brief Visit Number Expression
-     *      exp (MUL | DIV | MODULO) exp
-     * @details
-     *      number: ILITERAL | FLITERAL; (即: int or float)
-     */
-    std::any SysYIRGenerator::visitNumberExp(SysYParser::NumberExpContext *ctx) {
-        ir::Value *res = nullptr;
-        if (auto iLiteral = ctx->number()->ILITERAL()) {  //! int
-            std::string s = iLiteral->getText();
-            
-            //! 基数 (8, 10, 16)
-            int base = 10;
-            if (s.length() > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) base = 16;
-            else if (s[0] == '0') base = 8;
+/*
+ * @brief Visit Number Expression
+ *      exp (MUL | DIV | MODULO) exp
+ * @details
+ *      number: ILITERAL | FLITERAL; (即: int or float)
+ */
+std::any SysYIRGenerator::visitNumberExp(SysYParser::NumberExpContext *ctx) {
+    ir::Value *res = nullptr;
+    if (auto iLiteral = ctx->number()->ILITERAL()) {  //! int
+        std::string s = iLiteral->getText();
+        
+        //! 基数 (8, 10, 16)
+        int base = 10;
+        if (s.length() > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) base = 16;
+        else if (s[0] == '0') base = 8;
 
             res = ir::Constant::gen_i32(std::stoi(s, 0, base));
         }
@@ -192,8 +192,7 @@ std::any SysYIRGenerator::visitAdditiveExp(
     ir::Value* res;
     auto ftype = ir::Type::double_type();
 
-    if (ir::isa<ir::Constant>(op1) &&
-        ir::isa<ir::Constant>(op2)) {  //! 1. 常量 -> 常量折叠
+    if (ir::isa<ir::Constant>(op1) && ir::isa<ir::Constant>(op2)) {  //! 1. 常量 -> 常量折叠
         ir::Constant* cop1 = ir::dyn_cast<ir::Constant>(op1);
         ir::Constant* cop2 = ir::dyn_cast<ir::Constant>(op2);
         if (cop1->is_float() || cop2->is_float()) {
@@ -462,6 +461,6 @@ std::any SysYIRGenerator::visitOrExp(SysYParser::OrExpContext* ctx) {
     auto rhs_value = visit(ctx->exp(1));
 
     return rhs_value;
-}  // namespace sysy
+}
 
 }  // namespace sysy

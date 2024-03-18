@@ -24,14 +24,10 @@ std::any SysYIRGenerator::visitBtype(SysYParser::BtypeContext* ctx) {
 std::any SysYIRGenerator::visitDecl(SysYParser::DeclContext* ctx) {
     return _tables.isModuleScope() ? visitDeclGlobal(ctx) : visitDeclLocal(ctx);
 }
-/**
- * @brief
- * decl: CONST? btype varDef (COMMA varDef)* SEMICOLON;
- * varDef: lValue (ASSIGN initValue)?;
- * lValue: ID (LBRACKET exp RBRACKET)*;
- * initValue: exp | LBRACE (initValue (COMMA initValue)*)? RBRACE;
- * @param ctx
- * @return std::any
+
+/*
+ * @brief Visit Local Variable Declaration
+ *      decl: CONST? btype varDef (COMMA varDef)* SEMICOLON;
  */
 std::any SysYIRGenerator::visitDeclLocal(SysYParser::DeclContext* ctx) {
     // std::cout << ctx->getText() << std::endl;
@@ -49,13 +45,6 @@ std::any SysYIRGenerator::visitDeclLocal(SysYParser::DeclContext* ctx) {
     return res;
 }
 
-// varDef: lValue (ASSIGN initValue)?;
-// lValue: ID (LBRACKET exp RBRACKET)*;
-// int a = 5;
-// %a = alloca i32
-// store i32 5, i32* %a
-
-// int a[5] = {1, 2, 3}
 /*
 exp:
     LPAREN exp RPAREN				# parenExp
@@ -71,12 +60,18 @@ exp:
     | exp AND exp					# andExp
     | exp OR exp					# orExp;
 */
+/*
+ * @brief Visit Local Variable Declaration
+ *      decl: CONST? btype varDef (COMMA varDef)* SEMICOLON;
+ *      varDef: lValue (ASSIGN initValue)?;
+ *      lValue: ID (LBRACKET exp RBRACKET)*;
+ * @details
+ *      1. 
+ */
 ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
                                              ir::Type* btype,
                                              bool is_const) {
     auto name = ctx->lValue()->ID()->getText();
-
-    // array
     std::vector<ir::Value*> dims;
     for (auto dim : ctx->lValue()->exp()) {
         dims.push_back(any_cast_Value(visit(dim)));

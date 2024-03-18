@@ -118,7 +118,6 @@ class LoadInst : public Instruction {
     }
 
     Value* ptr() const { return operand(0); }
-    // int dims_cnt() const { return operands_cnt(); }
 
    public:
     static bool classof(const Value* v) { return v->scid() == vLOAD; }
