@@ -39,8 +39,18 @@ class IRBuilder {
     BasicBlock* block() const { return _block; }
     inst_iterator position() const { return _pos; }
 
-    BasicBlock* header() { return _headers.top(); }
-    BasicBlock* exit() { return _exits.top(); }
+    BasicBlock* header() {
+        if(not _headers.empty())
+            return _headers.top(); 
+        else
+            return nullptr;
+    }
+    BasicBlock* exit() {
+        if(not _exits.empty())
+            return _exits.top(); 
+        else
+            return nullptr;
+    }
 
     //! manage attributes
     void set_pos(BasicBlock* block, inst_iterator pos) {
@@ -50,12 +60,14 @@ class IRBuilder {
 
     void push_header(BasicBlock* block) { _headers.push(block); }
     void push_exit(BasicBlock* block) { _exits.push(block); }
+    void push_loop(BasicBlock* header_block,BasicBlock* exit_block){
+        push_header(header_block);
+        push_exit(exit_block);
+    }
 
     void pop_loop() {
-        //! Why?
         _headers.pop();
         _exits.pop();
-        assert(false && "not understand!");
     }
 
     void if_inc() { _if_cnt++; }

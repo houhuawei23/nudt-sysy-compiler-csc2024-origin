@@ -27,6 +27,15 @@ std::any SysYIRGenerator::visitBlockStmt(SysYParser::BlockStmtContext* ctx) {
                 // TODO
             }
         }
+        // auto teststmt=item->stmt();
+        // if(teststmt){
+        //     auto bktest=teststmt->breakStmt();
+        //     auto cttest=teststmt->continueStmt();
+        //     if(bktest||cttest)
+        //         break;
+        // }
+        //如果一个block中的stmt是break或者continue,那么后面的语句就可以不被翻译了
+
         // if (ir::isa<ir::Value>(visit(item))) {
         //     res = any_cast_Value(visit(item));
         //     if (auto ires = ir::dyn_cast<ir::ReturnInst>(res)) {
@@ -214,10 +223,13 @@ std::any SysYIRGenerator::visitWhileStmt(SysYParser::WhileStmtContext* ctx) {
     builder().while_inc();
     auto cur_block = builder().block();
     auto cur_func=cur_block->parent();
-
+    //create new blocks
     auto next_block=cur_func->new_block();
     auto loop_block=cur_func->new_block();
     auto judge_block=cur_func->new_block();
+    
+    //set header and exit block
+    builder().push_loop(judge_block,next_block);
 
 
     // jump without cond, directly jump to judge block
@@ -260,6 +272,9 @@ std::any SysYIRGenerator::visitWhileStmt(SysYParser::WhileStmtContext* ctx) {
     
     ir::BasicBlock::block_link(loop_block,judge_block);
 
+    //pop header and exit block
+    builder().pop_loop();
+
     //visit next block
     next_block->set_name(builder().getvarname());
     builder().set_pos(next_block,next_block->begin());
@@ -268,14 +283,26 @@ std::any SysYIRGenerator::visitWhileStmt(SysYParser::WhileStmtContext* ctx) {
 }
 
 std::any SysYIRGenerator::visitBreakStmt(SysYParser::BreakStmtContext* ctx) {
-    //! TODO
-    return nullptr;
+    
+    auto breakDest=builder().exit();
+    if(not breakDest){
+        std::cerr<<"Break stmt is not in a loop!"<<std::endl;
+        exit(EXIT_FAILURE);
+    }
+    auto res=builder().create_br(breakDest);
+    return res;
 }
 
 std::any SysYIRGenerator::visitContinueStmt(
     SysYParser::ContinueStmtContext* ctx) {
-    //! TODO
-    return nullptr;
+    
+    auto continueDest=builder().header();
+    if(not continueDest){
+        std::cerr<<"Break stmt is not in a loop!"<<std::endl;
+        exit(EXIT_FAILURE);
+    }
+    auto res=builder().create_br(continueDest);
+    return res;
 }
 
 std::any SysYIRGenerator::visitLValue(SysYParser::LValueContext* ctx) {

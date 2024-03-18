@@ -85,6 +85,7 @@ ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
     ir::Value* init = nullptr;
     ir::Constant* cinit = nullptr;
 
+    //get initial value
     if (ctx->ASSIGN()) {
         init = any_cast_Value(visit(ctx->initValue()->exp()));
         if (cinit = ir::dyn_cast<ir::Constant>(init)) {
@@ -93,11 +94,10 @@ ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
             } else if (btype->is_float() && cinit->is_i32()) {
                 cinit = ir::Constant::gen_f64(cinit->i32());
             }
-            
         }
     }
 
-
+    //deal with assignment
     if (is_const) {              //! 1 decl as const
         if (dims.size() == 0) {  //! 1.1 标量
             if (not ctx->ASSIGN()) {
@@ -121,10 +121,13 @@ ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
         // create alloca inst
         auto alloca_ptr = _builder.create_alloca(btype, dims, _builder.getvarname(), is_const);
         _tables.insert(name, alloca_ptr);
-
         //! create store inst
         if (dims.size() == 0) {  //* 2.1 (not const) scalar
-            if (init->is_float() && btype->is_i32()) {
+            if(not ctx->ASSIGN()){
+                //pass
+                //do nothing
+            }
+            else if (init->is_float() && btype->is_i32()) {
                 auto ftosi = _builder.create_ftosi(ir::Type::i32_type(), init, _builder.getvarname());
                 auto stroe = _builder.create_store(ftosi, alloca_ptr, {}, "store");
             } else if (init->is_i32() && btype->is_float()) {
@@ -137,6 +140,12 @@ ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
         } 
         else {  //* 2. (not const) array
             // TODO
+            if(ctx->ASSIGN()){// if have init
+
+            }
+            else{//no init
+
+            }
         }
 
         res = alloca_ptr;
