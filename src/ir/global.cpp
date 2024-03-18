@@ -4,13 +4,15 @@
 namespace ir {
 void GlobalVariable::print(std::ostream& os) const {
     os << "@" << name() << " = ";
-    if(is_decl_const()){
+    if (is_decl_const()) {
         os << "constant ";
+    } else {
+        os << "global ";
     }
-    os <<"global " << *dyn_cast<PointerType> (type())->base_type()  << " ";
+    os << *dyn_cast<PointerType>(type())->base_type() << " ";
     if (is_init()) {
         os << *init_value();
     }
     os << "\n";
 }
-}
+}  // namespace ir
