@@ -110,6 +110,7 @@ ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
                 res = cinit;
             } else {
                 // TODO: init value NOT Constant Type
+                
             }
 
         }       // const scalar end
@@ -134,7 +135,7 @@ ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
                 auto sitof = _builder.create_sitof(ir::Type::float_type(), init, _builder.getvarname());
                 auto store = _builder.create_store(sitof, alloca_ptr,{}, "store");
             } else {
-                auto store = _builder.create_store(cinit, alloca_ptr, {}, "store");
+                auto store = _builder.create_store(init, alloca_ptr, {}, "store");
             }
 
         } 
@@ -153,15 +154,86 @@ ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
     return res;
 }
 
+// varDef: lValue (ASSIGN initValue)?;
+// lValue: ID (LBRACKET exp RBRACKET)*;
+
+ir::Value* SysYIRGenerator::visitVarDef_global(SysYParser::VarDefContext* ctx,
+                                             ir::Type* btype,
+                                             bool is_const) {
+
+    auto name = ctx->lValue()->ID()->getText();
+    // array
+    std::vector<ir::Value*> dims;
+    for (auto dim : ctx->lValue()->exp()) {
+        dims.push_back(any_cast_Value(visit(dim)));
+    }
+    ir::Value* res = nullptr;
+    ir::Value* init = nullptr;
+    ir::Constant* cinit = nullptr;
+
+
+    if (ctx->ASSIGN()) {
+        init = any_cast_Value(visit(ctx->initValue()->exp()));
+        // initializer element must be a compile-time constant
+        assert(ir::isa<ir::Constant>(init) && "global var init val must be Constant");
+
+        cinit = ir::dyn_cast<ir::Constant>(init); 
+
+        if (btype->is_i32() && cinit->is_float()) {
+            cinit = ir::Constant::gen_i32(cinit->f64());
+        } else if (btype->is_float() && cinit->is_i32()) {
+            cinit = ir::Constant::gen_f64(cinit->i32());
+        }
+    }
+    else if(not ctx->ASSIGN()) { // default init is zero
+        if (btype->is_i32()) {
+            cinit = ir::Constant::gen_i32(0);
+        } else if (btype->is_float()) {
+            cinit = ir::Constant::gen_f64(0.0);
+        }
+    }
+    
+    auto gv = ir::GlobalVariable::gen(btype, dims, cinit, _module, name);
+    res = gv;
+    if (is_const) {              
+        //! 1 decl as const
+        // dont insert into globals, do constant spread
+        if (dims.size() == 0) {  //! 1.1 标量
+            _tables.insert(name, gv);
+            module()->add_gvar(name, gv); // 可以通过常量传播消除
+        }       // const scalar end
+        else {  //! 1.2 数组
+            // TODO
+        } // const array end
+    } // decl as 'const' end 
+    else { 
+        //! 2 not decl as const
+        // insert into globals
+        if (dims.size() == 0) {  //! 1.1 标量
+            _tables.insert(name, gv);
+            module()->add_gvar(name, gv);
+            res = gv;
+        }       // const scalar end
+        else {  //! 1.2 数组
+            // TODO
+        } // const array end
+
+    }
+    return res; // return GlobalVariable
+
+}
+
+
 // decl: CONST? btype varDef (COMMA varDef)* SEMICOLON;
 std::any SysYIRGenerator::visitDeclGlobal(SysYParser::DeclContext* ctx) {
     // std::cout << ctx->getText() << std::endl;
-    auto btype = ir::Type::pointer_type(any_cast_Type(visit(ctx->btype())));
+    auto btype = any_cast_Type(visit(ctx->btype()));
+    // auto ptr_type = ir::Type::pointer_type(btype);
 
     bool is_const = ctx->CONST();
     ir::Value* res = nullptr;
     for (auto varDef : ctx->varDef()) {
-        res = visitVarDef_beta(varDef, btype, is_const);
+        res = visitVarDef_global(varDef, btype, is_const);
     }
 
     return res;

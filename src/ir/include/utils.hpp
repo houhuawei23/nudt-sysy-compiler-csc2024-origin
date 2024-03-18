@@ -26,6 +26,12 @@ inline std::enable_if_t<std::is_base_of_v<Value, T>, bool> isa(
     return T::classof(value);
 }
 
+
+// template <typename T>
+// inline std::enable_if_t<std::is_base_of_v<Type, T>, bool> isa(
+//     const Type* ty) {
+//     return T::classof(value);
+// }
 //! be careful
 template <typename To, typename From>
 [[nodiscard]] inline decltype(auto) dyn_cast(From *Val) {

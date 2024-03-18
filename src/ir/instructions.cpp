@@ -33,7 +33,21 @@ void LoadInst::print(std::ostream& os) const {
     os << name() << " = ";
     os << "load ";
     os << *dyn_cast<PointerType>(ptr()->type())->base_type() << ", "
-       << *ptr()->type() << " " << ptr()->name();
+       << *ptr()->type() << " ";
+    if (isa<GlobalVariable>(ptr())) {
+        os << "@" << ptr()->name();
+    }
+    else {
+        os << ptr()->name();
+    }
+
+    // if (isa<GlobalVariable>(ptr())) {
+    //     os << *ptr()->type() << ", " << *ptr()->type() << " ";
+    //     os << "@" << ptr()->name();
+    // } else if (ptr()->type()->is_pointer()) {
+    //     os << *dyn_cast<PointerType>(ptr()->type())->base_type() << ", "
+    //        << *ptr()->type() << " " << ptr()->name();
+    // }
 }
 
 void ReturnInst::print(std::ostream& os) const {
@@ -52,45 +66,44 @@ void ReturnInst::print(std::ostream& os) const {
  */
 void BinaryInst::print(std::ostream& os) const {
     os << name() << " = ";
-    switch (scid())
-    {
-    case vADD:
-        os << "add ";
-        break;
-    case vFADD:
-        os << "fadd ";
-        break;
-    
-    case vSUB:
-        os << "sub ";
-        break;
-    case vFSUB:
-        os << "fsub ";
-        break;
-    
-    case vMUL: 
-        os << "mul ";
-        break;
-    case vFMUL:
-        os << "fmul ";
-        break;
-    
-    case vSDIV:
-        os << "sdiv ";
-        break;
-    case vFDIV:
-        os << "fdiv ";
-        break;
+    switch (scid()) {
+        case vADD:
+            os << "add ";
+            break;
+        case vFADD:
+            os << "fadd ";
+            break;
 
-    case vSREM:
-        os << "srem ";
-        break;
-    case vFREM:
-        os << "frem ";
-        break;
+        case vSUB:
+            os << "sub ";
+            break;
+        case vFSUB:
+            os << "fsub ";
+            break;
 
-    default:
-        break;
+        case vMUL:
+            os << "mul ";
+            break;
+        case vFMUL:
+            os << "fmul ";
+            break;
+
+        case vSDIV:
+            os << "sdiv ";
+            break;
+        case vFDIV:
+            os << "fdiv ";
+            break;
+
+        case vSREM:
+            os << "srem ";
+            break;
+        case vFREM:
+            os << "frem ";
+            break;
+
+        default:
+            break;
     }
     // <type>
     os << *type() << " ";
@@ -104,32 +117,35 @@ void BinaryInst::print(std::ostream& os) const {
  * @brief Unary Instruction Output
  *      <result> = sitofp <ty> <value> to <ty2>
  *      <result> = fptosi <ty> <value> to <ty2>
- * 
+ *
  *      <result> = fneg [fast-math flags]* <ty> <op1>
  */
 void UnaryInst::print(std::ostream& os) const {
     os << name() << " = ";
-    switch (scid())
-    {
-    case vFTOI:
-        os << "fptosi ";
-        
-        if (is_i32()) os << "float ";
-        else os << "i32 ";
-        os << get_value()->name() << " to " << *type();
-        break;
-    case vITOF:
-        os << "sitofp ";
+    switch (scid()) {
+        case vFTOI:
+            os << "fptosi ";
 
-        if (is_i32()) os << "float ";
-        else os << "i32 ";
-        os << get_value()->name() << " to " << *type();
-        break;
-    case vFNEG:
-        os << "fneg " << *type() << " " << get_value()->name();
-        break;
-    default:
-        break;
+            if (is_i32())
+                os << "float ";
+            else
+                os << "i32 ";
+            os << get_value()->name() << " to " << *type();
+            break;
+        case vITOF:
+            os << "sitofp ";
+
+            if (is_i32())
+                os << "float ";
+            else
+                os << "i32 ";
+            os << get_value()->name() << " to " << *type();
+            break;
+        case vFNEG:
+            os << "fneg " << *type() << " " << get_value()->name();
+            break;
+        default:
+            break;
     }
 }
 
@@ -161,7 +177,8 @@ void ICmpInst::print(std::ostream& os) const {
             break;
         default:
             // assert(false && "unimplemented");
-            std::cerr<<"Error from ICmpInst::print(), wrong Inst Type!"<<std::endl;
+            std::cerr << "Error from ICmpInst::print(), wrong Inst Type!"
+                      << std::endl;
             exit(EXIT_FAILURE);
             break;
     }
@@ -201,7 +218,8 @@ void FCmpInst::print(std::ostream& os) const {
             break;
         default:
             // assert(false && "unimplemented");
-            std::cerr<<"Error from FCmpInst::print(), wrong Inst Type!"<<std::endl;
+            std::cerr << "Error from FCmpInst::print(), wrong Inst Type!"
+                      << std::endl;
             exit(EXIT_FAILURE);
             break;
     }

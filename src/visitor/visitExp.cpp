@@ -44,6 +44,7 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
         if (res = ir::dyn_cast<ir::Constant>(valueptr)) {
         } else {
             res = _builder.create_load(valueptr, {}, _builder.getvarname());
+            
         }
     } else {  //! array
         // TODO

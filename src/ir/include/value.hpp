@@ -147,7 +147,7 @@ class Value {
         : _type(type), _scid(scid), _name(name), _uses() {}
     virtual ~Value() = default;
     // Value is all base, return true
-    static bool classof(const Value*) { return true; }
+    static bool classof(const Value* v) { return true; }
 
     //* get
     Type* type() const { return _type; }

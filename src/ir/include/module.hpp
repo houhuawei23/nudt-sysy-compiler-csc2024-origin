@@ -2,6 +2,8 @@
 
 #include "function.hpp"
 #include "value.hpp"
+#include "global.hpp"
+
 namespace ir {
 //! IR Unit for representing a SysY compile unit
 /**
@@ -39,6 +41,12 @@ class Module {
 
     Function* function(const_str_ref name);
     Function* add_function(bool is_decl, Type* type, const_str_ref name);
+
+    void add_gvar(const_str_ref name, GlobalVariable* gv) {
+        auto iter  = _globals.find(name); // find the name in _globals
+        assert(iter == _globals.end() && "Redeclare! global variable already exists");
+        _globals.emplace(name, gv);
+    }
 
     // Value *register_val(const_str_ref name);
     // Value *get_val(const_str_ref name);

@@ -1,8 +1,8 @@
 #pragma once
+#include "global.hpp"
 #include "infrast.hpp"
 #include "utils.hpp"
 #include "value.hpp"
-
 
 namespace ir {
 
@@ -88,16 +88,33 @@ class LoadInst : public Instruction {
    public:
     //<result> = load [volatile] <ty>, ptr <pointer>
     LoadInst(Value* ptr,
+             Type* type,
              BasicBlock* parent,
              const_value_ptr_vector& indices = {},
              const_str_ref name = "")
-        : Instruction(vLOAD,
-                      dyn_cast<PointerType>(ptr->type())->base_type(),
-                      parent,
-                      name) {
+        : Instruction(vLOAD, type, parent, name) {
         // Instruction type?? should be what?
         add_operand(ptr);
         add_operands(indices);
+    }
+
+    static LoadInst* gen(Value* ptr,
+                         BasicBlock* parent,
+                         const_value_ptr_vector& indices = {},
+                         const_str_ref name = "") {
+        // assert()
+        Type* type = nullptr;
+        // if (isa<GlobalVariable>(ptr)) {
+        //     auto gv = dyn_cast<GlobalVariable>(ptr);
+        //     type = gv->base_type(); // base type
+        // } else if (ptr->type()->is_pointer()) {
+        //     type = dyn_cast<PointerType>(ptr->type())->base_type();
+        // } else {
+        //     assert(false && "not supported");
+        // }
+        type = dyn_cast<PointerType>(ptr->type())->base_type();
+        auto inst = new LoadInst(ptr, type, parent, indices, name);
+        return inst;
     }
 
     Value* ptr() const { return operand(0); }
@@ -110,7 +127,7 @@ class LoadInst : public Instruction {
 
 /*
  * @brief Return Instruction
- * @details: 
+ * @details:
  *      ret <type> <value>
  *      ret void
  */
@@ -118,15 +135,19 @@ class ReturnInst : public Instruction {
     friend class IRBuilder;
 
    public:
-    ReturnInst(Value* value = nullptr, BasicBlock* parent = nullptr, const_str_ref name = "")
+    ReturnInst(Value* value = nullptr,
+               BasicBlock* parent = nullptr,
+               const_str_ref name = "")
         : Instruction(vRETURN, Type::void_type(), parent, name) {
         add_operand(value);
         // std::cout << _operands.size() << std::endl;
     }
 
-    public:
+   public:
     bool has_return_value() const { return not _operands.empty(); }
-    Value* return_value() const { return has_return_value() ? operand(0) : nullptr; }
+    Value* return_value() const {
+        return has_return_value() ? operand(0) : nullptr;
+    }
 
    public:
     static bool classof(const Value* v) { return v->scid() == vRETURN; }
@@ -135,60 +156,71 @@ class ReturnInst : public Instruction {
 
 /*
  * @brief Unary Instruction
- * @details: 
+ * @details:
  *      <result> = sitofp <ty> <value> to <ty2>
  *      <result> = fptosi <ty> <value> to <ty2>
- * 
+ *
  *      <result> = fneg [fast-math flags]* <ty> <op1>
  */
 class UnaryInst : public Instruction {
     friend class IRBuilder;
 
    protected:
-    UnaryInst(Value::ValueId kind, Type* type, Value* operand, BasicBlock* parent = nullptr, const_str_ref name = "")
+    UnaryInst(Value::ValueId kind,
+              Type* type,
+              Value* operand,
+              BasicBlock* parent = nullptr,
+              const_str_ref name = "")
         : Instruction(kind, type, parent, name) {
         add_operand(operand);
     }
 
    public:
-    static bool classof(const Value* v) { return v->scid() == vFTOI || v->scid() == vITOF || 
-                                                 v->scid() == vFNEG; }
+    static bool classof(const Value* v) {
+        return v->scid() == vFTOI || v->scid() == vITOF || v->scid() == vFNEG;
+    }
 
-    public:
+   public:
     Value* get_value() const { return operand(0); }
 
-    public:
+   public:
     void print(std::ostream& os) const override;
 };
 
 /*
  * @brief Binary Instruction
- * @details: 
+ * @details:
  *      1. exp (MUL | DIV | MODULO) exp
  *      2. exp (ADD | SUB) exp
  */
 class BinaryInst : public Instruction {
     friend class IRBuilder;
 
-    public:
-    BinaryInst(ValueId kind, Type* type, Value* lvalue, Value* rvalue, BasicBlock* parent, const std::string name="") 
-     : Instruction(kind, type, parent, name) {
+   public:
+    BinaryInst(ValueId kind,
+               Type* type,
+               Value* lvalue,
+               Value* rvalue,
+               BasicBlock* parent,
+               const std::string name = "")
+        : Instruction(kind, type, parent, name) {
         add_operand(lvalue);
         add_operand(rvalue);
     }
 
-    public:
-    static bool classof(const Value* v) { return v->scid() == vADD || v->scid() == vFADD || 
-                                                 v->scid() == vSUB || v->scid() == vFSUB ||
-                                                 v->scid() == vMUL || v->scid() == vFMUL || 
-                                                 v->scid() == vSDIV || v->scid() == vFDIV || 
-                                                 v->scid() == vSREM || v->scid() == vFREM; }
+   public:
+    static bool classof(const Value* v) {
+        return v->scid() == vADD || v->scid() == vFADD || v->scid() == vSUB ||
+               v->scid() == vFSUB || v->scid() == vMUL || v->scid() == vFMUL ||
+               v->scid() == vSDIV || v->scid() == vFDIV || v->scid() == vSREM ||
+               v->scid() == vFREM;
+    }
 
-    public:
+   public:
     Value* get_lvalue() const { return operand(0); }
     Value* get_rvalue() const { return operand(1); }
 
-    public:
+   public:
     void print(std::ostream& os) const override;
 };
 
@@ -229,7 +261,9 @@ class BranchInst : public Instruction {
         add_operand(iffalse);
     }
     // UnCondition Branch
-    BranchInst(BasicBlock* dest, BasicBlock* parent = nullptr, const_str_ref name="")
+    BranchInst(BasicBlock* dest,
+               BasicBlock* parent = nullptr,
+               const_str_ref name = "")
         : Instruction(vBR, Type::void_type(), parent, name), _is_cond(false) {
         add_operand(dest);
     }
@@ -280,7 +314,7 @@ class ICmpInst : public Instruction {
              Value* rhs,
              BasicBlock* parent,
              const_str_ref name = "")
-        : Instruction(itype, Type::i1_type(), parent, name) { // cmp return i1
+        : Instruction(itype, Type::i1_type(), parent, name) {  // cmp return i1
         add_operand(lhs);
         add_operand(rhs);
     }
@@ -302,14 +336,17 @@ class ICmpInst : public Instruction {
 //! FCmpInst
 class FCmpInst : public Instruction {
     //! TODO
-        //! TODO
+    //! TODO
    public:
     FCmpInst(ValueId itype,
              Value* lhs,
              Value* rhs,
              BasicBlock* parent,
              const_str_ref name = "")
-        : Instruction(itype, Type::i1_type(), parent, name) { //! return float type?
+        : Instruction(itype,
+                      Type::i1_type(),
+                      parent,
+                      name) {  //! return float type?
         add_operand(lhs);
         add_operand(rhs);
     }

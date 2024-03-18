@@ -1,5 +1,5 @@
-float main() {
-    int a = 3;
-    float g = a;
-    return g;
+int g = 3;
+int main() {
+    int a = g;
+    return a;
 }

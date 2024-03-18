@@ -31,7 +31,9 @@ Function *Module::add_function(bool is_decl, Type *type, const_str_ref name) {
 // readable ir print
 void Module::print(std::ostream &os) const{
     // print all global values
-
+    for (auto gv_iter : _globals) {
+        os << *gv_iter.second << std::endl;
+    }
     // print all functions
     for (auto iter : _functions) {
         auto func = iter.second;

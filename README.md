@@ -575,6 +575,35 @@ define i32 @main() {
 
 ```
 
+
+- 2024.03.18: 实现了全局变量GlobalVariable (scalar)
+  - 还不支持全局变量的常量传播，需要改进
+  - 下一步要完整实现 01_var_defn2.c
+  - 写一个测试脚本，最好能跟 gcc/llvm 对拍
+
+```C
+int g = 3;
+int main() {
+    int a = g;
+    return a;
+}
+```
+
+```LLVM
+@g = global i32 3
+
+define i32 @main() {
+0:     ; block
+    %1 = load i32, i32* @g
+    %2 = alloca i32
+    store i32 %1, i32* %2
+    %3 = load i32, i32* %2
+    ret i32 %3
+
+}
+
+```
+
 经证明，二者的lli return echo$?输出的不是一样的
 
 但是前者的lli输出和后者的gcc编译可执行文件echo$?的返回值是一样的

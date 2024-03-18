@@ -49,7 +49,9 @@ class SysYIRGenerator : public SysYBaseVisitor {
     ir::Value* visitVarDef_beta(SysYParser::VarDefContext* ctx,
                           ir::Type* type,
                           bool is_const);
-
+    ir::Value* visitVarDef_global(SysYParser::VarDefContext* ctx,
+                                                ir::Type* btype,
+                                                bool is_const);
     virtual std::any visitBtype(SysYParser::BtypeContext* ctx) override;
 
     virtual std::any visitLValue(SysYParser::LValueContext* ctx) override;
