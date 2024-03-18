@@ -281,9 +281,14 @@ std::any SysYIRGenerator::visitBreakStmt(SysYParser::BreakStmtContext* ctx) {
         exit(EXIT_FAILURE);
     }
     auto res = builder().create_br(breakDest);
-    return res;
-}
 
+    //create a basic block
+    auto cur_func=builder().block()->parent();
+    auto next_block=cur_func->new_block();
+    next_block->set_name(builder().getvarname());
+    builder().set_pos(next_block,next_block->begin());
+    return next_block;
+}
 std::any SysYIRGenerator::visitContinueStmt(
     SysYParser::ContinueStmtContext* ctx) {
     auto continueDest = builder().header();
@@ -292,6 +297,11 @@ std::any SysYIRGenerator::visitContinueStmt(
         exit(EXIT_FAILURE);
     }
     auto res = builder().create_br(continueDest);
+    //create a basic block
+    auto cur_func=builder().block()->parent();
+    auto next_block=cur_func->new_block();
+    next_block->set_name(builder().getvarname());
+    builder().set_pos(next_block,next_block->begin());
     return res;
 }
 
