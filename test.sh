@@ -96,10 +96,19 @@ else
             ./main "$file" >"${output_dir}/gen.ll"
             lli "${output_dir}/gen.ll"
             res=$?
-
-            clang -emit-llvm -S "$file" -o "${output_dir}/llvm.ll"
-            lli "${output_dir}/llvm.ll"
-            llvmres=$?
+            # clang -emit-llvm dont support *.sy file, so create tmp *.c file
+            if [[ "$single_file" == *.c ]]; then
+                clang -emit-llvm -S "$single_file" -o "${output_dir}/llvm.ll"
+                lli "${output_dir}/llvm.ll"
+                llvmres=$?
+            elif [[ "$single_file" == *.sy ]]; then
+                cp "$single_file" "${output_dir}/test.c"
+                clang -emit-llvm -S "${output_dir}/test.c" -o "${output_dir}/llvm.ll"
+                lli "${output_dir}/llvm.ll"
+                llvmres=$?
+            else
+                echo "Unsupported file type: ${single_file}"
+            fi
 
             if [ $res != $llvmres ]; then
                 echo "${RED}WRONG RESULT${RESET}: res (${res}), llvmres (${llvmres})"
