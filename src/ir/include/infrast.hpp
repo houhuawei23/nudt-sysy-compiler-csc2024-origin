@@ -1,6 +1,7 @@
 #pragma once
 
 #include "type.hpp"
+#include "utils.hpp"
 #include "value.hpp"
 
 // #include "module.hpp"
@@ -8,128 +9,128 @@ namespace ir {
 
 //  _type, _name, _uses
 class Constant : public User {
+    static std::map<std::string, Constant*> cache;
+
    protected:
     // std::variant<bool, int32_t, float> _field;
     union {
         /* data */
-        // bool _b;
-        int _i;
-        float _f;
-        // double _d;
+        bool _i1;
+        int32_t _i32;  // signed int
+        float _f32;
+        double _f64;
     };
 
    public:
-    Constant();
-    // Constant(Type* type, const_str_ref name = "")
-    //     : User(type, vCONSTANT, name) {}
-    Constant(Type* type, ValueId scid = vCONSTANT, const_str_ref name = "")
-        : User(type, scid, name) {}
+    //* Constant(num, name)
+    Constant(bool i1, const_str_ref name)
+        : User(Type::i1_type(), vCONSTANT, name), _i1(i1) {
+        // int a = 2;
+    }
 
-    Constant(int i)
-        : User(Type::int_type(), vCONSTANT, std::to_string(i)), _i(i) {}
+    Constant(int32_t i32, const_str_ref name)
+        : User(Type::i32_type(), vCONSTANT, name), _i32(i32) {
+        // int a = 2;
+    }
 
-    //! TODO: float to string? is that ok?
-    Constant(float f)
-        : User(Type::float_type(), vCONSTANT, std::to_string(f)), _f(f) {}
+    Constant(float f32, const_str_ref name)
+        : User(Type::float_type(), vCONSTANT, name), _f32(f32) {}
 
-    Constant(double f)
-        : User(Type::float_type(), vCONSTANT, std::to_string(f)), _f(f) {}
-
-    Constant(int i, const_str_ref name)
-        : User(Type::int_type(), vCONSTANT, name), _i(i) {}
-
-    Constant(float f, const_str_ref name)
-        : User(Type::float_type(), vCONSTANT, name), _f(f) {}
-
-    Constant(double f, const_str_ref name)
-        : User(Type::float_type(), vCONSTANT, std::to_string(f)), _f(f) {}
+    Constant(double f64, const_str_ref name)
+        : User(Type::double_type(), vCONSTANT, name), _f64(f64) {
+        // int a = 2;
+    }
 
     // gen Const from int or float
-
     template <typename T>
-    static Constant* gen(T v, const_str_ref name = "") {
-        static std::map<T, Constant*> cache;
-        assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
-        auto iter = cache.find(v);
+    static Constant* cache_add(T val, const std::string& name) {
+        auto iter = cache.find(name);
         if (iter != cache.end()) {
             return iter->second;
         }
+
         Constant* c;
-        if (name == "")
-            c = new Constant(v);
-        else
-            c = new Constant(v, name);
-        auto res = cache.emplace(v, c);
-        return c;  // res.first->second; ??
+        c = new Constant(val, name);
+        auto res = cache.emplace(name, c);
+        return c;
     }
-
-    int i() const {
-        assert(is_int());  // assert
-        return _i;
-    }
-    float f() const {
-        assert(is_float());
-        return _f;
-    }
-
-    // isa
-    static bool classof(const Value* v) { return v->scid() == vCONSTANT; }
-
-    // ir print
-    void print(std::ostream& os) const override;
-};
-
-class ConstantBeta : public User {
-   protected:
-    // std::variant<bool, int32_t, float> _field;
-    union {
-        /* data */
-        // bool _b;
-        int _i;
-        float _f;
-        // double _d;
-    };
-
-   public:
-    ConstantBeta();
-    ConstantBeta(Type* type, const_str_ref name = "")
-        : User(type, vCONSTANT, name) {}
-    ConstantBeta(Type* type, ValueId scid = vCONSTANT, const_str_ref name = "")
-        : User(type, scid, name) {}
-
-    ConstantBeta(int i)
-        : User(Type::int_type(), vCONSTANT, std::to_string(i)), _i(i) {}
-    //! TODO: float to string? is that ok?
-    ConstantBeta(float f)
-        : User(Type::float_type(), vCONSTANT, std::to_string(f)), _f(f) {}
-
-    ConstantBeta(int i, const_str_ref name)
-        : User(Type::int_type(), vCONSTANT, name), _i(i) {}
-    ConstantBeta(float f, const_str_ref name)
-        : User(Type::float_type(), vCONSTANT, name), _f(f) {}
-
-    // gen Const from int or float
 
     template <typename T>
-    static ConstantBeta* gen(T v) {
-        static std::map<T, ConstantBeta*> cache;
-        assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
-        auto iter = cache.find(v);
-        if (iter != cache.end()) {
-            return iter->second;
+    static Constant* gen_i1(T v) {
+        assert(std::is_integral_v<T> ||
+               std::is_floating_point_v<T> && "not int or float!");
+
+        bool num = (bool)v;
+        std::string name;
+        // auto name = std::to_string(num);
+        if (num) {
+            name = "true";
+        } else {
+            name = "false";
         }
-        ConstantBeta* c = new ConstantBeta(v);
-        auto res = cache.emplace(v, c);
-        return c;  // res.first->second; ??
+        return cache_add(num, name);
     }
 
-    int i() const {
-        assert(is_int());  // assert
-        return _i;
+    template <typename T>
+    static Constant* gen_i32(T v) {
+        assert(std::is_integral_v<T> ||
+               std::is_floating_point_v<T> && "not int or float!");
+
+        int32_t num = (int32_t)v;
+
+        std::string name = std::to_string(num);
+        return cache_add(num, name);
     }
-    float f() const {
+
+    template <typename T>
+    static Constant* gen_f64(T val) {
+        assert(std::is_integral_v<T> ||
+               std::is_floating_point_v<T> && "not int or float!");
+
+        auto f64 = (double)val;
+
+        auto name = getMC(f64);
+        return cache_add(f64, name);
+    }
+
+    // static Constant* gen_i32(int32_t v) {
+    //     auto name = std::to_string(v);
+    //     return cache_add(name);
+    // }
+    // static Constant* gen_f32
+    // float and double both gen f64
+    // static Constant* gen_f64(float v) {
+    //     auto name = getMC(v);
+    //     return cache_add(name);
+    // }
+    // static Constant* gen_f64(double v) {
+    //     auto name = getMC(v);
+    //     return cache_add(name);
+    // }
+
+    int32_t i32() const {
+        assert(is_i32());  // assert
+        return _i32;
+    }
+
+    float f32() const {
+        assert(is_float32());
+        return _f32;
+    }
+
+    double f64() const {
         assert(is_float());
-        return _f;
+        return _f64;
+    }
+
+    template <typename T>
+    T f() const {
+        if (is_float32()) {
+            return _f32;
+        }
+        else if (is_double()) {
+            return _f64;
+        } 
     }
 
     // isa
@@ -138,6 +139,7 @@ class ConstantBeta : public User {
     // ir print
     void print(std::ostream& os) const override;
 };
+
 /**
  * @brief Argument represents an incoming formal argument to a Function.
  * 形式参数，因为它是“形式的”，所以不包含实际值，而是表示特定函数的参数的类型、参数编号和属性。

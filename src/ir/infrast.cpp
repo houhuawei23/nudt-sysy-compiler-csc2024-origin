@@ -2,6 +2,9 @@
 #include "include/utils.hpp"
 
 namespace ir {
+
+std::map<std::string, Constant*> Constant::cache;
+
 void BasicBlock::print(std::ostream &os) const {
     // os <<
     // print all instructions
@@ -16,10 +19,10 @@ void BasicBlock::print(std::ostream &os) const {
 }
 
 void Constant::print(std::ostream &os) const {
-    if (type()->is_int()) {
-        os << i();
+    if (type()->is_i32()) {
+        os << i32();
     } else if (type()->is_float()) {
-        os << f();
+        os << f64();
     } else {
         // assert
     }

@@ -1,6 +1,26 @@
 #include "visitor.hpp"
 
 namespace sysy {
+//! btype: INT | FLOAT;
+std::any SysYIRGenerator::visitBtype(SysYParser::BtypeContext* ctx) {
+    // change Btype in c to Btype in LLVM
+    if (ctx->INT()) {
+        return ir::Type::i32_type();
+    } else if (ctx->FLOAT()) {
+        //! transfer all float to double
+        return ir::Type::double_type();
+        // return ir::Type::float_type();
+    }
+    // else if (ctx->DOUBLE()) {
+    //     return ir::Type::double_type();
+    // } else if (ctx->VOID()) {
+    //     return ir::Type::void_type();
+    // }
+
+    // return ctx->INT() ? ir::Type::i32_type() : ir::Type::float_type();
+    return nullptr;
+}
+
 std::any SysYIRGenerator::visitDecl(SysYParser::DeclContext* ctx) {
     return _tables.isModuleScope() ? visitDeclGlobal(ctx) : visitDeclLocal(ctx);
 }
@@ -17,7 +37,7 @@ std::any SysYIRGenerator::visitDeclLocal(SysYParser::DeclContext* ctx) {
     // std::cout << ctx->getText() << std::endl;
     // auto btype_pointer_type =
     // ir::Type::pointer_type(any_cast_Type(visit(ctx->btype())));
-    auto btype = any_cast_Type(visit(ctx->btype()));
+    auto btype = any_cast_Type(visitBtype(ctx->btype()));
     // auto test = safe_any_cast<ir::Type>(visit(ctx->btype()));
     // assert(test == btype);
     bool is_const = ctx->CONST();
@@ -61,63 +81,67 @@ ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
     for (auto dim : ctx->lValue()->exp()) {
         dims.push_back(any_cast_Value(visit(dim)));
     }
-    
-    if(is_const) {  //! const
+    ir::Value* res = nullptr;
+    ir::Value* init = nullptr;
+    ir::Constant* cinit = nullptr;
+
+    if (ctx->ASSIGN()) {
+        init = any_cast_Value(visit(ctx->initValue()->exp()));
+        if (cinit = ir::dyn_cast<ir::Constant>(init)) {
+            if (btype->is_i32() && cinit->is_float()) {
+                cinit = ir::Constant::gen_i32(cinit->f64());
+            } else if (btype->is_float() && cinit->is_i32()) {
+                cinit = ir::Constant::gen_f64(cinit->i32());
+            }
+            
+        }
+    }
+
+
+    if (is_const) {              //! 1 decl as const
         if (dims.size() == 0) {  //! 1.1 标量
-            if(ctx->ASSIGN()) {
-                auto init = any_cast_Value(visit(ctx->initValue()->exp()));
-                if(auto cinit = ir::dyn_cast<ir::Constant>(init)) {
-                    if (btype->is_int() && cinit->is_float()) {
-                        cinit = ir::Constant::gen((int)cinit->f());
-                    } else if (btype->is_float() && cinit->is_int()) {
-                        cinit = ir::Constant::gen((float)cinit->i(), ir::getMC((float)cinit->i()));
-                    }
-                    _tables.insert(name, cinit);
-                    return cinit;
-                } else {
-                    //TODO
-                }
-            } else {
+            if (not ctx->ASSIGN()) {
                 std::cerr << "const without initialization!" << std::endl;
                 exit(EXIT_FAILURE);
             }
-        } else {  //! 1.2 数组
+            //* has ASSIGN
+            if (cinit) {
+                _tables.insert(name, cinit);
+                res = cinit;
+            } else {
+                // TODO: init value NOT Constant Type
+            }
+
+        }       // const scalar end
+        else {  //! 1.2 数组
             // TODO
-        }
-        return nullptr;
-    } else {  //! 非const
-        //! create alloca inst
+        } // const array end
+    } // decl as 'const' end 
+    else {  //! 2 not decl as const
+        // create alloca inst
         auto alloca_ptr = _builder.create_alloca(btype, dims, _builder.getvarname(), is_const);
         _tables.insert(name, alloca_ptr);
 
         //! create store inst
-        ir::Value* init = nullptr;
-        if (ctx->ASSIGN()) {
-            if (dims.size() == 0) {  //! 1. scalar
-                init = any_cast_Value(visit(ctx->initValue()->exp()));
-                if (auto cinit = ir::dyn_cast<ir::Constant>(init)) {  //! 1.1 常量
-                    if (btype->is_int() && init->is_float()) {
-                        init = ir::Constant::gen((int)cinit->f());
-                    } else if (btype->is_float() && init->is_int()) {  // i2f
-                        init = ir::Constant::gen((float)cinit->i(),ir::getMC((float)cinit->i()));
-                    }
-                    init = ir::dyn_cast<ir::Constant>(init);
-                    auto store = _builder.create_store(init, alloca_ptr, {}, "store");
-                } else {  //! 1.2 变量
-                    if (init->is_float() && btype->is_int()) {
-                        auto ftosi = _builder.create_ftosi(ir::Type::int_type(), init, _builder.getvarname());
-                        auto stroe = _builder.create_store(ftosi, alloca_ptr, {}, "store");
-                    } else if (init->is_int() && btype->is_float()) {
-                        auto sitof = _builder.create_sitof(ir::Type::float_type(), init, _builder.getvarname());
-                        auto store = _builder.create_store(sitof, alloca_ptr, {}, "store");
-                    }
-                }
-            } else {  //! 2. array
-                // TODO
+        if (dims.size() == 0) {  //* 2.1 (not const) scalar
+            if (init->is_float() && btype->is_i32()) {
+                auto ftosi = _builder.create_ftosi(ir::Type::i32_type(), init, _builder.getvarname());
+                auto stroe = _builder.create_store(ftosi, alloca_ptr, {}, "store");
+            } else if (init->is_i32() && btype->is_float()) {
+                auto sitof = _builder.create_sitof(ir::Type::float_type(), init, _builder.getvarname());
+                auto store = _builder.create_store(sitof, alloca_ptr,{}, "store");
+            } else {
+                auto store = _builder.create_store(cinit, alloca_ptr, {}, "store");
             }
+
+        } 
+        else {  //* 2. (not const) array
+            // TODO
         }
-        return alloca_ptr;
+
+        res = alloca_ptr;
     }
+    return res;
 }
 
 // decl: CONST? btype varDef (COMMA varDef)* SEMICOLON;
@@ -134,7 +158,4 @@ std::any SysYIRGenerator::visitDeclGlobal(SysYParser::DeclContext* ctx) {
     return res;
 }
 
-std::any SysYIRGenerator::visitBtype(SysYParser::BtypeContext* ctx) {
-    return ctx->INT() ? ir::Type::int_type() : ir::Type::float_type();
-}
 }  // namespace sysy

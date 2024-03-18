@@ -13,7 +13,7 @@ namespace sysy {
  */
 std::any SysYIRGenerator::visitFuncType(SysYParser::FuncTypeContext* ctx) {
     if (ctx->INT()) {
-        return ir::Type::int_type();
+        return ir::Type::i32_type();
     } else if (ctx->FLOAT()) {
         return ir::Type::float_type();
     } else if (ctx->VOID()) {
@@ -54,7 +54,7 @@ std::any SysYIRGenerator::visitFunc(SysYParser::FuncContext* ctx) {
         
         for (auto param : params) {
             if(param->btype()->INT())
-                param_types.push_back(ir::Type::int_type());
+                param_types.push_back(ir::Type::i32_type());
             else
                 param_types.push_back(ir::Type::float_type());
             param_names.push_back(param->ID()->getText());

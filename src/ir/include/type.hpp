@@ -13,12 +13,14 @@ class FunctionType;
 using type_ptr_vector = std::vector<Type*>;
 
 // using const_vector_type = const std::vector<Type*>;
-
+// ir base type
 typedef enum : size_t {
     VOID,
-    INT,
-    FLOAT,
-    LABEL,
+    INT1,
+    INT32,
+    FLOAT,   // represent f32 in C
+    DOUBLE,  // represent f64
+    LABEL,   // BasicBlock
     POINTER,
     FUNCTION,
     UNDEFINE
@@ -33,8 +35,13 @@ class Type {
 
     // static method for construct Type instance
     static Type* void_type();
-    static Type* int_type();
+
+    static Type* i1_type();
+    static Type* i32_type();
+
     static Type* float_type();
+    static Type* double_type();
+
     static Type* label_type();
     static Type* pointer_type(Type* baseType);
     // static Type *array
@@ -45,8 +52,15 @@ class Type {
     bool is(Type* type);
     bool isnot(Type* type);
     bool is_void();
-    bool is_int();
-    bool is_float();
+
+    bool is_i1();
+    bool is_i32();
+
+    bool is_float32();   // only check f32
+    bool is_double();  // only check f64
+    bool is_float() {
+        return is_float32() || is_double();
+    }
     bool is_label();
     bool is_pointer();
     bool is_function();
@@ -56,15 +70,18 @@ class Type {
     BType btype() const { return _btype; };
     size_t size() const {
         switch (_btype) {
-            case INT:
+            case INT32:
                 return 4;
                 break;
             case FLOAT:
                 return 4;
+                break;
+            case DOUBLE:
             case LABEL:
             case POINTER:
             case FUNCTION:
                 return 8;
+                break;
             case VOID:
                 return 0;
             default:

@@ -18,12 +18,12 @@ namespace sysy
             if (s.length() > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) base = 16;
             else if (s[0] == '0') base = 8;
 
-            res = ir::Constant::gen(std::stoi(s, 0, base));
+            res = ir::Constant::gen_i32(std::stoi(s, 0, base));
         }
         else if (auto fctx = ctx->number()->FLITERAL()) {  //! float
             std::string s = fctx->getText();
             float f = std::stof(s);
-            res = ir::Constant::gen(f, ir::getMC(f));
+            res = ir::Constant::gen_f64(f);
         }
         return res;
     }
@@ -56,49 +56,24 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
  *      + - (NOT) exp
  */
 std::any SysYIRGenerator::visitUnaryExp(SysYParser::UnaryExpContext* ctx) {
-    // ir::Value* op = any_cast_Value(visit(ctx->exp()));
-    // ir::Value* res;
-
-    // if (ir::isa<ir::Constant>(op)) {  //! 1. 常量 -> 常量折叠
-    //     ir::Constant* cop = ir::dyn_cast<ir::Constant>(op);
-    //     if (ctx->NOT()) {
-    //         auto ans = !(cop->is_float() ? cop->f() : cop->i());
-    //         if (typeid(ans) == typeid(float)) res = ir::Constant::gen(ans,
-    //         ir::getMC(ans)); else res = ir::Constant::gen(ans);
-    //     } else if (ctx->ADD()) {
-    //         // TODO
-    //     } else {
-    //         // TODO
-    //     }
-    // } else {  //! 2. 变量 -> 生成 NOT 指令
-    //     if (op->is_int()) {
-    //         // int32 类型
-    //         res = _builder.create_fneg(ir::Type::int_type(), op,
-    //         _builder.getvarname());
-    //     } else {
-    //         // float 类型
-    //         res = _builder.create_fneg(ir::Type::float_type(), op,
-    //         _builder.getvarname());
-    //     }
-    //     //! TODO
-    // }
 
     ir::Value* res = nullptr;
     auto exp = any_cast_Value(visit(ctx->exp()));
+
     if (ctx->SUB()) {
         //! Constant, static type cast
         if (auto cexp = ir::dyn_cast<ir::Constant>(exp)) {
-            if (exp->is_int()) {
-                res = ir::Constant::gen(-cexp->i());
+            if (exp->is_i32()) {
+                res = ir::Constant::gen_i32(-cexp->i32());
             } else if (exp->is_float()) {
-                res = ir::Constant::gen(-cexp->f(), ir::getMC(-cexp->f()));
+                res = ir::Constant::gen_f64(-cexp->f64());
             }
         } else if (ir::isa<ir::AllocaInst>(exp) &&
                    ir::dyn_cast<ir::AllocaInst>(exp)->is_scalar()) {
             // 如果是 AllocaInst and 标量
             //! TODO:
             int a = 5;
-        } else if (exp->is_int()) {
+        } else if (exp->is_i32()) {
         } else if (exp->is_float()) {
         }
         //! TODO
@@ -134,91 +109,74 @@ std::any SysYIRGenerator::visitParenExp(SysYParser::ParenExpContext* ctx) {
  *      7. srem: 有符号整型取模
  *      8. frem: 有符号浮点型取模
  */
-std::any SysYIRGenerator::visitMultiplicativeExp(
-    SysYParser::MultiplicativeExpContext* ctx) {
-    ir::Value* op1 = any_cast_Value(visit(ctx->exp()[0]));
-    ir::Value* op2 = any_cast_Value(visit(ctx->exp()[1]));
+std::any SysYIRGenerator::visitMultiplicativeExp(SysYParser::MultiplicativeExpContext* ctx) {
+    ir::Value* op1 = any_cast_Value(visit(ctx->exp(0)));
+    ir::Value* op2 = any_cast_Value(visit(ctx->exp(1)));
     ir::Value* res;
     if (ir::isa<ir::Constant>(op1) &&
-        ir::isa<ir::Constant>(op2)) {  //! 1. 常量 -> 常量折叠
+        ir::isa<ir::Constant>(op2)) {  //! 1. both 常量 -> 常量折叠
+
         ir::Constant* cop1 = ir::dyn_cast<ir::Constant>(op1);
         ir::Constant* cop2 = ir::dyn_cast<ir::Constant>(op2);
         if (ctx->DIV()) {
-            auto ans = (cop1->is_float() ? cop1->f() : cop1->i()) /
-                       (cop2->is_float() ? cop2->f() : cop2->i());
+            auto ans = (cop1->is_float() ? cop1->f64() : cop1->i32()) /
+                       (cop2->is_float() ? cop2->f64() : cop2->i32());
             if (typeid(ans) == typeid(float))
-                res = ir::Constant::gen(ans, ir::getMC(ans));
+                res = ir::Constant::gen_f64(ans);
             else
-                res = ir::Constant::gen(ans);
+                res = ir::Constant::gen_i32(ans);
         } else if (ctx->MUL()) {
-            auto ans = (cop1->is_float() ? cop1->f() : cop1->i()) *
-                       (cop2->is_float() ? cop2->f() : cop2->i());
+            auto ans = (cop1->is_float() ? cop1->f64() : cop1->i32()) *
+                       (cop2->is_float() ? cop2->f64() : cop2->i32());
             if (typeid(ans) == typeid(float))
-                res = ir::Constant::gen(ans, ir::getMC(ans));
+                res = ir::Constant::gen_f64(ans);
             else
-                res = ir::Constant::gen(ans);
+                res = ir::Constant::gen_i32(ans);
         } else {  // MODULO
-            if (cop1->is_int() && cop2->is_int()) {
-                int ans = cop1->i() % cop2->i();
-                res = ir::Constant::gen(ans);
+            if (cop1->is_i32() && cop2->is_i32()) {
+                int ans = cop1->i32() % cop2->i32();
+                res = ir::Constant::gen_i32(ans);
             } else {
                 std::cerr << "Operands of modulo must be integer!" << std::endl;
                 exit(EXIT_FAILURE);
             }
         }
-    } else {  //! 2. 变量 -> 生成 MUL | FMUL | UDIV | SDIV | FDIV | UREM | SREM
+    } 
+    else {  //! 2. 变量 -> 生成 MUL | FMUL | UDIV | SDIV | FDIV | UREM | SREM
               //! | FREM 指令
-        if (op1->is_int() && op2->is_int()) {
-            // int32 类型
+        
+        if (op1->type() == op2->type()) { // same type
+            auto type = op1->type();
+
             if (ctx->MUL())
-                res = _builder.create_mul(ir::Type::int_type(), op1, op2,
-                                          _builder.getvarname());
+                res = _builder.create_mul(type, op1, op2, _builder.getvarname());
             else if (ctx->DIV())
-                res = _builder.create_div(ir::Type::int_type(), op1, op2,
-                                          _builder.getvarname());
+                res = _builder.create_div(type, op1, op2, _builder.getvarname());
             else
-                res = _builder.create_rem(ir::Type::int_type(), op1, op2,
-                                          _builder.getvarname());
-        } else if (op1->is_float() && op2->is_float()) {
-            // float 类型
+                res = _builder.create_rem(type, op1, op2, _builder.getvarname());
+        } 
+        else if (op1->is_i32() && op2->is_float()) { // 需要进行隐式类型转换
+            auto ftype = ir::Type::float_type();
+            auto sitof = _builder.create_sitof(ftype, op1, _builder.getvarname());
             if (ctx->MUL())
-                res = _builder.create_mul(ir::Type::float_type(), op1, op2,
-                                          _builder.getvarname());
+                res = _builder.create_mul(ftype, sitof, op2, _builder.getvarname());
             else if (ctx->DIV())
-                res = _builder.create_div(ir::Type::float_type(), op1, op2,
-                                          _builder.getvarname());
+                res = _builder.create_div(ftype, sitof, op2, _builder.getvarname());
             else
-                res = _builder.create_rem(ir::Type::float_type(), op1, op2,
-                                          _builder.getvarname());
-        } else {
-            // 需要进行隐式类型转换
-            if (op1->is_int() && op2->is_float()) {
-                auto sitof = _builder.create_sitof(ir::Type::float_type(), op1,
-                                                   _builder.getvarname());
-                if (ctx->MUL())
-                    res = _builder.create_mul(ir::Type::float_type(), sitof,
-                                              op2, _builder.getvarname());
-                else if (ctx->DIV())
-                    res = _builder.create_div(ir::Type::float_type(), sitof,
-                                              op2, _builder.getvarname());
-                else
-                    res = _builder.create_rem(ir::Type::float_type(), sitof,
-                                              op2, _builder.getvarname());
-            } else {
-                auto sitof = _builder.create_sitof(ir::Type::float_type(), op2,
-                                                   _builder.getvarname());
-                if (ctx->MUL())
-                    res = _builder.create_mul(ir::Type::float_type(), op1,
-                                              sitof, _builder.getvarname());
-                else if (ctx->DIV())
-                    res = _builder.create_div(ir::Type::float_type(), op1,
-                                              sitof, _builder.getvarname());
-                else
-                    res = _builder.create_rem(ir::Type::float_type(), op1,
-                                              sitof, _builder.getvarname());
-            }
+                res = _builder.create_rem(ftype, sitof,  op2, _builder.getvarname());
+        } 
+        else if (op1->is_float() && op2->is_i32()){ // 需要进行隐式类型转换
+            auto ftype = ir::Type::float_type();
+            auto sitof = _builder.create_sitof(ftype, op2, _builder.getvarname());
+            if (ctx->MUL())
+                res = _builder.create_mul(ftype, op1, sitof, _builder.getvarname());
+            else if (ctx->DIV())
+                res = _builder.create_div(ftype, op1, sitof, _builder.getvarname());
+            else
+                res = _builder.create_rem(ftype, op1, sitof, _builder.getvarname());
         }
     }
+    
     return res;
 }
 
@@ -231,6 +189,7 @@ std::any SysYIRGenerator::visitAdditiveExp(
     ir::Value* op1 = any_cast_Value(visit(ctx->exp()[0]));
     ir::Value* op2 = any_cast_Value(visit(ctx->exp()[1]));
     ir::Value* res;
+    auto ftype = ir::Type::double_type();
 
     if (ir::isa<ir::Constant>(op1) &&
         ir::isa<ir::Constant>(op2)) {  //! 1. 常量 -> 常量折叠
@@ -239,60 +198,62 @@ std::any SysYIRGenerator::visitAdditiveExp(
         if (cop1->is_float() || cop2->is_float()) {
             float sum, f1, f2;
 
-            if (cop1->is_int())
-                f1 = float(cop1->i());
+            if (cop1->is_i32())
+                f1 = float(cop1->i32());
             else
-                f1 = cop1->f();
-            if (cop2->is_int())
-                f2 = float(cop2->i());
+                f1 = cop1->f64();
+            
+            if (cop2->is_i32())
+                f2 = float(cop2->i32());
             else
-                f2 = cop2->f();
+                f2 = cop2->f64();
 
             if (ctx->ADD())
                 sum = f1 + f2;
             else
                 sum = f1 - f2;
-            res = ir::Constant::gen(sum, ir::getMC(sum));
-        } else {
+            
+            res = ir::Constant::gen_f64(sum);
+        } else { // both int
             int sum;
             if (ctx->ADD())
-                sum = cop1->i() + cop2->i();
+                sum = cop1->i32() + cop2->i32();
             else
-                sum = cop1->i() - cop2->i();
-            res = ir::Constant::gen(sum);
+                sum = cop1->i32() - cop2->i32();
+            res = ir::Constant::gen_i32(sum);
         }
     } else {  //! 2. 变量 -> 生成 ADD | fADD | SUB | fSUB 指令
-        if (op1->is_int() && op2->is_int()) {
+        if (op1->is_i32() && op2->is_i32()) {
             // int32 类型加减
             if (ctx->SUB())
-                res = _builder.create_sub(ir::Type::int_type(), op1, op2,
+                res = _builder.create_sub(ir::Type::i32_type(), op1, op2,
                                           _builder.getvarname());
             else
-                res = _builder.create_add(ir::Type::int_type(), op1, op2,
+                res = _builder.create_add(ir::Type::i32_type(), op1, op2,
                                           _builder.getvarname());
         } else if (op1->is_float() && op2->is_float()) {
             // float 类型加减
             if (ctx->SUB())
-                res = _builder.create_sub(ir::Type::float_type(), op1, op2,
+                res = _builder.create_sub(ftype, op1, op2,
                                           _builder.getvarname());
             else
-                res = _builder.create_add(ir::Type::float_type(), op1, op2,
+                res = _builder.create_add(ftype, op1, op2,
                                           _builder.getvarname());
         } else {
             // 需要进行隐式类型转换 (int op float)
-            if (op1->is_int()) {
-                op1 = _builder.create_sitof(ir::Type::float_type(), op1,
+            if (op1->is_i32()) {
+                op1 = _builder.create_sitof(ftype, op1,
                                             _builder.getvarname());
             }
-            if (op2->is_int()) {
-                op2 = _builder.create_sitof(ir::Type::float_type(), op2,
+            if (op2->is_i32()) {
+                op2 = _builder.create_sitof(ftype, op2,
                                             _builder.getvarname());
             }
             if (ctx->SUB())
-                res = _builder.create_sub(ir::Type::float_type(), op1, op2,
+                res = _builder.create_sub(ftype, op1, op2,
                                           _builder.getvarname());
             else
-                res = _builder.create_add(ir::Type::float_type(), op1, op2,
+                res = _builder.create_add(ftype, op1, op2,
                                           _builder.getvarname());
         }
     }
@@ -303,13 +264,15 @@ std::any SysYIRGenerator::visitRelationExp(
     SysYParser::RelationExpContext* ctx) {
     auto lhsptr = any_cast_Value(visit(ctx->exp()[0]));
     auto rhsptr = any_cast_Value(visit(ctx->exp()[1]));
+
     ir::Value* res;
     bool isfloat = lhsptr->is_float() || rhsptr->is_float();
+
     if (isfloat) {
-        if (lhsptr->is_int())
+        if (lhsptr->is_i32())
             lhsptr = _builder.create_sitof(ir::Type::float_type(), lhsptr,
                                            _builder.getvarname());
-        if (rhsptr->is_int())
+        if (rhsptr->is_i32())
             rhsptr = _builder.create_sitof(ir::Type::float_type(), rhsptr,
                                            _builder.getvarname());
     }
@@ -350,11 +313,11 @@ std::any SysYIRGenerator::visitEqualExp(SysYParser::EqualExpContext* ctx) {
     ir::Value* res;
     bool isfloat = lhsptr->is_float() || rhsptr->is_float();
     if (isfloat) {
-        if (lhsptr->is_int()) {
+        if (lhsptr->is_i32()) {
             lhsptr = _builder.create_sitof(ir::Type::float_type(), lhsptr,
                                            _builder.getvarname());
         }
-        if (rhsptr->is_int()) {
+        if (rhsptr->is_i32()) {
             rhsptr = _builder.create_sitof(ir::Type::float_type(), rhsptr,
                                            _builder.getvarname());
         }
@@ -404,16 +367,27 @@ std::any SysYIRGenerator::visitAndExp(SysYParser::AndExpContext* ctx) {
     //! visit lhs exp to get its value
     auto lhs_value = any_cast_Value(visit(ctx->exp(0)));  // recursively visit
     //* cast to i1
-    if (ir::isa<ir::ICmpInst>(lhs_value) || ir::isa<ir::FCmpInst>(lhs_value)) {
-        // pass
-        // do nothing
-    } else if (lhs_value->is_int()) {
-        lhs_value = builder().create_ine(lhs_value, ir::Constant::gen(0),
-                                         builder().getvarname());
-    } else if (lhs_value->is_float()) {
-        lhs_value = builder().create_fone(lhs_value, ir::Constant::gen(0.0),
-                                          builder().getvarname());
+
+    if(not lhs_value->is_i1()) {
+        if (lhs_value->is_i32()) {
+            lhs_value = builder().create_ine(lhs_value, ir::Constant::gen_i32(0),
+                                            builder().getvarname());
+        } else if (lhs_value->is_float()) {
+            lhs_value = builder().create_fone(lhs_value, ir::Constant::gen_f64(0.0),
+                                            builder().getvarname());
+        }
     }
+
+    // if (ir::isa<ir::ICmpInst>(lhs_value) || ir::isa<ir::FCmpInst>(lhs_value)) {
+    //     // pass
+    //     // do nothing
+    // } else if (lhs_value->is_i32()) {
+    //     lhs_value = builder().create_ine(lhs_value, ir::Constant::gen_i32(0),
+    //                                      builder().getvarname());
+    // } else if (lhs_value->is_float()) {
+    //     lhs_value = builder().create_fone(lhs_value, ir::Constant::gen_f64(0.0),
+    //                                       builder().getvarname());
+    // }
     rhs_block->set_name(builder().getvarname());
     // pop to get lhs t/f target
     auto lhs_t_target = builder().true_target();
@@ -462,16 +436,26 @@ std::any SysYIRGenerator::visitOrExp(SysYParser::OrExpContext* ctx) {
     //! visit lhs exp to get its value
     auto lhs_value = any_cast_Value(visit(ctx->exp(0)));  // recursively visit
     //* cast to i1
-    if (ir::isa<ir::ICmpInst>(lhs_value) || ir::isa<ir::FCmpInst>(lhs_value)) {
-        // pass
-        // do nothing
-    } else if (lhs_value->is_int()) {
-        lhs_value = builder().create_ine(lhs_value, ir::Constant::gen(0),
-                                         builder().getvarname());
-    } else if (lhs_value->is_float()) {
-        lhs_value = builder().create_fone(lhs_value, ir::Constant::gen(0.0),
-                                          builder().getvarname());
+
+    if(not lhs_value->is_i1()) {
+        if (lhs_value->is_i32()) {
+            lhs_value = builder().create_ine(lhs_value, ir::Constant::gen_i32(0),
+                                            builder().getvarname());
+        } else if (lhs_value->is_float()) {
+            lhs_value = builder().create_fone(lhs_value, ir::Constant::gen_f64(0.0),
+                                            builder().getvarname());
+        }
     }
+    // if (ir::isa<ir::ICmpInst>(lhs_value) || ir::isa<ir::FCmpInst>(lhs_value)) {
+    //     // pass
+    //     // do nothing
+    // } else if (lhs_value->is_i32()) {
+    //     lhs_value = builder().create_ine(lhs_value, ir::Constant::gen_i32(0),
+    //                                      builder().getvarname());
+    // } else if (lhs_value->is_float()) {
+    //     lhs_value = builder().create_fone(lhs_value, ir::Constant::gen_f64(0.0),
+    //                                       builder().getvarname());
+    // }
     rhs_block->set_name(builder().getvarname());
 
     //! pop to get lhs t/f target

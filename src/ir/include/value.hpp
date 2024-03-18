@@ -162,7 +162,10 @@ class Value {
     void set_name(const_str_ref name) { _name = name; }
 
     //* check
-    bool is_int() const { return _type->is_int(); }
+    bool is_i1() const { return _type->is_i1(); }
+    bool is_i32() const { return _type->is_i32(); }
+    bool is_float32() const { return _type->is_float32(); }
+    bool is_double() const { return _type->is_double(); }
     bool is_float() const { return _type->is_float(); }
 
    public:

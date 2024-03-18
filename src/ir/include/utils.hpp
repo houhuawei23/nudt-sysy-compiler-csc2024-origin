@@ -32,7 +32,7 @@ template <typename To, typename From>
   return dynamic_cast<To *>(Val);
 }
 // get machine code
-inline std::string getMC(float f){
+inline std::string getMC(double f){
     double d=f;
     unsigned long mrf=*reinterpret_cast<unsigned long*>(&d);
     std::stringstream ss;

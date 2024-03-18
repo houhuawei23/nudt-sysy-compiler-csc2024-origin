@@ -70,17 +70,17 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
     } else {
         if (ctx->exp()) {
             if (auto cvalue = ir::dyn_cast<ir::Constant>(value)) {
-                if (func->ret_type()->is_int() && cvalue->is_float()) {
-                    value = ir::Constant::gen((int)cvalue->f());
-                } else if (func->ret_type()->is_float() && cvalue->is_int()) {
-                    value = ir::Constant::gen((float)cvalue->i(), ir::getMC((float)cvalue->i()));
+                if (func->ret_type()->is_i32() && cvalue->is_float()) {
+                    value = ir::Constant::gen_i32(cvalue->f64());
+                } else if (func->ret_type()->is_float() && cvalue->is_i32()) {
+                    value = ir::Constant::gen_f64(cvalue->i32());
                 } else if (func->ret_type() != value->type()) {
                     assert(false);
                 }
             } else {
-                if (func->ret_type()->is_int() && value->is_float()) {
-                    value = _builder.create_ftosi(ir::Type::int_type(), value, _builder.getvarname());
-                } else if (func->ret_type()->is_float() && value->is_int()) {
+                if (func->ret_type()->is_i32() && value->is_float()) {
+                    value = _builder.create_ftosi(ir::Type::i32_type(), value, _builder.getvarname());
+                } else if (func->ret_type()->is_float() && value->is_i32()) {
                     value = _builder.create_sitof(ir::Type::float_type(), value, _builder.getvarname());
                 } else if (func->ret_type() != value->type()) {
                     assert(false);
@@ -100,18 +100,18 @@ std::any SysYIRGenerator::visitAssignStmt(SysYParser::AssignStmtContext* ctx) {
     ir::Value* res = nullptr;
 
     if (auto res = ir::dyn_cast<ir::Constant>(expptr)) {
-        if (lvalueptr->is_int() && res->is_float()) {
-            expptr = ir::Constant::gen((int)res->f());
-        } else if (lvalueptr->is_float() && res->is_int()) {
-            expptr = ir::Constant::gen((float)res->i());
+        if (lvalueptr->is_i32() && res->is_float()) {
+            expptr = ir::Constant::gen_i32(res->f64());
+        } else if (lvalueptr->is_float() && res->is_i32()) {
+            expptr = ir::Constant::gen_f64(res->i32());
         } else if (ir::dyn_cast<ir::PointerType>(lvalueptr->type())->base_type() != res->type()) {
             std::cerr << "Type " << *res->type() << " can not convert to type " << *res->type() << std::endl;
             assert(false);
         }
     } else {
-        if (lvalueptr->is_int() && expptr->is_float()) {
-            expptr = _builder.create_ftosi(ir::Type::int_type(), expptr, _builder.getvarname());
-        } else if (lvalueptr->is_float() && expptr->is_int()) {
+        if (lvalueptr->is_i32() && expptr->is_float()) {
+            expptr = _builder.create_ftosi(ir::Type::i32_type(), expptr, _builder.getvarname());
+        } else if (lvalueptr->is_float() && expptr->is_i32()) {
             expptr = _builder.create_sitof(ir::Type::float_type(), expptr, _builder.getvarname());
         } else if (ir::dyn_cast<ir::PointerType>(lvalueptr->type())->base_type() != expptr->type()) {
             std::cerr << "Type " << *expptr->type() << " can not convert to type " << *lvalueptr->type() << std::endl;
@@ -161,15 +161,18 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
     builder().pop_tf();  // match with push_tf
 
     //* cast to i1
+
+    // if ()
+
     if(ir::isa<ir::ICmpInst>(cond)||ir::isa<ir::FCmpInst>(cond)){
         // pass
         // do nothing
     }
-    else if (cond->is_int()) {
-        cond = builder().create_ine(cond, ir::Constant::gen(0),
+    else if (cond->is_i32()) {
+        cond = builder().create_ine(cond, ir::Constant::gen_i32(0),
                                     builder().getvarname());
     } else if (cond->is_float()) {
-        cond = builder().create_fone(cond, ir::Constant::gen(0.0),
+        cond = builder().create_fone(cond, ir::Constant::gen_f64(0.0),
                                      builder().getvarname());
     }
     //* create cond br inst

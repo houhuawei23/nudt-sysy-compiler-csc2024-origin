@@ -114,14 +114,14 @@ void UnaryInst::print(std::ostream& os) const {
     case vFTOI:
         os << "fptosi ";
         
-        if (is_int()) os << "float ";
+        if (is_i32()) os << "float ";
         else os << "i32 ";
         os << get_value()->name() << " to " << *type();
         break;
     case vITOF:
         os << "sitofp ";
 
-        if (is_int()) os << "float ";
+        if (is_i32()) os << "float ";
         else os << "i32 ";
         os << get_value()->name() << " to " << *type();
         break;

@@ -150,19 +150,19 @@ class IRBuilder {
         return inst;
     }
     BinaryInst* create_add(Type* type, Value* lvalue, Value* rvalue, const_str_ref name="") {
-        return type->is_int() ? create_binary(Value::ValueId::vADD, type, lvalue, rvalue, name) : create_binary(Value::ValueId::vFADD, type, lvalue, rvalue, name);
+        return type->is_i32() ? create_binary(Value::ValueId::vADD, type, lvalue, rvalue, name) : create_binary(Value::ValueId::vFADD, type, lvalue, rvalue, name);
     }
     BinaryInst* create_sub(Type* type, Value* lvalue, Value* rvalue, const_str_ref name="") {
-        return type->is_int() ? create_binary(Value::ValueId::vSUB, type, lvalue, rvalue, name) : create_binary(Value::ValueId::vFSUB, type, lvalue, rvalue, name);
+        return type->is_i32() ? create_binary(Value::ValueId::vSUB, type, lvalue, rvalue, name) : create_binary(Value::ValueId::vFSUB, type, lvalue, rvalue, name);
     }
     BinaryInst* create_mul(Type* type, Value* lvalue, Value* rvalue, const_str_ref name="") {
-        return type->is_int() ? create_binary(Value::ValueId::vMUL, type, lvalue, rvalue, name) : create_binary(Value::ValueId::vFMUL, type, lvalue, rvalue, name);
+        return type->is_i32() ? create_binary(Value::ValueId::vMUL, type, lvalue, rvalue, name) : create_binary(Value::ValueId::vFMUL, type, lvalue, rvalue, name);
     }
     BinaryInst* create_div(Type* type, Value* lvalue, Value* rvalue, const_str_ref name="") {
-        return type->is_int() ? create_binary(Value::ValueId::vSDIV, type, lvalue, rvalue, name) : create_binary(Value::ValueId::vFDIV, type, lvalue, rvalue, name);
+        return type->is_i32() ? create_binary(Value::ValueId::vSDIV, type, lvalue, rvalue, name) : create_binary(Value::ValueId::vFDIV, type, lvalue, rvalue, name);
     }
     BinaryInst* create_rem(Type* type, Value* lvalue, Value* rvalue, const_str_ref name="") {
-        return type->is_int() ? create_binary(Value::ValueId::vSREM, type, lvalue, rvalue, name) : create_binary(Value::ValueId::vFREM, type, lvalue, rvalue, name);
+        return type->is_i32() ? create_binary(Value::ValueId::vSREM, type, lvalue, rvalue, name) : create_binary(Value::ValueId::vFREM, type, lvalue, rvalue, name);
     }
     
     CallInst* create_call() {

@@ -280,7 +280,7 @@ class ICmpInst : public Instruction {
              Value* rhs,
              BasicBlock* parent,
              const_str_ref name = "")
-        : Instruction(itype, Type::int_type(), parent, name) {
+        : Instruction(itype, Type::i1_type(), parent, name) { // cmp return i1
         add_operand(lhs);
         add_operand(rhs);
     }
@@ -309,7 +309,7 @@ class FCmpInst : public Instruction {
              Value* rhs,
              BasicBlock* parent,
              const_str_ref name = "")
-        : Instruction(itype, Type::float_type(), parent, name) {
+        : Instruction(itype, Type::i1_type(), parent, name) { //! return float type?
         add_operand(lhs);
         add_operand(rhs);
     }

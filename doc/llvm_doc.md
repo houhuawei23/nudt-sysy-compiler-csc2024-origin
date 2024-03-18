@@ -475,10 +475,16 @@ Returns a pointer to the terminator instruction that appears at the end of the B
 */
 ```
 ## Argument
+[doxygen](https://llvm.org/doxygen/classllvm_1_1Argument.html#details)
 
 This subclass of Value defines the interface for incoming formal arguments to a function. A Function maintains a list of its formal arguments. An argument has a pointer to the parent Function.
 
-Value 的这个子类定义了函数传入形式参数的接口。函数维护其形式参数的列表。参数有一个指向父函数的指针。
+Value 的这个子类定义了函数传入**形式参数**的接口。函数维护其形式参数的列表。参数有一个指向父函数的指针。
+
+A formal argument, since it is `‘formal’', does not contain an actual value but instead represents the type, argument number, and attributes of an argument for a specific function. When used in the body of said function, the argument of course represents the value of the actual argument that the function was called with.
+
+形式参数，因为它是“形式的”，所以不包含实际值，而是表示特定函数的参数的类型、参数编号和属性。
+当在所述函数体中使用时，参数当然代表调用该函数的实际参数的值。
 
 ## class Instruction
 
