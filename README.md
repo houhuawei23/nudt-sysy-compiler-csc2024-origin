@@ -603,7 +603,21 @@ define i32 @main() {
 }
 
 ```
+- 经证明，二者的lli return echo$?输出的不是一样的
 
-经证明，二者的lli return echo$?输出的不是一样的
+- 但是前者的lli输出和后者的gcc编译可执行文件echo$?的返回值是一样的
 
-但是前者的lli输出和后者的gcc编译可执行文件echo$?的返回值是一样的
+- 2024.03.18: 测试脚本 testfunctional.sh
+
+```bash
+./test.sh -h
+Usage: ./test.sh [-t <test_dir>] [-o <output_dir>] [-s <file>] [-h]
+Options:
+  -t <test_dir>    Specify the directory containing test files (default: test/steps/)
+  -o <output_dir>  Specify the output directory (default: test/.out/)
+  -s <file>        Specify a single file to test
+  -h               Print this help message
+
+./test.sh -t test/steps/ -o test/.out/ -s test/steps/01_var_defn.c
+./test.sh -s ./test/functional/00_main.sy
+```
