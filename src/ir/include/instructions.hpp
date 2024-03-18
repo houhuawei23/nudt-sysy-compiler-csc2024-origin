@@ -121,7 +121,7 @@ class ReturnInst : public Instruction {
     ReturnInst(Value* value = nullptr, BasicBlock* parent = nullptr, const_str_ref name = "")
         : Instruction(vRETURN, Type::void_type(), parent, name) {
         add_operand(value);
-        std::cout << _operands.size() << std::endl;
+        // std::cout << _operands.size() << std::endl;
     }
 
     public:

@@ -440,3 +440,141 @@ define i32 @main() {
 }
 
 ```
+
+**2024-3-18**
+
+1. 实现了while, 大家帮忙看看有无bug
+
+**当前效果**
+
+```C
+int main(){
+    int a=10;
+    int b=5;
+    while(a&&b){
+        a=a-1;
+        b=b-1;
+        if(a>7 && b>6){
+            a=a+1;
+        }
+    }
+    return a;
+
+}
+
+```
+```LLVM
+;clang产生的代码
+define dso_local i32 @main() #0 {
+  %1 = alloca i32, align 4
+  %2 = alloca i32, align 4
+  %3 = alloca i32, align 4
+  store i32 0, i32* %1, align 4
+  store i32 10, i32* %2, align 4
+  store i32 5, i32* %3, align 4
+  br label %4
+
+4:                                                ; preds = %25, %0
+  %5 = load i32, i32* %2, align 4
+  %6 = icmp ne i32 %5, 0
+  br i1 %6, label %7, label %10
+
+7:                                                ; preds = %4
+  %8 = load i32, i32* %3, align 4
+  %9 = icmp ne i32 %8, 0
+  br label %10
+
+10:                                               ; preds = %7, %4
+  %11 = phi i1 [ false, %4 ], [ %9, %7 ]
+  br i1 %11, label %12, label %26
+
+12:                                               ; preds = %10
+  %13 = load i32, i32* %2, align 4
+  %14 = sub nsw i32 %13, 1
+  store i32 %14, i32* %2, align 4
+  %15 = load i32, i32* %3, align 4
+  %16 = sub nsw i32 %15, 1
+  store i32 %16, i32* %3, align 4
+  %17 = load i32, i32* %2, align 4
+  %18 = icmp sgt i32 %17, 7
+  br i1 %18, label %19, label %25
+
+19:                                               ; preds = %12
+  %20 = load i32, i32* %3, align 4
+  %21 = icmp sgt i32 %20, 6
+  br i1 %21, label %22, label %25
+
+22:                                               ; preds = %19
+  %23 = load i32, i32* %2, align 4
+  %24 = add nsw i32 %23, 1
+  store i32 %24, i32* %2, align 4
+  br label %25
+
+25:                                               ; preds = %22, %19, %12
+  br label %4, !llvm.loop !6
+
+26:                                               ; preds = %10
+  %27 = load i32, i32* %2, align 4
+  ret i32 %27
+}
+
+
+;./main产生的代码
+define i32 @main() {
+0:     ; block
+    %1 = alloca i32
+    store i32 10, i32* %1
+    %2 = alloca i32
+    store i32 5, i32* %2
+    br label %3
+
+3:     ; block
+    %4 = load i32, i32* %1
+    %5 = icmp ne i32 %4, 0
+    br i1 %5, label %6, label %24
+
+6:     ; block
+    %7 = load i32, i32* %2
+    %8 = icmp ne i32 %7, 0
+    br i1 %8, label %9, label %24
+
+9:     ; block
+    %10 = load i32, i32* %1
+    %11 = sub i32 %10, 1
+    store i32 %11, i32* %1
+    %12 = load i32, i32* %2
+    %13 = sub i32 %12, 1
+    store i32 %13, i32* %2
+    %14 = load i32, i32* %1
+    %15 = icmp sgt i32 %14, 7
+    br i1 %15, label %16, label %22
+
+16:     ; block
+    %17 = load i32, i32* %2
+    %18 = icmp sgt i32 %17, 6
+    br i1 %18, label %19, label %22
+
+19:     ; block
+    %20 = load i32, i32* %1
+    %21 = add i32 %20, 1
+    store i32 %21, i32* %1
+    br label %23
+
+22:     ; block
+    br label %23
+
+23:     ; block
+    br label %3
+
+24:     ; block
+    %25 = load i32, i32* %1
+    ret i32 %25
+
+}
+
+
+```
+
+经证明，二者的lli return echo$?输出的不是一样的
+
+但是前者的lli输出和后者的gcc编译可执行文件echo$?的返回值是一样的

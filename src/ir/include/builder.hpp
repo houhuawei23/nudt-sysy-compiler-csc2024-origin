@@ -110,9 +110,9 @@ class IRBuilder {
     }
 
     ReturnInst* create_return(Value* value = nullptr, const_str_ref name = "") {
-        std::cout << "enter create_return" << std::endl;
+        // std::cout << "enter create_return" << std::endl;
         auto inst = new ReturnInst(value, _block);
-        std::cout << "return instruction init" << std::endl;
+        // std::cout << "return instruction init" << std::endl;
         block()->emplace_back_inst(inst);
         return inst;
     }

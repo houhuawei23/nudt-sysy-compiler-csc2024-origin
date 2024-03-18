@@ -204,9 +204,66 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
     return merge_block;
 }
 
+
+/*
+这里的while的翻译:
+while(judge_block){loop_block}
+next_block
+*/
 std::any SysYIRGenerator::visitWhileStmt(SysYParser::WhileStmtContext* ctx) {
     //! TODO
-    return nullptr;
+    builder().while_inc();
+    auto cur_block = builder().block();
+    auto cur_func=cur_block->parent();
+
+    auto next_block=cur_func->new_block();
+    auto loop_block=cur_func->new_block();
+    auto judge_block=cur_func->new_block();
+
+
+    // jump without cond, directly jump to judge block
+    builder().create_br(judge_block);
+    judge_block->set_name(builder().getvarname());
+    builder().set_pos(judge_block,judge_block->begin());
+
+
+    builder().push_tf(loop_block,next_block);
+    auto cond=any_cast_Value((visit(ctx->exp())));
+
+    auto tTarget=builder().true_target();
+    auto fTarget=builder().false_target();
+    builder().pop_tf();
+    if(ir::isa<ir::ICmpInst>(cond)||ir::isa<ir::FCmpInst>(cond)){
+        // pass
+        // do nothing
+    }
+    else if (cond->is_int()) {
+        cond = builder().create_ine(cond, ir::Constant::gen(0),
+                                    builder().getvarname());
+    } else if (cond->is_float()) {
+        cond = builder().create_fone(cond, ir::Constant::gen(0.0),
+                                     builder().getvarname());
+    }
+
+    builder().create_br(cond, tTarget, fTarget);
+
+    cur_block=builder().block();
+    ir::BasicBlock::block_link(cur_block, tTarget);
+    ir::BasicBlock::block_link(cur_block, fTarget);
+
+    //visit loop block
+    loop_block->set_name(builder().getvarname());
+    builder().set_pos(loop_block,loop_block->begin());
+    visit(ctx->stmt());
+    builder().create_br(judge_block);
+    
+    ir::BasicBlock::block_link(loop_block,judge_block);
+
+    //visit next block
+    next_block->set_name(builder().getvarname());
+    builder().set_pos(next_block,next_block->begin());
+    
+    return next_block;
 }
 
 std::any SysYIRGenerator::visitBreakStmt(SysYParser::BreakStmtContext* ctx) {
