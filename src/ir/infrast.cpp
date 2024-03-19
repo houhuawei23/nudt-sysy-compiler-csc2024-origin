@@ -32,4 +32,16 @@ void Argument::print(std::ostream &os) const {
     os << *type() << " " << name();
 }
 
+void BasicBlock::emplace_back_inst(Instruction* i) {
+    if(not _is_terminal)
+        _insts.emplace_back(i); 
+    _is_terminal=i->is_terminator();
+}
+void BasicBlock::emplace_inst(inst_iterator pos, Instruction* i) {
+    if(not _is_terminal)
+        _insts.emplace(pos, i);
+    _is_terminal=i->is_terminator();
+}
+
+
 } // namespace ir

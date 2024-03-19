@@ -181,6 +181,7 @@ class BasicBlock : public Value {
     block_ptr_list _next_blocks;
     block_ptr_list _pre_blocks;
     int _depth = 0;
+    bool _is_terminal=false;
 
    public:
     BasicBlock(const_str_ref name = "", Function* parent = nullptr)
@@ -211,10 +212,8 @@ class BasicBlock : public Value {
     // manage
     void set_depth(int d) { _depth = d; }  // ?
 
-    void emplace_back_inst(Instruction* i) { _insts.emplace_back(i); }
-    void emplace_inst(inst_iterator pos, Instruction* i) {
-        _insts.emplace(pos, i);
-    }
+    void emplace_back_inst(Instruction* i);
+    void emplace_inst(inst_iterator pos, Instruction* i);
 
     // for CFG ?
     void add_next_block(BasicBlock* b) { _next_blocks.push_back(b); }
@@ -270,7 +269,9 @@ class Instruction : public User {
     void set_parent(BasicBlock* parent) { _parent = parent; }
 
     // inst type check
-    bool is_terminator();
+    bool is_terminator(){
+        return scid()==vRETURN||scid()==vBR;
+    }
     bool is_unary();
     bool is_binary();
     bool is_bitwise();
