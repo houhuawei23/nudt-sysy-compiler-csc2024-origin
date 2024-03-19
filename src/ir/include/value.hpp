@@ -83,6 +83,7 @@ class Value {
         vARGUMENT,
         vBASIC_BLOCK,
         vGLOBAL_VAR,
+
         // instructions class id
         vINSTRUCTION,
         vALLOCA,
@@ -131,6 +132,9 @@ class Value {
         vUREM,
         vSREM,
         vFREM,
+
+        // GetElementPtr Instruction
+        vGETELEMENTPTR, 
     };
     // for isa<> type check
     // each subclass of Value has different _scid
@@ -222,11 +226,13 @@ class User : public Value {
    public:
     User(Type* type, ValueId scid, const_str_ref name = "")
         : Value(type, scid, name) {}
-    // get
+
+    public:  // get function
     use_ptr_vector& operands();
     Value* operand(size_t index) const;
     int operands_cnt() const { return _operands.size(); }
-    // manage
+
+    public:  // manage function
     void add_operand(Value* value);
     void set_operand(size_t index, Value* value);
 

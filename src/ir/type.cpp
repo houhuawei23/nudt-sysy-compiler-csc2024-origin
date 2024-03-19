@@ -94,17 +94,14 @@ void Type::print(std::ostream& os) const {
             break;
         case FUNCTION:
             os << "function";
-            // to cdo
             break;
         case POINTER:
-            // os << "pointer";
             static_cast<const PointerType*>(this)->base_type()->print(os);
             os << "*";
             break;
         case LABEL:
             break;
         default:
-            // error
             break;
     }
 }

@@ -24,7 +24,7 @@ void Constant::print(std::ostream &os) const {
     } else if (type()->is_float()) {
         os << f64();
     } else {
-        // assert
+        assert(false);
     }
 }
 

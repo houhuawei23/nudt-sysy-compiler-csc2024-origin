@@ -11,12 +11,12 @@ namespace sysy
 std::any SysYIRGenerator::visitNumberExp(SysYParser::NumberExpContext *ctx) {
     ir::Value *res = nullptr;
     if (auto iLiteral = ctx->number()->ILITERAL()) {  //! int
-        std::string s = iLiteral->getText();
-        
-        //! 基数 (8, 10, 16)
-        int base = 10;
-        if (s.length() > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) base = 16;
-        else if (s[0] == '0') base = 8;
+            std::string s = iLiteral->getText();
+            
+            //! 基数 (8, 10, 16)
+            int base = 10;
+            if (s.length() > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) base = 16;
+            else if (s[0] == '0') base = 8;
 
             res = ir::Constant::gen_i32(std::stoi(s, 0, base));
         }
@@ -29,25 +29,36 @@ std::any SysYIRGenerator::visitNumberExp(SysYParser::NumberExpContext *ctx) {
     }
 
 std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
-    ir::Value* res = nullptr;
     bool isarray = not ctx->var()->LBRACKET().empty();
     std::string varname = ctx->var()->ID()->getText();
 
-    auto valueptr = _tables.lookup(varname);
-    if (valueptr == nullptr) {
-        std::cerr << "Use undefined variable: \"" << varname << "\""
-                  << std::endl;
+    auto res = _tables.lookup(varname);
+    if (res == nullptr) {
+        std::cerr << "Use undefined variable: \"" << varname << "\"" << std::endl;
         exit(EXIT_FAILURE);
     }
 
-    if (!isarray) {  //! scalar
-        if (res = ir::dyn_cast<ir::Constant>(valueptr)) {
+    if (!isarray) {  //! 1. scalar
+        if (res = ir::dyn_cast<ir::Constant>(res)) {
         } else {
-            res = _builder.create_load(valueptr, {}, _builder.getvarname());
-            
+            res = _builder.create_load(res, {}, _builder.getvarname());
         }
-    } else {  //! array
-        // TODO
+    } else {  //! 2. array
+        if (auto res_array = ir::dyn_cast<ir::AllocaInst>(res)) {
+            auto type = res_array->base_type();
+            int current_dimension = 1;
+            std::vector<ir::Value*> dims = res_array->dims();
+            for (auto expr : ctx->var()->exp()) {
+                ir::Value* idx = any_cast_Value(visit(expr));
+                res = _builder.create_getelementptr(type, res, 
+                                                    idx, current_dimension, 
+                                                    dims, _builder.getvarname(), 1);
+                current_dimension++;
+            }
+            res = _builder.create_load(res, {}, _builder.getvarname());
+        } else {
+            assert(false && "this is not an array");
+        }
     }
     return res;
 }

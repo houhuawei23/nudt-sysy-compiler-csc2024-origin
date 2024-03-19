@@ -30,12 +30,7 @@ std::any SysYIRGenerator::visitDecl(SysYParser::DeclContext* ctx) {
  *      decl: CONST? btype varDef (COMMA varDef)* SEMICOLON;
  */
 std::any SysYIRGenerator::visitDeclLocal(SysYParser::DeclContext* ctx) {
-    // std::cout << ctx->getText() << std::endl;
-    // auto btype_pointer_type =
-    // ir::Type::pointer_type(any_cast_Type(visit(ctx->btype())));
     auto btype = any_cast_Type(visitBtype(ctx->btype()));
-    // auto test = safe_any_cast<ir::Type>(visit(ctx->btype()));
-    // assert(test == btype);
     bool is_const = ctx->CONST();
     ir::Value* res = nullptr;
 
@@ -72,75 +67,89 @@ ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
                                              ir::Type* btype,
                                              bool is_const) {
     auto name = ctx->lValue()->ID()->getText();
+
+    // 获得数组各个维度
     std::vector<ir::Value*> dims;
     for (auto dim : ctx->lValue()->exp()) {
         dims.push_back(any_cast_Value(visit(dim)));
     }
+    std::vector<int> idx(dims.size());
+
     ir::Value* res = nullptr;
     ir::Value* init = nullptr;
     ir::Constant* cinit = nullptr;
 
-    //get initial value
+    std::vector<ir::Value*> arrayInit;
+
+    //! get initial value
     if (ctx->ASSIGN()) {
-        init = any_cast_Value(visit(ctx->initValue()->exp()));
-        if (cinit = ir::dyn_cast<ir::Constant>(init)) {
-            if (btype->is_i32() && cinit->is_float()) {
-                cinit = ir::Constant::gen_i32(cinit->f64());
-            } else if (btype->is_float() && cinit->is_i32()) {
-                cinit = ir::Constant::gen_f64(cinit->i32());
+        if (ctx->initValue()->LBRACE()) {  //! 1. array initial value
+            for (auto expr : ctx->initValue()->initValue()){
+                arrayInit.push_back(any_cast_Value(visitInitValue(expr)));
+            }
+        } else {  //! 2. scalar initial value
+            init = any_cast_Value(visit(ctx->initValue()->exp()));
+            if (cinit = ir::dyn_cast<ir::Constant>(init)) {
+                if (btype->is_i32() && cinit->is_float()) {
+                    cinit = ir::Constant::gen_i32(cinit->f64());
+                } else if (btype->is_float() && cinit->is_i32()) {
+                    cinit = ir::Constant::gen_f64(cinit->i32());
+                }
             }
         }
     }
 
-    //deal with assignment
-    if (is_const) {              //! 1 decl as const
-        if (dims.size() == 0) {  //! 1.1 标量
+    //! deal with assignment
+    if (is_const) {  //! 1. const
+        if (dims.size() == 0) {  //! 1.1 scalar
             if (not ctx->ASSIGN()) {
                 std::cerr << "const without initialization!" << std::endl;
                 exit(EXIT_FAILURE);
-            }
-            //* has ASSIGN
-            if (cinit) {
-                _tables.insert(name, cinit);
-                res = cinit;
             } else {
-                // TODO: init value NOT Constant Type
-                
+                if (cinit) {
+                    _tables.insert(name, cinit);
+                    res = cinit;
+                } else {
+                    std::cerr << "can't use variable initialize const" << std::endl;
+                    exit(EXIT_FAILURE);
+                }
             }
-
-        }       // const scalar end
-        else {  //! 1.2 数组
+        }
+        else {  //! 1.2 array
             // TODO
-        } // const array end
-    } // decl as 'const' end 
-    else {  //! 2 not decl as const
-        // create alloca inst
+        }
+    } else {  //! 2. variable
+        //! create alloca inst
         auto alloca_ptr = _builder.create_alloca(btype, dims, _builder.getvarname(), is_const);
         _tables.insert(name, alloca_ptr);
+        
         //! create store inst
-        if (dims.size() == 0) {  //* 2.1 (not const) scalar
+        if (dims.size() == 0) {  //! 2.1 scalar
             if(not ctx->ASSIGN()){
-                //pass
-                //do nothing
-            }
-            else if (init->is_float() && btype->is_i32()) {
+            } else if (init->is_float() && btype->is_i32()) {
                 auto ftosi = _builder.create_ftosi(ir::Type::i32_type(), init, _builder.getvarname());
-                auto stroe = _builder.create_store(ftosi, alloca_ptr, {}, "store");
+                auto stroe = _builder.create_store(ftosi, alloca_ptr, "store");
             } else if (init->is_i32() && btype->is_float()) {
                 auto sitof = _builder.create_sitof(ir::Type::float_type(), init, _builder.getvarname());
-                auto store = _builder.create_store(sitof, alloca_ptr,{}, "store");
+                auto store = _builder.create_store(sitof, alloca_ptr, "store");
             } else {
-                auto store = _builder.create_store(init, alloca_ptr, {}, "store");
+                auto store = _builder.create_store(init, alloca_ptr, "store");
             }
+        } else {  //! 2.2 array
+            if(ctx->ASSIGN()) {
+                int dimensions = dims.size();
+                ir::Value* ptr =ir::dyn_cast<ir::Value>(alloca_ptr);
+                ir::Type* type = alloca_ptr->base_type();
 
-        } 
-        else {  //* 2. (not const) array
-            // TODO
-            if(ctx->ASSIGN()){// if have init
-
-            }
-            else{//no init
-
+                // // 获得数组相关索引的地址
+                // for (int i = 1; i <= dimensions; i++) {
+                //     ptr = ir::dyn_cast<ir::Value>(_builder.create_getelementptr(type, ptr, 
+                //                                                                 idx, i, dims, 
+                //                                                                 _builder.getvarname(), 1));
+                //     type = ptr->type();
+                // }
+            } else{
+                // pass
             }
         }
 

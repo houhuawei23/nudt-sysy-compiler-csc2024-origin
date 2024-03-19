@@ -45,22 +45,20 @@ std::any SysYIRGenerator::visitBlockStmt(SysYParser::BlockStmtContext* ctx) {
  */
 std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
     auto value = ctx->exp() ? any_cast_Value(visit(ctx->exp())) : nullptr;
+
     auto curr_block = builder().block();
     auto func = curr_block->parent();
+    
     ir::Value* res = nullptr;
     assert(ir::isa<ir::Function>(func) && "ret stmt block parent err!");
 
     // 匹配 返回值类型 与 函数定义类型
     if (func->ret_type()->is_void()) {
-        if (ctx->exp())
-            assert(false);
-        else {
-            // std::cout << "void return" << std::endl;
-            res = builder().create_return(value);
-        }
+        if (ctx->exp()) assert(false);
+        else res = builder().create_return(value);
     } else {
         if (ctx->exp()) {
-            if (auto cvalue = ir::dyn_cast<ir::Constant>(value)) {
+            if (auto cvalue = ir::dyn_cast<ir::Constant>(value)) {  //! 常值
                 if (func->ret_type()->is_i32() && cvalue->is_float()) {
                     value = ir::Constant::gen_i32(cvalue->f64());
                 } else if (func->ret_type()->is_float() && cvalue->is_i32()) {
@@ -68,30 +66,38 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
                 } else if (func->ret_type() != value->type()) {
                     assert(false);
                 }
-            } else {
+            } else {  //! 变量
+                std::cout << "调整返回值变量类型" << std::endl;
+                if (value->is_float()) std::cout << "float" << std::endl;
+                else std::cout << "int" << std::endl;
                 if (func->ret_type()->is_i32() && value->is_float()) {
-                    value = _builder.create_ftosi(ir::Type::i32_type(), value,
-                                                  _builder.getvarname());
+                    value = _builder.create_ftosi(ir::Type::i32_type(), value, _builder.getvarname());
                 } else if (func->ret_type()->is_float() && value->is_i32()) {
-                    value = _builder.create_sitof(ir::Type::float_type(), value,
-                                                  _builder.getvarname());
+                    value = _builder.create_sitof(ir::Type::float_type(), value, _builder.getvarname());
                 } else if (func->ret_type() != value->type()) {
                     assert(false);
                 }
+                std::cout << "返回值类型调整完毕" << std::endl;
             }
         } else {
             assert(false);
         }
         res = builder().create_return(value);
     }
-    //* 生成 return 语句后立马创建一个新块，并设置 builder
+    
+    // 生成 return 语句后立马创建一个新块，并设置 builder
     auto new_block = func->new_block();
     new_block->set_name(builder().getvarname());
     builder().set_pos(new_block, new_block->begin());
-    //* END
+
     return res;
 }
 
+/*
+ * @brief visit assign stmt
+ * @details: 
+ *      assignStmt: lValue ASSIGN exp SEMICOLON
+ */
 std::any SysYIRGenerator::visitAssignStmt(SysYParser::AssignStmtContext* ctx) {
     ir::Value* lvalueptr = any_cast_Value(visit(ctx->lValue()));
     auto tmp = visit(ctx->exp());
@@ -99,26 +105,23 @@ std::any SysYIRGenerator::visitAssignStmt(SysYParser::AssignStmtContext* ctx) {
     // auto expptr = any_cast_Value(visit(ctx->exp())); // bad any cast for CallInst
     ir::Value* res = nullptr;
 
-    if (auto res = ir::dyn_cast<ir::Constant>(expptr)) {
+    if (auto res = ir::dyn_cast<ir::Constant>(expptr)) {  //! 1. 右值为常值
         if (lvalueptr->is_i32() && res->is_float()) {
             expptr = ir::Constant::gen_i32(res->f64());
         } else if (lvalueptr->is_float() && res->is_i32()) {
             expptr = ir::Constant::gen_f64(res->i32());
-        } else if (ir::dyn_cast<ir::PointerType>(lvalueptr->type())
-                       ->base_type() != res->type()) {
-            std::cerr << "Type " << *res->type() << " can not convert to type "
-                      << *res->type() << std::endl;
-            assert(false);
+        } else if (auto tmp = ir::dyn_cast<ir::PointerType>(lvalueptr->type())) {
+            if (tmp->base_type() != res->type()) {
+                std::cerr << "Type " << *res->type() << " can not convert to type " << *res->type() << std::endl;
+                assert(false);
+            }
         }
-    } else {
+    } else {  //! 2. 右值为变量
         if (lvalueptr->is_i32() && expptr->is_float()) {
-            expptr = _builder.create_ftosi(ir::Type::i32_type(), expptr,
-                                           _builder.getvarname());
+            expptr = _builder.create_ftosi(ir::Type::i32_type(), expptr, _builder.getvarname());
         } else if (lvalueptr->is_float() && expptr->is_i32()) {
-            expptr = _builder.create_sitof(ir::Type::float_type(), expptr,
-                                           _builder.getvarname());
-        } else if (ir::dyn_cast<ir::PointerType>(lvalueptr->type())
-                       ->base_type() != expptr->type()) {
+            expptr = _builder.create_sitof(ir::Type::float_type(), expptr, _builder.getvarname());
+        } else if (ir::dyn_cast<ir::PointerType>(lvalueptr->type())->base_type() != expptr->type()) {
             std::cerr << "Type " << *expptr->type()
                       << " can not convert to type " << *lvalueptr->type()
                       << std::endl;
@@ -307,18 +310,37 @@ std::any SysYIRGenerator::visitContinueStmt(
     return res;
 }
 
+/*
+ * @brief visit lvalue
+ * @details: 
+ *      lValue: ID (LBRACKET exp RBRACKET)*
+ */
 std::any SysYIRGenerator::visitLValue(SysYParser::LValueContext* ctx) {
     std::string name = ctx->ID()->getText();
     ir::Value* res = _tables.lookup(name);
+
     if (res == nullptr) {
         std::cerr << "Use undefined variable: \"" << name << "\"" << std::endl;
         exit(EXIT_FAILURE);
     }
-    bool isscalar = ctx->exp().empty();
-    if (isscalar)
-        return res;
-    else {
-        // TODO
+
+    if (ctx->exp().empty()) return res;  //! 1. scalar
+    else {  //! 2. array
+        if (auto res_array = ir::dyn_cast<ir::AllocaInst>(res)) {
+            auto type = res_array->base_type();
+            int current_dimension = 1;
+            std::vector<ir::Value*> dims = res_array->dims();
+            for (auto expr : ctx->exp()) {
+                ir::Value* idx = any_cast_Value(visit(expr));
+                res = _builder.create_getelementptr(type, res, 
+                                                    idx, current_dimension, 
+                                                    dims, _builder.getvarname(), 1);
+                current_dimension++;
+            }
+        } else {
+            assert(false && "this is not an array");
+        }
+
         return res;
     }
 }

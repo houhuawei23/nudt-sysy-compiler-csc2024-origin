@@ -2,24 +2,38 @@
 #include "include/utils.hpp"
 
 namespace ir {
-// Value <- User <- Instruction <- XxxInst
-/**
+//! Value <- User <- Instruction <- XxxInst
+
+/*
  * @brief AllocaInst::print
- *
- * @param os
- *
- * %1 = alloca i32
  */
 void AllocaInst::print(std::ostream& os) const {
     os << name() << " = ";
     os << "alloca ";
-    // just for int scalar
-
-    os << *(base_type());
+    
+    if (is_scalar() > 0) {  //! 1. scalar
+        os << *(base_type());
+    } else {  //! 2. array (未考虑变量定义数组维度)
+        int dims = dims_cnt();
+        for (int i = 0; i < dims; i++) {
+            auto value = operand(i);
+            if (auto cvalue = ir::dyn_cast<ir::Constant>(value)) {
+                os << "[" << *value << " x ";
+            } else {
+                assert(false);
+            }
+        }
+        os << *(base_type());
+        for (int i = 0; i < dims; i++) os << "]";
+    }
 }
 
+/*
+ * @brief StoreInst::print
+ * @details: 
+ *      store <ty> <value>, ptr <pointer>
+ */
 void StoreInst::print(std::ostream& os) const {
-    // store i32 5, i32* %1
     os << "store ";
     os << *(value()->type()) << " ";
 
@@ -249,6 +263,49 @@ void BranchInst::print(std::ostream& os) const {
         os << "label " << iffalse()->name();
     } else {
         os << "label " << dest()->name();
+    }
+}
+
+/*
+ * @brief GetElementPtrInst::print
+ *      数组: <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32 <idx>
+ *      指针: <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
+ */
+void GetElementPtrInst::print(std::ostream& os) const {
+    if (is_arrayInst()) {
+        // 确定数组指针地址
+        // <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32 idx
+        int dimensions = dims_cnt();
+        os << name() << " = " << "getelementptr ";
+        
+        for (int cur = current_dimension(); cur < dimensions + 1; cur++) {
+            auto value = operand(cur);
+            if (auto cvalue = ir::dyn_cast<ir::Constant>(value)) {
+                os << "[" << *value << " x ";
+            } else {
+                assert(false);
+            }
+        }
+        os << *(base_type());
+        for (int cur = current_dimension(); cur < dimensions + 1; cur++) os << "]";
+        os << ", ";
+
+        for (int cur = current_dimension(); cur < dimensions + 1; cur++) {
+            auto value = operand(cur);
+            if (auto cvalue = ir::dyn_cast<ir::Constant>(value)) {
+                os << "[" << *value << " x ";
+            } else {
+                assert(false);
+            }
+        }
+        os << *(base_type());
+        for (int cur = current_dimension(); cur < dimensions + 1; cur++) os << "]";
+        os << "* ";
+
+        os << get_value()->name() << ", ";
+        os << *(base_type()) << " 0, " << *(base_type()) << " " << get_index()->name();
+    } else {
+        // <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
     }
 }
 

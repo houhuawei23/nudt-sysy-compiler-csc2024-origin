@@ -28,25 +28,30 @@ class AllocaInst : public Instruction {
     bool _is_const;
 
    public:
-    // AllocaInst 的类型是 PointerType 实例
-    // 其 base_type() 表征指针的基类型
-    // alloca i32
-    AllocaInst(Type* base_type,  // i32 type
+    AllocaInst(Type* base_type,
                BasicBlock* parent = nullptr,
-               const_value_ptr_vector& dims = {},
+               const_value_ptr_vector& dims={},
                const_str_ref name = "",
                bool is_const = false)
         : Instruction(vALLOCA, ir::Type::pointer_type(base_type), parent, name),
           _is_const(is_const) {
         add_operands(dims);
-        // more if (is_const and arr)
     }
 
-    Type* base_type() const {
-        return dyn_cast<PointerType>(type())->base_type();
-    }
-    bool is_const() const { return _is_const; }
+    public:  // get function
+    Type* base_type() const { return dyn_cast<PointerType>(type())->base_type(); }
     int dims_cnt() const { return operands_cnt(); }
+    std::vector<Value*> dims() const {
+        std::vector<Value*> ans;
+        int dimensions = dims_cnt();
+        for (int i = 0; i < dimensions; i++) {
+            ans.push_back(operand(i));
+        }
+        return ans;
+    }
+
+    public:  // check function
+    bool is_const() const { return _is_const; }
     bool is_scalar() const { return dims_cnt() == 0; }
 
    public:
@@ -58,20 +63,13 @@ class StoreInst : public Instruction {
     friend class IRBuilder;
 
    public:
-    /**
-     * @brief Construct a new Store Inst object
-     * @details `store [volatile] <ty> <value>, ptr <pointer>`
-     *
-     */
     StoreInst(Value* value,
               Value* ptr,
               BasicBlock* parent = nullptr,
-              const_value_ptr_vector& indices = {},
               const_str_ref name = "")
         : Instruction(vSTORE, Type::void_type(), parent, name) {
         add_operand(value);
         add_operand(ptr);
-        add_operands(indices);
     }
 
     Value* value() const { return operand(0); }
@@ -419,6 +417,59 @@ class FCmpInst : public Instruction {
 /// Base class of casting instructions.
 class CastInst : public Instruction {
     //! TODO
+};
+
+/*
+ * @brief GetElementPtr Instruction
+ * @details:
+ *      数组: <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32 <idx>
+ *      指针: <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
+ * @param:
+ *      1. _current_dimension: 当前数组维度
+ *      2. _idx: 数组各个维度的下标索引
+ *      3. _id : calculate array address OR pointer address
+ */
+class GetElementPtrInst : public Instruction {
+    friend class IRBuilder;
+
+    protected:
+    int _id, _current_dimension;
+    Value* _idx;
+
+    public:
+    //! 1. Array GetElementPtr Instruction
+    GetElementPtrInst(Type* base_type, Value* value, 
+                      BasicBlock* parent, 
+                      Value* idx, const_value_ptr_vector& dims={}, 
+                      const int current_dimension=1, 
+                      const std::string name="", int id=1)
+        : Instruction(vGETELEMENTPTR, ir::Type::pointer_type(base_type), parent, name), 
+        _current_dimension(current_dimension), 
+        _idx(idx), _id(id) {
+        add_operand(value);
+        add_operands(dims);
+    }
+
+    //! 2. Pointer GetElementPtr Instruction
+    GetElementPtrInst(int id=2) {
+
+    }
+
+    public:
+    static bool classof(const Value* v) { return v->scid() == vGETELEMENTPTR; }
+
+    public:  // get function
+    int dims_cnt() const { return operands_cnt() - 1; }
+    int current_dimension() const { return _current_dimension; }
+    Value* get_value() const { return operand(0); }
+    Value* get_index() const { return _idx; }
+    Type* base_type() const { return dyn_cast<PointerType>(type())->base_type(); }
+
+    public:  // check function
+    bool is_arrayInst() const { return _id == 1; }
+
+    public:
+    void print(std::ostream& os) const override;
 };
 
 }  // namespace ir

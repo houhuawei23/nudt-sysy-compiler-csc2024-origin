@@ -57,12 +57,10 @@ class Constant : public User {
 
     template <typename T>
     static Constant* gen_i1(T v) {
-        assert(std::is_integral_v<T> ||
-               std::is_floating_point_v<T> && "not int or float!");
+        assert(std::is_integral_v<T> || std::is_floating_point_v<T> && "not int or float!");
 
         bool num = (bool)v;
         std::string name;
-        // auto name = std::to_string(num);
         if (num) {
             name = "true";
         } else {
@@ -73,22 +71,18 @@ class Constant : public User {
 
     template <typename T>
     static Constant* gen_i32(T v) {
-        assert(std::is_integral_v<T> ||
-               std::is_floating_point_v<T> && "not int or float!");
+        assert(std::is_integral_v<T> || std::is_floating_point_v<T> && "not int or float!");
 
         int32_t num = (int32_t)v;
-
         std::string name = std::to_string(num);
         return cache_add(num, name);
     }
 
     template <typename T>
     static Constant* gen_f64(T val) {
-        assert(std::is_integral_v<T> ||
-               std::is_floating_point_v<T> && "not int or float!");
+        assert(std::is_integral_v<T> || std::is_floating_point_v<T> && "not int or float!");
 
         auto f64 = (double)val;
-
         auto name = getMC(f64);
         return cache_add(f64, name);
     }
@@ -105,23 +99,8 @@ class Constant : public User {
         return c;
     }
 
-    // static Constant* gen_i32(int32_t v) {
-    //     auto name = std::to_string(v);
-    //     return cache_add(name);
-    // }
-    // static Constant* gen_f32
-    // float and double both gen f64
-    // static Constant* gen_f64(float v) {
-    //     auto name = getMC(v);
-    //     return cache_add(name);
-    // }
-    // static Constant* gen_f64(double v) {
-    //     auto name = getMC(v);
-    //     return cache_add(name);
-    // }
-
     int32_t i32() const {
-        assert(is_i32());  // assert
+        assert(is_i32());
         return _i32;
     }
 

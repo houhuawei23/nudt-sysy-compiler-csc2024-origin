@@ -103,21 +103,15 @@ class IRBuilder {
                               const_str_ref name = "",
                               const bool is_const = false) {
         auto inst = new AllocaInst(ret_type, _block, dims, name, is_const);
-        // // assert(inst);
-        // _block->insts().emplace(_pos, inst); // _pos++
-        // _block->insts().emplace_back(inst); // _pos++
-        block()->emplace_back_inst(inst); // _pos keep tracking _block.end()
+        block()->emplace_back_inst(inst);
         return inst;
-        // return nullptr;
     }
 
     StoreInst* create_store(Value* value,
                             Value* pointer,
-                            const_value_ptr_vector& dims = {},
                             const_str_ref name = "") {
-        auto inst = new StoreInst(value, pointer, _block, dims, name);
-        // _block->insts().emplace(_pos, inst);
-        block()->emplace_back_inst(inst); // _pos++
+        auto inst = new StoreInst(value, pointer, _block, name);
+        block()->emplace_back_inst(inst);
         return inst;
     }
 
@@ -352,7 +346,17 @@ class IRBuilder {
          return create_fcmp(Value::vFOLE,lhs,rhs,name);
     }
 
-
+    //! Create GetElementPtr Instruction
+    GetElementPtrInst* create_getelementptr(Type* type, Value* value, 
+                                            Value* idx, int current_dimension=1, 
+                                            const_value_ptr_vector& dims={}, 
+                                            const_str_ref name="", int id=1) {
+        auto inst = new GetElementPtrInst(type, value, 
+                                          _block, idx, dims, current_dimension, 
+                                          name, id);
+        block()->emplace_back_inst(inst);
+        return inst;
+    }
 
 
     void var_reset()  {
