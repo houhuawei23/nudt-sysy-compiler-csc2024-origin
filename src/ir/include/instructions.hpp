@@ -107,6 +107,8 @@ class LoadInst : public Instruction {
         auto inst = new LoadInst(ptr, type, parent, indices, name);
         return inst;
     }
+    // int dims_cnt() const { return operands_cnt(); }
+    // bool is_scalar() const { return dims_cnt() == 0; }
 
     Value* ptr() const { return operand(0); }
 

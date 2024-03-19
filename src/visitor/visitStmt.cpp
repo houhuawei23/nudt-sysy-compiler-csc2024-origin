@@ -67,9 +67,11 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
                     assert(false);
                 }
             } else {  //! 变量
-                std::cout << "调整返回值变量类型" << std::endl;
-                if (value->is_float()) std::cout << "float" << std::endl;
-                else std::cout << "int" << std::endl;
+                // std::cout << "调整返回值变量类型" << std::endl;
+
+                // if (value->is_float()) std::cout << "float" << std::endl;
+                // else std::cout << "int" << std::endl;
+
                 if (func->ret_type()->is_i32() && value->is_float()) {
                     value = _builder.create_ftosi(ir::Type::i32_type(), value, _builder.getvarname());
                 } else if (func->ret_type()->is_float() && value->is_i32()) {
@@ -77,7 +79,7 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
                 } else if (func->ret_type() != value->type()) {
                     assert(false);
                 }
-                std::cout << "返回值类型调整完毕" << std::endl;
+                // std::cout << "返回值类型调整完毕" << std::endl;
             }
         } else {
             assert(false);
@@ -163,8 +165,8 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
     builder().push_tf(then_block, else_block);
 
     //* visit cond, create icmp and br inst
-    auto cond = any_cast_Value(visit(ctx->exp()));  // load
-
+    auto cond = safe_any_cast<ir::Value>(visit(ctx->exp()));  // load
+    assert(cond != nullptr && "any_cast result nullptr!");
     //* pop to get lhs t/f target
     auto lhs_t_target = builder().true_target();
     auto lhs_f_target = builder().false_target();
