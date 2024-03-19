@@ -21,13 +21,15 @@ std::any SysYIRGenerator::visitCall(SysYParser::CallContext* ctx) {
     std::vector<ir::Value*> rargs;
     std::vector<ir::Value*> final_rargs;
     auto iter = func->arg_types().begin();
-    for (auto exp : ctx->funcRParams()->exp()) {
+    if(ctx->funcRParams()){
+        for (auto exp : ctx->funcRParams()->exp()) {
         // Type* arg_type = 
-        auto rarg = any_cast_Value(visit(exp));
-        iter++;
-        rargs.push_back(rarg);
-
+            auto rarg = any_cast_Value(visit(exp));
+            iter++;
+            rargs.push_back(rarg);
+        }
     }
+    
 
     assert(func->arg_types().size() == rargs.size() && "size not match!");
 
