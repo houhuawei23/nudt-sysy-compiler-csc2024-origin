@@ -44,12 +44,14 @@ using use_ptr_vector = std::vector<Use*>;
 
 //* BasicBlock
 using block_ptr_list = std::list<BasicBlock*>;
+using block_ptr_vector = std::vector<BasicBlock*>;
 // true or false targets stack
 using block_ptr_stack = std::stack<BasicBlock*>;
 
 //* Argument
 // function args
 using arg_ptr_list = std::list<Argument*>;
+using arg_ptr_vector = std::vector<Argument*>;
 
 //* Instruction
 // basicblock insts
@@ -88,6 +90,7 @@ class Value {
         vSTORE,
         vRETURN,
         vBR,
+        vCALL,
         // icmp
         vICMP,
         vIEQ,
@@ -234,7 +237,12 @@ class User : public Value {
         }
     }
 
-    void unuse_allvalue();
-    void replace_operand_with(size_t index, Value* value);
+    void unuse_allvalue() {
+        int a = 5;
+    };
+    void replace_operand_with(size_t index, Value* value){
+        int a = 5;
+    };
+    // void print(std::ostream& os) const {};
 };
 }  // namespace ir

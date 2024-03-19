@@ -39,8 +39,8 @@ class Module {
     str_fun_map& functions() { return _functions; }
     str_value_map& globals() { return _globals; }
 
-    Function* function(const_str_ref name);
-    Function* add_function(bool is_decl, Type* type, const_str_ref name);
+    Function* lookup_func(const_str_ref name);
+    Function* add_function(Type* type, const_str_ref name);
 
     void add_gvar(const_str_ref name, GlobalVariable* gv) {
         auto iter  = _globals.find(name); // find the name in _globals

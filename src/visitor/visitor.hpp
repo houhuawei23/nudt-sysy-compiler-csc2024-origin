@@ -33,10 +33,14 @@ class SysYIRGenerator : public SysYBaseVisitor {
     virtual std::any visitCompUnit(SysYParser::CompUnitContext* ctx) override;
 
     // virtual std::any visitDecl(SysYParser::DeclContext *ctx) override;
-
-    virtual std::any visitFunc(SysYParser::FuncContext* ctx) override;
-
+    //! function
     virtual std::any visitFuncType(SysYParser::FuncTypeContext* ctx) override;
+
+    // virtual std::any visitFuncDecl(SysYParser::FuncDeclContext* ctx) override;
+    virtual std::any visitFuncDef(SysYParser::FuncDefContext* ctx) override;
+    
+    ir::Function* create_func(SysYParser::FuncDefContext* ctx);
+
 
     virtual std::any visitBlockStmt(SysYParser::BlockStmtContext* ctx) override;
 
@@ -88,5 +92,10 @@ class SysYIRGenerator : public SysYBaseVisitor {
     virtual std::any visitAndExp(SysYParser::AndExpContext* ctx) override;
 
     virtual std::any visitOrExp(SysYParser::OrExpContext* ctx) override;
+
+    //! call
+    // virtual std::any visitCallExp(SysYParser::CallExpContext *ctx) override ;
+
+    virtual std::any visitCall(SysYParser::CallContext *ctx) override;
 };
 }  // namespace sysy

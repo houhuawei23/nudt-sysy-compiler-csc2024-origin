@@ -6,7 +6,7 @@
 
 #include "infrast.hpp"
 #include "instructions.hpp"
-
+#include <any>
 namespace ir {
 
 /**
@@ -177,10 +177,13 @@ class IRBuilder {
     BinaryInst* create_rem(Type* type, Value* lvalue, Value* rvalue, const_str_ref name="") {
         return type->is_i32() ? create_binary(Value::ValueId::vSREM, type, lvalue, rvalue, name) : create_binary(Value::ValueId::vFREM, type, lvalue, rvalue, name);
     }
+
     
-    CallInst* create_call() {
+    CallInst* create_call(Function*func, const_value_ptr_vector& args, const_str_ref name="") {
         //! TODO
-        assert(false && "not implemented");
+        auto call = new CallInst(func, args, _block, name);
+        block()->emplace_back_inst(call);
+        return call;
     }
     BranchInst* create_br(
         Value* cond,
@@ -352,7 +355,9 @@ class IRBuilder {
 
 
 
-
+    void var_reset()  {
+        _var_cnt = 0;
+    }
 
 
     std::string getvarname() {

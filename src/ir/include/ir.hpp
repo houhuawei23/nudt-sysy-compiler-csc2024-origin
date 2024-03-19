@@ -8,3 +8,4 @@
 #include "instructions.hpp"
 #include "module.hpp"
 #include "table_beta.hpp"
+#include "global.hpp"

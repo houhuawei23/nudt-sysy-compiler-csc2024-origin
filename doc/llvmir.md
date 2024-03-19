@@ -310,6 +310,108 @@ store atomic [volatile] <ty> <value>, ptr <pointer> [syncscope("<target-scope>")
 
 
 #### CALL
+
+This instruction requires several arguments:
+该指令需要几个参数：
+
+The optional tail and musttail markers indicate that the optimizers should perform tail call optimization. The tail marker is a hint that can be ignored. The musttail marker means that the call must be tail call optimized in order for the program to be correct. This is true even in the presence of attributes like “disable-tail-calls”. The musttail marker provides these guarantees:
+可选的 tail 和 musttail 标记指示优化器应该执行尾调用优化。 tail 标记是可以忽略的提示。 musttail 标记意味着调用必须经过尾部调用优化才能使程序正确。即使存在“disable-tail-calls”等属性也是如此。 musttail 标记提供以下保证：
+
+The call will not cause unbounded stack growth if it is part of a recursive cycle in the call graph.
+如果该调用是调用图中递归循环的一部分，则不会导致堆栈无限增长。
+
+Arguments with the inalloca or preallocated attribute are forwarded in place.
+具有 inalloca 或 preallocated 属性的参数将就地转发。
+
+If the musttail call appears in a function with the "thunk" attribute and the caller and callee both have varargs, then any unprototyped arguments in register or memory are forwarded to the callee. Similarly, the return value of the callee is returned to the caller’s caller, even if a void return type is in use.
+如果 Musttail 调用出现在具有 "thunk" 属性的函数中，并且调用者和被调用者都具有可变参数，则寄存器或内存中的任何非原型参数都会转发给被调用者。类似地，即使正在使用 void 返回类型，被调用者的返回值也会返回给调用者的调用者。
+
+Both markers imply that the callee does not access allocas from the caller. The tail marker additionally implies that the callee does not access varargs from the caller. Calls marked musttail must obey the following additional rules:
+这两个标记都意味着被调用者不会访问调用者的分配。 tail 标记还暗示被调用者不会从调用者访问可变参数。标记为 musttail 的调用必须遵守以下附加规则：
+
+The call must immediately precede a ret instruction, or a pointer bitcast followed by a ret instruction.
+该调用必须紧接在 ret 指令之前，或者紧跟在 ret 指令后面的指针位转换。
+
+The ret instruction must return the (possibly bitcasted) value produced by the call, undef, or void.
+ret 指令必须返回由调用、undef 或 void 生成的（可能是位转换的）值。
+
+The calling conventions of the caller and callee must match.
+调用者和被调用者的调用约定必须匹配。
+
+The callee must be varargs iff the caller is varargs. Bitcasting a non-varargs function to the appropriate varargs type is legal so long as the non-varargs prefixes obey the other rules.
+当且仅当调用者是可变参数时，被调用者必须是可变参数。只要非可变参数前缀遵守其他规则，将非可变参数函数位转换为适当的可变参数类型就是合法的。
+
+The return type must not undergo automatic conversion to an sret pointer.
+返回类型不得自动转换为 sret 指针。
+
+In addition, if the calling convention is not swifttailcc or tailcc:
+另外，如果调用约定不是 swifttailcc 或 tailcc：
+
+All ABI-impacting function attributes, such as sret, byval, inreg, returned, and inalloca, must match.
+所有影响 ABI 的函数属性（例如 sret、byval、inreg、returned 和 inalloca）都必须匹配。
+
+The caller and callee prototypes must match. Pointer types of parameters or return types may differ in pointee type, but not in address space.
+调用者和被调用者原型必须匹配。参数或返回类型的指针类型在指针对象类型中可能不同，但在地址空间中不会不同。
+
+On the other hand, if the calling convention is swifttailcc or swiftcc:
+另一方面，如果调用约定是 swifttailcc 或 swiftcc：
+
+Only these ABI-impacting attributes attributes are allowed: sret, byval, swiftself, and swiftasync.
+仅允许这些影响 ABI 的属性：sret、byval、swiftself 和 swiftasync。
+
+Prototypes are not required to match.
+原型不需要匹配。
+
+Tail call optimization for calls marked tail is guaranteed to occur if the following conditions are met:
+如果满足以下条件，则保证会发生标记为 tail 的尾部调用优化：
+
+Caller and callee both have the calling convention fastcc or tailcc.
+调用者和被调用者都具有调用约定 fastcc 或 tailcc 。
+
+The call is in tail position (ret immediately follows call and ret uses value of call or is void).
+调用位于尾部位置（ret 紧跟在调用之后，并且 ret 使用调用的值或者为 void）。
+
+Option -tailcallopt is enabled, llvm::GuaranteedTailCallOpt is true, or the calling convention is tailcc
+选项 -tailcallopt 已启用， llvm::GuaranteedTailCallOpt 为 true ，或者调用约定为 tailcc
+
+Platform-specific constraints are met.
+满足特定于平台的约束。
+
+The optional notail marker indicates that the optimizers should not add tail or musttail markers to the call. It is used to prevent tail call optimization from being performed on the call.
+可选的 notail 标记指示优化器不应向调用添加 tail 或 musttail 标记。它用于防止对调用执行尾调用优化。
+
+The optional fast-math flags marker indicates that the call has one or more fast-math flags, which are optimization hints to enable otherwise unsafe floating-point optimizations. Fast-math flags are only valid for calls that return a floating-point scalar or vector type, or an array (nested to any depth) of floating-point scalar or vector types.
+可选的 fast-math flags 标记指示该调用具有一个或多个快速数学标志，这些标志是优化提示，用于启用其他不安全的浮点优化。快速数学标志仅对返回浮点标量或向量类型或浮点标量或向量类型的数组（嵌套到任意深度）的调用有效。
+
+The optional “cconv” marker indicates which calling convention the call should use. If none is specified, the call defaults to using C calling conventions. The calling convention of the call must match the calling convention of the target function, or else the behavior is undefined.
+可选的“cconv”标记指示调用应使用哪种调用约定。如果未指定，则调用默认使用 C 调用约定。调用的调用约定必须与目标函数的调用约定相匹配，否则行为未定义。
+
+The optional Parameter Attributes list for return values. Only ‘zeroext’, ‘signext’, and ‘inreg’ attributes are valid here.
+返回值的可选参数属性列表。只有“ zeroext ”、“ signext ”和“ inreg ”属性在这里有效。
+
+The optional addrspace attribute can be used to indicate the address space of the called function. If it is not specified, the program address space from the datalayout string will be used.
+可选的 addrspace 属性可用于指示被调用函数的地址空间。如果未指定，则将使用数据布局字符串中的程序地址空间。
+
+‘ty’: the type of the call instruction itself which is also the type of the return value. Functions that return no value are marked void.
+‘ ty ’：调用指令本身的类型，也是返回值的类型。不返回值的函数被标记为 void 。
+
+‘fnty’: shall be the signature of the function being called. The argument types must match the types implied by this signature. This type can be omitted if the function is not varargs.
+‘ fnty ’：应是被调用函数的签名。参数类型必须与此签名隐含的类型匹配。如果函数不是可变参数，则可以省略此类型。
+
+‘fnptrval’: An LLVM value containing a pointer to a function to be called. In most cases, this is a direct function call, but indirect call’s are just as possible, calling an arbitrary pointer to function value.
+‘ fnptrval ’：一个 LLVM 值，包含指向要调用的函数的指针。在大多数情况下，这是直接函数调用，但间接 call 也是可能的，调用指向函数值的任意指针。
+
+‘function args’: argument list whose types match the function signature argument types and parameter attributes. All arguments must be of first class type. If the function signature indicates the function accepts a variable number of arguments, the extra arguments can be specified.
+‘ function args ’：类型与函数签名参数类型和参数属性匹配的参数列表。所有参数必须是第一类类型。如果函数签名指示该函数接受可变数量的参数，则可以指定额外的参数。
+
+The optional function attributes list.
+可选功能属性列表。
+
+The optional operand bundles list.
+可选操作数捆绑列表。
+
+#### Example
+
 ```LLVM
 ; <result> = icmp <cond> <ty> <op1>, <op2>   ; yields i1 or <N x i1>:result
 

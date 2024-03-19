@@ -1,5 +1,11 @@
 
+### Error
 
+```
+source is a pointer to incomplete type
+```
+通常，如果我在 .h 文件中向前声明了该类并且未能在 .cpp 文件中包含该类的完整头文件，我通常会收到此错误
+需要include完整头文件!!!
 ### Type Conversion
 
 

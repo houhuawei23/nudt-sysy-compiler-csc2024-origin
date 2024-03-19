@@ -94,7 +94,9 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
 
 std::any SysYIRGenerator::visitAssignStmt(SysYParser::AssignStmtContext* ctx) {
     ir::Value* lvalueptr = any_cast_Value(visit(ctx->lValue()));
-    auto expptr = any_cast_Value(visit(ctx->exp()));
+    auto tmp = visit(ctx->exp());
+    auto expptr = safe_any_cast<ir::Value>(tmp);
+    // auto expptr = any_cast_Value(visit(ctx->exp())); // bad any cast for CallInst
     ir::Value* res = nullptr;
 
     if (auto res = ir::dyn_cast<ir::Constant>(expptr)) {

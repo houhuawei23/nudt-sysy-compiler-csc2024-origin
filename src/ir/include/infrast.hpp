@@ -158,6 +158,8 @@ class Argument : public Value {
              const_str_ref name = "")
         : Value(type, vARGUMENT, name), _index(index), _parent(parent) {}
 
+
+    
     Function* parent() const { return _parent; }
     int index() const { return _index; }
     std::vector<int>& dims() { return _dims; }  // get ref?
@@ -251,16 +253,7 @@ class BasicBlock : public Value {
     }
 };
 
-inline bool compareBB(const BasicBlock* a1, const BasicBlock* a2) {
-    // return a1->priority < a2->priority;
-    if (a1->name().size() > 0 && a2->name().size() > 0)
-        return std::stoi(a1->name().substr(1)) <
-               std::stoi(a2->name().substr(1));
-    else {
-        // std::
-        assert(false && "compareBB error");
-    }
-}
+
 
 class Instruction : public User {
     // Instuction 的类型也通过 _scid

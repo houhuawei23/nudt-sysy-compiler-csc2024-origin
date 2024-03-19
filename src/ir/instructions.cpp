@@ -22,9 +22,16 @@ void StoreInst::print(std::ostream& os) const {
     // store i32 5, i32* %1
     os << "store ";
     os << *(value()->type()) << " ";
+
     os << value()->name() << ", ";  // constant worked
+
     os << *ptr()->type() << " ";
-    os << ptr()->name();
+
+    if (isa<GlobalVariable>(ptr())) {
+        os << "@" << ptr()->name();
+    } else {
+        os << ptr()->name();
+    }
 }
 
 void LoadInst::print(std::ostream& os) const {
@@ -36,8 +43,7 @@ void LoadInst::print(std::ostream& os) const {
        << *ptr()->type() << " ";
     if (isa<GlobalVariable>(ptr())) {
         os << "@" << ptr()->name();
-    }
-    else {
+    } else {
         os << ptr()->name();
     }
 
@@ -244,5 +250,34 @@ void BranchInst::print(std::ostream& os) const {
     } else {
         os << "label " << dest()->name();
     }
+}
+
+void CallInst::print(std::ostream& os) const {
+    os << name() << " = call ";
+    // ret_type
+    os << *type() << " ";
+    // func name
+    os << "@" << callee()->name() << "(";
+    for (auto rarg : _rargs) {
+        os << *rarg->type() << " ";
+        os << rarg->name();
+        if (rarg != _rargs.back())
+            os << ", ";
+    }
+    os << ")";
+}
+void CallInstBeta::print(std::ostream& os) const {
+    os << "call ";
+    // ret_type
+    os << *type() << " ";
+    // func name
+    // os << "@" << callee()->name() << "(";
+    // for (auto rarg : _rargs) {
+    //     os << rarg->type() << " ";
+    //     os << rarg->name();
+    //     if (rarg != _rargs.back())
+    //         os << ", ";
+    // }
+    os << ")";
 }
 }  // namespace ir

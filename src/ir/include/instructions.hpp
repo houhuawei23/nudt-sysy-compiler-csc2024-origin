@@ -1,4 +1,5 @@
 #pragma once
+#include "function.hpp"
 #include "global.hpp"
 #include "infrast.hpp"
 #include "utils.hpp"
@@ -104,14 +105,6 @@ class LoadInst : public Instruction {
                          const_str_ref name = "") {
         // assert()
         Type* type = nullptr;
-        // if (isa<GlobalVariable>(ptr)) {
-        //     auto gv = dyn_cast<GlobalVariable>(ptr);
-        //     type = gv->base_type(); // base type
-        // } else if (ptr->type()->is_pointer()) {
-        //     type = dyn_cast<PointerType>(ptr->type())->base_type();
-        // } else {
-        //     assert(false && "not supported");
-        // }
         type = dyn_cast<PointerType>(ptr->type())->base_type();
         auto inst = new LoadInst(ptr, type, parent, indices, name);
         return inst;
@@ -222,19 +215,69 @@ class BinaryInst : public Instruction {
    public:
     void print(std::ostream& os) const override;
 };
+class CallInstBeta : public Instruction {
+    //! TODO
+    // Function* _callee;
+    // const_value_ptr_vector _rargs;
+
+   public:
+    CallInstBeta(Function* callee,
+                 const_value_ptr_vector rargs = {},
+                 BasicBlock* parent = nullptr,
+                 const_str_ref name = "")
+        : Instruction(vCALL, callee->ret_type(), parent, name) {}
+
+   public:
+    // Function* callee() const { return dyn_cast<Function>(operand(0)); }
+
+    static bool classof(const Value* v) {
+        //! TODO
+        // assert(false && "not implemented");
+        return v->scid() == vCALL;
+    }
+    void print(std::ostream& os) const override;  //! TODO
+};
 
 class CallInst : public Instruction {
     //! TODO
-   protected:
-    CallInst() {
+    Function* _callee;
+    const_value_ptr_vector _rargs;
+
+   public:
+    CallInst(Function* callee,
+             const_value_ptr_vector rargs = {},
+             BasicBlock* parent = nullptr,
+             const_str_ref name = "")
+        : Instruction(vCALL, callee->ret_type(), parent, name),
+          _callee(callee),
+          _rargs(rargs) {
         //! TODO
-        assert(false && "not implemented");
+        // add_operands(args);
+        // for (auto arg : args) {
+        //     add_operand(arg);
+        // }
     }
 
    public:
+    Function* callee() const { 
+        return _callee;
+        // return dyn_cast<Function>(operand(0)); 
+        }
+
+    // use_ptr_vector& args() {
+    //     // return _operands;
+    //     return _args;
+    // }
+    // std::vector<Use*>::iterator args_begin() { return _operands.begin() + 1;
+    // } std::vector<Use*>::iterator args_end() { return _operands.end(); }
+    // std::vector<Value*>& args() {
+    //     // std::vector<Value*> _operands, 1:end
+    //     //TODO
+    // }
     static bool classof(const Value* v) {
         //! TODO
-        assert(false && "not implemented");
+        // assert(false && "not implemented");
+        return v->scid() == vCALL;
     }
     void print(std::ostream& os) const override;  //! TODO
 };

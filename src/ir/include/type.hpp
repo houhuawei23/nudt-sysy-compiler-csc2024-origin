@@ -56,11 +56,9 @@ class Type {
     bool is_i1();
     bool is_i32();
 
-    bool is_float32();   // only check f32
-    bool is_double();  // only check f64
-    bool is_float() {
-        return is_float32() || is_double();
-    }
+    bool is_float32();  // only check f32
+    bool is_double();   // only check f64
+    bool is_float() { return is_float32() || is_double(); }
     bool is_label();
     bool is_pointer();
     bool is_function();
@@ -126,10 +124,11 @@ class FunctionType : public Type {
    public:
     //! Gen
     static FunctionType* gen(Type* ret_type, const type_ptr_vector& arg_types);
+    
     //! get the return type of the function
     Type* ret_type() const { return _ret_type; }
+
     type_ptr_vector& arg_types() {
-        // ?? return what type?
         return _arg_types;
     }
 };

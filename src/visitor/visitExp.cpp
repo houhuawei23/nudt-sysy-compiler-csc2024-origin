@@ -195,6 +195,7 @@ std::any SysYIRGenerator::visitAdditiveExp(
     if (ir::isa<ir::Constant>(op1) && ir::isa<ir::Constant>(op2)) {  //! 1. 常量 -> 常量折叠
         ir::Constant* cop1 = ir::dyn_cast<ir::Constant>(op1);
         ir::Constant* cop2 = ir::dyn_cast<ir::Constant>(op2);
+        
         if (cop1->is_float() || cop2->is_float()) {
             float sum, f1, f2;
 

@@ -88,7 +88,7 @@ BLOCKCOMMENT: '/*' .*? '*/' -> skip;
 /* Syntax rules                                    */
 /*===-------------------------------------------===*/
 
-compUnit: (decl | func)+;
+compUnit: (decl | funcDecl | funcDef)+;
 
 // constDecl and varDecl shares the same syntax structure, except that constDecl must have constant
 // initial values. We combine these two syntax rules, and ensure the constraint above at the
@@ -101,7 +101,9 @@ varDef: lValue (ASSIGN initValue)?;
 
 initValue: exp | LBRACE (initValue (COMMA initValue)*)? RBRACE;
 
-func: funcType ID LPAREN funcFParams? RPAREN blockStmt;
+funcDecl: funcType ID LPAREN funcFParams? RPAREN SEMICOLON; 
+
+funcDef: funcType ID LPAREN funcFParams? RPAREN blockStmt; 
 
 funcType: VOID | INT | FLOAT;
 

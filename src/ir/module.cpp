@@ -1,35 +1,29 @@
 #include "include/module.hpp"
-#include "include/utils.hpp"
 #include <cassert>
 #include <iostream>
+#include "include/utils.hpp"
 namespace ir {
-Function *Module::function(const_str_ref name) {
-    // functions().find(name);
-    // if (auto iter = functions().find(name); iter !=
-    // functions().end()) {
-    //     return iter->second; // Funciton*
-    // }
+Function* Module::lookup_func(const_str_ref name) {
+    auto iter = _functions.find(name);
+    if (iter != _functions.end()) {
+        return iter->second;
+    }
     return nullptr;
 }
-Function *Module::add_function(bool is_decl, Type *type, const_str_ref name) {
-    if (function(name)) {
-        assert(0); // re-def name
-    }
-    ir::Function *func = new Function(type, name, this);
-    
-    // _functions.insert({ name, func });
+Function* Module::add_function(Type* type,
+                               const_str_ref name) {
+    assert(lookup_func(name) == nullptr && "re-add function!");  // re-def name
+
+    ir::Function* func = new Function(type, name, this);
+
     _values.emplace_back(func);
     _functions.emplace(name, func);
 
     return func;
 }
 
-// Value *Module::register_val(const_str_ref name) {}
-// Value *Module::val(const_str_ref name) {}
-// Value *Module::add_val(const_str_ref name, Value *addr) {}
-
 // readable ir print
-void Module::print(std::ostream &os) const{
+void Module::print(std::ostream& os) const {
     // print all global values
     for (auto gv_iter : _globals) {
         os << *gv_iter.second << std::endl;
@@ -40,4 +34,4 @@ void Module::print(std::ostream &os) const{
         os << *func << std::endl;
     }
 }
-} // namespace ir
+}  // namespace ir
