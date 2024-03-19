@@ -174,11 +174,11 @@ class IRBuilder {
 
     
     CallInst* create_call(Function*func, const_value_ptr_vector& args, const_str_ref name="") {
-        //! TODO
         auto call = new CallInst(func, args, _block, name);
         block()->emplace_back_inst(call);
         return call;
     }
+    
     BranchInst* create_br(
         Value* cond,
         BasicBlock* true_block,

@@ -128,7 +128,7 @@ std::any SysYIRGenerator::visitAssignStmt(SysYParser::AssignStmtContext* ctx) {
             assert(false);
         }
     }
-    res = builder().create_store(expptr, lvalueptr);
+    res = builder().create_store(expptr, lvalueptr, "store");
 
     return res;
 }

@@ -1,5 +1,7 @@
-int main() {
-    int a[5][5];
-    a[0][1] = 2;
-    return a[0][1];
+int main(){
+    int a, b0, _c;
+    a = 1;
+    b0 = 2;
+    _c = 3;
+    return b0 + _c;
 }

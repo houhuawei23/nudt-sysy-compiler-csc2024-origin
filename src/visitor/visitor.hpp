@@ -1,6 +1,5 @@
-
 #pragma once
-#include <any>  // any_cast
+#include <any>
 #include <typeinfo>
 #include <vector>
 #include <sstream>
@@ -11,6 +10,7 @@
 
 #include "utils_visit.hpp"
 #include "utils.hpp"
+
 namespace sysy {
 class SysYIRGenerator : public SysYBaseVisitor {
    private:
@@ -75,6 +75,7 @@ class SysYIRGenerator : public SysYBaseVisitor {
 
     //! visit EXP
     virtual std::any visitVarExp(SysYParser::VarExpContext* ctx) override;
+
     virtual std::any visitParenExp(SysYParser::ParenExpContext* ctx) override;
 
     virtual std::any visitNumberExp(SysYParser::NumberExpContext* ctx) override;

@@ -106,7 +106,7 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
                 auto arg_type = any_cast_Type(visit(pram->btype()));
                 // no const arg
                 auto alloca_ptr = builder().create_alloca(arg_type, {}, builder().getvarname(), false);
-                auto store = builder().create_store(func->arg_i(idx), alloca_ptr, {}, "store");
+                auto store = builder().create_store(func->arg_i(idx), alloca_ptr, "store");
                 _tables.insert(arg_name, alloca_ptr);
                 idx++;
             }
