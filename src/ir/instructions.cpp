@@ -253,7 +253,11 @@ void BranchInst::print(std::ostream& os) const {
 }
 
 void CallInst::print(std::ostream& os) const {
-    os << name() << " = call ";
+    if (name().size() == 0) {
+        os << "call ";
+    } else {
+        os << name() << " = call ";
+    }
     // ret_type
     os << *type() << " ";
     // func name

@@ -19,25 +19,39 @@ std::any SysYIRGenerator::visitCall(SysYParser::CallContext* ctx) {
     auto parent_func = builder().block()->parent();
 
     std::vector<ir::Value*> rargs;
-
+    std::vector<ir::Value*> final_rargs;
     auto iter = func->arg_types().begin();
     for (auto exp : ctx->funcRParams()->exp()) {
         // Type* arg_type = 
         auto rarg = any_cast_Value(visit(exp));
-        if(ir::isa<ir::Constant>(rarg)) {
-
-        }
-        else {
-
-        }
-
         iter++;
         rargs.push_back(rarg);
 
     }
-    ir::Value* inst; //  ir::Value* 接收
-    inst = builder().create_call(func, rargs, builder().getvarname());
 
+    assert(func->arg_types().size() == rargs.size() && "size not match!");
+
+    int length = rargs.size();
+    for(int i = 0;i < length;i++)
+    {
+        if(func->arg_types()[i]->is_i32() and rargs[i]->is_float()){
+            auto ftosi = _builder.create_ftosi(ir::Type::i32_type(), rargs[i], _builder.getvarname());
+            final_rargs.push_back(ftosi);
+        }
+        else if(func->arg_types()[i]->is_float() and rargs[i]->is_i32()){
+            auto sitof = _builder.create_sitof(ir::Type::float_type(), rargs[i], _builder.getvarname());
+            final_rargs.push_back(sitof);
+        }
+        else{
+            final_rargs.push_back(rargs[i]);
+        }
+    }
+
+    ir::Value* inst; //  ir::Value* 接收
+    if(func->ret_type()->is_void())
+        inst = builder().create_call(func, final_rargs, "");
+    else
+        inst = builder().create_call(func, final_rargs, builder().getvarname());
     return inst;
 }
 

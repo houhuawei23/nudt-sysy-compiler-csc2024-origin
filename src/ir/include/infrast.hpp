@@ -40,7 +40,7 @@ class Constant : public User {
         : User(Type::double_type(), vCONSTANT, name), _f64(f64) {
         // int a = 2;
     }
-
+    Constant() : User(Type::void_type(), vCONSTANT, "VOID") {}
     // gen Const from int or float
     template <typename T>
     static Constant* cache_add(T val, const std::string& name) {
@@ -92,6 +92,18 @@ class Constant : public User {
         auto name = getMC(f64);
         return cache_add(f64, name);
     }
+    static Constant* gen_void(){
+        std::string name = "VOID";
+        auto iter = cache.find(name);
+        if (iter != cache.end()) {
+            return iter->second;
+        }
+
+        Constant* c;
+        c = new Constant();
+        auto res = cache.emplace(name, c);
+        return c;
+    }
 
     // static Constant* gen_i32(int32_t v) {
     //     auto name = std::to_string(v);
@@ -122,6 +134,8 @@ class Constant : public User {
         assert(is_float());
         return _f64;
     }
+
+    
 
     template <typename T>
     T f() const {

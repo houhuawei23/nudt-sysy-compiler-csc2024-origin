@@ -55,7 +55,7 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
         if (ctx->exp())
             assert(false);
         else {
-            std::cout << "void return" << std::endl;
+            // std::cout << "void return" << std::endl;
             res = builder().create_return(value);
         }
     } else {

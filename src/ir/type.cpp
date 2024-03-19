@@ -87,7 +87,7 @@ void Type::print(std::ostream& os) const {
             os << "float";
             break;
         case DOUBLE:
-            os << "double";
+            os << "float";
             break;
         case VOID:
             os << "void";

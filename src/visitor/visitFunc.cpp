@@ -41,7 +41,6 @@ ir::Function* SysYIRGenerator::create_func(SysYParser::FuncDefContext* ctx) {
     // std::vector<std::string> param_names;
     // param_names.push_back(param->ID()->getText());
 
-    int length = 0;
 
     if (ctx->funcFParams()) { // if have formal params
         // funcFParams: funcFParam (COMMA funcFParam)*;
@@ -55,7 +54,6 @@ ir::Function* SysYIRGenerator::create_func(SysYParser::FuncDefContext* ctx) {
             else
                 param_types.push_back(ir::Type::float_type());
 
-            length++;
             //! TODO
             // up to realize array version
 
