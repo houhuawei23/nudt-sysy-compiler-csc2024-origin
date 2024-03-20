@@ -49,48 +49,67 @@ exp:
     | exp OR exp					# orExp;
 */
 /*
- * @brief Visit Local Variable Declaration
- *      decl: CONST? btype varDef (COMMA varDef)* SEMICOLON;
+ * @brief Visit Local Variable Definition (变量定义 && 使用)
  *      varDef: lValue (ASSIGN initValue)?;
- *      lValue: ID (LBRACKET exp RBRACKET)*;
+ *          1. lValue: ID (LBRACKET exp RBRACKET)*;
+ *          2. initValue: exp | LBRACE (initValue (COMMA initValue)*)? RBRACE;
  */
 ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
                                              ir::Type* btype,
                                              bool is_const) {
     auto name = ctx->lValue()->ID()->getText();
 
-    // 获得数组各个维度
+    // 获得数组的各个维度
     std::vector<ir::Value*> dims;
     for (auto dim : ctx->lValue()->exp()) {
-        dims.push_back(any_cast_Value(visit(dim)));
+        ir::Value* tmp = any_cast_Value(visit(dim));
+        if (auto ctmp = ir::dyn_cast<ir::Constant>(tmp)) {
+            if (ctmp->is_float()) tmp = ir::Constant::gen_i32(ctmp->f64());
+        } else {
+            assert(false && "dimension must be a constant");
+        }
+        dims.push_back(tmp);
     }
+    bool isArray = dims.size() > 0;
     std::vector<int> idx(dims.size());
 
     ir::Value* res = nullptr;
+
     ir::Value* init = nullptr;
     ir::Constant* cinit = nullptr;
+    ir::GlobalVariable* ginit = nullptr;
+    ir::AllocaInst* linit = nullptr;
 
-    std::vector<ir::Value*> arrayInit;
+    std::vector<ir::Constant*> arrayInit;
 
-    //! get initial value
+    //! get initial value (右值)
     if (ctx->ASSIGN()) {
-        if (ctx->initValue()->LBRACE()) {  //! 1. array initial value
-            for (auto expr : ctx->initValue()->initValue()){
-                // arrayInit.push_back(any_cast_Value(visitInitValue(expr)));
-            }
+        if (isArray) {  //! 1. array initial value
+            // TODO
+            // int capacity = 1;
+            // for (auto dim : dims) {
+            //     capacity *= ir::dyn_cast<ir::Constant>(dim)->i32();
+            // }
+            // for (int i = 0; i < capacity; i++) {
+            //     arrayInit.push_back(ir::Constant::gen_i32(0));
+            // }
+            // for (auto expr : ctx->initValue()->initValue()){
+            //     // visitInitValue_beta(expr, capacity, dims, arrayInit);
+            // }
         } else {  //! 2. scalar initial value
             init = any_cast_Value(visit(ctx->initValue()->exp()));
             if (cinit = ir::dyn_cast<ir::Constant>(init)) {
                 if (btype->is_i32() && cinit->is_float()) {
-                    cinit = ir::Constant::gen_i32(cinit->f64());
+                    init = ir::dyn_cast<ir::Value>(ir::Constant::gen_i32(cinit->f64()));
                 } else if (btype->is_float() && cinit->is_i32()) {
-                    cinit = ir::Constant::gen_f64(cinit->i32());
+                    init = ir::dyn_cast<ir::Value>(ir::Constant::gen_f64(cinit->i32()));
                 }
+            } else {
             }
         }
     }
 
-    //! deal with assignment
+    //! deal with assignment (左值)
     if (is_const) {  //! 1. const
         if (dims.size() == 0) {  //! 1.1 scalar
             if (not ctx->ASSIGN()) {
@@ -116,21 +135,23 @@ ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
         
         //! create store inst
         if (dims.size() == 0) {  //! 2.1 scalar
-            if(not ctx->ASSIGN()){
-            } else if (init->is_float() && btype->is_i32()) {
-                auto ftosi = _builder.create_ftosi(ir::Type::i32_type(), init, _builder.getvarname());
-                auto stroe = _builder.create_store(ftosi, alloca_ptr, "store");
-            } else if (init->is_i32() && btype->is_float()) {
-                auto sitof = _builder.create_sitof(ir::Type::float_type(), init, _builder.getvarname());
-                auto store = _builder.create_store(sitof, alloca_ptr, "store");
-            } else {
-                auto store = _builder.create_store(init, alloca_ptr, "store");
+            if(ctx->ASSIGN()){
+                if (init->is_float() && btype->is_i32()) {
+                    auto ftosi = _builder.create_ftosi(ir::Type::i32_type(), init, _builder.getvarname());
+                    auto stroe = _builder.create_store(ftosi, alloca_ptr, "store");
+                } else if (init->is_i32() && btype->is_float()) {
+                    auto sitof = _builder.create_sitof(ir::Type::float_type(), init, _builder.getvarname());
+                    auto store = _builder.create_store(sitof, alloca_ptr, "store");
+                } else {
+                    auto store = _builder.create_store(init, alloca_ptr, "store");
+                }
             }
         } else {  //! 2.2 array
             if(ctx->ASSIGN()) {
-                int dimensions = dims.size();
-                ir::Value* ptr =ir::dyn_cast<ir::Value>(alloca_ptr);
-                ir::Type* type = alloca_ptr->base_type();
+                // TODO
+                // int dimensions = dims.size();
+                // ir::Value* ptr =ir::dyn_cast<ir::Value>(alloca_ptr);
+                // ir::Type* type = alloca_ptr->base_type();
             } else{
                 // pass
             }
@@ -142,15 +163,14 @@ ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
 }
 
 /*
- * @brief Visit Global Variable Declaration
- *      decl: CONST? btype varDef (COMMA varDef)* SEMICOLON;
+ * @brief Visit Global Variable Definition
  *      varDef: lValue (ASSIGN initValue)?;
  *      lValue: ID (LBRACKET exp RBRACKET)*;
  */
 ir::Value* SysYIRGenerator::visitVarDef_global(SysYParser::VarDefContext* ctx,
                                                ir::Type* btype, bool is_const) {
     auto name = ctx->lValue()->ID()->getText();
-    
+
     // 获得数组的各个维度
     std::vector<ir::Value*> dims;
     for (auto dim : ctx->lValue()->exp()) {
@@ -188,14 +208,19 @@ ir::Value* SysYIRGenerator::visitVarDef_global(SysYParser::VarDefContext* ctx,
             }
         } else {  //! 2. scalar initial value
             ir::Value* tmp = any_cast_Value(visit(ctx->initValue()->exp()));
-            assert(ir::isa<ir::Constant>(tmp) && "global var init val must be Constant");
+            assert(ir::isa<ir::Constant>(tmp) && "global var must be initialised by constant");
 
             cinit = ir::dyn_cast<ir::Constant>(tmp);
-            cinit->set_name("@" + name);
             if (btype->is_i32() && cinit->is_float()) {
                 cinit = ir::Constant::gen_i32(cinit->f64(), "@" + name);
             } else if (btype->is_float() && cinit->is_i32()) {
                 cinit = ir::Constant::gen_f64(cinit->i32(), "@" + name);
+            } else if (cinit->is_float()) {
+                cinit = ir::Constant::gen_f64(cinit->f64(), "@" + name);
+            } else if (cinit->is_i32()) {
+                cinit = ir::Constant::gen_i32(cinit->i32(), "@" + name);
+            } else {
+                assert(false && "invalid type");
             }
             init.push_back(cinit);
         }

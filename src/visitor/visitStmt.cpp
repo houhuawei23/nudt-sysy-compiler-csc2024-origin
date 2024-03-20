@@ -95,36 +95,40 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
  *      assignStmt: lValue ASSIGN exp SEMICOLON
  */
 std::any SysYIRGenerator::visitAssignStmt(SysYParser::AssignStmtContext* ctx) {
-    ir::Value* lvalueptr = any_cast_Value(visit(ctx->lValue()));
-    auto tmp = visit(ctx->exp());
-    auto expptr = safe_any_cast<ir::Value>(tmp);
-    // auto expptr = any_cast_Value(visit(ctx->exp())); // bad any cast for CallInst
+    ir::Value* lvalue_ptr = any_cast_Value(visit(ctx->lValue()));  // 左值
+    ir::Value* exp = safe_any_cast<ir::Value>(visit(ctx->exp()));  // 右值
+
+    std::cout << "visit assignment" << std::endl;
+    if (lvalue_ptr->is_float()) std::cout << "左值是float" << std::endl;
+    else if (lvalue_ptr->is_i32()) std::cout << "左值是int" << std::endl;
+    else if (lvalue_ptr->is_pointer()) std::cout << "左值是pointer" << std::endl;
+
     ir::Value* res = nullptr;
 
-    if (auto res = ir::dyn_cast<ir::Constant>(expptr)) {  //! 1. 右值为常值
-        if (lvalueptr->is_i32() && res->is_float()) {
-            expptr = ir::Constant::gen_i32(res->f64());
-        } else if (lvalueptr->is_float() && res->is_i32()) {
-            expptr = ir::Constant::gen_f64(res->i32());
-        } else if (auto tmp = ir::dyn_cast<ir::PointerType>(lvalueptr->type())) {
-            if (tmp->base_type() != res->type()) {
-                std::cerr << "Type " << *res->type() << " can not convert to type " << *res->type() << std::endl;
+    if (auto cexp = ir::dyn_cast<ir::Constant>(exp)) {  //! 1. 右值为常值
+        if (lvalue_ptr->is_i32() && cexp->is_float()) {
+            exp = ir::Constant::gen_i32(cexp->f64());
+        } else if (lvalue_ptr->is_float() && cexp->is_i32()) {
+            exp = ir::Constant::gen_f64(cexp->i32());
+        } else if (auto tmp = ir::dyn_cast<ir::PointerType>(lvalue_ptr->type())) {
+            if (tmp->base_type() != cexp->type()) {
+                std::cerr << "Type " << *cexp->type() << " can not convert to type " << *cexp->type() << std::endl;
                 assert(false);
             }
         }
     } else {  //! 2. 右值为变量
-        if (lvalueptr->is_i32() && expptr->is_float()) {
-            expptr = _builder.create_ftosi(ir::Type::i32_type(), expptr, _builder.getvarname());
-        } else if (lvalueptr->is_float() && expptr->is_i32()) {
-            expptr = _builder.create_sitof(ir::Type::float_type(), expptr, _builder.getvarname());
-        } else if (ir::dyn_cast<ir::PointerType>(lvalueptr->type())->base_type() != expptr->type()) {
-            std::cerr << "Type " << *expptr->type()
-                      << " can not convert to type " << *lvalueptr->type()
+        if (lvalue_ptr->is_i32() && exp->is_float()) {
+            exp = _builder.create_ftosi(ir::Type::i32_type(), exp, _builder.getvarname());
+        } else if (lvalue_ptr->is_float() && exp->is_i32()) {
+            exp = _builder.create_sitof(ir::Type::float_type(), exp, _builder.getvarname());
+        } else if (ir::dyn_cast<ir::PointerType>(lvalue_ptr->type())->base_type() != exp->type()) {
+            std::cerr << "Type " << *exp->type()
+                      << " can not convert to type " << *lvalue_ptr->type()
                       << std::endl;
             assert(false);
         }
     }
-    res = builder().create_store(expptr, lvalueptr, "store");
+    res = _builder.create_store(exp, lvalue_ptr, "store");
 
     return res;
 }

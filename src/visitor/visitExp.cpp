@@ -3,19 +3,16 @@
 namespace sysy {
 /*
  * @brief Visit Number Expression
- *      exp (MUL | DIV | MODULO) exp
- * @details
  *      number: ILITERAL | FLITERAL; (即: int or float)
  */
 std::any SysYIRGenerator::visitNumberExp(SysYParser::NumberExpContext* ctx) {
     ir::Value* res = nullptr;
     if (auto iLiteral = ctx->number()->ILITERAL()) {  //! int
-            std::string s = iLiteral->getText();
-            
-            //! 基数 (8, 10, 16)
-            int base = 10;
-            if (s.length() > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) base = 16;
-            else if (s[0] == '0') base = 8;
+        std::string s = iLiteral->getText();
+        //! 基数 (8, 10, 16)
+        int base = 10;
+        if (s.length() > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) base = 16;
+        else if (s[0] == '0') base = 8;
 
         res = ir::Constant::gen_i32(std::stoi(s, 0, base));
     } else if (auto fctx = ctx->number()->FLITERAL()) {  //! float
@@ -26,8 +23,12 @@ std::any SysYIRGenerator::visitNumberExp(SysYParser::NumberExpContext* ctx) {
     return res;
 }
 
+/*
+ * @brief Visit Var Expression
+ *      var: ID (LBRACKET exp RBRACKET)*;
+ */
 std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
-    bool isarray = not ctx->var()->LBRACKET().empty();
+    bool isArray = not ctx->var()->LBRACKET().empty();
     std::string varname = ctx->var()->ID()->getText();
 
     auto res = _tables.lookup(varname);
@@ -36,7 +37,7 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
         exit(EXIT_FAILURE);
     }
 
-    if (!isarray) {  //! 1. scalar
+    if (!isArray) {  //! 1. scalar
         if (auto res_constant = ir::dyn_cast<ir::Constant>(res)) {
         } else {
             res = _builder.create_load(res, {}, _builder.getvarname());
@@ -69,7 +70,6 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
         }
         else {
             assert(false && "this is not an array");
-            // res = _builder.create_load(res, {}, _builder.getvarname());
         }
     }
     return res;
@@ -266,7 +266,6 @@ std::any SysYIRGenerator::visitAdditiveExp(SysYParser::AdditiveExpContext* ctx) 
             res = ir::Constant::gen_i32(sum);
         }
     } else {  //! 2. 变量 -> 生成 ADD | fADD | SUB | fSUB 指令
-        std::cout << "begin visit binary operation" << std::endl;
         if (op1->is_i32() && op2->is_i32()) {
             // int32 类型加减
             if (ctx->SUB())

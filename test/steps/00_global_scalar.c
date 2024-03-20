@@ -1,4 +1,7 @@
-int a[5] = {1, 2, 3, 4, 5};
-int main() {
-    return a[4];
+int a = 3;
+int b = 5;
+
+int main(){
+    int a = 5;
+    return a + b;
 }

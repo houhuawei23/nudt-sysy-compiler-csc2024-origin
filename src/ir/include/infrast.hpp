@@ -40,6 +40,7 @@ class Constant : public User {
         auto res = cache.emplace(name, c);
         return c;
     }
+
     template <typename T>
     static Constant* gen_i1(T v) {
         assert(std::is_integral_v<T> || std::is_floating_point_v<T> && "not int or float!");
@@ -53,6 +54,7 @@ class Constant : public User {
         }
         return cache_add(num, name);
     }
+    
     template <typename T>
     static Constant* gen_i32(T v) {
         assert(std::is_integral_v<T> || std::is_floating_point_v<T> && "not int or float!");
@@ -62,19 +64,20 @@ class Constant : public User {
         return cache_add(num, name);
     }
     template <typename T>
+    static Constant* gen_i32(T v, std::string name) {
+        assert(std::is_integral_v<T> || std::is_floating_point_v<T> && "not int or float!");
+
+        int32_t num = (int32_t)v;
+        return cache_add(num, name);
+    }
+    
+    template <typename T>
     static Constant* gen_f64(T val) {
         assert(std::is_integral_v<T> || std::is_floating_point_v<T> && "not int or float!");
 
         auto f64 = (double)val;
         auto name = getMC(f64);
         return cache_add(f64, name);
-    }
-        template <typename T>
-    static Constant* gen_i32(T v, std::string name) {
-        assert(std::is_integral_v<T> || std::is_floating_point_v<T> && "not int or float!");
-
-        int32_t num = (int32_t)v;
-        return cache_add(num, name);
     }
     template <typename T>
     static Constant* gen_f64(T val, std::string name) {
@@ -83,6 +86,7 @@ class Constant : public User {
         auto f64 = (double)val;
         return cache_add(f64, name);
     }
+    
     static Constant* gen_void(){
         std::string name = "VOID";
         auto iter = cache.find(name);

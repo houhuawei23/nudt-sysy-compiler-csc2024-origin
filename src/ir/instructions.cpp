@@ -36,38 +36,17 @@ void AllocaInst::print(std::ostream& os) const {
 void StoreInst::print(std::ostream& os) const {
     os << "store ";
     os << *(value()->type()) << " ";
-
-    os << value()->name() << ", ";  // constant worked
-
+    os << value()->name() << ", ";
     os << *ptr()->type() << " ";
-
-    if (isa<GlobalVariable>(ptr())) {
-        os << "@" << ptr()->name();
-    } else {
-        os << ptr()->name();
-    }
+    os << ptr()->name();
 }
 
 void LoadInst::print(std::ostream& os) const {
-    // %2 = load i32, i32* %1
-    //! to do
     os << name() << " = ";
     os << "load ";
     os << *dyn_cast<PointerType>(ptr()->type())->base_type() << ", "
        << *ptr()->type() << " ";
-    if (isa<GlobalVariable>(ptr())) {
-        os << "@" << ptr()->name();
-    } else {
-        os << ptr()->name();
-    }
-
-    // if (isa<GlobalVariable>(ptr())) {
-    //     os << *ptr()->type() << ", " << *ptr()->type() << " ";
-    //     os << "@" << ptr()->name();
-    // } else if (ptr()->type()->is_pointer()) {
-    //     os << *dyn_cast<PointerType>(ptr()->type())->base_type() << ", "
-    //        << *ptr()->type() << " " << ptr()->name();
-    // }
+    os << ptr()->name();
 }
 
 void ReturnInst::print(std::ostream& os) const {
