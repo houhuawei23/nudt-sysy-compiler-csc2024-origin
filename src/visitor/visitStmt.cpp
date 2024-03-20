@@ -54,7 +54,7 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
 
     // 匹配 返回值类型 与 函数定义类型
     if (func->ret_type()->is_void()) {
-        if (ctx->exp()) assert(false);
+        if (ctx->exp()) assert(false && "the returned value is not matching the function");
         else res = builder().create_return(value);
     } else {
         if (ctx->exp()) {
@@ -67,22 +67,16 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
                     assert(false);
                 }
             } else {  //! 变量
-                // std::cout << "调整返回值变量类型" << std::endl;
-
-                // if (value->is_float()) std::cout << "float" << std::endl;
-                // else std::cout << "int" << std::endl;
-
                 if (func->ret_type()->is_i32() && value->is_float()) {
                     value = _builder.create_ftosi(ir::Type::i32_type(), value, _builder.getvarname());
                 } else if (func->ret_type()->is_float() && value->is_i32()) {
                     value = _builder.create_sitof(ir::Type::float_type(), value, _builder.getvarname());
                 } else if (func->ret_type() != value->type()) {
-                    assert(false);
+                    assert(false && "invalid type");
                 }
-                // std::cout << "返回值类型调整完毕" << std::endl;
             }
         } else {
-            assert(false);
+            assert(false && "the returned value is not matching the function");
         }
         res = builder().create_return(value);
     }

@@ -8,7 +8,6 @@
 
 namespace ir {
 
-// for simple use <<
 inline std::ostream& operator<<(std::ostream& os, const Type& type) {
     type.print(os);
     return os;

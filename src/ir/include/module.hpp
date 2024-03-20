@@ -48,6 +48,12 @@ class Module {
         _globals.emplace(name, gv);
     }
 
+    void add_gvar(const_str_ref name, Value* gv) {
+        auto iter  = _globals.find(name); // find the name in _globals
+        assert(iter == _globals.end() && "Redeclare! global variable already exists");
+        _globals.emplace(name, gv);
+    }
+
     // Value *register_val(const_str_ref name);
     // Value *get_val(const_str_ref name);
     // Value *add_val(const_str_ref name, Value *addr);

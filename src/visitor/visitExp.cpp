@@ -37,7 +37,7 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
     }
 
     if (!isarray) {  //! 1. scalar
-        if (auto cres = ir::dyn_cast<ir::Constant>(res)) {
+        if (auto res_constant = ir::dyn_cast<ir::Constant>(res)) {
         } else {
             res = _builder.create_load(res, {}, _builder.getvarname());
         }
@@ -54,7 +54,20 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
                 current_dimension++;
             }
             res = _builder.create_load(res, {}, _builder.getvarname());
-        } else {
+        } else if (auto res_array = ir::dyn_cast<ir::GlobalVariable>(res)) {
+            auto type = res_array->base_type();
+            int current_dimension = 1;
+            std::vector<ir::Value*> dims = res_array->dims();
+            for (auto expr : ctx->var()->exp()) {
+                ir::Value* idx = any_cast_Value(visit(expr));
+                res = _builder.create_getelementptr(type, res, 
+                                                    idx, current_dimension, 
+                                                    dims, _builder.getvarname(), 1);
+                current_dimension++;
+            }
+            res = _builder.create_load(res, {}, _builder.getvarname());
+        }
+        else {
             assert(false && "this is not an array");
             // res = _builder.create_load(res, {}, _builder.getvarname());
         }
@@ -214,8 +227,7 @@ std::any SysYIRGenerator::visitMultiplicativeExp(
  * @brief Visit Additive Expression
  *      exp (ADD | SUB) exp
  */
-std::any SysYIRGenerator::visitAdditiveExp(
-    SysYParser::AdditiveExpContext* ctx) {
+std::any SysYIRGenerator::visitAdditiveExp(SysYParser::AdditiveExpContext* ctx) {
     ir::Value* op1 = any_cast_Value(visit(ctx->exp()[0]));
     ir::Value* op2 = any_cast_Value(visit(ctx->exp()[1]));
     ir::Value* res;
@@ -254,14 +266,13 @@ std::any SysYIRGenerator::visitAdditiveExp(
             res = ir::Constant::gen_i32(sum);
         }
     } else {  //! 2. 变量 -> 生成 ADD | fADD | SUB | fSUB 指令
+        std::cout << "begin visit binary operation" << std::endl;
         if (op1->is_i32() && op2->is_i32()) {
             // int32 类型加减
             if (ctx->SUB())
-                res = _builder.create_sub(ir::Type::i32_type(), op1, op2,
-                                          _builder.getvarname());
+                res = _builder.create_sub(ir::Type::i32_type(), op1, op2, _builder.getvarname());
             else
-                res = _builder.create_add(ir::Type::i32_type(), op1, op2,
-                                          _builder.getvarname());
+                res = _builder.create_add(ir::Type::i32_type(), op1, op2, _builder.getvarname());
         } else if (op1->is_float() && op2->is_float()) {
             // float 类型加减
             if (ctx->SUB())

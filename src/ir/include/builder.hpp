@@ -124,9 +124,7 @@ class IRBuilder {
                           const_value_ptr_vector& indices = {},
                           const_str_ref name = "") {
         auto inst = LoadInst::gen(ptr, _block, indices, name);
-        // auto inst = new LoadInst(ptr, _block, indices, name);
-        // _block->insts().emplace(_pos, inst);
-        block()->emplace_back_inst(inst);  // _pos++
+        block()->emplace_back_inst(inst);
         return inst;
     }
 

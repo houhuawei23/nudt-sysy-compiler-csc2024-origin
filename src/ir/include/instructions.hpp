@@ -81,18 +81,21 @@ class StoreInst : public Instruction {
     void print(std::ostream& os) const override;
 };
 
+/*
+ * @brief Load Instruction
+ * @details:
+ *      <result> = load <ty>, ptr <pointer>
+ */
 class LoadInst : public Instruction {
     friend class IRBuilder;
 
    public:
-    //<result> = load [volatile] <ty>, ptr <pointer>
     LoadInst(Value* ptr,
              Type* type,
              BasicBlock* parent,
              const_value_ptr_vector& indices = {},
              const_str_ref name = "")
         : Instruction(vLOAD, type, parent, name) {
-        // Instruction type?? should be what?
         add_operand(ptr);
         add_operands(indices);
     }
@@ -101,7 +104,6 @@ class LoadInst : public Instruction {
                          BasicBlock* parent,
                          const_value_ptr_vector& indices = {},
                          const_str_ref name = "") {
-        // assert()
         Type* type = nullptr;
         type = dyn_cast<PointerType>(ptr->type())->base_type();
         auto inst = new LoadInst(ptr, type, parent, indices, name);

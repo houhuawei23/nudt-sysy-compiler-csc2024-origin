@@ -19,6 +19,11 @@ class SysYIRGenerator : public SysYBaseVisitor {
     ir::SymbolTableBeta _tables;
     antlr4::ParserRuleContext* _root;
 
+    int _d = 0, _n = 0;
+    ir::Type* _current_type = nullptr;
+    std::vector<int> _path;
+    bool _is_alloca;
+
    public:
     SysYIRGenerator(){};
     SysYIRGenerator(ir::Module* module, antlr4::ParserRuleContext* root)
@@ -49,13 +54,13 @@ class SysYIRGenerator : public SysYBaseVisitor {
     std::any visitDeclLocal(SysYParser::DeclContext* ctx);
     std::any visitDeclGlobal(SysYParser::DeclContext* ctx);
 
-    // virtual std::any visitVarDef(SysYParser::VarDefContext* ctx) override;
-    ir::Value* visitVarDef_beta(SysYParser::VarDefContext* ctx,
-                          ir::Type* type,
-                          bool is_const);
-    ir::Value* visitVarDef_global(SysYParser::VarDefContext* ctx,
-                                                ir::Type* btype,
-                                                bool is_const);
+    void visitInitValue_beta(SysYParser::InitValueContext *ctx, 
+                                 const int capacity, const std::vector<ir::Value*> dims, 
+                                 std::vector<ir::Constant*>& init);
+    
+    ir::Value* visitVarDef_beta(SysYParser::VarDefContext* ctx, ir::Type* type, bool is_const);
+    ir::Value* visitVarDef_global(SysYParser::VarDefContext* ctx, ir::Type* btype, bool is_const);
+    
     virtual std::any visitBtype(SysYParser::BtypeContext* ctx) override;
 
     virtual std::any visitLValue(SysYParser::LValueContext* ctx) override;
@@ -95,8 +100,6 @@ class SysYIRGenerator : public SysYBaseVisitor {
     virtual std::any visitOrExp(SysYParser::OrExpContext* ctx) override;
 
     //! call
-    // virtual std::any visitCallExp(SysYParser::CallExpContext *ctx) override ;
-
     virtual std::any visitCall(SysYParser::CallContext *ctx) override;
 };
 }  // namespace sysy

@@ -168,12 +168,13 @@ class Value {
 
     void set_name(const_str_ref name) { _name = name; }
 
-    //* check
+    public:  // check
     bool is_i1() const { return _type->is_i1(); }
     bool is_i32() const { return _type->is_i32(); }
     bool is_float32() const { return _type->is_float32(); }
     bool is_double() const { return _type->is_double(); }
     bool is_float() const { return _type->is_float(); }
+    bool is_pointer() const { return _type->is_pointer(); }
 
    public:
     ValueId scid() const { return _scid; }

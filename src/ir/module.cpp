@@ -24,11 +24,19 @@ Function* Module::add_function(Type* type,
 
 // readable ir print
 void Module::print(std::ostream& os) const {
-    // print all global values
+    //! print all global values
     for (auto gv_iter : _globals) {
-        os << *gv_iter.second << std::endl;
+        if (ir::isa<ir::Constant>(gv_iter.second)) {
+            auto res = ir::dyn_cast<ir::Constant>(gv_iter.second);
+            os << res->name() << " = constant " << *(res->type()) << " ";
+            if (res->is_i32()) os << res->i32() << std::endl;
+            else os << res->f64() << std::endl;
+        } else {
+            os << *gv_iter.second << std::endl;
+        }
     }
-    // print all functions
+
+    //! print all functions
     for (auto iter : _functions) {
         auto func = iter.second;
         os << *func << std::endl;
