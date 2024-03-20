@@ -98,11 +98,6 @@ std::any SysYIRGenerator::visitAssignStmt(SysYParser::AssignStmtContext* ctx) {
     ir::Value* lvalue_ptr = any_cast_Value(visit(ctx->lValue()));  // 左值
     ir::Value* exp = safe_any_cast<ir::Value>(visit(ctx->exp()));  // 右值
 
-    std::cout << "visit assignment" << std::endl;
-    if (lvalue_ptr->is_float()) std::cout << "左值是float" << std::endl;
-    else if (lvalue_ptr->is_i32()) std::cout << "左值是int" << std::endl;
-    else if (lvalue_ptr->is_pointer()) std::cout << "左值是pointer" << std::endl;
-
     ir::Value* res = nullptr;
 
     if (auto cexp = ir::dyn_cast<ir::Constant>(exp)) {  //! 1. 右值为常值

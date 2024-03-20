@@ -53,7 +53,9 @@ void ReturnInst::print(std::ostream& os) const {
     os << "ret ";
     auto ret = return_value();
     if (ret) {
-        os << *ret->type() << " " << ret->name();
+        os << *ret->type() << " ";
+        if (ir::isa<ir::Constant>(ret)) os << *(ret);
+        else os << ret->name();
     } else {
         os << "void";
     }
@@ -107,9 +109,11 @@ void BinaryInst::print(std::ostream& os) const {
     // <type>
     os << *type() << " ";
     // <op1>
-    os << get_lvalue()->name() << ", ";
+    if (ir::isa<ir::Constant>(get_lvalue())) os << *(get_lvalue()) << ", ";
+    else os << get_lvalue()->name() << ", ";
     // <op2>
-    os << get_rvalue()->name();
+    if (ir::isa<ir::Constant>(get_rvalue())) os << *(get_rvalue());
+    else os << get_rvalue()->name();
 }
 
 /*

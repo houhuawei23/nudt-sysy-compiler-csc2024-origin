@@ -148,9 +148,7 @@ std::any SysYIRGenerator::visitMultiplicativeExp(
     ir::Value* op1 = any_cast_Value(visit(ctx->exp(0)));
     ir::Value* op2 = any_cast_Value(visit(ctx->exp(1)));
     ir::Value* res;
-    if (ir::isa<ir::Constant>(op1) &&
-        ir::isa<ir::Constant>(op2)) {  //! 1. both 常量 -> 常量折叠
-
+    if (ir::isa<ir::Constant>(op1) && ir::isa<ir::Constant>(op2)) {  //! 1. both 常量 -> 常量折叠
         ir::Constant* cop1 = ir::dyn_cast<ir::Constant>(op1);
         ir::Constant* cop2 = ir::dyn_cast<ir::Constant>(op2);
         if (ctx->DIV()) {
@@ -233,67 +231,46 @@ std::any SysYIRGenerator::visitAdditiveExp(SysYParser::AdditiveExpContext* ctx) 
     ir::Value* res;
     auto ftype = ir::Type::double_type();
 
-    if (ir::isa<ir::Constant>(op1) &&
-        ir::isa<ir::Constant>(op2)) {  //! 1. 常量 -> 常量折叠
+    if (ir::isa<ir::Constant>(op1) && ir::isa<ir::Constant>(op2)) {  //! 1. 常量 -> 常量折叠
         ir::Constant* cop1 = ir::dyn_cast<ir::Constant>(op1);
         ir::Constant* cop2 = ir::dyn_cast<ir::Constant>(op2);
 
         if (cop1->is_float() || cop2->is_float()) {
             float sum, f1, f2;
-
-            if (cop1->is_i32())
-                f1 = float(cop1->i32());
-            else
-                f1 = cop1->f64();
-
-            if (cop2->is_i32())
-                f2 = float(cop2->i32());
-            else
-                f2 = cop2->f64();
-
-            if (ctx->ADD())
-                sum = f1 + f2;
-            else
-                sum = f1 - f2;
+            if (cop1->is_i32()) f1 = float(cop1->i32());
+            else f1 = cop1->f64();
+            if (cop2->is_i32()) f2 = float(cop2->i32());
+            else f2 = cop2->f64();
+            if (ctx->ADD()) sum = f1 + f2;
+            else sum = f1 - f2;
 
             res = ir::Constant::gen_f64(sum);
         } else {  // both int
             int sum;
-            if (ctx->ADD())
-                sum = cop1->i32() + cop2->i32();
-            else
-                sum = cop1->i32() - cop2->i32();
+            if (ctx->ADD()) sum = cop1->i32() + cop2->i32();
+            else sum = cop1->i32() - cop2->i32();
             res = ir::Constant::gen_i32(sum);
         }
     } else {  //! 2. 变量 -> 生成 ADD | fADD | SUB | fSUB 指令
-        if (op1->is_i32() && op2->is_i32()) {
-            // int32 类型加减
+        if (op1->is_i32() && op2->is_i32()) {  // int32 类型加减
             if (ctx->SUB())
                 res = _builder.create_sub(ir::Type::i32_type(), op1, op2, _builder.getvarname());
             else
                 res = _builder.create_add(ir::Type::i32_type(), op1, op2, _builder.getvarname());
-        } else if (op1->is_float() && op2->is_float()) {
-            // float 类型加减
+        } else if (op1->is_float() && op2->is_float()) {  // float 类型加减
             if (ctx->SUB())
-                res =
-                    _builder.create_sub(ftype, op1, op2, _builder.getvarname());
+                res = _builder.create_sub(ftype, op1, op2, _builder.getvarname());
             else
-                res =
-                    _builder.create_add(ftype, op1, op2, _builder.getvarname());
-        } else {
-            // 需要进行隐式类型转换 (int op float)
-            if (op1->is_i32()) {
+                res = _builder.create_add(ftype, op1, op2, _builder.getvarname());
+        } else {  // 需要进行隐式类型转换 (int op float)
+            if (op1->is_i32())
                 op1 = _builder.create_sitof(ftype, op1, _builder.getvarname());
-            }
-            if (op2->is_i32()) {
+            if (op2->is_i32())
                 op2 = _builder.create_sitof(ftype, op2, _builder.getvarname());
-            }
             if (ctx->SUB())
-                res =
-                    _builder.create_sub(ftype, op1, op2, _builder.getvarname());
+                res = _builder.create_sub(ftype, op1, op2, _builder.getvarname());
             else
-                res =
-                    _builder.create_add(ftype, op1, op2, _builder.getvarname());
+                res = _builder.create_add(ftype, op1, op2, _builder.getvarname());
         }
     }
     return res;

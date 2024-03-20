@@ -136,8 +136,6 @@ class ReturnInst : public Instruction {
             if (value) {
                 add_operand(value);
             }
-        // add_operand(value);
-        // std::cout << _operands.size() << std::endl;
     }
 
    public:
