@@ -90,16 +90,27 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
 
         // create entry block with the same params of func
         // ir::BasicBlock* entry = func->create_entry();
-        ir::BasicBlock* entry = func->new_block();
 
+        ir::BasicBlock* entry = func->new_entry();
+        ir::BasicBlock* exit = func->new_exit();
         builder().set_pos(entry, entry->begin());
+        // create return value alloca
+        auto ret_value_ptr = builder().create_alloca(func->ret_type(), {}, "", false);
+        func->set_ret_value_ptr(ret_value_ptr);
+
         if (ctx->funcFParams()){
+            // first init args
             for (auto pram : ctx->funcFParams()->funcFParam()) {
                 auto arg_name = pram->ID()->getText();
                 auto arg_type = any_cast_Type(visit(pram->btype()));
                 auto arg = func->new_arg(arg_type, builder().getvarname());
             }
-            entry->set_name(builder().getvarname());
+
+            // init return value ptr and first block
+            ret_value_ptr->set_name(builder().getvarname());
+            entry->set_name(builder().get_bbname());
+
+            // allca all params and store
             int idx = 0;
             for (auto pram : ctx->funcFParams()->funcFParam()) {
                 auto arg_name = pram->ID()->getText();
@@ -113,15 +124,24 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
 
         }
         else {
-            entry->set_name(builder().getvarname());
+            ret_value_ptr->set_name(builder().getvarname());
+            entry->set_name(builder().get_bbname());
         }
 
 
         visitBlockStmt(ctx->blockStmt());
+
+        builder().create_br(exit);
+        exit->set_name(builder().get_bbname());
+        builder().set_pos(exit, exit->begin());
+
+        auto ret_value = builder().create_load(func->ret_value_ptr(), {}, builder().getvarname());
+        builder().create_return(ret_value);
+        
         func->sort_blocks();
     }
 
-    builder().var_reset();
+    builder().reset();
     return func;
 }
 

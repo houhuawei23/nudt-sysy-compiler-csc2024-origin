@@ -29,9 +29,7 @@ void Function::print(std::ostream& os) const {
     
     // print bbloks
     for (auto& bb : _blocks) {
-        if (!bb->empty()) {
-            os << *bb << std::endl;
-        }
+        os << *bb << std::endl;
     }
     os << "}";
 }

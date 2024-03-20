@@ -78,12 +78,18 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
         } else {
             assert(false && "the returned value is not matching the function");
         }
-        res = builder().create_return(value);
+        
+        // store res to re_value
+        auto store = builder().create_store(value, func->ret_value_ptr());
+        auto br = builder().create_br(func->exit());
+        res = br;
+        // res = builder().create_return(value);
+
     }
     
     // 生成 return 语句后立马创建一个新块，并设置 builder
     auto new_block = func->new_block();
-    new_block->set_name(builder().getvarname());
+    new_block->set_name(builder().get_bbname());
     builder().set_pos(new_block, new_block->begin());
 
     return res;
@@ -188,7 +194,7 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
     ir::BasicBlock::block_link(cur_block, lhs_t_target);
 
     //! VISIT then block
-    then_block->set_name(builder().getvarname());
+    then_block->set_name(builder().get_bbname());
     builder().set_pos(then_block, then_block->begin());
     visit(ctx->stmt(0));  //* may change the basic block
 
@@ -196,7 +202,7 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
     ir::BasicBlock::block_link(then_block, merge_block);
 
     //! VISIT else block
-    else_block->set_name(builder().getvarname());
+    else_block->set_name(builder().get_bbname());
     builder().set_pos(else_block, else_block->begin());
     if (auto elsestmt = ctx->stmt(1))
         visit(elsestmt);
@@ -205,7 +211,7 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
     ir::BasicBlock::block_link(else_block, merge_block);
     //! SETUP builder fo merge block
     builder().set_pos(merge_block, merge_block->begin());
-    merge_block->set_name(builder().getvarname());
+    merge_block->set_name(builder().get_bbname());
 
     return merge_block;
 }
@@ -230,7 +236,7 @@ std::any SysYIRGenerator::visitWhileStmt(SysYParser::WhileStmtContext* ctx) {
 
     // jump without cond, directly jump to judge block
     builder().create_br(judge_block);
-    judge_block->set_name(builder().getvarname());
+    judge_block->set_name(builder().get_bbname());
     builder().set_pos(judge_block, judge_block->begin());
 
     builder().push_tf(loop_block, next_block);
@@ -257,7 +263,7 @@ std::any SysYIRGenerator::visitWhileStmt(SysYParser::WhileStmtContext* ctx) {
     ir::BasicBlock::block_link(cur_block, fTarget);
 
     // visit loop block
-    loop_block->set_name(builder().getvarname());
+    loop_block->set_name(builder().get_bbname());
     builder().set_pos(loop_block, loop_block->begin());
     visit(ctx->stmt());
     builder().create_br(judge_block);
@@ -268,7 +274,7 @@ std::any SysYIRGenerator::visitWhileStmt(SysYParser::WhileStmtContext* ctx) {
     builder().pop_loop();
 
     // visit next block
-    next_block->set_name(builder().getvarname());
+    next_block->set_name(builder().get_bbname());
     builder().set_pos(next_block, next_block->begin());
 
     return next_block;
@@ -285,7 +291,7 @@ std::any SysYIRGenerator::visitBreakStmt(SysYParser::BreakStmtContext* ctx) {
     //create a basic block
     auto cur_func=builder().block()->parent();
     auto next_block=cur_func->new_block();
-    next_block->set_name(builder().getvarname());
+    next_block->set_name(builder().get_bbname());
     builder().set_pos(next_block,next_block->begin());
     return next_block;
 }
@@ -300,7 +306,7 @@ std::any SysYIRGenerator::visitContinueStmt(
     //create a basic block
     auto cur_func=builder().block()->parent();
     auto next_block=cur_func->new_block();
-    next_block->set_name(builder().getvarname());
+    next_block->set_name(builder().get_bbname());
     builder().set_pos(next_block,next_block->begin());
     return res;
 }

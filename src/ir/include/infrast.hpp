@@ -180,6 +180,7 @@ class BasicBlock : public Value {
     int _depth = 0;
     bool _is_terminal=false;
 
+    // int _id;
    public:
     BasicBlock(const_str_ref name = "", Function* parent = nullptr)
         : Value(Type::label_type(), vBASIC_BLOCK, name),

@@ -15,7 +15,7 @@ namespace ir {
  */
 class IRBuilder {
    private:
-    BasicBlock* _block;  // current basic block for insert instruction
+    BasicBlock* _block = nullptr;  // current basic block for insert instruction
     inst_iterator _pos;  // insert pos for cur block
     block_ptr_stack _headers, _exits;
     int _if_cnt, _while_cnt, _rhs_cnt, _func_cnt, _var_cnt;
@@ -23,6 +23,7 @@ class IRBuilder {
     // true/false br targets stack for if-else Short-circuit evaluation
     // the top the deeper nest
     block_ptr_stack _true_targets, _false_targets;
+    int _bb_cnt;
 
    public:
     IRBuilder() {
@@ -31,9 +32,14 @@ class IRBuilder {
         _rhs_cnt = 0;
         _func_cnt = 0;
         _var_cnt = 0;
+        _bb_cnt = 0;
     }
 
     //! get
+    // int bb_cnt() {
+    //     return _bb_cnt++;
+    // }
+    std::string get_bbname() { return "bb" + std::to_string(_bb_cnt++); }
     BasicBlock* block() const { return _block; }
     inst_iterator position() const { return _pos; }
 
@@ -320,19 +326,23 @@ class IRBuilder {
     }
 
     //! Create GetElementPtr Instruction
-    GetElementPtrInst* create_getelementptr(Type* type, Value* value, 
-                                            Value* idx, int current_dimension=1, 
-                                            const_value_ptr_vector& dims={}, 
-                                            const_str_ref name="", int id=1) {
-        auto inst = new GetElementPtrInst(type, value, 
-                                          _block, idx, dims, current_dimension, 
-                                          name, id);
+    GetElementPtrInst* create_getelementptr(Type* type,
+                                            Value* value,
+                                            Value* idx,
+                                            int current_dimension = 1,
+                                            const_value_ptr_vector& dims = {},
+                                            const_str_ref name = "",
+                                            int id = 1) {
+        auto inst = new GetElementPtrInst(type, value, _block, idx, dims,
+                                          current_dimension, name, id);
         block()->emplace_back_inst(inst);
         return inst;
     }
 
-
-    void var_reset() { _var_cnt = 0; }
+    void reset() {
+        _var_cnt = 0;
+        _bb_cnt = 0;
+    }
 
     std::string getvarname() {
         // temporary realization

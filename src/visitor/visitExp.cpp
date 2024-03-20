@@ -395,7 +395,7 @@ std::any SysYIRGenerator::visitAndExp(SysYParser::AndExpContext* ctx) {
         }
     }
 
-    rhs_block->set_name(builder().getvarname());
+    rhs_block->set_name(builder().get_bbname());
     // pop to get lhs t/f target
     auto lhs_t_target = builder().true_target();
     auto lhs_f_target = builder().false_target();
@@ -455,7 +455,7 @@ std::any SysYIRGenerator::visitOrExp(SysYParser::OrExpContext* ctx) {
         }
     }
 
-    rhs_block->set_name(builder().getvarname());
+    rhs_block->set_name(builder().get_bbname());
 
     //! pop to get lhs t/f target
     auto lhs_t_target = builder().true_target();

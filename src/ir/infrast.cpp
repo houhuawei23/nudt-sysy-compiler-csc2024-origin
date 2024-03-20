@@ -6,13 +6,9 @@ namespace ir {
 std::map<std::string, Constant*> Constant::cache;
 
 void BasicBlock::print(std::ostream &os) const {
-    // os <<
     // print all instructions
-    std::string n = name();
-    if (n.size() > 0) {
-        n = n.substr(1);
-    }
-    os << n << ":" << "     " << "; block" << std::endl;
+
+    os << name() << ":" << "     " << "; block" << std::endl;
     for (auto &inst : _insts) {
         os << "    " << *inst << std::endl;
     }

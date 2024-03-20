@@ -9,9 +9,9 @@ namespace ir {
  */
 class GlobalVariable : public User {
     protected:
-    Module* _parent;
-    bool _is_array;
-    int _dimensions;
+    Module* _parent = nullptr;
+    bool _is_array = false;
+    int _dimensions = 0;
     std::vector<Constant*> _init;
 
     public:

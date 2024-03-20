@@ -25,7 +25,7 @@ class AllocaInst : public Instruction {
     friend class IRBuilder;
 
    protected:
-    bool _is_const;
+    bool _is_const = false;
 
    public:
     AllocaInst(Type* base_type,
@@ -243,7 +243,7 @@ class CallInstBeta : public Instruction {
 
 class CallInst : public Instruction {
     //! TODO
-    Function* _callee;
+    Function* _callee = nullptr;
     const_value_ptr_vector _rargs;
 
    public:
@@ -289,7 +289,7 @@ class CallInst : public Instruction {
 class BranchInst : public Instruction {
     // `br i1 <cond>, label <iftrue>, label <iffalse>`
     // br label <dest>
-    bool _is_cond;
+    bool _is_cond = false;
     //! TODO
    public:
     // Condition Branch
@@ -435,8 +435,8 @@ class GetElementPtrInst : public Instruction {
     friend class IRBuilder;
 
     protected:
-    int _id, _current_dimension;
-    Value* _idx;
+    int _id = 0, _current_dimension = 0;
+    Value* _idx = nullptr;
 
     public:
     //! 1. Array GetElementPtr Instruction

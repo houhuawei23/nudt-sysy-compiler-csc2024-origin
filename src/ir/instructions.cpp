@@ -249,10 +249,13 @@ void BranchInst::print(std::ostream& os) const {
     if (is_cond()) {
         os << "i1 ";
         os << cond()->name() << ", ";
-        os << "label " << iftrue()->name() << ", ";
-        os << "label " << iffalse()->name();
+        os << "label "
+           << "%" << iftrue()->name() << ", ";
+        os << "label "
+           << "%" << iffalse()->name();
     } else {
-        os << "label " << dest()->name();
+        os << "label "
+           << "%" << dest()->name();
     }
 }
 
@@ -317,7 +320,7 @@ void CallInst::print(std::ostream& os) const {
     if (_rargs.size() > 0) {
         auto last = _rargs.end() - 1;  // Iterator pointing to the last element
         for (auto it = _rargs.begin(); it != last; ++it) {
-            // it is a iterator, *it get the element in _rargs, 
+            // it is a iterator, *it get the element in _rargs,
             // which is the Value* ptr
             os << *((*it)->type()) << " ";
             os << (*it)->name();
