@@ -10,7 +10,7 @@ namespace ir {
 void AllocaInst::print(std::ostream& os) const {
     os << name() << " = ";
     os << "alloca ";
-    
+
     if (is_scalar() > 0) {  //! 1. scalar
         os << *(base_type());
     } else {  //! 2. array (未考虑变量定义数组维度)
@@ -24,13 +24,14 @@ void AllocaInst::print(std::ostream& os) const {
             }
         }
         os << *(base_type());
-        for (int i = 0; i < dims; i++) os << "]";
+        for (int i = 0; i < dims; i++)
+            os << "]";
     }
 }
 
 /*
  * @brief StoreInst::print
- * @details: 
+ * @details:
  *      store <ty> <value>, ptr <pointer>
  */
 void StoreInst::print(std::ostream& os) const {
@@ -54,8 +55,10 @@ void ReturnInst::print(std::ostream& os) const {
     auto ret = return_value();
     if (ret) {
         os << *ret->type() << " ";
-        if (ir::isa<ir::Constant>(ret)) os << *(ret);
-        else os << ret->name();
+        if (ir::isa<ir::Constant>(ret))
+            os << *(ret);
+        else
+            os << ret->name();
     } else {
         os << "void";
     }
@@ -109,11 +112,15 @@ void BinaryInst::print(std::ostream& os) const {
     // <type>
     os << *type() << " ";
     // <op1>
-    if (ir::isa<ir::Constant>(get_lvalue())) os << *(get_lvalue()) << ", ";
-    else os << get_lvalue()->name() << ", ";
+    if (ir::isa<ir::Constant>(get_lvalue()))
+        os << *(get_lvalue()) << ", ";
+    else
+        os << get_lvalue()->name() << ", ";
     // <op2>
-    if (ir::isa<ir::Constant>(get_rvalue())) os << *(get_rvalue());
-    else os << get_rvalue()->name();
+    if (ir::isa<ir::Constant>(get_rvalue()))
+        os << *(get_rvalue());
+    else
+        os << get_rvalue()->name();
 }
 
 /*
@@ -251,16 +258,17 @@ void BranchInst::print(std::ostream& os) const {
 
 /*
  * @brief GetElementPtrInst::print
- *      数组: <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32 <idx>
- *      指针: <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
+ *      数组: <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32
+ * <idx> 指针: <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
  */
 void GetElementPtrInst::print(std::ostream& os) const {
     if (is_arrayInst()) {
         // 确定数组指针地址
         // <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32 idx
         int dimensions = dims_cnt();
-        os << name() << " = " << "getelementptr ";
-        
+        os << name() << " = "
+           << "getelementptr ";
+
         for (int cur = current_dimension(); cur < dimensions + 1; cur++) {
             auto value = operand(cur);
             if (auto cvalue = ir::dyn_cast<ir::Constant>(value)) {
@@ -270,7 +278,8 @@ void GetElementPtrInst::print(std::ostream& os) const {
             }
         }
         os << *(base_type());
-        for (int cur = current_dimension(); cur < dimensions + 1; cur++) os << "]";
+        for (int cur = current_dimension(); cur < dimensions + 1; cur++)
+            os << "]";
         os << ", ";
 
         for (int cur = current_dimension(); cur < dimensions + 1; cur++) {
@@ -282,11 +291,13 @@ void GetElementPtrInst::print(std::ostream& os) const {
             }
         }
         os << *(base_type());
-        for (int cur = current_dimension(); cur < dimensions + 1; cur++) os << "]";
+        for (int cur = current_dimension(); cur < dimensions + 1; cur++)
+            os << "]";
         os << "* ";
 
         os << get_value()->name() << ", ";
-        os << *(base_type()) << " 0, " << *(base_type()) << " " << get_index()->name();
+        os << *(base_type()) << " 0, " << *(base_type()) << " "
+           << get_index()->name();
     } else {
         // <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
     }
@@ -302,12 +313,20 @@ void CallInst::print(std::ostream& os) const {
     os << *type() << " ";
     // func name
     os << "@" << callee()->name() << "(";
-    for (auto rarg : _rargs) {
-        os << *rarg->type() << " ";
-        os << rarg->name();
-        if (rarg != _rargs.back())
+
+    if (_rargs.size() > 0) {
+        auto last = _rargs.end() - 1;  // Iterator pointing to the last element
+        for (auto it = _rargs.begin(); it != last; ++it) {
+            // it is a iterator, *it get the element in _rargs, 
+            // which is the Value* ptr
+            os << *((*it)->type()) << " ";
+            os << (*it)->name();
             os << ", ";
+        }
+        os << *((*last)->type()) << " ";
+        os << (*last)->name();
     }
+
     os << ")";
 }
 void CallInstBeta::print(std::ostream& os) const {

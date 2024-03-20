@@ -12,18 +12,22 @@ void Function::print(std::ostream& os) const {
     auto return_type = ret_type();
     // auto param_types = param_type();
     os << "define " << *return_type << " @" << name() << "(";
+    
     // print fparams
-    //! to do
-    for (auto &p : _args) {
-        os << *p->type() << " " << p->name() ;
-        // _args.end()
-        if (&p != &_args.back()) {
+    if (_args.size() > 0) {
+        auto last_iter = _args.end() - 1;
+        for (auto iter = _args.begin(); iter != last_iter; ++iter) {
+            auto arg = *iter;
+            os << *(arg->type()) << " " << arg->name();
             os << ", ";
         }
+        auto arg = *last_iter;
+        os << *(arg->type()) << " " << arg->name();
     }
+    
     os << ") {\n";
+    
     // print bbloks
-
     for (auto& bb : _blocks) {
         if (!bb->empty()) {
             os << *bb << std::endl;
