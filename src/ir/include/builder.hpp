@@ -102,9 +102,10 @@ class IRBuilder {
 
     //! create
     AllocaInst* create_alloca(Type* ret_type,
-                              const_value_ptr_vector& dims = {},
-                              const_str_ref name = "") {
-        auto inst = new AllocaInst(ret_type, _block, dims, name);
+                              const_value_ptr_vector& dims={},
+                              const_str_ref name="", 
+                              bool is_const=false) {
+        auto inst = new AllocaInst(ret_type, _block, dims, name, is_const);
         block()->emplace_back_inst(inst);
         return inst;
     }

@@ -8,7 +8,9 @@ namespace ir {
  *      @a = global [4 x [4 x i32]] zeroinitializer 
  */
 void GlobalVariable::print(std::ostream& os) {
-    os << name() << " = global ";
+    os << name();
+    if (is_constant()) os << " = constant ";
+    else os << " = global ";
     if (is_array()) {
         int dimensions = dims_cnt();
         for (int cur = 0; cur < dimensions; cur++) {

@@ -41,8 +41,8 @@ void BasicBlock::emplace_inst(inst_iterator pos, Instruction* i) {
 }
 
 void Instruction::setvarname(){
-    auto cur_func=_parent->parent();
-    _name= "%"+std::to_string(cur_func->getvarcnt());
+    auto cur_func = _parent->parent();
+    _name= "%" + std::to_string(cur_func->getvarcnt());
 }
 
 } // namespace ir

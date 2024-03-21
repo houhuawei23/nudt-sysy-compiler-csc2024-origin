@@ -21,6 +21,12 @@ class ICmpInst;
 class FCmpInst;
 class CastInst;
 
+/*
+ * @brief Class AllocaInst
+ * @maninclude
+ *      1. Variable
+ *      2. Constant Array (Global OR Local)
+ */
 class AllocaInst : public Instruction {
     friend class IRBuilder;
 
@@ -31,8 +37,10 @@ class AllocaInst : public Instruction {
     AllocaInst(Type* base_type,
                BasicBlock* parent = nullptr,
                const_value_ptr_vector& dims={},
-               const_str_ref name = "")
-        : Instruction(vALLOCA, ir::Type::pointer_type(base_type), parent, name) {
+               const_str_ref name="", 
+               bool is_const=false)
+        : Instruction(vALLOCA, ir::Type::pointer_type(base_type), parent, name), 
+          _is_const(is_const) {
         add_operands(dims);
     }
 
@@ -50,6 +58,7 @@ class AllocaInst : public Instruction {
 
     public:  // check function
     bool is_scalar() const { return dims_cnt() == 0; }
+    bool is_const() const { return _is_const; }
 
    public:
     static bool classof(const Value* v) { return v->scid() == vALLOCA; }

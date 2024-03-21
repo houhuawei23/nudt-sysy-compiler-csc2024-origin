@@ -133,7 +133,27 @@ ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
                 exit(EXIT_FAILURE);
             }
         } else {  //! 1.2 array
-            // TODO (待实现)
+            auto alloca_ptr = _builder.create_alloca(btype, dims, _builder.getvarname(), is_const);
+            _tables.insert(name, alloca_ptr);
+            ir::Value* element_ptr = ir::dyn_cast<ir::Value>(alloca_ptr);
+            for (int cur = 1; cur <= dimensions; cur++) {
+                element_ptr = _builder.create_getelementptr(btype, element_ptr, 
+                                                            ir::Constant::gen_i32(0), cur, 
+                                                            dims, _builder.getvarname(), 1);
+            }
+            int cnt = 0;
+            for (int i = 0; i < Arrayinit.size(); i++) {
+                if (Arrayinit[i]) {
+                    if (i != 0) {
+                        element_ptr = _builder.create_getelementptr(btype, element_ptr, 
+                                                                    ir::Constant::gen_i32(cnt), i, 
+                                                                    dims, _builder.getvarname(), 2);
+                        cnt = 0;
+                    }
+                    auto store = _builder.create_store(Arrayinit[i], element_ptr, "store");
+                }
+                cnt++;
+            }
         }
     } else {  //! 2. variable
         //! create alloca inst
@@ -265,7 +285,10 @@ ir::Value* SysYIRGenerator::visitVarDef_global(SysYParser::VarDefContext* ctx,
             module()->add_gvar(name, cinit);
         }
         else {  //! 1.2 数组
-            // TODO
+            auto gv = ir::GlobalVariable::gen(btype, init, dims, _module, "@" + name, true);
+            _tables.insert(name, gv);
+            module()->add_gvar(name, gv);
+            res = gv;
         }
     } else {  //! 2. variable (数组 OR 变量)
         auto gv = ir::GlobalVariable::gen(btype, init, dims, _module, "@" + name);

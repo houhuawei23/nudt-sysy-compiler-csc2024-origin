@@ -11,6 +11,7 @@ class GlobalVariable : public User {
     protected:
     Module* _parent = nullptr;
     bool _is_array = false;
+    bool _is_constant = false;
     int _dimensions = 0;
     std::vector<Value*> _init;
 
@@ -19,9 +20,10 @@ class GlobalVariable : public User {
                    const std::vector<Value*>& init,
                    const_value_ptr_vector& dims={},
                    Module* parent=nullptr,
-                   const_str_ref name="")
+                   const_str_ref name="", 
+                   bool is_constant=false)
         : User(ir::Type::pointer_type(base_type), vGLOBAL_VAR, name),
-          _parent(parent), _init(init) {
+          _parent(parent), _init(init), _is_constant(is_constant) {
         _dimensions = dims.size();
 
         if (dims.size() == 0) {  //! 1. scalar
@@ -37,13 +39,15 @@ class GlobalVariable : public User {
                                const std::vector<Value*>& init,
                                const_value_ptr_vector& dims={},
                                Module* parent=nullptr,
-                               const_str_ref name="") {
-        auto var = new GlobalVariable(base_type, init, dims, parent, name);
+                               const_str_ref name="", 
+                               bool is_constant=false) {
+        auto var = new GlobalVariable(base_type, init, dims, parent, name, is_constant);
         return var;
     }
 
     public:  // check function
     bool is_array() const { return _is_array; }
+    bool is_constant() const { return _is_constant; }
 
     public:  // get function
     Module* parent() const { return _parent; }

@@ -14,14 +14,14 @@ void AllocaInst::print(std::ostream& os)  {
 
     if (is_scalar() > 0) {  //! 1. scalar
         os << *(base_type());
-    } else {  //! 2. array (未考虑变量定义数组维度)
+    } else {  //! 2. array
         int dims = dims_cnt();
         for (int i = 0; i < dims; i++) {
             auto value = operand(i);
             if (auto cvalue = ir::dyn_cast<ir::Constant>(value)) {
                 os << "[" << *value << " x ";
             } else {
-                assert(false);
+                assert(false && "The dimension must be a constant! ");
             }
         }
         os << *(base_type());
@@ -310,6 +310,7 @@ void GetElementPtrInst::print(std::ostream& os)  {
         os << "i32 0, i32 " << get_index()->name();
     } else {
         // <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
+        Instruction::setvarname();
         os << name() << " = " << "getelementptr " << *(base_type()) << ", " << *type() << " ";
         os << get_value()->name() << ", i32 " << get_index()->name();
     }
