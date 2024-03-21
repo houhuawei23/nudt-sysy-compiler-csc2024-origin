@@ -71,6 +71,6 @@ class GlobalVariable : public User {
     static bool classof(const Value* v) { return v->scid() == vGLOBAL_VAR; }
 
     public:
-    void print(std::ostream& os) const override;
+    void print(std::ostream& os)override;
 };
 }  // namespace ir

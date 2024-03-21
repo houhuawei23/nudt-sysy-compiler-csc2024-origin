@@ -87,7 +87,7 @@ class Type {
         }
         return -1;
     };
-    void print(std::ostream& os) const;
+    void print(std::ostream& os);
 };
 /**
  * @brief

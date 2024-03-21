@@ -56,7 +56,7 @@ class AllocaInst : public Instruction {
 
    public:
     static bool classof(const Value* v) { return v->scid() == vALLOCA; }
-    void print(std::ostream& os) const override;
+    void print(std::ostream& os) override;
 };
 
 class StoreInst : public Instruction {
@@ -78,7 +78,7 @@ class StoreInst : public Instruction {
    public:
     static bool classof(const Value* v) { return v->scid() == vSTORE; }
 
-    void print(std::ostream& os) const override;
+    void print(std::ostream& os) override;
 };
 
 /*
@@ -116,7 +116,7 @@ class LoadInst : public Instruction {
 
    public:
     static bool classof(const Value* v) { return v->scid() == vLOAD; }
-    void print(std::ostream& os) const override;
+    void print(std::ostream& os) override;
 };
 
 /*
@@ -146,7 +146,7 @@ class ReturnInst : public Instruction {
 
    public:
     static bool classof(const Value* v) { return v->scid() == vRETURN; }
-    void print(std::ostream& os) const override;
+    void print(std::ostream& os) override;
 };
 
 /*
@@ -179,7 +179,7 @@ class UnaryInst : public Instruction {
     Value* get_value() const { return operand(0); }
 
    public:
-    void print(std::ostream& os) const override;
+    void print(std::ostream& os) override;
 };
 
 /*
@@ -216,7 +216,7 @@ class BinaryInst : public Instruction {
     Value* get_rvalue() const { return operand(1); }
 
    public:
-    void print(std::ostream& os) const override;
+    void print(std::ostream& os) override;
 };
 class CallInstBeta : public Instruction {
     //! TODO
@@ -238,7 +238,7 @@ class CallInstBeta : public Instruction {
         // assert(false && "not implemented");
         return v->scid() == vCALL;
     }
-    void print(std::ostream& os) const override;  //! TODO
+    void print(std::ostream& os) override;  //! TODO
 };
 
 class CallInst : public Instruction {
@@ -282,7 +282,7 @@ class CallInst : public Instruction {
         // assert(false && "not implemented");
         return v->scid() == vCALL;
     }
-    void print(std::ostream& os) const override;  //! TODO
+    void print(std::ostream& os) override;  //! TODO
 };
 
 //! Conditional or Unconditional Branch instruction.
@@ -338,7 +338,7 @@ class BranchInst : public Instruction {
         // assert(false && "not implemented");
         return v->scid() == vBR;
     }
-    void print(std::ostream& os) const override;  //! TODO
+    void print(std::ostream& os) override;  //! TODO
 };
 
 /// This class is the base class for the comparison instructions.
@@ -375,7 +375,7 @@ class ICmpInst : public Instruction {
         return v->scid() >= vICMP && v->scid() <= vICMP_END;
         // return v->scid() == vICMP;
     }
-    void print(std::ostream& os) const override;  //! TODO
+    void print(std::ostream& os) override;  //! TODO
 };
 
 //! FCmpInst
@@ -407,7 +407,7 @@ class FCmpInst : public Instruction {
         // return v->scid() == vFCMP;
         return v->scid() >= vFCMP && v->scid() <= vFCMP_END;
     }
-    void print(std::ostream& os) const override;  //! TODO
+    void print(std::ostream& os) override;  //! TODO
 };
 
 //! CastInst
@@ -471,7 +471,7 @@ class GetElementPtrInst : public Instruction {
     bool is_arrayInst() const { return _id == 1; }
 
     public:
-    void print(std::ostream& os) const override;
+    void print(std::ostream& os) override;
 };
 
 }  // namespace ir

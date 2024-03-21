@@ -179,7 +179,7 @@ class Value {
    public:
     ValueId scid() const { return _scid; }
     // each derived class must implement 'print' to print readable IR
-    virtual void print(std::ostream& os) const {};
+    virtual void print(std::ostream& os){};
 };
 
 /**
@@ -250,6 +250,6 @@ class User : public Value {
     void replace_operand_with(size_t index, Value* value){
         int a = 5;
     };
-    // void print(std::ostream& os) const {};
+    virtual void print(std::ostream& os){};
 };
 }  // namespace ir

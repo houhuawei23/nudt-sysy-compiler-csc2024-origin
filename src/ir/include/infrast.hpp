@@ -127,7 +127,7 @@ class Constant : public User {
     static bool classof(const Value* v) { return v->scid() == vCONSTANT; }
 
     public:
-    void print(std::ostream& os) const override;
+    void print(std::ostream& os)override;
 };
 
 /**
@@ -160,7 +160,9 @@ class Argument : public Value {
     static bool classof(const Value* v) { return v->scid() == vARGUMENT; }
 
     // ir print
-    void print(std::ostream& os) const override;
+    void print(std::ostream& os)override;
+
+    void setname(std::string name){_name=name;}
 };
 /**
  * @brief The container for `Instruction` sequence.
@@ -221,7 +223,7 @@ class BasicBlock : public Value {
     static bool classof(const Value* v) { return v->scid() == vBASIC_BLOCK; }
 
     // ir print
-    void print(std::ostream& os) const override;
+    void print(std::ostream& os)override;
 
     static void block_link(ir::BasicBlock* pre, ir::BasicBlock* next) {
         pre->add_next_block(next);
@@ -285,6 +287,10 @@ class Instruction : public User {
     static bool classof(const Value* v) {
         return v->scid() >= vINSTRUCTION;  // <= ?
     }
+
+    void setvarname();//change varname to pass lli
+
+    void virtual print(std::ostream& os)=0;
 };
 
 }  // namespace ir

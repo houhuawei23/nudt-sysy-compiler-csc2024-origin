@@ -38,6 +38,8 @@ class Function : public User {
     BasicBlock* _entry = nullptr;
     BasicBlock* _exit = nullptr;
 
+    int var_cnt=0;
+
    public:
     Function(Type* func_type, const_str_ref name = "", Module* parent = nullptr)
         : User(func_type, vFUNCTION, name), _parent(parent) {
@@ -110,6 +112,8 @@ class Function : public User {
 
     static bool classof(const Value* v) { return v->scid() == vFUNCTION; }
 
-    void print(std::ostream& os) const override;
+    void print(std::ostream& os)override;
+
+    int getvarcnt(){return var_cnt++;}
 };
 }  // namespace ir

@@ -7,7 +7,7 @@ namespace ir {
  * @example: 
  *      @a = global [4 x [4 x i32]] zeroinitializer 
  */
-void GlobalVariable::print(std::ostream& os) const {
+void GlobalVariable::print(std::ostream& os) {
     os << name() << " = global ";
     if (is_array()) {
         int dimensions = dims_cnt();

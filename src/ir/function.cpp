@@ -8,7 +8,7 @@ BasicBlock* Function::new_block() {
     return nb;
 }
 
-void Function::print(std::ostream& os) const {
+void Function::print(std::ostream& os) {
     auto return_type = ret_type();
     // auto param_types = param_type();
     os << "define " << *return_type << " @" << name() << "(";
@@ -18,10 +18,12 @@ void Function::print(std::ostream& os) const {
         auto last_iter = _args.end() - 1;
         for (auto iter = _args.begin(); iter != last_iter; ++iter) {
             auto arg = *iter;
+            arg->setname("%"+std::to_string(getvarcnt()));
             os << *(arg->type()) << " " << arg->name();
             os << ", ";
         }
         auto arg = *last_iter;
+        arg->setname("%"+std::to_string(getvarcnt()));
         os << *(arg->type()) << " " << arg->name();
     }
     
