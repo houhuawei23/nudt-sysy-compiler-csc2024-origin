@@ -37,7 +37,8 @@ void AllocaInst::print(std::ostream& os) const {
 void StoreInst::print(std::ostream& os) const {
     os << "store ";
     os << *(value()->type()) << " ";
-    os << value()->name() << ", ";
+    if (ir::isa<ir::Constant>(value())) os << *(value()) << ", ";
+    else os << value()->name() << ", ";
     os << *ptr()->type() << " ";
     os << ptr()->name();
 }
