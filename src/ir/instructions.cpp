@@ -307,10 +307,11 @@ void GetElementPtrInst::print(std::ostream& os)  {
         os << "* ";
 
         os << get_value()->name() << ", ";
-        os << *(base_type()) << " 0, " << *(base_type()) << " "
-           << get_index()->name();
+        os << "i32 0, i32 " << get_index()->name();
     } else {
         // <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
+        os << name() << " = " << "getelementptr " << *(base_type()) << ", " << *type() << " ";
+        os << get_value()->name() << ", i32 " << get_index()->name();
     }
 }
 

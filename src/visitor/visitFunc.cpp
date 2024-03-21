@@ -95,7 +95,7 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
         ir::BasicBlock* exit = func->new_exit();
         builder().set_pos(entry, entry->begin());
         // create return value alloca
-        auto ret_value_ptr = builder().create_alloca(func->ret_type(), {}, "", false);
+        auto ret_value_ptr = builder().create_alloca(func->ret_type(), {}, "");
         func->set_ret_value_ptr(ret_value_ptr);
 
         if (ctx->funcFParams()){
@@ -116,7 +116,7 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
                 auto arg_name = pram->ID()->getText();
                 auto arg_type = any_cast_Type(visit(pram->btype()));
                 // no const arg
-                auto alloca_ptr = builder().create_alloca(arg_type, {}, builder().getvarname(), false);
+                auto alloca_ptr = builder().create_alloca(arg_type, {}, builder().getvarname());
                 auto store = builder().create_store(func->arg_i(idx), alloca_ptr, "store");
                 _tables.insert(arg_name, alloca_ptr);
                 idx++;

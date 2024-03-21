@@ -338,6 +338,17 @@ std::any SysYIRGenerator::visitLValue(SysYParser::LValueContext* ctx) {
                                                     dims, _builder.getvarname(), 1);
                 current_dimension++;
             }
+        } else if (auto res_array = ir::dyn_cast<ir::GlobalVariable>(res)) {
+            auto type = res_array->base_type();
+            int current_dimension = 1;
+            std::vector<ir::Value*> dims = res_array->dims();
+            for (auto expr : ctx->exp()) {
+                ir::Value* idx = any_cast_Value(visit(expr));
+                res = _builder.create_getelementptr(type, res, 
+                                                    idx, current_dimension, 
+                                                    dims, _builder.getvarname(), 1);
+                current_dimension++;
+            }
         } else {
             assert(false && "this is not an array");
         }

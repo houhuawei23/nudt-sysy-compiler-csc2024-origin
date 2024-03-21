@@ -12,11 +12,11 @@ class GlobalVariable : public User {
     Module* _parent = nullptr;
     bool _is_array = false;
     int _dimensions = 0;
-    std::vector<Constant*> _init;
+    std::vector<Value*> _init;
 
     public:
     GlobalVariable(Type* base_type,
-                   const std::vector<Constant*>& init,
+                   const std::vector<Value*>& init,
                    const_value_ptr_vector& dims={},
                    Module* parent=nullptr,
                    const_str_ref name="")
@@ -34,7 +34,7 @@ class GlobalVariable : public User {
 
     public:  // generate function
     static GlobalVariable* gen(Type* base_type,
-                               const std::vector<Constant*>& init,
+                               const std::vector<Value*>& init,
                                const_value_ptr_vector& dims={},
                                Module* parent=nullptr,
                                const_str_ref name="") {
@@ -60,7 +60,7 @@ class GlobalVariable : public User {
         return ans;
     }
     int init_cnt() const { return _init.size(); }
-    Constant* init(int index) const { return _init[index]; }
+    Value* init(int index) const { return _init[index]; }
     Type* base_type() const { return dyn_cast<PointerType>(type())->base_type(); }
     Value* scalar_value() const { return _init[0]; }
 
