@@ -40,5 +40,14 @@ set(ANTLR4_INSTALL ON)
 set(ANTLR_BUILD_CPP_TESTS OFF) # Only for ANTLR 4.10.0 and later versions
 add_subdirectory(${ANTLR_RUNTIME})
 
+# Add All Includes
+include_directories(
+  ${CMAKE_CURRENT_BINARY_DIR}/src/antlr4
+  ${CMAKE_SOURCE_DIR}/src/ir/include
+  ${CMAKE_SOURCE_DIR}/src/visitor
+  ${CMAKE_SOURCE_DIR}/src/pass
+)
+
+
 # Project source files
 add_subdirectory(src)

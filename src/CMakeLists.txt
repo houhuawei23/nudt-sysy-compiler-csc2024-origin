@@ -1,30 +1,21 @@
+project(compiler)
 
-# add_executable(sysyc
-#     sysyc.cpp
-#     ASTPrinter.cpp)
+# add all src files in current directory
+aux_source_directory(. SRC_FILES)
 
-# target_include_directories(sysyc PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/antlr4)
-# target_link_libraries(sysyc PRIVATE SysYParser)
-
-# set(THREADS_PREFER_PTHREAD_FLAG ON)
-# find_package(Threads REQUIRED)
-# target_link_libraries(sysyc PRIVATE Threads::Threads)
-
-## main.cpp
+# add subdirectory
+add_subdirectory(antlr4)
+add_subdirectory(ir)
+add_subdirectory(visitor)
+add_subdirectory(pass)
 
 
 add_executable(main
-    main.cpp
+    ${SRC_FILES}
 )
-# antlr4 include
-target_include_directories(main PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/antlr4)
-target_link_libraries(main PUBLIC SysYParser)
-# visitor include
-target_include_directories(main PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/visitor)
-target_link_libraries(main PUBLIC visitor)
 
-
-
-add_subdirectory(antlr4)
-add_subdirectory(visitor)
-add_subdirectory(ir)
+target_link_libraries(main PUBLIC 
+    ir
+    visitor  
+    pass
+)
