@@ -31,10 +31,8 @@ class AllocaInst : public Instruction {
     AllocaInst(Type* base_type,
                BasicBlock* parent = nullptr,
                const_value_ptr_vector& dims={},
-               const_str_ref name = "",
-               bool is_const = false)
-        : Instruction(vALLOCA, ir::Type::pointer_type(base_type), parent, name),
-          _is_const(is_const) {
+               const_str_ref name = "")
+        : Instruction(vALLOCA, ir::Type::pointer_type(base_type), parent, name) {
         add_operands(dims);
     }
 
@@ -51,7 +49,6 @@ class AllocaInst : public Instruction {
     }
 
     public:  // check function
-    bool is_const() const { return _is_const; }
     bool is_scalar() const { return dims_cnt() == 0; }
 
    public:
@@ -450,11 +447,6 @@ class GetElementPtrInst : public Instruction {
         _idx(idx), _id(id) {
         add_operand(value);
         add_operands(dims);
-    }
-
-    //! 2. Pointer GetElementPtr Instruction
-    GetElementPtrInst(int id=2) {
-
     }
 
     public:

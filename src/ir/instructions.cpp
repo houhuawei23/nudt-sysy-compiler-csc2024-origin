@@ -270,8 +270,7 @@ void GetElementPtrInst::print(std::ostream& os) const {
         // 确定数组指针地址
         // <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32 idx
         int dimensions = dims_cnt();
-        os << name() << " = "
-           << "getelementptr ";
+        os << name() << " = " << "getelementptr ";
 
         for (int cur = current_dimension(); cur < dimensions + 1; cur++) {
             auto value = operand(cur);
@@ -300,10 +299,11 @@ void GetElementPtrInst::print(std::ostream& os) const {
         os << "* ";
 
         os << get_value()->name() << ", ";
-        os << *(base_type()) << " 0, " << *(base_type()) << " "
-           << get_index()->name();
+        os << "i32 0, i32 " << get_index()->name();
     } else {
         // <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
+        os << name() << " = " << "getelementptr " << *(base_type()) << ", " << *type() << " ";
+        os << get_value()->name() << ", i32 " << get_index()->name();
     }
 }
 
