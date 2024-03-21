@@ -56,7 +56,7 @@ class SysYIRGenerator : public SysYBaseVisitor {
 
     void visitInitValue_beta(SysYParser::InitValueContext *ctx, 
                                  const int capacity, const std::vector<ir::Value*> dims, 
-                                 std::vector<ir::Constant*>& init);
+                                 std::vector<ir::Value*>& init);
     
     ir::Value* visitVarDef_beta(SysYParser::VarDefContext* ctx, ir::Type* type, bool is_const);
     ir::Value* visitVarDef_global(SysYParser::VarDefContext* ctx, ir::Type* btype, bool is_const);

@@ -74,7 +74,7 @@ bool Type::is_function() {
     return _btype == FUNCTION;
 }
 
-void Type::print(std::ostream& os) const {
+void Type::print(std::ostream& os){
     auto basetype = btype();
     switch (basetype) {
         case INT1:

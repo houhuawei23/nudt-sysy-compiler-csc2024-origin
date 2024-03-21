@@ -7,7 +7,8 @@ namespace ir {
 /*
  * @brief AllocaInst::print
  */
-void AllocaInst::print(std::ostream& os) const {
+void AllocaInst::print(std::ostream& os)  {
+    Instruction::setvarname();
     os << name() << " = ";
     os << "alloca ";
 
@@ -34,7 +35,7 @@ void AllocaInst::print(std::ostream& os) const {
  * @details:
  *      store <ty> <value>, ptr <pointer>
  */
-void StoreInst::print(std::ostream& os) const {
+void StoreInst::print(std::ostream& os) {
     os << "store ";
     os << *(value()->type()) << " ";
     if (ir::isa<ir::Constant>(value())) os << *(value()) << ", ";
@@ -43,7 +44,8 @@ void StoreInst::print(std::ostream& os) const {
     os << ptr()->name();
 }
 
-void LoadInst::print(std::ostream& os) const {
+void LoadInst::print(std::ostream& os) {
+    Instruction::setvarname();
     os << name() << " = ";
     os << "load ";
     os << *dyn_cast<PointerType>(ptr()->type())->base_type() << ", "
@@ -51,7 +53,7 @@ void LoadInst::print(std::ostream& os) const {
     os << ptr()->name();
 }
 
-void ReturnInst::print(std::ostream& os) const {
+void ReturnInst::print(std::ostream& os) {
     os << "ret ";
     auto ret = return_value();
     if (ret) {
@@ -69,7 +71,8 @@ void ReturnInst::print(std::ostream& os) const {
  * @brief Binary Instruction Output
  *      <result> = add <ty> <op1>, <op2>
  */
-void BinaryInst::print(std::ostream& os) const {
+void BinaryInst::print(std::ostream& os) {
+    Instruction::setvarname();
     os << name() << " = ";
     switch (scid()) {
         case vADD:
@@ -131,7 +134,8 @@ void BinaryInst::print(std::ostream& os) const {
  *
  *      <result> = fneg [fast-math flags]* <ty> <op1>
  */
-void UnaryInst::print(std::ostream& os) const {
+void UnaryInst::print(std::ostream& os) {
+    Instruction::setvarname();
     os << name() << " = ";
     switch (scid()) {
         case vFTOI:
@@ -160,9 +164,10 @@ void UnaryInst::print(std::ostream& os) const {
     }
 }
 
-void ICmpInst::print(std::ostream& os) const {
+void ICmpInst::print(std::ostream& os) {
     // <result> = icmp <cond> <ty> <op1>, <op2>   ; yields i1 or <N x i1>:result
     // %res = icmp eq i32, 1, 2
+    Instruction::setvarname();
     os << name() << " = ";
 
     os << "icmp ";
@@ -201,9 +206,10 @@ void ICmpInst::print(std::ostream& os) const {
     os << rhs()->name();
 }
 
-void FCmpInst::print(std::ostream& os) const {
+void FCmpInst::print(std::ostream& os)  {
     // <result> = icmp <cond> <ty> <op1>, <op2>   ; yields i1 or <N x i1>:result
     // %res = icmp eq i32, 1, 2
+    Instruction::setvarname();
     os << name() << " = ";
 
     os << "fcmp ";
@@ -242,7 +248,7 @@ void FCmpInst::print(std::ostream& os) const {
     os << rhs()->name();
 }
 
-void BranchInst::print(std::ostream& os) const {
+void BranchInst::print(std::ostream& os)  {
     // br i1 <cond>, label <iftrue>, label <iffalse>
     // br label <dest>
     os << "br ";
@@ -265,11 +271,12 @@ void BranchInst::print(std::ostream& os) const {
  *      数组: <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32
  * <idx> 指针: <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
  */
-void GetElementPtrInst::print(std::ostream& os) const {
+void GetElementPtrInst::print(std::ostream& os)  {
     if (is_arrayInst()) {
         // 确定数组指针地址
         // <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32 idx
         int dimensions = dims_cnt();
+        Instruction::setvarname();
         os << name() << " = "
            << "getelementptr ";
 
@@ -300,17 +307,19 @@ void GetElementPtrInst::print(std::ostream& os) const {
         os << "* ";
 
         os << get_value()->name() << ", ";
-        os << *(base_type()) << " 0, " << *(base_type()) << " "
-           << get_index()->name();
+        os << "i32 0, i32 " << get_index()->name();
     } else {
         // <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
+        os << name() << " = " << "getelementptr " << *(base_type()) << ", " << *type() << " ";
+        os << get_value()->name() << ", i32 " << get_index()->name();
     }
 }
 
-void CallInst::print(std::ostream& os) const {
+void CallInst::print(std::ostream& os) {
     if (name().size() == 0) {
         os << "call ";
     } else {
+        Instruction::setvarname();
         os << name() << " = call ";
     }
     // ret_type
@@ -333,7 +342,7 @@ void CallInst::print(std::ostream& os) const {
 
     os << ")";
 }
-void CallInstBeta::print(std::ostream& os) const {
+void CallInstBeta::print(std::ostream& os) {
     os << "call ";
     // ret_type
     os << *type() << " ";

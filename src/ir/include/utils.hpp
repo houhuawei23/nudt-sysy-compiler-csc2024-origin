@@ -8,12 +8,12 @@
 
 namespace ir {
 
-inline std::ostream& operator<<(std::ostream& os, const Type& type) {
+inline std::ostream& operator<<(std::ostream& os, Type& type) {
     type.print(os);
     return os;
 }
 
-inline std::ostream& operator<<(std::ostream& os, const Value& value) {
+inline std::ostream& operator<<(std::ostream& os, Value& value) {
     value.print(os);
     return os;
 }
