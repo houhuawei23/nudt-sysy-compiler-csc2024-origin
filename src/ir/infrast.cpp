@@ -4,6 +4,9 @@
 
 namespace ir {
 
+
+//! Constant
+//* Instantiation for static data attribute
 std::map<std::string, Constant*> Constant::cache;
 
 void BasicBlock::print(std::ostream &os) {

@@ -23,7 +23,6 @@ class Module {
     value_ptr_vector _values;
     str_fun_map _functions;
     str_value_map _globals;
-    // SymbolTable _stable;
 
    public:
     Module() = default;
@@ -36,10 +35,13 @@ class Module {
     // directly using, point to same: values().push xxx
     // how about use iterator to access?
     value_ptr_vector& values() { return _values; }
+
     str_fun_map& functions() { return _functions; }
+    
     str_value_map& globals() { return _globals; }
 
     Function* lookup_func(const_str_ref name);
+
     Function* add_function(Type* type, const_str_ref name);
 
     void add_gvar(const_str_ref name, GlobalVariable* gv) {
@@ -54,12 +56,6 @@ class Module {
         _globals.emplace(name, gv);
     }
 
-    // Value *register_val(const_str_ref name);
-    // Value *get_val(const_str_ref name);
-    // Value *add_val(const_str_ref name, Value *addr);
-
-    // void add_gvalue(const_str_ref name, Value*init);
-    // Value *lookup_gvalue(const_str_ref name);
 
     // readable ir print
     void print(std::ostream& os) const;

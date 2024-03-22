@@ -8,6 +8,7 @@
 
 namespace ir {
 
+//! Operator '<<' overloading, for print
 inline std::ostream& operator<<(std::ostream& os, Type& type) {
     type.print(os);
     return os;
@@ -17,26 +18,23 @@ inline std::ostream& operator<<(std::ostream& os, Value& value) {
     value.print(os);
     return os;
 }
-// type check, eg:
+
+//! type check, eg:
 // ir::isa<ir::Function>(func)
 template <typename T>
-inline std::enable_if_t<std::is_base_of_v<Value, T>, bool> isa(
-    const Value* value) {
+inline std::enable_if_t<std::is_base_of_v<Value, T>, bool> isa(const Value* value) {
     return T::classof(value);
 }
 
 
-// template <typename T>
-// inline std::enable_if_t<std::is_base_of_v<Type, T>, bool> isa(
-//     const Type* ty) {
-//     return T::classof(value);
-// }
+
 //! be careful
 template <typename To, typename From>
 [[nodiscard]] inline decltype(auto) dyn_cast(From *Val) {
   return dynamic_cast<To *>(Val);
 }
-// get machine code
+
+// get machine code for float
 inline std::string getMC(double f){
     double d=f;
     unsigned long mrf=*reinterpret_cast<unsigned long*>(&d);

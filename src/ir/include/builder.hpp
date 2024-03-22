@@ -36,9 +36,6 @@ class IRBuilder {
     }
 
     //! get
-    // int bb_cnt() {
-    //     return _bb_cnt++;
-    // }
     std::string get_bbname() { return "bb" + std::to_string(_bb_cnt++); }
     BasicBlock* block() const { return _block; }
     inst_iterator position() const { return _pos; }
@@ -118,7 +115,8 @@ class IRBuilder {
         return inst;
     }
 
-    ReturnInst* create_return(Value* value = nullptr, const_str_ref name = "") {
+    ReturnInst* create_return(Value* value = nullptr, 
+                              const_str_ref name = "") {
         auto inst = new ReturnInst(value, _block);
         block()->emplace_back_inst(inst);
         return inst;
@@ -141,10 +139,10 @@ class IRBuilder {
         return inst;
     }
     UnaryInst* create_sitof(Type* type, Value* value, const_str_ref name = "") {
-        return create_unary(Value::ValueId::vITOF, type, value, name);
+        return create_unary(Value::ValueId::vSITOFP, type, value, name);
     }
     UnaryInst* create_ftosi(Type* type, Value* value, const_str_ref name = "") {
-        return create_unary(Value::ValueId::vFTOI, type, value, name);
+        return create_unary(Value::ValueId::vFPTOSI, type, value, name);
     }
     UnaryInst* create_fneg(Type* type, Value* value, const_str_ref name = "") {
         return create_unary(Value::ValueId::vFNEG, type, value, name);
@@ -216,8 +214,7 @@ class IRBuilder {
     BranchInst* create_br(Value* cond,
                           BasicBlock* true_block,
                           BasicBlock* false_block) {
-        //! TODO
-        // assert(false && "not implemented");
+
         auto inst = new BranchInst(cond, true_block, false_block, _block);
         // _block->insts().emplace(_pos, inst);
         block()->emplace_back_inst(inst);  // _pos++
@@ -225,8 +222,7 @@ class IRBuilder {
     }
 
     BranchInst* create_br(BasicBlock* dest) {
-        //! TODO
-        // assert(false && "not implemented");
+
         auto inst = new BranchInst(dest, _block);
         // _block->insts().emplace(_pos, inst);
         block()->emplace_back_inst(inst);  // _pos++
@@ -238,8 +234,7 @@ class IRBuilder {
                           Value* lhs,
                           Value* rhs,
                           const_str_ref name = "") {
-        //! TODO
-        // assert(false && "not implemented");
+
         auto inst = new ICmpInst(itype, lhs, rhs, _block, name);
         // _block->insts().emplace(_pos, inst);
         block()->emplace_back_inst(inst);  // _pos++
@@ -248,34 +243,27 @@ class IRBuilder {
     ICmpInst* create_ieq(Value* lhs, Value* rhs, const_str_ref name = ""
 
     ) {
-        //! TODO
-        // assert(false && "not implemented");
+
         return create_icmp(Value::vIEQ, lhs, rhs, name);
     }
     // icmp ne i32 4, 5
     ICmpInst* create_ine(Value* lhs, Value* rhs, const_str_ref name = "") {
-        //! TODO
-        // assert(false && "not implemented");
+
         return create_icmp(Value::vINE, lhs, rhs, name);
     }
     ICmpInst* create_isgt(Value* lhs, Value* rhs, const_str_ref name = "") {
-        //! TODO
-        // assert(false && "not implemented");
+
         return create_icmp(Value::vISGT, lhs, rhs, name);
     }
     ICmpInst* create_isge(Value* lhs, Value* rhs, const_str_ref name = "") {
-        //! TODO
-        // assert(false && "not implemented");
+
         return create_icmp(Value::vISGE, lhs, rhs, name);
     }
     ICmpInst* create_islt(Value* lhs, Value* rhs, const_str_ref name = "") {
-        //! TODO
-        // assert(false && "not implemented");
         return create_icmp(Value::vISLT, lhs, rhs, name);
     }
     ICmpInst* create_isle(Value* lhs, Value* rhs, const_str_ref name = "") {
-        //! TODO
-        // assert(false && "not implemented");
+
         return create_icmp(Value::vISLE, lhs, rhs, name);
     }
     //! FCMP inst family
@@ -293,35 +281,29 @@ class IRBuilder {
     //! <result> = fcmp oeq float 4.0, 5.0
     //! yields: result=false
     FCmpInst* create_foeq(Value* lhs, Value* rhs, const_str_ref name = "") {
-        //! TODO
-        // assert(false && "not implemented");
+
         return create_fcmp(Value::vFOEQ, lhs, rhs, name);
     }
     // <result> = fcmp one float 4.0, 5.0
     // yields: result=true
     FCmpInst* create_fone(Value* lhs, Value* rhs, const_str_ref name = "") {
-        //! TODO
-        // assert(false && "not implemented");
+
         return create_fcmp(Value::vFONE, lhs, rhs, name);
     }
     FCmpInst* create_fogt(Value* lhs, Value* rhs, const_str_ref name = "") {
-        //! TODO
-        // assert(false && "not implemented");
+
         return create_fcmp(Value::vFOGT, lhs, rhs, name);
     }
     FCmpInst* create_foge(Value* lhs, Value* rhs, const_str_ref name = "") {
-        //! TODO
-        // assert(false && "not implemented");
+
         return create_fcmp(Value::vFOGE, lhs, rhs, name);
     }
     FCmpInst* create_folt(Value* lhs, Value* rhs, const_str_ref name = "") {
-        //! TODO
-        // assert(false && "not implemented");
+
         return create_fcmp(Value::vFOLT, lhs, rhs, name);
     }
     FCmpInst* create_fole(Value* lhs, Value* rhs, const_str_ref name = "") {
-        //! TODO
-        // assert(false && "not implemented");
+
         return create_fcmp(Value::vFOLE, lhs, rhs, name);
     }
 

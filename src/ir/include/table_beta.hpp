@@ -6,6 +6,13 @@
 
 namespace ir {
 //! SymbolTableBeta
+
+/**
+ * @brief 
+ * XXScope new_scope(_tables)
+ * .lookup(name)
+ * .insert(name, value)
+ */
 class SymbolTableBeta {
    private:
     enum Kind {

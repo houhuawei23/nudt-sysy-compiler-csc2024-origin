@@ -138,7 +138,7 @@ void UnaryInst::print(std::ostream& os) {
     Instruction::setvarname();
     os << name() << " = ";
     switch (scid()) {
-        case vFTOI:
+        case vFPTOSI:
             os << "fptosi ";
 
             if (is_i32())
@@ -147,7 +147,7 @@ void UnaryInst::print(std::ostream& os) {
                 os << "i32 ";
             os << get_value()->name() << " to " << *type();
             break;
-        case vITOF:
+        case vSITOFP:
             os << "sitofp ";
 
             if (is_i32())
@@ -341,18 +341,5 @@ void CallInst::print(std::ostream& os) {
 
     os << ")";
 }
-void CallInstBeta::print(std::ostream& os) {
-    os << "call ";
-    // ret_type
-    os << *type() << " ";
-    // func name
-    // os << "@" << callee()->name() << "(";
-    // for (auto rarg : _rargs) {
-    //     os << rarg->type() << " ";
-    //     os << rarg->name();
-    //     if (rarg != _rargs.back())
-    //         os << ", ";
-    // }
-    os << ")";
-}
+
 }  // namespace ir

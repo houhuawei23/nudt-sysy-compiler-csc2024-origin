@@ -86,14 +86,21 @@ class Value {
 
         // instructions class id
         vINSTRUCTION,
+        // vMEM_BEGIN,
         vALLOCA,
         vLOAD,
         vSTORE,
+        vGETELEMENTPTR,  // GetElementPtr Instruction
+        // vMEM_END,
+
+        // vTERMINATOR_BEGIN
         vRETURN,
         vBR,
+        // vTERMINATOR_END
         vCALL,
+
         // icmp
-        vICMP,
+        vICMP_BEGIN,
         vIEQ,
         vINE,
         vISGT,
@@ -102,7 +109,7 @@ class Value {
         vISLE,
         vICMP_END,
         // fcmp
-        vFCMP,
+        vFCMP_BEGIN,
         vFOEQ,
         vFONE,
         vFOGT,
@@ -113,10 +120,12 @@ class Value {
         // Unary Instruction
         vFNEG,
 
-        vFTOI,
-        vITOF,
+        // Conversion Insts
+        vFPTOSI,
+        vSITOFP,
 
         // Binary Instruction
+        vBINARY_BEGIN,
         vADD,
         vFADD,
         vSUB,
@@ -132,9 +141,8 @@ class Value {
         vUREM,
         vSREM,
         vFREM,
+        vBINARY_END,
 
-        // GetElementPtr Instruction
-        vGETELEMENTPTR, 
     };
     // for isa<> type check
     // each subclass of Value has different _scid
@@ -168,7 +176,8 @@ class Value {
 
     void set_name(const_str_ref name) { _name = name; }
 
-    public:  // check
+   public:
+    //* check
     bool is_i1() const { return _type->is_i1(); }
     bool is_i32() const { return _type->is_i32(); }
     bool is_float32() const { return _type->is_float32(); }
@@ -224,16 +233,19 @@ class User : public Value {
     // _type, _name, _uses
    protected:
     use_ptr_vector _operands;  // 操作数
+
    public:
     User(Type* type, ValueId scid, const_str_ref name = "")
         : Value(type, scid, name) {}
 
-    public:  // get function
+   public:
+    // get function
     use_ptr_vector& operands();
     Value* operand(size_t index) const;
     int operands_cnt() const { return _operands.size(); }
 
-    public:  // manage function
+   public:
+    // manage function
     void add_operand(Value* value);
     void set_operand(size_t index, Value* value);
 
@@ -244,12 +256,9 @@ class User : public Value {
         }
     }
 
-    void unuse_allvalue() {
-        int a = 5;
-    };
-    void replace_operand_with(size_t index, Value* value){
-        int a = 5;
-    };
+    void unuse_allvalue() { int a = 5; };
+    void replace_operand_with(size_t index, Value* value) { int a = 5; };
+    
     virtual void print(std::ostream& os){};
 };
 }  // namespace ir

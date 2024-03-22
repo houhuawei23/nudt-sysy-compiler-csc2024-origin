@@ -25,6 +25,7 @@ typedef enum : size_t {
     FUNCTION,
     UNDEFINE
 } BType;
+
 class Type {
    protected:
     BType _btype;
@@ -89,18 +90,17 @@ class Type {
     };
     void print(std::ostream& os);
 };
-/**
- * @brief
- *
- */
+
+
 class PointerType : public Type {
-    //! inherit from Type
+    //* inherit from Type
+    // _btype = POINTER
    protected:
     Type* _base_type;
     PointerType(Type* baseType) : Type(POINTER), _base_type(baseType) {}
 
    public:
-    //! Generate a pointer type from a given base type
+    // Generate a pointer type from a given base type
     static PointerType* gen(Type* baseType);
 
     //! Get the base type of this pointer
@@ -110,13 +110,16 @@ class PointerType : public Type {
 };
 
 class FunctionType : public Type {
-    //! inherit from Type
-    // BType _btype;
+    //*inherit from Type
+    // BType _btype = FUNCTION
    protected:
+
     // the return type of the function
     Type* _ret_type;
+
     // the argument types of the function
     std::vector<Type*> _arg_types;
+    
     // the constructor for FunctionType
     FunctionType(Type* ret_type, const type_ptr_vector& arg_types = {})
         : Type(FUNCTION), _ret_type(ret_type), _arg_types(arg_types) {}

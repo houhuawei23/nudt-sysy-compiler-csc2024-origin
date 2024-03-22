@@ -8,17 +8,20 @@
 namespace ir {
 
 class AllocaInst;
-class StoreInst;
 class LoadInst;
-class ReturnInst;
+class StoreInst;
+class GetElementPtrInst;
 
-class CallInst;
+class ReturnInst;
+class BranchInst;
+
 class UnaryInst;
 class BinaryInst;
-class BranchInst;
 
 class ICmpInst;
 class FCmpInst;
+class CallInst;
+
 class CastInst;
 
 /*
@@ -36,17 +39,21 @@ class AllocaInst : public Instruction {
    public:
     AllocaInst(Type* base_type,
                BasicBlock* parent = nullptr,
-               const_value_ptr_vector& dims={},
-               const_str_ref name="", 
-               bool is_const=false)
-        : Instruction(vALLOCA, ir::Type::pointer_type(base_type), parent, name), 
+               const_value_ptr_vector& dims = {},
+               const_str_ref name = "",
+               bool is_const = false)
+        : Instruction(vALLOCA, ir::Type::pointer_type(base_type), parent, name),
           _is_const(is_const) {
         add_operands(dims);
     }
 
-    public:  // get function
-    Type* base_type() const { return dyn_cast<PointerType>(type())->base_type(); }
+   public:  // get function
+    Type* base_type() const {
+        return dyn_cast<PointerType>(type())->base_type();
+    }
+
     int dims_cnt() const { return operands_cnt(); }
+
     std::vector<Value*> dims() const {
         std::vector<Value*> ans;
         int dimensions = dims_cnt();
@@ -56,7 +63,7 @@ class AllocaInst : public Instruction {
         return ans;
     }
 
-    public:  // check function
+   public:  // check function
     bool is_scalar() const { return dims_cnt() == 0; }
     bool is_const() const { return _is_const; }
 
@@ -139,9 +146,9 @@ class ReturnInst : public Instruction {
                BasicBlock* parent = nullptr,
                const_str_ref name = "")
         : Instruction(vRETURN, Type::void_type(), parent, name) {
-            if (value) {
-                add_operand(value);
-            }
+        if (value) {
+            add_operand(value);
+        }
     }
 
    public:
@@ -178,7 +185,7 @@ class UnaryInst : public Instruction {
 
    public:
     static bool classof(const Value* v) {
-        return v->scid() == vFTOI || v->scid() == vITOF || v->scid() == vFNEG;
+        return v->scid() == vFPTOSI || v->scid() == vSITOFP || v->scid() == vFNEG;
     }
 
    public:
@@ -224,31 +231,8 @@ class BinaryInst : public Instruction {
    public:
     void print(std::ostream& os) override;
 };
-class CallInstBeta : public Instruction {
-    //! TODO
-    // Function* _callee;
-    // const_value_ptr_vector _rargs;
-
-   public:
-    CallInstBeta(Function* callee,
-                 const_value_ptr_vector rargs = {},
-                 BasicBlock* parent = nullptr,
-                 const_str_ref name = "")
-        : Instruction(vCALL, callee->ret_type(), parent, name) {}
-
-   public:
-    // Function* callee() const { return dyn_cast<Function>(operand(0)); }
-
-    static bool classof(const Value* v) {
-        //! TODO
-        // assert(false && "not implemented");
-        return v->scid() == vCALL;
-    }
-    void print(std::ostream& os) override;  //! TODO
-};
 
 class CallInst : public Instruction {
-    //! TODO
     Function* _callee = nullptr;
     const_value_ptr_vector _rargs;
 
@@ -268,50 +252,31 @@ class CallInst : public Instruction {
     }
 
    public:
-    Function* callee() const { 
-        return _callee;
-        // return dyn_cast<Function>(operand(0)); 
-        }
+    Function* callee() const { return _callee; }
 
-    // use_ptr_vector& args() {
-    //     // return _operands;
-    //     return _args;
-    // }
-    // std::vector<Use*>::iterator args_begin() { return _operands.begin() + 1;
-    // } std::vector<Use*>::iterator args_end() { return _operands.end(); }
-    // std::vector<Value*>& args() {
-    //     // std::vector<Value*> _operands, 1:end
-    //     //TODO
-    // }
-    static bool classof(const Value* v) {
-        //! TODO
-        // assert(false && "not implemented");
-        return v->scid() == vCALL;
-    }
-    void print(std::ostream& os) override;  //! TODO
+    static bool classof(const Value* v) { return v->scid() == vCALL; }
+    void print(std::ostream& os) override;
 };
 
 //! Conditional or Unconditional Branch instruction.
 class BranchInst : public Instruction {
-    // `br i1 <cond>, label <iftrue>, label <iffalse>`
+    // br i1 <cond>, label <iftrue>, label <iffalse>
     // br label <dest>
     bool _is_cond = false;
     //! TODO
    public:
-    // Condition Branch
+    //* Condition Branch
     BranchInst(Value* cond,
                BasicBlock* iftrue,
                BasicBlock* iffalse,
                BasicBlock* parent = nullptr,
                const_str_ref name = "")
         : Instruction(vBR, Type::void_type(), parent, name), _is_cond(true) {
-        //! TODO
-        // assert(false && "not implemented");
         add_operand(cond);
         add_operand(iftrue);
         add_operand(iffalse);
     }
-    // UnCondition Branch
+    //* UnCondition Branch
     BranchInst(BasicBlock* dest,
                BasicBlock* parent = nullptr,
                const_str_ref name = "")
@@ -340,19 +305,11 @@ class BranchInst : public Instruction {
 
    public:
     static bool classof(const Value* v) {
-        //! TODO
-        // assert(false && "not implemented");
         return v->scid() == vBR;
     }
-    void print(std::ostream& os) override;  //! TODO
+    void print(std::ostream& os) override; 
 };
 
-/// This class is the base class for the comparison instructions.
-/// Abstract base class of comparison instructions.
-//! CmpInst
-// class CmpInst : public Instruction {
-//     //! TODO
-// };
 
 //! ICmpInst
 //! <result> = icmp <cond> <ty> <op1>, <op2>
@@ -376,18 +333,13 @@ class ICmpInst : public Instruction {
 
    public:
     static bool classof(const Value* v) {
-        //! TODO
-        // assert(false && "not implemented");
-        return v->scid() >= vICMP && v->scid() <= vICMP_END;
-        // return v->scid() == vICMP;
+        return v->scid() >= vICMP_BEGIN && v->scid() <= vICMP_END;
     }
-    void print(std::ostream& os) override;  //! TODO
+    void print(std::ostream& os) override;  
 };
 
 //! FCmpInst
 class FCmpInst : public Instruction {
-    //! TODO
-    //! TODO
    public:
     FCmpInst(ValueId itype,
              Value* lhs,
@@ -395,9 +347,9 @@ class FCmpInst : public Instruction {
              BasicBlock* parent,
              const_str_ref name = "")
         : Instruction(itype,
-                      Type::i1_type(),
+                      Type::i1_type(), // also return i1
                       parent,
-                      name) {  //! return float type?
+                      name) {  
         add_operand(lhs);
         add_operand(rhs);
     }
@@ -408,12 +360,9 @@ class FCmpInst : public Instruction {
 
    public:
     static bool classof(const Value* v) {
-        //! TODO
-        // assert(false && "not implemented");
-        // return v->scid() == vFCMP;
-        return v->scid() >= vFCMP && v->scid() <= vFCMP_END;
+        return v->scid() >= vFCMP_BEGIN && v->scid() <= vFCMP_END;
     }
-    void print(std::ostream& os) override;  //! TODO
+    void print(std::ostream& os) override;  
 };
 
 //! CastInst
@@ -430,8 +379,8 @@ class CastInst : public Instruction {
 /*
  * @brief GetElementPtr Instruction
  * @details:
- *      数组: <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32 <idx>
- *      指针: <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
+ *      数组: <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32
+ * <idx> 指针: <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
  * @param:
  *      1. _current_dimension: 当前数组维度
  *      2. _idx: 数组各个维度的下标索引
@@ -440,38 +389,47 @@ class CastInst : public Instruction {
 class GetElementPtrInst : public Instruction {
     friend class IRBuilder;
 
-    protected:
+   protected:
     int _id = 0, _current_dimension = 0;
     Value* _idx = nullptr;
 
-    public:
+   public:
     //! 1. Array GetElementPtr Instruction
-    GetElementPtrInst(Type* base_type, Value* value, 
-                      BasicBlock* parent, 
-                      Value* idx, const_value_ptr_vector& dims={}, 
-                      const int current_dimension=1, 
-                      const std::string name="", int id=1)
-        : Instruction(vGETELEMENTPTR, ir::Type::pointer_type(base_type), parent, name), 
-        _current_dimension(current_dimension), 
-        _idx(idx), _id(id) {
+    GetElementPtrInst(Type* base_type,
+                      Value* value,
+                      BasicBlock* parent,
+                      Value* idx,
+                      const_value_ptr_vector& dims = {},
+                      const int current_dimension = 1,
+                      const std::string name = "",
+                      int id = 1)
+        : Instruction(vGETELEMENTPTR,
+                      ir::Type::pointer_type(base_type),
+                      parent,
+                      name),
+          _current_dimension(current_dimension),
+          _idx(idx),
+          _id(id) {
         add_operand(value);
         add_operands(dims);
     }
 
-    public:
+   public:
     static bool classof(const Value* v) { return v->scid() == vGETELEMENTPTR; }
 
-    public:  // get function
+   public:  // get function
     int dims_cnt() const { return operands_cnt() - 1; }
     int current_dimension() const { return _current_dimension; }
     Value* get_value() const { return operand(0); }
     Value* get_index() const { return _idx; }
-    Type* base_type() const { return dyn_cast<PointerType>(type())->base_type(); }
+    Type* base_type() const {
+        return dyn_cast<PointerType>(type())->base_type();
+    }
 
-    public:  // check function
+   public:  // check function
     bool is_arrayInst() const { return _id == 1; }
 
-    public:
+   public:
     void print(std::ostream& os) override;
 };
 
