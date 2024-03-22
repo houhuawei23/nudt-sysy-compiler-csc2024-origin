@@ -1,7 +1,7 @@
 
-
-
 ## Target-Independent Code Generatator
+
+[doc](https://llvm.org/docs/CodeGenerator.html)
 
 The high-level design of the code generator
 
@@ -12,7 +12,7 @@ LLVM 与目标无关的代码生成器旨在支持基于标准寄存器的微处
 
 **Instruction Selection** — This phase determines an efficient way to express the **input LLVM code** in the **target instruction set**. This stage produces the initial code for the program in the target instruction set, then makes use of **virtual registers** in SSA form and **physical registers** that represent any required register assignments due to target constraints or calling conventions. **This step turns the LLVM code into a DAG of target instructions.**
 
-指令选择——此阶段确定在**目标指令集**中表达输入 LLVM 代码的有效方式。此阶段为目标指令集中的程序生成初始代码，然后使用 SSA 形式的**虚拟寄存器** 和 表示由于目标约束或调用约定而需要的任何寄存器分配的**物理寄存器**。此步骤将 LLVM 代码转换为目标指令的 DAG。
+指令选择——此阶段确定在 **目标指令集** 中表达输入 LLVM 代码的有效方式。此阶段为目标指令集中的程序生成初始代码，然后使用 SSA 形式的**虚拟寄存器** 和 表示由于目标约束或调用约定而需要的任何寄存器分配的**物理寄存器**。此步骤将 LLVM 代码转换为目标指令的 DAG。
 
 **Scheduling and Formation** — This phase takes the DAG of target instructions produced by the instruction selection phase, determines an ordering of the instructions, then emits the instructions as **MachineInstr**s with that ordering. Note that we describe this in the instruction selection section because it operates on a SelectionDAG.
 
@@ -82,3 +82,26 @@ MC 层用于在原始机器代码级别表示和处理代码，缺乏“常量�
 
 ## Target-independent code generation algorithms¶ 与目标无关的代码生成算法 ¶
 
+
+### SelectionDAG ISP
+
+SelectionDAG-based instruction selection consists of the following steps:
+基于SelectionDAG的指令选择包括以下步骤：
+
+- Build initial DAG — This stage performs a simple translation from the input LLVM code to an illegal SelectionDAG.
+- Optimize SelectionDAG — This stage performs simple optimizations on the SelectionDAG to simplify it, and recognize meta instructions (like rotates and div/rem pairs) for targets that support these meta operations. This makes the resultant code more efficient and the select instructions from DAG phase (below) simpler.
+- Legalize SelectionDAG Types — This stage transforms SelectionDAG nodes to eliminate any types that are unsupported on the target.
+- Optimize SelectionDAG — The SelectionDAG optimizer is run to clean up redundancies exposed by type legalization.
+- Legalize SelectionDAG Ops — This stage transforms SelectionDAG nodes to eliminate any operations that are unsupported on the target.
+- Optimize SelectionDAG — The SelectionDAG optimizer is run to eliminate inefficiencies introduced by operation legalization.
+- Select instructions from DAG — Finally, the target instruction selector matches the DAG operations to target instructions. This process translates the target-independent input DAG into another DAG of target instructions.
+- SelectionDAG Scheduling and Formation — The last phase assigns a linear order to the instructions in the target-instruction DAG and emits them into the MachineFunction being compiled. This step uses traditional prepass scheduling techniques.
+
+- **构建初始 DAG** — 此阶段执行从输入 LLVM 代码到非法 SelectionDAG 的简单转换。
+- **优化 SelectionDAG** — 此阶段对 SelectionDAG 执行简单的优化以简化它，并识别支持这些元操作的目标的元指令（如旋转和 div / rem 对）。这使得生成的代码更加高效，并且 DAG 阶段（如下）的选择指令更加简单。
+- **合法化 SelectionDAG 类型** — 此阶段转换 SelectionDAG 节点以消除目标上不支持的任何类型。
+- **优化 SelectionDAG** — 运行 SelectionDAG 优化器来清理类型合法化所暴露的冗余。
+- **合法化 SelectionDAG 操作** — 此阶段转换 SelectionDAG 节点以消除目标上不支持的任何操作。
+- **优化 SelectionDAG** — 运行 SelectionDAG 优化器是为了消除操作合法化带来的低效率。
+- **从DAG中选择指令** ——最后，目标指令选择器将DAG操作与目标指令相匹配。此过程将与目标无关的输入 DAG 转换为目标指令的另一个 DAG。
+- **SelectionDAG 调度和形成**——最后一个阶段为目标指令 DAG 中的指令分配线性顺序，并将它们发送到正在编译的 MachineFunction 中。此步骤使用传统的预通过调度技术。

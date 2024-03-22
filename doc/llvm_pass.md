@@ -5,6 +5,8 @@
 
 LLVM: PassManager
 
+[doxygen](https://llvm.org/doxygen/classllvm_1_1PassManager.html#:~:text=A%20pass%20manager%20contains%20a,block%20of%20a%20pass%20pipeline.)
+
 Manages a sequence of passes over a particular unit of IR.
 
 A pass manager contains **a sequence of passes** to run over a particular unit of IR (e.g. Functions, Modules). It is itself a valid **pass** over that unit of IR, and when run over some given IR will run each of its contained passes in sequence. Pass managers are the primary and most basic building block of a pass pipeline.
@@ -13,6 +15,8 @@ When you run a pass manager, you provide an AnalysisManager<IRUnitT> argument. T
 
 
 ## Pass
+
+[doxygen](https://llvm.org/doxygen/classllvm_1_1Pass.html#details)
 
 ### LLVM: Pass
 

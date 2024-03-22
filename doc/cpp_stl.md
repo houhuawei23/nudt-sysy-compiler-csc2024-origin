@@ -1,4 +1,13 @@
 
+### C++ 17
+
+- nodiscard
+- If a function declared nodiscard or a function returning an enumeration or class declared nodiscard by value is called from a discarded-value expression other than a cast to void, the compiler is encouraged to issue a warning.
+- 如果声明 nodiscard 的函数或返回按值声明 nodiscard 的枚举或类的函数是从废弃值表达式调用的，而不是强制转换为 void，则鼓励编译器发出一个警告。
+
+
+
+
 ### Error
 
 ```
