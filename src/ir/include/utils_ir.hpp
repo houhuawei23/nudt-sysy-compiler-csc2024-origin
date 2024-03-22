@@ -27,13 +27,6 @@ inline std::enable_if_t<std::is_base_of_v<Value, T>, bool> isa(const Value* valu
 }
 
 
-
-//! be careful
-template <typename To, typename From>
-[[nodiscard]] inline decltype(auto) dyn_cast(From *Val) {
-  return dynamic_cast<To *>(Val);
-}
-
 // get machine code for float
 inline std::string getMC(double f){
     double d=f;

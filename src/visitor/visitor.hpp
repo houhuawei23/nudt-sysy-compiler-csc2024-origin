@@ -8,13 +8,12 @@
 #include "SysYBaseVisitor.h"
 #include "ir.hpp"
 
-#include "utils_visit.hpp"
 #include "utils.hpp"
 
 namespace sysy {
 class SysYIRGenerator : public SysYBaseVisitor {
    private:
-    ir::Module* _module;
+    ir::Module* _module = nullptr;
     ir::IRBuilder _builder;
     ir::SymbolTableBeta _tables;
     antlr4::ParserRuleContext* _root;
@@ -22,26 +21,29 @@ class SysYIRGenerator : public SysYBaseVisitor {
     int _d = 0, _n = 0;
     ir::Type* _current_type = nullptr;
     std::vector<int> _path;
-    bool _is_alloca;
+    bool _is_alloca = false;
 
    public:
     SysYIRGenerator(){};
     SysYIRGenerator(ir::Module* module, antlr4::ParserRuleContext* root)
         : _module(module), _root(root) {}
+
     // 'get' means get the same obj int the class
     // 'copy' means get the copy of obj
+
     ir::Module* module() { return _module; }
+
     ir::IRBuilder& builder() { return _builder; }
 
     void build_ir() { visit(_root); }
 
+
+    //! Override all visit methods
     virtual std::any visitCompUnit(SysYParser::CompUnitContext* ctx) override;
 
-    // virtual std::any visitDecl(SysYParser::DeclContext *ctx) override;
     //! function
     virtual std::any visitFuncType(SysYParser::FuncTypeContext* ctx) override;
 
-    // virtual std::any visitFuncDecl(SysYParser::FuncDeclContext* ctx) override;
     virtual std::any visitFuncDef(SysYParser::FuncDefContext* ctx) override;
     
     ir::Function* create_func(SysYParser::FuncDefContext* ctx);
@@ -51,14 +53,18 @@ class SysYIRGenerator : public SysYBaseVisitor {
 
     // visitDecl
     virtual std::any visitDecl(SysYParser::DeclContext* ctx) override;
+
     std::any visitDeclLocal(SysYParser::DeclContext* ctx);
+
     std::any visitDeclGlobal(SysYParser::DeclContext* ctx);
 
     void visitInitValue_beta(SysYParser::InitValueContext *ctx, 
-                                 const int capacity, const std::vector<ir::Value*> dims, 
-                                 std::vector<ir::Value*>& init);
-    
+                            const int capacity, 
+                            const std::vector<ir::Value*> dims, 
+                            std::vector<ir::Value*>& init);
+
     ir::Value* visitVarDef_beta(SysYParser::VarDefContext* ctx, ir::Type* type, bool is_const);
+
     ir::Value* visitVarDef_global(SysYParser::VarDefContext* ctx, ir::Type* btype, bool is_const);
     
     virtual std::any visitBtype(SysYParser::BtypeContext* ctx) override;

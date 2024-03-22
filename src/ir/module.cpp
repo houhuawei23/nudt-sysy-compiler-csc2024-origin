@@ -1,7 +1,7 @@
 #include "include/module.hpp"
 #include <cassert>
 #include <iostream>
-#include "include/utils.hpp"
+#include "include/utils_ir.hpp"
 namespace ir {
 Function* Module::lookup_func(const_str_ref name) {
     auto iter = _functions.find(name);
@@ -27,7 +27,7 @@ void Module::print(std::ostream& os) const {
     //! print all global values
     for (auto gv_iter : _globals) {
         if (ir::isa<ir::Constant>(gv_iter.second)) {
-            auto res = ir::dyn_cast<ir::Constant>(gv_iter.second);
+            auto res = dyn_cast<ir::Constant>(gv_iter.second);
             os << res->name() << " = constant " << *(res->type()) << " ";
             if (res->is_i32()) os << res->i32() << std::endl;
             else os << res->f64() << std::endl;

@@ -61,10 +61,10 @@ ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
     int capacity = 1;
     for (auto dim : ctx->lValue()->exp()) {
         ir::Value* tmp = any_cast_Value(visit(dim));
-        if (auto ctmp = ir::dyn_cast<ir::Constant>(tmp)) {
+        if (auto ctmp = dyn_cast<ir::Constant>(tmp)) {
             if (ctmp->is_float()) {
                 capacity *= (int)(ctmp->f64());
-                tmp = ir::dyn_cast<ir::Value>(ir::Constant::gen_i32(ctmp->f64()));
+                tmp = dyn_cast<ir::Value>(ir::Constant::gen_i32(ctmp->f64()));
             } else {
                 capacity *= ctmp->i32();
             }
@@ -99,13 +99,13 @@ ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
         } else {  //! 2. scalar initial value
             init = any_cast_Value(visit(ctx->initValue()->exp()));
             if (ir::isa<ir::Constant>(init)) {  // 2.1 常量
-                cinit = ir::dyn_cast<ir::Constant>(init);
+                cinit = dyn_cast<ir::Constant>(init);
                 if (btype->is_i32() && cinit->is_float()) {
                     cinit = ir::Constant::gen_i32(cinit->f64());
-                    init = ir::dyn_cast<ir::Value>(cinit);
+                    init = dyn_cast<ir::Value>(cinit);
                 } else if (btype->is_float() && cinit->is_i32()) {
                     cinit = ir::Constant::gen_f64(cinit->i32());
-                    init = ir::dyn_cast<ir::Value>(cinit);
+                    init = dyn_cast<ir::Value>(cinit);
                 }
             } else {  // 2.2 变量
                 if (btype->is_i32() && init->is_float()) {
@@ -135,7 +135,7 @@ ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
         } else {  //! 1.2 array
             auto alloca_ptr = _builder.create_alloca(btype, dims, _builder.getvarname(), is_const);
             _tables.insert(name, alloca_ptr);
-            ir::Value* element_ptr = ir::dyn_cast<ir::Value>(alloca_ptr);
+            ir::Value* element_ptr = dyn_cast<ir::Value>(alloca_ptr);
             for (int cur = 1; cur <= dimensions; cur++) {
                 element_ptr = _builder.create_getelementptr(btype, element_ptr, 
                                                             ir::Constant::gen_i32(0), cur, 
@@ -167,7 +167,7 @@ ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
             }
         } else {  //! 2.2 array
             if(ctx->ASSIGN()) {
-                ir::Value* element_ptr = ir::dyn_cast<ir::Value>(alloca_ptr);
+                ir::Value* element_ptr = dyn_cast<ir::Value>(alloca_ptr);
                 for (int cur = 1; cur <= dimensions; cur++) {
                     element_ptr = _builder.create_getelementptr(btype, element_ptr, 
                                                                 ir::Constant::gen_i32(0), cur, 
@@ -212,10 +212,10 @@ ir::Value* SysYIRGenerator::visitVarDef_global(SysYParser::VarDefContext* ctx,
     int capacity = 1;
     for (auto dim : ctx->lValue()->exp()) {
         ir::Value* tmp = any_cast_Value(visit(dim));
-        if (auto ctmp = ir::dyn_cast<ir::Constant>(tmp)) {
+        if (auto ctmp = dyn_cast<ir::Constant>(tmp)) {
             if (ctmp->is_float()) {
                 capacity *= (int)(ctmp->f64());
-                tmp = ir::dyn_cast<ir::Value>(ir::Constant::gen_i32(ctmp->f64()));
+                tmp = dyn_cast<ir::Value>(ir::Constant::gen_i32(ctmp->f64()));
             } else {
                 capacity *= ctmp->i32();
             }
@@ -249,7 +249,7 @@ ir::Value* SysYIRGenerator::visitVarDef_global(SysYParser::VarDefContext* ctx,
             ir::Value* tmp = any_cast_Value(visit(ctx->initValue()->exp()));
             assert(ir::isa<ir::Constant>(tmp) && "Global must be initialized by constant");
             
-            cinit = ir::dyn_cast<ir::Constant>(tmp);
+            cinit = dyn_cast<ir::Constant>(tmp);
             if (btype->is_i32() && cinit->is_float()) {
                 cinit = ir::Constant::gen_i32(cinit->f64(), "@" + name);
             } else if (btype->is_float() && cinit->is_i32()) {
@@ -328,7 +328,7 @@ void SysYIRGenerator::visitInitValue_beta(SysYParser::InitValueContext *ctx,
         auto value = any_cast_Value(visit(ctx->exp()));
 
         //! 类型转换 (匹配左值与右值的数据类型)
-        if (auto cvalue = ir::dyn_cast<ir::Constant>(value)) {  //! 1. 常量
+        if (auto cvalue = dyn_cast<ir::Constant>(value)) {  //! 1. 常量
             if (_current_type->is_i32() && cvalue->is_float()) {
                 value = ir::Constant::gen_i32(cvalue->f64());
             } else if (_current_type->is_float() && cvalue->is_i32()) {
@@ -356,10 +356,10 @@ void SysYIRGenerator::visitInitValue_beta(SysYParser::InitValueContext *ctx,
         //! 将特定位置的数组元素存入init数组中
         int factor = 1, offset = 0;
         for (int i = indices.size() - 1; i >= 0; i--) {
-            offset += factor * ir::dyn_cast<ir::Constant>(indices[i])->i32();
-            factor *= ir::dyn_cast<ir::Constant>(dims[i])->i32();
+            offset += factor * dyn_cast<ir::Constant>(indices[i])->i32();
+            factor *= dyn_cast<ir::Constant>(dims[i])->i32();
         }
-        if (auto cvalue = ir::dyn_cast<ir::Constant>(value)) {  // 1. 常值 (global OR local)
+        if (auto cvalue = dyn_cast<ir::Constant>(value)) {  // 1. 常值 (global OR local)
             init[offset] = value;
         } else {  // 2. 变量 (just for local)
             if (_is_alloca) {
@@ -378,7 +378,7 @@ void SysYIRGenerator::visitInitValue_beta(SysYParser::InitValueContext *ctx,
 
     // goto next element
     _n++;
-    while (_d >= 0 && _n >= ir::dyn_cast<ir::Constant>(dims[_d])->i32()) {
+    while (_d >= 0 && _n >= dyn_cast<ir::Constant>(dims[_d])->i32()) {
         _n = _path[--_d] + 1;
     }
 }

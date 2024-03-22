@@ -1,5 +1,5 @@
 #include "include/instructions.hpp"
-#include "include/utils.hpp"
+#include "include/utils_ir.hpp"
 
 namespace ir {
 //! Value <- User <- Instruction <- XxxInst
@@ -18,7 +18,7 @@ void AllocaInst::print(std::ostream& os)  {
         int dims = dims_cnt();
         for (int i = 0; i < dims; i++) {
             auto value = operand(i);
-            if (auto cvalue = ir::dyn_cast<ir::Constant>(value)) {
+            if (auto cvalue = dyn_cast<ir::Constant>(value)) {
                 os << "[" << *value << " x ";
             } else {
                 assert(false && "The dimension must be a constant! ");
@@ -281,7 +281,7 @@ void GetElementPtrInst::print(std::ostream& os)  {
 
         for (int cur = current_dimension(); cur < dimensions + 1; cur++) {
             auto value = operand(cur);
-            if (auto cvalue = ir::dyn_cast<ir::Constant>(value)) {
+            if (auto cvalue = dyn_cast<ir::Constant>(value)) {
                 os << "[" << *value << " x ";
             } else {
                 assert(false);
@@ -294,7 +294,7 @@ void GetElementPtrInst::print(std::ostream& os)  {
 
         for (int cur = current_dimension(); cur < dimensions + 1; cur++) {
             auto value = operand(cur);
-            if (auto cvalue = ir::dyn_cast<ir::Constant>(value)) {
+            if (auto cvalue = dyn_cast<ir::Constant>(value)) {
                 os << "[" << *value << " x ";
             } else {
                 assert(false);

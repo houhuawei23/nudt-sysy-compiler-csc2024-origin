@@ -1,5 +1,5 @@
 #include "include/infrast.hpp"
-#include "include/utils.hpp"
+#include "include/utils_ir.hpp"
 #include "include/function.hpp"
 
 namespace ir {

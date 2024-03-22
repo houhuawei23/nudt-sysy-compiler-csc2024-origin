@@ -1,7 +1,7 @@
 #pragma once
 
 #include "type.hpp"
-#include "utils.hpp"
+#include "utils_ir.hpp"
 #include "value.hpp"
 
 namespace ir {

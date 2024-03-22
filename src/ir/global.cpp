@@ -15,7 +15,7 @@ void GlobalVariable::print(std::ostream& os) {
         int dimensions = dims_cnt();
         for (int cur = 0; cur < dimensions; cur++) {
             auto value = operand(cur);
-            if (auto cvalue = ir::dyn_cast<ir::Constant>(value)) {
+            if (auto cvalue = dyn_cast<ir::Constant>(value)) {
                 os << "[" << *value << " x ";
             } else {
                 assert(false);
@@ -40,7 +40,7 @@ void GlobalVariable::print(std::ostream& os) {
 void GlobalVariable::print_ArrayInit(std::ostream& os, const int dimension, const int begin, int* idx) const {
     if (begin + 1 == dimension) {
         os << "[";
-        int num = ir::dyn_cast<ir::Constant>(operand(begin))->i32();
+        int num = dyn_cast<ir::Constant>(operand(begin))->i32();
         for (int i = 0; i < num - 1; i++) {
             os << *(base_type()) << " " << *init(*idx + i) << ", ";
         }
@@ -48,8 +48,8 @@ void GlobalVariable::print_ArrayInit(std::ostream& os, const int dimension, cons
         os << "]";
         *idx = *idx + num;
     } else if (dimension == 2 + begin) {
-        int num1 = ir::dyn_cast<ir::Constant>(operand(begin))->i32();
-        int num2 = ir::dyn_cast<ir::Constant>(operand(begin + 1))->i32();
+        int num1 = dyn_cast<ir::Constant>(operand(begin))->i32();
+        int num2 = dyn_cast<ir::Constant>(operand(begin + 1))->i32();
         os << "[";
 
         for (int i = 0; i < num1 - 1; i++) {
@@ -76,14 +76,14 @@ void GlobalVariable::print_ArrayInit(std::ostream& os, const int dimension, cons
     } else {
         os << "[";
 
-        int num = ir::dyn_cast<ir::Constant>(operand(begin))->i32();
-        int num1 = ir::dyn_cast<ir::Constant>(operand(begin + 1))->i32();
-        int num2 = ir::dyn_cast<ir::Constant>(operand(begin + 2))->i32();
+        int num = dyn_cast<ir::Constant>(operand(begin))->i32();
+        int num1 = dyn_cast<ir::Constant>(operand(begin + 1))->i32();
+        int num2 = dyn_cast<ir::Constant>(operand(begin + 2))->i32();
 
         for  (int i = 1; i < num; i++) {
             for (int cur = begin + 1; cur < dimension; cur++) {
                 auto value = operand(cur);
-                if (auto cvalue = ir::dyn_cast<ir::Constant>(value)) {
+                if (auto cvalue = dyn_cast<ir::Constant>(value)) {
                     os << "[" << *value << " x ";
                 } else {
                     assert(false);
@@ -97,7 +97,7 @@ void GlobalVariable::print_ArrayInit(std::ostream& os, const int dimension, cons
         }
         for (int cur = begin + 1; cur < dimension; cur++) {
             auto value = operand(cur);
-            if (auto cvalue = ir::dyn_cast<ir::Constant>(value)) {
+            if (auto cvalue = dyn_cast<ir::Constant>(value)) {
                 os << "[" << *value << " x ";
             } else {
                 assert(false);

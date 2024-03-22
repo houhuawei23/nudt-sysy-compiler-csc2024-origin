@@ -11,8 +11,6 @@ namespace sysy {
  * blockStmt: LBRACE blockItem* RBRACE;
  */
 std::any SysYIRGenerator::visitBlockStmt(SysYParser::BlockStmtContext* ctx) {
-    // std::cout << "visitBloclStmt" << std::endl;
-    // std::cout << ctx->getText() << std::endl;
 
     ir::SymbolTableBeta::BlockScope scope(_tables);
     // visit children item
@@ -20,7 +18,7 @@ std::any SysYIRGenerator::visitBlockStmt(SysYParser::BlockStmtContext* ctx) {
 
     for (auto item : ctx->blockItem()) {
         // res = any_cast_Value(visit(item));
-        if (res = safe_any_cast<ir::Value>(visit(item))) {
+        if (res = any_cast_Value(visit(item))) {
             if (ir::isa<ir::ReturnInst>(res)) {
                 break;
             } else {
@@ -58,7 +56,7 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
         else res = builder().create_return(value);
     } else {
         if (ctx->exp()) {
-            if (auto cvalue = ir::dyn_cast<ir::Constant>(value)) {  //! 常值
+            if (auto cvalue = dyn_cast<ir::Constant>(value)) {  //! 常值
                 if (func->ret_type()->is_i32() && cvalue->is_float()) {
                     value = ir::Constant::gen_i32(cvalue->f64());
                 } else if (func->ret_type()->is_float() && cvalue->is_i32()) {
@@ -102,16 +100,16 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
  */
 std::any SysYIRGenerator::visitAssignStmt(SysYParser::AssignStmtContext* ctx) {
     ir::Value* lvalue_ptr = any_cast_Value(visit(ctx->lValue()));  // 左值
-    ir::Value* exp = safe_any_cast<ir::Value>(visit(ctx->exp()));  // 右值
+    ir::Value* exp = any_cast_Value(visit(ctx->exp()));  // 右值
 
     ir::Value* res = nullptr;
 
-    if (auto cexp = ir::dyn_cast<ir::Constant>(exp)) {  //! 1. 右值为常值
+    if (auto cexp = dyn_cast<ir::Constant>(exp)) {  //! 1. 右值为常值
         if (lvalue_ptr->is_i32() && cexp->is_float()) {
             exp = ir::Constant::gen_i32(cexp->f64());
         } else if (lvalue_ptr->is_float() && cexp->is_i32()) {
             exp = ir::Constant::gen_f64(cexp->i32());
-        } else if (auto tmp = ir::dyn_cast<ir::PointerType>(lvalue_ptr->type())) {
+        } else if (auto tmp = dyn_cast<ir::PointerType>(lvalue_ptr->type())) {
             if (tmp->base_type() != cexp->type()) {
                 std::cerr << "Type " << *cexp->type() << " can not convert to type " << *cexp->type() << std::endl;
                 assert(false);
@@ -122,7 +120,7 @@ std::any SysYIRGenerator::visitAssignStmt(SysYParser::AssignStmtContext* ctx) {
             exp = _builder.create_ftosi(ir::Type::i32_type(), exp, _builder.getvarname());
         } else if (lvalue_ptr->is_float() && exp->is_i32()) {
             exp = _builder.create_sitof(ir::Type::float_type(), exp, _builder.getvarname());
-        } else if (ir::dyn_cast<ir::PointerType>(lvalue_ptr->type())->base_type() != exp->type()) {
+        } else if (dyn_cast<ir::PointerType>(lvalue_ptr->type())->base_type() != exp->type()) {
             std::cerr << "Type " << *exp->type()
                       << " can not convert to type " << *lvalue_ptr->type()
                       << std::endl;
@@ -164,7 +162,7 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
     builder().push_tf(then_block, else_block);
 
     //* visit cond, create icmp and br inst
-    auto cond = safe_any_cast<ir::Value>(visit(ctx->exp()));  // load
+    auto cond = any_cast_Value(visit(ctx->exp()));  // load
     assert(cond != nullptr && "any_cast result nullptr!");
     //* pop to get lhs t/f target
     auto lhs_t_target = builder().true_target();
@@ -327,7 +325,7 @@ std::any SysYIRGenerator::visitLValue(SysYParser::LValueContext* ctx) {
 
     if (ctx->exp().empty()) return res;  //! 1. scalar
     else {  //! 2. array
-        if (auto res_array = ir::dyn_cast<ir::AllocaInst>(res)) {
+        if (auto res_array = dyn_cast<ir::AllocaInst>(res)) {
             auto type = res_array->base_type();
             int current_dimension = 1;
             std::vector<ir::Value*> dims = res_array->dims();
@@ -338,7 +336,7 @@ std::any SysYIRGenerator::visitLValue(SysYParser::LValueContext* ctx) {
                                                     dims, _builder.getvarname(), 1);
                 current_dimension++;
             }
-        } else if (auto res_array = ir::dyn_cast<ir::GlobalVariable>(res)) {
+        } else if (auto res_array = dyn_cast<ir::GlobalVariable>(res)) {
             auto type = res_array->base_type();
             int current_dimension = 1;
             std::vector<ir::Value*> dims = res_array->dims();

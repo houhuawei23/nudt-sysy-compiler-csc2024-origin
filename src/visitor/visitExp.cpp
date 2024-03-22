@@ -38,12 +38,12 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
     }
 
     if (!isArray) {  //! 1. scalar
-        if (auto res_constant = ir::dyn_cast<ir::Constant>(res)) {
+        if (auto res_constant = dyn_cast<ir::Constant>(res)) {
         } else {
             res = _builder.create_load(res, {}, _builder.getvarname());
         }
     } else {  //! 2. array
-        if (auto res_array = ir::dyn_cast<ir::AllocaInst>(res)) {
+        if (auto res_array = dyn_cast<ir::AllocaInst>(res)) {
             auto type = res_array->base_type();
             int current_dimension = 1;
             std::vector<ir::Value*> dims = res_array->dims();
@@ -55,7 +55,7 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
                 current_dimension++;
             }
             res = _builder.create_load(res, {}, _builder.getvarname());
-        } else if (auto res_array = ir::dyn_cast<ir::GlobalVariable>(res)) {
+        } else if (auto res_array = dyn_cast<ir::GlobalVariable>(res)) {
             auto type = res_array->base_type();
             int current_dimension = 1;
             std::vector<ir::Value*> dims = res_array->dims();
@@ -86,7 +86,7 @@ std::any SysYIRGenerator::visitUnaryExp(SysYParser::UnaryExpContext* ctx) {
     if (ctx->SUB()) {
         //! Constant, static type cast
         // alloca arr
-        if (auto cexp = ir::dyn_cast<ir::Constant>(exp)) {
+        if (auto cexp = dyn_cast<ir::Constant>(exp)) {
             //
             if (exp->is_i32()) {
                 res = ir::Constant::gen_i32(-cexp->i32());
@@ -149,8 +149,8 @@ std::any SysYIRGenerator::visitMultiplicativeExp(
     ir::Value* op2 = any_cast_Value(visit(ctx->exp(1)));
     ir::Value* res;
     if (ir::isa<ir::Constant>(op1) && ir::isa<ir::Constant>(op2)) {  //! 1. both 常量 -> 常量折叠
-        ir::Constant* cop1 = ir::dyn_cast<ir::Constant>(op1);
-        ir::Constant* cop2 = ir::dyn_cast<ir::Constant>(op2);
+        ir::Constant* cop1 = dyn_cast<ir::Constant>(op1);
+        ir::Constant* cop2 = dyn_cast<ir::Constant>(op2);
         if (ctx->DIV()) {
             auto ans = (cop1->is_float() ? cop1->f64() : cop1->i32()) /
                        (cop2->is_float() ? cop2->f64() : cop2->i32());
@@ -232,8 +232,8 @@ std::any SysYIRGenerator::visitAdditiveExp(SysYParser::AdditiveExpContext* ctx) 
     auto ftype = ir::Type::double_type();
 
     if (ir::isa<ir::Constant>(op1) && ir::isa<ir::Constant>(op2)) {  //! 1. 常量 -> 常量折叠
-        ir::Constant* cop1 = ir::dyn_cast<ir::Constant>(op1);
-        ir::Constant* cop2 = ir::dyn_cast<ir::Constant>(op2);
+        ir::Constant* cop1 = dyn_cast<ir::Constant>(op1);
+        ir::Constant* cop2 = dyn_cast<ir::Constant>(op2);
 
         if (cop1->is_float() || cop2->is_float()) {
             float sum, f1, f2;

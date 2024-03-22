@@ -1,5 +1,5 @@
 #include "include/function.hpp"
-#include "include/utils.hpp"
+#include "include/utils_ir.hpp"
 
 namespace ir {
 BasicBlock* Function::new_block() {
