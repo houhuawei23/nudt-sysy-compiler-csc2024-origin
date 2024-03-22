@@ -26,9 +26,8 @@ void GlobalVariable::print(std::ostream& os) {
         os << " ";
 
         if (init_cnt()) {
-            os << "[";
-            print_ArrayInit(os, dimensions);
-            os << "]";
+            int idx = 0;
+            print_ArrayInit(os, dimensions, 0, &idx);
         } else {  // default initialization
             os << "zeroinitializer";
         }
@@ -38,36 +37,78 @@ void GlobalVariable::print(std::ostream& os) {
     os << "\n";
 }
 
-void GlobalVariable::print_ArrayInit(std::ostream& os, const int dimension) const {
-    if (dimension == 1) {
-        int num = ir::dyn_cast<ir::Constant>(operand(0))->i32();
+void GlobalVariable::print_ArrayInit(std::ostream& os, const int dimension, const int begin, int* idx) const {
+    if (begin + 1 == dimension) {
+        os << "[";
+        int num = ir::dyn_cast<ir::Constant>(operand(begin))->i32();
         for (int i = 0; i < num - 1; i++) {
-            os << *(base_type()) << " " << *init(i) << ", ";
+            os << *(base_type()) << " " << *init(*idx + i) << ", ";
         }
-        os << *(base_type()) << " " << *init(num - 1);
-    } else if (dimension == 2) {
-        int num1 = ir::dyn_cast<ir::Constant>(operand(0))->i32();
-        int num2 = ir::dyn_cast<ir::Constant>(operand(1))->i32();
+        os << *(base_type()) << " " << *init(*idx + num - 1);
+        os << "]";
+        *idx = *idx + num;
+    } else if (dimension == 2 + begin) {
+        int num1 = ir::dyn_cast<ir::Constant>(operand(begin))->i32();
+        int num2 = ir::dyn_cast<ir::Constant>(operand(begin + 1))->i32();
+        os << "[";
+
         for (int i = 0; i < num1 - 1; i++) {
-            os << "[" << num1 << " x " << *(base_type()) << "] ";
+            os << "[" << num2 << " x " << *(base_type()) << "] ";
 
             os << "[";
             for (int j = 0; j < num2 - 1; j++) {
-                os << *(base_type()) << " " << *init( i * num2 + j) << ", ";
+                os << *(base_type()) << " " << *init(*idx + i * num2 + j) << ", ";
             }
-            os << *(base_type()) << " " << *init(i * num2 + num2 - 1);
+            os << *(base_type()) << " " << *init(*idx + i * num2 + num2 - 1);
             os << "], ";
         }
-        os << "[" << num1 << " x " << *(base_type()) << "] ";
+        os << "[" << num2 << " x " << *(base_type()) << "] ";
 
         os << "[";
         for (int j = 0; j < num2 - 1; j++) {
-            os << *(base_type()) << " " << *init((num1 - 1) * num2 + j) << ", ";
+            os << *(base_type()) << " " << *init(*idx + (num1 - 1) * num2 + j) << ", ";
         }
-        os << *(base_type()) << " " << *init((num1 - 1) * num2 + num2 - 1);
+        os << *(base_type()) << " " << *init(*idx + (num1 - 1) * num2 + num2 - 1);
+        os << "]";
+        *idx = *idx + (num1 - 1) * num2 + num2;
+
         os << "]";
     } else {
-        // TODO: 多维数组的IR输出
+        os << "[";
+
+        int num = ir::dyn_cast<ir::Constant>(operand(begin))->i32();
+        int num1 = ir::dyn_cast<ir::Constant>(operand(begin + 1))->i32();
+        int num2 = ir::dyn_cast<ir::Constant>(operand(begin + 2))->i32();
+
+        for  (int i = 1; i < num; i++) {
+            for (int cur = begin + 1; cur < dimension; cur++) {
+                auto value = operand(cur);
+                if (auto cvalue = ir::dyn_cast<ir::Constant>(value)) {
+                    os << "[" << *value << " x ";
+                } else {
+                    assert(false);
+                }
+            }
+            os << *(base_type());
+            for (int cur = begin + 1; cur < dimension; cur++) os << "]";
+            os << " ";
+            print_ArrayInit(os, dimension, begin + 1, idx);
+            os << ", ";
+        }
+        for (int cur = begin + 1; cur < dimension; cur++) {
+            auto value = operand(cur);
+            if (auto cvalue = ir::dyn_cast<ir::Constant>(value)) {
+                os << "[" << *value << " x ";
+            } else {
+                assert(false);
+            }
+        }
+        os << *(base_type());
+        for (int cur = begin + 1; cur < dimension; cur++) os << "]";
+        os << " ";
+        print_ArrayInit(os, dimension, begin + 1, idx);
+
+        os << "]";
     }
 }
 }  // namespace ir

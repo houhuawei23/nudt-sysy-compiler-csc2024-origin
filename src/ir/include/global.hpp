@@ -69,7 +69,7 @@ class GlobalVariable : public User {
     Value* scalar_value() const { return _init[0]; }
 
     public:
-    void print_ArrayInit(std::ostream& os, const int dimension) const;
+    void print_ArrayInit(std::ostream& os, const int dimension, const int begin, int* idx) const;
 
     public:
     static bool classof(const Value* v) { return v->scid() == vGLOBAL_VAR; }
