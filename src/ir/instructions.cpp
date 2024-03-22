@@ -272,13 +272,12 @@ void BranchInst::print(std::ostream& os)  {
  * <idx> 指针: <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
  */
 void GetElementPtrInst::print(std::ostream& os)  {
+    Instruction::setvarname();
     if (is_arrayInst()) {
         // 确定数组指针地址
         // <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32 idx
         int dimensions = dims_cnt();
-        Instruction::setvarname();
-        os << name() << " = "
-           << "getelementptr ";
+        os << name() << " = " << "getelementptr ";
 
         for (int cur = current_dimension(); cur < dimensions + 1; cur++) {
             auto value = operand(cur);
@@ -310,7 +309,6 @@ void GetElementPtrInst::print(std::ostream& os)  {
         os << "i32 0, i32 " << get_index()->name();
     } else {
         // <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
-        Instruction::setvarname();
         os << name() << " = " << "getelementptr " << *(base_type()) << ", " << *type() << " ";
         os << get_value()->name() << ", i32 " << get_index()->name();
     }
