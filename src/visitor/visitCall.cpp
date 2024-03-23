@@ -54,7 +54,7 @@ std::any SysYIRGenerator::visitCall(SysYParser::CallContext* ctx) {
         inst = builder().create_call(func, final_rargs, "");
     else
         inst = builder().create_call(func, final_rargs, builder().getvarname());
-    return inst;
+    return dyn_cast_Value(inst);
 }
 
 }  // namespace sysy

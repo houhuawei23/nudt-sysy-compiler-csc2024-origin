@@ -142,7 +142,7 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
     }
 
     builder().reset();
-    return func;
+    return dyn_cast_Value(func);
 }
 
 }  // namespace sysy

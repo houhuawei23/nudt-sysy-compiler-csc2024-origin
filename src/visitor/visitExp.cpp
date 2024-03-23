@@ -11,8 +11,10 @@ std::any SysYIRGenerator::visitNumberExp(SysYParser::NumberExpContext* ctx) {
         std::string s = iLiteral->getText();
         //! 基数 (8, 10, 16)
         int base = 10;
-        if (s.length() > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) base = 16;
-        else if (s[0] == '0') base = 8;
+        if (s.length() > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X'))
+            base = 16;
+        else if (s[0] == '0')
+            base = 8;
 
         res = ir::Constant::gen_i32(std::stoi(s, 0, base));
     } else if (auto fctx = ctx->number()->FLITERAL()) {  //! float
@@ -20,7 +22,7 @@ std::any SysYIRGenerator::visitNumberExp(SysYParser::NumberExpContext* ctx) {
         float f = std::stof(s);
         res = ir::Constant::gen_f64(f);
     }
-    return res;
+    return dyn_cast_Value(res);
 }
 
 /*
@@ -33,7 +35,8 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
 
     auto res = _tables.lookup(varname);
     if (res == nullptr) {
-        std::cerr << "Use undefined variable: \"" << varname << "\"" << std::endl;
+        std::cerr << "Use undefined variable: \"" << varname << "\""
+                  << std::endl;
         exit(EXIT_FAILURE);
     }
 
@@ -49,9 +52,9 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
             std::vector<ir::Value*> dims = res_array->dims();
             for (auto expr : ctx->var()->exp()) {
                 ir::Value* idx = any_cast_Value(visit(expr));
-                res = _builder.create_getelementptr(type, res, 
-                                                    idx, current_dimension, 
-                                                    dims, _builder.getvarname(), 1);
+                res = _builder.create_getelementptr(type, res, idx,
+                                                    current_dimension, dims,
+                                                    _builder.getvarname(), 1);
                 current_dimension++;
             }
             res = _builder.create_load(res, {}, _builder.getvarname());
@@ -61,18 +64,17 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
             std::vector<ir::Value*> dims = res_array->dims();
             for (auto expr : ctx->var()->exp()) {
                 ir::Value* idx = any_cast_Value(visit(expr));
-                res = _builder.create_getelementptr(type, res, 
-                                                    idx, current_dimension, 
-                                                    dims, _builder.getvarname(), 1);
+                res = _builder.create_getelementptr(type, res, idx,
+                                                    current_dimension, dims,
+                                                    _builder.getvarname(), 1);
                 current_dimension++;
             }
             res = _builder.create_load(res, {}, _builder.getvarname());
-        }
-        else {
+        } else {
             assert(false && "this is not an array");
         }
     }
-    return res;
+    return dyn_cast_Value(res);
 }
 
 /*
@@ -121,7 +123,7 @@ std::any SysYIRGenerator::visitUnaryExp(SysYParser::UnaryExpContext* ctx) {
     } else if (ctx->ADD()) {
         res = exp;
     }
-    return res;
+    return dyn_cast_Value(res);
 }
 
 std::any SysYIRGenerator::visitParenExp(SysYParser::ParenExpContext* ctx) {
@@ -148,7 +150,8 @@ std::any SysYIRGenerator::visitMultiplicativeExp(
     ir::Value* op1 = any_cast_Value(visit(ctx->exp(0)));
     ir::Value* op2 = any_cast_Value(visit(ctx->exp(1)));
     ir::Value* res;
-    if (ir::isa<ir::Constant>(op1) && ir::isa<ir::Constant>(op2)) {  //! 1. both 常量 -> 常量折叠
+    if (ir::isa<ir::Constant>(op1) &&
+        ir::isa<ir::Constant>(op2)) {  //! 1. both 常量 -> 常量折叠
         ir::Constant* cop1 = dyn_cast<ir::Constant>(op1);
         ir::Constant* cop2 = dyn_cast<ir::Constant>(op2);
         if (ctx->DIV()) {
@@ -218,62 +221,78 @@ std::any SysYIRGenerator::visitMultiplicativeExp(
         }
     }
 
-    return res;
+    return dyn_cast_Value(res);
 }
 
 /*
  * @brief Visit Additive Expression
  *      exp (ADD | SUB) exp
  */
-std::any SysYIRGenerator::visitAdditiveExp(SysYParser::AdditiveExpContext* ctx) {
+std::any SysYIRGenerator::visitAdditiveExp(
+    SysYParser::AdditiveExpContext* ctx) {
     ir::Value* op1 = any_cast_Value(visit(ctx->exp()[0]));
     ir::Value* op2 = any_cast_Value(visit(ctx->exp()[1]));
     ir::Value* res;
     auto ftype = ir::Type::double_type();
 
-    if (ir::isa<ir::Constant>(op1) && ir::isa<ir::Constant>(op2)) {  //! 1. 常量 -> 常量折叠
+    if (ir::isa<ir::Constant>(op1) &&
+        ir::isa<ir::Constant>(op2)) {  //! 1. 常量 -> 常量折叠
         ir::Constant* cop1 = dyn_cast<ir::Constant>(op1);
         ir::Constant* cop2 = dyn_cast<ir::Constant>(op2);
 
         if (cop1->is_float() || cop2->is_float()) {
             float sum, f1, f2;
-            if (cop1->is_i32()) f1 = float(cop1->i32());
-            else f1 = cop1->f64();
-            if (cop2->is_i32()) f2 = float(cop2->i32());
-            else f2 = cop2->f64();
-            if (ctx->ADD()) sum = f1 + f2;
-            else sum = f1 - f2;
+            if (cop1->is_i32())
+                f1 = float(cop1->i32());
+            else
+                f1 = cop1->f64();
+            if (cop2->is_i32())
+                f2 = float(cop2->i32());
+            else
+                f2 = cop2->f64();
+            if (ctx->ADD())
+                sum = f1 + f2;
+            else
+                sum = f1 - f2;
 
             res = ir::Constant::gen_f64(sum);
         } else {  // both int
             int sum;
-            if (ctx->ADD()) sum = cop1->i32() + cop2->i32();
-            else sum = cop1->i32() - cop2->i32();
+            if (ctx->ADD())
+                sum = cop1->i32() + cop2->i32();
+            else
+                sum = cop1->i32() - cop2->i32();
             res = ir::Constant::gen_i32(sum);
         }
     } else {  //! 2. 变量 -> 生成 ADD | fADD | SUB | fSUB 指令
         if (op1->is_i32() && op2->is_i32()) {  // int32 类型加减
             if (ctx->SUB())
-                res = _builder.create_sub(ir::Type::i32_type(), op1, op2, _builder.getvarname());
+                res = _builder.create_sub(ir::Type::i32_type(), op1, op2,
+                                          _builder.getvarname());
             else
-                res = _builder.create_add(ir::Type::i32_type(), op1, op2, _builder.getvarname());
+                res = _builder.create_add(ir::Type::i32_type(), op1, op2,
+                                          _builder.getvarname());
         } else if (op1->is_float() && op2->is_float()) {  // float 类型加减
             if (ctx->SUB())
-                res = _builder.create_sub(ftype, op1, op2, _builder.getvarname());
+                res =
+                    _builder.create_sub(ftype, op1, op2, _builder.getvarname());
             else
-                res = _builder.create_add(ftype, op1, op2, _builder.getvarname());
+                res =
+                    _builder.create_add(ftype, op1, op2, _builder.getvarname());
         } else {  // 需要进行隐式类型转换 (int op float)
             if (op1->is_i32())
                 op1 = _builder.create_sitof(ftype, op1, _builder.getvarname());
             if (op2->is_i32())
                 op2 = _builder.create_sitof(ftype, op2, _builder.getvarname());
             if (ctx->SUB())
-                res = _builder.create_sub(ftype, op1, op2, _builder.getvarname());
+                res =
+                    _builder.create_sub(ftype, op1, op2, _builder.getvarname());
             else
-                res = _builder.create_add(ftype, op1, op2, _builder.getvarname());
+                res =
+                    _builder.create_add(ftype, op1, op2, _builder.getvarname());
         }
     }
-    return res;
+    return dyn_cast_Value(res);
 }
 //! exp (LT | GT | LE | GE) exp
 std::any SysYIRGenerator::visitRelationExp(
@@ -318,7 +337,7 @@ std::any SysYIRGenerator::visitRelationExp(
             res = _builder.create_isle(lhsptr, rhsptr, _builder.getvarname());
         }
     }
-    return res;
+    return dyn_cast_Value(res);
 }
 
 //! exp (EQ | NE) exp
@@ -351,7 +370,7 @@ std::any SysYIRGenerator::visitEqualExp(SysYParser::EqualExpContext* ctx) {
             res = _builder.create_ine(lhsptr, rhsptr, _builder.getvarname());
         }
     }
-    return res;
+    return dyn_cast_Value(res);
 }
 /*
 - before you visit one exp, you must prepare its true and false target
@@ -416,7 +435,7 @@ std::any SysYIRGenerator::visitAndExp(SysYParser::AndExpContext* ctx) {
     //! visit and generate code for rhs block
     builder().set_pos(rhs_block, rhs_block->begin());
 
-    auto rhs_value = visit(ctx->exp(1));
+    auto rhs_value = any_cast_Value(visit(ctx->exp(1)));
 
     return rhs_value;
 }
@@ -478,7 +497,7 @@ std::any SysYIRGenerator::visitOrExp(SysYParser::OrExpContext* ctx) {
     //! visit and generate code for rhs block
     builder().set_pos(rhs_block, rhs_block->begin());
 
-    auto rhs_value = visit(ctx->exp(1));
+    auto rhs_value = any_cast_Value(visit(ctx->exp(1)));
 
     return rhs_value;
 }

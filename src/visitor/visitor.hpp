@@ -51,12 +51,12 @@ class SysYIRGenerator : public SysYBaseVisitor {
 
     virtual std::any visitBlockStmt(SysYParser::BlockStmtContext* ctx) override;
 
-    // visitDecl
+    //! visitDecl
     virtual std::any visitDecl(SysYParser::DeclContext* ctx) override;
 
-    std::any visitDeclLocal(SysYParser::DeclContext* ctx);
+    ir::Value* visitDeclLocal(SysYParser::DeclContext* ctx);
 
-    std::any visitDeclGlobal(SysYParser::DeclContext* ctx);
+    ir::Value* visitDeclGlobal(SysYParser::DeclContext* ctx);
 
     void visitInitValue_beta(SysYParser::InitValueContext *ctx, 
                             const int capacity, 

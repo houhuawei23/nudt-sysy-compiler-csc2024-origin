@@ -20,7 +20,11 @@ std::any SysYIRGenerator::visitBtype(SysYParser::BtypeContext* ctx) {
  * @brief Visit Variable Declaration (变量定义 && 声明)
  */
 std::any SysYIRGenerator::visitDecl(SysYParser::DeclContext* ctx) {
-    return _tables.isModuleScope() ? visitDeclGlobal(ctx) : visitDeclLocal(ctx);
+    if (_tables.isModuleScope()) {
+        return visitDeclGlobal(ctx);
+    } else {
+        return visitDeclLocal(ctx);
+    }
 }
 
 /*
@@ -28,7 +32,7 @@ std::any SysYIRGenerator::visitDecl(SysYParser::DeclContext* ctx) {
  * @details
  *      decl: CONST? btype varDef (COMMA varDef)* SEMICOLON;
  */
-std::any SysYIRGenerator::visitDeclLocal(SysYParser::DeclContext* ctx) {
+ir::Value* SysYIRGenerator::visitDeclLocal(SysYParser::DeclContext* ctx) {
     auto btype = any_cast_Type(visitBtype(ctx->btype()));
     bool is_const = ctx->CONST();
     ir::Value* res = nullptr;
@@ -36,7 +40,7 @@ std::any SysYIRGenerator::visitDeclLocal(SysYParser::DeclContext* ctx) {
     for (auto varDef : ctx->varDef()) {
         res = visitVarDef_beta(varDef, btype, is_const);
     }
-    return res;
+    return dyn_cast_Value(res);
 }
 
 /*
@@ -191,7 +195,7 @@ ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
 
         res = alloca_ptr;
     }
-    return res;
+    return dyn_cast_Value(res);
 }
 
 /*
@@ -296,7 +300,7 @@ ir::Value* SysYIRGenerator::visitVarDef_global(SysYParser::VarDefContext* ctx,
         module()->add_gvar(name, gv);
         res = gv;
     }
-    return res;
+    return dyn_cast_Value(res);
 }
 
 
@@ -305,7 +309,7 @@ ir::Value* SysYIRGenerator::visitVarDef_global(SysYParser::VarDefContext* ctx,
  * @details
  *      decl: CONST? btype varDef (COMMA varDef)* SEMICOLON;
  */
-std::any SysYIRGenerator::visitDeclGlobal(SysYParser::DeclContext* ctx) {
+ir::Value* SysYIRGenerator::visitDeclGlobal(SysYParser::DeclContext* ctx) {
     auto btype = any_cast_Type(visit(ctx->btype()));
     bool is_const = ctx->CONST();
     ir::Value* res = nullptr;
@@ -313,7 +317,7 @@ std::any SysYIRGenerator::visitDeclGlobal(SysYParser::DeclContext* ctx) {
         res = visitVarDef_global(varDef, btype, is_const);
     }
 
-    return res;
+    return dyn_cast_Value(res);
 }
 
 /*

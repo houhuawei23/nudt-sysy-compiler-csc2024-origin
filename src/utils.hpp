@@ -13,14 +13,20 @@ template <typename To, typename From>
 }
 
 #define dyn_cast utils::safe_dyn_cast
+#define dyn_cast_Value utils::safe_dyn_cast<ir::Value>
 
+//! any_cast
 template <typename T>
 T* safe_any_cast(std::any any_value) {
     if (any_value.type() == typeid(T*)) {
         return std::any_cast<T*>(any_value);
     } else {
         // Handle the mismatched type gracefully
+        // std::cerr << "any_value.type(): " << any_value.type() << std::endl;
+        // std::cerr << "T*: " << typeid(T*).name() << std::endl;
         std::cerr << "Error: Type mismatch during safe_any_cast." << std::endl;
+        // auto tmp = std::any_cast<T*>(any_value);
+        // assert(false && "Type mismatch during safe_any_cast");
         return nullptr;
     }
 }
