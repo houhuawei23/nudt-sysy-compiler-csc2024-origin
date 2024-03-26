@@ -2,7 +2,7 @@
 
 namespace sysy {
 /*
- * @brief Visit Variable Type
+ * @brief Visit Variable Type (变量类型)
  * @details
  *      btype: INT | FLOAT;
  */
@@ -15,9 +15,10 @@ std::any SysYIRGenerator::visitBtype(SysYParser::BtypeContext* ctx) {
     return nullptr;
 }
 
-
 /*
  * @brief Visit Variable Declaration (变量定义 && 声明)
+ * @details
+ *      Global OR Local (全局 OR 局部)
  */
 std::any SysYIRGenerator::visitDecl(SysYParser::DeclContext* ctx) {
     if (_tables.isModuleScope()) {
@@ -42,7 +43,6 @@ ir::Value* SysYIRGenerator::visitDeclLocal(SysYParser::DeclContext* ctx) {
     }
     return dyn_cast_Value(res);
 }
-
 /*
  * @brief Visit Local Variable Definition (矢量 OR 标量)
  * @details: 
@@ -69,8 +69,10 @@ ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
             if (ctmp->is_float()) {
                 capacity *= (int)(ctmp->f64());
                 tmp = dyn_cast<ir::Value>(ir::Constant::gen_i32(ctmp->f64()));
-            } else {
+            } else if (ctmp->is_i32()) {
                 capacity *= ctmp->i32();
+            } else {
+                assert(false && "Invalid type.");
             }
         } else {
             assert(false && "dimension must be a constant");
@@ -78,7 +80,7 @@ ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
         dims.push_back(tmp);
     }
     int dimensions = dims.size();
-    bool isArray = dims.size() > 0;
+    bool isArray = dimensions > 0;
 
     ir::Value* res = nullptr;
     ir::Value* init = nullptr;
@@ -89,7 +91,9 @@ ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
     if (ctx->ASSIGN()) {
         if (isArray) {  //! 1. array initial value
             for (int i = 0; i < capacity; i++) {
-                Arrayinit.push_back(nullptr);
+                if (btype->is_float()) Arrayinit.push_back(ir::Constant::gen_f64(0.0));
+                else if (btype->is_i32()) Arrayinit.push_back(ir::Constant::gen_i32(0));
+                else assert(false && "Invalid type.");
             }
 
             _d = 0; _n = 0;
@@ -179,15 +183,13 @@ ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
                 }
                 int cnt = 0;
                 for (int i = 0; i < Arrayinit.size(); i++) {
-                    if (Arrayinit[i]) {
-                        if (i != 0) {
-                            element_ptr = _builder.create_getelementptr(btype, element_ptr, 
-                                                                        ir::Constant::gen_i32(cnt), i, 
-                                                                        dims, _builder.getvarname(), 2);
-                            cnt = 0;
-                        }
-                        auto store = _builder.create_store(Arrayinit[i], element_ptr, "store");
+                    if (i != 0) {
+                        element_ptr = _builder.create_getelementptr(btype, element_ptr, 
+                                                                    ir::Constant::gen_i32(cnt), i, 
+                                                                    dims, _builder.getvarname(), 2);
+                        cnt = 0;
                     }
+                    auto store = _builder.create_store(Arrayinit[i], element_ptr, "store");
                     cnt++;
                 }
             }
@@ -198,6 +200,21 @@ ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
     return dyn_cast_Value(res);
 }
 
+/*
+ * @brief Visit Global Variable Declaration (全局变量定义 && 声明)
+ * @details
+ *      decl: CONST? btype varDef (COMMA varDef)* SEMICOLON;
+ */
+ir::Value* SysYIRGenerator::visitDeclGlobal(SysYParser::DeclContext* ctx) {
+    auto btype = any_cast_Type(visit(ctx->btype()));
+    bool is_const = ctx->CONST();
+    
+    ir::Value* res = nullptr;
+    for (auto varDef : ctx->varDef()) {
+        res = visitVarDef_global(varDef, btype, is_const);
+    }
+    return dyn_cast_Value(res);
+}
 /*
  * @brief Visit Global Variable Definition (矢量 OR 标量)
  * @details: 
@@ -300,23 +317,6 @@ ir::Value* SysYIRGenerator::visitVarDef_global(SysYParser::VarDefContext* ctx,
         module()->add_gvar(name, gv);
         res = gv;
     }
-    return dyn_cast_Value(res);
-}
-
-
-/*
- * @brief Visit Global Variable Declaration (全局变量定义 && 声明)
- * @details
- *      decl: CONST? btype varDef (COMMA varDef)* SEMICOLON;
- */
-ir::Value* SysYIRGenerator::visitDeclGlobal(SysYParser::DeclContext* ctx) {
-    auto btype = any_cast_Type(visit(ctx->btype()));
-    bool is_const = ctx->CONST();
-    ir::Value* res = nullptr;
-    for (auto varDef : ctx->varDef()) {
-        res = visitVarDef_global(varDef, btype, is_const);
-    }
-
     return dyn_cast_Value(res);
 }
 
