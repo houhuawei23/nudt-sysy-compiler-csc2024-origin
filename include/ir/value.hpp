@@ -8,7 +8,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include "type.hpp"
+#include "ir/type.hpp"
 // #include <queue>      // for block list priority queue
 // #include <algorithm>  // for block list sort
 namespace ir {

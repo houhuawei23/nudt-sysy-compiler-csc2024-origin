@@ -1,4 +1,4 @@
-#include "include/type.hpp"
+#include "ir/type.hpp"
 
 #include <variant>  // dynamic_cast
 

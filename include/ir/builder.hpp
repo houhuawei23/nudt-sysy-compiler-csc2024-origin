@@ -5,8 +5,8 @@
 #pragma once
 
 #include <any>
-#include "infrast.hpp"
-#include "instructions.hpp"
+#include "ir/infrast.hpp"
+#include "ir/instructions.hpp"
 namespace ir {
 
 /**
@@ -16,7 +16,7 @@ namespace ir {
 class IRBuilder {
    private:
     BasicBlock* _block = nullptr;  // current basic block for insert instruction
-    inst_iterator _pos;  // insert pos for cur block
+    inst_iterator _pos;            // insert pos for cur block
     block_ptr_stack _headers, _exits;
     int _if_cnt, _while_cnt, _rhs_cnt, _func_cnt, _var_cnt;
 
@@ -105,10 +105,9 @@ class IRBuilder {
 
     //! create
     AllocaInst* create_alloca(Type* ret_type,
-                              const_value_ptr_vector& dims={},
-                              bool is_const=false,
-                              const_str_ref name=""
-                              ) {
+                              const_value_ptr_vector& dims = {},
+                              bool is_const = false,
+                              const_str_ref name = "") {
         auto inst = new AllocaInst(ret_type, _block, dims, name, is_const);
         block()->emplace_back_inst(inst);
         return inst;
@@ -122,8 +121,7 @@ class IRBuilder {
         return inst;
     }
 
-    ReturnInst* create_return(Value* value = nullptr, 
-                              const_str_ref name = "") {
+    ReturnInst* create_return(Value* value = nullptr, const_str_ref name = "") {
         auto inst = new ReturnInst(value, _block);
         block()->emplace_back_inst(inst);
         return inst;
@@ -221,7 +219,6 @@ class IRBuilder {
     BranchInst* create_br(Value* cond,
                           BasicBlock* true_block,
                           BasicBlock* false_block) {
-
         auto inst = new BranchInst(cond, true_block, false_block, _block);
         // _block->insts().emplace(_pos, inst);
         block()->emplace_back_inst(inst);  // _pos++
@@ -229,7 +226,6 @@ class IRBuilder {
     }
 
     BranchInst* create_br(BasicBlock* dest) {
-
         auto inst = new BranchInst(dest, _block);
         // _block->insts().emplace(_pos, inst);
         block()->emplace_back_inst(inst);  // _pos++
@@ -241,7 +237,6 @@ class IRBuilder {
                           Value* lhs,
                           Value* rhs,
                           const_str_ref name = "") {
-
         auto inst = new ICmpInst(itype, lhs, rhs, _block, name);
         // _block->insts().emplace(_pos, inst);
         block()->emplace_back_inst(inst);  // _pos++
@@ -250,27 +245,22 @@ class IRBuilder {
     ICmpInst* create_ieq(Value* lhs, Value* rhs, const_str_ref name = ""
 
     ) {
-
         return create_icmp(Value::vIEQ, lhs, rhs, name);
     }
     // icmp ne i32 4, 5
     ICmpInst* create_ine(Value* lhs, Value* rhs, const_str_ref name = "") {
-
         return create_icmp(Value::vINE, lhs, rhs, name);
     }
     ICmpInst* create_isgt(Value* lhs, Value* rhs, const_str_ref name = "") {
-
         return create_icmp(Value::vISGT, lhs, rhs, name);
     }
     ICmpInst* create_isge(Value* lhs, Value* rhs, const_str_ref name = "") {
-
         return create_icmp(Value::vISGE, lhs, rhs, name);
     }
     ICmpInst* create_islt(Value* lhs, Value* rhs, const_str_ref name = "") {
         return create_icmp(Value::vISLT, lhs, rhs, name);
     }
     ICmpInst* create_isle(Value* lhs, Value* rhs, const_str_ref name = "") {
-
         return create_icmp(Value::vISLE, lhs, rhs, name);
     }
     //! FCMP inst family
@@ -288,29 +278,23 @@ class IRBuilder {
     //! <result> = fcmp oeq float 4.0, 5.0
     //! yields: result=false
     FCmpInst* create_foeq(Value* lhs, Value* rhs, const_str_ref name = "") {
-
         return create_fcmp(Value::vFOEQ, lhs, rhs, name);
     }
     // <result> = fcmp one float 4.0, 5.0
     // yields: result=true
     FCmpInst* create_fone(Value* lhs, Value* rhs, const_str_ref name = "") {
-
         return create_fcmp(Value::vFONE, lhs, rhs, name);
     }
     FCmpInst* create_fogt(Value* lhs, Value* rhs, const_str_ref name = "") {
-
         return create_fcmp(Value::vFOGT, lhs, rhs, name);
     }
     FCmpInst* create_foge(Value* lhs, Value* rhs, const_str_ref name = "") {
-
         return create_fcmp(Value::vFOGE, lhs, rhs, name);
     }
     FCmpInst* create_folt(Value* lhs, Value* rhs, const_str_ref name = "") {
-
         return create_fcmp(Value::vFOLT, lhs, rhs, name);
     }
     FCmpInst* create_fole(Value* lhs, Value* rhs, const_str_ref name = "") {
-
         return create_fcmp(Value::vFOLE, lhs, rhs, name);
     }
 
@@ -321,15 +305,12 @@ class IRBuilder {
                                             int current_dimension = 1,
                                             const_value_ptr_vector& dims = {},
                                             int id = 1,
-                                            const_str_ref name = ""
-                                            ) {
+                                            const_str_ref name = "") {
         auto inst = new GetElementPtrInst(base_type, value, _block, idx, dims,
                                           current_dimension, name, id);
         block()->emplace_back_inst(inst);
         return inst;
     }
-
-
 };
 
 }  // namespace ir

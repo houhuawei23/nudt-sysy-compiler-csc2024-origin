@@ -1,13 +1,28 @@
-#include "include/infrast.hpp"
-#include "include/utils_ir.hpp"
-#include "include/function.hpp"
+#include "ir/infrast.hpp"
+#include "ir/utils_ir.hpp"
+#include "ir/function.hpp"
 
 namespace ir {
 
 
 //! Constant
 //* Instantiation for static data attribute
-std::map<std::string, Constant*> Constant::cache;
+// std::map<std::string, Constant*> Constant::cache;
+
+
+// void Constant::print(std::ostream &os) {
+//     if (type()->is_i32()) {
+//         os << i32();
+//     } else if (type()->is_float()) {
+//         os << f64();
+//     } else {
+//         assert(false);
+//     }
+// }
+
+void Argument::print(std::ostream &os){
+    os << *type() << " " << name();
+}
 
 void BasicBlock::print(std::ostream &os) {
     // print all instructions
@@ -16,20 +31,6 @@ void BasicBlock::print(std::ostream &os) {
     for (auto &inst : _insts) {
         os << "    " << *inst << std::endl;
     }
-}
-
-void Constant::print(std::ostream &os) {
-    if (type()->is_i32()) {
-        os << i32();
-    } else if (type()->is_float()) {
-        os << f64();
-    } else {
-        assert(false);
-    }
-}
-
-void Argument::print(std::ostream &os){
-    os << *type() << " " << name();
 }
 
 void BasicBlock::emplace_back_inst(Instruction* i) {

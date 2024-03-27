@@ -6,9 +6,9 @@
 #include <iomanip>
 
 #include "SysYBaseVisitor.h"
-#include "ir.hpp"
+#include "ir/ir.hpp"
 
-#include "utils.hpp"
+#include "support/utils.hpp"
 
 namespace sysy {
 class SysYIRGenerator : public SysYBaseVisitor {

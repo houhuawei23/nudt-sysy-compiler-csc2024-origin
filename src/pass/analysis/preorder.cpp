@@ -1,4 +1,4 @@
-#include "pass.hpp"
+#include "pass/pass.hpp"
 
 namespace pass
 {

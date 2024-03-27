@@ -1,13 +1,13 @@
 #pragma once
-#include "infrast.hpp"
-#include "type.hpp"
-#include "utils.hpp"
-#include "value.hpp"
+#include "ir/infrast.hpp"
+#include "ir/type.hpp"
+#include "ir/value.hpp"
+#include "support/utils.hpp"
 namespace ir {
 /**
  * @brief Class GlobalVariable
  * 1 Init Value must be Constant
- * 2 
+ * 2
  */
 class GlobalVariable : public User {
    protected:
@@ -80,7 +80,7 @@ class GlobalVariable : public User {
     Type* base_type() const {
         return dyn_cast<PointerType>(type())->base_type();
     }
-    
+
     Value* scalar_value() const { return _init[0]; }
 
    public:
@@ -88,7 +88,6 @@ class GlobalVariable : public User {
                          const int dimension,
                          const int begin,
                          int* idx) const;
-
 
    public:
     static bool classof(const Value* v) { return v->scid() == vGLOBAL_VAR; }

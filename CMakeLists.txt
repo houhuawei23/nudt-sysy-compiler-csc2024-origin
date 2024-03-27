@@ -43,10 +43,7 @@ add_subdirectory(${ANTLR_RUNTIME})
 # Add All Includes
 include_directories(
   ${CMAKE_CURRENT_BINARY_DIR}/src/antlr4
-  ${CMAKE_SOURCE_DIR}/src/
-  ${CMAKE_SOURCE_DIR}/src/ir/include
-  ${CMAKE_SOURCE_DIR}/src/visitor
-  ${CMAKE_SOURCE_DIR}/src/pass
+  ${CMAKE_SOURCE_DIR}/include/
 )
 
 

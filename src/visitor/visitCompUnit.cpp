@@ -1,4 +1,4 @@
-#include "visitor.hpp"
+#include "visitor/visitor.hpp"
 
 #include <stdbool.h>
 namespace sysy {

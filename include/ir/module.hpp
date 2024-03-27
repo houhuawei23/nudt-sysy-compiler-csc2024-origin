@@ -1,8 +1,8 @@
 #pragma once
-
-#include "function.hpp"
-#include "global.hpp"
-#include "value.hpp"
+#include "ir/constant.hpp"
+#include "ir/function.hpp"
+#include "ir/global.hpp"
+#include "ir/value.hpp"
 
 namespace ir {
 //! IR Unit for representing a SysY compile unit

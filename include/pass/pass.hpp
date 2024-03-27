@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include "ir.hpp"
+#include "ir/ir.hpp"
 
 namespace pass {
 

@@ -1,5 +1,6 @@
-#include "include/instructions.hpp"
-#include "include/utils_ir.hpp"
+#include "ir/instructions.hpp"
+#include "ir/constant.hpp"
+#include "ir/utils_ir.hpp"
 
 namespace ir {
 //! Value <- User <- Instruction <- XxxInst
@@ -7,7 +8,7 @@ namespace ir {
 /*
  * @brief AllocaInst::print
  */
-void AllocaInst::print(std::ostream& os)  {
+void AllocaInst::print(std::ostream& os) {
     Instruction::setvarname();
     os << name() << " = ";
     os << "alloca ";
@@ -38,8 +39,10 @@ void AllocaInst::print(std::ostream& os)  {
 void StoreInst::print(std::ostream& os) {
     os << "store ";
     os << *(value()->type()) << " ";
-    if (ir::isa<ir::Constant>(value())) os << *(value()) << ", ";
-    else os << value()->name() << ", ";
+    if (ir::isa<ir::Constant>(value()))
+        os << *(value()) << ", ";
+    else
+        os << value()->name() << ", ";
     os << *ptr()->type() << " ";
     os << ptr()->name();
 }
@@ -206,7 +209,7 @@ void ICmpInst::print(std::ostream& os) {
     os << rhs()->name();
 }
 
-void FCmpInst::print(std::ostream& os)  {
+void FCmpInst::print(std::ostream& os) {
     // <result> = icmp <cond> <ty> <op1>, <op2>   ; yields i1 or <N x i1>:result
     // %res = icmp eq i32, 1, 2
     Instruction::setvarname();
@@ -248,7 +251,7 @@ void FCmpInst::print(std::ostream& os)  {
     os << rhs()->name();
 }
 
-void BranchInst::print(std::ostream& os)  {
+void BranchInst::print(std::ostream& os) {
     // br i1 <cond>, label <iftrue>, label <iffalse>
     // br label <dest>
     os << "br ";
@@ -271,13 +274,14 @@ void BranchInst::print(std::ostream& os)  {
  *      数组: <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32
  * <idx> 指针: <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
  */
-void GetElementPtrInst::print(std::ostream& os)  {
+void GetElementPtrInst::print(std::ostream& os) {
     Instruction::setvarname();
     if (is_arrayInst()) {
         // 确定数组指针地址
         // <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32 idx
         int dimensions = dims_cnt();
-        os << name() << " = " << "getelementptr ";
+        os << name() << " = "
+           << "getelementptr ";
 
         for (int cur = current_dimension(); cur < dimensions + 1; cur++) {
             auto value = operand(cur);
@@ -309,7 +313,8 @@ void GetElementPtrInst::print(std::ostream& os)  {
         os << "i32 0, i32 " << get_index()->name();
     } else {
         // <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
-        os << name() << " = " << "getelementptr " << *(base_type()) << ", " << *type() << " ";
+        os << name() << " = "
+           << "getelementptr " << *(base_type()) << ", " << *type() << " ";
         os << get_value()->name() << ", i32 " << get_index()->name();
     }
 }

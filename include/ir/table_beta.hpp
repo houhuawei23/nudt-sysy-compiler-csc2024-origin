@@ -2,7 +2,7 @@
 #include <cassert>
 #include <forward_list>
 #include <unordered_map>
-#include "value.hpp"
+#include "ir/value.hpp"
 
 namespace ir {
 //! SymbolTableBeta

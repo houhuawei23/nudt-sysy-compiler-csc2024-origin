@@ -1,5 +1,5 @@
-#pragma onece
-#include "include/global.hpp"
+#include "ir/global.hpp"
+#include "ir/constant.hpp"
 
 namespace ir {
 /*

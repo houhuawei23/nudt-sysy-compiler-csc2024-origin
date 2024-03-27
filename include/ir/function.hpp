@@ -1,10 +1,10 @@
 #pragma once
 
-#include "infrast.hpp"
-#include "module.hpp"
-#include "type.hpp"
-#include "utils.hpp"
-#include "value.hpp"
+#include "ir/infrast.hpp"
+#include "ir/module.hpp"
+#include "ir/type.hpp"
+#include "support/utils.hpp"
+#include "ir/value.hpp"
 
 namespace ir {
 

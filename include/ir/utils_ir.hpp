@@ -3,8 +3,8 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
-#include "type.hpp"
-#include "value.hpp"
+#include "ir/type.hpp"
+#include "ir/value.hpp"
 
 namespace ir {
 

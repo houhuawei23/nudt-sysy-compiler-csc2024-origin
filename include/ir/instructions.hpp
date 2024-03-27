@@ -1,9 +1,9 @@
 #pragma once
-#include "function.hpp"
-#include "global.hpp"
-#include "infrast.hpp"
-#include "utils.hpp"
-#include "value.hpp"
+#include "ir/function.hpp"
+#include "ir/global.hpp"
+#include "ir/infrast.hpp"
+#include "support/utils.hpp"
+#include "ir/value.hpp"
 
 namespace ir {
 

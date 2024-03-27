@@ -1,5 +1,5 @@
 #include "SysYLexer.h"
-#include "visitor.hpp"
+#include "visitor/visitor.hpp"
 #include <iostream>
 using namespace std;
 

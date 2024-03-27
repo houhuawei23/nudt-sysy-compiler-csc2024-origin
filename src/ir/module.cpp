@@ -1,7 +1,8 @@
-#include "include/module.hpp"
+#include "ir/module.hpp"
 #include <cassert>
 #include <iostream>
-#include "include/utils_ir.hpp"
+// #include "ir/constant.hpp"
+#include "ir/utils_ir.hpp"
 namespace ir {
 
 void Module::add_gvar(const_str_ref name, Value* gv) {

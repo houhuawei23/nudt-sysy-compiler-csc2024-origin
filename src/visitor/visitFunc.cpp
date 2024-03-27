@@ -1,4 +1,4 @@
-#include "visitor.hpp"
+#include "visitor/visitor.hpp"
 
 using namespace std;
 
@@ -87,9 +87,6 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
         // create and enter function scope
         // it will be automatically destroyed when return from this visitFfunc
         ir::SymbolTableBeta::FunctionScope scope(_tables);
-
-        // create entry block with the same params of func
-        // ir::BasicBlock* entry = func->create_entry();
 
         ir::BasicBlock* entry = func->new_entry();
         ir::BasicBlock* exit = func->new_exit();
