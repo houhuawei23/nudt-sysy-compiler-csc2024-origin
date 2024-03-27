@@ -3,34 +3,24 @@
 namespace sysy {
 
 /**
- * @brief
- *
- * @param ctx
- * @return std::any
- *
  * blockStmt: LBRACE blockItem* RBRACE;
+ * blockItem: decl | stmt;
  */
 std::any SysYIRGenerator::visitBlockStmt(SysYParser::BlockStmtContext* ctx) {
     ir::SymbolTableBeta::BlockScope scope(_tables);
     // visit children item
-    ir::Value* res = nullptr;
-
     for (auto item : ctx->blockItem()) {
-        if (res = any_cast_Value(visit(item))) {
-            if (ir::isa<ir::ReturnInst>(res)) {
-                break;
-            }
-        }
-        auto teststmt = item->stmt();
-        if (teststmt) {
-            auto bktest = teststmt->breakStmt();
-            auto cttest = teststmt->continueStmt();
-            if (bktest || cttest)
+        visit(item);
+        if (auto teststmt = item->stmt()) {
+            // break, continue, return 后的语句不再翻译
+            auto bk = teststmt->breakStmt();
+            auto ct = teststmt->continueStmt();
+            auto ret = teststmt->returnStmt();
+            if (bk || ct || ret)
                 break;
         }
-        // 如果一个block中的stmt是break或者continue,那么后面的语句就可以不被翻译了
     }
-    return res;
+    return nullptr;
 }
 
 /*
@@ -38,12 +28,11 @@ std::any SysYIRGenerator::visitBlockStmt(SysYParser::BlockStmtContext* ctx) {
  *      returnStmt: RETURN exp? SEMICOLON;
  */
 std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
+    ir::Value* res = nullptr;
     auto value = ctx->exp() ? any_cast_Value(visit(ctx->exp())) : nullptr;
 
-    auto curr_block = builder().block();
-    auto func = curr_block->parent();
+    auto func = builder().block()->parent();
 
-    ir::Value* res = nullptr;
     assert(ir::isa<ir::Function>(func) && "ret stmt block parent err!");
 
     // 匹配 返回值类型 与 函数定义类型
@@ -64,10 +53,9 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
                 }
             } else {  //! 变量
                 if (func->ret_type()->is_i32() && value->is_float()) {
-                    value = _builder.create_ftosi(ir::Type::i32_type(), value);
+                    value = _builder.create_ftosi(value);
                 } else if (func->ret_type()->is_float() && value->is_i32()) {
-                    value =
-                        _builder.create_sitof(ir::Type::float_type(), value);
+                    value = _builder.create_sitof(value);
                 } else if (func->ret_type() != value->type()) {
                     assert(false && "invalid type");
                 }
@@ -76,11 +64,10 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
             assert(false && "the returned value is not matching the function");
         }
 
-        // store res to re_value
+        // store res to ret_value
         auto store = builder().create_store(value, func->ret_value_ptr());
         auto br = builder().create_br(func->exit());
         res = br;
-        // res = builder().create_return(value);
     }
 
     // 生成 return 语句后立马创建一个新块，并设置 builder
@@ -117,9 +104,9 @@ std::any SysYIRGenerator::visitAssignStmt(SysYParser::AssignStmtContext* ctx) {
         }
     } else {  //! 2. 右值为变量
         if (lvalue_ptr->is_i32() && exp->is_float()) {
-            exp = _builder.create_ftosi(ir::Type::i32_type(), exp);
+            exp = _builder.create_ftosi(exp);
         } else if (lvalue_ptr->is_float() && exp->is_i32()) {
-            exp = _builder.create_sitof(ir::Type::float_type(), exp);
+            exp = _builder.create_sitof(exp);
         } else if (dyn_cast<ir::PointerType>(lvalue_ptr->type())->base_type() !=
                    exp->type()) {
             std::cerr << "Type " << *exp->type() << " can not convert to type "
@@ -157,60 +144,53 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
     // ir::BasicBlock::block_link(cur_block, then_block);
     // ir::BasicBlock::block_link(cur_block, else_block);
 
-    //! VISIT cond
-    //* push the then and else block to the stack
-    builder().push_tf(then_block, else_block);
+    {  //! VISIT cond
+        //* push the then and else block to the stack
+        builder().push_tf(then_block, else_block);
 
-    //* visit cond, create icmp and br inst
-    auto cond = any_cast_Value(visit(ctx->exp()));  // load
-    assert(cond != nullptr && "any_cast result nullptr!");
-    //* pop to get lhs t/f target
-    auto lhs_t_target = builder().true_target();
-    auto lhs_f_target = builder().false_target();
-    builder().pop_tf();  // match with push_tf
+        //* visit cond, create icmp and br inst
+        auto cond = any_cast_Value(visit(ctx->exp()));  // load
+        assert(cond != nullptr && "any_cast result nullptr!");
+        //* pop to get lhs t/f target
+        auto lhs_t_target = builder().true_target();
+        auto lhs_f_target = builder().false_target();
 
-    //* cast to i1
+        builder().pop_tf();  // match with push_tf
 
-    // if ()
-    if (not cond->is_i1()) {
-        if (cond->is_i32()) {
-            cond = builder().create_ine(cond, ir::Constant::gen_i32(0));
-        } else if (cond->is_float()) {
-            cond = builder().create_fone(cond, ir::Constant::gen_f64(0.0));
-        }
+        cond = builder().cast_to_i1(cond);  //* cast to i1
+        //* create cond br inst
+        builder().create_br(cond, lhs_t_target, lhs_f_target);
+
+        //! [CFG] link the basic block
+        ir::BasicBlock::block_link(builder().block(), lhs_t_target);
+        ir::BasicBlock::block_link(builder().block(), lhs_t_target);
     }
 
-    //* create cond br inst
-    builder().create_br(cond, lhs_t_target, lhs_f_target);
-    //! VISIT cond end
+    {  //! VISIT then block
+        then_block->set_name(builder().get_bbname());
+        builder().set_pos(then_block, then_block->begin());
+        visit(ctx->stmt(0));  //* may change the basic block
 
-    //* link the basic block
-    cur_block = builder().block();
-    ir::BasicBlock::block_link(cur_block, lhs_t_target);
-    ir::BasicBlock::block_link(cur_block, lhs_t_target);
-
-    //! VISIT then block
-    then_block->set_name(builder().get_bbname());
-    builder().set_pos(then_block, then_block->begin());
-    visit(ctx->stmt(0));  //* may change the basic block
-
-    builder().create_br(merge_block);
-    ir::BasicBlock::block_link(then_block, merge_block);
+        builder().create_br(merge_block);
+        ir::BasicBlock::block_link(then_block, merge_block);
+    }
 
     //! VISIT else block
-    else_block->set_name(builder().get_bbname());
-    builder().set_pos(else_block, else_block->begin());
-    if (auto elsestmt = ctx->stmt(1))
-        visit(elsestmt);
+    {
+        else_block->set_name(builder().get_bbname());
+        builder().set_pos(else_block, else_block->begin());
+        if (auto elsestmt = ctx->stmt(1))
+            visit(elsestmt);
 
-    builder().create_br(merge_block);
-    ir::BasicBlock::block_link(else_block, merge_block);
+        builder().create_br(merge_block);
+        ir::BasicBlock::block_link(else_block, merge_block);
+    }
+
     //! SETUP builder fo merge block
     builder().set_pos(merge_block, merge_block->begin());
     merge_block->set_name(builder().get_bbname());
 
     return dyn_cast_Value(merge_block);
-    // return merge_block;
 }
 
 /*

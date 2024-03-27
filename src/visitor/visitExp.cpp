@@ -110,7 +110,7 @@ std::any SysYIRGenerator::visitUnaryExp(SysYParser::UnaryExpContext* ctx) {
         }
         //! TODO
     } else if (ctx->NOT()) {
-        //! TODO: if else, then is used
+        //! change target
         auto true_target = builder().false_target();
         auto false_target = builder().true_target();
         builder().pop_tf();
@@ -187,7 +187,7 @@ std::any SysYIRGenerator::visitMultiplicativeExp(
                 res = _builder.create_rem(type, op1, op2);
         } else if (op1->is_i32() && op2->is_float()) {  // 需要进行隐式类型转换
             auto ftype = ir::Type::float_type();
-            auto sitof = _builder.create_sitof(ftype, op1);
+            auto sitof = _builder.create_sitof(op1);
             if (ctx->MUL())
                 res = _builder.create_mul(ftype, sitof, op2);
             else if (ctx->DIV())
@@ -196,7 +196,7 @@ std::any SysYIRGenerator::visitMultiplicativeExp(
                 res = _builder.create_rem(ftype, sitof, op2);
         } else if (op1->is_float() && op2->is_i32()) {  // 需要进行隐式类型转换
             auto ftype = ir::Type::float_type();
-            auto sitof = _builder.create_sitof(ftype, op2);
+            auto sitof = _builder.create_sitof(op2);
             if (ctx->MUL())
                 res = _builder.create_mul(ftype, op1, sitof);
             else if (ctx->DIV())
@@ -262,9 +262,9 @@ std::any SysYIRGenerator::visitAdditiveExp(
                 res = _builder.create_add(ftype, op1, op2);
         } else {  // 需要进行隐式类型转换 (int op float)
             if (op1->is_i32())
-                op1 = _builder.create_sitof(ftype, op1);
+                op1 = _builder.create_sitof(op1);
             if (op2->is_i32())
-                op2 = _builder.create_sitof(ftype, op2);
+                op2 = _builder.create_sitof(op2);
             if (ctx->SUB())
                 res = _builder.create_sub(ftype, op1, op2);
             else
@@ -284,9 +284,9 @@ std::any SysYIRGenerator::visitRelationExp(
 
     if (isfloat) {
         if (lhsptr->is_i32())
-            lhsptr = _builder.create_sitof(ir::Type::float_type(), lhsptr);
+            lhsptr = _builder.create_sitof(lhsptr);
         if (rhsptr->is_i32())
-            rhsptr = _builder.create_sitof(ir::Type::float_type(), rhsptr);
+            rhsptr = _builder.create_sitof(rhsptr);
     }
     //! TODO
     if (ctx->GT()) {
@@ -319,17 +319,16 @@ std::any SysYIRGenerator::visitRelationExp(
 
 //! exp (EQ | NE) exp
 std::any SysYIRGenerator::visitEqualExp(SysYParser::EqualExpContext* ctx) {
-    //! TODO
     auto lhsptr = any_cast_Value(visit(ctx->exp()[0]));
     auto rhsptr = any_cast_Value(visit(ctx->exp()[1]));
     ir::Value* res;
     bool isfloat = lhsptr->is_float() || rhsptr->is_float();
     if (isfloat) {
         if (lhsptr->is_i32()) {
-            lhsptr = _builder.create_sitof(ir::Type::float_type(), lhsptr);
+            lhsptr = _builder.create_sitof(lhsptr);
         }
         if (rhsptr->is_i32()) {
-            rhsptr = _builder.create_sitof(ir::Type::float_type(), rhsptr);
+            rhsptr = _builder.create_sitof(rhsptr);
         }
     }
     if (ctx->EQ()) {
@@ -355,61 +354,34 @@ std::any SysYIRGenerator::visitEqualExp(SysYParser::EqualExpContext* ctx) {
 */
 //! exp : exp AND exp
 // exp: lhs AND rhs
-
+// know exp's true/false target block
+// lhs's true target = rhs block
+// lhs's false target = exp false target
+// rhs's true target = exp true target
+// rhs's false target = exp false target
 std::any SysYIRGenerator::visitAndExp(SysYParser::AndExpContext* ctx) {
-    //! TODO
-    // know exp's true/false target block
-    // lhs's true target = rhs block
-    // lhs's false target = exp false target
-    // rhs's true target = exp true target
-    // rhs's false target = exp false target
-    auto cur_block = builder().block();
-    auto cur_func = cur_block->parent();
+    auto cur_func = builder().block()->parent();
 
-    // create rhs block as lhs's true target
-    // lhs's false target is exp false target
     auto rhs_block = cur_func->new_block();
-
-    builder().push_tf(rhs_block, builder().false_target());  //! diff with OrExp
-    // builder().push_true_target(rhs_block);
-    // builder().push_false_target(builder().false_target());
-
-    //! visit lhs exp to get its value
-    auto lhs_value = any_cast_Value(visit(ctx->exp(0)));  // recursively visit
-    //* cast to i1
-
-    if (not lhs_value->is_i1()) {
-        if (lhs_value->is_i32()) {
-            // better wrap it to a simple method
-            lhs_value =
-                builder().create_ine(lhs_value, ir::Constant::gen_i32(0));
-        } else if (lhs_value->is_float()) {
-            lhs_value =
-                builder().create_fone(lhs_value, ir::Constant::gen_f64(0.0));
-        }
-    }
-
-    rhs_block->set_name(builder().get_bbname());
-    // pop to get lhs t/f target
-    auto lhs_t_target = builder().true_target();
     auto lhs_f_target = builder().false_target();
-    builder().pop_tf();  // match with push_tf
 
-    // create cond br inst
-    auto cond_br = builder().create_br(lhs_value, lhs_t_target, lhs_f_target);
+    //! 1 visit lhs exp to get its value
+    builder().push_tf(rhs_block, lhs_f_target);           //! diff with OrExp
+    auto lhs_value = any_cast_Value(visit(ctx->exp(0)));  // recursively visit
+    builder().pop_tf();                                   // match with push_tf
 
-    //! [for CFG] link cur_block and target
+    lhs_value = builder().cast_to_i1(lhs_value);  
+
+    builder().create_br(lhs_value, rhs_block, lhs_f_target);
+
+    //! 2 [for CFG] link cur_block and target
     // visit may change the cur_block, so need to reload the cur block
-    cur_block = builder().block();
+    ir::BasicBlock::block_link(builder().block(), rhs_block);
+    ir::BasicBlock::block_link(builder().block(), lhs_f_target);
 
-    ir::BasicBlock::block_link(cur_block, lhs_t_target);
-    ir::BasicBlock::block_link(cur_block, lhs_f_target);
-
-    //! [for CFG] link over
-
-    //! visit and generate code for rhs block
+    //! 3 visit and generate code for rhs block
     builder().set_pos(rhs_block, rhs_block->begin());
-
+    rhs_block->set_name(builder().get_bbname());
     auto rhs_value = any_cast_Value(visit(ctx->exp(1)));
 
     return rhs_value;
@@ -417,61 +389,33 @@ std::any SysYIRGenerator::visitAndExp(SysYParser::AndExpContext* ctx) {
 
 //! exp OR exp
 // lhs OR rhs
+// know exp's true/false target block (already in builder's stack)
+// lhs true target = exp true target
+// lhs false target = rhs block
+// rhs true target = exp true target
+// rhs false target = exp false target
 std::any SysYIRGenerator::visitOrExp(SysYParser::OrExpContext* ctx) {
-    //! TODO
-    // know exp's true/false target block (already in builder's stack)
-    // lhs true target = exp true target
-    // lhs false target = rhs block
-    // rhs true target = exp true target
-    // rhs false target = exp false target
-    auto cur_block = builder().block();  // pre block
-    auto cur_func = cur_block->parent();
+    auto cur_func = builder().block()->parent();
 
-    // create rhs block as lhs's false target
-    // lhs's true target is exp true target
+    auto lhs_t_target = builder().true_target();
     auto rhs_block = cur_func->new_block();
 
-    //! push target
-    builder().push_tf(builder().true_target(), rhs_block);  // match with pop_tf
-
-    //! visit lhs exp to get its value
-    auto lhs_value = any_cast_Value(visit(ctx->exp(0)));  // recursively visit
-    //* cast to i1
-
-    if (not lhs_value->is_i1()) {
-        if (lhs_value->is_i32()) {
-            // better wrap it to a simple method
-            lhs_value =
-                builder().create_ine(lhs_value, ir::Constant::gen_i32(0));
-        } else if (lhs_value->is_float()) {
-            lhs_value =
-                builder().create_fone(lhs_value, ir::Constant::gen_f64(0.0));
-        }
-    }
-
-    rhs_block->set_name(builder().get_bbname());
-
-    //! pop to get lhs t/f target
-    auto lhs_t_target = builder().true_target();
-    auto lhs_f_target = builder().false_target();
+    //! 1 visit lhs exp to get its value
+    builder().push_tf(builder().true_target(), rhs_block);
+    auto lhs_value = any_cast_Value(visit(ctx->exp(0)));
     builder().pop_tf();  // match with push_tf
 
-    // create condbr
-    builder().create_br(lhs_value, lhs_t_target, lhs_f_target);
-    //! lhs is finished,
+    lhs_value = builder().cast_to_i1(lhs_value);
+    builder().create_br(lhs_value, lhs_t_target, rhs_block);
 
-    //! [for CFG] link cur_block and target
+    //! 2 [for CFG] link cur_block and target
     // visit may change the cur_block, so need to reload the cur block
-    cur_block = builder().block();  // after block
+    ir::BasicBlock::block_link(builder().block(), lhs_t_target);
+    ir::BasicBlock::block_link(builder().block(), rhs_block);
 
-    ir::BasicBlock::block_link(cur_block, lhs_t_target);
-    ir::BasicBlock::block_link(cur_block, lhs_f_target);
-
-    //! [for CFG] link over
-
-    //! visit and generate code for rhs block
+    //! 3 visit and generate code for rhs block
     builder().set_pos(rhs_block, rhs_block->begin());
-
+    rhs_block->set_name(builder().get_bbname());
     auto rhs_value = any_cast_Value(visit(ctx->exp(1)));
 
     return rhs_value;

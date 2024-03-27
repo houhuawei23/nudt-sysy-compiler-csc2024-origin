@@ -37,11 +37,11 @@ std::any SysYIRGenerator::visitCall(SysYParser::CallContext* ctx) {
     for(int i = 0;i < length;i++)
     {
         if(func->arg_types()[i]->is_i32() and rargs[i]->is_float()){
-            auto ftosi = _builder.create_ftosi(ir::Type::i32_type(), rargs[i]);
+            auto ftosi = _builder.create_ftosi(rargs[i]);
             final_rargs.push_back(ftosi);
         }
         else if(func->arg_types()[i]->is_float() and rargs[i]->is_i32()){
-            auto sitof = _builder.create_sitof(ir::Type::float_type(), rargs[i]);
+            auto sitof = _builder.create_sitof(rargs[i]);
             final_rargs.push_back(sitof);
         }
         else{

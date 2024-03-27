@@ -40,6 +40,20 @@ class IRBuilder {
         _bb_cnt = 0;
     }
 
+    Value* cast_to_i1(Value* val) {
+        Value* res = nullptr;
+        if (not val->is_i1()) {
+            if (val->is_i32()) {
+                res = create_ine(val, ir::Constant::gen_i32(0));  // this
+            } else if (val->is_float()) {
+                res = create_fone(val, ir::Constant::gen_f64(0.0));
+            }
+        } else {
+            res = val;
+        }
+        return res;
+    }
+
     //! get
     std::string get_bbname() { return "bb" + std::to_string(_bb_cnt++); }
     BasicBlock* block() const { return _block; }
@@ -143,11 +157,11 @@ class IRBuilder {
         block()->emplace_back_inst(inst);
         return inst;
     }
-    UnaryInst* create_sitof(Type* type, Value* value, const_str_ref name = "") {
-        return create_unary(Value::ValueId::vSITOFP, type, value, name);
+    UnaryInst* create_sitof(Value* value, const_str_ref name = "") {
+        return create_unary(Value::ValueId::vSITOFP, ir::Type::float_type(), value, name);
     }
-    UnaryInst* create_ftosi(Type* type, Value* value, const_str_ref name = "") {
-        return create_unary(Value::ValueId::vFPTOSI, type, value, name);
+    UnaryInst* create_ftosi(Value* value, const_str_ref name = "") {
+        return create_unary(Value::ValueId::vFPTOSI, ir::Type::i32_type(), value, name);
     }
     UnaryInst* create_fneg(Type* type, Value* value, const_str_ref name = "") {
         return create_unary(Value::ValueId::vFNEG, type, value, name);
