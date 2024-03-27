@@ -37,11 +37,11 @@ std::any SysYIRGenerator::visitCall(SysYParser::CallContext* ctx) {
     for(int i = 0;i < length;i++)
     {
         if(func->arg_types()[i]->is_i32() and rargs[i]->is_float()){
-            auto ftosi = _builder.create_ftosi(ir::Type::i32_type(), rargs[i], _builder.getvarname());
+            auto ftosi = _builder.create_ftosi(ir::Type::i32_type(), rargs[i]);
             final_rargs.push_back(ftosi);
         }
         else if(func->arg_types()[i]->is_float() and rargs[i]->is_i32()){
-            auto sitof = _builder.create_sitof(ir::Type::float_type(), rargs[i], _builder.getvarname());
+            auto sitof = _builder.create_sitof(ir::Type::float_type(), rargs[i]);
             final_rargs.push_back(sitof);
         }
         else{
@@ -50,10 +50,7 @@ std::any SysYIRGenerator::visitCall(SysYParser::CallContext* ctx) {
     }
 
     ir::Value* inst; //  ir::Value* 接收
-    if(func->ret_type()->is_void())
-        inst = builder().create_call(func, final_rargs, "");
-    else
-        inst = builder().create_call(func, final_rargs, builder().getvarname());
+    inst = builder().create_call(func, final_rargs);
     return dyn_cast_Value(inst);
 }
 

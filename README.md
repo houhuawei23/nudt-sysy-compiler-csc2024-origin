@@ -67,6 +67,65 @@ alias grun="java org.antlr.v4.gui.TestRig"
 cmake -S . -B build
 cmake --build build
 ```
+## useful commands
+
+```bash
+# clang
+## gen llvm ir
+clang -S -emit-llvm test.c 
+clang -S --target=riscv64 -emit-llvm test.c -o test.rv64.ll
+clang -S --target=arm -emit-llvm test.c -o test.rv64.ll
+
+## print registered targets
+clang -print-targets
+
+# arm        - ARM
+# arm64      - ARM64 (little endian)
+# arm64_32   - ARM64 (little endian ILP32)
+# armeb      - ARM (big endian)
+# riscv32    - 32-bit RISC-V
+# riscv64    - 64-bit RISC-V
+# x86        - 32-bit X86: Pentium-Pro and above
+# x86-64     - 64-bit X86: EM64T and AMD64
+
+-mtargetos=<value>      
+# Set the deployment target to be the specified OS and OS version
+--offload-arch=<value>  CUDA offloading device architecture (e.g. sm_35), or HIP offloading target ID in the form of a device architecture followed by target ID features delimited by a colon. Each target ID feature is a pre-defined string followed by a plus or minus sign (e.g. gfx908:xnack+:sramecc-).  May be specified more than once.
+--offload=<value>       Specify comma-separated list of offloading target triples (CUDA and HIP only)
+-print-effective-triple 
+# Print the effective target triple
+-print-multiarch        
+# Print the multiarch target triple
+-print-supported-cpus   
+# Print supported cpu models for the given target (if target is not specified, it will print the supported cpus for the default target)
+-print-target-triple    
+# Print the normalized target triple
+-print-targets          
+# Print the registered targets
+--target=<value>        
+# Generate code for the given target
+
+# lli: interprete llvm ir file
+clang -S -emit-llvm test.c -o test.ll
+lli test.ll
+
+# llc: compile llvmir file to assembly code
+llc test.ll -o test.s
+llc -march=riscv64 test.ll -o test.rv64.s
+
+./clang -S -emit-llvm --target=armv7 -mfloat-abi=hard test.c
+./llc -march=arm -float-abi=hard test.ll
+arm-linux-gnueabihf-gcc
+
+clang -S --target=riscv64 -emit-llvm test.c -o test.rv64.ll # gen .ll
+llc -march=riscv64 test.rv64.ll -o test.rv64.s
+riscv64-linux-gnu-gcc -march=rv64gc t.s  
+# qemu
+qemu-riscv64 -L /usr/riscv64-linux-gnu/ a.out 
+
+llc -march=riscv64 -mcpu=generic-rv64 test.rv64.ll -o test.rv64.s
+```
+
 
 ## code到AST的分析
 

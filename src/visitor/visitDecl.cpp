@@ -117,9 +117,9 @@ ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
                 }
             } else {  // 2.2 变量
                 if (btype->is_i32() && init->is_float()) {
-                    init = _builder.create_ftosi(ir::Type::i32_type(), init, _builder.getvarname());
+                    init = _builder.create_ftosi(ir::Type::i32_type(), init);
                 } else if (btype->is_float() && init->is_i32()) {
-                    init = _builder.create_sitof(ir::Type::float_type(), init, _builder.getvarname());
+                    init = _builder.create_sitof(ir::Type::float_type(), init);
                 }
             }
         }
@@ -141,13 +141,13 @@ ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
                 exit(EXIT_FAILURE);
             }
         } else {  //! 1.2 array
-            auto alloca_ptr = _builder.create_alloca(btype, dims, _builder.getvarname(), is_const);
+            auto alloca_ptr = _builder.create_alloca(btype, dims, is_const);
             _tables.insert(name, alloca_ptr);
             ir::Value* element_ptr = dyn_cast<ir::Value>(alloca_ptr);
             for (int cur = 1; cur <= dimensions; cur++) {
                 element_ptr = _builder.create_getelementptr(btype, element_ptr, 
                                                             ir::Constant::gen_i32(0), cur, 
-                                                            dims, _builder.getvarname(), 1);
+                                                            dims, 1);
             }
             int cnt = 0;
             for (int i = 0; i < Arrayinit.size(); i++) {
@@ -155,7 +155,7 @@ ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
                     if (i != 0) {
                         element_ptr = _builder.create_getelementptr(btype, element_ptr, 
                                                                     ir::Constant::gen_i32(cnt), i, 
-                                                                    dims, _builder.getvarname(), 2);
+                                                                    dims, 2);
                         cnt = 0;
                     }
                     auto store = _builder.create_store(Arrayinit[i], element_ptr, "store");
@@ -165,7 +165,7 @@ ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
         }
     } else {  //! 2. variable
         //! create alloca inst
-        auto alloca_ptr = _builder.create_alloca(btype, dims, _builder.getvarname());
+        auto alloca_ptr = _builder.create_alloca(btype, dims);
         _tables.insert(name, alloca_ptr);
         
         //! create store inst
@@ -179,14 +179,14 @@ ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
                 for (int cur = 1; cur <= dimensions; cur++) {
                     element_ptr = _builder.create_getelementptr(btype, element_ptr, 
                                                                 ir::Constant::gen_i32(0), cur, 
-                                                                dims, _builder.getvarname(), 1);
+                                                                dims, 1);
                 }
                 int cnt = 0;
                 for (int i = 0; i < Arrayinit.size(); i++) {
                     if (i != 0) {
                         element_ptr = _builder.create_getelementptr(btype, element_ptr, 
                                                                     ir::Constant::gen_i32(cnt), i, 
-                                                                    dims, _builder.getvarname(), 2);
+                                                                    dims, 2);
                         cnt = 0;
                     }
                     auto store = _builder.create_store(Arrayinit[i], element_ptr, "store");
@@ -340,9 +340,9 @@ void SysYIRGenerator::visitInitValue_beta(SysYParser::InitValueContext *ctx,
             }
         } else {  //! 2. 变量
             if (_current_type->is_i32() && value->is_float()) {
-                value = _builder.create_ftosi(ir::Type::i32_type(), value, _builder.getvarname());
+                value = _builder.create_ftosi(ir::Type::i32_type(), value);
             } else if (_current_type->is_float() && value->is_i32()) {
-                value = _builder.create_sitof(ir::Type::float_type(), value, _builder.getvarname());
+                value = _builder.create_sitof(ir::Type::float_type(), value);
             }
         }
 

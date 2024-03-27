@@ -105,7 +105,7 @@ class Function : public User {
         return _args[idx];
     }
 
-    Argument* new_arg(Type* btype, const_str_ref name) {
+    Argument* new_arg(Type* btype, const_str_ref name="") {
         auto arg = new Argument(btype, _arg_cnt, this, name);
         _arg_cnt++;
         _args.emplace_back(arg);

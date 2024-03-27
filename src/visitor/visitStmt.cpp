@@ -64,11 +64,10 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
                 }
             } else {  //! 变量
                 if (func->ret_type()->is_i32() && value->is_float()) {
-                    value = _builder.create_ftosi(ir::Type::i32_type(), value,
-                                                  _builder.getvarname());
+                    value = _builder.create_ftosi(ir::Type::i32_type(), value);
                 } else if (func->ret_type()->is_float() && value->is_i32()) {
-                    value = _builder.create_sitof(ir::Type::float_type(), value,
-                                                  _builder.getvarname());
+                    value =
+                        _builder.create_sitof(ir::Type::float_type(), value);
                 } else if (func->ret_type() != value->type()) {
                     assert(false && "invalid type");
                 }
@@ -118,11 +117,9 @@ std::any SysYIRGenerator::visitAssignStmt(SysYParser::AssignStmtContext* ctx) {
         }
     } else {  //! 2. 右值为变量
         if (lvalue_ptr->is_i32() && exp->is_float()) {
-            exp = _builder.create_ftosi(ir::Type::i32_type(), exp,
-                                        _builder.getvarname());
+            exp = _builder.create_ftosi(ir::Type::i32_type(), exp);
         } else if (lvalue_ptr->is_float() && exp->is_i32()) {
-            exp = _builder.create_sitof(ir::Type::float_type(), exp,
-                                        _builder.getvarname());
+            exp = _builder.create_sitof(ir::Type::float_type(), exp);
         } else if (dyn_cast<ir::PointerType>(lvalue_ptr->type())->base_type() !=
                    exp->type()) {
             std::cerr << "Type " << *exp->type() << " can not convert to type "
@@ -148,7 +145,7 @@ create true_block, false_block or
 // 短路求值？
 // cond =
 std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
-    builder().if_inc();
+    // builder().if_inc();
     auto cur_block = builder().block();
     auto cur_func = cur_block->parent();
 
@@ -177,11 +174,9 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
     // if ()
     if (not cond->is_i1()) {
         if (cond->is_i32()) {
-            cond = builder().create_ine(cond, ir::Constant::gen_i32(0),
-                                        builder().getvarname());
+            cond = builder().create_ine(cond, ir::Constant::gen_i32(0));
         } else if (cond->is_float()) {
-            cond = builder().create_fone(cond, ir::Constant::gen_f64(0.0),
-                                         builder().getvarname());
+            cond = builder().create_fone(cond, ir::Constant::gen_f64(0.0));
         }
     }
 
@@ -250,11 +245,9 @@ std::any SysYIRGenerator::visitWhileStmt(SysYParser::WhileStmtContext* ctx) {
 
     if (not cond->is_i1()) {
         if (cond->is_i32()) {
-            cond = builder().create_ine(cond, ir::Constant::gen_i32(0),
-                                        builder().getvarname());
+            cond = builder().create_ine(cond, ir::Constant::gen_i32(0));
         } else if (cond->is_float()) {
-            cond = builder().create_fone(cond, ir::Constant::gen_f64(0.0),
-                                         builder().getvarname());
+            cond = builder().create_fone(cond, ir::Constant::gen_f64(0.0));
         }
     }
 
@@ -339,8 +332,7 @@ std::any SysYIRGenerator::visitLValue(SysYParser::LValueContext* ctx) {
             for (auto expr : ctx->exp()) {
                 ir::Value* idx = any_cast_Value(visit(expr));
                 res = _builder.create_getelementptr(type, res, idx,
-                                                    current_dimension, dims,
-                                                    _builder.getvarname(), 1);
+                                                    current_dimension, dims, 1);
                 current_dimension++;
             }
         } else if (auto res_array = dyn_cast<ir::GlobalVariable>(res)) {
@@ -350,15 +342,14 @@ std::any SysYIRGenerator::visitLValue(SysYParser::LValueContext* ctx) {
             for (auto expr : ctx->exp()) {
                 ir::Value* idx = any_cast_Value(visit(expr));
                 res = _builder.create_getelementptr(type, res, idx,
-                                                    current_dimension, dims,
-                                                    _builder.getvarname(), 1);
+                                                    current_dimension, dims, 1);
                 current_dimension++;
             }
         } else {
             assert(false && "this is not an array");
         }
     }
-    
+
     return dyn_cast_Value(res);
 }
 }  // namespace sysy

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "function.hpp"
-#include "value.hpp"
 #include "global.hpp"
+#include "value.hpp"
 
 namespace ir {
 //! IR Unit for representing a SysY compile unit
@@ -19,43 +19,24 @@ namespace ir {
  *
  */
 class Module {
-   public:
-    value_ptr_vector _values;
-    str_fun_map _functions;
-    str_value_map _globals;
+   private:
+
+    std::vector<ir::Function*> _funcs;
+    str_fun_map _func_table;
+
+    std::vector<ir::Value*> _gvs;
+    str_value_map _gv_table;
 
    public:
     Module() = default;
     ~Module() = default;
 
     //! get
-    // return the ref, avoid generate temp var
-    // using original type to recieve, point to new?
-    // using ref type to receive, they point to same obj
-    // directly using, point to same: values().push xxx
-    // how about use iterator to access?
-    value_ptr_vector& values() { return _values; }
-
-    str_fun_map& functions() { return _functions; }
-    
-    str_value_map& globals() { return _globals; }
-
     Function* lookup_func(const_str_ref name);
 
     Function* add_function(Type* type, const_str_ref name);
 
-    void add_gvar(const_str_ref name, GlobalVariable* gv) {
-        auto iter  = _globals.find(name); // find the name in _globals
-        assert(iter == _globals.end() && "Redeclare! global variable already exists");
-        _globals.emplace(name, gv);
-    }
-
-    void add_gvar(const_str_ref name, Value* gv) {
-        auto iter  = _globals.find(name); // find the name in _globals
-        assert(iter == _globals.end() && "Redeclare! global variable already exists");
-        _globals.emplace(name, gv);
-    }
-
+    void add_gvar(const_str_ref name, Value* gv);
 
     // readable ir print
     void print(std::ostream& os) const;

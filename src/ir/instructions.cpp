@@ -315,12 +315,13 @@ void GetElementPtrInst::print(std::ostream& os)  {
 }
 
 void CallInst::print(std::ostream& os) {
-    if (name().size() == 0) {
+    if (callee()->ret_type()->is_void()) {
         os << "call ";
     } else {
         Instruction::setvarname();
         os << name() << " = call ";
     }
+
     // ret_type
     os << *type() << " ";
     // func name

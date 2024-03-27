@@ -43,7 +43,7 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
     if (!isArray) {  //! 1. scalar
         if (auto res_constant = dyn_cast<ir::Constant>(res)) {
         } else {
-            res = _builder.create_load(res, {}, _builder.getvarname());
+            res = _builder.create_load(res, {});
         }
     } else {  //! 2. array
         if (auto res_array = dyn_cast<ir::AllocaInst>(res)) {
@@ -53,11 +53,10 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
             for (auto expr : ctx->var()->exp()) {
                 ir::Value* idx = any_cast_Value(visit(expr));
                 res = _builder.create_getelementptr(type, res, idx,
-                                                    current_dimension, dims,
-                                                    _builder.getvarname(), 1);
+                                                    current_dimension, dims, 1);
                 current_dimension++;
             }
-            res = _builder.create_load(res, {}, _builder.getvarname());
+            res = _builder.create_load(res, {});
         } else if (auto res_array = dyn_cast<ir::GlobalVariable>(res)) {
             auto type = res_array->base_type();
             int current_dimension = 1;
@@ -65,11 +64,10 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
             for (auto expr : ctx->var()->exp()) {
                 ir::Value* idx = any_cast_Value(visit(expr));
                 res = _builder.create_getelementptr(type, res, idx,
-                                                    current_dimension, dims,
-                                                    _builder.getvarname(), 1);
+                                                    current_dimension, dims, 1);
                 current_dimension++;
             }
-            res = _builder.create_load(res, {}, _builder.getvarname());
+            res = _builder.create_load(res, {});
         } else {
             assert(false && "this is not an array");
         }
@@ -100,12 +98,10 @@ std::any SysYIRGenerator::visitUnaryExp(SysYParser::UnaryExpContext* ctx) {
             if (exp->is_i32()) {
                 // create sub 0
                 res = builder().create_sub(ir::Type::i32_type(),
-                                           ir::Constant::gen_i32(0), exp,
-                                           builder().getvarname());
+                                           ir::Constant::gen_i32(0), exp);
             } else if (exp->is_float()) {
                 // fneg
-                res = builder().create_fneg(ir::Type::double_type(), exp,
-                                            builder().getvarname());
+                res = builder().create_fneg(ir::Type::double_type(), exp);
             } else {
                 assert(false && "not known type!");
             }
@@ -184,40 +180,29 @@ std::any SysYIRGenerator::visitMultiplicativeExp(
             auto type = op1->type();
 
             if (ctx->MUL())
-                res =
-                    _builder.create_mul(type, op1, op2, _builder.getvarname());
+                res = _builder.create_mul(type, op1, op2);
             else if (ctx->DIV())
-                res =
-                    _builder.create_div(type, op1, op2, _builder.getvarname());
+                res = _builder.create_div(type, op1, op2);
             else
-                res =
-                    _builder.create_rem(type, op1, op2, _builder.getvarname());
+                res = _builder.create_rem(type, op1, op2);
         } else if (op1->is_i32() && op2->is_float()) {  // 需要进行隐式类型转换
             auto ftype = ir::Type::float_type();
-            auto sitof =
-                _builder.create_sitof(ftype, op1, _builder.getvarname());
+            auto sitof = _builder.create_sitof(ftype, op1);
             if (ctx->MUL())
-                res = _builder.create_mul(ftype, sitof, op2,
-                                          _builder.getvarname());
+                res = _builder.create_mul(ftype, sitof, op2);
             else if (ctx->DIV())
-                res = _builder.create_div(ftype, sitof, op2,
-                                          _builder.getvarname());
+                res = _builder.create_div(ftype, sitof, op2);
             else
-                res = _builder.create_rem(ftype, sitof, op2,
-                                          _builder.getvarname());
+                res = _builder.create_rem(ftype, sitof, op2);
         } else if (op1->is_float() && op2->is_i32()) {  // 需要进行隐式类型转换
             auto ftype = ir::Type::float_type();
-            auto sitof =
-                _builder.create_sitof(ftype, op2, _builder.getvarname());
+            auto sitof = _builder.create_sitof(ftype, op2);
             if (ctx->MUL())
-                res = _builder.create_mul(ftype, op1, sitof,
-                                          _builder.getvarname());
+                res = _builder.create_mul(ftype, op1, sitof);
             else if (ctx->DIV())
-                res = _builder.create_div(ftype, op1, sitof,
-                                          _builder.getvarname());
+                res = _builder.create_div(ftype, op1, sitof);
             else
-                res = _builder.create_rem(ftype, op1, sitof,
-                                          _builder.getvarname());
+                res = _builder.create_rem(ftype, op1, sitof);
         }
     }
 
@@ -267,29 +252,23 @@ std::any SysYIRGenerator::visitAdditiveExp(
     } else {  //! 2. 变量 -> 生成 ADD | fADD | SUB | fSUB 指令
         if (op1->is_i32() && op2->is_i32()) {  // int32 类型加减
             if (ctx->SUB())
-                res = _builder.create_sub(ir::Type::i32_type(), op1, op2,
-                                          _builder.getvarname());
+                res = _builder.create_sub(ir::Type::i32_type(), op1, op2);
             else
-                res = _builder.create_add(ir::Type::i32_type(), op1, op2,
-                                          _builder.getvarname());
+                res = _builder.create_add(ir::Type::i32_type(), op1, op2);
         } else if (op1->is_float() && op2->is_float()) {  // float 类型加减
             if (ctx->SUB())
-                res =
-                    _builder.create_sub(ftype, op1, op2, _builder.getvarname());
+                res = _builder.create_sub(ftype, op1, op2);
             else
-                res =
-                    _builder.create_add(ftype, op1, op2, _builder.getvarname());
+                res = _builder.create_add(ftype, op1, op2);
         } else {  // 需要进行隐式类型转换 (int op float)
             if (op1->is_i32())
-                op1 = _builder.create_sitof(ftype, op1, _builder.getvarname());
+                op1 = _builder.create_sitof(ftype, op1);
             if (op2->is_i32())
-                op2 = _builder.create_sitof(ftype, op2, _builder.getvarname());
+                op2 = _builder.create_sitof(ftype, op2);
             if (ctx->SUB())
-                res =
-                    _builder.create_sub(ftype, op1, op2, _builder.getvarname());
+                res = _builder.create_sub(ftype, op1, op2);
             else
-                res =
-                    _builder.create_add(ftype, op1, op2, _builder.getvarname());
+                res = _builder.create_add(ftype, op1, op2);
         }
     }
     return dyn_cast_Value(res);
@@ -305,36 +284,34 @@ std::any SysYIRGenerator::visitRelationExp(
 
     if (isfloat) {
         if (lhsptr->is_i32())
-            lhsptr = _builder.create_sitof(ir::Type::float_type(), lhsptr,
-                                           _builder.getvarname());
+            lhsptr = _builder.create_sitof(ir::Type::float_type(), lhsptr);
         if (rhsptr->is_i32())
-            rhsptr = _builder.create_sitof(ir::Type::float_type(), rhsptr,
-                                           _builder.getvarname());
+            rhsptr = _builder.create_sitof(ir::Type::float_type(), rhsptr);
     }
     //! TODO
     if (ctx->GT()) {
         if (isfloat) {
-            res = _builder.create_fogt(lhsptr, rhsptr, _builder.getvarname());
+            res = _builder.create_fogt(lhsptr, rhsptr);
         } else {
-            res = _builder.create_isgt(lhsptr, rhsptr, _builder.getvarname());
+            res = _builder.create_isgt(lhsptr, rhsptr);
         }
     } else if (ctx->GE()) {
         if (isfloat) {
-            res = _builder.create_foge(lhsptr, rhsptr, _builder.getvarname());
+            res = _builder.create_foge(lhsptr, rhsptr);
         } else {
-            res = _builder.create_isge(lhsptr, rhsptr, _builder.getvarname());
+            res = _builder.create_isge(lhsptr, rhsptr);
         }
     } else if (ctx->LT()) {
         if (isfloat) {
-            res = _builder.create_folt(lhsptr, rhsptr, _builder.getvarname());
+            res = _builder.create_folt(lhsptr, rhsptr);
         } else {
-            res = _builder.create_islt(lhsptr, rhsptr, _builder.getvarname());
+            res = _builder.create_islt(lhsptr, rhsptr);
         }
     } else if (ctx->LE()) {
         if (isfloat) {
-            res = _builder.create_fole(lhsptr, rhsptr, _builder.getvarname());
+            res = _builder.create_fole(lhsptr, rhsptr);
         } else {
-            res = _builder.create_isle(lhsptr, rhsptr, _builder.getvarname());
+            res = _builder.create_isle(lhsptr, rhsptr);
         }
     }
     return dyn_cast_Value(res);
@@ -349,25 +326,23 @@ std::any SysYIRGenerator::visitEqualExp(SysYParser::EqualExpContext* ctx) {
     bool isfloat = lhsptr->is_float() || rhsptr->is_float();
     if (isfloat) {
         if (lhsptr->is_i32()) {
-            lhsptr = _builder.create_sitof(ir::Type::float_type(), lhsptr,
-                                           _builder.getvarname());
+            lhsptr = _builder.create_sitof(ir::Type::float_type(), lhsptr);
         }
         if (rhsptr->is_i32()) {
-            rhsptr = _builder.create_sitof(ir::Type::float_type(), rhsptr,
-                                           _builder.getvarname());
+            rhsptr = _builder.create_sitof(ir::Type::float_type(), rhsptr);
         }
     }
     if (ctx->EQ()) {
         if (isfloat) {
-            res = _builder.create_foeq(lhsptr, rhsptr, _builder.getvarname());
+            res = _builder.create_foeq(lhsptr, rhsptr);
         } else {
-            res = _builder.create_ieq(lhsptr, rhsptr, _builder.getvarname());
+            res = _builder.create_ieq(lhsptr, rhsptr);
         }
     } else if (ctx->NE()) {
         if (isfloat) {
-            res = _builder.create_fone(lhsptr, rhsptr, _builder.getvarname());
+            res = _builder.create_fone(lhsptr, rhsptr);
         } else {
-            res = _builder.create_ine(lhsptr, rhsptr, _builder.getvarname());
+            res = _builder.create_ine(lhsptr, rhsptr);
         }
     }
     return dyn_cast_Value(res);
@@ -406,11 +381,11 @@ std::any SysYIRGenerator::visitAndExp(SysYParser::AndExpContext* ctx) {
     if (not lhs_value->is_i1()) {
         if (lhs_value->is_i32()) {
             // better wrap it to a simple method
-            lhs_value = builder().create_ine(
-                lhs_value, ir::Constant::gen_i32(0), builder().getvarname());
+            lhs_value =
+                builder().create_ine(lhs_value, ir::Constant::gen_i32(0));
         } else if (lhs_value->is_float()) {
-            lhs_value = builder().create_fone(
-                lhs_value, ir::Constant::gen_f64(0.0), builder().getvarname());
+            lhs_value =
+                builder().create_fone(lhs_value, ir::Constant::gen_f64(0.0));
         }
     }
 
@@ -466,11 +441,11 @@ std::any SysYIRGenerator::visitOrExp(SysYParser::OrExpContext* ctx) {
     if (not lhs_value->is_i1()) {
         if (lhs_value->is_i32()) {
             // better wrap it to a simple method
-            lhs_value = builder().create_ine(
-                lhs_value, ir::Constant::gen_i32(0), builder().getvarname());
+            lhs_value =
+                builder().create_ine(lhs_value, ir::Constant::gen_i32(0));
         } else if (lhs_value->is_float()) {
-            lhs_value = builder().create_fone(
-                lhs_value, ir::Constant::gen_f64(0.0), builder().getvarname());
+            lhs_value =
+                builder().create_fone(lhs_value, ir::Constant::gen_f64(0.0));
         }
     }
 

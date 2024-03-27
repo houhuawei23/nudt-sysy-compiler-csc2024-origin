@@ -35,6 +35,11 @@ class IRBuilder {
         _bb_cnt = 0;
     }
 
+    void reset() {
+        _var_cnt = 0;
+        _bb_cnt = 0;
+    }
+
     //! get
     std::string get_bbname() { return "bb" + std::to_string(_bb_cnt++); }
     BasicBlock* block() const { return _block; }
@@ -61,6 +66,7 @@ class IRBuilder {
 
     void push_header(BasicBlock* block) { _headers.push(block); }
     void push_exit(BasicBlock* block) { _exits.push(block); }
+
     void push_loop(BasicBlock* header_block, BasicBlock* exit_block) {
         push_header(header_block);
         push_exit(exit_block);
@@ -100,8 +106,9 @@ class IRBuilder {
     //! create
     AllocaInst* create_alloca(Type* ret_type,
                               const_value_ptr_vector& dims={},
-                              const_str_ref name="", 
-                              bool is_const=false) {
+                              bool is_const=false,
+                              const_str_ref name=""
+                              ) {
         auto inst = new AllocaInst(ret_type, _block, dims, name, is_const);
         block()->emplace_back_inst(inst);
         return inst;
@@ -313,28 +320,16 @@ class IRBuilder {
                                             Value* idx,
                                             int current_dimension = 1,
                                             const_value_ptr_vector& dims = {},
-                                            const_str_ref name = "",
-                                            int id = 1) {
+                                            int id = 1,
+                                            const_str_ref name = ""
+                                            ) {
         auto inst = new GetElementPtrInst(base_type, value, _block, idx, dims,
                                           current_dimension, name, id);
         block()->emplace_back_inst(inst);
         return inst;
     }
 
-    void reset() {
-        _var_cnt = 0;
-        _bb_cnt = 0;
-    }
 
-    std::string getvarname() {
-        // temporary realization
-        std::string res = std::to_string(_var_cnt);
-        _var_cnt++;
-
-        return "%" + res;
-        // TODO!
-        // all counting of local variables should be with funcScope
-    }
 };
 
 }  // namespace ir

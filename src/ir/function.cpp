@@ -11,28 +11,37 @@ BasicBlock* Function::new_block() {
 void Function::print(std::ostream& os) {
     auto return_type = ret_type();
     // auto param_types = param_type();
-    os << "define " << *return_type << " @" << name() << "(";
-    
+    if (blocks().size()) {
+        os << "define " << *return_type << " @" << name() << "(";
+    } else {
+        os << "declare " << *return_type << " @" << name() << "(";
+    }
+
     // print fparams
     if (_args.size() > 0) {
         auto last_iter = _args.end() - 1;
         for (auto iter = _args.begin(); iter != last_iter; ++iter) {
             auto arg = *iter;
-            arg->setname("%"+std::to_string(getvarcnt()));
+            arg->setname("%" + std::to_string(getvarcnt()));
             os << *(arg->type()) << " " << arg->name();
             os << ", ";
         }
         auto arg = *last_iter;
-        arg->setname("%"+std::to_string(getvarcnt()));
+        arg->setname("%" + std::to_string(getvarcnt()));
         os << *(arg->type()) << " " << arg->name();
     }
-    
-    os << ") {\n";
-    
+
+    os << ")";
+
     // print bbloks
-    for (auto& bb : _blocks) {
-        os << *bb << std::endl;
+    if (blocks().size()) {
+        os << " {\n";
+        for (auto& bb : _blocks) {
+            os << *bb << std::endl;
+        }
+        os << "}";
+    } else {
+        os << "\n";
     }
-    os << "}";
 }
 }  // namespace ir

@@ -103,11 +103,10 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
             for (auto pram : ctx->funcFParams()->funcFParam()) {
                 auto arg_name = pram->ID()->getText();
                 auto arg_type = any_cast_Type(visit(pram->btype()));
-                auto arg = func->new_arg(arg_type, builder().getvarname());
+                auto arg = func->new_arg(arg_type);
             }
 
             // init return value ptr and first block
-            ret_value_ptr->set_name(builder().getvarname());
             entry->set_name(builder().get_bbname());
 
             // allca all params and store
@@ -116,7 +115,7 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
                 auto arg_name = pram->ID()->getText();
                 auto arg_type = any_cast_Type(visit(pram->btype()));
                 // no const arg
-                auto alloca_ptr = builder().create_alloca(arg_type, {}, builder().getvarname());
+                auto alloca_ptr = builder().create_alloca(arg_type, {});
                 auto store = builder().create_store(func->arg_i(idx), alloca_ptr, "store");
                 _tables.insert(arg_name, alloca_ptr);
                 idx++;
@@ -124,7 +123,6 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
 
         }
         else {
-            ret_value_ptr->set_name(builder().getvarname());
             entry->set_name(builder().get_bbname());
         }
 
@@ -135,7 +133,7 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
         exit->set_name(builder().get_bbname());
         builder().set_pos(exit, exit->begin());
 
-        auto ret_value = builder().create_load(func->ret_value_ptr(), {}, builder().getvarname());
+        auto ret_value = builder().create_load(func->ret_value_ptr(), {});
         builder().create_return(ret_value);
         
         func->sort_blocks();
