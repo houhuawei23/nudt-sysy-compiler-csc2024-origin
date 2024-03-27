@@ -67,6 +67,8 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
         // store res to ret_value
         auto store = builder().create_store(value, func->ret_value_ptr());
         auto br = builder().create_br(func->exit());
+        ir::BasicBlock::block_link(builder().block(), func->exit());
+        
         res = br;
     }
 
@@ -163,7 +165,7 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
 
         //! [CFG] link the basic block
         ir::BasicBlock::block_link(builder().block(), lhs_t_target);
-        ir::BasicBlock::block_link(builder().block(), lhs_t_target);
+        ir::BasicBlock::block_link(builder().block(), lhs_f_target);
     }
 
     {  //! VISIT then block
@@ -172,7 +174,7 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
         visit(ctx->stmt(0));  //* may change the basic block
 
         builder().create_br(merge_block);
-        ir::BasicBlock::block_link(then_block, merge_block);
+        ir::BasicBlock::block_link(builder().block(), merge_block);
     }
 
     //! VISIT else block
@@ -183,7 +185,7 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
             visit(elsestmt);
 
         builder().create_br(merge_block);
-        ir::BasicBlock::block_link(else_block, merge_block);
+        ir::BasicBlock::block_link(builder().block(), merge_block);
     }
 
     //! SETUP builder fo merge block
@@ -213,6 +215,8 @@ std::any SysYIRGenerator::visitWhileStmt(SysYParser::WhileStmtContext* ctx) {
 
     // jump without cond, directly jump to judge block
     builder().create_br(judge_block);
+    ir::BasicBlock::block_link(builder().block(), judge_block);
+
     judge_block->set_name(builder().get_bbname());
     builder().set_pos(judge_block, judge_block->begin());
 
@@ -233,17 +237,16 @@ std::any SysYIRGenerator::visitWhileStmt(SysYParser::WhileStmtContext* ctx) {
 
     builder().create_br(cond, tTarget, fTarget);
 
-    cur_block = builder().block();
-    ir::BasicBlock::block_link(cur_block, tTarget);
-    ir::BasicBlock::block_link(cur_block, fTarget);
+    ir::BasicBlock::block_link(builder().block(), tTarget);
+    ir::BasicBlock::block_link(builder().block(), fTarget);
 
     // visit loop block
     loop_block->set_name(builder().get_bbname());
     builder().set_pos(loop_block, loop_block->begin());
     visit(ctx->stmt());
-    builder().create_br(judge_block);
 
-    ir::BasicBlock::block_link(loop_block, judge_block);
+    builder().create_br(judge_block);
+    ir::BasicBlock::block_link(builder().block(), judge_block);
 
     // pop header and exit block
     builder().pop_loop();
@@ -262,6 +265,7 @@ std::any SysYIRGenerator::visitBreakStmt(SysYParser::BreakStmtContext* ctx) {
         exit(EXIT_FAILURE);
     }
     auto res = builder().create_br(breakDest);
+    ir::BasicBlock::block_link(builder().block(), breakDest);
 
     // create a basic block
     auto cur_func = builder().block()->parent();
@@ -278,6 +282,7 @@ std::any SysYIRGenerator::visitContinueStmt(
         exit(EXIT_FAILURE);
     }
     auto res = builder().create_br(continueDest);
+    ir::BasicBlock::block_link(builder().block(), continueDest);
     // create a basic block
     auto cur_func = builder().block()->parent();
     auto next_block = cur_func->new_block();

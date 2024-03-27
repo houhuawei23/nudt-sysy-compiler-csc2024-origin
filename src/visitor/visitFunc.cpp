@@ -127,6 +127,8 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
         visitBlockStmt(ctx->blockStmt());
 
         builder().create_br(exit);
+        ir::BasicBlock::block_link(builder().block(), exit);
+        
         exit->set_name(builder().get_bbname());
         builder().set_pos(exit, exit->begin());
 
