@@ -134,7 +134,7 @@ create true_block, false_block or
 // 短路求值？
 // cond =
 std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
-    // builder().if_inc();
+    builder().if_inc();
     auto cur_block = builder().block();
     auto cur_func = cur_block->parent();
 
@@ -142,9 +142,6 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
     auto else_block = cur_func->new_block();
     auto merge_block = cur_func->new_block();
 
-    // //* link the basic block
-    // ir::BasicBlock::block_link(cur_block, then_block);
-    // ir::BasicBlock::block_link(cur_block, else_block);
 
     {  //! VISIT cond
         //* push the then and else block to the stack
@@ -201,10 +198,8 @@ while(judge_block){loop_block}
 next_block
 */
 std::any SysYIRGenerator::visitWhileStmt(SysYParser::WhileStmtContext* ctx) {
-    //! TODO
     builder().while_inc();
-    auto cur_block = builder().block();
-    auto cur_func = cur_block->parent();
+    auto cur_func = builder().block()->parent();
     // create new blocks
     auto next_block = cur_func->new_block();
     auto loop_block = cur_func->new_block();
@@ -227,16 +222,9 @@ std::any SysYIRGenerator::visitWhileStmt(SysYParser::WhileStmtContext* ctx) {
     auto fTarget = builder().false_target();
     builder().pop_tf();
 
-    if (not cond->is_i1()) {
-        if (cond->is_i32()) {
-            cond = builder().create_ine(cond, ir::Constant::gen_i32(0));
-        } else if (cond->is_float()) {
-            cond = builder().create_fone(cond, ir::Constant::gen_f64(0.0));
-        }
-    }
-
+    cond = builder().cast_to_i1(cond);
     builder().create_br(cond, tTarget, fTarget);
-
+    //! [CFG] link
     ir::BasicBlock::block_link(builder().block(), tTarget);
     ir::BasicBlock::block_link(builder().block(), fTarget);
 

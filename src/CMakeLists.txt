@@ -8,7 +8,7 @@ add_subdirectory(antlr4)
 add_subdirectory(ir)
 add_subdirectory(visitor)
 add_subdirectory(pass)
-
+add_subdirectory(mir)
 
 add_executable(main
     ${SRC_FILES}
@@ -18,4 +18,5 @@ target_link_libraries(main PUBLIC
     ir
     visitor  
     pass
+    mir
 )

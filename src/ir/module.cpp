@@ -6,11 +6,11 @@
 namespace ir {
 
 void Module::add_gvar(const_str_ref name, Value* gv) {
-    auto iter = _gv_table.find(name);  // find the name in _globals
-    assert(iter == _gv_table.end() &&
+    auto iter = _gvalue_table.find(name);  // find the name in _globals
+    assert(iter == _gvalue_table.end() &&
            "Redeclare! global variable already exists");
-    _gv_table.emplace(name, gv);
-    _gvs.emplace_back(gv);
+    _gvalue_table.emplace(name, gv);
+    _gvalues.emplace_back(gv);
 }
 
 Function* Module::lookup_func(const_str_ref name) {
@@ -32,9 +32,9 @@ Function* Module::add_function(Type* type, const_str_ref name) {
 }
 
 // readable ir print
-void Module::print(std::ostream& os) const {
+void Module::print(std::ostream& os) {
     //! print all global values
-    for (auto gv : _gvs) {
+    for (auto gv : gvalues()) {
         if (ir::isa<ir::Constant>(gv)) {
             auto res = dyn_cast<ir::Constant>(gv);
             os << res->name() << " = constant " << *(res->type()) << " ";

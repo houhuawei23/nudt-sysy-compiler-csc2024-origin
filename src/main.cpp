@@ -1,9 +1,10 @@
+#include <iostream>
 #include "SysYLexer.h"
 #include "visitor/visitor.hpp"
-#include <iostream>
+#include "mir/mir.hpp"
 using namespace std;
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     if (argc != 2) {
         cerr << "Usage: " << argv[0] << "inputfile\n";
         return EXIT_FAILURE;
@@ -18,10 +19,10 @@ int main(int argc, char **argv) {
     antlr4::CommonTokenStream tokens(&lexer);
     SysYParser parser(&tokens);
 
-    SysYParser::CompUnitContext *ast_root = parser.compUnit();
+    SysYParser::CompUnitContext* ast_root = parser.compUnit();
 
-    ir::Module *base_module = new ir::Module();
-    sysy::SysYIRGenerator gen(base_module, ast_root); // forget to pass module
+    ir::Module* base_module = new ir::Module();
+    sysy::SysYIRGenerator gen(base_module, ast_root);  // forget to pass module
     gen.build_ir();
 
     auto module_ir = gen.module();
@@ -29,6 +30,8 @@ int main(int argc, char **argv) {
     if (genir) {
         module_ir->print(std::cout);
     }
-    // 
+    //
+
+    mir::MIRModule * mir_module = new mir::MIRModule(module_ir);
     return EXIT_SUCCESS;
 }
