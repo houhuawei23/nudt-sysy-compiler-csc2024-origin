@@ -17,7 +17,7 @@ class MIRGlobalObject;
 class MIRModule {
    private:
     std::vector<MIRFunction*> _functions;
-    std::vector<MIRGlobalObject*> global_objs;
+    std::vector<MIRGlobalObject*> _global_objs;
     ir::Module* _ir_module;
 
    public:
@@ -33,6 +33,8 @@ class MIRFunction {
     MIRModule* _parent;
     std::vector<MIRBlock*> _blocks;
     ir::Function* _ir_func;
+
+    std::string _name;
 
    public:
     MIRFunction() = default;
@@ -52,16 +54,21 @@ class MIRBlock {
     MIRBlock() = default;
     MIRBlock(ir::BasicBlock* ir_block, MIRFunction* parent);
 
+    void inst_sel(ir::BasicBlock* ir_bb);
+
    public:
     void print();
 };
-
+// addi	sp,sp,-16
+// sd	s0,8(sp)
+// addi	s0,sp,16
 class MIRInst {
-    static const int max_operand_num = 7;
+    // static const int max_operand_num = 7;
 
-   private:
+   protected:
     MIRBlock* _parent;
-    std::array<MIROperand*, max_operand_num> _operands;
+    // std::array<MIROperand*, max_operand_num> _operands;
+    std::vector<MIROperand*> _operands;
 
    public:
     MIRInst() = default;
@@ -74,7 +81,12 @@ class MIRInst {
 class MIROperand {
    private:
     // std::variant<MIRRegister /*others*/> _operand;
-    int tmp;
+    // int tmp;
+    union _operand {
+        MIRRegister* reg;
+        // int i;
+        // float f;
+    };
 
    public:
     void print();
@@ -94,5 +106,13 @@ class MIRRegister {
     void print();
 };
 
-class MIRGlobalObject {};
+class MIRGlobalObject {
+   private:
+    MIRModule* _parent;
+    ir::Value* _ir_global;
+
+   public:
+    MIRGlobalObject() = default;
+    MIRGlobalObject(ir::Value* ir_global, MIRModule* parent);
+};
 }  // namespace mir
