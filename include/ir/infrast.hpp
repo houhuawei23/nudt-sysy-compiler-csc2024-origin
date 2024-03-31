@@ -51,6 +51,15 @@ class Argument : public Value {
 class BasicBlock : public Value {
     // _type: label_type()
 
+    // dom info for anlaysis
+    public:
+        BasicBlock* idom;
+        BasicBlock* sdom;
+        std::vector<BasicBlock*>domTree;
+        std::vector<BasicBlock*>domFrontier;
+        int domLevel;
+
+
    protected:
     Function* _parent;
     inst_list _insts;
@@ -61,6 +70,8 @@ class BasicBlock : public Value {
 
     int _depth = 0;
     bool _is_terminal = false;
+
+
 
    public:
     BasicBlock(const_str_ref name = "", Function* parent = nullptr)
