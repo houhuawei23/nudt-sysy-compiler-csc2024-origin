@@ -63,7 +63,7 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
                 }
             } else {  //! 变量
                 if (func->ret_type()->is_i32() && value->is_float()) {
-                    value = _builder.create_ftosi(value);
+                    value =_builder.create_unary_beta(ir::Value::vFPTOSI, value, ir::Type::i32_type());
                 } else if (func->ret_type()->is_float() && value->is_i32()) {
                     value = builder().create_unary_beta(ir::Value::vSITOFP, value, ir::Type::float_type());
                 } else if (func->ret_type() != value->type()) {
@@ -116,7 +116,7 @@ std::any SysYIRGenerator::visitAssignStmt(SysYParser::AssignStmtContext* ctx) {
         }
     } else {  //! 2. 右值为变量
         if (lvalue_ptr->is_i32() && exp->is_float()) {
-            exp = _builder.create_ftosi(exp);
+            exp = _builder.create_unary_beta(ir::Value::vFPTOSI, exp, ir::Type::i32_type());
         } else if (lvalue_ptr->is_float() && exp->is_i32()) {
             exp = builder().create_unary_beta(ir::Value::vSITOFP, exp, ir::Type::float_type());
         } else if (dyn_cast<ir::PointerType>(lvalue_ptr->type())->base_type() !=

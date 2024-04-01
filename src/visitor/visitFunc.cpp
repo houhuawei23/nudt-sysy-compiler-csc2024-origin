@@ -94,8 +94,11 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
         exit->append_comment("exit");
         builder().set_pos(entry, entry->begin());
         // create return value alloca
-        auto ret_value_ptr = builder().create_alloca(func->ret_type(), {}, "");
-        func->set_ret_value_ptr(ret_value_ptr);
+        if (not func->ret_type()->is_void()) {
+            auto ret_value_ptr = builder().create_alloca(func->ret_type(), {});
+            func->set_ret_value_ptr(ret_value_ptr); 
+        }
+
 
         if (ctx->funcFParams()){
             // first init args
@@ -134,8 +137,13 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
         exit->set_name(builder().get_bbname());
         builder().set_pos(exit, exit->begin());
 
-        auto ret_value = builder().create_load(func->ret_value_ptr(), {});
-        builder().create_return(ret_value);
+        if (not func->ret_type()->is_void()) {
+            auto ret_value = builder().create_load(func->ret_value_ptr(), {});
+            builder().create_return(ret_value);
+        } else {
+            builder().create_return();
+        }
+
         
         func->sort_blocks();
     }

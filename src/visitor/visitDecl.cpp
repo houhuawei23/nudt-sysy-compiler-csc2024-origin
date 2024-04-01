@@ -123,7 +123,7 @@ ir::Value* SysYIRGenerator::visitVarDef_beta(SysYParser::VarDefContext* ctx,
                 }
             } else {  // 2.2 变量
                 if (btype->is_i32() && init->is_float()) {
-                    init = _builder.create_ftosi(init);
+                    init = _builder.create_unary_beta(ir::Value::vFPTOSI, init, ir::Type::i32_type());
                 } else if (btype->is_float() && init->is_i32()) {
                     // init = _builder.create_sitof(init);
                     init = builder().create_unary_beta(ir::Value::vSITOFP, init,
@@ -357,7 +357,7 @@ void SysYIRGenerator::visitInitValue_beta(SysYParser::InitValueContext* ctx,
             }
         } else {  //! 2. 变量
             if (_current_type->is_i32() && value->is_float()) {
-                value = _builder.create_ftosi(value);
+                value = _builder.create_unary_beta(ir::Value::vFPTOSI, value, ir::Type::i32_type());
             } else if (_current_type->is_float() && value->is_i32()) {
                 value = _builder.create_unary_beta(ir::Value::vSITOFP, value,
                                                    ir::Type::float_type());

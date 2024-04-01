@@ -80,6 +80,18 @@ function run_test() {
     if [ -f "$single_file" ]; then
         in_file="${single_file%.*}.in"
 
+        # llvm compiler
+        cp "$single_file" "${output_dir}/test.c"
+        clang --no-warnings -emit-llvm -S "${output_dir}/test.c" -o "${output_dir}/llvm.ll" -O0
+        llvm-link --suppress-warnings ./test/link/link.ll "${output_dir}/llvm.ll" -S -o "${output_dir}/llvm_linked.ll"
+        if [ -f "$in_file" ]; then
+            lli "${output_dir}/llvm_linked.ll" > "${output_dir}/llvm.out" < "${in_file}"
+        else 
+            lli "${output_dir}/llvm_linked.ll" > "${output_dir}/llvm.out"
+        fi
+        llvmres=$?
+        # llvm compiler end
+
         # sys-compiler
         ./main "$single_file" >"${output_dir}/gen.ll"
 
@@ -102,17 +114,7 @@ function run_test() {
             lli "${output_dir}/gen_linked.ll" > "${output_dir}/gen.out"
         fi
         res=$?
-
-        # llvm compiler
-        cp "$single_file" "${output_dir}/test.c"
-        clang --no-warnings -emit-llvm -S "${output_dir}/test.c" -o "${output_dir}/llvm.ll"
-        llvm-link --suppress-warnings ./test/link/link.ll "${output_dir}/llvm.ll" -S -o "${output_dir}/llvm_linked.ll"
-        if [ -f "$in_file" ]; then
-            lli "${output_dir}/llvm_linked.ll" > "${output_dir}/llvm.out" < "${in_file}"
-        else 
-            lli "${output_dir}/llvm_linked.ll" > "${output_dir}/llvm.out"
-        fi
-        llvmres=$?
+        # sys-compiler end
 
         diff "${output_dir}/gen.out" "${output_dir}/llvm.out" > "/dev/null"
         diff_res=$?

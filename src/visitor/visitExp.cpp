@@ -108,7 +108,7 @@ std::any SysYIRGenerator::visitUnaryExp(SysYParser::UnaryExpContext* ctx) {
                         ir::Value::SUB, ir::Constant::gen_i32(0), exp);
                     break;
                 case ir::FLOAT:
-                    res = builder().create_fneg(exp->type(), exp);
+                    res = builder().create_unary_beta(ir::Value::vFNEG, exp);
                     break;
                 default:
                     assert(false && "Unsupport btype");

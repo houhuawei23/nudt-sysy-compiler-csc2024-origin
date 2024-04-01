@@ -37,7 +37,7 @@ std::any SysYIRGenerator::visitCall(SysYParser::CallContext* ctx) {
     for(int i = 0;i < length;i++)
     {
         if(func->arg_types()[i]->is_i32() and rargs[i]->is_float()){
-            auto ftosi = _builder.create_ftosi(rargs[i]);
+            auto ftosi = _builder.create_unary_beta(ir::Value::vFPTOSI, rargs[i], ir::Type::i32_type());
             final_rargs.push_back(ftosi);
         }
         else if(func->arg_types()[i]->is_float() and rargs[i]->is_i32()){

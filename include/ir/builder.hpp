@@ -319,17 +319,6 @@ class IRBuilder {
         block()->emplace_back_inst(inst);
         return inst;
     }
-    UnaryInst* create_sitof(Value* value, const_str_ref name = "") {
-        return create_unary(Value::ValueId::vSITOFP, ir::Type::float_type(),
-                            value, name);
-    }
-    UnaryInst* create_ftosi(Value* value, const_str_ref name = "") {
-        return create_unary(Value::ValueId::vFPTOSI, ir::Type::i32_type(),
-                            value, name);
-    }
-    UnaryInst* create_fneg(Type* type, Value* value, const_str_ref name = "") {
-        return create_unary(Value::ValueId::vFNEG, type, value, name);
-    }
 
     BinaryInst* create_binary(Value::ValueId kind,
                               Type* type,
