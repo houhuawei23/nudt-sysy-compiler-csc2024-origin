@@ -44,6 +44,7 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
 
     if (!isArray) {  //! 1. scalar
         if (auto res_constant = dyn_cast<ir::Constant>(res)) {
+            res = res_constant;
         } else {
             res = _builder.create_load(res, {});
         }

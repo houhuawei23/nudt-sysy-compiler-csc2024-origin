@@ -7,8 +7,7 @@ namespace ir {
 
 void Module::add_gvar(const_str_ref name, Value* gv) {
     auto iter = _gvalue_table.find(name);  // find the name in _globals
-    assert(iter == _gvalue_table.end() &&
-           "Redeclare! global variable already exists");
+    assert(iter == _gvalue_table.end() && "Redeclare! global variable already exists");
     _gvalue_table.emplace(name, gv);
     _gvalues.emplace_back(gv);
 }

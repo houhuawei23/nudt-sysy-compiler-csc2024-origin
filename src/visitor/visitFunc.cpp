@@ -96,6 +96,7 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
         // create return value alloca
         if (not func->ret_type()->is_void()) {
             auto ret_value_ptr = builder().create_alloca(func->ret_type(), {});
+            auto ret_store_zero = builder().create_store(ir::Constant::gen_i32(0), ret_value_ptr);
             func->set_ret_value_ptr(ret_value_ptr); 
         }
 

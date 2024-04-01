@@ -287,13 +287,13 @@ ir::Value* SysYIRGenerator::visitVarDef_global(SysYParser::VarDefContext* ctx,
 
             cinit = dyn_cast<ir::Constant>(tmp);
             if (btype->is_i32() && cinit->is_float()) {
-                cinit = ir::Constant::gen_i32(cinit->f32(), "@" + name);
+                cinit = ir::Constant::gen_i32(cinit->f32());
             } else if (btype->is_float() && cinit->is_i32()) {
-                cinit = ir::Constant::gen_f32(cinit->i32(), "@" + name);
+                cinit = ir::Constant::gen_f32(cinit->i32());
             } else if (cinit->is_float()) {
-                cinit = ir::Constant::gen_f32(cinit->f32(), "@" + name);
+                cinit = ir::Constant::gen_f32(cinit->f32());
             } else if (cinit->is_i32()) {
-                cinit = ir::Constant::gen_i32(cinit->i32(), "@" + name);
+                cinit = ir::Constant::gen_i32(cinit->i32());
             } else {
                 assert(false && "Invalid type");
             }
@@ -317,8 +317,9 @@ ir::Value* SysYIRGenerator::visitVarDef_global(SysYParser::VarDefContext* ctx,
     if (is_const) {              //! 1. const
         if (dims.size() == 0) {  //! 1.1 标量
             res = cinit;
+            ir::GlobalVariable *gv = ir::GlobalVariable::gen(btype, {cinit}, {}, _module);
             _tables.insert(name, cinit);
-            module()->add_gvar(name, cinit);
+            // module()->add_gvar(name, gv); // constant spread, not need to add gvar
         } else {  //! 1.2 数组
             auto gv = ir::GlobalVariable::gen(btype, init, dims, _module,
                                               "@" + name, true);
