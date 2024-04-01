@@ -76,6 +76,25 @@ using str_fun_map = std::map<std::string, Function*>;
 
 class Value {
    public:
+    enum CmpOp {
+        EQ,  // ==
+        NE,  // !=
+        GT,  // >
+        GE,  // >=
+        LT,  // <
+        LE,  // <=
+    };
+    enum BinaryOp {
+        ADD, /* + */
+        SUB, /* - */
+        MUL, /* * */
+        DIV, /* / */
+        REM /* %*/
+    };
+
+    enum UnaryOp {
+        NEG, 
+    };
     enum ValueId {
         vValue,
         vFUNCTION,
@@ -118,12 +137,17 @@ class Value {
         vFOLE,
         vFCMP_END,
         // Unary Instruction
+        vUNARY_BEGIN,
         vFNEG,
 
         // Conversion Insts
+        vTRUNC,
+        vZEXT,
+        vSEXT,
+        vFPTRUNC,
         vFPTOSI,
         vSITOFP,
-
+        vUNARY_END,
         // Binary Instruction
         vBINARY_BEGIN,
         vADD,
@@ -257,7 +281,7 @@ class User : public Value {
 
     void unuse_allvalue() { int a = 5; };
     void replace_operand_with(size_t index, Value* value) { int a = 5; };
-    
+
     virtual void print(std::ostream& os){};
 };
 }  // namespace ir

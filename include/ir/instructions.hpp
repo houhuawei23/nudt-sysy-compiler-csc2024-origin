@@ -2,8 +2,8 @@
 #include "ir/function.hpp"
 #include "ir/global.hpp"
 #include "ir/infrast.hpp"
-#include "support/utils.hpp"
 #include "ir/value.hpp"
+#include "support/utils.hpp"
 
 namespace ir {
 
@@ -185,7 +185,7 @@ class UnaryInst : public Instruction {
 
    public:
     static bool classof(const Value* v) {
-        return v->scid() == vFPTOSI || v->scid() == vSITOFP || v->scid() == vFNEG;
+        return v->scid() >= vUNARY_BEGIN && v->scid() <= vUNARY_END;
     }
 
    public:
@@ -304,12 +304,9 @@ class BranchInst : public Instruction {
     }
 
    public:
-    static bool classof(const Value* v) {
-        return v->scid() == vBR;
-    }
-    void print(std::ostream& os) override; 
+    static bool classof(const Value* v) { return v->scid() == vBR; }
+    void print(std::ostream& os) override;
 };
-
 
 //! ICmpInst
 //! <result> = icmp <cond> <ty> <op1>, <op2>
@@ -335,7 +332,7 @@ class ICmpInst : public Instruction {
     static bool classof(const Value* v) {
         return v->scid() >= vICMP_BEGIN && v->scid() <= vICMP_END;
     }
-    void print(std::ostream& os) override;  
+    void print(std::ostream& os) override;
 };
 
 //! FCmpInst
@@ -347,9 +344,9 @@ class FCmpInst : public Instruction {
              BasicBlock* parent,
              const_str_ref name = "")
         : Instruction(itype,
-                      Type::i1_type(), // also return i1
+                      Type::i1_type(),  // also return i1
                       parent,
-                      name) {  
+                      name) {
         add_operand(lhs);
         add_operand(rhs);
     }
@@ -362,7 +359,7 @@ class FCmpInst : public Instruction {
     static bool classof(const Value* v) {
         return v->scid() >= vFCMP_BEGIN && v->scid() <= vFCMP_END;
     }
-    void print(std::ostream& os) override;  
+    void print(std::ostream& os) override;
 };
 
 //! CastInst
@@ -372,9 +369,17 @@ class FCmpInst : public Instruction {
 ///
 /// if (isa<CastInst>(Instr)) { ... }
 /// Base class of casting instructions.
-class CastInst : public Instruction {
-    //! TODO
-};
+// class CastInst : public Instruction {
+//     CastInst(ValueId itype,
+//               Type* type,
+//              Value* src_val,
+//              BasicBlock* parent = nullptr)
+//         : Instruction(itype, type, parent) {
+//         add_operand(src_val);
+//     }
+
+//     void print(std::ostream& os) override;
+// };
 
 /*
  * @brief GetElementPtr Instruction

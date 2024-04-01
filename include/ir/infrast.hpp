@@ -52,13 +52,12 @@ class BasicBlock : public Value {
     // _type: label_type()
 
     // dom info for anlaysis
-    public:
-        BasicBlock* idom;
-        BasicBlock* sdom;
-        std::vector<BasicBlock*>domTree;
-        std::vector<BasicBlock*>domFrontier;
-        int domLevel;
-
+   public:
+    BasicBlock* idom;
+    BasicBlock* sdom;
+    std::vector<BasicBlock*> domTree;
+    std::vector<BasicBlock*> domFrontier;
+    int domLevel;
 
    protected:
     Function* _parent;
@@ -71,7 +70,7 @@ class BasicBlock : public Value {
     int _depth = 0;
     bool _is_terminal = false;
 
-
+    std::string _comment;
 
    public:
     BasicBlock(const_str_ref name = "", Function* parent = nullptr)
@@ -103,6 +102,19 @@ class BasicBlock : public Value {
     inst_iterator end() { return _insts.end(); }
 
     // manage
+    void set_comment(const_str_ref comment) {
+        if (!_comment.empty()) {
+            std::cerr << "re-set basicblock comment!" << std::endl;
+        }
+        _comment = comment;
+    }
+    void append_comment(const_str_ref comment) {
+        if (_comment.empty()) {
+            _comment += comment;
+        } else {
+            _comment = _comment + ", " + comment;
+        }
+    }
     void set_depth(int d) { _depth = d; }  // ?
 
     void emplace_back_inst(Instruction* i);
@@ -162,9 +174,7 @@ class Instruction : public User {
     bool is_math();
 
     // for isa, cast and dyn_cast
-    static bool classof(const Value* v) {
-        return v->scid() >= vINSTRUCTION;  
-    }
+    static bool classof(const Value* v) { return v->scid() >= vINSTRUCTION; }
 
     void setvarname();  // change varname to pass lli
 

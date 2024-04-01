@@ -76,7 +76,7 @@ void MIRGlobalObject::print(std::ostream& os) {
         if (ir::isa<ir::Constant>(scalar)) {
             auto cscalar = dyn_cast<ir::Constant>(scalar);
             if (cscalar->is_i32()) os << cscalar->i32();
-            else if (cscalar->is_float()) os << ir::getMC(cscalar->f64());
+            else if (cscalar->is_float()) os << ir::getMC(cscalar->f32());
             else assert(false && "invalid type");   
         }
     } else {

@@ -44,16 +44,178 @@ class IRBuilder {
         Value* res = nullptr;
         if (not val->is_i1()) {
             if (val->is_i32()) {
-                res = create_ine(val, ir::Constant::gen_i32(0));  // this
+                res = create_icmp(Value::vINE, val, ir::Constant::gen_i32(0));
             } else if (val->is_float()) {
-                res = create_fone(val, ir::Constant::gen_f64(0.0));
+                res =
+                    create_fcmp(Value::vFONE, val, ir::Constant::gen_f32(0.0));
             }
         } else {
             res = val;
         }
         return res;
     }
+    // using pair?
+    // defalut promote to i32
+    Value* type_promote(Value* val,
+                        Type* target_tpye,
+                        Type* base_type = Type::i32_type()) {
+        Value* res = val;
+        if (val->type()->btype() < target_tpye->btype()) {
+            // need to promote
+            if (val->type()->is_i1()) {
+                if (target_tpye->is_i32()) {
+                    res = create_unary_beta(Value::vZEXT, res, Type::i32_type());
 
+                } else if (target_tpye->is_float()) {
+                    res = create_unary_beta(Value::vZEXT, res, Type::i32_type());
+                    res = create_unary_beta(Value::vSITOFP, res, Type::float_type());
+                }
+            } else if (val->type()->is_i32()) {
+                if (target_tpye->is_float()) {
+                    res = create_unary_beta(Value::vSITOFP, res, Type::float_type());
+                }
+            }
+        }
+        return res;
+    }
+
+    auto create_cmp(Value::CmpOp op, Value* lhs, Value* rhs) {
+        if (lhs->type() != rhs->type()) {
+            assert(false && "create_eq_beta: type mismatch!");
+        }
+        switch (lhs->type()->btype()) {
+            case INT32: {
+                switch (op) {
+                    case Value::EQ:
+                        return create_icmp(Value::vIEQ, lhs, rhs);
+                    case Value::NE:
+                        return create_icmp(Value::vINE, lhs, rhs);
+                    case Value::GT:
+                        return create_icmp(Value::vISGT, lhs, rhs);
+                    case Value::GE:
+                        return create_icmp(Value::vISGE, lhs, rhs);
+                    case Value::LT:
+                        return create_icmp(Value::vISLT, lhs, rhs);
+                    case Value::LE:
+                        return create_icmp(Value::vISLE, lhs, rhs);
+                    default:
+                        assert(false && "create_cmp: invalid op!");
+                }
+            } break;
+            case FLOAT:
+            case DOUBLE: {
+                switch (op) {
+                    case Value::EQ:
+                        return create_fcmp(Value::vFOEQ, lhs, rhs);
+                    case Value::NE:
+                        return create_fcmp(Value::vFONE, lhs, rhs);
+                    case Value::GT:
+                        return create_fcmp(Value::vFOGT, lhs, rhs);
+                    case Value::GE:
+                        return create_fcmp(Value::vFOGE, lhs, rhs);
+                    case Value::LT:
+                        return create_fcmp(Value::vFOLT, lhs, rhs);
+                    case Value::LE:
+                        return create_fcmp(Value::vFOLE, lhs, rhs);
+                    default:
+                        assert(false && "create_cmp: invalid op!");
+                }
+            } break;
+            default:
+                assert(false && "create_eq_beta: type mismatch!");
+        }
+    }
+
+    auto create_binary_beta(Value::BinaryOp op, Value* lhs, Value* rhs) {
+        if (lhs->type() != rhs->type()) {
+            assert(false && "create_eq_beta: type mismatch!");
+        }
+        Value* res = nullptr;
+        Type* type = nullptr;
+        Value::ValueId vid;
+        // Type::i32_type()
+        switch (lhs->type()->btype()) {
+            case INT32: {
+                switch (op) {
+                    case Value::ADD:
+                        vid = Value::vADD;
+                        break;
+                    case Value::SUB:
+                        vid = Value::vSUB;
+                        break;
+                    case Value::MUL:
+                        vid = Value::vMUL;
+                        break;
+                    case Value::DIV:
+                        vid = Value::vSDIV;
+                        break;
+                    case Value::REM:
+                        vid = Value::vSREM;
+                        break;
+                    default:
+                        assert(false && "create_binary_beta: invalid op!");
+                }
+                res = create_binary(vid, Type::i32_type(), lhs, rhs);
+            } break;
+            case FLOAT: {
+                switch (op) {
+                    case Value::ADD:
+                        vid = Value::vFADD;
+                        break;
+                    case Value::SUB:
+                        vid = Value::vFSUB;
+                        break;
+                    case Value::MUL:
+                        vid = Value::vFMUL;
+                        break;
+                    case Value::DIV:
+                        vid = Value::vFDIV;
+                        break;
+                    default:
+                        assert(false && "create_binary_beta: invalid op!");
+                }
+                res = create_binary(vid, Type::float_type(), lhs, rhs);
+            } break;
+            case DOUBLE: {
+                assert(false && "create_binary_beta: invalid type!");
+            }
+        }
+        return res;
+    }
+
+    Value* create_unary_beta(Value::ValueId vid, Value* val, Type* ty = nullptr) {
+        //! check vid
+        Value* res = nullptr;
+
+        if (vid == Value::vFNEG) {
+            assert(val->type()->is_float() && "fneg must have float operand");
+            res = create_unary(Value::vFNEG, Type::float_type(), val);
+            return dyn_cast_Value(res);
+        }
+        //! else
+        assert(ty != nullptr && "must have target type");
+
+        switch (vid) {
+            case Value::vSITOFP:
+                assert(val->type()->is_int() && "sitofp must have int operand");
+                assert(ty->is_float() && "sitofp must have float type");
+                break;
+            case Value::vFPTOSI:
+                assert(val->type()->is_float() && "fptosi must have float operand");
+                assert(ty->is_int() && "fptosi must have int type");
+                break;
+            case Value::vTRUNC:
+            case Value::vZEXT:
+            case Value::vSEXT:
+                assert(val->type()->is_int() && ty->is_int());
+                break;
+            case Value::vFPTRUNC:
+                assert(val->type()->is_float() && ty->is_float());
+                break;
+        }
+        res = create_unary(vid, ty, val);
+        return dyn_cast_Value(res);
+    }
     //! get
     std::string get_bbname() { return "bb" + std::to_string(_bb_cnt++); }
     BasicBlock* block() const { return _block; }
@@ -158,10 +320,12 @@ class IRBuilder {
         return inst;
     }
     UnaryInst* create_sitof(Value* value, const_str_ref name = "") {
-        return create_unary(Value::ValueId::vSITOFP, ir::Type::float_type(), value, name);
+        return create_unary(Value::ValueId::vSITOFP, ir::Type::float_type(),
+                            value, name);
     }
     UnaryInst* create_ftosi(Value* value, const_str_ref name = "") {
-        return create_unary(Value::ValueId::vFPTOSI, ir::Type::i32_type(), value, name);
+        return create_unary(Value::ValueId::vFPTOSI, ir::Type::i32_type(),
+                            value, name);
     }
     UnaryInst* create_fneg(Type* type, Value* value, const_str_ref name = "") {
         return create_unary(Value::ValueId::vFNEG, type, value, name);
@@ -176,56 +340,10 @@ class IRBuilder {
         block()->emplace_back_inst(inst);
         return inst;
     }
-    BinaryInst* create_add(Type* type,
-                           Value* lvalue,
-                           Value* rvalue,
-                           const_str_ref name = "") {
-        return type->is_i32() ? create_binary(Value::ValueId::vADD, type,
-                                              lvalue, rvalue, name)
-                              : create_binary(Value::ValueId::vFADD, type,
-                                              lvalue, rvalue, name);
-    }
-    BinaryInst* create_sub(Type* type,
-                           Value* lvalue,
-                           Value* rvalue,
-                           const_str_ref name = "") {
-        return type->is_i32() ? create_binary(Value::ValueId::vSUB, type,
-                                              lvalue, rvalue, name)
-                              : create_binary(Value::ValueId::vFSUB, type,
-                                              lvalue, rvalue, name);
-    }
-    BinaryInst* create_mul(Type* type,
-                           Value* lvalue,
-                           Value* rvalue,
-                           const_str_ref name = "") {
-        return type->is_i32() ? create_binary(Value::ValueId::vMUL, type,
-                                              lvalue, rvalue, name)
-                              : create_binary(Value::ValueId::vFMUL, type,
-                                              lvalue, rvalue, name);
-    }
-    BinaryInst* create_div(Type* type,
-                           Value* lvalue,
-                           Value* rvalue,
-                           const_str_ref name = "") {
-        return type->is_i32() ? create_binary(Value::ValueId::vSDIV, type,
-                                              lvalue, rvalue, name)
-                              : create_binary(Value::ValueId::vFDIV, type,
-                                              lvalue, rvalue, name);
-    }
-    BinaryInst* create_rem(Type* type,
-                           Value* lvalue,
-                           Value* rvalue,
-                           const_str_ref name = "") {
-        return type->is_i32() ? create_binary(Value::ValueId::vSREM, type,
-                                              lvalue, rvalue, name)
-                              : create_binary(Value::ValueId::vFREM, type,
-                                              lvalue, rvalue, name);
-    }
 
     CallInst* create_call(Function* func,
                           const_value_ptr_vector& args,
                           const_str_ref name = "") {
-        //! TODO
         auto call = new CallInst(func, args, _block, name);
         block()->emplace_back_inst(call);
         return call;
@@ -234,84 +352,35 @@ class IRBuilder {
                           BasicBlock* true_block,
                           BasicBlock* false_block) {
         auto inst = new BranchInst(cond, true_block, false_block, _block);
-        // _block->insts().emplace(_pos, inst);
         block()->emplace_back_inst(inst);  // _pos++
         return inst;
     }
 
     BranchInst* create_br(BasicBlock* dest) {
         auto inst = new BranchInst(dest, _block);
-        // _block->insts().emplace(_pos, inst);
         block()->emplace_back_inst(inst);  // _pos++
         return inst;
     }
     //! ICMP inst family
     // (itype, lhs, rhs, parent, name)
-    ICmpInst* create_icmp(Value::ValueId itype,
-                          Value* lhs,
-                          Value* rhs,
-                          const_str_ref name = "") {
+    Instruction* create_icmp(Value::ValueId itype,
+                             Value* lhs,
+                             Value* rhs,
+                             const_str_ref name = "") {
         auto inst = new ICmpInst(itype, lhs, rhs, _block, name);
-        // _block->insts().emplace(_pos, inst);
         block()->emplace_back_inst(inst);  // _pos++
         return inst;
     }
-    ICmpInst* create_ieq(Value* lhs, Value* rhs, const_str_ref name = ""
 
-    ) {
-        return create_icmp(Value::vIEQ, lhs, rhs, name);
-    }
-    // icmp ne i32 4, 5
-    ICmpInst* create_ine(Value* lhs, Value* rhs, const_str_ref name = "") {
-        return create_icmp(Value::vINE, lhs, rhs, name);
-    }
-    ICmpInst* create_isgt(Value* lhs, Value* rhs, const_str_ref name = "") {
-        return create_icmp(Value::vISGT, lhs, rhs, name);
-    }
-    ICmpInst* create_isge(Value* lhs, Value* rhs, const_str_ref name = "") {
-        return create_icmp(Value::vISGE, lhs, rhs, name);
-    }
-    ICmpInst* create_islt(Value* lhs, Value* rhs, const_str_ref name = "") {
-        return create_icmp(Value::vISLT, lhs, rhs, name);
-    }
-    ICmpInst* create_isle(Value* lhs, Value* rhs, const_str_ref name = "") {
-        return create_icmp(Value::vISLE, lhs, rhs, name);
-    }
     //! FCMP inst family
-    FCmpInst* create_fcmp(Value::ValueId itype,
-                          Value* lhs,
-                          Value* rhs,
-                          const_str_ref name = "") {
-        //! TODO: base fcmp
-        // assert(false && "not implemented");
+    Instruction* create_fcmp(Value::ValueId itype,
+                             Value* lhs,
+                             Value* rhs,
+                             const_str_ref name = "") {
         auto inst = new FCmpInst(itype, lhs, rhs, _block, name);
-        // _block->insts().emplace(_pos, inst);
         block()->emplace_back_inst(inst);  // _pos++
         return inst;
     }
-    //! <result> = fcmp oeq float 4.0, 5.0
-    //! yields: result=false
-    FCmpInst* create_foeq(Value* lhs, Value* rhs, const_str_ref name = "") {
-        return create_fcmp(Value::vFOEQ, lhs, rhs, name);
-    }
-    // <result> = fcmp one float 4.0, 5.0
-    // yields: result=true
-    FCmpInst* create_fone(Value* lhs, Value* rhs, const_str_ref name = "") {
-        return create_fcmp(Value::vFONE, lhs, rhs, name);
-    }
-    FCmpInst* create_fogt(Value* lhs, Value* rhs, const_str_ref name = "") {
-        return create_fcmp(Value::vFOGT, lhs, rhs, name);
-    }
-    FCmpInst* create_foge(Value* lhs, Value* rhs, const_str_ref name = "") {
-        return create_fcmp(Value::vFOGE, lhs, rhs, name);
-    }
-    FCmpInst* create_folt(Value* lhs, Value* rhs, const_str_ref name = "") {
-        return create_fcmp(Value::vFOLT, lhs, rhs, name);
-    }
-    FCmpInst* create_fole(Value* lhs, Value* rhs, const_str_ref name = "") {
-        return create_fcmp(Value::vFOLE, lhs, rhs, name);
-    }
-
     //! Create GetElementPtr Instruction
     GetElementPtrInst* create_getelementptr(Type* base_type,
                                             Value* value,

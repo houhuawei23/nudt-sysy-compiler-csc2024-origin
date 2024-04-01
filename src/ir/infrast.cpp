@@ -11,8 +11,12 @@ void Argument::print(std::ostream& os) {
 void BasicBlock::print(std::ostream& os) {
     // print all instructions
 
-    os << name() << ":" << std::endl;
-
+    os << name() << ":" ;
+    if(!_comment.empty()) {
+        os << " ; " << _comment << std::endl;
+    } else {
+        os << std::endl;
+    }
     if (pre_num()) {
         os << "    ; "
            << "pres: ";

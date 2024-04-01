@@ -41,7 +41,7 @@ void Module::print(std::ostream& os) {
             if (res->is_i32())
                 os << res->i32() << std::endl;
             else
-                os << res->f64() << std::endl;
+                os << res->f32() << std::endl;
         } else {
             os << *gv << std::endl;
         }

@@ -140,31 +140,35 @@ void BinaryInst::print(std::ostream& os) {
 void UnaryInst::print(std::ostream& os) {
     Instruction::setvarname();
     os << name() << " = ";
+    if (scid() == vFNEG) {
+        os << "fneg " << *type() << " " << get_value()->name();
+    }
     switch (scid()) {
-        case vFPTOSI:
-            os << "fptosi ";
-
-            if (is_i32())
-                os << "float ";
-            else
-                os << "i32 ";
-            os << get_value()->name() << " to " << *type();
-            break;
         case vSITOFP:
             os << "sitofp ";
-
-            if (is_i32())
-                os << "float ";
-            else
-                os << "i32 ";
-            os << get_value()->name() << " to " << *type();
             break;
-        case vFNEG:
-            os << "fneg " << *type() << " " << get_value()->name();
+        case vFPTOSI:
+            os << "fptosi ";
+            break;
+        case vTRUNC:
+            os << "trunc ";
+            break;
+        case vZEXT:
+            os << "zext ";
+            break;
+        case vSEXT:
+            os << "sext ";
+            break;
+        case vFPTRUNC:
+            os << "fptrunc ";
             break;
         default:
+            assert(false && "not valid scid");
             break;
     }
+    os << *(get_value()->type()) << " ";
+    os << get_value()->name() << " ";
+    os << " to " << *type();
 }
 
 void ICmpInst::print(std::ostream& os) {

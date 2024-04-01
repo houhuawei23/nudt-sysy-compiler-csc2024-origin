@@ -82,8 +82,8 @@ function run_test() {
 
         # sys-compiler
         ./main "$single_file" >"${output_dir}/gen.ll"
-        echo "123"
-        llvm-link ./test/link/link.ll "${output_dir}/gen.ll" -S -o "${output_dir}/1.ll"
+
+        llvm-link --suppress-warnings ./test/link/link.ll "${output_dir}/gen.ll" -S -o "${output_dir}/gen_linked.ll"
         
         if [ $? != 0 ]; then
             echo "link error"
@@ -97,24 +97,24 @@ function run_test() {
         fi
 
         if [ -f "$in_file" ]; then
-            lli "${output_dir}/1.ll" > "${output_dir}/1.out" < "${in_file}"
+            lli "${output_dir}/gen_linked.ll" > "${output_dir}/gen.out" < "${in_file}"
         else 
-            lli "${output_dir}/1.ll" > "${output_dir}/1.out"
+            lli "${output_dir}/gen_linked.ll" > "${output_dir}/gen.out"
         fi
         res=$?
 
         # llvm compiler
         cp "$single_file" "${output_dir}/test.c"
-        clang -emit-llvm -S "${output_dir}/test.c" -o "${output_dir}/llvm.ll"
-        llvm-link ./test/link/link.ll "${output_dir}/llvm.ll" -S -o "${output_dir}/2.ll"
+        clang --no-warnings -emit-llvm -S "${output_dir}/test.c" -o "${output_dir}/llvm.ll"
+        llvm-link --suppress-warnings ./test/link/link.ll "${output_dir}/llvm.ll" -S -o "${output_dir}/llvm_linked.ll"
         if [ -f "$in_file" ]; then
-            lli "${output_dir}/2.ll" > "${output_dir}/2.out" < "${in_file}"
+            lli "${output_dir}/llvm_linked.ll" > "${output_dir}/llvm.out" < "${in_file}"
         else 
-            lli "${output_dir}/2.ll" > "${output_dir}/2.out"
+            lli "${output_dir}/llvm_linked.ll" > "${output_dir}/llvm.out"
         fi
         llvmres=$?
 
-        diff "${output_dir}/1.out" "${output_dir}/2.out" > "/dev/null"
+        diff "${output_dir}/gen.out" "${output_dir}/llvm.out" > "/dev/null"
         diff_res=$?
 
         if [ $res != $llvmres ] || [ $diff_res != 0 ]; then

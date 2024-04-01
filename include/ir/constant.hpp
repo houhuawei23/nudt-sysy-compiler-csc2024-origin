@@ -81,6 +81,25 @@ class Constant : public User {
     }
 
     template <typename T>
+    static Constant* gen_f32(T val) {
+        assert(std::is_integral_v<T> ||
+               std::is_floating_point_v<T> && "not int or float!");
+        auto f32 = (float)val;
+        auto f64 = (double)val;
+        auto name = getMC(f64);
+        return cache_add(f32, name);
+    }
+
+    template <typename T>
+    static Constant* gen_f32(T val, std::string name) {
+        assert(std::is_integral_v<T> ||
+               std::is_floating_point_v<T> && "not int or float!");
+
+        auto f32 = (float)val;
+        auto f64 = (double)val;
+        return cache_add(f32, name);
+    }
+    template <typename T>
     static Constant* gen_f64(T val) {
         assert(std::is_integral_v<T> ||
                std::is_floating_point_v<T> && "not int or float!");
@@ -110,19 +129,29 @@ class Constant : public User {
         auto res = cache.emplace(name, c);
         return c;
     }
+    // static Constant* 
 
    public:
+
     // get function
     int32_t i32() const {
-        assert(is_i32());
+        if (not is_i32()) {
+            std::cerr << "Implicit type conversion!" << std::endl;
+            return (int32_t)_i32;
+        }
+        assert(is_i32() && "not i32!");
         return _i32;
     }
     float f32() const {
-        assert(is_float32());
+        if (not is_float32()) {
+            std::cerr << "Implicit type conversion!" << std::endl;
+            return (float)_f32;
+        }
+        // assert(is_float32() && "not f32!");
         return _f32;
     }
     double f64() const {
-        assert(is_float());
+        assert(is_float() && "not f64!");
         return _f64;
     }
     // get f by catural type

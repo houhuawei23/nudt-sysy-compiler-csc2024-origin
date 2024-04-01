@@ -90,6 +90,8 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
 
         ir::BasicBlock* entry = func->new_entry();
         ir::BasicBlock* exit = func->new_exit();
+        entry->append_comment("entry");
+        exit->append_comment("exit");
         builder().set_pos(entry, entry->begin());
         // create return value alloca
         auto ret_value_ptr = builder().create_alloca(func->ret_type(), {}, "");

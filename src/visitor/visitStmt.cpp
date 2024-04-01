@@ -55,9 +55,9 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
         if (ctx->exp()) {
             if (auto cvalue = dyn_cast<ir::Constant>(value)) {  //! 常值
                 if (func->ret_type()->is_i32() && cvalue->is_float()) {
-                    value = ir::Constant::gen_i32(cvalue->f64());
+                    value = ir::Constant::gen_i32(cvalue->f32());
                 } else if (func->ret_type()->is_float() && cvalue->is_i32()) {
-                    value = ir::Constant::gen_f64(cvalue->i32());
+                    value = ir::Constant::gen_f32(cvalue->i32());
                 } else if (func->ret_type() != cvalue->type()) {
                     assert(false && "invalid type");
                 }
@@ -65,7 +65,7 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
                 if (func->ret_type()->is_i32() && value->is_float()) {
                     value = _builder.create_ftosi(value);
                 } else if (func->ret_type()->is_float() && value->is_i32()) {
-                    value = _builder.create_sitof(value);
+                    value = builder().create_unary_beta(ir::Value::vSITOFP, value, ir::Type::float_type());
                 } else if (func->ret_type() != value->type()) {
                     assert(false && "invalid type");
                 }
@@ -103,9 +103,9 @@ std::any SysYIRGenerator::visitAssignStmt(SysYParser::AssignStmtContext* ctx) {
 
     if (auto cexp = dyn_cast<ir::Constant>(exp)) {  //! 1. 右值为常值
         if (lvalue_ptr->is_i32() && cexp->is_float()) {
-            exp = ir::Constant::gen_i32(cexp->f64());
+            exp = ir::Constant::gen_i32(cexp->f32());
         } else if (lvalue_ptr->is_float() && cexp->is_i32()) {
-            exp = ir::Constant::gen_f64(cexp->i32());
+            exp = ir::Constant::gen_f32(cexp->i32());
         } else if (auto tmp = dyn_cast<ir::PointerType>(lvalue_ptr->type())) {
             if (tmp->base_type() != cexp->type()) {
                 std::cerr << "Type " << *cexp->type()
@@ -118,7 +118,7 @@ std::any SysYIRGenerator::visitAssignStmt(SysYParser::AssignStmtContext* ctx) {
         if (lvalue_ptr->is_i32() && exp->is_float()) {
             exp = _builder.create_ftosi(exp);
         } else if (lvalue_ptr->is_float() && exp->is_i32()) {
-            exp = _builder.create_sitof(exp);
+            exp = builder().create_unary_beta(ir::Value::vSITOFP, exp, ir::Type::float_type());
         } else if (dyn_cast<ir::PointerType>(lvalue_ptr->type())->base_type() !=
                    exp->type()) {
             std::cerr << "Type " << *exp->type() << " can not convert to type "
@@ -145,6 +145,9 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
     auto else_block = cur_func->new_block();
     auto merge_block = cur_func->new_block();
 
+    then_block->append_comment("if" + std::to_string(builder().if_cnt()) + "_then");
+    else_block->append_comment("if" + std::to_string(builder().if_cnt()) + "_else");
+    merge_block->append_comment("if" + std::to_string(builder().if_cnt()) + "_merge");
 
     {   //! 1. VISIT cond
         //* push the then and else block to the stack
@@ -207,6 +210,11 @@ std::any SysYIRGenerator::visitWhileStmt(SysYParser::WhileStmtContext* ctx) {
     auto next_block = cur_func->new_block();
     auto loop_block = cur_func->new_block();
     auto judge_block = cur_func->new_block();
+
+    //! block comment
+    next_block->append_comment("while" + std::to_string(builder().while_cnt()) + "_next");
+    loop_block->append_comment("while" + std::to_string(builder().while_cnt()) + "_loop");
+    judge_block->append_comment("while" + std::to_string(builder().while_cnt()) + "_judge");
 
     // set header and exit block
     builder().push_loop(judge_block, next_block);

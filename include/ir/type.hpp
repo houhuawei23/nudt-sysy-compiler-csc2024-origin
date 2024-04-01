@@ -20,7 +20,8 @@ typedef enum : size_t {
     INT32,
     FLOAT,   // represent f32 in C
     DOUBLE,  // represent f64
-    LABEL,   // BasicBlock
+
+    LABEL,  // BasicBlock
     POINTER,
     FUNCTION,
     UNDEFINE
@@ -56,10 +57,12 @@ class Type {
 
     bool is_i1();
     bool is_i32();
+    bool is_int() { return is_i1() || is_i32(); }
 
     bool is_float32();  // only check f32
     bool is_double();   // only check f64
     bool is_float() { return is_float32() || is_double(); }
+    
     bool is_label();
     bool is_pointer();
     bool is_function();
@@ -91,7 +94,6 @@ class Type {
     void print(std::ostream& os);
 };
 
-
 class PointerType : public Type {
     //* inherit from Type
     // _btype = POINTER
@@ -113,13 +115,12 @@ class FunctionType : public Type {
     //*inherit from Type
     // BType _btype = FUNCTION
    protected:
-
     // the return type of the function
     Type* _ret_type;
 
     // the argument types of the function
     std::vector<Type*> _arg_types;
-    
+
     // the constructor for FunctionType
     FunctionType(Type* ret_type, const type_ptr_vector& arg_types = {})
         : Type(FUNCTION), _ret_type(ret_type), _arg_types(arg_types) {}
@@ -127,7 +128,7 @@ class FunctionType : public Type {
    public:
     //! Gen
     static FunctionType* gen(Type* ret_type, const type_ptr_vector& arg_types);
-    
+
     //! get the return type of the function
     Type* ret_type() const { return _ret_type; }
 

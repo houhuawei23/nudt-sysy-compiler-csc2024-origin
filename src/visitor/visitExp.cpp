@@ -1,3 +1,4 @@
+#include <any>
 #include "visitor/visitor.hpp"
 
 namespace sysy {
@@ -20,7 +21,7 @@ std::any SysYIRGenerator::visitNumberExp(SysYParser::NumberExpContext* ctx) {
     } else if (auto fctx = ctx->number()->FLITERAL()) {  //! float
         std::string s = fctx->getText();
         float f = std::stof(s);
-        res = ir::Constant::gen_f64(f);
+        res = ir::Constant::gen_f32(f);
     }
     return dyn_cast_Value(res);
 }
@@ -78,7 +79,7 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
 
 /*
  * @brief Visit Unary Expression
- * @details: 
+ * @details:
  *      + - ! exp
  */
 std::any SysYIRGenerator::visitUnaryExp(SysYParser::UnaryExpContext* ctx) {
@@ -87,20 +88,30 @@ std::any SysYIRGenerator::visitUnaryExp(SysYParser::UnaryExpContext* ctx) {
 
     if (ctx->SUB()) {
         if (auto cexp = dyn_cast<ir::Constant>(exp)) {
-            if (exp->is_i32()) {
-                res = ir::Constant::gen_i32(-cexp->i32());
-            } else if (exp->is_float()) {
-                res = ir::Constant::gen_f64(-cexp->f64());
-            } else {
-                assert(false && "invalid constant type");
+            //! constant
+            switch (cexp->type()->btype()) {
+                case ir::INT32:
+                    res = ir::Constant::gen_i32(-cexp->i32());
+                    break;
+                case ir::FLOAT:
+                    res = ir::Constant::gen_f32(-cexp->f32());
+                case ir::DOUBLE:
+                    assert(false && "Unsupport Double");
+                    break;
+                default:
+                    assert(false && "Unsupport btype");
             }
         } else if (ir::isa<ir::LoadInst>(exp) || ir::isa<ir::BinaryInst>(exp)) {
-            if (exp->is_i32()) {
-                res = builder().create_sub(ir::Type::i32_type(), ir::Constant::gen_i32(0), exp);
-            } else if (exp->is_float()) {
-                res = builder().create_fneg(ir::Type::double_type(), exp);
-            } else {
-                assert(false && "not known type!");
+            switch (exp->type()->btype()) {
+                case ir::INT32:
+                    res = builder().create_binary_beta(
+                        ir::Value::SUB, ir::Constant::gen_i32(0), exp);
+                    break;
+                case ir::FLOAT:
+                    res = builder().create_fneg(exp->type(), exp);
+                    break;
+                default:
+                    assert(false && "Unsupport btype");
             }
         } else {
             assert(false && "invalid value type");
@@ -135,7 +146,7 @@ std::any SysYIRGenerator::visitParenExp(SysYParser::ParenExpContext* ctx) {
  *      5. fdiv: 有符号浮点型除法
  *
  *      6. urem: 无符号整型取模 ???
- *      7. srem: 有符号整型取模
+ *      7. srem: 有符号整型取模1
  *      8. frem: 有符号浮点型取模
  */
 std::any SysYIRGenerator::visitMultiplicativeExp(
@@ -143,123 +154,134 @@ std::any SysYIRGenerator::visitMultiplicativeExp(
     ir::Value* op1 = any_cast_Value(visit(ctx->exp(0)));
     ir::Value* op2 = any_cast_Value(visit(ctx->exp(1)));
     ir::Value* res;
-    if (ir::isa<ir::Constant>(op1) &&
-        ir::isa<ir::Constant>(op2)) {  //! 1. both 常量 -> 常量折叠
+    if (ir::isa<ir::Constant>(op1) && ir::isa<ir::Constant>(op2)) {
+        //! both constant
         ir::Constant* cop1 = dyn_cast<ir::Constant>(op1);
         ir::Constant* cop2 = dyn_cast<ir::Constant>(op2);
-        if (ctx->DIV()) {
-            auto ans = (cop1->is_float() ? cop1->f64() : cop1->i32()) /
-                       (cop2->is_float() ? cop2->f64() : cop2->i32());
-            if (typeid(ans) == typeid(float))
-                res = ir::Constant::gen_f64(ans);
-            else
-                res = ir::Constant::gen_i32(ans);
-        } else if (ctx->MUL()) {
-            auto ans = (cop1->is_float() ? cop1->f64() : cop1->i32()) *
-                       (cop2->is_float() ? cop2->f64() : cop2->i32());
-            if (typeid(ans) == typeid(float))
-                res = ir::Constant::gen_f64(ans);
-            else
-                res = ir::Constant::gen_i32(ans);
-        } else {  // MODULO
-            if (cop1->is_i32() && cop2->is_i32()) {
-                int ans = cop1->i32() % cop2->i32();
-                res = ir::Constant::gen_i32(ans);
-            } else {
-                std::cerr << "Operands of modulo must be integer!" << std::endl;
-                exit(EXIT_FAILURE);
-            }
+        auto higher_Btype =
+            std::max(cop1->type()->btype(), cop2->type()->btype());
+
+        int32_t ans_i32;
+        float ans_f32;
+        double ans_f64;
+
+        switch (higher_Btype) {
+            case ir::INT32:
+                if (ctx->MUL())
+                    ans_i32 = cop1->i32() * cop2->i32();
+                else if (ctx->DIV())
+                    ans_i32 = cop1->i32() / cop2->i32();
+                else if (ctx->MODULO())
+                    ans_i32 = cop1->i32() % cop2->i32();
+                else
+                    assert(false && "Unknown Binary Operator");
+                res = ir::Constant::gen_i32(ans_i32);
+                break;
+            case ir::FLOAT:
+                if (ctx->MUL())
+                    ans_f32 = cop1->f32() * cop2->f32();
+                else if (ctx->DIV())
+                    ans_f32 = cop1->f32() / cop2->f32();
+                else
+                    assert(false && "Unknown Binary Operator");
+                res = ir::Constant::gen_f32(ans_f32);
+                break;
+            case ir::DOUBLE:
+                assert(false && "Unsupported DOUBLE");
+                break;
+            default:
+                assert(false && "Unknown BType");
+                break;
         }
-    } else {  //! 2. 变量 -> 生成 MUL | FMUL | UDIV | SDIV | FDIV | UREM | SREM
-              //! | FREM 指令
+    } else {
+        //! not all constant
+        auto hi_type = op1->type();
+        if (op1->type()->btype() < op2->type()->btype()) {
+            hi_type = op2->type();
+        }
+        op1 = builder().type_promote(op1, hi_type);  // base i32
+        op2 = builder().type_promote(op2, hi_type);
 
-        if (op1->type() == op2->type()) {  // same type
-            auto type = op1->type();
-
-            if (ctx->MUL())
-                res = _builder.create_mul(type, op1, op2);
-            else if (ctx->DIV())
-                res = _builder.create_div(type, op1, op2);
-            else
-                res = _builder.create_rem(type, op1, op2);
-        } else if (op1->is_i32() && op2->is_float()) {  // 需要进行隐式类型转换
-            auto ftype = ir::Type::float_type();
-            auto sitof = _builder.create_sitof(op1);
-            if (ctx->MUL())
-                res = _builder.create_mul(ftype, sitof, op2);
-            else if (ctx->DIV())
-                res = _builder.create_div(ftype, sitof, op2);
-            else
-                res = _builder.create_rem(ftype, sitof, op2);
-        } else if (op1->is_float() && op2->is_i32()) {  // 需要进行隐式类型转换
-            auto ftype = ir::Type::float_type();
-            auto sitof = _builder.create_sitof(op2);
-            if (ctx->MUL())
-                res = _builder.create_mul(ftype, op1, sitof);
-            else if (ctx->DIV())
-                res = _builder.create_div(ftype, op1, sitof);
-            else
-                res = _builder.create_rem(ftype, op1, sitof);
+        if (ctx->MUL()) {
+            res = builder().create_binary_beta(ir::Value::MUL, op1, op2);
+        } else if (ctx->DIV()) {
+            res = builder().create_binary_beta(ir::Value::DIV, op1, op2);
+        } else if (ctx->MODULO()) {
+            res = builder().create_binary_beta(ir::Value::REM, op1, op2);
+        } else {
+            assert(false && "not support");
         }
     }
-
     return dyn_cast_Value(res);
 }
 
 /*
  * @brief Visit Additive Expression
- * @details: 
+ * @details:
  *      exp (ADD | SUB) exp
  */
-std::any SysYIRGenerator::visitAdditiveExp(SysYParser::AdditiveExpContext* ctx) {
-    ir::Value* op1 = any_cast_Value(visit(ctx->exp()[0]));
-    ir::Value* op2 = any_cast_Value(visit(ctx->exp()[1]));
+std::any SysYIRGenerator::visitAdditiveExp(
+    SysYParser::AdditiveExpContext* ctx) {
+    ir::Value* lhs = any_cast_Value(visit(ctx->exp()[0]));
+    ir::Value* rhs = any_cast_Value(visit(ctx->exp()[1]));
     ir::Value* res;
-    auto ftype = ir::Type::double_type();
 
-    if (ir::isa<ir::Constant>(op1) &&
-        ir::isa<ir::Constant>(op2)) {  //! 1. 常量 -> 常量折叠
-        ir::Constant* cop1 = dyn_cast<ir::Constant>(op1);
-        ir::Constant* cop2 = dyn_cast<ir::Constant>(op2);
+    if (ir::isa<ir::Constant>(lhs) && ir::isa<ir::Constant>(rhs)) {
+        //! constant
+        ir::Constant* clhs = dyn_cast<ir::Constant>(lhs);
+        ir::Constant* crhs = dyn_cast<ir::Constant>(rhs);
+        // bool is_ADD = ctx->ADD();
 
-        if (cop1->is_float() || cop2->is_float()) {
-            float sum, f1, f2;
-            if (cop1->is_i32()) f1 = float(cop1->i32());
-            else f1 = cop1->f64();
-            if (cop2->is_i32()) f2 = float(cop2->i32());
-            else f2 = cop2->f64();
-            if (ctx->ADD()) sum = f1 + f2;
-            else sum = f1 - f2;
+        auto higher_BType =
+            std::max(clhs->type()->btype(), crhs->type()->btype());
 
-            res = ir::Constant::gen_f64(sum);
-        } else {  // both int
-            int sum;
-            if (ctx->ADD()) sum = cop1->i32() + cop2->i32();
-            else sum = cop1->i32() - cop2->i32();
-            res = ir::Constant::gen_i32(sum);
+        int32_t ans_i32;
+        float ans_f32;
+        double ans_f64;
+
+        switch (higher_BType) {
+            case ir::INT32: {
+                if (ctx->ADD())
+                    ans_i32 = clhs->i32() + crhs->i32();
+                else
+                    ans_i32 = clhs->i32() - crhs->i32();
+                res = ir::Constant::gen_i32(ans_i32);
+            } break;
+
+            case ir::FLOAT: {
+                if (ctx->ADD())
+                    ans_f32 = clhs->f32() + crhs->f32();
+                else
+                    ans_f32 = clhs->f32() - crhs->f32();
+                res = ir::Constant::gen_f32(ans_f32);
+            } break;
+
+            case ir::DOUBLE: {
+                assert(false && "not support double");
+            } break;
+
+            default:
+                assert(false && "not support");
         }
-    } else {  //! 2. 变量 -> 生成 ADD | fADD | SUB | fSUB 指令
-        if (op1->is_i32() && op2->is_i32()) {  // int32 类型加减
-            if (ctx->SUB())
-                res = _builder.create_sub(ir::Type::i32_type(), op1, op2);
-            else
-                res = _builder.create_add(ir::Type::i32_type(), op1, op2);
-        } else if (op1->is_float() && op2->is_float()) {  // float 类型加减
-            if (ctx->SUB())
-                res = _builder.create_sub(ftype, op1, op2);
-            else
-                res = _builder.create_add(ftype, op1, op2);
-        } else {  // 需要进行隐式类型转换 (int op float)
-            if (op1->is_i32())
-                op1 = _builder.create_sitof(op1);
-            if (op2->is_i32())
-                op2 = _builder.create_sitof(op2);
-            if (ctx->SUB())
-                res = _builder.create_sub(ftype, op1, op2);
-            else
-                res = _builder.create_add(ftype, op1, op2);
+
+    } else {
+        //! not all constant
+        auto hi_type = lhs->type();
+        if (lhs->type()->btype() < rhs->type()->btype()) {
+            hi_type = rhs->type();
+        }
+        lhs = builder().type_promote(lhs, hi_type);  // base i32
+        rhs = builder().type_promote(rhs, hi_type);
+
+        if (ctx->ADD()) {
+            res = builder().create_binary_beta(ir::Value::ADD, lhs, rhs);
+        } else if (ctx->SUB()) {
+            res = builder().create_binary_beta(ir::Value::SUB, lhs, rhs);
+        } else {
+            assert(false && "not support");
         }
     }
+
     return dyn_cast_Value(res);
 }
 //! exp (LT | GT | LE | GE) exp
@@ -269,79 +291,66 @@ std::any SysYIRGenerator::visitRelationExp(
     auto rhsptr = any_cast_Value(visit(ctx->exp()[1]));
 
     ir::Value* res;
-    bool isfloat = lhsptr->is_float() || rhsptr->is_float();
 
-    if (isfloat) {
-        if (lhsptr->is_i32())
-            lhsptr = _builder.create_sitof(lhsptr);
-        if (rhsptr->is_i32())
-            rhsptr = _builder.create_sitof(rhsptr);
+    auto hi_type = lhsptr->type();
+    if (lhsptr->type()->btype() < rhsptr->type()->btype()) {
+        hi_type = rhsptr->type();
     }
-    //! TODO
+    lhsptr = builder().type_promote(lhsptr, hi_type);  // base i32
+    rhsptr = builder().type_promote(rhsptr, hi_type);
+
     if (ctx->GT()) {
-        if (isfloat) {
-            res = _builder.create_fogt(lhsptr, rhsptr);
-        } else {
-            res = _builder.create_isgt(lhsptr, rhsptr);
-        }
+        res = builder().create_cmp(ir::Value::GT, lhsptr, rhsptr);
     } else if (ctx->GE()) {
-        if (isfloat) {
-            res = _builder.create_foge(lhsptr, rhsptr);
-        } else {
-            res = _builder.create_isge(lhsptr, rhsptr);
-        }
+        res = builder().create_cmp(ir::Value::GE, lhsptr, rhsptr);
     } else if (ctx->LT()) {
-        if (isfloat) {
-            res = _builder.create_folt(lhsptr, rhsptr);
-        } else {
-            res = _builder.create_islt(lhsptr, rhsptr);
-        }
+        res = builder().create_cmp(ir::Value::LT, lhsptr, rhsptr);
     } else if (ctx->LE()) {
-        if (isfloat) {
-            res = _builder.create_fole(lhsptr, rhsptr);
-        } else {
-            res = _builder.create_isle(lhsptr, rhsptr);
-        }
+        res = builder().create_cmp(ir::Value::LE, lhsptr, rhsptr);
+    } else {
+        std::cerr << "Unknown relation operator!" << std::endl;
     }
     return dyn_cast_Value(res);
 }
 
 //! exp (EQ | NE) exp
+/**
+ * i1  vs i1     -> i32 vs i32       (zext)
+ * i1  vs i32    -> i32 vs i32       (zext)
+ * i1  vs float  -> float vs float   (zext, sitofp)
+ * i32 vs float  -> float vs float   (sitofp)
+ */
 std::any SysYIRGenerator::visitEqualExp(SysYParser::EqualExpContext* ctx) {
     auto lhsptr = any_cast_Value(visit(ctx->exp()[0]));
     auto rhsptr = any_cast_Value(visit(ctx->exp()[1]));
     ir::Value* res;
-    bool isfloat = lhsptr->is_float() || rhsptr->is_float();
-    if (isfloat) {
-        if (lhsptr->is_i32()) {
-            lhsptr = _builder.create_sitof(lhsptr);
-        }
-        if (rhsptr->is_i32()) {
-            rhsptr = _builder.create_sitof(rhsptr);
-        }
+
+    auto hi_type = lhsptr->type();
+    if (lhsptr->type()->btype() < rhsptr->type()->btype()) {
+        hi_type = rhsptr->type();
     }
+
+    lhsptr = builder().type_promote(lhsptr, hi_type);  // base i32
+    rhsptr = builder().type_promote(rhsptr, hi_type);
+
+    // same type
     if (ctx->EQ()) {
-        if (isfloat) {
-            res = _builder.create_foeq(lhsptr, rhsptr);
-        } else {
-            res = _builder.create_ieq(lhsptr, rhsptr);
-        }
+        res = builder().create_cmp(ir::Value::EQ, lhsptr, rhsptr);
     } else if (ctx->NE()) {
-        if (isfloat) {
-            res = _builder.create_fone(lhsptr, rhsptr);
-        } else {
-            res = _builder.create_ine(lhsptr, rhsptr);
-        }
+        res = builder().create_cmp(ir::Value::NE, lhsptr, rhsptr);
+    } else {
+        std::cerr << "not valid equal exp" << std::endl;
     }
     return dyn_cast_Value(res);
 }
 
 /*
  * @brief visit And Expressions
- * @details: 
+ * @details:
  *      exp: exp AND exp;
- * @note: 
- *       - before you visit one exp, you must prepare its true and false target
+ * @note:
+ *       - before you visit one exp, you must prepare its true and false
+ * target
  *       1. push the thing you protect
  *       2. call the function
  *       3. pop to reuse OR use tmp var to log
@@ -356,20 +365,23 @@ std::any SysYIRGenerator::visitAndExp(SysYParser::AndExpContext* ctx) {
     auto cur_func = builder().block()->parent();
 
     auto rhs_block = cur_func->new_block();
-    auto lhs_f_target = builder().false_target();
-
+    rhs_block->append_comment("rhs");
     //! 1 visit lhs exp to get its value
-    builder().push_tf(rhs_block, lhs_f_target);           //! diff with OrExp
+    builder().push_tf(rhs_block,
+                      builder().false_target());          //! diff with OrExp
     auto lhs_value = any_cast_Value(visit(ctx->exp(0)));  // recursively visit
-    builder().pop_tf();                                   // match with push_tf
+    //! may chage by visit, need to re get
+    auto lhs_t_target = builder().true_target();
+    auto lhs_f_target = builder().false_target();
+    builder().pop_tf();  // match with push_tf
 
-    lhs_value = builder().cast_to_i1(lhs_value);  
+    lhs_value = builder().cast_to_i1(lhs_value);
 
-    builder().create_br(lhs_value, rhs_block, lhs_f_target);
+    builder().create_br(lhs_value, lhs_t_target, lhs_f_target);
 
     //! 2 [for CFG] link cur_block and target
     // visit may change the cur_block, so need to reload the cur block
-    ir::BasicBlock::block_link(builder().block(), rhs_block);
+    ir::BasicBlock::block_link(builder().block(), lhs_t_target);
     ir::BasicBlock::block_link(builder().block(), lhs_f_target);
 
     //! 3 visit and generate code for rhs block
@@ -390,21 +402,23 @@ std::any SysYIRGenerator::visitAndExp(SysYParser::AndExpContext* ctx) {
 std::any SysYIRGenerator::visitOrExp(SysYParser::OrExpContext* ctx) {
     auto cur_func = builder().block()->parent();
 
-    auto lhs_t_target = builder().true_target();
     auto rhs_block = cur_func->new_block();
+    rhs_block->append_comment("rhs");
 
     //! 1 visit lhs exp to get its value
     builder().push_tf(builder().true_target(), rhs_block);
     auto lhs_value = any_cast_Value(visit(ctx->exp(0)));
+    auto lhs_t_target = builder().true_target();
+    auto lhs_f_target = builder().false_target();
     builder().pop_tf();  // match with push_tf
 
     lhs_value = builder().cast_to_i1(lhs_value);
-    builder().create_br(lhs_value, lhs_t_target, rhs_block);
+    builder().create_br(lhs_value, lhs_t_target, lhs_f_target);
 
     //! 2 [for CFG] link cur_block and target
     // visit may change the cur_block, so need to reload the cur block
     ir::BasicBlock::block_link(builder().block(), lhs_t_target);
-    ir::BasicBlock::block_link(builder().block(), rhs_block);
+    ir::BasicBlock::block_link(builder().block(), lhs_f_target);
 
     //! 3 visit and generate code for rhs block
     builder().set_pos(rhs_block, rhs_block->begin());
