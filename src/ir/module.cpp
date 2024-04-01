@@ -19,7 +19,7 @@ Function* Module::lookup_func(const_str_ref name) {
     }
     return nullptr;
 }
-Function* Module::add_function(Type* type, const_str_ref name) {
+Function* Module::add_func(Type* type, const_str_ref name) {
     // re-def name
     assert(lookup_func(name) == nullptr && "re-add function!");
 

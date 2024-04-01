@@ -292,6 +292,7 @@ class IRBuilder {
     StoreInst* create_store(Value* value,
                             Value* pointer,
                             const_str_ref name = "") {
+        assert(value->type() == dyn_cast<PointerType>(pointer->type())->base_type());
         auto inst = new StoreInst(value, pointer, _block, name);
         block()->emplace_back_inst(inst);
         return inst;

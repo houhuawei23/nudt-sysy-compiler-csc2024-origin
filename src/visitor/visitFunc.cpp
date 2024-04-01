@@ -15,7 +15,7 @@ std::any SysYIRGenerator::visitFuncType(SysYParser::FuncTypeContext* ctx) {
     if (ctx->INT()) {
         return ir::Type::i32_type();
     } else if (ctx->FLOAT()) {
-        return ir::Type::double_type();
+        return ir::Type::float_type();
     } else if (ctx->VOID()) {
         return ir::Type::void_type();
     }
@@ -64,9 +64,9 @@ ir::Function* SysYIRGenerator::create_func(SysYParser::FuncDefContext* ctx) {
     ir::Type* ret_type = any_cast_Type(visit(ctx->funcType()));
 
     // empty param types
-    ir::Type* func_type = ir::Type::function_type(ret_type, param_types);
+    ir::Type* func_type = ir::Type::func_type(ret_type, param_types);
     // add func to module
-    ir::Function* func = module()->add_function(func_type, func_name);
+    ir::Function* func = module()->add_func(func_type, func_name);
 
     return func;
 }
@@ -94,9 +94,21 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
         exit->append_comment("exit");
         builder().set_pos(entry, entry->begin());
         // create return value alloca
+        auto fz = ir::Constant::gen_f32(0.0);
         if (not func->ret_type()->is_void()) {
             auto ret_value_ptr = builder().create_alloca(func->ret_type(), {});
-            auto ret_store_zero = builder().create_store(ir::Constant::gen_i32(0), ret_value_ptr);
+            switch (func->ret_type()->btype()) {
+                case ir::INT32: 
+                    builder().create_store(ir::Constant::gen_i32(0), ret_value_ptr);
+                    break;
+                case ir::FLOAT:
+                    
+                    builder().create_store(ir::Constant::gen_f32(0.0), ret_value_ptr);
+                    break;
+                default: 
+                    assert(false && "not valid type");
+            }
+            // auto ret_store_zero = builder().create_store(ir::Constant::gen_i32(0), ret_value_ptr);
             func->set_ret_value_ptr(ret_value_ptr); 
         }
 

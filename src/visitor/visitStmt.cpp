@@ -97,30 +97,33 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
  */
 std::any SysYIRGenerator::visitAssignStmt(SysYParser::AssignStmtContext* ctx) {
     ir::Value* lvalue_ptr = any_cast_Value(visit(ctx->lValue()));  // 左值
+    auto lvar_pointee_type = dyn_cast<ir::PointerType>(lvalue_ptr->type())->base_type();
     ir::Value* exp = any_cast_Value(visit(ctx->exp()));            // 右值
 
     ir::Value* res = nullptr;
 
     if (auto cexp = dyn_cast<ir::Constant>(exp)) {  //! 1. 右值为常值
-        if (lvalue_ptr->is_i32() && cexp->is_float()) {
-            exp = ir::Constant::gen_i32(cexp->f32());
-        } else if (lvalue_ptr->is_float() && cexp->is_i32()) {
-            exp = ir::Constant::gen_f32(cexp->i32());
-        } else if (auto tmp = dyn_cast<ir::PointerType>(lvalue_ptr->type())) {
-            if (tmp->base_type() != cexp->type()) {
-                std::cerr << "Type " << *cexp->type()
-                          << " can not convert to type " << *cexp->type()
-                          << std::endl;
-                assert(false);
-            }
+        switch (lvar_pointee_type->btype()) {
+            case ir::INT32:
+                exp = ir::Constant::gen_i32(cexp->i32());
+                break;
+            case ir::FLOAT:
+                exp = ir::Constant::gen_f32(cexp->f32());
+                break;
+            default:
+                assert(false && "not valid btype");
         }
     } else {  //! 2. 右值为变量
-        if (lvalue_ptr->is_i32() && exp->is_float()) {
+        if (lvar_pointee_type == exp->type()) {
+            exp = exp;
+        }
+        else if (lvar_pointee_type->is_i32() && exp->is_float32()) {
             exp = _builder.create_unary_beta(ir::Value::vFPTOSI, exp, ir::Type::i32_type());
-        } else if (lvalue_ptr->is_float() && exp->is_i32()) {
+
+        } else if (lvar_pointee_type->is_float32() && exp->is_i32()) {
             exp = builder().create_unary_beta(ir::Value::vSITOFP, exp, ir::Type::float_type());
-        } else if (dyn_cast<ir::PointerType>(lvalue_ptr->type())->base_type() !=
-                   exp->type()) {
+
+        } else {
             std::cerr << "Type " << *exp->type() << " can not convert to type "
                       << *lvalue_ptr->type() << std::endl;
             assert(false);

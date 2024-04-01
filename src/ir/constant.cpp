@@ -11,7 +11,7 @@ void Constant::print(std::ostream& os) {
     if (type()->is_i32()) {
         os << i32();
     } else if (type()->is_float()) {
-        os << f32();
+        os << name(); // 0x...
     } else {
         assert(false);
     }

@@ -10,7 +10,7 @@ std::any SysYIRGenerator::visitBtype(SysYParser::BtypeContext* ctx) {
     if (ctx->INT()) {
         return ir::Type::i32_type();
     } else if (ctx->FLOAT()) {
-        return ir::Type::double_type();
+        return ir::Type::float_type();
     }
     return nullptr;
 }

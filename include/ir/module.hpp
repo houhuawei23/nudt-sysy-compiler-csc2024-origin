@@ -36,7 +36,7 @@ class Module {
 
     Function* lookup_func(const_str_ref name);
 
-    Function* add_function(Type* type, const_str_ref name);
+    Function* add_func(Type* type, const_str_ref name);
 
     void add_gvar(const_str_ref name, Value* gv);
 

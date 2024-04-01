@@ -41,6 +41,12 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
                   << std::endl;
         exit(EXIT_FAILURE);
     }
+    //! TODO
+    // if (res->type()->is_pointer()) {
+    //     int a = 55;
+    //     int b = 66;
+    //     assert(false && "not implemented");
+    // }
 
     if (!isArray) {  //! 1. scalar
         if (auto res_constant = dyn_cast<ir::Constant>(res)) {
@@ -96,6 +102,7 @@ std::any SysYIRGenerator::visitUnaryExp(SysYParser::UnaryExpContext* ctx) {
                     break;
                 case ir::FLOAT:
                     res = ir::Constant::gen_f32(-cexp->f32());
+                    break;
                 case ir::DOUBLE:
                     assert(false && "Unsupport Double");
                     break;

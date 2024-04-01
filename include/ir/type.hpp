@@ -47,7 +47,7 @@ class Type {
     static Type* label_type();
     static Type* pointer_type(Type* baseType);
     // static Type *array
-    static Type* function_type(Type* ret_type,
+    static Type* func_type(Type* ret_type,
                                const type_ptr_vector& param_types);
 
     // type check

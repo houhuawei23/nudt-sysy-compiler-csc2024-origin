@@ -35,7 +35,7 @@ Type* Type::label_type() {
 Type* Type::pointer_type(Type* baseType) {
     return PointerType::gen(baseType);
 }
-Type* Type::function_type(Type* ret_type, const type_ptr_vector& arg_types) {
+Type* Type::func_type(Type* ret_type, const type_ptr_vector& arg_types) {
     return FunctionType::gen(ret_type, arg_types);
 }
 /// Type instance construct functions END
