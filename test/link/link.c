@@ -2,8 +2,6 @@
 #include<stdarg.h>
 #include<sys/time.h>
 
-#include "sylib.h"
-
 /* Input & output functions */
 int getint() {
   int t;
@@ -54,6 +52,14 @@ void putf(char a[], ...) {
 }
 
 /* Timing function implementation */
+struct timeval _sysy_start, _sysy_end;
+#define starttime() _sysy_starttime(__LINE__)
+#define stoptime() _sysy_stoptime(__LINE__)
+#define _SYSY_N 1024
+int _sysy_l1[_SYSY_N], _sysy_l2[_SYSY_N];
+int _sysy_h[_SYSY_N], _sysy_m[_SYSY_N], _sysy_s[_SYSY_N], _sysy_us[_SYSY_N];
+int _sysy_idx;
+
 __attribute((constructor)) void before_main() {
   for(int i = 0; i < _SYSY_N; i++) _sysy_h[i] = _sysy_m[i]= _sysy_s[i] = _sysy_us[i] = 0;
   _sysy_idx = 1;

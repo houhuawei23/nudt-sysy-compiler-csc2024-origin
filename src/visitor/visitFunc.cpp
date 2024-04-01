@@ -15,7 +15,7 @@ std::any SysYIRGenerator::visitFuncType(SysYParser::FuncTypeContext* ctx) {
     if (ctx->INT()) {
         return ir::Type::i32_type();
     } else if (ctx->FLOAT()) {
-        return ir::Type::float_type();
+        return ir::Type::double_type();
     } else if (ctx->VOID()) {
         return ir::Type::void_type();
     }

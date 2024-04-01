@@ -21,6 +21,7 @@ int main(int argc, char** argv) {
 
     SysYParser::CompUnitContext* ast_root = parser.compUnit();
 
+    // IR Generation
     ir::Module* base_module = new ir::Module();
     sysy::SysYIRGenerator gen(base_module, ast_root);  // forget to pass module
     gen.build_ir();
@@ -30,8 +31,13 @@ int main(int argc, char** argv) {
     if (genir) {
         module_ir->print(std::cout);
     }
-    //
+    
+    // MIR Generation
+    // mir::MIRModule* mir_base_module = new mir::MIRModule(module_ir);
+    // bool gen_mir = true;
+    // if (gen_mir) {
+    //     mir_base_module->print(std::cout);
+    // }
 
-    mir::MIRModule * mir_module = new mir::MIRModule(module_ir);
     return EXIT_SUCCESS;
 }

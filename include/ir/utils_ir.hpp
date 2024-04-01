@@ -27,14 +27,13 @@ inline std::enable_if_t<std::is_base_of_v<Value, T>, bool> isa(const Value* valu
 }
 
 
-// get machine code for float
+//! get machine code for float
 inline std::string getMC(double f){
-    double d=f;
-    unsigned long mrf=*reinterpret_cast<unsigned long*>(&d);
+    double d = f;
+    unsigned long mrf = *reinterpret_cast<unsigned long*>(&d);
     std::stringstream ss;
     ss << std::hex << std::uppercase << std::setfill('0') << std::setw(16) << mrf;
-    std::string res="0x"+ss.str();
+    std::string res = "0x" + ss.str();
     return res;
 }
-
 }  // namespace ir

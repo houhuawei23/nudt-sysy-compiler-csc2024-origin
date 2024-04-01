@@ -15,16 +15,18 @@ class MIRGlobalObject;
 // class MIR
 
 class MIRModule {
-   private:
+    private:
     std::vector<MIRFunction*> _functions;
     std::vector<MIRGlobalObject*> _global_objs;
     ir::Module* _ir_module;
 
-   public:
+    public:
     MIRModule() = default;
     MIRModule(ir::Module* ir_module);
 
-   public:
+    void print(std::ostream &os);
+
+    public:
     void print();
 };
 
@@ -106,13 +108,23 @@ class MIRRegister {
     void print();
 };
 
+/*
+ * @brief Global Value
+ */
 class MIRGlobalObject {
-   private:
+    private:
     MIRModule* _parent;
     ir::Value* _ir_global;
 
-   public:
+    public:
     MIRGlobalObject() = default;
-    MIRGlobalObject(ir::Value* ir_global, MIRModule* parent);
+    MIRGlobalObject(ir::Value* ir_global, MIRModule* parent) : _parent(parent), _ir_global(ir_global) {
+        std::string var_name = _ir_global->name();
+        var_name = var_name.substr(1, var_name.length() - 1);
+        _ir_global->set_name(var_name);
+    }
+
+    public:
+    void print(std::ostream& os);
 };
 }  // namespace mir

@@ -23,7 +23,7 @@ class StypeInst : public MIRInst {
 
 class JtypeInst : public MIRInst {
     auto rd() {return _operands[0];}
-    auto imm() {return ;}
+    auto imm();
 };
 // class 
 }  // namespace mir

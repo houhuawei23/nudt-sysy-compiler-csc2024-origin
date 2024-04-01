@@ -161,9 +161,14 @@ src中需要关注的文件有：
 - SysYParser.h
 - SysYParser.cpp
 
-## TO DO
-- [] 环境配置 cmake 版本更新解决脚本
-- 
+## 链接静态库
+1. 生成静态链接库
+```bash
+cd ./sysylib
+gcc -c ./sylib.c -o sylib.o
+ar rcs libsy.a ./sylib.o
+```
+2. 
 
 
 

@@ -131,8 +131,6 @@ class FunctionType : public Type {
     //! get the return type of the function
     Type* ret_type() const { return _ret_type; }
 
-    type_ptr_vector& arg_types() {
-        return _arg_types;
-    }
+    type_ptr_vector& arg_types() { return _arg_types; }
 };
 }  // namespace ir

@@ -1,5 +1,6 @@
 #include "ir/function.hpp"
 #include "ir/utils_ir.hpp"
+#include "ir/type.hpp"
 
 namespace ir {
 BasicBlock* Function::new_block() {
@@ -13,22 +14,33 @@ void Function::print(std::ostream& os) {
     // auto param_types = param_type();
     if (blocks().size()) {
         os << "define " << *return_type << " @" << name() << "(";
-    } else {
-        os << "declare " << *return_type << " @" << name() << "(";
-    }
-
-    // print fparams
-    if (_args.size() > 0) {
-        auto last_iter = _args.end() - 1;
-        for (auto iter = _args.begin(); iter != last_iter; ++iter) {
-            auto arg = *iter;
+        if (_args.size() > 0) {
+            auto last_iter = _args.end() - 1;
+            for (auto iter = _args.begin(); iter != last_iter; ++iter) {
+                auto arg = *iter;
+                arg->setname("%" + std::to_string(getvarcnt()));
+                os << *(arg->type()) << " " << arg->name();
+                os << ", ";
+            }
+            auto arg = *last_iter;
             arg->setname("%" + std::to_string(getvarcnt()));
             os << *(arg->type()) << " " << arg->name();
-            os << ", ";
         }
-        auto arg = *last_iter;
-        arg->setname("%" + std::to_string(getvarcnt()));
-        os << *(arg->type()) << " " << arg->name();
+    } else {
+        os << "declare " << *return_type << " @" << name() << "(";
+        auto t = type();
+        if (auto func_type = dyn_cast<FunctionType>(t)) {
+            auto args_types = func_type->arg_types();
+            if (args_types.size() > 0) {
+                auto last_iter = args_types.end() - 1;
+                for (auto iter = args_types.begin(); iter != last_iter; ++iter) {
+                    os << **iter << ", ";
+                }
+                os << **last_iter;
+            }
+        } else {
+            assert(false && "Unexpected type");
+        }
     }
 
     os << ")";

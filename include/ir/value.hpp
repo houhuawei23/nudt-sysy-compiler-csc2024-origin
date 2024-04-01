@@ -142,7 +142,6 @@ class Value {
         vSREM,
         vFREM,
         vBINARY_END,
-
     };
     // for isa<> type check
     // each subclass of Value has different _scid

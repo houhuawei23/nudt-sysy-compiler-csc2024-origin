@@ -27,6 +27,7 @@ std::any SysYIRGenerator::visitNumberExp(SysYParser::NumberExpContext* ctx) {
 
 /*
  * @brief Visit Var Expression
+ * @details:
  *      var: ID (LBRACKET exp RBRACKET)*;
  */
 std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
@@ -77,40 +78,34 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
 
 /*
  * @brief Visit Unary Expression
- *      + - (NOT) exp
+ * @details: 
+ *      + - ! exp
  */
 std::any SysYIRGenerator::visitUnaryExp(SysYParser::UnaryExpContext* ctx) {
     ir::Value* res = nullptr;
     auto exp = any_cast_Value(visit(ctx->exp()));
 
     if (ctx->SUB()) {
-        //! Constant, static type cast
-        // alloca arr
         if (auto cexp = dyn_cast<ir::Constant>(exp)) {
-            //
             if (exp->is_i32()) {
                 res = ir::Constant::gen_i32(-cexp->i32());
             } else if (exp->is_float()) {
                 res = ir::Constant::gen_f64(-cexp->f64());
+            } else {
+                assert(false && "invalid constant type");
             }
-        } else if (ir::isa<ir::LoadInst>(exp)) {
-            // 如果是 AllocaInst and 标量
+        } else if (ir::isa<ir::LoadInst>(exp) || ir::isa<ir::BinaryInst>(exp)) {
             if (exp->is_i32()) {
-                // create sub 0
-                res = builder().create_sub(ir::Type::i32_type(),
-                                           ir::Constant::gen_i32(0), exp);
+                res = builder().create_sub(ir::Type::i32_type(), ir::Constant::gen_i32(0), exp);
             } else if (exp->is_float()) {
-                // fneg
                 res = builder().create_fneg(ir::Type::double_type(), exp);
             } else {
                 assert(false && "not known type!");
             }
-        } else if (exp->is_i32()) {
-        } else if (exp->is_float()) {
+        } else {
+            assert(false && "invalid value type");
         }
-        //! TODO
     } else if (ctx->NOT()) {
-        //! change target
         auto true_target = builder().false_target();
         auto false_target = builder().true_target();
         builder().pop_tf();
@@ -118,6 +113,8 @@ std::any SysYIRGenerator::visitUnaryExp(SysYParser::UnaryExpContext* ctx) {
         res = exp;
     } else if (ctx->ADD()) {
         res = exp;
+    } else {
+        assert(false && "invalid expression");
     }
     return dyn_cast_Value(res);
 }
@@ -211,10 +208,10 @@ std::any SysYIRGenerator::visitMultiplicativeExp(
 
 /*
  * @brief Visit Additive Expression
+ * @details: 
  *      exp (ADD | SUB) exp
  */
-std::any SysYIRGenerator::visitAdditiveExp(
-    SysYParser::AdditiveExpContext* ctx) {
+std::any SysYIRGenerator::visitAdditiveExp(SysYParser::AdditiveExpContext* ctx) {
     ir::Value* op1 = any_cast_Value(visit(ctx->exp()[0]));
     ir::Value* op2 = any_cast_Value(visit(ctx->exp()[1]));
     ir::Value* res;
@@ -227,26 +224,18 @@ std::any SysYIRGenerator::visitAdditiveExp(
 
         if (cop1->is_float() || cop2->is_float()) {
             float sum, f1, f2;
-            if (cop1->is_i32())
-                f1 = float(cop1->i32());
-            else
-                f1 = cop1->f64();
-            if (cop2->is_i32())
-                f2 = float(cop2->i32());
-            else
-                f2 = cop2->f64();
-            if (ctx->ADD())
-                sum = f1 + f2;
-            else
-                sum = f1 - f2;
+            if (cop1->is_i32()) f1 = float(cop1->i32());
+            else f1 = cop1->f64();
+            if (cop2->is_i32()) f2 = float(cop2->i32());
+            else f2 = cop2->f64();
+            if (ctx->ADD()) sum = f1 + f2;
+            else sum = f1 - f2;
 
             res = ir::Constant::gen_f64(sum);
         } else {  // both int
             int sum;
-            if (ctx->ADD())
-                sum = cop1->i32() + cop2->i32();
-            else
-                sum = cop1->i32() - cop2->i32();
+            if (ctx->ADD()) sum = cop1->i32() + cop2->i32();
+            else sum = cop1->i32() - cop2->i32();
             res = ir::Constant::gen_i32(sum);
         }
     } else {  //! 2. 变量 -> 生成 ADD | fADD | SUB | fSUB 指令
@@ -346,19 +335,23 @@ std::any SysYIRGenerator::visitEqualExp(SysYParser::EqualExpContext* ctx) {
     }
     return dyn_cast_Value(res);
 }
+
 /*
-- before you visit one exp, you must prepare its true and false target
-1. push the thing you protect
-2. call the function
-3. pop to reuse OR use tmp var to log
-*/
-//! exp : exp AND exp
-// exp: lhs AND rhs
-// know exp's true/false target block
-// lhs's true target = rhs block
-// lhs's false target = exp false target
-// rhs's true target = exp true target
-// rhs's false target = exp false target
+ * @brief visit And Expressions
+ * @details: 
+ *      exp: exp AND exp;
+ * @note: 
+ *       - before you visit one exp, you must prepare its true and false target
+ *       1. push the thing you protect
+ *       2. call the function
+ *       3. pop to reuse OR use tmp var to log
+ * // exp: lhs AND rhs
+ * // know exp's true/false target block
+ * // lhs's true target = rhs block
+ * // lhs's false target = exp false target
+ * // rhs's true target = exp true target
+ * // rhs's false target = exp false target
+ */
 std::any SysYIRGenerator::visitAndExp(SysYParser::AndExpContext* ctx) {
     auto cur_func = builder().block()->parent();
 

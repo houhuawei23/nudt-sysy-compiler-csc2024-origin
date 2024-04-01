@@ -2,13 +2,24 @@
 
 namespace sysy {
 
-/**
- * blockStmt: LBRACE blockItem* RBRACE;
- * blockItem: decl | stmt;
+/*
+ * @brief visit BlockStmt
+ * @details: 
+ *      blockStmt: LBRACE blockItem* RBRACE;
+ *      blockItem: decl | stmt;
+ *      stmt:
+ *            assignStmt
+ *          | expStmt
+ *          | ifStmt
+ *          | whileStmt
+ *          | breakStmt
+ *          | continueStmt
+ *          | returnStmt
+ *          | blockStmt
+ *          | emptyStmt;
  */
 std::any SysYIRGenerator::visitBlockStmt(SysYParser::BlockStmtContext* ctx) {
     ir::SymbolTableBeta::BlockScope scope(_tables);
-    // visit children item
     for (auto item : ctx->blockItem()) {
         visit(item);
         if (auto teststmt = item->stmt()) {
@@ -16,8 +27,7 @@ std::any SysYIRGenerator::visitBlockStmt(SysYParser::BlockStmtContext* ctx) {
             auto bk = teststmt->breakStmt();
             auto ct = teststmt->continueStmt();
             auto ret = teststmt->returnStmt();
-            if (bk || ct || ret)
-                break;
+            if (bk || ct || ret) break;
         }
     }
     return nullptr;
@@ -48,8 +58,8 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
                     value = ir::Constant::gen_i32(cvalue->f64());
                 } else if (func->ret_type()->is_float() && cvalue->is_i32()) {
                     value = ir::Constant::gen_f64(cvalue->i32());
-                } else if (func->ret_type() != value->type()) {
-                    assert(false);
+                } else if (func->ret_type() != cvalue->type()) {
+                    assert(false && "invalid type");
                 }
             } else {  //! 变量
                 if (func->ret_type()->is_i32() && value->is_float()) {
@@ -121,18 +131,11 @@ std::any SysYIRGenerator::visitAssignStmt(SysYParser::AssignStmtContext* ctx) {
     return dyn_cast_Value(res);
 }
 
-//! ifStmt: IF LPAREN exp RPAREN stmt (ELSE stmt)?;
 /*
-if(exp) {} else {}
-if(exp) {}
-create true_block, false_block or
-       then_block, else_block
-如果是 exp = !exp, 则调换 true_block 和 false_block
-的指针，正常地访问!右边的exp, 实际上实现了 ! NOT 操作。
-*/
-
-// 短路求值？
-// cond =
+ * @brief visit If Stmt
+ * @details: 
+ *      ifStmt: IF LPAREN exp RPAREN stmt (ELSE stmt)?;
+ */
 std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
     builder().if_inc();
     auto cur_block = builder().block();
@@ -143,7 +146,7 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
     auto merge_block = cur_func->new_block();
 
 
-    {  //! VISIT cond
+    {   //! 1. VISIT cond
         //* push the then and else block to the stack
         builder().push_tf(then_block, else_block);
 
@@ -154,7 +157,7 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
         auto lhs_t_target = builder().true_target();
         auto lhs_f_target = builder().false_target();
 
-        builder().pop_tf();  // match with push_tf
+        builder().pop_tf();
 
         cond = builder().cast_to_i1(cond);  //* cast to i1
         //* create cond br inst

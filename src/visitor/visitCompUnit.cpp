@@ -10,6 +10,8 @@ std::any SysYIRGenerator::visitCompUnit(SysYParser::CompUnitContext* ctx) {
     auto type_void = ir::Type::void_type();
     // ir::Type* func_type = ir::Type::function_type(, {});
     // auto getIntFunc = 
+
+    //! 外部函数
     module()->add_function(ir::Type::function_type(type_i32, {}), "getint");
     module()->add_function(ir::Type::function_type(type_i32, {}), "getch");
     module()->add_function(ir::Type::function_type(type_f64, {}), "getfloat");
