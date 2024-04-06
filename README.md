@@ -745,3 +745,10 @@ define i32 @main() {
 }
 
 ```
+
+- 2024.4.7
+  - 实现了dom信息的计算
+  - 能够提供正确的idom sdom domTree domFrontier信息，存在BasicBlock的公开接口
+  - 临时在ir::Function中添加了删除其中BB的函数，有待改进
+
+效果：在main中按照添加遍的方法添加domInfoCheck遍，会打印出来相关bb的各种支配信息，以供检查

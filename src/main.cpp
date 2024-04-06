@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
     //mem2reg
     fpm.add_pass(new pass::preProcDom());
     fpm.add_pass(new pass::idomGen());
-    // fpm.add_pass(new pass::domFrontierGen());
+    fpm.add_pass(new pass::domFrontierGen());
     fpm.add_pass(new pass::domInfoCheck());
     for(auto f : module_ir->funcs()){
         fpm.run(f);

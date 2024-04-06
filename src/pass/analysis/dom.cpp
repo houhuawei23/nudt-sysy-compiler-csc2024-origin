@@ -56,11 +56,11 @@ namespace pass
         auto s=w;
         while(semi[label[w]]<semi[label[child[s]]]){
             if(size[s]+size[child[child[s]]]>=2*size[child[s]]){
-                parent[child[s]]=s;
+                ancestor[child[s]]=s;
                 child[s]=child[child[s]];
             }else{
                 size[child[s]]=size[s];
-                s=parent[s]=child[s];
+                s=ancestor[s]=child[s];
             }
         }
         label[s]=label[w];
@@ -71,7 +71,7 @@ namespace pass
             child[v]=tmp;
         }
         while(s){
-            parent[s]=v;
+            ancestor[s]=v;
             s=child[s];
         }
     }
@@ -86,7 +86,7 @@ namespace pass
 
     void idomGen::dfsBlocks(ir::BasicBlock* bb){
         static int dfc=0;
-        semi[bb]=++dfc;
+        semi[bb]=dfc++;
         vertex.push_back(bb);
         for(auto bbnext:bb->next_blocks()){
             if(semi[bbnext]==0){
@@ -155,26 +155,6 @@ namespace pass
             bb->sdom=vertex[semi[bb]];
         }
 
-        // //debug info
-        // for(auto bb : func->blocks()){
-        //     using namespace std;
-        //     cout<<bb->name()<<" idom :\t";
-        //     if(bb->idom)
-        //         cout<<bb->idom->name()<<endl;
-        //     else
-        //         cout<<"null"<<endl;
-        // }
-        // std::cout<<std::endl;
-
-        // for(auto bb : func->blocks()){
-        //     using namespace std;
-        //     cout<<bb->name()<<" sdom :\t";
-        //     if(bb->idom)
-        //         cout<<bb->sdom->name()<<endl;
-        //     else
-        //         cout<<"null"<<endl;
-        // }
-        // std::cout<<std::endl;
     }
 
     std::string idomGen::name(){return "idomGen";}
@@ -254,6 +234,21 @@ namespace pass
             cout<<endl;
         }
         cout<<endl;
+        for(auto bb:func->blocks()){
+            cout<<bb->name()<<" domTreeSons: ";
+            for(auto bbson:bb->domTree){
+                cout<<bbson->name()<<'\t';
+            }
+            cout<<endl;
+        }
+        cout<<endl;
+        for(auto bb:func->blocks()){
+            cout<<bb->name()<<" domFrontier: ";
+            for(auto bbf:bb->domFrontier){
+                cout<<bbf->name()<<'\t';
+            }
+            cout<<endl;
+        }
     }
     std::string domInfoCheck::name(){
         return "domInfoCheck";
