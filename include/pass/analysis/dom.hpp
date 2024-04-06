@@ -6,7 +6,7 @@ namespace pass{
 class preProcDom:public FunctionPass{
     public:
         void run(ir::Function* func) override;
-        std::string name() override;    
+        std::string name() override;
 };
 
 class idomGen:public FunctionPass{
