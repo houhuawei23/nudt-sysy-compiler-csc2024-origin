@@ -55,9 +55,9 @@ class BasicBlock : public Value {
    public:
     BasicBlock* idom;
     BasicBlock* sdom;
-    std::vector<BasicBlock*> domTree;
-    std::vector<BasicBlock*> domFrontier;
-    int domLevel;
+    std::vector<BasicBlock*> domTree;//sons in dom Tree
+    std::vector<BasicBlock*> domFrontier;//dom frontier
+    // int domLevel;
 
    protected:
     Function* _parent;

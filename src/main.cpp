@@ -2,6 +2,8 @@
 #include "SysYLexer.h"
 #include "visitor/visitor.hpp"
 #include "mir/mir.hpp"
+#include "pass/pass.hpp"
+#include "pass/analysis/dom.hpp"
 using namespace std;
 
 int main(int argc, char** argv) {
@@ -30,6 +32,16 @@ int main(int argc, char** argv) {
     bool genir = true;
     if (genir) {
         module_ir->print(std::cout);
+    }
+
+    pass::FunctionPassManager fpm;
+    //mem2reg
+    fpm.add_pass(new pass::preProcDom());
+    fpm.add_pass(new pass::idomGen());
+    // fpm.add_pass(new pass::domFrontierGen());
+    fpm.add_pass(new pass::domInfoCheck());
+    for(auto f : module_ir->funcs()){
+        fpm.run(f);
     }
     
     // MIR Generation
