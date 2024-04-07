@@ -17,7 +17,7 @@ void Function::delete_block(BasicBlock* bb){
         bbnext->pre_blocks().remove(bb);
     }
     for(auto bbinst:bb->insts()){
-        delete bbinst;
+        bb->delete_inst(bbinst);
     }
     _blocks.remove(bb);
     delete bb;

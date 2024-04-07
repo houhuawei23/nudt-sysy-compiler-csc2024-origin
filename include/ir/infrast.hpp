@@ -121,6 +121,8 @@ class BasicBlock : public Value {
 
     void emplace_inst(inst_iterator pos, Instruction* i);
 
+    void delete_inst(Instruction* inst);
+
     // for CFG
     void add_next_block(BasicBlock* b) { _next_blocks.push_back(b); }
     void add_pre_block(BasicBlock* b) { _pre_blocks.push_back(b); }
