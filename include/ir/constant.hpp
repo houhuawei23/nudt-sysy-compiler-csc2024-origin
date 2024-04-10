@@ -30,6 +30,8 @@ class Constant : public User {
     Constant(double f64, const_str_ref name)
         : User(Type::double_type(), vCONSTANT, name), _f64(f64) {}
     Constant() : User(Type::void_type(), vCONSTANT, "VOID") {}
+    Constant(const_str_ref name) : User(Type::undefine_type(), vCONSTANT, "UNDEFINE") {}
+     
 
    public:
     //* add constant to cache
@@ -127,6 +129,18 @@ class Constant : public User {
         Constant* c;
         c = new Constant();
         auto res = cache.emplace(name, c);
+        return c;
+    }
+
+    static Constant* gen_undefine(){
+        std::string name="UNDEFINE";
+        auto iter = cache.find(name);
+        if (iter != cache.end()) {
+            return iter->second;
+        }
+        
+        auto c=new Constant(name);
+        auto res=cache.emplace(name,c);
         return c;
     }
     // static Constant* 

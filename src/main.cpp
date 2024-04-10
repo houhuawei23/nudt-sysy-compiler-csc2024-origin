@@ -4,6 +4,7 @@
 #include "mir/mir.hpp"
 #include "pass/pass.hpp"
 #include "pass/analysis/dom.hpp"
+#include "pass/optimize/mem2reg.hpp"
 using namespace std;
 
 int main(int argc, char** argv) {

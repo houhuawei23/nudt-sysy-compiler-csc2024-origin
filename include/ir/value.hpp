@@ -166,6 +166,7 @@ class Value {
         vSREM,
         vFREM,
         vBINARY_END,
+        vPHI
     };
 
    protected:

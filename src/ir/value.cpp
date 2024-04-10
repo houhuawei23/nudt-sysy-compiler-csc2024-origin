@@ -60,4 +60,10 @@ void User::set_operand(size_t index, Value* value) {
     value->add_use(_operands[index]);
 }
 
+void Value::replace_all_use_with(Value* _value){
+    for(auto puse:_uses){
+        puse->user()->set_operand(puse->index(),_value);
+    }
+}
+
 }  // namespace ir

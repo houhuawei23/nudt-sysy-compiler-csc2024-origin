@@ -379,6 +379,12 @@ class IRBuilder {
         block()->emplace_back_inst(inst);
         return inst;
     }
+
+    PhiInst* create_phi(Type *type, const std::vector<Value *> &vals, const std::vector<BasicBlock *> &bbs){
+        auto inst = new PhiInst(_block, type, vals, bbs);
+        block()->emplace_back_inst(inst);
+        return inst;
+    }
 };
 
 }  // namespace ir

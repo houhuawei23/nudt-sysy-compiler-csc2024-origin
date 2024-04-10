@@ -22,7 +22,7 @@ class ICmpInst;
 class FCmpInst;
 class CallInst;
 
-class CastInst;
+class PhiInst;
 
 /*
  * @brief: AllocaInst
@@ -400,4 +400,44 @@ class GetElementPtrInst : public Instruction {
     void print(std::ostream& os) override;
 };
 
+class PhiInst:public Instruction{
+    protected:
+    size_t size;
+    std::vector<Value*> _vals;
+    std::vector<BasicBlock*> _bbs;
+    public:
+        PhiInst(BasicBlock *bb, Type *type, const std::vector<Value *> &vals = {}, const std::vector<BasicBlock *> &bbs = {}) : Instruction(vPHI, type, bb),size(vals.size())
+        {
+            add_operands(vals); // _operands;
+            add_operands(bbs);
+            _vals = vals;
+            _bbs = bbs;
+            // f
+        }
+        auto vals(){
+            //return Util::range(_operands.begin(), _operands.begin() + size);
+            return _vals;
+        }
+        auto bbs(){
+            //return Util::range(_operands.begin() + size, _operands.begin() + 2 * size);
+            return _bbs;
+        }
+        Value *getvals(size_t k){
+            return operand(k);
+        }
+        Value *getblos(size_t k){
+            return operand(k + size);
+        }
+        void addIncoming(Value *val, BasicBlock *bb){
+            add_operand(val);
+            add_operand(bb);
+            _vals.push_back(val);
+            _bbs.push_back(bb);
+            // 更新操作数的数量
+            size++;
+        }
+        void print(std::ostream& os) override;
+};
+
 }  // namespace ir
+

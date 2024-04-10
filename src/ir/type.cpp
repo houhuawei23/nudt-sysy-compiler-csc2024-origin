@@ -32,7 +32,10 @@ Type* Type::label_type() {
     static Type labelType(LABEL);
     return &labelType;
 }
-
+Type* Type::undefine_type(){
+    static Type undefineType(UNDEFINE);
+    return &undefineType;
+}
 Type* Type::pointer_type(Type* baseType) {
     return PointerType::gen(baseType);
 }

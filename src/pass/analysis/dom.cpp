@@ -16,6 +16,7 @@ static std::unordered_map<ir::BasicBlock*,ir::BasicBlock*>ancestor;
 static std::unordered_map<ir::BasicBlock*,ir::BasicBlock*>child;
 static std::unordered_map<ir::BasicBlock*,int>size;
 static std::unordered_map<ir::BasicBlock*,ir::BasicBlock*>label;
+static bbset doms;
 
 
 
@@ -168,6 +169,17 @@ namespace pass
         }
     }
 
+    void domFrontierGen::getDomInfo(ir::BasicBlock* bb, int level){
+        doms.erase(bb);
+        bb->domLevel=level;
+        bb->dom.clear();
+        bb->dom=std::set<ir::BasicBlock*>(doms);
+        for(auto bbson:bb->domTree){
+            getDomInfo(bbson,level+1);
+        }
+        doms.insert(bb);
+    }
+
     void domFrontierGen::getDomFrontier(ir::Function* func){
         for(auto bb : func->blocks())
             bb->domFrontier.clear();
@@ -188,6 +200,9 @@ namespace pass
     void domFrontierGen::run(ir::Function* func){
         if(!func->entry())return;
         getDomTree(func);
+        for(auto bb:func->blocks())
+            doms.insert(bb);
+        getDomInfo(func->entry(),0);
         getDomFrontier(func);
         
     }

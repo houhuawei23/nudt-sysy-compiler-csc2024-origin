@@ -328,4 +328,15 @@ void CallInst::print(std::ostream& os) {
     os << ")";
 }
 
+void PhiInst::print(std::ostream& os){
+    Instruction::setvarname();
+    os << name() << " = ";
+    os << "phi " << *(type()) << " ";
+    // for all vals, bbs
+    for(int i = 0;i<size-1;i++){
+        os <<"[ "<<*_vals[i]<<", "<<*_bbs[i]<<" ]"<<",";
+    }
+    os <<"[ "<<*_vals[size-1]<<", "<<*_bbs[size-1]<<" ]";
+}
+
 }  // namespace ir

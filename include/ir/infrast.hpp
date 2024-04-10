@@ -57,7 +57,8 @@ class BasicBlock : public Value {
     BasicBlock* sdom;
     std::vector<BasicBlock*> domTree;//sons in dom Tree
     std::vector<BasicBlock*> domFrontier;//dom frontier
-    // int domLevel;
+    std::set<BasicBlock*> dom;//those bb was dominated by self
+    int domLevel;
 
    protected:
     Function* _parent;
@@ -119,7 +120,11 @@ class BasicBlock : public Value {
 
     void emplace_back_inst(Instruction* i);
 
-    void emplace_inst(inst_iterator pos, Instruction* i);
+    void emplace_inst(inst_iterator pos, Instruction* i);// didn't check is_terminal 
+
+    void emplace_first_inst(Instruction* i);// didn't check is_terminal
+
+    void delete_inst(Instruction* inst);
 
     void delete_inst(Instruction* inst);
 

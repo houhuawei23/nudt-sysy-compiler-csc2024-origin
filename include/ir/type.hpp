@@ -48,6 +48,7 @@ class Type {
     static Type* double_type();
 
     static Type* label_type();
+    static Type* undefine_type();
     static Type* pointer_type(Type* baseType);
     static Type* array_type(Type* baseType, std::vector<int> dims);
     static Type* func_type(Type* ret_type, const type_ptr_vector& param_types);

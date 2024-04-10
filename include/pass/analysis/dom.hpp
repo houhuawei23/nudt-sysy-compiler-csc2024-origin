@@ -24,6 +24,7 @@ class domFrontierGen:public FunctionPass{
     private:
         void getDomTree(ir::Function* func);
         void getDomFrontier(ir::Function* func);
+        void getDomInfo(ir::BasicBlock* bb, int level);
     public:
         void run(ir::Function* func) override;
         std::string name() override;
