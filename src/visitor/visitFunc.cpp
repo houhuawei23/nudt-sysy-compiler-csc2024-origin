@@ -3,13 +3,10 @@
 using namespace std;
 
 namespace sysy {
-/**
- * @brief
- *
- * @param ctx
- * @return std::any
- *
- * funcType: VOID | INT | FLOAT;
+/*
+ * @brief: visit function type
+ * @details: 
+ *      funcType: VOID | INT | FLOAT;
  */
 std::any SysYIRGenerator::visitFuncType(SysYParser::FuncTypeContext* ctx) {
     if (ctx->INT()) {
@@ -18,71 +15,70 @@ std::any SysYIRGenerator::visitFuncType(SysYParser::FuncTypeContext* ctx) {
         return ir::Type::float_type();
     } else if (ctx->VOID()) {
         return ir::Type::void_type();
+    } else {
+        assert(false && "invalid return type");
     }
-    assert(false);
-    return 0;
 }
 
-/**
- * func: funcType ID LPAREN funcFParams? RPAREN blockStmt;
- * ```
- * int func();
- * int func(int a);
- * int func(int a) {
- *  return a + 5;
- * }
- * ```
+/*
+ * @brief: create function
+ * @details: 
+ *      funcDef: funcType ID LPAREN funcFParams? RPAREN blockStmt;
+ *      funcFParams: funcFParam (COMMA funcFParam)*;
+ *      funcFParam: btype ID (LBRACKET RBRACKET (LBRACKET exp RBRACKET)*)?;
  */
-
 ir::Function* SysYIRGenerator::create_func(SysYParser::FuncDefContext* ctx) {
     std::string func_name = ctx->ID()->getText();
     std::vector<ir::Type*> param_types;
 
-    // std::vector<std::string> param_names;
-    // param_names.push_back(param->ID()->getText());
-
-
-    if (ctx->funcFParams()) { // if have formal params
-        // funcFParams: funcFParam (COMMA funcFParam)*;
+    if (ctx->funcFParams()) {
         auto params = ctx->funcFParams()->funcFParam();
-        // cout << params->getText() << endl;
-        // std::cout << typeid(params).name() << std::endl;
 
         for (auto param : params) {
-            if (param->btype()->INT())
-                param_types.push_back(ir::Type::i32_type());
-            else
-                param_types.push_back(ir::Type::float_type());
+            bool isArray = not param->LBRACKET().empty();
 
-            //! TODO
-            // up to realize array version
+            ir::Type* base_type = any_cast_Type(visit(param->btype()));
+            
+            if (!isArray) {
+                param_types.push_back(base_type);
+            } else {
+                std::vector<int> dims;
+                for (auto expr : param->exp()) {
+                    auto value = any_cast_Value(visit(expr));
+                    if (auto cvalue = dyn_cast<ir::Constant>(value)) {
+                        if (cvalue->is_float()) dims.push_back((int)cvalue->f32());
+                        else dims.push_back(cvalue->i32());
+                    } else {
+                        assert(false && "function parameter must be constant");
+                    }
+                }
 
-            // std::cout << param->getText() << std::endl;
+                if (dims.size() != 0) base_type = ir::Type::array_type(base_type, dims);
+                param_types.push_back(ir::Type::pointer_type(base_type));
+            }
         }
     }
-    // any_cast: cast any to whated type
-    ir::Type* ret_type = any_cast_Type(visit(ctx->funcType()));
 
-    // empty param types
+    ir::Type* ret_type = any_cast_Type(visit(ctx->funcType()));
     ir::Type* func_type = ir::Type::func_type(ret_type, param_types);
-    // add func to module
     ir::Function* func = module()->add_func(func_type, func_name);
 
     return func;
 }
 
-// funcFParams: funcFParam (COMMA funcFParam)*;
-// funcFParam: btype ID (LBRACKET RBRACKET (LBRACKET exp RBRACKET)*)?;
+/*
+ * @brief: visit function define
+ * @details: 
+ *      funcDef: funcType ID LPAREN funcFParams? RPAREN blockStmt;
+ *      funcFParams: funcFParam (COMMA funcFParam)*;
+ *      funcFParam: btype ID (LBRACKET RBRACKET (LBRACKET exp RBRACKET)*)?;
+ */
 std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
-    // _builder.func_inc();
     std::string func_name = ctx->ID()->getText();
     ir::Function* func = module()->lookup_func(func_name);
-    if (not func) { // not declared
-        func = create_func(ctx);
-    }
-    // is defined
-    if (ctx->blockStmt())  
-    {
+    if (not func) func = create_func(ctx);
+    
+    if (ctx->blockStmt()) {
 
         // create and enter function scope
         // it will be automatically destroyed when return from this visitFfunc
@@ -108,16 +104,32 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
                 default: 
                     assert(false && "not valid type");
             }
-            // auto ret_store_zero = builder().create_store(ir::Constant::gen_i32(0), ret_value_ptr);
+
             func->set_ret_value_ptr(ret_value_ptr); 
         }
-
 
         if (ctx->funcFParams()){
             // first init args
             for (auto pram : ctx->funcFParams()->funcFParam()) {
                 auto arg_name = pram->ID()->getText();
+
+                bool isArray = not pram->LBRACKET().empty();
                 auto arg_type = any_cast_Type(visit(pram->btype()));
+                if (isArray) {
+                    std::vector<int> dims;
+                    for (auto expr : pram->exp()) {
+                        auto value = any_cast_Value(visit(expr));
+                        if (auto cvalue = dyn_cast<ir::Constant>(value)) {
+                            if (cvalue->is_float()) dims.push_back((int)cvalue->f32());
+                            else dims.push_back(cvalue->i32());
+                        } else {
+                            assert(false && "function parameter must be constant");
+                        }
+                    }
+                    if (dims.size() != 0) arg_type = ir::Type::array_type(arg_type, dims);
+                    arg_type = ir::Type::pointer_type(arg_type);
+                }
+
                 auto arg = func->new_arg(arg_type);
             }
 
@@ -128,10 +140,26 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
             int idx = 0;
             for (auto pram : ctx->funcFParams()->funcFParam()) {
                 auto arg_name = pram->ID()->getText();
+
+                bool isArray = not pram->LBRACKET().empty();
                 auto arg_type = any_cast_Type(visit(pram->btype()));
-                // no const arg
-                auto alloca_ptr = builder().create_alloca(arg_type, {});
-                auto store = builder().create_store(func->arg_i(idx), alloca_ptr, "store");
+                if (isArray) {
+                    std::vector<int> dims;
+                    for (auto expr : pram->exp()) {
+                        auto value = any_cast_Value(visit(expr));
+                        if (auto cvalue = dyn_cast<ir::Constant>(value)) {
+                            if (cvalue->is_float()) dims.push_back((int)cvalue->f32());
+                            else dims.push_back(cvalue->i32());
+                        } else {
+                            assert(false && "function parameter must be constant");
+                        }
+                    }
+                    if (dims.size() != 0) arg_type = ir::Type::array_type(arg_type, dims);
+                    arg_type = ir::Type::pointer_type(arg_type);
+                }
+
+                auto alloca_ptr = builder().create_alloca(arg_type);
+                auto store = builder().create_store(func->arg_i(idx), alloca_ptr);
                 _tables.insert(arg_name, alloca_ptr);
                 idx++;
             }
@@ -151,7 +179,7 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
         builder().set_pos(exit, exit->begin());
 
         if (not func->ret_type()->is_void()) {
-            auto ret_value = builder().create_load(func->ret_value_ptr(), {});
+            auto ret_value = builder().create_load(func->ret_value_ptr());
             builder().create_return(ret_value);
         } else {
             builder().create_return();

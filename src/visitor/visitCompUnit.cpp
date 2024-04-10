@@ -25,10 +25,10 @@ std::any SysYIRGenerator::visitCompUnit(SysYParser::CompUnitContext* ctx) {
     module()->add_func(ir::Type::func_type(type_void, {type_i32}), "putch");
     module()->add_func(ir::Type::func_type(type_void, {type_f32}), "putfloat");
 
-    module()->add_func(ir::Type::func_type(type_void, {type_i32p}), "putarray");
+    module()->add_func(ir::Type::func_type(type_void, {type_i32, type_i32p}), "putarray");
     module()->add_func(ir::Type::func_type(type_void, {type_i32, type_f32p}), "putfarray");
 
-    module()->add_func(ir::Type::func_type(type_void, {}), "putf"); //!
+    module()->add_func(ir::Type::func_type(type_void, {}), "putf");
 
     module()->add_func(ir::Type::func_type(type_void, {}), "starttime");
     module()->add_func(ir::Type::func_type(type_void, {}), "stoptime");

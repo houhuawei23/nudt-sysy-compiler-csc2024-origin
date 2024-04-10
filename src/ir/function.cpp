@@ -9,9 +9,23 @@ BasicBlock* Function::new_block() {
     return nb;
 }
 
+void Function::delete_block(BasicBlock* bb){
+    for(auto bbpre:bb->pre_blocks()){
+        bbpre->next_blocks().remove(bb);
+    }
+    for(auto bbnext:bb->next_blocks()){
+        bbnext->pre_blocks().remove(bb);
+    }
+    for(auto bbinst:bb->insts()){
+        bb->delete_inst(bbinst);
+    }
+    _blocks.remove(bb);
+    delete bb;
+}
+
 void Function::print(std::ostream& os) {
     auto return_type = ret_type();
-    // auto param_types = param_type();
+    
     if (blocks().size()) {
         os << "define " << *return_type << " @" << name() << "(";
         if (_args.size() > 0) {

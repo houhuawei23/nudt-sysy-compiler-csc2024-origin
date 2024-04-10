@@ -167,51 +167,43 @@ class Value {
         vFREM,
         vBINARY_END,
     };
-    // for isa<> type check
-    // each subclass of Value has different _scid
-    // compare _scid to check class
-    // isa<Constant>: return _scid == CONSTANT
 
-    // _type, _name, _uses
-    // friend class User;
    protected:
     Type* _type;    // type of the value
     ValueId _scid;  // subclass id of Value
     std::string _name;
     use_ptr_list _uses;  // uses list
 
-   public:
-    Value(Type* type, ValueId scid = vValue, const_str_ref name = "")
-        : _type(type), _scid(scid), _name(name), _uses() {}
-    virtual ~Value() = default;
-    // Value is all base, return true
-    static bool classof(const Value* v) { return true; }
+    public:
+        Value(Type* type, ValueId scid = vValue, const_str_ref name = "")
+            : _type(type), _scid(scid), _name(name), _uses() {}
+        virtual ~Value() = default;
+        // Value is all base, return true
+        static bool classof(const Value* v) { return true; }
 
-    //* get
-    Type* type() const { return _type; }
-    std::string name() const { return _name; }
-    use_ptr_list& uses() { return _uses; }
+        // get
+        Type* type() const { return _type; }
+        std::string name() const { return _name; }
+        use_ptr_list& uses() { return _uses; }
 
-    //* manage
-    void add_use(Use* use);
-    void del_use(Use* use);
-    void replace_all_use_with(Value* _value);
+        // manage
+        void add_use(Use* use);
+        void del_use(Use* use);
+        void replace_all_use_with(Value* _value);
 
-    void set_name(const_str_ref name) { _name = name; }
+        void set_name(const_str_ref name) { _name = name; }
 
-   public:
-    //* check
-    bool is_i1() const { return _type->is_i1(); }
-    bool is_i32() const { return _type->is_i32(); }
-    bool is_float32() const { return _type->is_float32(); }
-    bool is_double() const { return _type->is_double(); }
-    bool is_float() const { return _type->is_float(); }
-    bool is_pointer() const { return _type->is_pointer(); }
+    public:  // check
+        bool is_i1() const { return _type->is_i1(); }
+        bool is_i32() const { return _type->is_i32(); }
+        bool is_float32() const { return _type->is_float32(); }
+        bool is_double() const { return _type->is_double(); }
+        bool is_float() const { return _type->is_float(); }
+        bool is_pointer() const { return _type->is_pointer(); }
 
-   public:
-    ValueId scid() const { return _scid; }
-    // each derived class must implement 'print' to print readable IR
-    virtual void print(std::ostream& os){};
+    public:
+        ValueId scid() const { return _scid; }
+        virtual void print(std::ostream& os){};
 };
 
 /**

@@ -83,6 +83,7 @@ class IRBuilder {
         if (lhs->type() != rhs->type()) {
             assert(false && "create_eq_beta: type mismatch!");
         }
+
         switch (lhs->type()->btype()) {
             case INT32: {
                 switch (op) {
@@ -127,14 +128,15 @@ class IRBuilder {
     }
 
     auto create_binary_beta(Value::BinaryOp op, Value* lhs, Value* rhs) {
-        if (lhs->type() != rhs->type()) {
+        Type* ltype = lhs->type(), *rtype = rhs->type();
+        if (ltype->is_array()) ltype = dyn_cast<ArrayType>(ltype)->base_type();
+        if (rtype->is_array()) rtype = dyn_cast<ArrayType>(rtype)->base_type();
+        if (ltype != rtype) {
             assert(false && "create_eq_beta: type mismatch!");
         }
         Value* res = nullptr;
-        Type* type = nullptr;
         Value::ValueId vid;
-        // Type::i32_type()
-        switch (lhs->type()->btype()) {
+        switch (ltype->btype()) {
             case INT32: {
                 switch (op) {
                     case Value::ADD:
@@ -279,21 +281,19 @@ class IRBuilder {
         _false_targets.pop();
     }
 
-    //! create
-    AllocaInst* create_alloca(Type* ret_type,
-                              const_value_ptr_vector& dims = {},
-                              bool is_const = false,
-                              const_str_ref name = "") {
-        auto inst = new AllocaInst(ret_type, _block, dims, name, is_const);
+    //! Create Alloca Instruction
+    AllocaInst* create_alloca(Type* base_type, bool is_const=false, 
+                              std::vector<int> dims={}, 
+                              const_str_ref name="") {
+        AllocaInst* inst = nullptr;
+        if (dims.size() == 0) inst = new AllocaInst(base_type, _block, name, is_const);
+        else inst = new AllocaInst(base_type, dims, _block, name, is_const);
         block()->emplace_back_inst(inst);
         return inst;
     }
 
-    StoreInst* create_store(Value* value,
-                            Value* pointer,
-                            const_str_ref name = "") {
-        assert(value->type() == dyn_cast<PointerType>(pointer->type())->base_type());
-        auto inst = new StoreInst(value, pointer, _block, name);
+    StoreInst* create_store(Value* value, Value* pointer) {
+        auto inst = new StoreInst(value, pointer, _block);
         block()->emplace_back_inst(inst);
         return inst;
     }
@@ -304,10 +304,8 @@ class IRBuilder {
         return inst;
     }
 
-    LoadInst* create_load(Value* ptr,
-                          const_value_ptr_vector& indices = {},
-                          const_str_ref name = "") {
-        auto inst = LoadInst::gen(ptr, _block, indices, name);
+    LoadInst* create_load(Value* ptr) {
+        auto inst = LoadInst::gen(ptr, _block);
         block()->emplace_back_inst(inst);
         return inst;
     }
@@ -371,16 +369,13 @@ class IRBuilder {
         block()->emplace_back_inst(inst);  // _pos++
         return inst;
     }
+
     //! Create GetElementPtr Instruction
-    GetElementPtrInst* create_getelementptr(Type* base_type,
-                                            Value* value,
-                                            Value* idx,
-                                            int current_dimension = 1,
-                                            const_value_ptr_vector& dims = {},
-                                            int id = 1,
-                                            const_str_ref name = "") {
-        auto inst = new GetElementPtrInst(base_type, value, _block, idx, dims,
-                                          current_dimension, name, id);
+    GetElementPtrInst* create_getelementptr(Type* base_type, Value* value,
+                                            Value* idx, std::vector<int> dims={}) {
+        GetElementPtrInst* inst = nullptr;
+        if (dims.size() == 0) inst = new GetElementPtrInst(base_type, value, _block, idx);
+        else inst = new GetElementPtrInst(base_type, value, _block, idx, dims);
         block()->emplace_back_inst(inst);
         return inst;
     }

@@ -55,9 +55,9 @@ class BasicBlock : public Value {
    public:
     BasicBlock* idom;
     BasicBlock* sdom;
-    std::vector<BasicBlock*> domTree;
-    std::vector<BasicBlock*> domFrontier;
-    int domLevel;
+    std::vector<BasicBlock*> domTree;//sons in dom Tree
+    std::vector<BasicBlock*> domFrontier;//dom frontier
+    // int domLevel;
 
    protected:
     Function* _parent;
@@ -121,6 +121,8 @@ class BasicBlock : public Value {
 
     void emplace_inst(inst_iterator pos, Instruction* i);
 
+    void delete_inst(Instruction* inst);
+
     // for CFG
     void add_next_block(BasicBlock* b) { _next_blocks.push_back(b); }
     void add_pre_block(BasicBlock* b) { _pre_blocks.push_back(b); }
@@ -147,10 +149,10 @@ class Instruction : public User {
 
    public:
     // Construct a new Instruction object
-    Instruction(ValueId itype = vINSTRUCTION,
-                Type* ret_type = Type::void_type(),
-                BasicBlock* pblock = nullptr,
-                const_str_ref name = "")
+    Instruction(ValueId itype=vINSTRUCTION,
+                Type* ret_type=Type::void_type(),
+                BasicBlock* pblock=nullptr,
+                const_str_ref name="")
         : User(ret_type, itype, name), _parent(pblock) {}
     // get
     BasicBlock* parent() { return _parent; };
