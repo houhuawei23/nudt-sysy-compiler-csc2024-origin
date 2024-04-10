@@ -1,3 +1,104 @@
+mir:
+MIRRelocable: class
+    MIRFunction
+    MIRBasicBlock
+    MIRZeroStorage
+    MIRDataStorage
+    MIRJumpTable
+
+MIRregister struct, MIRRegisterFlag enum
+
+MIRInst class, MIRGenericInst enum
+    MIROperand class, OperandType enum
+    
+
+StackObject struct, StackObjectUsage enum
+
+MIRModule class
+    Target
+    MIRGlobal: MIRRelocable*
+
+target.hpp:
+
+Target:
+    DataLayout
+    TargetScheduleModel
+    TargetInstInfo
+    TargetSelInfo
+    TargetFrameInfo
+    TargetRegisterInfo
+
+CodeGenContext struct:
+    Target
+    DataLayout
+    TargetScheduleModel
+    TargetInstInfo
+    TargetSelInfo
+    TargetFrameInfo
+    TargetRegisterInfo
+    MIRFlags
+    idx, next_idx()
+
+datalayout.hpp:
+DataLayout class:
+    getEndian(), enum Endian
+    getBuiltinAlignment()
+    getPointerSize()
+    getCodeAlignment()
+    getStorageAlignment()
+
+schedulemodel.hpp:
+
+ScheduleClass class
+MicroarchitectureInfo struct
+TargetScheduleModel class:
+    getInstScheClass(opcode)
+    getInfo() MicroarchitectureInfo
+    peepholeOpt(mirfunc, codegenctx)
+    isExpensiveInst()
+ScheduleState class:
+    ??
+
+instinfo.hpp:
+
+OperandFlag enum: use, def, metadata
+InstFlag enum: xxx
+InstInfo class:
+    print() 
+    getOperandNum()
+    getOperandFlag()
+    getInstFlag()
+    getUniqueName()
+TargetInstInfo class:
+    getInstInfo
+    matchBranch
+    matchConditionalBranch
+    matchUnconditionalBranch
+    redirectBranch
+    emitGoto
+    inverseBranch
+    getAddressingImmRange
+
+iselinfo.hpp
+ISelContext class
+InstLegalizeContext
+TargetISelInfo class
+
+frameinfo.hpp
+TargeFrameInfo class:
+    lowering stage
+        emitCall
+        emitPrologue
+        emitReturn
+    ra stage
+    sa stage
+
+target.riscv:
+
+
+
+
+
 Global Value:
 
 - has init: .data
