@@ -39,8 +39,6 @@ class Function : public User {
     int _arg_cnt = 0;  // formal arguments count
 
     bool _is_defined = false;
-    // for alloca
-    inst_list _alloca_insts;  // alloca insts for this function
    public:
     Function(Type* func_type, const_str_ref name = "", Module* parent = nullptr)
         : User(func_type, vFUNCTION, name), _parent(parent) {
@@ -54,14 +52,6 @@ class Function : public User {
 
     Module* parent() const { return _parent; }
 
-    inst_list& alloca_insts() { return _alloca_insts; }
-    using inst_reverse_iterator = std::reverse_iterator<inst_list::iterator>;
-    void add_allocas_to_entry() {
-        for (auto iter = _alloca_insts.rbegin(); iter != _alloca_insts.rend();
-             ++iter) {
-            _entry->emplace_first_inst(*iter);
-        }
-    }
     //* return
     Type* ret_type() const {
         FunctionType* ftype = dyn_cast<FunctionType>(type());

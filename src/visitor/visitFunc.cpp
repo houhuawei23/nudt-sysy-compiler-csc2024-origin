@@ -88,7 +88,11 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
         ir::BasicBlock* exit = func->new_exit();
         entry->append_comment("entry");
         exit->append_comment("exit");
-        builder().set_pos(entry, entry->begin());
+        auto next = func->new_block();
+  
+        entry->set_name(builder().get_bbname());
+
+        builder().set_pos(next, next->begin());
         // create return value alloca
         auto fz = ir::Constant::gen_f32(0.0);
         if (not func->ret_type()->is_void()) {
@@ -134,7 +138,7 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
             }
 
             // init return value ptr and first block
-            entry->set_name(builder().get_bbname());
+            next->set_name(builder().get_bbname());
 
             // allca all params and store
             int idx = 0;
@@ -166,7 +170,7 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
 
         }
         else {
-            entry->set_name(builder().get_bbname());
+            next->set_name(builder().get_bbname());
         }
 
 
@@ -184,10 +188,12 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
         } else {
             builder().create_return();
         }
+        // for entry to next
+        builder().set_pos(entry, entry->begin());
+        builder().create_br(next);
 
-        
         func->sort_blocks();
-        func->add_allocas_to_entry();
+        // func->add_allocas_to_entry();
     }
 
     builder().reset();
