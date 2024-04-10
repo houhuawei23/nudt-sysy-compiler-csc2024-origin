@@ -149,10 +149,10 @@ class Instruction : public User {
 
    public:
     // Construct a new Instruction object
-    Instruction(ValueId itype = vINSTRUCTION,
-                Type* ret_type = Type::void_type(),
-                BasicBlock* pblock = nullptr,
-                const_str_ref name = "")
+    Instruction(ValueId itype=vINSTRUCTION,
+                Type* ret_type=Type::void_type(),
+                BasicBlock* pblock=nullptr,
+                const_str_ref name="")
         : User(ret_type, itype, name), _parent(pblock) {}
     // get
     BasicBlock* parent() { return _parent; };

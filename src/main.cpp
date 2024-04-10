@@ -34,15 +34,15 @@ int main(int argc, char** argv) {
         module_ir->print(std::cout);
     }
 
-    pass::FunctionPassManager fpm;
-    //mem2reg
-    fpm.add_pass(new pass::preProcDom());
-    fpm.add_pass(new pass::idomGen());
-    fpm.add_pass(new pass::domFrontierGen());
-    fpm.add_pass(new pass::domInfoCheck());
-    for(auto f : module_ir->funcs()){
-        fpm.run(f);
-    }
+    // pass::FunctionPassManager fpm;
+    // //mem2reg
+    // fpm.add_pass(new pass::preProcDom());
+    // fpm.add_pass(new pass::idomGen());
+    // // fpm.add_pass(new pass::domFrontierGen());
+    // fpm.add_pass(new pass::domInfoCheck());
+    // for(auto f : module_ir->funcs()){
+    //     fpm.run(f);
+    // }
     
     // MIR Generation
     // mir::MIRModule* mir_base_module = new mir::MIRModule(module_ir);

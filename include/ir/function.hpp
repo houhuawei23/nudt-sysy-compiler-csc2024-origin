@@ -21,34 +21,31 @@ inline bool compareBB(const BasicBlock* a1, const BasicBlock* a2) {
 
 class Function : public User {
     friend class Module;
-    //* Inherited Data Attribute
-    // Value: _type = FUNCTION, _name, _uses
-    // User:  _operands;
-   protected:
-    Module* _parent = nullptr;  // parent Module
+    protected:
+        Module* _parent = nullptr;  // parent Module
 
-    block_ptr_list _blocks;       // blocks of the function
-    block_ptr_list _exit_blocks;  // exit blocks
-    arg_ptr_vector _args;         // formal args
+        block_ptr_list _blocks;       // blocks of the function
+        block_ptr_list _exit_blocks;  // exit blocks
+        arg_ptr_vector _args;         // formal args
 
-    //* function has concrete local var for return value,
-    //* addressed by _ret_value_ptr
-    Value* _ret_value_ptr = nullptr;  // return value
-    BasicBlock* _entry = nullptr;     // entry block
-    BasicBlock* _exit = nullptr;      // exit block
+        //* function has concrete local var for return value,
+        //* addressed by _ret_value_ptr
+        Value* _ret_value_ptr = nullptr;  // return value
+        BasicBlock* _entry = nullptr;     // entry block
+        BasicBlock* _exit = nullptr;      // exit block
 
-    int var_cnt = 0;   // for local variables count
-    int _arg_cnt = 0;  // formal arguments count
+        int var_cnt = 0;   // for local variables count
+        int _arg_cnt = 0;  // formal arguments count
 
-    bool _is_defined = false;
+        bool _is_defined = false;
 
-   public:
-    Function(Type* func_type, const_str_ref name = "", Module* parent = nullptr)
-        : User(func_type, vFUNCTION, name), _parent(parent) {
-        _is_defined = false;
-        _arg_cnt = 0;
-        _ret_value_ptr = nullptr;
-    }
+    public:
+        Function(Type* func_type, const_str_ref name="", Module* parent=nullptr)
+            : User(func_type, vFUNCTION, name), _parent(parent) {
+            _is_defined = false;
+            _arg_cnt = 0;
+            _ret_value_ptr = nullptr;
+        }
 
     //* get
     int getvarcnt() { return var_cnt++; }
@@ -117,10 +114,8 @@ class Function : public User {
     //* print blocks in ascending order
     void sort_blocks() { _blocks.sort(compareBB); }
 
-    // isa<>
-    static bool classof(const Value* v) { return v->scid() == vFUNCTION; }
-    
-    // ir print
-    void print(std::ostream& os) override;
+    public:
+        static bool classof(const Value* v) { return v->scid() == vFUNCTION; }
+        void print(std::ostream& os) override;
 };
 }  // namespace ir

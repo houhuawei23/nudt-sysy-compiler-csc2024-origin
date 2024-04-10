@@ -25,62 +25,54 @@ class CallInst;
 class CastInst;
 
 /*
- * @brief Class AllocaInst
- * @maninclude
- *      1. Variable
- *      2. Constant Array (Global OR Local)
+ * @brief: AllocaInst
  */
 class AllocaInst : public Instruction {
     friend class IRBuilder;
 
-   protected:
-    bool _is_const = false;
+    protected:
+        bool _is_const = false;
 
-   public:
-    AllocaInst(Type* base_type,
-               BasicBlock* parent = nullptr,
-               const_value_ptr_vector& dims = {},
-               const_str_ref name = "",
-               bool is_const = false)
-        : Instruction(vALLOCA, ir::Type::pointer_type(base_type), parent, name),
-          _is_const(is_const) {
-        add_operands(dims);
-    }
+    public:  // 构造函数
+        //! 1. Alloca Scalar
+        AllocaInst(Type* base_type, BasicBlock* parent = nullptr,
+                    const_str_ref name = "", bool is_const=false)
+            : Instruction(vALLOCA, ir::Type::pointer_type(base_type), parent, name),
+              _is_const(is_const) {}
 
-   public:  // get function
-    Type* base_type() const {
-        return dyn_cast<PointerType>(type())->base_type();
-    }
+        //! 2. Alloca Array
+        AllocaInst(Type* base_type, std::vector<int> dims, BasicBlock* parent=nullptr, 
+                   const_str_ref name="", bool is_const=false)
+            : Instruction(vALLOCA, ir::Type::array_type(base_type, dims), parent, name), 
+              _is_const(is_const) {}
 
-    int dims_cnt() const { return operands_cnt(); }
-
-    std::vector<Value*> dims() const {
-        std::vector<Value*> ans;
-        int dimensions = dims_cnt();
-        for (int i = 0; i < dimensions; i++) {
-            ans.push_back(operand(i));
+    public:  // get function
+        Type* base_type() const {
+            if (type()->is_array()) return dyn_cast<ArrayType>(type())->base_type();
+            else if (type()->is_pointer()) return dyn_cast<PointerType>(type())->base_type();
+            else assert(false && "invalid type");
         }
-        return ans;
-    }
+        int dims_cnt() const {
+            if (type()->is_array()) return dyn_cast<ArrayType>(type())->dims_cnt();
+            else return 0;
+        }
 
-   public:  // check function
-    bool is_scalar() const { return dims_cnt() == 0; }
-    bool is_const() const { return _is_const; }
+    public:  // check function
+        bool is_scalar() const { return type()->is_pointer(); }
+        bool is_const() const { return _is_const; }
 
-   public:
-    static bool classof(const Value* v) { return v->scid() == vALLOCA; }
-    void print(std::ostream& os) override;
+    public:
+        static bool classof(const Value* v) { return v->scid() == vALLOCA; }
+        void print(std::ostream& os) override;
 };
 
 class StoreInst : public Instruction {
     friend class IRBuilder;
 
    public:
-    StoreInst(Value* value,
-              Value* ptr,
-              BasicBlock* parent = nullptr,
-              const_str_ref name = "")
-        : Instruction(vSTORE, Type::void_type(), parent, name) {
+    StoreInst(Value* value, Value* ptr,
+              BasicBlock* parent=nullptr)
+        : Instruction(vSTORE, Type::void_type(), parent) {
         add_operand(value);
         add_operand(ptr);
     }
@@ -90,7 +82,6 @@ class StoreInst : public Instruction {
 
    public:
     static bool classof(const Value* v) { return v->scid() == vSTORE; }
-
     void print(std::ostream& os) override;
 };
 
@@ -102,34 +93,25 @@ class StoreInst : public Instruction {
 class LoadInst : public Instruction {
     friend class IRBuilder;
 
-   public:
-    LoadInst(Value* ptr,
-             Type* type,
-             BasicBlock* parent,
-             const_value_ptr_vector& indices = {},
-             const_str_ref name = "")
-        : Instruction(vLOAD, type, parent, name) {
-        add_operand(ptr);
-        add_operands(indices);
-    }
+    public:
+        LoadInst(Value* ptr, Type* type, BasicBlock* parent)
+            : Instruction(vLOAD, type, parent) {
+            add_operand(ptr);
+        }
 
-    static LoadInst* gen(Value* ptr,
-                         BasicBlock* parent,
-                         const_value_ptr_vector& indices = {},
-                         const_str_ref name = "") {
-        Type* type = nullptr;
-        type = dyn_cast<PointerType>(ptr->type())->base_type();
-        auto inst = new LoadInst(ptr, type, parent, indices, name);
-        return inst;
-    }
-    // int dims_cnt() const { return operands_cnt(); }
-    // bool is_scalar() const { return dims_cnt() == 0; }
+        static LoadInst* gen(Value* ptr, BasicBlock* parent) {
+            Type* type = nullptr;
+            if (ptr->type()->is_pointer()) type = dyn_cast<PointerType>(ptr->type())->base_type();
+            else type = dyn_cast<ArrayType>(ptr->type())->base_type();
+            auto inst = new LoadInst(ptr, type, parent);
+            return inst;
+        }
 
-    Value* ptr() const { return operand(0); }
+        Value* ptr() const { return operand(0); }
 
-   public:
-    static bool classof(const Value* v) { return v->scid() == vLOAD; }
-    void print(std::ostream& os) override;
+    public:
+        static bool classof(const Value* v) { return v->scid() == vLOAD; }
+        void print(std::ostream& os) override;
 };
 
 /*
@@ -362,79 +344,59 @@ class FCmpInst : public Instruction {
     void print(std::ostream& os) override;
 };
 
-//! CastInst
-/// This is the base class for all instructions that perform data
-/// casts. It is simply provided so that instruction category testing
-/// can be performed with code like:
-///
-/// if (isa<CastInst>(Instr)) { ... }
-/// Base class of casting instructions.
-// class CastInst : public Instruction {
-//     CastInst(ValueId itype,
-//               Type* type,
-//              Value* src_val,
-//              BasicBlock* parent = nullptr)
-//         : Instruction(itype, type, parent) {
-//         add_operand(src_val);
-//     }
-
-//     void print(std::ostream& os) override;
-// };
-
 /*
  * @brief GetElementPtr Instruction
  * @details:
- *      数组: <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32
- * <idx> 指针: <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
+ *      数组: <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32 <idx> 
+ *      指针: <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
  * @param:
- *      1. _current_dimension: 当前数组维度
- *      2. _idx: 数组各个维度的下标索引
- *      3. _id : calculate array address OR pointer address
+ *      1. _idx: 数组各个维度的下标索引
+ *      2. _id : calculate array address OR pointer address
  */
 class GetElementPtrInst : public Instruction {
     friend class IRBuilder;
 
-   protected:
-    int _id = 0, _current_dimension = 0;
+    protected:
+    int _id = 0;
     Value* _idx = nullptr;
 
-   public:
-    //! 1. Array GetElementPtr Instruction
-    GetElementPtrInst(Type* base_type,
-                      Value* value,
-                      BasicBlock* parent,
-                      Value* idx,
-                      const_value_ptr_vector& dims = {},
-                      const int current_dimension = 1,
-                      const std::string name = "",
-                      int id = 1)
-        : Instruction(vGETELEMENTPTR,
-                      ir::Type::pointer_type(base_type),
-                      parent,
-                      name),
-          _current_dimension(current_dimension),
-          _idx(idx),
-          _id(id) {
-        add_operand(value);
-        add_operands(dims);
-    }
+    public:
+        //! 1. Pointer <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
+        GetElementPtrInst(Type* base_type, Value* value, 
+                          BasicBlock* parent, Value* idx)
+            : Instruction(vGETELEMENTPTR, ir::Type::pointer_type(base_type), parent), 
+              _idx(idx) {
+            _id = 0; add_operand(value);
+        }
 
-   public:
+        //! 2. Array <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32 <idx> 
+        GetElementPtrInst(Type* base_type, Value* value, 
+                          BasicBlock* parent, Value* idx, 
+                          std::vector<int> dims)
+            : Instruction(vGETELEMENTPTR, ir::Type::pointer_type(ir::Type::array_type(base_type, dims)), parent), 
+              _idx(idx) {
+            _id = 1; add_operand(value);
+        }
+
+    public:
     static bool classof(const Value* v) { return v->scid() == vGETELEMENTPTR; }
 
-   public:  // get function
-    int dims_cnt() const { return operands_cnt() - 1; }
-    int current_dimension() const { return _current_dimension; }
+    public:  // get function
     Value* get_value() const { return operand(0); }
-    Value* get_index() const { return _idx; }
     Type* base_type() const {
+        assert(dyn_cast<PointerType>(type())->base_type() && "getelementptr has error type");
         return dyn_cast<PointerType>(type())->base_type();
     }
+    Value* get_index() const { return _idx; }
+    int dims_cnt() const { 
+        if (base_type()->is_array()) return dyn_cast<ArrayType>(base_type())->dims_cnt(); 
+        else return 0;
+    }
 
-   public:  // check function
+    public:  // check function
     bool is_arrayInst() const { return _id == 1; }
 
-   public:
+    public:
     void print(std::ostream& os) override;
 };
 

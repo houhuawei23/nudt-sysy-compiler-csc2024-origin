@@ -1,18 +1,14 @@
 #include "visitor/visitor.hpp"
 
 namespace sysy {
-
 /*
-
-call: ID LPAREN funcRParams? RPAREN;
-
-funcRParams: exp (COMMA exp)*;
-
-var: ID (LBRACKET exp RBRACKET)*;
-
-lValue: ID (LBRACKET exp RBRACKET)*;
-
-*/
+ * @brief: visit call
+ * @details: 
+ *      call: ID LPAREN funcRParams? RPAREN;
+ *      funcRParams: exp (COMMA exp)*;
+ *      var: ID (LBRACKET exp RBRACKET)*;
+ *      lValue: ID (LBRACKET exp RBRACKET)*;
+ */
 std::any SysYIRGenerator::visitCall(SysYParser::CallContext* ctx) {
     auto func_name = ctx->ID()->getText();
     auto func = module()->lookup_func(func_name);
@@ -21,26 +17,22 @@ std::any SysYIRGenerator::visitCall(SysYParser::CallContext* ctx) {
     std::vector<ir::Value*> rargs;
     std::vector<ir::Value*> final_rargs;
     auto iter = func->arg_types().begin();
-    if(ctx->funcRParams()){
+    if (ctx->funcRParams()) {
         for (auto exp : ctx->funcRParams()->exp()) {
-        // Type* arg_type = 
             auto rarg = any_cast_Value(visit(exp));
             iter++;
             rargs.push_back(rarg);
         }
     }
-    
-
     assert(func->arg_types().size() == rargs.size() && "size not match!");
 
     int length = rargs.size();
-    for(int i = 0;i < length;i++)
-    {
-        if(func->arg_types()[i]->is_i32() and rargs[i]->is_float()){
+    for (int i = 0;i < length;i++) {
+        if (func->arg_types()[i]->is_i32() && rargs[i]->is_float()){
             auto ftosi = _builder.create_unary_beta(ir::Value::vFPTOSI, rargs[i], ir::Type::i32_type());
             final_rargs.push_back(ftosi);
         }
-        else if(func->arg_types()[i]->is_float() and rargs[i]->is_i32()){
+        else if (func->arg_types()[i]->is_float() && rargs[i]->is_i32()){
             auto sitof = builder().create_unary_beta(ir::Value::vSITOFP, rargs[i], ir::Type::float_type());
             final_rargs.push_back(sitof);
         }
@@ -49,9 +41,7 @@ std::any SysYIRGenerator::visitCall(SysYParser::CallContext* ctx) {
         }
     }
 
-    ir::Value* inst; //  ir::Value* 接收
-    inst = builder().create_call(func, final_rargs);
+    ir::Value* inst = builder().create_call(func, final_rargs);
     return dyn_cast_Value(inst);
 }
-
 }  // namespace sysy

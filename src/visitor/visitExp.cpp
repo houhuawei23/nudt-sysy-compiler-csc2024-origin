@@ -3,7 +3,8 @@
 
 namespace sysy {
 /*
- * @brief Visit Number Expression
+ * @brief: Visit Number Expression
+ * @details: 
  *      number: ILITERAL | FLITERAL; (即: int or float)
  */
 std::any SysYIRGenerator::visitNumberExp(SysYParser::NumberExpContext* ctx) {
@@ -12,10 +13,8 @@ std::any SysYIRGenerator::visitNumberExp(SysYParser::NumberExpContext* ctx) {
         std::string s = iLiteral->getText();
         //! 基数 (8, 10, 16)
         int base = 10;
-        if (s.length() > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X'))
-            base = 16;
-        else if (s[0] == '0')
-            base = 8;
+        if (s.length() > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) base = 16;
+        else if (s[0] == '0') base = 8;
 
         res = ir::Constant::gen_i32(std::stoi(s, 0, base));
     } else if (auto fctx = ctx->number()->FLITERAL()) {  //! float
@@ -27,59 +26,96 @@ std::any SysYIRGenerator::visitNumberExp(SysYParser::NumberExpContext* ctx) {
 }
 
 /*
- * @brief Visit Var Expression
+ * @brief: Visit Var Expression
  * @details:
  *      var: ID (LBRACKET exp RBRACKET)*;
  */
 std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
-    bool isArray = not ctx->var()->LBRACKET().empty();
     std::string varname = ctx->var()->ID()->getText();
 
     auto res = _tables.lookup(varname);
     if (res == nullptr) {
-        std::cerr << "Use undefined variable: \"" << varname << "\""
-                  << std::endl;
-        exit(EXIT_FAILURE);
+        assert(false && "use undefined variable");
     }
-    //! TODO
-    // if (res->type()->is_pointer()) {
-    //     int a = 55;
-    //     int b = 66;
-    //     assert(false && "not implemented");
-    // }
+    bool isArray = false;
+    if (res->type()->is_array()) {  // 数组
+        isArray = true;
+    } else if (auto ptype = dyn_cast<ir::PointerType>(res->type())) {  // 二级指针
+        isArray = ptype->base_type()->is_pointer();
+    }
 
     if (!isArray) {  //! 1. scalar
-        if (auto res_constant = dyn_cast<ir::Constant>(res)) {
-            res = res_constant;
-        } else {
-            res = _builder.create_load(res, {});
+        if (ir::isa<ir::GlobalVariable>(res)) {  // 全局
+            auto gres = dyn_cast<ir::GlobalVariable>(res);
+            if (gres->is_const()) {  // 常量
+                res = gres->scalar_value();
+            } else {  // 变量
+                res = _builder.create_load(res);
+            }
+        } else {  // 局部 (变量 - load, 常量 - ignore)
+            if (!ir::isa<ir::Constant>(res)) {
+                res = _builder.create_load(res);
+            }
         }
     } else {  //! 2. array
-        if (auto res_array = dyn_cast<ir::AllocaInst>(res)) {
-            auto type = res_array->base_type();
-            int current_dimension = 1;
-            std::vector<ir::Value*> dims = res_array->dims();
-            for (auto expr : ctx->var()->exp()) {
-                ir::Value* idx = any_cast_Value(visit(expr));
-                res = _builder.create_getelementptr(type, res, idx,
-                                                    current_dimension, dims, 1);
-                current_dimension++;
-            }
-            res = _builder.create_load(res, {});
-        } else if (auto res_array = dyn_cast<ir::GlobalVariable>(res)) {
-            auto type = res_array->base_type();
-            int current_dimension = 1;
-            std::vector<ir::Value*> dims = res_array->dims();
-            for (auto expr : ctx->var()->exp()) {
-                ir::Value* idx = any_cast_Value(visit(expr));
-                res = _builder.create_getelementptr(type, res, idx,
-                                                    current_dimension, dims, 1);
-                current_dimension++;
-            }
-            res = _builder.create_load(res, {});
+        ir::Type* type = res->type(), *base_type = nullptr;
+        assert((ir::isa<ir::AllocaInst>(res) || ir::isa<ir::GlobalVariable>(res)) && "this is not an array");
+
+        if (ir::isa<ir::AllocaInst>(res)) {
+            base_type = dyn_cast<ir::AllocaInst>(res)->base_type();
         } else {
-            assert(false && "this is not an array");
+            base_type = dyn_cast<ir::GlobalVariable>(res)->base_type();
         }
+
+        if (auto atype = dyn_cast<ir::ArrayType>(type)) {
+            std::vector<int> dims = atype->dims();
+            if (ctx->var()->exp().size()) {
+                for (auto expr : ctx->var()->exp()) {
+                    ir::Value* idx = any_cast_Value(visit(expr));
+                    res = _builder.create_getelementptr(base_type, res, idx, dims);
+                    dims.erase(dims.begin());
+                }
+            } else {  // 数组名作为函数参数传入
+                ir::Value* idx = ir::Constant::gen_i32(0);
+                res = _builder.create_getelementptr(base_type, res, idx, dims);
+                return dyn_cast_Value(res);
+            }
+        } else if (auto ptype = dyn_cast<ir::PointerType>(type)) {  // res为二级指针及以上
+            res = _builder.create_load(res);  // 指针降级
+            base_type = res->type();
+            if (auto ptype = dyn_cast<ir::PointerType>(base_type)) {
+                base_type = ptype->base_type();
+            } else {
+                assert(false && "pointer error");
+            }
+            if (base_type->is_array()) {  // 二维及高维数组
+                auto exp_vec = ctx->var()->exp();
+                if (exp_vec.size() == 0) return dyn_cast_Value(res);
+                assert(exp_vec.size() > 1 && "lack number");
+                auto dims = dyn_cast<ir::ArrayType>(base_type)->dims();
+
+                ir::Value* idx = any_cast_Value(visit(exp_vec[0]));
+                res = _builder.create_getelementptr(base_type, res, idx);
+                base_type = dyn_cast<ir::ArrayType>(base_type)->base_type();
+
+                for (int i = 1; i < exp_vec.size(); i++) {
+                    idx = any_cast_Value(visit(exp_vec[i]));
+                    res = _builder.create_getelementptr(base_type, res, idx, dims);
+                    dims.erase(dims.begin());
+                }
+            } else {  // 一维数组
+                if (ctx->var()->exp().size()) {
+                    for (auto expr : ctx->var()->exp()) {
+                        ir::Value* idx = any_cast_Value(visit(expr));
+                        res = _builder.create_getelementptr(base_type, res, idx);
+                    }
+                } else {  // 作为参数进行函数内调用函数
+                    return dyn_cast_Value(res);
+                }
+            }
+        }
+
+        res = _builder.create_load(res);
     }
     return dyn_cast_Value(res);
 }
@@ -112,8 +148,7 @@ std::any SysYIRGenerator::visitUnaryExp(SysYParser::UnaryExpContext* ctx) {
         } else if (ir::isa<ir::LoadInst>(exp) || ir::isa<ir::BinaryInst>(exp)) {
             switch (exp->type()->btype()) {
                 case ir::INT32:
-                    res = builder().create_binary_beta(
-                        ir::Value::SUB, ir::Constant::gen_i32(0), exp);
+                    res = builder().create_binary_beta(ir::Value::SUB, ir::Constant::gen_i32(0), exp);
                     break;
                 case ir::FLOAT:
                     res = builder().create_unary_beta(ir::Value::vFNEG, exp);
@@ -162,8 +197,7 @@ std::any SysYIRGenerator::visitMultiplicativeExp(
     ir::Value* op1 = any_cast_Value(visit(ctx->exp(0)));
     ir::Value* op2 = any_cast_Value(visit(ctx->exp(1)));
     ir::Value* res;
-    if (ir::isa<ir::Constant>(op1) && ir::isa<ir::Constant>(op2)) {
-        //! both constant
+    if (ir::isa<ir::Constant>(op1) && ir::isa<ir::Constant>(op2)) {  //! both constant (常数折叠)
         ir::Constant* cop1 = dyn_cast<ir::Constant>(op1);
         ir::Constant* cop2 = dyn_cast<ir::Constant>(op2);
         auto higher_Btype =
@@ -201,8 +235,7 @@ std::any SysYIRGenerator::visitMultiplicativeExp(
                 assert(false && "Unknown BType");
                 break;
         }
-    } else {
-        //! not all constant
+    } else {  //! not all constant
         auto hi_type = op1->type();
         if (op1->type()->btype() < op2->type()->btype()) {
             hi_type = op2->type();
@@ -293,8 +326,7 @@ std::any SysYIRGenerator::visitAdditiveExp(
     return dyn_cast_Value(res);
 }
 //! exp (LT | GT | LE | GE) exp
-std::any SysYIRGenerator::visitRelationExp(
-    SysYParser::RelationExpContext* ctx) {
+std::any SysYIRGenerator::visitRelationExp(SysYParser::RelationExpContext* ctx) {
     auto lhsptr = any_cast_Value(visit(ctx->exp()[0]));
     auto rhsptr = any_cast_Value(visit(ctx->exp()[1]));
 

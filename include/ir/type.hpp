@@ -24,6 +24,9 @@ typedef enum : size_t {
     LABEL,  // BasicBlock
     POINTER,
     FUNCTION,
+
+    ARRAY, 
+
     UNDEFINE
 } BType;
 
@@ -46,11 +49,10 @@ class Type {
 
     static Type* label_type();
     static Type* pointer_type(Type* baseType);
-    // static Type *array
-    static Type* func_type(Type* ret_type,
-                               const type_ptr_vector& param_types);
+    static Type* array_type(Type* baseType, std::vector<int> dims);
+    static Type* func_type(Type* ret_type, const type_ptr_vector& param_types);
 
-    // type check
+    //! type check
     bool is(Type* type);
     bool isnot(Type* type);
     bool is_void();
@@ -59,12 +61,13 @@ class Type {
     bool is_i32();
     bool is_int() { return is_i1() || is_i32(); }
 
-    bool is_float32();  // only check f32
-    bool is_double();   // only check f64
+    bool is_float32();
+    bool is_double();
     bool is_float() { return is_float32() || is_double(); }
     
     bool is_label();
     bool is_pointer();
+    bool is_array();
     bool is_function();
 
     // get attribute
@@ -95,34 +98,38 @@ class Type {
 };
 
 class PointerType : public Type {
-    //* inherit from Type
-    // _btype = POINTER
-   protected:
-    Type* _base_type;
-    PointerType(Type* baseType) : Type(POINTER), _base_type(baseType) {}
+    protected:
+        Type* _base_type;
+        PointerType(Type* baseType) : Type(POINTER), _base_type(baseType) {}
 
-   public:
-    // Generate a pointer type from a given base type
-    static PointerType* gen(Type* baseType);
+    public:
+        static PointerType* gen(Type* baseType);
 
-    //! Get the base type of this pointer
-    Type* base_type() const { return _base_type; }
+        Type* base_type() const { return _base_type; }
+};
 
-    // void print(std::ostream &os) const
+class ArrayType : public Type {
+    protected:
+        std::vector<int> _dims;  // dimensions
+        Type* _base_type;        // int or float
+        ArrayType(Type* baseType, std::vector<int> dims) 
+            : Type(ARRAY), _base_type(baseType), _dims(dims) {}
+
+    public:
+        static ArrayType* gen(Type* baseType, std::vector<int> dims);
+
+        int dims_cnt() const { return _dims.size(); }
+        int dim(int index) const { return _dims[index]; }
+        std::vector<int> dims() const { return _dims; }
+        Type* base_type() const { return _base_type; }
 };
 
 class FunctionType : public Type {
-    //*inherit from Type
-    // BType _btype = FUNCTION
-   protected:
-    // the return type of the function
-    Type* _ret_type;
+    protected:
+        Type* _ret_type;
+        std::vector<Type*> _arg_types;
 
-    // the argument types of the function
-    std::vector<Type*> _arg_types;
-
-    // the constructor for FunctionType
-    FunctionType(Type* ret_type, const type_ptr_vector& arg_types = {})
+    FunctionType(Type* ret_type, const type_ptr_vector& arg_types={})
         : Type(FUNCTION), _ret_type(ret_type), _arg_types(arg_types) {}
 
    public:

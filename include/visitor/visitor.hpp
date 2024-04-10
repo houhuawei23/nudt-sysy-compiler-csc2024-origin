@@ -53,19 +53,22 @@ class SysYIRGenerator : public SysYBaseVisitor {
 
     //! visitDecl
     virtual std::any visitDecl(SysYParser::DeclContext* ctx) override;
-
     ir::Value* visitDeclLocal(SysYParser::DeclContext* ctx);
-
     ir::Value* visitDeclGlobal(SysYParser::DeclContext* ctx);
 
-    void visitInitValue_beta(SysYParser::InitValueContext *ctx, 
-                            const int capacity, 
-                            const std::vector<ir::Value*> dims, 
-                            std::vector<ir::Value*>& init);
+    void visitInitValue_Array(SysYParser::InitValueContext* ctx,
+                              const int capacity,
+                              const std::vector<int> dims,
+                              std::vector<ir::Value*>& init);
+    // 局部变量    
+    ir::Value* visitVarDef_local(SysYParser::VarDefContext* ctx, ir::Type* btype, bool is_const);
+    ir::Value* visitArray_local(SysYParser::VarDefContext* ctx, ir::Type* btype, bool is_const, std::vector<int>dims, int capacity);
+    ir::Value* visitScalar_local(SysYParser::VarDefContext* ctx, ir::Type* btype, bool is_const);
 
-    ir::Value* visitVarDef_beta(SysYParser::VarDefContext* ctx, ir::Type* type, bool is_const);
-
+    // 全局变量
     ir::Value* visitVarDef_global(SysYParser::VarDefContext* ctx, ir::Type* btype, bool is_const);
+    ir::Value* visitArray_global(SysYParser::VarDefContext* ctx, ir::Type* btype, bool is_const, std::vector<int>dims, int capacity);
+    ir::Value* visitScalar_global(SysYParser::VarDefContext* ctx, ir::Type* btype, bool is_const);
     
     virtual std::any visitBtype(SysYParser::BtypeContext* ctx) override;
 

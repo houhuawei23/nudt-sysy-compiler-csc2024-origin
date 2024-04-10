@@ -103,14 +103,13 @@ initValue: exp | LBRACE (initValue (COMMA initValue)*)? RBRACE;
 
 funcDecl: funcType ID LPAREN funcFParams? RPAREN SEMICOLON; 
 
-funcDef: funcType ID LPAREN funcFParams? RPAREN blockStmt; 
+funcDef: funcType ID LPAREN funcFParams? RPAREN blockStmt;
 
 funcType: VOID | INT | FLOAT;
 
 funcFParams: funcFParam (COMMA funcFParam)*;
 
-funcFParam:
-	btype ID (LBRACKET RBRACKET (LBRACKET exp RBRACKET)*)?;
+funcFParam: btype ID (LBRACKET RBRACKET (LBRACKET exp RBRACKET)*)?;
 
 blockStmt: LBRACE blockItem* RBRACE;
 

@@ -25,7 +25,7 @@ void Function::delete_block(BasicBlock* bb){
 
 void Function::print(std::ostream& os) {
     auto return_type = ret_type();
-    // auto param_types = param_type();
+    
     if (blocks().size()) {
         os << "define " << *return_type << " @" << name() << "(";
         if (_args.size() > 0) {

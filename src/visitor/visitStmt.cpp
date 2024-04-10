@@ -97,7 +97,11 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
  */
 std::any SysYIRGenerator::visitAssignStmt(SysYParser::AssignStmtContext* ctx) {
     ir::Value* lvalue_ptr = any_cast_Value(visit(ctx->lValue()));  // 左值
-    auto lvar_pointee_type = dyn_cast<ir::PointerType>(lvalue_ptr->type())->base_type();
+    ir::Type* lvar_pointee_type = nullptr;
+    if (lvalue_ptr->type()->is_pointer())
+        lvar_pointee_type = dyn_cast<ir::PointerType>(lvalue_ptr->type())->base_type();
+    else 
+        lvar_pointee_type = dyn_cast<ir::ArrayType>(lvalue_ptr->type())->base_type();
     ir::Value* exp = any_cast_Value(visit(ctx->exp()));            // 右值
 
     ir::Value* res = nullptr;
@@ -123,19 +127,15 @@ std::any SysYIRGenerator::visitAssignStmt(SysYParser::AssignStmtContext* ctx) {
         } else if (lvar_pointee_type->is_float32() && exp->is_i32()) {
             exp = builder().create_unary_beta(ir::Value::vSITOFP, exp, ir::Type::float_type());
 
-        } else {
-            std::cerr << "Type " << *exp->type() << " can not convert to type "
-                      << *lvalue_ptr->type() << std::endl;
-            assert(false);
         }
     }
-    res = _builder.create_store(exp, lvalue_ptr, "store");
+    res = _builder.create_store(exp, lvalue_ptr);
 
     return dyn_cast_Value(res);
 }
 
 /*
- * @brief visit If Stmt
+ * @brief: visit If Stmt
  * @details: 
  *      ifStmt: IF LPAREN exp RPAREN stmt (ELSE stmt)?;
  */
@@ -294,7 +294,7 @@ std::any SysYIRGenerator::visitContinueStmt(
 }
 
 /*
- * @brief visit lvalue
+ * @brief: visit lvalue
  * @details:
  *      lValue: ID (LBRACKET exp RBRACKET)*
  */
@@ -302,38 +302,41 @@ std::any SysYIRGenerator::visitLValue(SysYParser::LValueContext* ctx) {
     std::string name = ctx->ID()->getText();
     ir::Value* res = _tables.lookup(name);
 
-    if (res == nullptr) {
-        std::cerr << "Use undefined variable: \"" << name << "\"" << std::endl;
-        exit(EXIT_FAILURE);
-    }
+    if (res == nullptr) assert(false && "use undefined variable");
 
-    if (ctx->exp().empty()) {
-        //! 1. scalar
+    if (ctx->exp().empty()) {  //! 1. scalar
         return dyn_cast_Value(res);
-
     } else {  //! 2. array
-        if (auto res_array = dyn_cast<ir::AllocaInst>(res)) {
-            auto type = res_array->base_type();
-            int current_dimension = 1;
-            std::vector<ir::Value*> dims = res_array->dims();
-            for (auto expr : ctx->exp()) {
-                ir::Value* idx = any_cast_Value(visit(expr));
-                res = _builder.create_getelementptr(type, res, idx,
-                                                    current_dimension, dims, 1);
-                current_dimension++;
-            }
-        } else if (auto res_array = dyn_cast<ir::GlobalVariable>(res)) {
-            auto type = res_array->base_type();
-            int current_dimension = 1;
-            std::vector<ir::Value*> dims = res_array->dims();
-            for (auto expr : ctx->exp()) {
-                ir::Value* idx = any_cast_Value(visit(expr));
-                res = _builder.create_getelementptr(type, res, idx,
-                                                    current_dimension, dims, 1);
-                current_dimension++;
-            }
+        ir::Type* type = res->type(), *base_type = nullptr;
+        assert((ir::isa<ir::AllocaInst>(res) || ir::isa<ir::GlobalVariable>(res)) && "this is not an array");
+
+        if (ir::isa<ir::AllocaInst>(res)) {
+            base_type = dyn_cast<ir::AllocaInst>(res)->base_type();
         } else {
-            assert(false && "this is not an array");
+            base_type = dyn_cast<ir::GlobalVariable>(res)->base_type();
+        }
+
+        if (auto atype = dyn_cast<ir::ArrayType>(type)) {
+            std::vector<int> dims = atype->dims();
+
+            for (auto expr : ctx->exp()) {
+                ir::Value* idx = any_cast_Value(visit(expr));
+                res = _builder.create_getelementptr(base_type, res, idx, dims);
+                dims.erase(dims.begin());
+            }
+        } else if (auto ptype = dyn_cast<ir::PointerType>(type)) {  // res为二级指针及以上 (一级指针alloca)
+            res = _builder.create_load(res);  // 一级指针
+            base_type = res->type();
+            if (auto ptype = dyn_cast<ir::PointerType>(base_type)) {
+                base_type = ptype->base_type();
+            } else {
+                assert(false && "pointer error");
+            }
+
+            for (auto expr : ctx->exp()) {
+                ir::Value* idx = any_cast_Value(visit(expr));
+                res = _builder.create_getelementptr(base_type, res, idx);
+            }
         }
     }
 

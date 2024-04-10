@@ -7,27 +7,17 @@ namespace ir {
 
 /*
  * @brief AllocaInst::print
+ * @details: 
+ *      alloca <ty>
  */
 void AllocaInst::print(std::ostream& os) {
     Instruction::setvarname();
-    os << name() << " = ";
-    os << "alloca ";
+    os << name() << " = alloca ";
 
     if (is_scalar() > 0) {  //! 1. scalar
         os << *(base_type());
     } else {  //! 2. array
-        int dims = dims_cnt();
-        for (int i = 0; i < dims; i++) {
-            auto value = operand(i);
-            if (auto cvalue = dyn_cast<ir::Constant>(value)) {
-                os << "[" << *value << " x ";
-            } else {
-                assert(false && "The dimension must be a constant! ");
-            }
-        }
-        os << *(base_type());
-        for (int i = 0; i < dims; i++)
-            os << "]";
+        os << *(type());
     }
 }
 
@@ -35,6 +25,8 @@ void AllocaInst::print(std::ostream& os) {
  * @brief StoreInst::print
  * @details:
  *      store <ty> <value>, ptr <pointer>
+ * @note: 
+ *      ptr: ArrayType or PointerType
  */
 void StoreInst::print(std::ostream& os) {
     os << "store ";
@@ -45,16 +37,26 @@ void StoreInst::print(std::ostream& os) {
     } else {
         os << value()->name() << ", ";
     }
-    os << *ptr()->type() << " ";
+    if (ptr()->type()->is_pointer()) os << *(ptr()->type()) << " ";
+    else {
+        auto ptype = ptr()->type();
+        ArrayType* atype = dyn_cast<ArrayType>(ptype);
+        os << *(atype->base_type()) << "* ";
+    }
     os << ptr()->name();
 }
 
 void LoadInst::print(std::ostream& os) {
     Instruction::setvarname();
-    os << name() << " = ";
-    os << "load ";
-    os << *dyn_cast<PointerType>(ptr()->type())->base_type() << ", "
-       << *ptr()->type() << " ";
+    os << name() << " = load ";
+    auto ptype = ptr()->type();
+    if (ptype->is_pointer()) {
+        os << *dyn_cast<PointerType>(ptype)->base_type() << ", ";
+        os << *ptype << " ";
+    } else {
+        os << *dyn_cast<ArrayType>(ptype)->base_type() << ", ";
+        os << *dyn_cast<ArrayType>(ptype)->base_type() << "* ";
+    }
     os << ptr()->name();
 }
 
@@ -257,71 +259,42 @@ void FCmpInst::print(std::ostream& os) {
     // op2
     os << rhs()->name();
 }
-
+/*
+ * @brief: BranchInst::print
+ * @details: 
+ *      br i1 <cond>, label <iftrue>, label <iffalse>
+ *      br label <dest>
+ */
 void BranchInst::print(std::ostream& os) {
-    // br i1 <cond>, label <iftrue>, label <iffalse>
-    // br label <dest>
     os << "br ";
-    //
     if (is_cond()) {
         os << "i1 ";
         os << cond()->name() << ", ";
-        os << "label "
-           << "%" << iftrue()->name() << ", ";
-        os << "label "
-           << "%" << iffalse()->name();
+        os << "label %" << iftrue()->name() << ", ";
+        os << "label %" << iffalse()->name();
     } else {
-        os << "label "
-           << "%" << dest()->name();
+        os << "label %" << dest()->name();
     }
 }
 
 /*
- * @brief GetElementPtrInst::print
- *      数组: <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32
- * <idx> 指针: <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
+ * @brief: GetElementPtrInst::print
+ * @details: 
+ *      数组: <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32 <idx> 
+ *      指针: <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
  */
 void GetElementPtrInst::print(std::ostream& os) {
     Instruction::setvarname();
     if (is_arrayInst()) {
-        // 确定数组指针地址
-        // <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32 idx
         int dimensions = dims_cnt();
-        os << name() << " = "
-           << "getelementptr ";
-
-        for (int cur = current_dimension(); cur < dimensions + 1; cur++) {
-            auto value = operand(cur);
-            if (auto cvalue = dyn_cast<ir::Constant>(value)) {
-                os << "[" << *value << " x ";
-            } else {
-                assert(false);
-            }
-        }
-        os << *(base_type());
-        for (int cur = current_dimension(); cur < dimensions + 1; cur++)
-            os << "]";
-        os << ", ";
-
-        for (int cur = current_dimension(); cur < dimensions + 1; cur++) {
-            auto value = operand(cur);
-            if (auto cvalue = dyn_cast<ir::Constant>(value)) {
-                os << "[" << *value << " x ";
-            } else {
-                assert(false);
-            }
-        }
-        os << *(base_type());
-        for (int cur = current_dimension(); cur < dimensions + 1; cur++)
-            os << "]";
-        os << "* ";
+        os << name() << " = getelementptr ";
+        os << *(base_type()) << ", ";
+        os << *(type());
 
         os << get_value()->name() << ", ";
         os << "i32 0, i32 " << get_index()->name();
     } else {
-        // <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
-        os << name() << " = "
-           << "getelementptr " << *(base_type()) << ", " << *type() << " ";
+        os << name() << " = getelementptr " << *(base_type()) << ", " << *type() << " ";
         os << get_value()->name() << ", i32 " << get_index()->name();
     }
 }
