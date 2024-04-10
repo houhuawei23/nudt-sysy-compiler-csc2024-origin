@@ -126,7 +126,7 @@ class BasicBlock : public Value {
 
     void delete_inst(Instruction* inst);
 
-    void delete_inst(Instruction* inst);
+    // void delete_inst(Instruction* inst);
 
     // for CFG
     void add_next_block(BasicBlock* b) { _next_blocks.push_back(b); }

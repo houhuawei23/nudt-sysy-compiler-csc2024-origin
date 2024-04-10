@@ -72,13 +72,13 @@ void Instruction::setvarname() {
     _name = "%" + std::to_string(cur_func->getvarcnt());
 }
 
-void BasicBlock::delete_inst(Instruction* inst){
-    for(auto puse:inst->uses()){
-        puse->user()->del_use(puse);
-    }
-    _insts.remove(inst);
-    delete inst;
-}
+// void BasicBlock::delete_inst(Instruction* inst){
+//     for(auto puse:inst->uses()){
+//         puse->user()->del_use(puse);
+//     }
+//     _insts.remove(inst);
+//     delete inst;
+// }
 
 void BasicBlock::emplace_first_inst(Instruction* inst){
     //Warning: didn't check _is_terminal
