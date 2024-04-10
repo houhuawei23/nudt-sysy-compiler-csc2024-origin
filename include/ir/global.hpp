@@ -38,7 +38,8 @@ class GlobalVariable : public User {
         }
     }
 
-   public:  // generate function
+   public:  
+   // generate function
     static GlobalVariable* gen(Type* base_type,
                                const std::vector<Value*>& init,
                                const_value_ptr_vector& dims = {},
@@ -53,6 +54,7 @@ class GlobalVariable : public User {
    public:  // check function
     bool is_array() const { return _is_array; }
     bool is_constant() const { return _is_constant; }
+    bool is_init() const { return _init.size() > 0; }
 
    public:  // get function
     Module* parent() const { return _parent; }

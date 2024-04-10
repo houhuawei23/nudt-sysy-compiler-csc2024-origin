@@ -70,7 +70,8 @@ class Type {
     // get attribute
     // Type* btype();
     BType btype() const { return _btype; };
-    size_t size() const {
+    size_t size() const { 
+        // bytes
         switch (_btype) {
             case INT32:
                 return 4;
