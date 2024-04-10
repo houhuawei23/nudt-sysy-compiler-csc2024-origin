@@ -187,6 +187,7 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
 
         
         func->sort_blocks();
+        func->add_allocas_to_entry();
     }
 
     builder().reset();

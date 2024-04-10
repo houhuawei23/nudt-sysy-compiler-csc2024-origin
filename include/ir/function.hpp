@@ -3,8 +3,8 @@
 #include "ir/infrast.hpp"
 #include "ir/module.hpp"
 #include "ir/type.hpp"
-#include "support/utils.hpp"
 #include "ir/value.hpp"
+#include "support/utils.hpp"
 
 namespace ir {
 
@@ -21,37 +21,47 @@ inline bool compareBB(const BasicBlock* a1, const BasicBlock* a2) {
 
 class Function : public User {
     friend class Module;
-    protected:
-        Module* _parent = nullptr;  // parent Module
 
-        block_ptr_list _blocks;       // blocks of the function
-        block_ptr_list _exit_blocks;  // exit blocks
-        arg_ptr_vector _args;         // formal args
+   protected:
+    Module* _parent = nullptr;  // parent Module
 
-        //* function has concrete local var for return value,
-        //* addressed by _ret_value_ptr
-        Value* _ret_value_ptr = nullptr;  // return value
-        BasicBlock* _entry = nullptr;     // entry block
-        BasicBlock* _exit = nullptr;      // exit block
+    block_ptr_list _blocks;       // blocks of the function
+    block_ptr_list _exit_blocks;  // exit blocks
+    arg_ptr_vector _args;         // formal args
 
-        int var_cnt = 0;   // for local variables count
-        int _arg_cnt = 0;  // formal arguments count
+    //* function has concrete local var for return value,
+    //* addressed by _ret_value_ptr
+    Value* _ret_value_ptr = nullptr;  // return value
+    BasicBlock* _entry = nullptr;     // entry block
+    BasicBlock* _exit = nullptr;      // exit block
 
-        bool _is_defined = false;
+    int var_cnt = 0;   // for local variables count
+    int _arg_cnt = 0;  // formal arguments count
 
-    public:
-        Function(Type* func_type, const_str_ref name="", Module* parent=nullptr)
-            : User(func_type, vFUNCTION, name), _parent(parent) {
-            _is_defined = false;
-            _arg_cnt = 0;
-            _ret_value_ptr = nullptr;
-        }
+    bool _is_defined = false;
+    // for alloca
+    inst_list _alloca_insts;  // alloca insts for this function
+   public:
+    Function(Type* func_type, const_str_ref name = "", Module* parent = nullptr)
+        : User(func_type, vFUNCTION, name), _parent(parent) {
+        _is_defined = false;
+        _arg_cnt = 0;
+        _ret_value_ptr = nullptr;
+    }
 
     //* get
     int getvarcnt() { return var_cnt++; }
 
     Module* parent() const { return _parent; }
 
+    inst_list& alloca_insts() { return _alloca_insts; }
+    using inst_reverse_iterator = std::reverse_iterator<inst_list::iterator>;
+    void add_allocas_to_entry() {
+        for (auto iter = _alloca_insts.rbegin(); iter != _alloca_insts.rend();
+             ++iter) {
+            _entry->emplace_first_inst(*iter);
+        }
+    }
     //* return
     Type* ret_type() const {
         FunctionType* ftype = dyn_cast<FunctionType>(type());
@@ -104,7 +114,7 @@ class Function : public User {
         return _args[idx];
     }
 
-    Argument* new_arg(Type* btype, const_str_ref name="") {
+    Argument* new_arg(Type* btype, const_str_ref name = "") {
         auto arg = new Argument(btype, _arg_cnt, this, name);
         _arg_cnt++;
         _args.emplace_back(arg);
@@ -114,8 +124,8 @@ class Function : public User {
     //* print blocks in ascending order
     void sort_blocks() { _blocks.sort(compareBB); }
 
-    public:
-        static bool classof(const Value* v) { return v->scid() == vFUNCTION; }
-        void print(std::ostream& os) override;
+   public:
+    static bool classof(const Value* v) { return v->scid() == vFUNCTION; }
+    void print(std::ostream& os) override;
 };
 }  // namespace ir

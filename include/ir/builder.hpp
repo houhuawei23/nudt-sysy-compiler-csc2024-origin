@@ -288,7 +288,10 @@ class IRBuilder {
         AllocaInst* inst = nullptr;
         if (dims.size() == 0) inst = new AllocaInst(base_type, _block, name, is_const);
         else inst = new AllocaInst(base_type, dims, _block, name, is_const);
-        block()->emplace_back_inst(inst);
+        /* hhw, add alloca to function alloca_insts*/
+        auto func = block()->parent();
+        func->alloca_insts().push_back(inst);
+        
         return inst;
     }
 
