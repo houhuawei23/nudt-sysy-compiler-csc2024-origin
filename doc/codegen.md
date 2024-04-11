@@ -96,9 +96,57 @@ TargeFrameInfo class:
 target.riscv:
 
 
-
-
-
+RISCV:
+- instinfodecl.hpp:
+  - enum RISCVInst
+  - getRISCVInstInfo()
+- instinfoimpl.hpp:
+  - RISCVInstInfoXXX classes
+  - RISCVInstInfo class 
+  - getRISCVInstInfo()
+- instselinfodecl.hpp:
+  - getRISCVISelInfo()
+- instselinfopimpl.hpp:
+  - matchInstXXX(): match Generic Inst
+  - matchAndSelectPatternXXX(): match Generic Inst and select RISCV isa
+  - matchAndSelectImpl(): switch opcode on matchAndSelectPatternXXX()
+  - RISCVISelInfo class: public TargetISelInfo
+    - matchAndSelect(): call matchAndSelectImpl()
+  - getRISCVISelInfo()
+- scheduleModeldecl.hpp:
+  - getRISCVScheduleModel()
+- impl.hpp:
+  - class RISCVScheduleModel_sifive_u74: public TargetScheduleModel
+    - getInstScheClass(opcode)
+    - getInfo()
+    - peepholeOpt(mir_func, codegen_ctx)
+    - isExpensiveInst()
+  - getRISCVScheduleModel()
+- riscv.hpp:
+  - enum RISCVRegister{}
+  - isOperandXXX(): check operand type for isel
+- RISCVTarget.cpp:
+  - class RISCVDataLayout: public DataLayout
+  - class RISCVFrameInfo: public TargetFrameInfo
+  - class RISCVRigisterInfo: public TargetRegisterInfo
+  - class RISCVTarget: public Target
+    - RISCVDataLayout mDataLayout;
+    - RISCVFrameInfo mFrameInfo;
+    - RISCVRegisterInfo mRegisterInfo;
+- RISCVInstInfo.cpp:
+  - getRISCVGPRTextualName()
+  - operator<<(out, operand)
+  - emitGotoImpl()
+  - inverseBranchImpl
+  - getAddressingImmRangeImpl
+- RISCVISelInfo.cpp:
+  - getXXXXOpcode()
+  - selectXXXX()
+  - legalizeInst()
+- RISCVScheduleModel.cpp:
+  - template class RISCVScheduleClassXXXXX: public ScheduleClass
+    - schedule(state, inst, instinfo)
+  - 
 Global Value:
 
 - has init: .data

@@ -19,7 +19,7 @@ class Target {
     virtual const DataLayout& get_datalayout() const = 0;
     // virtual const TargetScheduleModel& get_schedule_model() const = 0;
     virtual const TargetInstInfo& get_inst_info() const = 0;
-    virtual const TargetISelInfo& get_isel_info() const = 0;
+    // virtual const TargetISelInfo& get_isel_info() const = 0;
     // virtual const TargetFrameInfo& get_frame_info() const = 0;
     // virtual const TargetRegisterInfo* get_register_info() const = 0;
 };
@@ -38,7 +38,7 @@ class CodeGenContext final {
     // const TargetScheduleModel& scheduleModel;
     const DataLayout& dataLayout;
     const TargetInstInfo& instInfo;
-    const TargetISelInfo& iselInfo;
+    // const TargetISelInfo& iselInfo;
     const TargetFrameInfo& frameInfo;
     // const TargetRegisterInfo* registerInfo;
     MIRFlags flags;

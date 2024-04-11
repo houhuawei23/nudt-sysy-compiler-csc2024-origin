@@ -1,0 +1,34 @@
+// Automatically generated file, do not edit!
+
+#pragma once
+#include "InstInfoDecl.hpp
+
+TARGET_NAMESPACE_BEGIN
+
+{%for name, inst in insts.items() %}
+class {{target_name}}InstInfo{{name}} final: public InstInfo {
+public:
+
+
+}
+{% endfor %}
+
+class {{target_name}}InstInfo final: public TargetInstInfo {
+    {% for name, info in insts.items() %}
+    {{target_name}}InstInfo{{name}} _instinfo{{name}};
+    {% endfor %}
+public:
+    {{target_name}}InstInfo() = default;
+    InstInfo& get_instinfo(uint32_t opcode) {
+        switch (opcode) {
+            {% for name, info in insts.items() %}
+            case {{target_name}}Inst::{{name}}:
+                return _instinfo{{name}};
+            {% endfor %}
+            default:
+                return TargetInstInfo::get_instinfo(opcode);
+        }
+    }
+}
+
+TARGET_NAMESPACE_END
