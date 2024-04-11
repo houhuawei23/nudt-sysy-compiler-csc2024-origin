@@ -12,13 +12,7 @@ namespace ir {
  */
 void AllocaInst::print(std::ostream& os) {
     Instruction::setvarname();
-    os << name() << " = alloca ";
-
-    if (is_scalar() > 0) {  //! 1. scalar
-        os << *(base_type());
-    } else {  //! 2. array
-        os << *(type());
-    }
+    os << name() << " = alloca " << *(base_type());
 }
 
 /*
@@ -286,10 +280,26 @@ void BranchInst::print(std::ostream& os) {
 void GetElementPtrInst::print(std::ostream& os) {
     Instruction::setvarname();
     if (is_arrayInst()) {
-        int dimensions = dims_cnt();
         os << name() << " = getelementptr ";
-        os << *(base_type()) << ", ";
-        os << *(type());
+
+        int dimensions = cur_dims_cnt();
+        for (int i = 0; i < dimensions; i++) {
+            int value = cur_dims()[i];
+            os << "[" << value << " x ";
+        }
+        if (_id == 1) os << *(dyn_cast<ir::ArrayType>(base_type())->base_type());
+        else os << *(base_type());
+        for (int i = 0; i < dimensions; i++) os << "]";
+        os << ", ";
+
+        for (int i = 0; i < dimensions; i++) {
+            int value = cur_dims()[i];
+            os << "[" << value << " x ";
+        }
+        if (_id == 1) os << *(dyn_cast<ir::ArrayType>(base_type())->base_type());
+        else os << *(base_type());
+        for (int i = 0; i < dimensions; i++) os << "]";
+        os << "* ";
 
         os << get_value()->name() << ", ";
         os << "i32 0, i32 " << get_index()->name();

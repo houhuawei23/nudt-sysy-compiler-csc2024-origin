@@ -6,7 +6,7 @@
 
 代码仓库: [SysYCompiler](https://gitee.com/triple-adventurer/sys-ycompiler.git)
 
-开发人员(按拼音):侯华玮 简泽鑫 汤翔晟 杨俯众
+开发人员 (按拼音):侯华玮 简泽鑫 汤翔晟 杨俯众
 
 ## 项目基本结构和介绍
 
@@ -160,16 +160,6 @@ src中需要关注的文件有：
 - **sysyc.cpp**
 - SysYParser.h
 - SysYParser.cpp
-
-## 链接静态库
-1. 生成静态链接库
-```bash
-cd ./sysylib
-gcc -c ./sylib.c -o sylib.o
-ar rcs libsy.a ./sylib.o
-```
-2. 
-
 
 
 ## logs

@@ -19,7 +19,7 @@ class GlobalVariable : public User {
         GlobalVariable(Type* base_type, std::vector<Value*> init,
                        std::vector<int> dims, Module* parent=nullptr, 
                        const_str_ref name="", bool is_const=false)
-            : User(ir::Type::array_type(base_type, dims), vGLOBAL_VAR, name),
+            : User(ir::Type::pointer_type(ir::Type::array_type(base_type, dims)), vGLOBAL_VAR, name),
               _parent(parent), _init(init), _is_const(is_const) {
             _is_array = true;
         }
@@ -45,25 +45,23 @@ class GlobalVariable : public User {
     public:  // check function
         bool is_array() const { return _is_array; }
         bool is_const() const { return _is_const; }
-    bool is_init() const { return _init.size() > 0; }
 
     public:  // get function
         Module* parent() const { return _parent; }
         int dims_cnt() const {
-            if (is_array()) return dyn_cast<ArrayType>(type())->dims_cnt();
+            if (is_array()) return dyn_cast<ArrayType>(base_type())->dims_cnt();
             else return 0;
         }
         int init_cnt() const { return _init.size(); }
         Value* init(int index) const { return _init[index]; }
         Type* base_type() const {
-            if (type()->is_array()) return dyn_cast<ArrayType>(type())->base_type();
-            else return dyn_cast<PointerType>(type())->base_type();
+            assert(dyn_cast<PointerType>(type()) && "type error");
+            return dyn_cast<PointerType>(type())->base_type();
         }
         Value* scalar_value() const { return _init[0]; }
 
     public:
-        void print_ArrayInit(std::ostream& os, const int dimension,
-                             const int begin, int* idx) const;
+        void print_ArrayInit(std::ostream& os, const int dimension, const int begin, int* idx) const;
 
     public:
         static bool classof(const Value* v) { return v->scid() == vGLOBAL_VAR; }

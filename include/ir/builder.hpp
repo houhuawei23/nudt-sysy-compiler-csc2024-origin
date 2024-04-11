@@ -129,8 +129,6 @@ class IRBuilder {
 
     auto create_binary_beta(Value::BinaryOp op, Value* lhs, Value* rhs) {
         Type* ltype = lhs->type(), *rtype = rhs->type();
-        if (ltype->is_array()) ltype = dyn_cast<ArrayType>(ltype)->base_type();
-        if (rtype->is_array()) rtype = dyn_cast<ArrayType>(rtype)->base_type();
         if (ltype != rtype) {
             assert(false && "create_eq_beta: type mismatch!");
         }
@@ -372,11 +370,12 @@ class IRBuilder {
     }
 
     //! Create GetElementPtr Instruction
-    GetElementPtrInst* create_getelementptr(Type* base_type, Value* value,
-                                            Value* idx, std::vector<int> dims={}) {
+    GetElementPtrInst* create_getelementptr(Type* base_type, Value* value, Value* idx, 
+                                            std::vector<int> dims={}, std::vector<int> cur_dims={}) {
         GetElementPtrInst* inst = nullptr;
-        if (dims.size() == 0) inst = new GetElementPtrInst(base_type, value, _block, idx);
-        else inst = new GetElementPtrInst(base_type, value, _block, idx, dims);
+        if (dims.size() == 0 && cur_dims.size() == 0) inst = new GetElementPtrInst(base_type, value, _block, idx);
+        else if (dims.size() == 0 && cur_dims.size() != 0) inst = new GetElementPtrInst(base_type, value, _block, idx, cur_dims);
+        else inst = new GetElementPtrInst(base_type, value, _block, idx, dims, cur_dims);
         block()->emplace_back_inst(inst);
         return inst;
     }

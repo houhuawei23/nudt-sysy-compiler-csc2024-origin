@@ -301,42 +301,39 @@ std::any SysYIRGenerator::visitContinueStmt(
 std::any SysYIRGenerator::visitLValue(SysYParser::LValueContext* ctx) {
     std::string name = ctx->ID()->getText();
     ir::Value* res = _tables.lookup(name);
-
-    if (res == nullptr) assert(false && "use undefined variable");
-
-    if (ctx->exp().empty()) {  //! 1. scalar
+    assert(res && "use undefined variable");
+    
+    bool isArray = false;
+    if (auto ptype = dyn_cast<ir::PointerType>(res->type())) {
+        isArray = ptype->base_type()->is_array() || ptype->base_type()->is_pointer();
+    }
+    if (!isArray) {  //! 1. scalar
         return dyn_cast_Value(res);
     } else {  //! 2. array
-        ir::Type* type = res->type(), *base_type = nullptr;
-        assert((ir::isa<ir::AllocaInst>(res) || ir::isa<ir::GlobalVariable>(res)) && "this is not an array");
-
-        if (ir::isa<ir::AllocaInst>(res)) {
-            base_type = dyn_cast<ir::AllocaInst>(res)->base_type();
-        } else {
-            base_type = dyn_cast<ir::GlobalVariable>(res)->base_type();
-        }
-
-        if (auto atype = dyn_cast<ir::ArrayType>(type)) {
-            std::vector<int> dims = atype->dims();
-
+        ir::Type* type = dyn_cast<ir::PointerType>(res->type())->base_type();
+        if (type->is_array()) {  // 数组 (eg. int a[2][3]) -> 常规使用
+            auto atype = dyn_cast<ir::ArrayType>(type);
+            auto base_type = atype->base_type();
+            std::vector<int> dims = atype->dims(), cur_dims(dims);
             for (auto expr : ctx->exp()) {
                 ir::Value* idx = any_cast_Value(visit(expr));
-                res = _builder.create_getelementptr(base_type, res, idx, dims);
                 dims.erase(dims.begin());
+                res = _builder.create_getelementptr(base_type, res, idx, dims, cur_dims);
+                cur_dims.erase(cur_dims.begin());
             }
-        } else if (auto ptype = dyn_cast<ir::PointerType>(type)) {  // res为二级指针及以上 (一级指针alloca)
-            res = _builder.create_load(res);  // 一级指针
-            base_type = res->type();
-            if (auto ptype = dyn_cast<ir::PointerType>(base_type)) {
-                base_type = ptype->base_type();
-            } else {
-                assert(false && "pointer error");
-            }
+        } else if (type->is_pointer()) {  // 指针 (eg. int a[] OR int a[][5]) -> 函数参数
+            res = _builder.create_load(res);
+            type = dyn_cast<ir::PointerType>(type)->base_type();
+            if (type->is_array()) {  // 二级及以上指针
 
-            for (auto expr : ctx->exp()) {
-                ir::Value* idx = any_cast_Value(visit(expr));
-                res = _builder.create_getelementptr(base_type, res, idx);
+            } else {  // 一级指针
+                for (auto expr : ctx->exp()) {
+                    ir::Value* idx = any_cast_Value(visit(expr));
+                    res = _builder.create_getelementptr(type, res, idx);
+                }
             }
+        } else {
+            assert(false && "type error");
         }
     }
 
