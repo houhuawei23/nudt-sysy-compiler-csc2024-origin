@@ -169,11 +169,11 @@ class Value {
         vPHI
     };
 
-   protected:
-    Type* _type;    // type of the value
-    ValueId _scid;  // subclass id of Value
-    std::string _name;
-    use_ptr_list _uses;  // uses list
+    protected:
+        Type* _type;    // type of the value
+        ValueId _scid;  // subclass id of Value
+        std::string _name;
+        use_ptr_list _uses;  // uses list
 
     public:
         Value(Type* type, ValueId scid = vValue, const_str_ref name = "")

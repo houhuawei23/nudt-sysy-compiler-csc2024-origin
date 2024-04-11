@@ -145,9 +145,7 @@ class Constant : public User {
     }
     // static Constant* 
 
-   public:
-
-    // get function
+    public:  // get
     int32_t i32() const {
         if (not is_i32()) {
             std::cerr << "Implicit type conversion!" << std::endl;

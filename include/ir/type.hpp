@@ -31,72 +31,72 @@ typedef enum : size_t {
 } BType;
 
 class Type {
-   protected:
-    BType _btype;
+    protected:
+        BType _btype;
 
-   public:
-    Type(BType btype) : _btype(btype) {}
-    virtual ~Type() = default;  // default deconstructor
+    public:
+        Type(BType btype) : _btype(btype) {}
+        virtual ~Type() = default;
 
-    // static method for construct Type instance
-    static Type* void_type();
+    public:  // static method for construct Type instance
+        static Type* void_type();
 
-    static Type* i1_type();
-    static Type* i32_type();
+        static Type* i1_type();
+        static Type* i32_type();
 
-    static Type* float_type();
-    static Type* double_type();
+        static Type* float_type();
+        static Type* double_type();
 
-    static Type* label_type();
-    static Type* undefine_type();
-    static Type* pointer_type(Type* baseType);
-    static Type* array_type(Type* baseType, std::vector<int> dims);
-    static Type* func_type(Type* ret_type, const type_ptr_vector& param_types);
+        static Type* label_type();
+        static Type* undefine_type();
+        static Type* pointer_type(Type* baseType);
+        static Type* array_type(Type* baseType, std::vector<int> dims);
+        static Type* func_type(Type* ret_type, const type_ptr_vector& param_types);
 
-    //! type check
-    bool is(Type* type);
-    bool isnot(Type* type);
-    bool is_void();
+    public:  // check
+        bool is(Type* type);
+        bool isnot(Type* type);
+        bool is_void();
 
-    bool is_i1();
-    bool is_i32();
-    bool is_int() { return is_i1() || is_i32(); }
+        bool is_i1();
+        bool is_i32();
+        bool is_int() { return is_i1() || is_i32(); }
 
-    bool is_float32();
-    bool is_double();
-    bool is_float() { return is_float32() || is_double(); }
-    
-    bool is_label();
-    bool is_pointer();
-    bool is_array();
-    bool is_function();
+        bool is_float32();
+        bool is_double();
+        bool is_float() { return is_float32() || is_double(); }
+        
+        bool is_label();
+        bool is_pointer();
+        bool is_array();
+        bool is_function();
 
-    // get attribute
-    // Type* btype();
-    BType btype() const { return _btype; };
-    size_t size() const { 
-        // bytes
-        switch (_btype) {
-            case INT32:
-                return 4;
-                break;
-            case FLOAT:
-                return 4;
-                break;
-            case DOUBLE:
-            case LABEL:
-            case POINTER:
-            case FUNCTION:
-                return 8;
-                break;
-            case VOID:
-                return 0;
-            default:
-                break;
-        }
-        return -1;
-    };
-    void print(std::ostream& os);
+    public:  // get
+        BType btype() const { return _btype; };
+        size_t size() const { 
+            switch (_btype) {
+                case INT32:
+                    return 4;
+                    break;
+                case FLOAT:
+                    return 4;
+                    break;
+                case DOUBLE:
+                case LABEL:
+                case POINTER:
+                case FUNCTION:
+                    return 8;
+                    break;
+                case VOID:
+                    return 0;
+                default:
+                    break;
+            }
+            return -1;
+        };
+
+    public:
+        void print(std::ostream& os);
 };
 
 class PointerType : public Type {
@@ -134,9 +134,8 @@ class FunctionType : public Type {
     FunctionType(Type* ret_type, const type_ptr_vector& arg_types={})
         : Type(FUNCTION), _ret_type(ret_type), _arg_types(arg_types) {}
 
-   public:
-    //! Gen
-    static FunctionType* gen(Type* ret_type, const type_ptr_vector& arg_types);
+    public:  // Gen
+        static FunctionType* gen(Type* ret_type, const type_ptr_vector& arg_types);
 
     //! get the return type of the function
     Type* ret_type() const { return _ret_type; }
