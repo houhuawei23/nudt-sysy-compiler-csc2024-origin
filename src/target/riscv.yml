@@ -1,0 +1,117 @@
+Templates:
+  {
+    Rtype:
+      {
+        template: "$name $rd, $rs1, $rs2",
+        oprands:
+          {
+            rd: { type: GPR, flag: Def },
+            rs1: { type: GPR, flag: Use },
+            rs2: { type: GPR, flag: Use },
+          },
+      },
+    IType:
+      {
+        template: "$name $rd, $rs1, $imm",
+        oprands:
+          {
+            rd: { type: GPR, flag: Def },
+            rs1: { type: GPR, flag: Use },
+            imm: { type: IMM12, flag: Metadata },
+          },
+      },
+    SType:
+      {
+        template: "$name $rs2, $offset($rs1)",
+        oprands:
+          {
+            rs1: { type: GPR, flag: Use }, # BaseLike
+            rs2: { type: GPR, flag: Use },
+            offset: { type: IMM12, flag: Metadata },
+          },
+      },
+    UType:
+      {
+        template: "$name $rd, $imm",
+        oprands:
+          {
+            rd: { type: GPR, flag: Def },
+            imm: { type: IMM20, flag: Metadata },
+          },
+      },
+    # for Pseudos
+    # R2Type: {
+    #   template: "$name $rd, $rs",
+
+    # }
+  }
+Instances: {
+    # RRR
+    ADD: { name: "add", template: Rtype },
+    SUB: { name: "sub", template: Rtype },
+    XOR: { name: "xor", template: Rtype },
+    OR: { name: "or", template: Rtype },
+    AND: { name: "and", template: Rtype },
+    SLL: { name: "sll", template: Rtype },
+    SRL: { name: "srl", template: Rtype },
+    SRA: { name: "sra", template: Rtype },
+    SLT: { name: "slt", template: Rtype },
+    SLTU: { name: "sltu", template: Rtype },
+    # RII
+    ADDI: { name: "addi", template: IType },
+    XORI: { name: "xori", template: IType },
+    ORI: { name: "ori", template: IType },
+    ANDI: { name: "andi", template: IType },
+    SLTI: { name: "slti", template: IType },
+    SLTIU: { name: "sltiu", template: IType },
+    # RII-shift
+    SLLI:
+      {
+        name: "slli",
+        template: IType,
+        operands: { imm: { type:UIMM6, flag: Metadata } },
+      },
+    SRLI:
+      {
+        name: "srli",
+        template: IType,
+        operands: { imm: { type:UIMM6, flag: Metadata } },
+      },
+    SRAI:
+      {
+        name: "srai",
+        template: IType,
+        operands: { imm: { type:UIMM6, flag: Metadata } },
+      },
+    # Load
+    LB: { name: "lb", template: IType, flag: [Load] },
+    LH: { name: "lh", template: IType, flag: [Load] },
+    LW: { name: "lw", template: IType, flag: [Load] },
+    LBU: { name: "lbu", template: IType, flag: [Load] },
+    LHU: { name: "lhu", template: IType, flag: [Load] },
+    # Store
+    SB: { name: "sb", template: SType, flag: [Store] },
+    SH: { name: "sh", template: SType, flag: [Store] },
+    SW: { name: "sw", template: SType, flag: [Store] },
+    # branch Btype-Itype offset-imm
+    BEQ: { name: "beq", template: IType, flag: [Branch, Terminator] }, 
+    BNE: { name: "bne", template: IType, flag: [Branch, Terminator] }, 
+    BLT: { name: "blt", template: IType, flag: [Branch, Terminator] }, 
+    BGE: { name: "bge", template: IType, flag: [Branch, Terminator] }, 
+    BLTU: { name: "bltu", template: IType, flag: [Branch, Terminator] }, 
+    BGEU: { name: "bgeu", template: IType, flag: [Branch, Terminator] }, 
+    # J JType-Utype 
+    JAL: { name: "jal", template: UType, flag: [Call] },
+    JALR: { name: "jalr", template: IType, flag: [Call] },
+  
+    # RIU lui, auipc
+    LUI: { name: "lui", template: UType, flag: [LoadConstant] },
+    AUIPC: { name: "auipc", template: UType, flag: [PCRel, LoadConstant] },
+    # Pseudos
+    # nop
+
+    # MV: { }
+
+
+
+  }
