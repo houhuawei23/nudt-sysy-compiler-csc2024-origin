@@ -57,28 +57,28 @@ void BasicBlock::emplace_inst(inst_iterator pos, Instruction* i) {
     _is_terminal = i->is_terminator();
 }
 
-void BasicBlock::delete_inst(Instruction* inst){
-    for(auto op:inst->operands()){
-        auto val=op->value();
-        if(val){
-            val->del_use(op);
-        }
-    }
-    delete inst;
-}
+// void BasicBlock::delete_inst(Instruction* inst){
+//     for(auto op:inst->operands()){
+//         auto val=op->value();
+//         if(val){
+//             val->del_use(op);
+//         }
+//     }
+//     delete inst;
+// }
 
 void Instruction::setvarname() {
     auto cur_func = _parent->parent();
     _name = "%" + std::to_string(cur_func->getvarcnt());
 }
 
-// void BasicBlock::delete_inst(Instruction* inst){
-//     for(auto puse:inst->uses()){
-//         puse->user()->del_use(puse);
-//     }
-//     _insts.remove(inst);
-//     delete inst;
-// }
+void BasicBlock::delete_inst(Instruction* inst){
+    for(auto puse:inst->uses()){
+        puse->user()->del_use(puse);
+    }
+    _insts.remove(inst);
+    delete inst;
+}
 
 void BasicBlock::emplace_first_inst(Instruction* inst){
     //Warning: didn't check _is_terminal

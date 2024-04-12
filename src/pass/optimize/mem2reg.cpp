@@ -43,6 +43,7 @@ namespace pass
             }
             else if (auto store = dynamic_cast<ir::StoreInst *>(use->user()))
             {
+                //TODO 这里type的比较要比较其指针的basetype而不是本身, 估计这整个程序里面都有这样的问题
                 if (store->value() == alloca || store->value()->type() != alloca->type())
                 {
                     return false;
@@ -106,7 +107,7 @@ namespace pass
                         continue;
                     }
                 }
-                else if (storeBB->dom.find(load->parent()) == storeBB->dom.end())
+                else if (not storeBB->dominate(load->parent()))
                 {
                     UsesBlock[alloca].insert(load->parent());
                     continue;
@@ -296,10 +297,18 @@ namespace pass
                 {
                     if (auto *ai = dyn_cast<ir::AllocaInst>(inst))
                     {
-                        if (ai->type()->is_float32() || ai->type()->is_i32() || ai->type()->is_i1())
+                        //这里不是ai->type()->is_xx(), 而应该是其指针原来的类型->is_xx()
+                        auto aitype=ai->type();
+                        if (aitype and aitype->is_pointer())
                         {
-                            if (is_promoted(ai))
-                                Allocas.push_back(ai);
+                            auto pttype=dyn_cast<ir::PointerType>(aitype);
+                            auto aibasetype=pttype->base_type();
+                            if(aibasetype->is_float32() or aibasetype->is_i32() or aibasetype->is_i1())
+                            {
+                                if (is_promoted(ai))
+                                    Allocas.push_back(ai);
+                            }
+                            
                         }
                     }
                 }
@@ -314,7 +323,7 @@ namespace pass
 
     void Mem2Reg::run(ir::Function *F)
     {
-        if(promotemem2reg(F))
-            return;
+        if(not F->entry())return;
+        promotemem2reg(F);
     }
 } // namespace pass

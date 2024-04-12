@@ -57,7 +57,7 @@ class BasicBlock : public Value {
     BasicBlock* sdom;
     std::vector<BasicBlock*> domTree;//sons in dom Tree
     std::vector<BasicBlock*> domFrontier;//dom frontier
-    std::set<BasicBlock*> dom;//those bb was dominated by self
+    // std::set<BasicBlock*> dom;//those bb was dominated by self
     int domLevel;
 
    protected:
@@ -135,6 +135,14 @@ class BasicBlock : public Value {
     static void block_link(ir::BasicBlock* pre, ir::BasicBlock* next) {
         pre->add_next_block(next);
         next->add_pre_block(pre);
+    }
+
+    bool dominate(BasicBlock *bb){
+        if(this==bb)return true;
+        for(auto bbnext:domTree){
+            if(bbnext->dominate(bb)) return true;
+        }
+        return false;
     }
 
     // for isa<>
