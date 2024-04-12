@@ -437,6 +437,7 @@ class PhiInst:public Instruction{
         void addIncoming(Value *val, BasicBlock *bb){
             add_operand(val);
             add_operand(bb);
+            parent()->parent()->print(std::cout);
             _vals.push_back(val);
             _bbs.push_back(bb);
             // 更新操作数的数量

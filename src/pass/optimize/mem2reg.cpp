@@ -44,7 +44,7 @@ namespace pass
             }
             else if (auto store = dynamic_cast<ir::StoreInst *>(use->user()))
             {
-                //TODO 这里type的比较要比较其指针的basetype而不是本身, 估计这整个程序里面都有这样的问题
+                // 这里type的比较要比较其指针的basetype而不是本身, 估计这整个程序里面都有这样的问题
                 if (store->value() == alloca || store->value()->type() != allocapt)
                 {
                     return false;
@@ -84,13 +84,14 @@ namespace pass
 
     bool Mem2Reg::rewriteSingleStoreAlloca(ir::AllocaInst *alloca)
     {
-        bool not_globalstore = ir::isa<ir::Instruction>(OnlyStore->operand(0));
+        bool not_globalstore = not ir::isa<ir::GlobalVariable>(OnlyStore->value());
         int StoreIndex = -1;
         ir::BasicBlock *storeBB = OnlyStore->parent();
         UsesBlock[alloca].clear();
-        for (auto pinst : alloca->uses())
+        for (auto institer=alloca->uses().begin();institer!=alloca->uses().end();)
         {
-            auto inst=pinst->user();
+            auto inst=(*institer)->user();
+            institer++;
             if (dyn_cast<ir::StoreInst>(inst) == OnlyStore)
                 continue;
             ir::LoadInst *load = dyn_cast<ir::LoadInst>(inst);
@@ -108,13 +109,14 @@ namespace pass
                         continue;
                     }
                 }
-                else if (not storeBB->dominate(load->parent()))
+                else if (not storeBB->dominate(load->parent()))// 如果storeBB支配了load不能进行替换
                 {
                     UsesBlock[alloca].insert(load->parent());
                     continue;
                 }
             }
-            ir::Value *ReplVal = OnlyStore->operand(0);
+            // 
+            ir::Value *ReplVal = OnlyStore->value();
             load->replace_all_use_with(ReplVal);
             load->parent()->delete_inst(load);
             
@@ -148,7 +150,6 @@ namespace pass
                 }
             }
         }
-
         std::set<ir::BasicBlock *> Phiset;
         std::vector<ir::BasicBlock *> W;
         ir::PhiInst *phi;
@@ -181,14 +182,14 @@ namespace pass
                 }
             }
         }
-
         // rename:填充phi指令内容
         std::vector<ir::Instruction *> instRemovelist;
         std::vector<std::pair<ir::BasicBlock *, std::map<ir::AllocaInst *, ir::Value *>>> Worklist;
         std::set<ir::BasicBlock *> VisitedSet;
         ir::BasicBlock *SuccBB, *BB;
         std::map<ir::AllocaInst *, ir::Value *> Incommings;
-        ir::Instruction *Inst;
+        ir::Instruction* Inst;
+
         Worklist.push_back({F->entry(), {}});
         for (ir::AllocaInst *alloca : Allocas)
         {
@@ -197,6 +198,7 @@ namespace pass
         }
         while (!Worklist.empty())
         {
+            
             BB = Worklist.back().first;
             Incommings = Worklist.back().second;
             Worklist.pop_back();
@@ -205,17 +207,15 @@ namespace pass
                 continue;
             else
                 VisitedSet.insert(BB);
-
-            for (auto &inst : BB->insts())
+            
+            for (auto inst : BB->insts())
             {
-
-                Inst = dyn_cast<ir::Instruction>(inst);
 
                 if (ir::AllocaInst *AI = dyn_cast<ir::AllocaInst>(inst))
                 {
                     if (find(Allocas.begin(), Allocas.end(), AI) == Allocas.end())//如果不是可提升的alloca就不管，否则把这条alloca放入待删除列表
                         continue;
-                    instRemovelist.push_back(Inst);
+                    instRemovelist.push_back(inst);
                 }
 
                 else if (ir::LoadInst *LD = dyn_cast<ir::LoadInst>(inst))
@@ -231,7 +231,7 @@ namespace pass
                             Incommings[AI] = ir::Constant::gen_undefine();
                         }
                         LD->replace_all_use_with(Incommings[AI]);
-                        instRemovelist.push_back(Inst);
+                        instRemovelist.push_back(inst);
                     }
                 }
 
@@ -243,7 +243,7 @@ namespace pass
                     if (find(Allocas.begin(), Allocas.end(), AI) == Allocas.end())
                         continue;
                     Incommings[AI] = ST->value();
-                    instRemovelist.push_back(Inst);
+                    instRemovelist.push_back(inst);
                 }
 
                 else if (ir::PhiInst *PHI = dyn_cast<ir::PhiInst>(inst))
@@ -253,30 +253,32 @@ namespace pass
                     Incommings[PhiMap[BB][PHI]] = PHI;
                 }
             }
+            
             for (auto &sBB : BB->next_blocks())
             {
                 SuccBB = dyn_cast<ir::BasicBlock>(sBB);
                 Worklist.push_back({SuccBB, Incommings});
-                for (auto &inst : SuccBB->insts())
+                for (auto inst : SuccBB->insts())
                 {
                     if (ir::PhiInst *PHI = dyn_cast<ir::PhiInst>(inst))
                     {
                         if (PhiMap[SuccBB].find(PHI) == PhiMap[SuccBB].end())
                             continue;
-                        if (Incommings[PhiMap[SuccBB][PHI]])
+                        if (Incommings[PhiMap[SuccBB][PHI]]){
                             PHI->addIncoming(Incommings[PhiMap[SuccBB][PHI]], BB);
+                            F->print(std::cout);
+                        }
+                            
                     }
                 }
             }
         }
-
         while (!instRemovelist.empty())
         {
             Inst = instRemovelist.back();
             Inst->parent()->delete_inst(Inst);
             instRemovelist.pop_back();
         }
-
         for (auto &item : PhiMap)
             for (auto &pa : item.second)
             {
@@ -287,33 +289,31 @@ namespace pass
 
     bool Mem2Reg::promotemem2reg(ir::Function *F)
     {
-        std::vector<ir::AllocaInst *> Allocas;
         bool changed = false;
         while (true)
         {
             Allocas.clear();
-            for (ir::BasicBlock *bb : F->blocks())
+            ir::BasicBlock *bb = F->entry();
+            for (auto &inst : bb->insts())
             {
-                for (auto &inst : bb->insts())
+                if (auto *ai = dyn_cast<ir::AllocaInst>(inst))
                 {
-                    if (auto *ai = dyn_cast<ir::AllocaInst>(inst))
+                    //这里不是ai->type()->is_xx(), 而应该是其指针原来的类型->is_xx()
+                    auto aitype=ai->type();
+                    if (aitype and aitype->is_pointer())
                     {
-                        //这里不是ai->type()->is_xx(), 而应该是其指针原来的类型->is_xx()
-                        auto aitype=ai->type();
-                        if (aitype and aitype->is_pointer())
+                        auto pttype=dyn_cast<ir::PointerType>(aitype);
+                        auto aibasetype=pttype->base_type();
+                        if(aibasetype->is_float32() or aibasetype->is_i32() or aibasetype->is_i1())
                         {
-                            auto pttype=dyn_cast<ir::PointerType>(aitype);
-                            auto aibasetype=pttype->base_type();
-                            if(aibasetype->is_float32() or aibasetype->is_i32() or aibasetype->is_i1())
-                            {
-                                if (is_promoted(ai))
-                                    Allocas.push_back(ai);
-                            }
-                            
+                            if (is_promoted(ai))
+                                Allocas.push_back(ai);
                         }
+                        
                     }
                 }
             }
+            
             if (Allocas.empty())
                 break;
             promotememToreg(F);

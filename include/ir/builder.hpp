@@ -284,10 +284,11 @@ class IRBuilder {
                               std::vector<int> dims={}, 
                               const_str_ref name="") {
         AllocaInst* inst = nullptr;
-        if (dims.size() == 0) inst = new AllocaInst(base_type, _block, name, is_const);
-        else inst = new AllocaInst(base_type, dims, _block, name, is_const);
+        auto entryBlock=block()->parent()->entry();
+        if (dims.size() == 0) inst = new AllocaInst(base_type, entryBlock, name, is_const);
+        else inst = new AllocaInst(base_type, dims, entryBlock, name, is_const);
         /* hhw, add alloca to function entry block*/
-        block()->parent()->entry()->emplace_back_inst(inst);
+        entryBlock->emplace_back_inst(inst);
         return inst;
     }
 

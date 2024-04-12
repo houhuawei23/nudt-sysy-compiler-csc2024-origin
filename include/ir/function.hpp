@@ -49,6 +49,7 @@ class Function : public User {
 
     //* get
     int getvarcnt() { return var_cnt++; }
+    void setvarcnt(int x) {var_cnt=x;}
 
     Module* parent() const { return _parent; }
 

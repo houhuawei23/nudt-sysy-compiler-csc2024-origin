@@ -343,10 +343,15 @@ void PhiInst::print(std::ostream& os){
     os << name() << " = ";
     os << "phi " << *(type()) << " ";
     // for all vals, bbs
-    for(int i = 0;i<size-1;i++){
-        os <<"[ "<<*_vals[i]<<", "<<*_bbs[i]<<" ]"<<",";
+    if(size > 0)
+    {
+        for(int i = 0;i <size-1;i++)
+        {
+            os <<"[ "<<_vals[i]->name()<<", "<<_bbs[i]->name()<<" ]"<<",";
+        }
+        os <<"[ "<<_vals[size-1]->name()<<", "<<_bbs[size-1]->name()<<" ]";
     }
-    os <<"[ "<<*_vals[size-1]<<", "<<*_bbs[size-1]<<" ]";
+    
 }
 
 }  // namespace ir
