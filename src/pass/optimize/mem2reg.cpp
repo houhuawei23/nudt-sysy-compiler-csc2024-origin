@@ -32,11 +32,12 @@ namespace pass
 
     bool Mem2Reg::is_promoted(ir::AllocaInst *alloca)
     {
+        auto allocapt=dyn_cast<ir::PointerType>(alloca->type())->base_type();
         for (const auto &use : alloca->uses())
         {
             if (auto load = dynamic_cast<ir::LoadInst *>(use->user()))
             {
-                if (load->type() != alloca->type())
+                if (load->type() != allocapt)
                 {
                     return false;
                 }
@@ -44,7 +45,7 @@ namespace pass
             else if (auto store = dynamic_cast<ir::StoreInst *>(use->user()))
             {
                 //TODO 这里type的比较要比较其指针的basetype而不是本身, 估计这整个程序里面都有这样的问题
-                if (store->value() == alloca || store->value()->type() != alloca->type())
+                if (store->value() == alloca || store->value()->type() != allocapt)
                 {
                     return false;
                 }
