@@ -132,6 +132,11 @@ git merge --squash <source-branch>
 
 # jinja2 template gen
 python ./src/target/gen.py ./src/target/riscv.yml ./include/target
+
+# clang-format
+cd build
+make format_check # check format
+make format       # format all src and include files
 ```
 ## code到AST的分析
 
