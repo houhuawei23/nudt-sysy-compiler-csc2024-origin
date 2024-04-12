@@ -46,9 +46,9 @@ int main(int argc, char** argv) {
         fpm.run(f);
     }
 
-    // if (genir) {
-    //     module_ir->print(std::cout);
-    // }
+    if (genir) {
+        module_ir->print(std::cout);
+    }
     
     // MIR Generation
     // mir::MIRModule* mir_base_module = new mir::MIRModule(module_ir);

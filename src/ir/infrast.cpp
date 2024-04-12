@@ -85,7 +85,7 @@ void BasicBlock::delete_inst(Instruction* inst){
     }
     _insts.remove(inst);
     
-    delete inst;
+    // delete inst;
 }
 
 void BasicBlock::emplace_first_inst(Instruction* inst){

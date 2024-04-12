@@ -23,6 +23,7 @@ namespace pass
             {
                 DefsBlock[alloca].insert(store->parent());
                 OnlyStore = store;
+                
             }
 
             else if (auto load = dynamic_cast<ir::StoreInst *>(use->user()))
@@ -92,7 +93,7 @@ namespace pass
         {
             auto inst=(*institer)->user();
             institer++;
-            if (dyn_cast<ir::StoreInst>(inst) == OnlyStore)
+            if (dyn_cast<ir::StoreInst>(inst))
                 continue;
             ir::LoadInst *load = dyn_cast<ir::LoadInst>(inst);
             if (not_globalstore)
@@ -266,7 +267,7 @@ namespace pass
                             continue;
                         if (Incommings[PhiMap[SuccBB][PHI]]){
                             PHI->addIncoming(Incommings[PhiMap[SuccBB][PHI]], BB);
-                            F->print(std::cout);
+                            // F->print(std::cout);
                         }
                             
                     }

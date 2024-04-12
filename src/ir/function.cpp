@@ -22,7 +22,7 @@ void Function::delete_block(BasicBlock* bb){
         bb->delete_inst(delinst);
     }
     _blocks.remove(bb);
-    delete bb;
+    // delete bb;
 }
 
 void Function::print(std::ostream& os) {

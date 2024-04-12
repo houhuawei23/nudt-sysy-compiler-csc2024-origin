@@ -64,10 +64,10 @@ void Value::replace_all_use_with(Value* _value){
     for(auto puse:_uses){
         puse->user()->set_operand(puse->index(),_value);
     }
-    for(auto iter=_uses.begin();iter!=_uses.end();){
-        auto curiter=iter++;
-        delete *curiter;
-    }
+    // for(auto iter=_uses.begin();iter!=_uses.end();){
+    //     auto curiter=iter++;
+    //     delete *curiter;
+    // }
     _uses.clear();
 }
 
