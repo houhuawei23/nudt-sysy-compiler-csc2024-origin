@@ -33,6 +33,7 @@ Function* Module::add_func(Type* type, const_str_ref name) {
 // readable ir print
 void Module::print(std::ostream& os) {
     //! print all global values
+    rename();
     for (auto gv : gvalues()) {
         if (ir::isa<ir::Constant>(gv)) {
             auto res = dyn_cast<ir::Constant>(gv);
@@ -49,6 +50,12 @@ void Module::print(std::ostream& os) {
     //! print all functions
     for (auto func : _funcs) {
         os << *func << std::endl;
+    }
+}
+
+void Module::rename(){
+    for(auto func : _funcs){
+        func->rename();
     }
 }
 

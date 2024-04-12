@@ -89,12 +89,16 @@ namespace pass
         int StoreIndex = -1;
         ir::BasicBlock *storeBB = OnlyStore->parent();
         UsesBlock[alloca].clear();
+        int StoreCnt=0;
         for (auto institer=alloca->uses().begin();institer!=alloca->uses().end();)
         {
             auto inst=(*institer)->user();
             institer++;
-            if (dyn_cast<ir::StoreInst>(inst))
+            if (dyn_cast<ir::StoreInst>(inst)){
+                StoreCnt++;
                 continue;
+            }
+                
             ir::LoadInst *load = dyn_cast<ir::LoadInst>(inst);
             if (not_globalstore)
             {
@@ -125,7 +129,8 @@ namespace pass
         if (!UsesBlock[alloca].empty())
             return false;
         OnlyStore->parent()->delete_inst(OnlyStore);
-        alloca->parent()->delete_inst(alloca);
+        if(StoreCnt==1)
+            alloca->parent()->delete_inst(alloca);
         return true;
     }
 
@@ -151,6 +156,7 @@ namespace pass
                 }
             }
         }
+
         std::set<ir::BasicBlock *> Phiset;
         std::vector<ir::BasicBlock *> W;
         ir::PhiInst *phi;
@@ -173,7 +179,8 @@ namespace pass
                 {
                     if (Phiset.find(Y) == Phiset.end())
                     {
-                        phi = new ir::PhiInst(Y, alloca->type());
+                        auto allocabaseType=dyn_cast<ir::PointerType>(alloca->type())->base_type();
+                        phi = new ir::PhiInst(Y, allocabaseType);
                         Y->emplace_first_inst(phi);
                         Phiset.insert(Y);
                         PhiMap[Y].insert({phi, alloca});

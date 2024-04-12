@@ -31,9 +31,9 @@ int main(int argc, char** argv) {
 
     auto module_ir = gen.module();
     bool genir = true;
-    if (genir) {
-        module_ir->print(std::cout);
-    }
+    // if (genir) {
+    //     module_ir->print(std::cout);
+    // }
 
     pass::FunctionPassManager fpm;
     //mem2reg

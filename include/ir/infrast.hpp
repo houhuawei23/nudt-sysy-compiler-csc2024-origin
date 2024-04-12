@@ -187,6 +187,7 @@ class Instruction : public User {
     bool is_icmp();
     bool is_fcmp();
     bool is_math();
+    bool is_noname(){return is_terminator() or scid()==vSTORE;}
 
     // for isa, cast and dyn_cast
     static bool classof(const Value* v) { return v->scid() >= vINSTRUCTION; }

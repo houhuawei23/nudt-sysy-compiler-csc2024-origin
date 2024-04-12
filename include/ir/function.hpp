@@ -118,5 +118,7 @@ class Function : public User {
    public:
     static bool classof(const Value* v) { return v->scid() == vFUNCTION; }
     void print(std::ostream& os) override;
+
+    void rename();
 };
 }  // namespace ir
