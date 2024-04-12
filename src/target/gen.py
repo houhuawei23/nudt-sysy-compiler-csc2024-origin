@@ -14,7 +14,8 @@ def gen_from_template(template_file, output_dir, params):
     with open(output_file, "w") as f:
         res = template.render(params)
         f.write(res)
-    os.system('clang-format -i {}'.format(output_file))
+    os.system("clang-format -i {}".format(output_file))
+
 
 def load_inst_info(file):
     with open(file, "r") as stream:
@@ -39,11 +40,11 @@ def load_inst_info(file):
 
 if __name__ == "__main__":
     isa_data_yml = sys.argv[1]
-    # output_dir = sys.argv[2]
+    output_dir = sys.argv[2]
     target_name, instances = load_inst_info(isa_data_yml)
     params = {"target_name": target_name, "insts": instances}
-    gen_from_template("InstInfoDecl.hpp.jinja2", ".", params)
-    gen_from_template("InstInfoImpl.hpp.jinja2", ".", params)
+    gen_from_template("InstInfoDecl.hpp.jinja2", output_dir, params)
+    gen_from_template("InstInfoImpl.hpp.jinja2", output_dir, params)
     # with open(isa_data_yml, 'r') as f:
     #     isa_data = yaml.load(f, Loader=yaml.FullLoader)
     # print(isa_data)

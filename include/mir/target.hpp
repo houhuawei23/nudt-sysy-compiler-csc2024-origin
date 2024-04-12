@@ -20,7 +20,7 @@ class Target {
     // virtual const TargetScheduleModel& get_schedule_model() const = 0;
     virtual const TargetInstInfo& get_inst_info() const = 0;
     // virtual const TargetISelInfo& get_isel_info() const = 0;
-    // virtual const TargetFrameInfo& get_frame_info() const = 0;
+    virtual const TargetFrameInfo& get_frame_info() const = 0;
     // virtual const TargetRegisterInfo* get_register_info() const = 0;
 };
 
@@ -33,7 +33,7 @@ struct MIRFlags final {
     bool postLegal = false;
 };
 
-class CodeGenContext final {
+struct CodeGenContext final {
     const Target& target;
     // const TargetScheduleModel& scheduleModel;
     const DataLayout& dataLayout;
@@ -46,9 +46,13 @@ class CodeGenContext final {
     uint32_t next_id() { return ++idx; }
 };
 
-class RISCVTarget : public Target {
-    // RISCVDataLayout mDataLayout;
-    // RISCVFrameInfo mFrameInfo;
-    // RISCVRegisterInfo mRegisterInfo;
-};
+// using TargetBuilder = std::pair<std::string_view, std::function<Targe*()> >;
+// class TargetRegistry {
+//     std::vector<TargetBuilder> _targets;
+// public:
+//     void add_target(const TargetBuilder& target_builder);
+//     Target* select_target() 
+// };
+
+
 }  // namespace mir

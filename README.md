@@ -126,7 +126,13 @@ qemu-riscv64 -L /usr/riscv64-linux-gnu/ a.out
 llc -march=riscv64 -mcpu=generic-rv64 test.rv64.ll -o test.rv64.s
 ```
 
+```bash
+# merge multiple commits into one
+git merge --squash <source-branch>
 
+# jinja2 template gen
+python ./src/target/gen.py ./src/target/riscv.yml ./include/target
+```
 ## code到AST的分析
 
 antlr4是一个编译器前端生成工具，可以生成多种目标语言的前端。本项目生成的目标语言是C++。

@@ -1,10 +1,18 @@
+// clang-format off
 #include <iostream>
 #include "SysYLexer.h"
 #include "visitor/visitor.hpp"
-#include "mir/mir.hpp"
+
 #include "pass/pass.hpp"
 #include "pass/analysis/dom.hpp"
 #include "pass/optimize/mem2reg.hpp"
+
+// #include "mir/mir.hpp"
+// #include "mir/target.hpp"
+
+// #include "target/riscv.hpp"
+// #include "target/riscvtarget.hpp"
+// clang-format on
 using namespace std;
 
 int main(int argc, char** argv) {
@@ -35,6 +43,7 @@ int main(int argc, char** argv) {
         module_ir->print(std::cout);
     }
 
+    // auto target = mir::RISCVTarget();
     // pass::FunctionPassManager fpm;
     // //mem2reg
     // fpm.add_pass(new pass::preProcDom());
@@ -44,7 +53,7 @@ int main(int argc, char** argv) {
     // for(auto f : module_ir->funcs()){
     //     fpm.run(f);
     // }
-    
+
     // MIR Generation
     // mir::MIRModule* mir_base_module = new mir::MIRModule(module_ir);
     // bool gen_mir = true;

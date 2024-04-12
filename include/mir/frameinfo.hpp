@@ -39,18 +39,5 @@ public:
     // virtual int32_t insert_prologue_epilogue(MIRFunction* func) const = 0;
 };
 
-class RISCVFrameInfo : public TargetFrameInfo {
-   public:
-    // lowering stage
-    virtual void emit_call(ir::CallInst* inst);
-    virtual void emit_prologue(MIRFunction* func);
-    virtual void emit_return(ir::ReturnInst* inst);
-    // ra stage
-    virtual bool is_caller_saved(MIROperand& op);
-    virtual bool is_callee_saved(MIROperand& op);
-    // sa stage
-    virtual int stack_pointer_align();
-    virtual void emit_postsa_prologue(MIRBlock* entry, int32_t stack_size);
-    virtual void emit_postsa_epilogue(MIRBlock* exit, int32_t stack_size);
-};
+
 } // namespace mir

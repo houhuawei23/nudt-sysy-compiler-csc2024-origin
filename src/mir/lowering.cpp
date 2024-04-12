@@ -1,6 +1,6 @@
 #include "mir/mir.hpp"
 #include "mir/lowering.hpp"
-
+#include "mir/target.hpp"
 namespace mir {
 //! declare
 void create_mir_module(ir::Module* ir_module, LoweringContext& ctx);
@@ -28,13 +28,13 @@ void create_mir_module(ir::Module* ir_module, LoweringContext& ctx) {
         auto mir_func = mir_module->add_func(func->name());
         ctx.func_map[func] = mir_func;  // update map
     }
-
+    //! for all global variables, create MIRGlobalObject
     for (auto ir_gval : ir_module->gvalues()) {
         auto ir_gvar = dynamic_cast<ir::GlobalVariable*>(ir_gval);
         auto type = dyn_cast<ir::PointerType>(ir_gvar->type())->base_type();
         size_t size = ir_gvar->type()->size();
 
-        if (ir_gvar->is_init()) {  // gvar init: .data
+        if (ir_gvar->is_init()) {  //! gvar init: .data
             MIRDataStorage::Storage data;
             auto val = dynamic_cast<ir::Constant*>(ir_gvar->init(0));
             if (type->is_int()) {
@@ -47,7 +47,7 @@ void create_mir_module(ir::Module* ir_module, LoweringContext& ctx) {
             auto mir_storage = new MIRDataStorage(std::move(data), false);
             auto mir_gobj = new MIRGlobalObject(4, mir_storage, mir_module);
             mir_module->add_gobj(mir_gobj);
-        } else {  // gvar not init: .bss
+        } else {  //! gvar not init: .bss
 
             size_t align = 4;  // TODO: align
             auto mir_storage = new MIRZeroStorage(size, ir_gvar->name());
@@ -58,6 +58,11 @@ void create_mir_module(ir::Module* ir_module, LoweringContext& ctx) {
         ctx.gvar_map[ir_gvar] = mir_module->global_objs().back();  // update map
     }
 
+    // TODO: transformModuleBeforeCodeGen
+
+    // CodeGenContext codegen_ctx{target, }
+
+    //! lower all functions
     for (auto ir_func : ir_module->funcs()) {  // for all funcs
         auto mir_func = ctx.func_map[ir_func];
         if (ir_func->blocks().empty()) {

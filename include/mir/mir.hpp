@@ -122,7 +122,7 @@ enum MIRGenericInst : uint32_t {
     InstRet,
 
     // ISA specific
-    ISABegin
+    ISASpecificBegin
 
 };
 
