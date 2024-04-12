@@ -80,7 +80,9 @@ function run_test() {
         in_file="${single_file%.*}.in"
 
         # llvm compiler
-        cp "$single_file" "${output_dir}/test.c"
+        touch "${output_dir}/test.c"
+        cat ./test/link/sy.c > "${output_dir}/test.c"
+        cat "$single_file" >> "${output_dir}/test.c"
         clang --no-warnings -emit-llvm -S "${output_dir}/test.c" -o "${output_dir}/llvm.ll" -O0
         llvm-link --suppress-warnings ./test/link/link.ll "${output_dir}/llvm.ll" -S -o "${output_dir}/llvm_linked.ll"
         if [ -f "$in_file" ]; then
@@ -92,6 +94,7 @@ function run_test() {
         # llvm compiler end
 
         # sys-compiler
+        cat "$single_file" > "${output_dir}/test.c"
         ./main "$single_file" >"${output_dir}/gen.ll"
         llvm-link --suppress-warnings ./test/link/link.ll "${output_dir}/gen.ll" -S -o "${output_dir}/gen_linked.ll"
         if [ $? != 0 ]; then
