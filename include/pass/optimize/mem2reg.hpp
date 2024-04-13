@@ -15,8 +15,8 @@ namespace pass
         ir::StoreInst *OnlyStore;
         ir::BasicBlock *OnlyBlock;
         std::vector<ir::AllocaInst *> Allocas;
-        std::map<ir::AllocaInst *, std::vector<ir::BasicBlock *>> DefsBlock;
-        std::map<ir::AllocaInst *, std::vector<ir::BasicBlock *>> UsesBlock;
+        std::map<ir::AllocaInst *, std::set<ir::BasicBlock *>> DefsBlock;
+        std::map<ir::AllocaInst *, std::set<ir::BasicBlock *>> UsesBlock;
 
         std::map<ir::BasicBlock *, std::map<ir::PhiInst *, ir::AllocaInst *>> PhiMap;
         std::map<ir::AllocaInst *, ir::Argument *> ValueMap;
@@ -27,12 +27,16 @@ namespace pass
         {
             return "mem2reg";
         }
+        int getStoreNuminBB(ir::BasicBlock *BB,ir::AllocaInst *AI);
+        ir::StoreInst* getLastStoreinBB(ir::BasicBlock *BB,ir::AllocaInst *AI);
+        bool rewriteSingleStoreAlloca(ir::AllocaInst *alloca);
         void promotememToreg(ir::Function *F);
         void RemoveFromAllocasList(unsigned &AllocaIdx);
         void allocaAnalysis(ir::AllocaInst *alloca);
         bool promotemem2reg(ir::Function *F);
         bool is_promoted(ir::AllocaInst *alloca);
-        bool rewriteSingleStoreAlloca(ir::AllocaInst *alloca);
+        void insertphi();
+        void rename(ir::Function *F);
         int getStoreinstindexinBB(ir::BasicBlock *BB, ir::StoreInst *I);
         int getLoadeinstindexinBB(ir::BasicBlock *BB, ir::LoadInst *I);
     };
