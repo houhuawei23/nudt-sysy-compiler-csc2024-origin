@@ -157,7 +157,9 @@ class MIROperand {
     bool is_imm() { return std::holds_alternative<intmax_t>(_storage); }
     bool is_reg() { return std::holds_alternative<MIRRegister*>(_storage); }
     bool is_reloc() { return std::holds_alternative<MIRRelocable*>(_storage); }
+    bool is_prob() { return false; }
     bool is_init() { return !std::holds_alternative<std::monostate>(_storage); }
+
 
     template <typename T>
     bool is() {

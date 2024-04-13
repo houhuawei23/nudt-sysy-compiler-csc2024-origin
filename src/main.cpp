@@ -7,11 +7,11 @@
 #include "pass/analysis/dom.hpp"
 #include "pass/optimize/mem2reg.hpp"
 
-// #include "mir/mir.hpp"
-// #include "mir/target.hpp"
+#include "mir/mir.hpp"
+#include "mir/target.hpp"
 
-// #include "target/riscv.hpp"
-// #include "target/riscvtarget.hpp"
+#include "target/riscv.hpp"
+#include "target/riscvtarget.hpp"
 // clang-format on
 using namespace std;
 
@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
         module_ir->print(std::cout);
     }
 
-    // auto target = mir::RISCVTarget();
+    auto target = mir::RISCVTarget();
     // pass::FunctionPassManager fpm;
     // //mem2reg
     // fpm.add_pass(new pass::preProcDom());

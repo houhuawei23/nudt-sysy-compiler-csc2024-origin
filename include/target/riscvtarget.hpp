@@ -5,16 +5,20 @@
 #include "mir/datalayout.hpp"
 
 #include "target/InstInfoDecl.hpp"
+#include "target/InstInfoImpl.hpp"
 // clang-format on
 
 namespace mir {
 
 class RISCVDataLayout final : public DataLayout {
    public:
-    Endian edian() { return Endian::Little; }
-    size_t ptr_size() { return 8; }
-    size_t code_align() { return 4; }
-    size_t mem_align() { return 8; }
+    Endian edian() const override { return Endian::Little; }
+    size_t type_align(const ir::Type* type) const override { 
+        return 4; // TODO: check type size
+    }
+    size_t ptr_size() const override { return 8; }
+    size_t code_align() const override{ return 4; }
+    size_t mem_align() const override { return 8; }
 };
 
 class RISCVFrameInfo : public TargetFrameInfo {
@@ -41,8 +45,11 @@ class RISCVTarget : public Target {
     const TargetInstInfo& get_inst_info() const override {
         return RISCV::getRISCVInstInfo();
     }
+    const TargetFrameInfo& get_frame_info() const override {
+        return _frameinfo;
+    }
 
    public:
-   RISCVTarget() = default;
+    RISCVTarget() = default;
 };
 }  // namespace mir

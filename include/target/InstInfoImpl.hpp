@@ -1,354 +1,543 @@
 // Automatically generated file, do not edit!
 
 #pragma once
-#include "target/InstInfoDecl.hpp
+#include "mir/mir.hpp"
+#include "mir/instinfo.hpp"
+#include "target/InstInfoDecl.hpp"
 
 TARGET_NAMESPACE_BEGIN
 
 class RISCVInstInfoADD final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoADD() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::ADD";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoSUB final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoSUB() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::SUB";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoXOR final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoXOR() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::XOR";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoOR final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoOR() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::OR";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoAND final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoAND() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::AND";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoSLL final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoSLL() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::SLL";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoSRL final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoSRL() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::SRL";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoSRA final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoSRA() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::SRA";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoSLT final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoSLT() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::SLT";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoSLTU final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoSLTU() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::SLTU";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoADDI final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoADDI() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::ADDI";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoXORI final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoXORI() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::XORI";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoORI final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoORI() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::ORI";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoANDI final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoANDI() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::ANDI";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoSLTI final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoSLTI() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::SLTI";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoSLTIU final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoSLTIU() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::SLTIU";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoSLLI final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoSLLI() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::SLLI";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoSRLI final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoSRLI() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::SRLI";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoSRAI final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoSRAI() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::SRAI";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoLB final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoLB() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::LB";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoLH final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoLH() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::LH";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoLW final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoLW() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::LW";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoLBU final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoLBU() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::LBU";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoLHU final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoLHU() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::LHU";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoSB final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoSB() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::SB";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoSH final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoSH() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::SH";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoSW final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoSW() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::SW";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoBEQ final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoBEQ() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::BEQ";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoBNE final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoBNE() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::BNE";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoBLT final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoBLT() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::BLT";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoBGE final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoBGE() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::BGE";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoBLTU final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoBLTU() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::BLTU";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoBGEU final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoBGEU() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::BGEU";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoJAL final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoJAL() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::JAL";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoJALR final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoJALR() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::JALR";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoLUI final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoLUI() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::LUI";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfoAUIPC final : public InstInfo {
-public:
-}
+   public:
+    RISCVInstInfoAUIPC() = default;
+    void print(std::ostream& out, const MIRInst& inst, bool comment) const {
+        out << "RISCVInst::AUIPC";
+    }
+    uint32_t operand_num() const { return 3; }
+};
 
 class RISCVInstInfo final : public TargetInstInfo {
+    RISCVInstInfoADD _instinfoADD;
 
-  RISCVInstInfoADD _instinfoADD;
+    RISCVInstInfoSUB _instinfoSUB;
 
-  RISCVInstInfoSUB _instinfoSUB;
+    RISCVInstInfoXOR _instinfoXOR;
 
-  RISCVInstInfoXOR _instinfoXOR;
+    RISCVInstInfoOR _instinfoOR;
 
-  RISCVInstInfoOR _instinfoOR;
+    RISCVInstInfoAND _instinfoAND;
 
-  RISCVInstInfoAND _instinfoAND;
+    RISCVInstInfoSLL _instinfoSLL;
 
-  RISCVInstInfoSLL _instinfoSLL;
+    RISCVInstInfoSRL _instinfoSRL;
 
-  RISCVInstInfoSRL _instinfoSRL;
+    RISCVInstInfoSRA _instinfoSRA;
 
-  RISCVInstInfoSRA _instinfoSRA;
+    RISCVInstInfoSLT _instinfoSLT;
 
-  RISCVInstInfoSLT _instinfoSLT;
+    RISCVInstInfoSLTU _instinfoSLTU;
 
-  RISCVInstInfoSLTU _instinfoSLTU;
+    RISCVInstInfoADDI _instinfoADDI;
 
-  RISCVInstInfoADDI _instinfoADDI;
+    RISCVInstInfoXORI _instinfoXORI;
 
-  RISCVInstInfoXORI _instinfoXORI;
+    RISCVInstInfoORI _instinfoORI;
 
-  RISCVInstInfoORI _instinfoORI;
+    RISCVInstInfoANDI _instinfoANDI;
 
-  RISCVInstInfoANDI _instinfoANDI;
+    RISCVInstInfoSLTI _instinfoSLTI;
 
-  RISCVInstInfoSLTI _instinfoSLTI;
+    RISCVInstInfoSLTIU _instinfoSLTIU;
 
-  RISCVInstInfoSLTIU _instinfoSLTIU;
+    RISCVInstInfoSLLI _instinfoSLLI;
 
-  RISCVInstInfoSLLI _instinfoSLLI;
+    RISCVInstInfoSRLI _instinfoSRLI;
 
-  RISCVInstInfoSRLI _instinfoSRLI;
+    RISCVInstInfoSRAI _instinfoSRAI;
 
-  RISCVInstInfoSRAI _instinfoSRAI;
+    RISCVInstInfoLB _instinfoLB;
 
-  RISCVInstInfoLB _instinfoLB;
+    RISCVInstInfoLH _instinfoLH;
 
-  RISCVInstInfoLH _instinfoLH;
+    RISCVInstInfoLW _instinfoLW;
 
-  RISCVInstInfoLW _instinfoLW;
+    RISCVInstInfoLBU _instinfoLBU;
 
-  RISCVInstInfoLBU _instinfoLBU;
+    RISCVInstInfoLHU _instinfoLHU;
 
-  RISCVInstInfoLHU _instinfoLHU;
+    RISCVInstInfoSB _instinfoSB;
 
-  RISCVInstInfoSB _instinfoSB;
+    RISCVInstInfoSH _instinfoSH;
 
-  RISCVInstInfoSH _instinfoSH;
+    RISCVInstInfoSW _instinfoSW;
 
-  RISCVInstInfoSW _instinfoSW;
+    RISCVInstInfoBEQ _instinfoBEQ;
 
-  RISCVInstInfoBEQ _instinfoBEQ;
+    RISCVInstInfoBNE _instinfoBNE;
 
-  RISCVInstInfoBNE _instinfoBNE;
+    RISCVInstInfoBLT _instinfoBLT;
 
-  RISCVInstInfoBLT _instinfoBLT;
+    RISCVInstInfoBGE _instinfoBGE;
 
-  RISCVInstInfoBGE _instinfoBGE;
+    RISCVInstInfoBLTU _instinfoBLTU;
 
-  RISCVInstInfoBLTU _instinfoBLTU;
+    RISCVInstInfoBGEU _instinfoBGEU;
 
-  RISCVInstInfoBGEU _instinfoBGEU;
+    RISCVInstInfoJAL _instinfoJAL;
 
-  RISCVInstInfoJAL _instinfoJAL;
+    RISCVInstInfoJALR _instinfoJALR;
 
-  RISCVInstInfoJALR _instinfoJALR;
+    RISCVInstInfoLUI _instinfoLUI;
 
-  RISCVInstInfoLUI _instinfoLUI;
+    RISCVInstInfoAUIPC _instinfoAUIPC;
 
-  RISCVInstInfoAUIPC _instinfoAUIPC;
+   public:
+    RISCVInstInfo() = default;
+    InstInfo& get_instinfo(uint32_t opcode) {
+        switch (opcode) {
+            case RISCVInst::ADD:
+                return _instinfoADD;
 
-public:
-  RISCVInstInfo() = default;
-  InstInfo &get_instinfo(uint32_t opcode) {
-    switch (opcode) {
+            case RISCVInst::SUB:
+                return _instinfoSUB;
 
-    case RISCVInst::ADD:
-      return _instinfoADD;
+            case RISCVInst::XOR:
+                return _instinfoXOR;
 
-    case RISCVInst::SUB:
-      return _instinfoSUB;
+            case RISCVInst::OR:
+                return _instinfoOR;
 
-    case RISCVInst::XOR:
-      return _instinfoXOR;
+            case RISCVInst::AND:
+                return _instinfoAND;
 
-    case RISCVInst::OR:
-      return _instinfoOR;
+            case RISCVInst::SLL:
+                return _instinfoSLL;
 
-    case RISCVInst::AND:
-      return _instinfoAND;
+            case RISCVInst::SRL:
+                return _instinfoSRL;
 
-    case RISCVInst::SLL:
-      return _instinfoSLL;
+            case RISCVInst::SRA:
+                return _instinfoSRA;
 
-    case RISCVInst::SRL:
-      return _instinfoSRL;
+            case RISCVInst::SLT:
+                return _instinfoSLT;
 
-    case RISCVInst::SRA:
-      return _instinfoSRA;
+            case RISCVInst::SLTU:
+                return _instinfoSLTU;
 
-    case RISCVInst::SLT:
-      return _instinfoSLT;
+            case RISCVInst::ADDI:
+                return _instinfoADDI;
 
-    case RISCVInst::SLTU:
-      return _instinfoSLTU;
+            case RISCVInst::XORI:
+                return _instinfoXORI;
 
-    case RISCVInst::ADDI:
-      return _instinfoADDI;
+            case RISCVInst::ORI:
+                return _instinfoORI;
 
-    case RISCVInst::XORI:
-      return _instinfoXORI;
+            case RISCVInst::ANDI:
+                return _instinfoANDI;
 
-    case RISCVInst::ORI:
-      return _instinfoORI;
+            case RISCVInst::SLTI:
+                return _instinfoSLTI;
 
-    case RISCVInst::ANDI:
-      return _instinfoANDI;
+            case RISCVInst::SLTIU:
+                return _instinfoSLTIU;
 
-    case RISCVInst::SLTI:
-      return _instinfoSLTI;
+            case RISCVInst::SLLI:
+                return _instinfoSLLI;
 
-    case RISCVInst::SLTIU:
-      return _instinfoSLTIU;
+            case RISCVInst::SRLI:
+                return _instinfoSRLI;
 
-    case RISCVInst::SLLI:
-      return _instinfoSLLI;
+            case RISCVInst::SRAI:
+                return _instinfoSRAI;
 
-    case RISCVInst::SRLI:
-      return _instinfoSRLI;
+            case RISCVInst::LB:
+                return _instinfoLB;
 
-    case RISCVInst::SRAI:
-      return _instinfoSRAI;
+            case RISCVInst::LH:
+                return _instinfoLH;
 
-    case RISCVInst::LB:
-      return _instinfoLB;
+            case RISCVInst::LW:
+                return _instinfoLW;
 
-    case RISCVInst::LH:
-      return _instinfoLH;
+            case RISCVInst::LBU:
+                return _instinfoLBU;
 
-    case RISCVInst::LW:
-      return _instinfoLW;
+            case RISCVInst::LHU:
+                return _instinfoLHU;
 
-    case RISCVInst::LBU:
-      return _instinfoLBU;
+            case RISCVInst::SB:
+                return _instinfoSB;
 
-    case RISCVInst::LHU:
-      return _instinfoLHU;
+            case RISCVInst::SH:
+                return _instinfoSH;
 
-    case RISCVInst::SB:
-      return _instinfoSB;
+            case RISCVInst::SW:
+                return _instinfoSW;
 
-    case RISCVInst::SH:
-      return _instinfoSH;
+            case RISCVInst::BEQ:
+                return _instinfoBEQ;
 
-    case RISCVInst::SW:
-      return _instinfoSW;
+            case RISCVInst::BNE:
+                return _instinfoBNE;
 
-    case RISCVInst::BEQ:
-      return _instinfoBEQ;
+            case RISCVInst::BLT:
+                return _instinfoBLT;
 
-    case RISCVInst::BNE:
-      return _instinfoBNE;
+            case RISCVInst::BGE:
+                return _instinfoBGE;
 
-    case RISCVInst::BLT:
-      return _instinfoBLT;
+            case RISCVInst::BLTU:
+                return _instinfoBLTU;
 
-    case RISCVInst::BGE:
-      return _instinfoBGE;
+            case RISCVInst::BGEU:
+                return _instinfoBGEU;
 
-    case RISCVInst::BLTU:
-      return _instinfoBLTU;
+            case RISCVInst::JAL:
+                return _instinfoJAL;
 
-    case RISCVInst::BGEU:
-      return _instinfoBGEU;
+            case RISCVInst::JALR:
+                return _instinfoJALR;
 
-    case RISCVInst::JAL:
-      return _instinfoJAL;
+            case RISCVInst::LUI:
+                return _instinfoLUI;
 
-    case RISCVInst::JALR:
-      return _instinfoJALR;
+            case RISCVInst::AUIPC:
+                return _instinfoAUIPC;
 
-    case RISCVInst::LUI:
-      return _instinfoLUI;
-
-    case RISCVInst::AUIPC:
-      return _instinfoAUIPC;
-
-    default:
-      return TargetInstInfo::get_instinfo(opcode);
+            default:
+                return TargetInstInfo::get_instinfo(opcode);
+        }
     }
-  }
-}
+};
 
+const TargetInstInfo& getRISCVInstInfo() {
+    static RISCVInstInfo instance;
+    return instance;
+}
 TARGET_NAMESPACE_END

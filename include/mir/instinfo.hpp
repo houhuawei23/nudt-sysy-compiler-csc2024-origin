@@ -17,7 +17,7 @@ class TargetInstInfo {
 public:
     TargetInstInfo() = default;
     virtual ~TargetInstInfo() = default;
-    virtual const InstInfo& get_instinfo(uint32_t opcode) const;
+    virtual InstInfo& get_instinfo(uint32_t opcode);
 
     // virtual bool match_branch(const MIRInst* inst, MIRBlock* target)
 

@@ -5,50 +5,55 @@ Templates:
   {
     Rtype:
       {
-        template: "{mnem} {rd}, {rs1}, {rs2}",
-        oprands:
+        # format: "{mnem} {rd}, {rs1}, {rs2}",
+        format: [mnem, 0, ", ", 1, ", ", 2],
+        operands:
           {
-            rd: { type: GPR, flag: Def },
-            rs1: { type: GPR, flag: Use },
-            rs2: { type: GPR, flag: Use },
+            0: { name: rd,  type: GPR, flag: Def },
+            1: { name: rs1, type: GPR, flag: Use },
+            2: { name: rs2, type: GPR, flag: Use },
           },
       },
-    IType:
+    Itype:
       {
-        template: "$mnem $rd, $rs1, $imm",
-        oprands:
+        # format: "$mnem $rd, $rs1, $imm",
+        format: [mnem, 0, ", ", 1, ", ", 2],
+        operands:
           {
-            rd: { type: GPR, flag: Def },
-            rs1: { type: GPR, flag: Use },
-            imm: { type: IMM12, flag: Metadata },
+            0: { name: rd,  type: GPR, flag: Def },
+            1: { name: rs1, type: GPR, flag: Use },
+            2: { name: imm, type: IMM12, flag: Metadata },
+        },
+      },
+    Stype:
+      {
+        # format: "$mnem $rs2, $offset($rs1)",
+        format: [mnem, 0, ", ", 1, "(", 2, ")"],
+        operands:
+          {
+            0: { name: rs2, type: GPR, flag: Use }, 
+            1: { name: offset, type: IMM12, flag: Metadata },
+            2: { name: rs1, type: GPR, flag: Use }, # BaseLike
           },
       },
-    SType:
+    Utype:
       {
-        template: "$mnem $rs2, $offset($rs1)",
-        oprands:
+        # format: "$mnem $rd, $imm",
+        format: [mnem, 0, ", ", 1],
+        operands:
           {
-            rs1: { type: GPR, flag: Use }, # BaseLike
-            rs2: { type: GPR, flag: Use },
-            offset: { type: IMM12, flag: Metadata },
-          },
-      },
-    UType:
-      {
-        template: "$mnem $rd, $imm",
-        oprands:
-          {
-            rd: { type: GPR, flag: Def },
-            imm: { type: IMM20, flag: Metadata },
+            0: { name: rd, type: GPR, flag: Def },
+            1: { name: imm, type: IMM20, flag: Metadata },
           },
       },
     # for Pseudos
     # R2Type: {
-    #   template: "$mnem $rd, $rs",
+    #   format: "$mnem $rd, $rs",
 
     # }
   }
 Instances: {
+    # RV32I Base Integer Instructions
     # RRR
     ADD: { mnem: "add", template: Rtype },
     SUB: { mnem: "sub", template: Rtype },
@@ -61,55 +66,79 @@ Instances: {
     SLT: { mnem: "slt", template: Rtype },
     SLTU: { mnem: "sltu", template: Rtype },
     # RII
-    ADDI: { mnem: "addi", template: IType },
-    XORI: { mnem: "xori", template: IType },
-    ORI: { mnem: "ori", template: IType },
-    ANDI: { mnem: "andi", template: IType },
-    SLTI: { mnem: "slti", template: IType },
-    SLTIU: { mnem: "sltiu", template: IType },
+    ADDI: { mnem: "addi", template: Itype },
+    XORI: { mnem: "xori", template: Itype },
+    ORI: { mnem: "ori", template: Itype },
+    ANDI: { mnem: "andi", template: Itype },
+    SLTI: { mnem: "slti", template: Itype },
+    SLTIU: { mnem: "sltiu", template: Itype },
     # RII-shift
     SLLI:
       {
         mnem: "slli",
-        template: IType,
-        operands: { imm: { type:UIMM6, flag: Metadata } },
+        template: Itype,
+        operands: { imm: { type: UIMM6, flag: Metadata } },
       },
     SRLI:
       {
         mnem: "srli",
-        template: IType,
-        operands: { imm: { type:UIMM6, flag: Metadata } },
+        template: Itype,
+        operands: { imm: { type: UIMM6, flag: Metadata } },
       },
     SRAI:
       {
         mnem: "srai",
-        template: IType,
-        operands: { imm: { type:UIMM6, flag: Metadata } },
+        template: Itype,
+        operands: { imm: { type: UIMM6, flag: Metadata } },
       },
     # Load
-    LB: { mnem: "lb", template: IType, flag: [Load] },
-    LH: { mnem: "lh", template: IType, flag: [Load] },
-    LW: { mnem: "lw", template: IType, flag: [Load] },
-    LBU: { mnem: "lbu", template: IType, flag: [Load] },
-    LHU: { mnem: "lhu", template: IType, flag: [Load] },
+    LB: { mnem: "lb", template: Itype, flag: [Load] },
+    LH: { mnem: "lh", template: Itype, flag: [Load] },
+    LW: { mnem: "lw", template: Itype, flag: [Load] },
+    LBU: { mnem: "lbu", template: Itype, flag: [Load] },
+    LHU: { mnem: "lhu", template: Itype, flag: [Load] },
     # Store
-    SB: { mnem: "sb", template: SType, flag: [Store] },
-    SH: { mnem: "sh", template: SType, flag: [Store] },
-    SW: { mnem: "sw", template: SType, flag: [Store] },
+    SB: { mnem: "sb", template: Stype, flag: [Store] },
+    SH: { mnem: "sh", template: Stype, flag: [Store] },
+    SW: { mnem: "sw", template: Stype, flag: [Store] },
     # branch Btype-Itype offset-imm
-    BEQ: { mnem: "beq", template: IType, flag: [Branch, Terminator] }, 
-    BNE: { mnem: "bne", template: IType, flag: [Branch, Terminator] }, 
-    BLT: { mnem: "blt", template: IType, flag: [Branch, Terminator] }, 
-    BGE: { mnem: "bge", template: IType, flag: [Branch, Terminator] }, 
-    BLTU: { mnem: "bltu", template: IType, flag: [Branch, Terminator] }, 
-    BGEU: { mnem: "bgeu", template: IType, flag: [Branch, Terminator] }, 
+    BEQ: { mnem: "beq", template: Itype, flag: [Branch, Terminator] }, 
+    BNE: { mnem: "bne", template: Itype, flag: [Branch, Terminator] }, 
+    BLT: { mnem: "blt", template: Itype, flag: [Branch, Terminator] }, 
+    BGE: { mnem: "bge", template: Itype, flag: [Branch, Terminator] }, 
+    BLTU: { mnem: "bltu", template: Itype, flag: [Branch, Terminator] }, 
+    BGEU: { mnem: "bgeu", template: Itype, flag: [Branch, Terminator] }, 
     # J JType-Utype 
-    JAL: { mnem: "jal", template: UType, flag: [Call] },
-    JALR: { mnem: "jalr", template: IType, flag: [Call] },
+    JAL: { mnem: "jal", template: Utype, flag: [Call] },
+    JALR: { mnem: "jalr", template: Itype, flag: [Call] },
   
     # RIU lui, auipc
-    LUI: { mnem: "lui", template: UType, flag: [LoadConstant] },
-    AUIPC: { mnem: "auipc", template: UType, flag: [PCRel, LoadConstant] },
+    LUI: { mnem: "lui", template: Utype, flag: [LoadConstant] },
+    AUIPC: { mnem: "auipc", template: Utype, flag: [PCRel, LoadConstant] },
+    
+    # RV32M Multiply Extension
+    MUL: { mnem: "mul", template: Rtype },
+    MULH: { mnem: "mulh", template: Rtype },
+    MULHSU: { mnem: "mulhsu", template: Rtype },
+    MULHU: { mnem: "mulhu", template: Rtype },
+    DIV: { mnem: "div", template: Rtype },
+    DIVU: { mnem: "divu", template: Rtype },
+    REM: { mnem: "rem", template: Rtype },
+    REMU: { mnem: "remu", template: Rtype },
+    
+    # RV32A Atomic Instructions
+    LR: { mnem: "lr.w", template: Rtype }, # Load Reserved
+    SC: { mnem: "sc.w", template: Rtype }, # Store Conditional
+    AMOSWAP: { mnem: "amoswap.w", template: Rtype },
+    AMOADD: { mnem: "amoadd.w", template: Rtype },
+    AMOAND: { mnem: "amoand.w", template: Rtype },
+    AMOOR: { mnem: "amoor.w", template: Rtype },
+    AMOXOR: { mnem: "amoxor.w", template: Rtype },
+
+    # RV32F Single-Precision Floating-Point Instructions
+    
+    
+    
     # Pseudos
     # nop
 
