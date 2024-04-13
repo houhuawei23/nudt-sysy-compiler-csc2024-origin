@@ -35,6 +35,7 @@ void Value::del_use(Use* use) {
 // void Value::replace_all_use_with
 
 //! User: public Value
+// TODO: unpack use to value!
 use_ptr_vector& User::operands() {
     return _operands;
 }

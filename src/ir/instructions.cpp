@@ -315,19 +315,21 @@ void CallInst::print(std::ostream& os) {
     // func name
     os << "@" << callee()->name() << "(";
 
-    if (_rargs.size() > 0) {
-        auto last = _rargs.end() - 1;  // Iterator pointing to the last element
-        for (auto it = _rargs.begin(); it != last; ++it) {
-            // it is a iterator, *it get the element in _rargs,
+    if (operands().size() > 0) {
+        // Iterator pointing to the last element
+        auto last = operands().end() - 1;  
+        for (auto it = operands().begin(); it != last; ++it) {
+            // it is a iterator, *it get the element in operands,
             // which is the Value* ptr
-            os << *((*it)->type()) << " ";
-            os << (*it)->name();
+            auto val = (*it)->value();
+            os << *(val->type()) << " ";
+            os << val->name();
             os << ", ";
         }
-        os << *((*last)->type()) << " ";
-        os << (*last)->name();
+        auto lastval = (*last)->value();
+        os << *(lastval->type()) << " ";
+        os << lastval->name();
     }
-
     os << ")";
 }
 

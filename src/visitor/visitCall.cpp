@@ -13,7 +13,7 @@ std::any SysYIRGenerator::visitCall(SysYParser::CallContext* ctx) {
     auto func_name = ctx->ID()->getText();
     auto func = module()->lookup_func(func_name);
     auto parent_func = builder().block()->parent();
-
+    // function rargs 应该被作为 function 的 operands
     std::vector<ir::Value*> rargs;
     std::vector<ir::Value*> final_rargs;
     auto iter = func->arg_types().begin();

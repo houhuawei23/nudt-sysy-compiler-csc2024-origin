@@ -330,9 +330,9 @@ class IRBuilder {
     }
 
     CallInst* create_call(Function* func,
-                          const_value_ptr_vector& args,
+                          const_value_ptr_vector& rargs,
                           const_str_ref name = "") {
-        auto call = new CallInst(func, args, _block, name);
+        auto call = new CallInst(func, rargs, _block, name);
         block()->emplace_back_inst(call);
         return call;
     }
