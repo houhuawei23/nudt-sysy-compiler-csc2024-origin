@@ -5,6 +5,7 @@
 #include "pass/pass.hpp"
 #include "pass/analysis/dom.hpp"
 #include "pass/optimize/mem2reg.hpp"
+#include "pass/optimize/DCE.hpp"
 using namespace std;
 
 int main(int argc, char** argv) {
@@ -42,6 +43,7 @@ int main(int argc, char** argv) {
     fpm.add_pass(new pass::domFrontierGen());
     // fpm.add_pass(new pass::domInfoCheck());
     fpm.add_pass(new pass::Mem2Reg());
+    fpm.add_pass(new pass::DCE());
     for(auto f : module_ir->funcs()){
         fpm.run(f);
     }

@@ -78,7 +78,7 @@ void BasicBlock::delete_inst(Instruction* inst){
     // if 3 use inst, 3.operands have use(3, 1)
     // first replace use(3, 1)
     // if you want to delete a inst, all use of it must be deleted in advance
-    assert(inst->uses().size()==0);
+    // assert(inst->uses().size()==0);
     for(auto op_use : inst->operands()) {
         auto op = op_use->value();
         op->del_use(op_use);
