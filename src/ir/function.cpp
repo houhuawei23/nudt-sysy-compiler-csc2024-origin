@@ -1,6 +1,7 @@
 #include "ir/function.hpp"
 #include "ir/utils_ir.hpp"
 #include "ir/type.hpp"
+#include "ir/instructions.hpp"
 
 namespace ir {
 BasicBlock* Function::new_block() {
@@ -16,28 +17,28 @@ void Function::delete_block(BasicBlock* bb){
     for(auto bbnext:bb->next_blocks()){
         bbnext->pre_blocks().remove(bb);
     }
-    for(auto bbinst:bb->insts()){
-        bb->delete_inst(bbinst);
+    for(auto bbinstIter=bb->insts().begin();bbinstIter!=bb->insts().end();){
+        auto delinst=*bbinstIter;
+        bbinstIter++;
+        bb->delete_inst(delinst);
     }
     _blocks.remove(bb);
-    delete bb;
+    // delete bb;
 }
 
 void Function::print(std::ostream& os) {
     auto return_type = ret_type();
-    
+    rename();
     if (blocks().size()) {
         os << "define " << *return_type << " @" << name() << "(";
         if (_args.size() > 0) {
             auto last_iter = _args.end() - 1;
             for (auto iter = _args.begin(); iter != last_iter; ++iter) {
                 auto arg = *iter;
-                arg->setname("%" + std::to_string(getvarcnt()));
                 os << *(arg->type()) << " " << arg->name();
                 os << ", ";
             }
             auto arg = *last_iter;
-            arg->setname("%" + std::to_string(getvarcnt()));
             os << *(arg->type()) << " " << arg->name();
         }
     } else {
@@ -68,6 +69,24 @@ void Function::print(std::ostream& os) {
         os << "}";
     } else {
         os << "\n";
+    }
+}
+
+void Function::rename(){
+    if(not entry())return;
+    setvarcnt(0);
+    for(auto arg:_args){
+        std::string argname="%"+std::to_string(getvarcnt());
+        arg->set_name(argname);
+    }
+    
+    for(auto bb : _blocks){
+        for(auto inst : bb->insts()){
+            if(inst->is_noname())continue;
+            auto callpt=dyn_cast<CallInst>(inst);
+            if(callpt and callpt->is_void()) continue;
+            inst->setvarname();
+        }
     }
 }
 }  // namespace ir

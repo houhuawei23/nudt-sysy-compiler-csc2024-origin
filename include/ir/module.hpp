@@ -42,5 +42,7 @@ class Module {
 
     // readable ir print
     void print(std::ostream& os);
+
+    void rename();
 };
 }  // namespace ir

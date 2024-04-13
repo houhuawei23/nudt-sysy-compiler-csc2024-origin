@@ -11,7 +11,7 @@ namespace ir {
  *      alloca <ty>
  */
 void AllocaInst::print(std::ostream& os) {
-    Instruction::setvarname();
+
     os << name() << " = alloca " << *(base_type());
 }
 
@@ -41,7 +41,6 @@ void StoreInst::print(std::ostream& os) {
 }
 
 void LoadInst::print(std::ostream& os) {
-    Instruction::setvarname();
     os << name() << " = load ";
     auto ptype = ptr()->type();
     if (ptype->is_pointer()) {
@@ -73,7 +72,6 @@ void ReturnInst::print(std::ostream& os) {
  *      <result> = add <ty> <op1>, <op2>
  */
 void BinaryInst::print(std::ostream& os) {
-    Instruction::setvarname();
     os << name() << " = ";
     switch (scid()) {
         case vADD:
@@ -136,7 +134,6 @@ void BinaryInst::print(std::ostream& os) {
  *      <result> = fneg [fast-math flags]* <ty> <op1>
  */
 void UnaryInst::print(std::ostream& os) {
-    Instruction::setvarname();
     os << name() << " = ";
     if (scid() == vFNEG) {
         os << "fneg " << *type() << " " << get_value()->name();
@@ -173,7 +170,6 @@ void UnaryInst::print(std::ostream& os) {
 void ICmpInst::print(std::ostream& os) {
     // <result> = icmp <cond> <ty> <op1>, <op2>   ; yields i1 or <N x i1>:result
     // %res = icmp eq i32, 1, 2
-    Instruction::setvarname();
     os << name() << " = ";
 
     os << "icmp ";
@@ -215,7 +211,6 @@ void ICmpInst::print(std::ostream& os) {
 void FCmpInst::print(std::ostream& os) {
     // <result> = icmp <cond> <ty> <op1>, <op2>   ; yields i1 or <N x i1>:result
     // %res = icmp eq i32, 1, 2
-    Instruction::setvarname();
     os << name() << " = ";
 
     os << "fcmp ";
@@ -278,7 +273,6 @@ void BranchInst::print(std::ostream& os) {
  *      指针: <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
  */
 void GetElementPtrInst::print(std::ostream& os) {
-    Instruction::setvarname();
     if (is_arrayInst()) {
         os << name() << " = getelementptr ";
 
@@ -313,7 +307,6 @@ void CallInst::print(std::ostream& os) {
     if (callee()->ret_type()->is_void()) {
         os << "call ";
     } else {
-        Instruction::setvarname();
         os << name() << " = call ";
     }
 
@@ -322,31 +315,37 @@ void CallInst::print(std::ostream& os) {
     // func name
     os << "@" << callee()->name() << "(";
 
-    if (_rargs.size() > 0) {
-        auto last = _rargs.end() - 1;  // Iterator pointing to the last element
-        for (auto it = _rargs.begin(); it != last; ++it) {
-            // it is a iterator, *it get the element in _rargs,
+    if (operands().size() > 0) {
+        // Iterator pointing to the last element
+        auto last = operands().end() - 1;  
+        for (auto it = operands().begin(); it != last; ++it) {
+            // it is a iterator, *it get the element in operands,
             // which is the Value* ptr
-            os << *((*it)->type()) << " ";
-            os << (*it)->name();
+            auto val = (*it)->value();
+            os << *(val->type()) << " ";
+            os << val->name();
             os << ", ";
         }
-        os << *((*last)->type()) << " ";
-        os << (*last)->name();
+        auto lastval = (*last)->value();
+        os << *(lastval->type()) << " ";
+        os << lastval->name();
     }
-
     os << ")";
 }
 
 void PhiInst::print(std::ostream& os){
-    Instruction::setvarname();
     os << name() << " = ";
     os << "phi " << *(type()) << " ";
     // for all vals, bbs
-    for(int i = 0;i<size-1;i++){
-        os <<"[ "<<*_vals[i]<<", "<<*_bbs[i]<<" ]"<<",";
+    if(size > 0)
+    {
+        for(int i = 0;i <size-1;i++)
+        {
+            os <<"[ "<<_vals[i]->name()<<", %"<<_bbs[i]->name()<<" ]"<<",";
+        }
+        os <<"[ "<<_vals[size-1]->name()<<", %"<<_bbs[size-1]->name()<<" ]";
     }
-    os <<"[ "<<*_vals[size-1]<<", "<<*_bbs[size-1]<<" ]";
+    
 }
 
 }  // namespace ir

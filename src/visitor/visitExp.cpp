@@ -16,7 +16,7 @@ std::any SysYIRGenerator::visitNumberExp(SysYParser::NumberExpContext* ctx) {
         if (s.length() > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) base = 16;
         else if (s[0] == '0') base = 8;
 
-        res = ir::Constant::gen_i32(std::stoi(s, 0, base));
+        res = ir::Constant::gen_i32(std::stol(s, 0, base));
     } else if (auto fctx = ctx->number()->FLITERAL()) {  //! float
         std::string s = fctx->getText();
         float f = std::stof(s);

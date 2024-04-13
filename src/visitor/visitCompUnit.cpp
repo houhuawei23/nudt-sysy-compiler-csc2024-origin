@@ -4,7 +4,7 @@
 namespace sysy {
 std::any SysYIRGenerator::visitCompUnit(SysYParser::CompUnitContext* ctx) {
     ir::SymbolTableBeta::ModuleScope scope(_tables);
-    // TODO: add runtime lib functions
+    // add runtime lib functions
     auto type_i32 = ir::Type::i32_type();
     auto type_f32 = ir::Type::float_type();
     auto type_void = ir::Type::void_type();

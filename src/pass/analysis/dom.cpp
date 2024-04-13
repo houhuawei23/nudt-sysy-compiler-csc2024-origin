@@ -16,7 +16,7 @@ static std::unordered_map<ir::BasicBlock*,ir::BasicBlock*>ancestor;
 static std::unordered_map<ir::BasicBlock*,ir::BasicBlock*>child;
 static std::unordered_map<ir::BasicBlock*,int>size;
 static std::unordered_map<ir::BasicBlock*,ir::BasicBlock*>label;
-static bbset doms;
+static int dfc;
 
 
 
@@ -86,7 +86,6 @@ namespace pass
     }
 
     void idomGen::dfsBlocks(ir::BasicBlock* bb){
-        static int dfc=0;
         semi[bb]=dfc++;
         vertex.push_back(bb);
         for(auto bbnext:bb->next_blocks()){
@@ -121,8 +120,8 @@ namespace pass
         label[nullptr]=nullptr;
         size[nullptr]=0;
         //dfs
+        dfc=0;// can't static def in dfs func, think about why
         dfsBlocks(func->entry());
-
         //step2 and 3
         for(auto bbIter=vertex.rbegin();bbIter!=vertex.rend();bbIter++){
             auto w=*bbIter;
@@ -170,14 +169,11 @@ namespace pass
     }
 
     void domFrontierGen::getDomInfo(ir::BasicBlock* bb, int level){
-        doms.erase(bb);
         bb->domLevel=level;
-        bb->dom.clear();
-        bb->dom=std::set<ir::BasicBlock*>(doms);
-        for(auto bbson:bb->domTree){
-            getDomInfo(bbson,level+1);
+        for(auto bbnext:bb->domTree){
+            getDomInfo(bbnext,level+1);
         }
-        doms.insert(bb);
+
     }
 
     void domFrontierGen::getDomFrontier(ir::Function* func){
@@ -200,8 +196,6 @@ namespace pass
     void domFrontierGen::run(ir::Function* func){
         if(!func->entry())return;
         getDomTree(func);
-        for(auto bb:func->blocks())
-            doms.insert(bb);
         getDomInfo(func->entry(),0);
         getDomFrontier(func);
         

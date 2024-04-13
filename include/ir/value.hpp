@@ -201,6 +201,7 @@ class Value {
         bool is_double() const { return _type->is_double(); }
         bool is_float() const { return _type->is_float(); }
         bool is_pointer() const { return _type->is_pointer(); }
+        bool is_void()const {return _type->is_void(); }
 
     public:
         ValueId scid() const { return _scid; }

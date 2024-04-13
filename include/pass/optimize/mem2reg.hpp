@@ -15,8 +15,8 @@ namespace pass
         ir::StoreInst *OnlyStore;
         ir::BasicBlock *OnlyBlock;
         std::vector<ir::AllocaInst *> Allocas;
-        std::map<ir::AllocaInst *, std::set<ir::BasicBlock *>> DefsBlock;
-        std::map<ir::AllocaInst *, std::set<ir::BasicBlock *>> UsesBlock;
+        std::map<ir::AllocaInst *, std::vector<ir::BasicBlock *>> DefsBlock;
+        std::map<ir::AllocaInst *, std::vector<ir::BasicBlock *>> UsesBlock;
 
         std::map<ir::BasicBlock *, std::map<ir::PhiInst *, ir::AllocaInst *>> PhiMap;
         std::map<ir::AllocaInst *, ir::Argument *> ValueMap;
