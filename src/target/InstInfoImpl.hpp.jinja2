@@ -12,7 +12,7 @@ class {{target_name}}InstInfo{{name}} final: public InstInfo {
 public:
     {{target_name}}InstInfo{{name}}() = default;
 
-    void print(std::ostream& out, const MIRInst& inst, bool comment) const {        
+    void print(std::ostream& out, MIRInst& inst, bool comment) {        
         out 
         {%- for part in info.format -%}
             <<
@@ -37,11 +37,11 @@ public:
         {%- endif -%}
     }
 
-    uint32_t operand_num() const {
+    uint32_t operand_num() {
         return {{info.operands|length}};
     }
 
-    OperandFlag operand_flag(uint32_t idx) const {
+    OperandFlag operand_flag(uint32_t idx) {
         switch (idx) {
             {%- for idx, op in info.operands.items() -%}
                 case {{idx}}:
@@ -52,14 +52,14 @@ public:
         }
     }
     
-    InstFlag inst_flag() const {
+    uint32_t inst_flag() {
         return InstFlagNone 
             {%- for flag in info.flag -%}
                 | InstFlag{{flag}} 
             {%- endfor -%};
     }
 
-    std::string_view name() const {
+    std::string_view name() {
         return "{{target_name}}.{{name}}";
     }
 
@@ -79,12 +79,13 @@ public:
                 return _instinfo{{name}};
             {%- endfor %}
             default:
-                return TargetInstInfo::get_instinfo(opcode);
+            assert(false && "Invalid opcode");
+                // return TargetInstInfo::get_instinfo(opcode);
         }
     }
 };
 
-const TargetInstInfo& get{{target_name}}InstInfo() {
+TargetInstInfo& get{{target_name}}InstInfo() {
     static {{target_name}}InstInfo instance;
     return instance;
 }

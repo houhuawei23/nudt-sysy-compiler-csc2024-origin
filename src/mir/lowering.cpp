@@ -1,9 +1,10 @@
 #include "mir/mir.hpp"
 #include "mir/lowering.hpp"
 #include "mir/target.hpp"
+#include "mir/iselinfo.hpp"
 namespace mir {
 //! declare
-void create_mir_module(ir::Module* ir_module, LoweringContext& ctx);
+void create_mir_module(ir::Module& ir_module, LoweringContext& ctx);
 
 MIRFunction* create_mir_function(ir::Function* ir_func,
                                  MIRFunction* mir_func,
@@ -13,30 +14,37 @@ MIRInst* create_mir_inst(ir::Instruction* ir_inst, LoweringContext& ctx);
 
 //! implementation
 
-MIRModule* create_mir_module(ir::Module* ir_module) {
-    MIRModule* mir_module = new MIRModule(ir_module);
-    LoweringContext ctx = LoweringContext(mir_module);
+std::unique_ptr<MIRModule> create_mir_module(ir::Module& ir_module,
+                                             Target& target) {
+    // new MIRModule
+    auto mir_module_uptr = std::make_unique<MIRModule>(&ir_module, target);
+    LoweringContext ctx = LoweringContext(*mir_module_uptr, target);
     create_mir_module(ir_module, ctx);
-    return mir_module;
+    return mir_module_uptr;
 }
 
-void create_mir_module(ir::Module* ir_module, LoweringContext& ctx) {
-    auto& mir_module = ctx._mir_module;
-    for (auto func : ir_module->funcs()) {
-        // auto mir_func = new MIRFunction(func->name(), mir_module);
-        // only add function declar, or recursively generate function body?
-        auto mir_func = mir_module->add_func(func->name());
-        ctx.func_map[func] = mir_func;  // update map
+void create_mir_module(ir::Module& ir_module, LoweringContext& lowering_ctx) {
+    auto& mir_module = lowering_ctx._mir_module; // return ref, using ref to use
+    auto& functions = mir_module.functions();
+    auto& global_objs = mir_module.global_objs();
+    
+    for (auto func : ir_module.funcs()) {
+        functions.push_back(std::make_unique<MIRFunction>(func->name(), &mir_module));
+        //! error, why?
+        // mir_module.functions().push_back(std::make_unique<MIRFunction>(func->name(), mir_module));
+        // auto& mir_func = functions.back();
+        lowering_ctx.func_map.emplace(func, functions.back().get());
     }
     //! for all global variables, create MIRGlobalObject
-    for (auto ir_gval : ir_module->gvalues()) {
-        auto ir_gvar = dynamic_cast<ir::GlobalVariable*>(ir_gval);
+    for (auto ir_gval : ir_module.gvalues()) {
+        auto ir_gvar = dyn_cast<ir::GlobalVariable>(ir_gval);
         auto type = dyn_cast<ir::PointerType>(ir_gvar->type())->base_type();
         size_t size = ir_gvar->type()->size();
 
         if (ir_gvar->is_init()) {  //! gvar init: .data
+            // TODO: now only support scalar, need to support array
             MIRDataStorage::Storage data;
-            auto val = dynamic_cast<ir::Constant*>(ir_gvar->init(0));
+            auto val = dyn_cast<ir::Constant>(ir_gvar->scalar_value());
             if (type->is_int()) {
                 if (type->is_i32()) {
                     data.push_back(static_cast<uint32_t>(val->i32()));
@@ -44,41 +52,56 @@ void create_mir_module(ir::Module* ir_module, LoweringContext& ctx) {
             } else if (type->is_float()) {
             }
             size_t align = 4;  // TODO: align
-            auto mir_storage = new MIRDataStorage(std::move(data), false);
-            auto mir_gobj = new MIRGlobalObject(4, mir_storage, mir_module);
-            mir_module->add_gobj(mir_gobj);
+            auto mir_storage = std::make_unique<MIRDataStorage>(std::move(data), false);
+            auto mir_gobj = std::make_unique<MIRGlobalObject>(align, std::move(mir_storage), &mir_module);
+            mir_module.global_objs().push_back(std::move(mir_gobj));
         } else {  //! gvar not init: .bss
 
             size_t align = 4;  // TODO: align
-            auto mir_storage = new MIRZeroStorage(size, ir_gvar->name());
-            auto mir_gobj = new MIRGlobalObject(align, mir_storage, mir_module);
-            mir_module->add_gobj(mir_gobj);
+            auto mir_storage = std::make_unique<MIRZeroStorage>(size, ir_gvar->name());
+            auto mir_gobj = std::make_unique<MIRGlobalObject>(align, std::move(mir_storage), &mir_module);
+            mir_module.global_objs().push_back(std::move(mir_gobj));
         }
-        // gvar_map.emplace(ir_gvar, mir_module->global_objs().back());
-        ctx.gvar_map[ir_gvar] = mir_module->global_objs().back();  // update map
+        lowering_ctx.gvar_map.emplace(ir_gvar, mir_module.global_objs().back().get());
     }
 
     // TODO: transformModuleBeforeCodeGen
 
-    // CodeGenContext codegen_ctx{target, }
-
+    //! codegen
+    auto& target = lowering_ctx._target;  // Target*
+    CodeGenContext codegen_ctx{target, target.get_datalayout(),
+                               target.get_inst_info(), target.get_frame_info(),
+                               MIRFlags{}};
+    lowering_ctx.set_code_gen_ctx(&codegen_ctx);
     //! lower all functions
-    for (auto ir_func : ir_module->funcs()) {  // for all funcs
-        auto mir_func = ctx.func_map[ir_func];
+    for (auto& ir_func : ir_module.funcs()) {  // for all funcs
+        auto mir_func = lowering_ctx.func_map[ir_func];
         if (ir_func->blocks().empty()) {
             continue;
         }
-        create_mir_function(ir_func, mir_func, ctx);
+        // 1: lower function body to generic MIR
+        create_mir_function(ir_func, mir_func, lowering_ctx);
+
+        // 2: inst selection
+        // ISelContext isel_ctx(&codegen_ctx);
+        // isel_ctx.run_isel(mir_func);
+
+        // register coalescing
+        // peephole optimization
+        // register allocation
+        // stack allocation
     }
 }
 
 MIRFunction* create_mir_function(ir::Function* ir_func,
                                  MIRFunction* mir_func,
-                                 LoweringContext& ctx) {
+                                 LoweringContext& lowering_ctx) {
+    auto codegen_ctx = lowering_ctx._code_gen_ctx;  // *
+
     std::unordered_map<ir::BasicBlock*, MIRBlock*> block_map;
     std::unordered_map<ir::Value*, MIROperand> value_map;
     std::unordered_map<ir::Value*, MIROperand> storage_map;
-
+    // map all blocks
     for (auto ir_block : ir_func->blocks()) {
         auto mir_block = new MIRBlock(ir_block, mir_func);
         mir_func->blocks().push_back(mir_block);
@@ -90,8 +113,19 @@ MIRFunction* create_mir_function(ir::Function* ir_func,
         // assign vreg to arg
     }
 
+    //! emitPrologue for function
+    {
+        for (auto arg : ir_func->args()) {
+            auto vreg = lowering_ctx.new_vreg(arg->type());
+            lowering_ctx.add_valmap(arg, vreg);
+            mir_func->args().push_back(vreg);
+        }
+        lowering_ctx.set_mir_block(block_map.at(ir_func->entry()));
+        codegen_ctx->frameInfo.emit_prologue(mir_func, lowering_ctx);
+    }
+
     //! process alloca
-    ctx.set_mir_block(block_map.at(ir_func->entry()));
+    lowering_ctx.set_mir_block(block_map.at(ir_func->entry()));
     for (auto& inst : ir_func->entry()->insts()) {
         // all alloca in entry
         auto type = dyn_cast<ir::PointerType>(inst->type());
@@ -103,7 +137,7 @@ MIRFunction* create_mir_function(ir::Function* ir_func,
         auto mir_block = block_map[ir_block];
         // set current block
         for (auto ir_inst : ir_block->insts()) {
-            create_mir_inst(ir_inst, ctx);
+            create_mir_inst(ir_inst, lowering_ctx);
         }
     }
 }

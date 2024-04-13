@@ -1,16 +1,20 @@
 #pragma once
 
 #include "mir/mir.hpp"
+#include "mir/target.hpp"
+
 /*
 lowering context
 */
 namespace mir {
 class LoweringContext {
    public:
-    MIRModule* _mir_module = nullptr;
+    Target& _target;
+    MIRModule& _mir_module;
     MIRFunction* _mir_func = nullptr;
     MIRBlock* _mir_block = nullptr;
-    std::unordered_map<ir::Value*, MIROperand*> irval2mirop;
+    // map
+    std::unordered_map<ir::Value*, MIROperand*> _val_map;
     std::unordered_map<ir::Function*, MIRFunction*> func_map;
     std::unordered_map<ir::GlobalVariable*, MIRGlobalObject*> gvar_map;
 
@@ -18,13 +22,22 @@ class LoweringContext {
     // pointer type for target platform
     OperandType _ptr_type = OperandType::Int64;
 
-    LoweringContext(MIRModule* mir_module) : _mir_module(mir_module) {}
+    // code gen context
+    CodeGenContext* _code_gen_ctx = nullptr;
+
+   public:
+    LoweringContext(MIRModule& mir_module, Target& target)
+        : _mir_module(mir_module), _target(target) {}
+
+    void set_code_gen_ctx(CodeGenContext* code_gen_ctx) {
+        _code_gen_ctx = code_gen_ctx;
+    }
 
     uint32_t next_id() { return ++_idx; }
 
     MIRModule* get_mir_module();
 
-    void set_mir_module(MIRModule* mir_module) { _mir_module = mir_module; }
+    // void set_mir_module(MIRModule& mir_module) { _mir_module = mir_module; }
     void set_mir_func(MIRFunction* mir_func) { _mir_func = mir_func; }
     void set_mir_block(MIRBlock* mir_block) { _mir_block = mir_block; }
 
@@ -48,11 +61,16 @@ class LoweringContext {
     //         return InstCopyToReg;
     //     }
     // }
-
+    void add_valmap(ir::Value* ir_val, MIROperand* mir_operand) {
+        if (_val_map.count(ir_val)) {
+            assert(false && "value already mapped");
+        }
+        _val_map.emplace(ir_val, mir_operand);
+    }
 
     MIROperand* map2operand(ir::Value* ir_val) {
-        auto iter = irval2mirop.find(ir_val);
-        if (iter != irval2mirop.end()) {
+        auto iter = _val_map.find(ir_val);
+        if (iter != _val_map.end()) {
             return iter->second;
         }
         // gen the operand
@@ -79,6 +97,6 @@ class LoweringContext {
     }
 };
 
-MIRModule* create_mir_module(ir::Module* ir_module);
+std::unique_ptr<MIRModule> create_mir_module(ir::Module& ir_module, Target& target);
 
 }  // namespace mir

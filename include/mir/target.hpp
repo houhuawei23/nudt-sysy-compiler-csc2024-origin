@@ -16,12 +16,12 @@ class Target {
     // emitAssembly
    public:
     virtual ~Target() = default;
-    virtual const DataLayout& get_datalayout() const = 0;
-    // virtual const TargetScheduleModel& get_schedule_model() const = 0;
-    virtual const TargetInstInfo& get_inst_info() const = 0;
-    // virtual const TargetISelInfo& get_isel_info() const = 0;
-    virtual const TargetFrameInfo& get_frame_info() const = 0;
-    // virtual const TargetRegisterInfo* get_register_info() const = 0;
+    virtual DataLayout& get_datalayout() = 0;
+    // virtual  TargetScheduleModel& get_schedule_model()  = 0;
+    virtual TargetInstInfo& get_inst_info() = 0;
+    // virtual  TargetISelInfo& get_isel_info()  = 0;
+    virtual TargetFrameInfo& get_frame_info() = 0;
+    // virtual  TargetRegisterInfo* get_register_info()  = 0;
 };
 
 struct MIRFlags final {
@@ -34,13 +34,13 @@ struct MIRFlags final {
 };
 
 struct CodeGenContext final {
-    const Target& target;
-    // const TargetScheduleModel& scheduleModel;
-    const DataLayout& dataLayout;
-    const TargetInstInfo& instInfo;
-    // const TargetISelInfo& iselInfo;
-    const TargetFrameInfo& frameInfo;
-    // const TargetRegisterInfo* registerInfo;
+    Target& target;
+    //  TargetScheduleModel& scheduleModel;
+    DataLayout& dataLayout;
+    TargetInstInfo& instInfo;
+    //  TargetISelInfo& iselInfo;
+    TargetFrameInfo& frameInfo;
+    //  TargetRegisterInfo* registerInfo;
     MIRFlags flags;
     uint32_t idx = 0;
     uint32_t next_id() { return ++idx; }
@@ -50,9 +50,8 @@ struct CodeGenContext final {
 // class TargetRegistry {
 //     std::vector<TargetBuilder> _targets;
 // public:
-//     void add_target(const TargetBuilder& target_builder);
-//     Target* select_target() 
+//     void add_target( TargetBuilder& target_builder);
+//     Target* select_target()
 // };
-
 
 }  // namespace mir

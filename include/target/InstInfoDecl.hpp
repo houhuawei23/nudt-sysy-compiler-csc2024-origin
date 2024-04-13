@@ -46,9 +46,24 @@ enum RISCVInst {
     JALR,
     LUI,
     AUIPC,
+    MUL,
+    MULH,
+    MULHSU,
+    MULHU,
+    DIV,
+    DIVU,
+    REM,
+    REMU,
+    LR,
+    SC,
+    AMOSWAP,
+    AMOADD,
+    AMOAND,
+    AMOOR,
+    AMOXOR,
     RISCVInstEnd
 };
 
-const TargetInstInfo& getRISCVInstInfo();
+TargetInstInfo& getRISCVInstInfo();
 
 TARGET_NAMESPACE_END

@@ -9,6 +9,7 @@
 
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
+#include "mir/lowering.hpp"
 
 #include "target/riscv.hpp"
 #include "target/riscvtarget.hpp"
@@ -39,26 +40,27 @@ int main(int argc, char** argv) {
 
     auto module_ir = gen.module();
     bool genir = true;
-    // if (genir) {
-    //     module_ir->print(std::cout);
-    // }
-
-    pass::FunctionPassManager fpm;
-    //mem2reg
-    fpm.add_pass(new pass::preProcDom());
-    fpm.add_pass(new pass::idomGen());
-    fpm.add_pass(new pass::domFrontierGen());
-    // fpm.add_pass(new pass::domInfoCheck());
-    fpm.add_pass(new pass::Mem2Reg());
-    for(auto f : module_ir->funcs()){
-        fpm.run(f);
-    }
-
     if (genir) {
         module_ir->print(std::cout);
     }
 
+    // pass::FunctionPassManager fpm;
+    // //mem2reg
+    // fpm.add_pass(new pass::preProcDom());
+    // fpm.add_pass(new pass::idomGen());
+    // fpm.add_pass(new pass::domFrontierGen());
+    // // fpm.add_pass(new pass::domInfoCheck());
+    // fpm.add_pass(new pass::Mem2Reg());
+    // for(auto f : module_ir->funcs()){
+    //     fpm.run(f);
+    // }
+
+    // if (genir) {
+    //     module_ir->print(std::cout);
+    // }
+
     auto target = mir::RISCVTarget();
+    auto mir_module = mir::create_mir_module(*module_ir, target);
     // pass::FunctionPassManager fpm;
     // //mem2reg
     // fpm.add_pass(new pass::preProcDom());

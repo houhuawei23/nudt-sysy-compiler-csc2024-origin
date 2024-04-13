@@ -7,9 +7,9 @@
 
 namespace mir {
 class MIRRelocable;
-class MIRFunction;
 class MIRModule;
-class MIRBlock;
+class MIRFunction;  // public MIRRelocable
+class MIRBlock;     // public MIRRelocable
 class MIRInst;
 class MIRRegister;
 class MIROperand;
@@ -80,6 +80,7 @@ class MIRRegister {
 enum MIRGenericInst : uint32_t {
     InstJump,
     InstBranch,
+    InstUnreachable,
     // memory
     InstLoad,
     InstStore,
@@ -98,14 +99,32 @@ enum MIRGenericInst : uint32_t {
     // Signed div/rem
     InstSDiv,
     InstSRem,
-
+    // minmax
+    InstSMin,
+    InstSMax,
+    // unary
+    InstNeg,
+    InstAbs,
     // fp
-
+    InstFAdd,
+    InstFSub,
+    InstFMul,
+    InstFDiv,
+    InstFNeg,
+    InstFAbs,
+    InstFFma,
     // comp
     InstICmp,
     InstFCmp,
     // conversion
-
+    InstSExt,
+    InstZExt,
+    InstTrunc,
+    InstF2U,
+    InstF2S,
+    InstU2F,
+    InstS2F,
+    InstFCast,
     // misc
     InstCopy,
     InstSelect,
@@ -122,7 +141,7 @@ enum MIRGenericInst : uint32_t {
     InstRet,
 
     // ISA specific
-    ISASpecificBegin
+    ISASpecificBegin,
 
 };
 
@@ -159,7 +178,6 @@ class MIROperand {
     bool is_reloc() { return std::holds_alternative<MIRRelocable*>(_storage); }
     bool is_prob() { return false; }
     bool is_init() { return !std::holds_alternative<std::monostate>(_storage); }
-
 
     template <typename T>
     bool is() {
@@ -236,7 +254,8 @@ class MIRBlock : public MIRRelocable {
 
    public:
     MIRBlock() = default;
-    MIRBlock(ir::BasicBlock* ir_block, MIRFunction* parent);
+    MIRBlock(ir::BasicBlock* ir_block, MIRFunction* parent)
+        : _ir_block(ir_block), _parent(parent) {}
 
     void inst_sel(ir::BasicBlock* ir_bb);
     void add_inst(MIRInst* inst) { _insts.push_back(inst); }
@@ -280,12 +299,13 @@ class MIRFunction : public MIRRelocable {
     auto& stack_objs() { return _stack_objs; }
 
     MIROperand* add_stack_obj(uint32_t id,
-                             uint32_t size,
-                             uint32_t alignment,
-                             int32_t offset,
-                             StackObjectUsage usage) {
+                              uint32_t size,
+                              uint32_t alignment,
+                              int32_t offset,
+                              StackObjectUsage usage) {
         auto ref = MIROperand::as_stack_obj(id, OperandType::Special);
-        // _stack_objs.emplace(ref, new StackObject(size, alignment, offset, usage));
+        // _stack_objs.emplace(ref, new StackObject(size, alignment, offset,
+        // usage));
         return ref;
     }
 
@@ -293,11 +313,6 @@ class MIRFunction : public MIRRelocable {
     void print(std::ostream& os);
     void print_cfg(std::ostream& os);
 };
-
-
-
-
-
 
 // all zero storage
 class MIRZeroStorage : public MIRRelocable {
@@ -313,7 +328,7 @@ class MIRZeroStorage : public MIRRelocable {
 // data storage
 class MIRDataStorage : public MIRRelocable {
    public:
-    using Storage = std::vector<uint32_t>;
+    using Storage = std::vector<uint32_t>;  // words vector
 
    private:
     Storage _data;
@@ -339,51 +354,48 @@ class MIRDataStorage : public MIRRelocable {
 /*
  * in cmmc, MIRGlobal contains MIRFunction/MIRDataStorage/MIRZeroStorage
  */
+using MIRRelocable_UPtr = std::unique_ptr<MIRRelocable>;
 class MIRGlobalObject {
    private:
     MIRModule* _parent;
     ir::Value* _ir_global;
     size_t align;
-    MIRRelocable* reloc;  // MIRZeroStorage, MIRDataStorage
+    MIRRelocable_UPtr _reloc;  // MIRZeroStorage, MIRDataStorage
 
    public:
     MIRGlobalObject() = default;
-    MIRGlobalObject(ir::Value* ir_global, MIRModule* parent)
-        : _parent(parent), _ir_global(ir_global) {
-        std::string var_name = _ir_global->name();
-        var_name = var_name.substr(1, var_name.length() - 1);
-        _ir_global->set_name(var_name);
-    }
-    MIRGlobalObject(size_t align, MIRRelocable* reloc, MIRModule* parent)
-        : _parent(parent), align(align), reloc(reloc) {}
+    // MIRGlobalObject(ir::Value* ir_global, MIRModule* parent)
+    //     : _parent(parent), _ir_global(ir_global) {
+    //     std::string var_name = _ir_global->name();
+    //     var_name = var_name.substr(1, var_name.length() - 1);
+    //     _ir_global->set_name(var_name);
+    // }
+    MIRGlobalObject(size_t align, std::unique_ptr<MIRRelocable> reloc, MIRModule* parent)
+        : _parent(parent), align(align), _reloc(std::move(reloc)) {}
 
    public:
     void print(std::ostream& os);
 };
 
+class Target;
+using MIRFunction_UPtrVec = std::vector<std::unique_ptr<MIRFunction>>;
+using MIRGlobalObject_UPtrVec = std::vector<std::unique_ptr<MIRGlobalObject>>;
+
 class MIRModule {
    private:
-    std::vector<MIRFunction*> _functions;
-    std::vector<MIRGlobalObject*> _global_objs;
+    Target& _target;
+    MIRFunction_UPtrVec _functions;
+    MIRGlobalObject_UPtrVec _global_objs;
+    // std::vector<MIRGlobalObject*> _global_objs;
     ir::Module* _ir_module;
 
    public:
     MIRModule() = default;
-    MIRModule(ir::Module* ir_module);
+    MIRModule(ir::Module* ir_module, Target& target)
+        : _ir_module(ir_module), _target(target) {}
 
-    std::vector<MIRFunction*>& functions() { return _functions; }
-    std::vector<MIRGlobalObject*>& global_objs() { return _global_objs; }
-
-    MIRFunction* add_func(const std::string& name) {
-        MIRFunction* func = new MIRFunction(name, this);
-        _functions.push_back(func);
-        return func;
-    }
-
-    MIRGlobalObject* add_gobj(MIRGlobalObject* gobj) {
-        _global_objs.push_back(gobj);
-        return gobj;
-    }
+    MIRFunction_UPtrVec& functions() { return _functions; }
+    MIRGlobalObject_UPtrVec& global_objs() { return _global_objs; }
 
    public:
     void print(std::ostream& os);

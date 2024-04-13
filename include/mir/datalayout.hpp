@@ -8,13 +8,12 @@ enum Endian { Big, Little };
 class DataLayout {
    public:
     virtual ~DataLayout() = default;
-    virtual Endian edian() const = 0;
+    virtual Endian edian() = 0;
     // getBuiltinAlignment
-    virtual size_t type_align(const ir::Type* type) const = 0;
-    virtual size_t ptr_size() const = 0;
-    virtual size_t code_align() const = 0;
-    virtual size_t mem_align() const { return 8; }
+    virtual size_t type_align(ir::Type* type) = 0;
+    virtual size_t ptr_size() = 0;
+    virtual size_t code_align() = 0;
+    virtual size_t mem_align() { return 8; }
 };
-
 
 }  // namespace mir
