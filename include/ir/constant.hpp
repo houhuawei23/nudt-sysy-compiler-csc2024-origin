@@ -15,7 +15,8 @@ class Constant : public User {
    protected:
     union {
         bool _i1;
-        int32_t _i32;
+        int64_t _i32;
+        int64_t _i64;
         float _f32;
         double _f64;
     };
@@ -23,12 +24,19 @@ class Constant : public User {
    public:
     Constant(bool i1, const_str_ref name)
         : User(Type::i1_type(), vCONSTANT, name), _i1(i1) {}
+
     Constant(int32_t i32, const_str_ref name)
         : User(Type::i32_type(), vCONSTANT, name), _i32(i32) {}
+    //! use 64bits to store i32
+    Constant(int64_t i64, const_str_ref name)
+        : User(Type::i32_type(), vCONSTANT, name), _i32(i64) {}
+
     Constant(float f32, const_str_ref name)
         : User(Type::float_type(), vCONSTANT, name), _f32(f32) {}
+
     Constant(double f64, const_str_ref name)
         : User(Type::double_type(), vCONSTANT, name), _f64(f64) {}
+
     Constant() : User(Type::void_type(), vCONSTANT, "VOID") {}
     Constant(const_str_ref name) : User(Type::undefine_type(), vCONSTANT, "UNDEFINE") {}
      
@@ -69,7 +77,7 @@ class Constant : public User {
         assert(std::is_integral_v<T> ||
                std::is_floating_point_v<T> && "not int or float!");
 
-        int32_t num = (int32_t)v;
+        int64_t num = (int64_t)v;
         std::string name = std::to_string(num);
         return cache_add(num, name);
     }
@@ -78,7 +86,7 @@ class Constant : public User {
         assert(std::is_integral_v<T> ||
                std::is_floating_point_v<T> && "not int or float!");
 
-        int32_t num = (int32_t)v;
+        int64_t num = (int64_t)v;
         return cache_add(num, name);
     }
 
@@ -145,7 +153,8 @@ class Constant : public User {
     }
     // static Constant* 
 
-    public:  // get
+    public:  
+    // get
     int32_t i32() const {
         if (not is_i32()) {
             std::cerr << "Implicit type conversion!" << std::endl;

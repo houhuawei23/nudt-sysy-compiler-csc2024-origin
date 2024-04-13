@@ -288,7 +288,7 @@ class IRBuilder {
         if (dims.size() == 0) inst = new AllocaInst(base_type, entryBlock, name, is_const);
         else inst = new AllocaInst(base_type, dims, entryBlock, name, is_const);
         /* hhw, add alloca to function entry block*/
-        entryBlock->emplace_back_inst(inst);
+        block()->parent()->entry()->emplace_back_inst(inst);
         return inst;
     }
 
