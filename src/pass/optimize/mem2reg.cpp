@@ -21,13 +21,13 @@ namespace pass
         {
             if (auto store = dynamic_cast<ir::StoreInst *>(use->user()))
             {
-                DefsBlock[alloca].insert(store->parent());
+                DefsBlock[alloca].push_back(store->parent());
                 OnlyStore = store;
                 
             }
 
             else if (auto load = dynamic_cast<ir::StoreInst *>(use->user()))
-                UsesBlock[alloca].insert(load->parent());
+                UsesBlock[alloca].push_back(load->parent());
         }
     }
 
@@ -89,13 +89,13 @@ namespace pass
         int StoreIndex = -1;
         ir::BasicBlock *storeBB = OnlyStore->parent();
         UsesBlock[alloca].clear();
-        int StoreCnt=0;
+        // int StoreCnt=0;
         for (auto institer=alloca->uses().begin();institer!=alloca->uses().end();)
         {
             auto inst=(*institer)->user();
             institer++;
             if (dyn_cast<ir::StoreInst>(inst)){
-                StoreCnt++;
+                // StoreCnt++;
                 continue;
             }
                 
@@ -110,13 +110,13 @@ namespace pass
                     }
                     if (StoreIndex > getLoadeinstindexinBB(storeBB, load))
                     {
-                        UsesBlock[alloca].insert(storeBB);
+                        UsesBlock[alloca].push_back(storeBB);
                         continue;
                     }
                 }
                 else if (not storeBB->dominate(load->parent()))// 如果storeBB支配了load不能进行替换
                 {
-                    UsesBlock[alloca].insert(load->parent());
+                    UsesBlock[alloca].push_back(load->parent());
                     continue;
                 }
             }
@@ -129,8 +129,8 @@ namespace pass
         if (!UsesBlock[alloca].empty())
             return false;
         OnlyStore->parent()->delete_inst(OnlyStore);
-        if(StoreCnt==1)
-            alloca->parent()->delete_inst(alloca);
+        // if(StoreCnt==1)
+        alloca->parent()->delete_inst(alloca);
         return true;
     }
 
@@ -294,7 +294,8 @@ namespace pass
                     pa.first->parent()->delete_inst(pa.first);
             }
     }
-
+    //主函数 首先遍历函数F的第一个块取出所有alloca，如果alloca的basetype是float32或i32或i1，再判断这个alloca是否可做mem2reg，可以就加入Allocas；
+    //如果Allocas是empty的就直接break，否则进入promotememToreg函数对F做mem2reg；
     bool Mem2Reg::promotemem2reg(ir::Function *F)
     {
         bool changed = false;
