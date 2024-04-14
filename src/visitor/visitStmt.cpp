@@ -299,18 +299,22 @@ std::any SysYIRGenerator::visitContinueStmt(
  *      lValue: ID (LBRACKET exp RBRACKET)*
  */
 std::any SysYIRGenerator::visitLValue(SysYParser::LValueContext* ctx) {
+    //! lvalue must be a pointer
     std::string name = ctx->ID()->getText();
-    ir::Value* res = _tables.lookup(name);
-    assert(res && "use undefined variable");
-    
+    ir::Value* ptr = _tables.lookup(name); // pointer type
+    assert(ptr && "use undefined variable");
+
+    auto ptype = dyn_cast<ir::PointerType>(ptr->type());
+    assert(ptype && "lvalue is not a pointer type");
+
     bool isArray = false;
-    if (auto ptype = dyn_cast<ir::PointerType>(res->type())) {
-        isArray = ptype->base_type()->is_array() || ptype->base_type()->is_pointer();
-    }
+    
+    isArray = ptype->base_type()->is_array() || ptype->base_type()->is_pointer();
+
     if (!isArray) {  //! 1. scalar
-        return dyn_cast_Value(res);
+        return dyn_cast_Value(ptr);
     } else {  //! 2. array
-        ir::Type* type = dyn_cast<ir::PointerType>(res->type())->base_type();
+        ir::Type* type = dyn_cast<ir::PointerType>(ptr->type())->base_type();
         if (type->is_array()) {  // 数组 (eg. int a[2][3]) -> 常规使用
             auto atype = dyn_cast<ir::ArrayType>(type);
             auto base_type = atype->base_type();
@@ -318,18 +322,18 @@ std::any SysYIRGenerator::visitLValue(SysYParser::LValueContext* ctx) {
             for (auto expr : ctx->exp()) {
                 ir::Value* idx = any_cast_Value(visit(expr));
                 dims.erase(dims.begin());
-                res = _builder.create_getelementptr(base_type, res, idx, dims, cur_dims);
+                ptr = _builder.create_getelementptr(base_type, ptr, idx, dims, cur_dims);
                 cur_dims.erase(cur_dims.begin());
             }
         } else if (type->is_pointer()) {  // 指针 (eg. int a[] OR int a[][5]) -> 函数参数
-            res = _builder.create_load(res);
+            ptr = _builder.create_load(ptr);
             type = dyn_cast<ir::PointerType>(type)->base_type();
             if (type->is_array()) {  // 二级及以上指针
 
             } else {  // 一级指针
                 for (auto expr : ctx->exp()) {
                     ir::Value* idx = any_cast_Value(visit(expr));
-                    res = _builder.create_getelementptr(type, res, idx);
+                    ptr = _builder.create_getelementptr(type, ptr, idx);
                 }
             }
         } else {
@@ -337,6 +341,6 @@ std::any SysYIRGenerator::visitLValue(SysYParser::LValueContext* ctx) {
         }
     }
 
-    return dyn_cast_Value(res);
+    return dyn_cast_Value(ptr);
 }
 }  // namespace sysy

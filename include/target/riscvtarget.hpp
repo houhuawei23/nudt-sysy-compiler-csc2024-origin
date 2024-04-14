@@ -25,6 +25,8 @@ class RISCVFrameInfo : public TargetFrameInfo {
    public:
     // lowering stage
     void emit_call(ir::CallInst* inst) override {}
+    
+    // 在函数调用前生成序言代码，用于设置栈帧和保存寄存器状态。
     void emit_prologue(MIRFunction* func,
                        LoweringContext& lowering_ctx) override {
         // TODO: implement prologue

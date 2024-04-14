@@ -6,6 +6,9 @@
 #include <vector>
 
 namespace ir {
+// mir
+class DataLayout;
+
 class Type;
 class PointerType;
 class FunctionType;

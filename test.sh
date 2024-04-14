@@ -108,6 +108,7 @@ function run_gen_test() {
         # sys-compiler
         cat "$single_file" > "${output_dir}/test.c"
         ./main "$single_file" >"${output_dir}/gen.ll"
+        llc -march=riscv64 "${output_dir}/gen.ll" -o "${output_dir}/gen.rv64.s" -O0
         llvm-link --suppress-warnings ./test/link/link.ll "${output_dir}/gen.ll" -S -o "${output_dir}/gen_linked.ll"
         if [ $? != 0 ]; then
             echo "link error"
@@ -120,7 +121,8 @@ function run_gen_test() {
         fi
 
         if [ -f "$in_file" ]; then
-            timeout $TIMEOUT lli "${output_dir}/gen_linked.ll" > "${output_dir}/gen.out" < "${in_file}"
+            # timeout test
+            timeout $TIMEOUT lli "${output_dir}/gen_linked.ll" &> /dev/null  < "${in_file}"
             if [ $? == 124 ]; then
                 echo "link timeout"
                 echo "${RED}[WRONG]${RESET} ${single_file}"
@@ -130,6 +132,7 @@ function run_gen_test() {
                 WRONG_FILES+=($single_file)
                 return 1
             fi
+            # retest for lli return value
             lli "${output_dir}/gen_linked.ll" > "${output_dir}/gen.out" < "${in_file}"
         else 
             timeout $TIMEOUT lli "${output_dir}/gen_linked.ll" > "${output_dir}/gen.out"
@@ -162,10 +165,10 @@ function run_test() {
     if [ -f "$single_file" ]; then
         echo "${YELLOW}[Testing]${RESET} $single_file"
         in_file="${single_file%.*}.in"
-
+        echo "llvm test"
         run_llvm_test "$single_file" "$output_dir" "$result_file"
         llvmres=$?
-
+        echo "sys-compiler test"
         run_gen_test "$single_file" "$output_dir" "$result_file"
         res=$?
 

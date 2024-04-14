@@ -24,14 +24,13 @@ std::unique_ptr<MIRModule> create_mir_module(ir::Module& ir_module,
 }
 
 void create_mir_module(ir::Module& ir_module, LoweringContext& lowering_ctx) {
-    auto& mir_module = lowering_ctx._mir_module; // return ref, using ref to use
+    auto& mir_module = lowering_ctx._mir_module;  // return ref, using ref to use
     auto& functions = mir_module.functions();
     auto& global_objs = mir_module.global_objs();
-    
+
     for (auto func : ir_module.funcs()) {
-        functions.push_back(std::make_unique<MIRFunction>(func->name(), &mir_module));
-        //! error, why?
-        // mir_module.functions().push_back(std::make_unique<MIRFunction>(func->name(), mir_module));
+        functions.push_back(
+            std::make_unique<MIRFunction>(func->name(), &mir_module));
         // auto& mir_func = functions.back();
         lowering_ctx.func_map.emplace(func, functions.back().get());
     }
@@ -52,17 +51,22 @@ void create_mir_module(ir::Module& ir_module, LoweringContext& lowering_ctx) {
             } else if (type->is_float()) {
             }
             size_t align = 4;  // TODO: align
-            auto mir_storage = std::make_unique<MIRDataStorage>(std::move(data), false);
-            auto mir_gobj = std::make_unique<MIRGlobalObject>(align, std::move(mir_storage), &mir_module);
+            auto mir_storage =
+                std::make_unique<MIRDataStorage>(std::move(data), false);
+            auto mir_gobj = std::make_unique<MIRGlobalObject>(
+                align, std::move(mir_storage), &mir_module);
             mir_module.global_objs().push_back(std::move(mir_gobj));
         } else {  //! gvar not init: .bss
 
             size_t align = 4;  // TODO: align
-            auto mir_storage = std::make_unique<MIRZeroStorage>(size, ir_gvar->name());
-            auto mir_gobj = std::make_unique<MIRGlobalObject>(align, std::move(mir_storage), &mir_module);
+            auto mir_storage =
+                std::make_unique<MIRZeroStorage>(size, ir_gvar->name());
+            auto mir_gobj = std::make_unique<MIRGlobalObject>(
+                align, std::move(mir_storage), &mir_module);
             mir_module.global_objs().push_back(std::move(mir_gobj));
         }
-        lowering_ctx.gvar_map.emplace(ir_gvar, mir_module.global_objs().back().get());
+        lowering_ctx.gvar_map.emplace(ir_gvar,
+                                      mir_module.global_objs().back().get());
     }
 
     // TODO: transformModuleBeforeCodeGen
@@ -98,105 +102,181 @@ MIRFunction* create_mir_function(ir::Function* ir_func,
                                  LoweringContext& lowering_ctx) {
     auto codegen_ctx = lowering_ctx._code_gen_ctx;  // *
 
+    // TODO: before lowering, ge some analysis pass result
+    /* aligenment */
+    /* range */
+    /* dom */
+
+    // map from ir to mir
     std::unordered_map<ir::BasicBlock*, MIRBlock*> block_map;
     std::unordered_map<ir::Value*, MIROperand> value_map;
-    std::unordered_map<ir::Value*, MIROperand> storage_map;
-    // map all blocks
-    for (auto ir_block : ir_func->blocks()) {
-        auto mir_block = new MIRBlock(ir_block, mir_func);
-        mir_func->blocks().push_back(mir_block);
-        block_map[ir_block] = mir_block;
-    }
+    std::unordered_map<ir::Value*, MIROperand*> storage_map;
 
-    // args
-    for (auto ir_arg : ir_func->args()) {
-        // assign vreg to arg
+    auto& target = lowering_ctx._target;         // Target&
+    auto& datalayout = target.get_datalayout();  // DataLayout&
+
+    // map all blocks
+    for (auto ir_block : ir_func->blocks()) {  // dom.blocks()?
+        mir_func->blocks().push_back(
+            std::make_unique<MIRBlock>(ir_block, mir_func));
+        block_map.emplace(ir_block, mir_func->blocks().back().get());
     }
 
     //! emitPrologue for function
-    {
-        for (auto arg : ir_func->args()) {
-            auto vreg = lowering_ctx.new_vreg(arg->type());
-            lowering_ctx.add_valmap(arg, vreg);
+    {  // args
+        for (auto ir_arg : ir_func->args()) {
+            // assign vreg to arg
+            auto vreg = lowering_ctx.new_vreg(ir_arg->type());
+            lowering_ctx.add_valmap(ir_arg, vreg);
             mir_func->args().push_back(vreg);
         }
-        lowering_ctx.set_mir_block(block_map.at(ir_func->entry()));
+        lowering_ctx.set_mir_block(block_map.at(ir_func->entry()));  // entry
+        // TODO: implement riscv frameinfo.emit_prologue()
         codegen_ctx->frameInfo.emit_prologue(mir_func, lowering_ctx);
     }
 
-    //! process alloca
-    lowering_ctx.set_mir_block(block_map.at(ir_func->entry()));
-    for (auto& inst : ir_func->entry()->insts()) {
+    //! process alloca, new stack object for each alloca
+    lowering_ctx.set_mir_block(block_map.at(ir_func->entry()));  // entry
+    for (auto& ir_inst : ir_func->entry()->insts()) {
         // all alloca in entry
-        auto type = dyn_cast<ir::PointerType>(inst->type());
-        // auto storage = mir_func->add_stack_obj(ctx.next_id(), )
+        if (ir_inst->scid() != ir::Value::vALLOCA)
+            continue;
+        // else: alloca inst
+        auto type = dyn_cast<ir::PointerType>(ir_inst->type());
+        uint32_t align = 4;  // TODO: align, need bind to ir object
+        auto storage = mir_func->add_stack_obj(
+            lowering_ctx.next_id(),  // id
+            static_cast<uint32_t>(
+                type->size()),  //! size, datalayout; if array??
+            align,              // align
+            0,                  // offset
+            StackObjectUsage::Local);
+        storage_map.emplace(ir_inst, storage);
+        // emit load stack object addr inst
+        auto addr = lowering_ctx.new_vreg(lowering_ctx.get_ptr_type());
+        auto ldsa_inst = new MIRInst{InstLoadStackObjectAddr};
+        ldsa_inst->set_operand(0, addr);
+        ldsa_inst->set_operand(1, storage);
+        lowering_ctx.emit_inst(ldsa_inst);
+        // map
+        lowering_ctx.add_valmap(ir_inst, addr);
     }
 
-    // blocks
+    // lowering blocks
     for (auto ir_block : ir_func->blocks()) {
         auto mir_block = block_map[ir_block];
         // set current block
+        lowering_ctx.set_mir_block(mir_block);
         for (auto ir_inst : ir_block->insts()) {
             create_mir_inst(ir_inst, lowering_ctx);
         }
     }
+    return mir_func;
+}
+
+void lower(ir::BinaryInst* ir_inst, LoweringContext& ctx);
+void lower(ir::BranchInst* ir_inst, LoweringContext& ctx);
+void lower(ir::LoadInst* ir_inst, LoweringContext& ctx) {
+    // ir: %13 = load i32, i32* %12
+    auto ret = ctx.new_vreg(ir_inst->type());
+    auto ptr = ctx.map2operand(ir_inst->operand(0));
+    auto align = 4;
+    auto inst = new MIRInst(InstLoad);
+    inst->set_operand(0, ret);
+    inst->set_operand(1, ptr);
+
+    ctx.emit_inst(inst);
+    //   .set_operand(2, MIROperand::as_imm(
+    //                       align, OperandType::Special))
+}
+void lower(ir::StoreInst* ir_inst, LoweringContext& ctx) {
+    // auto& ir_store = dyn_cast<ir::StoreInst>(ir_inst);
+    // ir: store type val, type* ptr
+    // align = 4
+    auto inst = new MIRInst(InstStore);
+    inst->set_operand(0, ctx.map2operand(ir_inst->operand(0)));
+    inst->set_operand(1, ctx.map2operand(ir_inst->operand(1)));
+
+    ctx.emit_inst(inst);
+}
+
+//! return
+void lower(ir::ReturnInst* ir_inst, LoweringContext& ctx) {
+    auto inst = new MIRInst(InstRet);
+}
+
+//! branch
+void lower(ir::BranchInst* ir_inst, LoweringContext& ctx) {
+    // auto ir_cur_block = ir_inst->block();
 }
 
 MIRInst* create_mir_inst(ir::Instruction* ir_inst, LoweringContext& ctx) {
+    // auto scid = ir_inst->scid();
+    // if (scid > ir::Value::vBINARY_BEGIN and scid < ir::Value::vBINARY_END) {
+    //     lower(dyn_cast<ir::BinaryInst>(ir_inst), ctx);
+    // } else if (scid > ir::Value::vUNARY_BEGIN and scid <
+    // ir::Value::vUNARY_END) {
+    //     lower(dyn_cast<ir::UnaryInst>(ir_inst), ctx);
+    // } else if (scid > ir::Value::vICMP_BEGIN and scid < ir::Value::vICMP_END)
+    // {
+    //     lower(dyn_cast<ir::ICmpInst>(ir_inst), ctx);
+    // } else if (scid > ir::Value::vFCMP_BEGIN and scid < ir::Value::vFCMP_END)
+    // {
+    //     lower(dyn_cast<ir::FCmpInst>(ir_inst), ctx);
+    // }
+
     switch (ir_inst->scid()) {
-        case ir::Value::vADD: {
-            auto ret = ctx.new_vreg(ir_inst->type());
-            auto inst = new MIRInst(InstAdd);
-            inst->set_operand(0, ret);
-            inst->set_operand(1, ctx.map2operand(ir_inst->operand(0)));
-            inst->set_operand(2, ctx.map2operand(ir_inst->operand(1)));
-            ctx.emit_inst(inst);
+        case ir::Value::vADD:
+        case ir::Value::vFADD:
+        case ir::Value::vSUB:
+        case ir::Value::vFSUB:
+        case ir::Value::vMUL:
+        case ir::Value::vFMUL:
+        case ir::Value::vUDIV:
+        case ir::Value::vSDIV:
+        case ir::Value::vFDIV:
+        case ir::Value::vUREM:
+        case ir::Value::vSREM:
+        case ir::Value::vFREM:
+            lower(dyn_cast<ir::BinaryInst>(ir_inst), ctx);
             break;
-        }
-
-        case ir::Value::vALLOCA: {
-            // emit_inst()
+        case ir::Value::vALLOCA:
             break;
-        }
-        case ir::Value::vLOAD: {
-            // ir: %13 = load i32, i32* %12
-            auto ret = ctx.new_vreg(ir_inst->type());
-            auto ptr = ctx.map2operand(ir_inst->operand(0));
-            auto align = 4;
-            auto inst = new MIRInst(InstLoad);
-            inst->set_operand(0, ret);
-            inst->set_operand(1, ptr);
-
-            ctx.emit_inst(inst);
-            //   .set_operand(2, MIROperand::as_imm(
-            //                       align, OperandType::Special))
+        case ir::Value::vLOAD:
+            lower(dyn_cast<ir::LoadInst>(ir_inst), ctx);
             break;
-        }
-        case ir::Value::vSTORE: {
-            // auto& ir_store = dyn_cast<ir::StoreInst>(ir_inst);
-            // ir: store type val, type* ptr
-            // align = 4
-            auto inst = new MIRInst(InstStore);
-            inst->set_operand(0, ctx.map2operand(ir_inst->operand(0)));
-            inst->set_operand(1, ctx.map2operand(ir_inst->operand(1)));
-
-            ctx.emit_inst(inst);
+        case ir::Value::vSTORE:
+            lower(dyn_cast<ir::StoreInst>(ir_inst), ctx);
             break;
-        }
-        case ir::Value::vRETURN: {
-            auto inst = new MIRInst(InstRet);
-        }
+        case ir::Value::vRETURN:
+            lower(dyn_cast<ir::ReturnInst>(ir_inst), ctx);
+            break;
+        case ir::Value::vBR:
+            lower(dyn_cast<ir::BranchInst>(ir_inst), ctx);
+            break;
         default:
             break;
     }
     return nullptr;
 }
 
-void lower(ir::BranchInst* ir_inst, LoweringContext& ctx) {
-    if (!ir_inst->is_cond()) {
-        // unconditional branch
-        // emit_branch();
-    }
+void lower(ir::BinaryInst* ir_inst, LoweringContext& ctx) {
+    // case ir::Value::vADD: {
+    //     auto ret = ctx.new_vreg(ir_inst->type());
+    //     auto inst = new MIRInst(InstAdd);
+    //     inst->set_operand(0, ret);
+    //     inst->set_operand(1, ctx.map2operand(ir_inst->operand(0)));
+    //     inst->set_operand(2, ctx.map2operand(ir_inst->operand(1)));
+    //     ctx.emit_inst(inst);
+    //     break;
+    // }
 }
+
+// void lower(ir::BranchInst* ir_inst, LoweringContext& ctx) {
+//     if (!ir_inst->is_cond()) {
+//         // unconditional branch
+//         // emit_branch();
+//     }
+// }
 
 }  // namespace mir

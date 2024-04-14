@@ -19,8 +19,8 @@ class LoweringContext {
     std::unordered_map<ir::GlobalVariable*, MIRGlobalObject*> gvar_map;
 
     uint32_t _idx = 0;
-    // pointer type for target platform
-    OperandType _ptr_type = OperandType::Int64;
+
+    OperandType _ptr_type = OperandType::Int64;  // pointer type for target platform
 
     // code gen context
     CodeGenContext* _code_gen_ctx = nullptr;
@@ -35,11 +35,16 @@ class LoweringContext {
 
     uint32_t next_id() { return ++_idx; }
 
-    MIRModule* get_mir_module();
-
     // void set_mir_module(MIRModule& mir_module) { _mir_module = mir_module; }
+
+   public:  // set function
     void set_mir_func(MIRFunction* mir_func) { _mir_func = mir_func; }
     void set_mir_block(MIRBlock* mir_block) { _mir_block = mir_block; }
+
+   public:  // get function
+    MIRModule& get_mir_module() { return _mir_module; };
+    MIRBlock* get_mir_block() const { return _mir_block; }
+    OperandType get_ptr_type() { return _ptr_type; }
 
     MIROperand* new_vreg(ir::Type* type) {
         auto optype = get_optype(type);
@@ -61,6 +66,7 @@ class LoweringContext {
     //         return InstCopyToReg;
     //     }
     // }
+    // ir_val -> mir_operand
     void add_valmap(ir::Value* ir_val, MIROperand* mir_operand) {
         if (_val_map.count(ir_val)) {
             assert(false && "value already mapped");
@@ -97,6 +103,7 @@ class LoweringContext {
     }
 };
 
-std::unique_ptr<MIRModule> create_mir_module(ir::Module& ir_module, Target& target);
+std::unique_ptr<MIRModule> create_mir_module(ir::Module& ir_module,
+                                             Target& target);
 
 }  // namespace mir

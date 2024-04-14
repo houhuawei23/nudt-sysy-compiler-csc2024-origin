@@ -139,7 +139,6 @@ class Value {
         // Unary Instruction
         vUNARY_BEGIN,
         vFNEG,
-
         // Conversion Insts
         vTRUNC,
         vZEXT,
@@ -166,6 +165,7 @@ class Value {
         vSREM,
         vFREM,
         vBINARY_END,
+
         vPHI
     };
 

@@ -236,10 +236,10 @@ class MIRInst {
     MIROperand* operand(int idx) { return _operands[idx]; }
 
     // set
-    MIRInst& set_operand(int idx, MIROperand* opeand) {
+    MIRInst* set_operand(int idx, MIROperand* opeand) {
         assert(idx < max_operand_num);
         _operands[idx] = opeand;
-        return *this;
+        return this;
     }
 
    public:
@@ -281,12 +281,13 @@ struct StackObject final {
 
 class MIRFunction : public MIRRelocable {
    private:
-    MIRModule* _parent;
-    std::vector<MIRBlock*> _blocks;
     ir::Function* _ir_func;
-    std::unordered_map<MIROperand*, StackObject*> _stack_objs;
+
+    MIRModule* _parent;
+    // std::vector<MIRBlock*> _blocks;
+    std::list<std::unique_ptr<MIRBlock>> _blocks;
+    std::unordered_map<MIROperand*, StackObject> _stack_objs;
     std::vector<MIROperand*> _args;
-    // std::string _name;
 
    public:
     MIRFunction();
@@ -304,8 +305,7 @@ class MIRFunction : public MIRRelocable {
                               int32_t offset,
                               StackObjectUsage usage) {
         auto ref = MIROperand::as_stack_obj(id, OperandType::Special);
-        // _stack_objs.emplace(ref, new StackObject(size, alignment, offset,
-        // usage));
+        _stack_objs.emplace(ref, StackObject{size, alignment, offset, usage});
         return ref;
     }
 
