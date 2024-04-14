@@ -188,7 +188,7 @@ namespace pass
     }
     void Mem2Reg::insertphi()
     {
-              /// 插入phi节点
+        /// 插入phi节点
         
         // F->print(std::cout);
         // std::set<ir::BasicBlock *> Phiset; // visted
@@ -255,7 +255,7 @@ namespace pass
                         Y->emplace_first_inst(phi);
                         Phiset.insert(Y);
                         PhiMap[Y].insert({phi, alloca});
-                        if (find(W.begin(), W.end(), Y) == W.end())
+                        if (find(DefsBlock[alloca].begin(),DefsBlock[alloca].end(), Y) == DefsBlock[alloca].end())
                             W.push_back(Y);
                     }
                 }
