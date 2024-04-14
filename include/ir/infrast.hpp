@@ -126,6 +126,8 @@ class BasicBlock : public Value {
 
     void delete_inst(Instruction* inst);
 
+    void force_delete_inst(Instruction* inst);
+
     // void delete_inst(Instruction* inst);
 
     // for CFG

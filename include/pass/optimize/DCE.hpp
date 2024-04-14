@@ -12,6 +12,7 @@ namespace pass
         private:
             bool isAlive(ir::Instruction* inst);
             void addAlive(ir::Instruction*inst);
+            // void DCE_delete(ir::Instruction* inst);
     };
 
 } // namespace pass
