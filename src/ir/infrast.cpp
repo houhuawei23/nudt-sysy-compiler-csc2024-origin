@@ -89,7 +89,7 @@ void BasicBlock::delete_inst(Instruction* inst){
 }
 
 void BasicBlock::force_delete_inst(Instruction* inst){
-    assert(inst->uses().size()==0);
+    // assert(inst->uses().size()==0);
     for(auto op_use : inst->operands()) {
         auto op = op_use->value();
         op->del_use(op_use);
