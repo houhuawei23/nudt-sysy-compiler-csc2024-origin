@@ -1,3 +1,6 @@
+*.local
+*.s
+
 **/build
 **/lib
 **/local

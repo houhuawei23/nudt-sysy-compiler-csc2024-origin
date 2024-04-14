@@ -11,6 +11,12 @@ namespace sysy {
  */
 std::any SysYIRGenerator::visitCall(SysYParser::CallContext* ctx) {
     auto func_name = ctx->ID()->getText();
+    /* macro replace */
+    if (func_name.compare("starttime") == 0) {
+        func_name = "_sysy_starttime";
+    } else if (func_name.compare("stoptime") == 0) {
+        func_name = "_sysy_stoptime";
+    }
     auto func = module()->lookup_func(func_name);
     auto parent_func = builder().block()->parent();
     // function rargs 应该被作为 function 的 operands

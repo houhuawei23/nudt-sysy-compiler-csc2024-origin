@@ -7,3 +7,7 @@ void putfloat(float a);
 void putfarray(int n, float a[]);
 
 void putf(char a[], ...);
+
+#define starttime() _sysy_starttime(__LINE__)
+#define stoptime() _sysy_stoptime(__LINE__)
+

@@ -2,6 +2,8 @@
 #include "ir/ir.hpp"
 
 namespace mir {
+
+/*
 MIRModule::MIRModule(ir::Module* ir_module) {
     _ir_module = ir_module;
     for (auto func : ir_module->funcs()) {
@@ -53,6 +55,7 @@ void MIRBlock::inst_sel(ir::BasicBlock* ir_bb){
         
     }
 }
+*/
 
 /*
  * @brief Global Value Assembly Code
@@ -66,6 +69,7 @@ void MIRBlock::inst_sel(ir::BasicBlock* ir_bb){
  *      a:
  *          .word   2
  */
+/*
 void MIRGlobalObject::print(std::ostream& os) {
     os << _ir_global->name() << ":\n";
 
@@ -83,5 +87,5 @@ void MIRGlobalObject::print(std::ostream& os) {
         assert(false && "the variable is not global scope");
     }
 }
-
+*/
 }  // namespace mir

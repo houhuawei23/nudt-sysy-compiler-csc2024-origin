@@ -64,6 +64,6 @@ enum RISCVInst {
     RISCVInstEnd
 };
 
-const TargetInstInfo& getRISCVInstInfo();
+TargetInstInfo& getRISCVInstInfo();
 
 TARGET_NAMESPACE_END

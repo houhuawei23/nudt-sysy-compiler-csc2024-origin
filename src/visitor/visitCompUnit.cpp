@@ -33,6 +33,9 @@ std::any SysYIRGenerator::visitCompUnit(SysYParser::CompUnitContext* ctx) {
     module()->add_func(ir::Type::func_type(type_void, {}), "starttime");
     module()->add_func(ir::Type::func_type(type_void, {}), "stoptime");
 
+    module()->add_func(ir::Type::func_type(type_void, {}), "_sysy_starttime");
+    module()->add_func(ir::Type::func_type(type_void, {}), "_sysy_stoptime");
+
     visitChildren(ctx);
     return nullptr;
 }
