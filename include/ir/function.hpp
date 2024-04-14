@@ -34,7 +34,7 @@ class Function : public User {
     Value* _ret_value_ptr = nullptr;  // return value
     BasicBlock* _entry = nullptr;     // entry block
     BasicBlock* _exit = nullptr;      // exit block
-
+    BasicBlock* _next = nullptr;
     int var_cnt = 0;   // for local variables count
     int _arg_cnt = 0;  // formal arguments count
 
@@ -50,7 +50,12 @@ class Function : public User {
     //* get
     int getvarcnt() { return var_cnt++; }
     void setvarcnt(int x) {var_cnt=x;}
-
+    void set_next(BasicBlock* next) {
+        _next = next;
+    }
+    BasicBlock* next() {
+        return _next;
+    }
     Module* parent() const { return _parent; }
 
     //* return

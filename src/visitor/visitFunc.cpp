@@ -89,9 +89,9 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
         entry->append_comment("entry");
         exit->append_comment("exit");
         auto next = func->new_block();
-  
+        func->set_next(next);
         entry->set_name(builder().get_bbname());
-        ir::BasicBlock::block_link(entry,next);
+        ir::BasicBlock::block_link(entry, next);
 
         builder().set_pos(next, next->begin());
         // create return value alloca
