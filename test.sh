@@ -70,12 +70,10 @@ echo "result_file    ${result_file} " >>${result_file}
 
 echo "" >>${result_file}
 
-# define a function that test one file
-function run_test() {
+function run_llvm_test() {
     single_file="$1"
     output_dir="$2"
     result_file="$3"
-
     if [ -f "$single_file" ]; then
         in_file="${single_file%.*}.in"
 
@@ -92,6 +90,20 @@ function run_test() {
         fi
         llvmres=$?
         # llvm compiler end
+        return $llvmres
+    else
+        echo "File not found: $single_file"
+        exit 1
+    fi
+}
+
+function run_gen_test() {
+    single_file="$1"
+    output_dir="$2"
+    result_file="$3"
+
+    if [ -f "$single_file" ]; then
+        in_file="${single_file%.*}.in"
 
         # sys-compiler
         cat "$single_file" > "${output_dir}/test.c"
@@ -134,6 +146,28 @@ function run_test() {
         fi
         res=$?
         # sys-compiler end
+        return $res
+    else
+        echo "File not found: $single_file"
+        exit 1
+    fi
+
+}
+# define a function that test one file
+function run_test() {
+    single_file="$1"
+    output_dir="$2"
+    result_file="$3"
+
+    if [ -f "$single_file" ]; then
+        echo "${YELLOW}[Testing]${RESET} $single_file"
+        in_file="${single_file%.*}.in"
+
+        run_llvm_test "$single_file" "$output_dir" "$result_file"
+        llvmres=$?
+
+        run_gen_test "$single_file" "$output_dir" "$result_file"
+        res=$?
 
         diff "${output_dir}/gen.out" "${output_dir}/llvm.out" > "/dev/null"
         diff_res=$?
@@ -161,6 +195,8 @@ if [ -f "$test_path" ]; then
     run_test "$test_path" "$output_dir" "$result_file"
 fi
 file_types=("*.c" "*.sy")
+
+
 # if test_path is a directory
 
 if [ -d "$test_path" ]; then
