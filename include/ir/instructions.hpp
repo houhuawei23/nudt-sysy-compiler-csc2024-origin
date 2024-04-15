@@ -365,7 +365,6 @@ class GetElementPtrInst : public Instruction {
 
    protected:
     int _id = 0;
-    // Value* _idx = nullptr;
     std::vector<int> _cur_dims = {};
 
    public:

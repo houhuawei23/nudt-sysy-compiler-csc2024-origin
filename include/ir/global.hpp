@@ -46,6 +46,7 @@ class GlobalVariable : public User {
         bool is_array() const { return _is_array; }
         bool is_const() const { return _is_const; }
         bool is_init() const { return _init.size() > 0; }
+
     public:  // get function
         Module* parent() const { return _parent; }
         int dims_cnt() const {
