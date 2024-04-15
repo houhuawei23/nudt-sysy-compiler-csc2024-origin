@@ -12,14 +12,14 @@ void Argument::print(std::ostream& os) {
 void BasicBlock::print(std::ostream& os) {
     // print all instructions
 
-    os << name() << ":" ;
+    os << name() << ":";
     /* comment begin */
-    if(not _comment.empty()) {
+    if (not _comment.empty()) {
         os << " ; " << _comment << std::endl;
     } else {
         os << std::endl;
     }
-    if (pre_num()) {
+    if (not _pre_blocks.empty()) {
         os << "    ; "
            << "pres: ";
         for (auto it = pre_blocks().begin(); it != pre_blocks().end(); it++) {
@@ -30,7 +30,7 @@ void BasicBlock::print(std::ostream& os) {
         }
         os << std::endl;
     }
-    if (next_num()) {
+    if (not _next_blocks.empty()) {
         os << "    ; "
            << "nexts: ";
         for (auto it = next_blocks().begin(); it != next_blocks().end(); it++) {
@@ -54,7 +54,7 @@ void BasicBlock::emplace_back_inst(Instruction* i) {
     _is_terminal = i->is_terminator();
 }
 void BasicBlock::emplace_inst(inst_iterator pos, Instruction* i) {
-    //Warning: didn't check _is_terminal
+    // Warning: didn't check _is_terminal
     _insts.emplace(pos, i);
     _is_terminal = i->is_terminator();
 }
@@ -74,35 +74,35 @@ void Instruction::setvarname() {
     _name = "%" + std::to_string(cur_func->getvarcnt());
 }
 
-void BasicBlock::delete_inst(Instruction* inst){
+void BasicBlock::delete_inst(Instruction* inst) {
     // if inst1 use 2, 2->_uses have use user inst
     // in 2, del use of 1
     // if 3 use inst, 3.operands have use(3, 1)
     // first replace use(3, 1)
     // if you want to delete a inst, all use of it must be deleted in advance
-    assert(inst->uses().size()==0);
-    for(auto op_use : inst->operands()) {
+    assert(inst->uses().size() == 0);
+    for (auto op_use : inst->operands()) {
         auto op = op_use->value();
         op->del_use(op_use);
     }
     _insts.remove(inst);
-    
+
     // delete inst;
 }
 
-void BasicBlock::force_delete_inst(Instruction* inst){
+void BasicBlock::force_delete_inst(Instruction* inst) {
     // assert(inst->uses().size()==0);
-    for(auto op_use : inst->operands()) {
+    for (auto op_use : inst->operands()) {
         auto op = op_use->value();
         op->del_use(op_use);
     }
     _insts.remove(inst);
 }
 
-void BasicBlock::emplace_first_inst(Instruction* inst){
-    //Warning: didn't check _is_terminal
-    auto pos=_insts.begin();
-    _insts.emplace(pos,inst);
+void BasicBlock::emplace_first_inst(Instruction* inst) {
+    // Warning: didn't check _is_terminal
+    auto pos = _insts.begin();
+    _insts.emplace(pos, inst);
     _is_terminal = inst->is_terminator();
 }
 

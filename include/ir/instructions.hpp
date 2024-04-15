@@ -212,10 +212,7 @@ class BinaryInst : public Instruction {
 
    public:
     static bool classof(const Value* v) {
-        return v->scid() == vADD || v->scid() == vFADD || v->scid() == vSUB ||
-               v->scid() == vFSUB || v->scid() == vMUL || v->scid() == vFMUL ||
-               v->scid() == vSDIV || v->scid() == vFDIV || v->scid() == vSREM ||
-               v->scid() == vFREM;
+        return v->scid() >= vBINARY_BEGIN && v->scid() <= vBINARY_END;
     }
 
    public:
@@ -252,7 +249,7 @@ class BranchInst : public Instruction {
     // br i1 <cond>, label <iftrue>, label <iffalse>
     // br label <dest>
     bool _is_cond = false;
-    //! TODO
+
    public:
     //* Condition Branch
     BranchInst(Value* cond,
@@ -301,7 +298,6 @@ class BranchInst : public Instruction {
 //! <result> = icmp <cond> <ty> <op1>, <op2>
 // icmp ne i32 1, 2
 class ICmpInst : public Instruction {
-    //! TODO
    public:
     ICmpInst(ValueId itype,
              Value* lhs,

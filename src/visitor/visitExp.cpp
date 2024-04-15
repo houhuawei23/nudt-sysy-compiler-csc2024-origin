@@ -402,7 +402,7 @@ std::any SysYIRGenerator::visitAndExp(SysYParser::AndExpContext* ctx) {
     auto cur_func = builder().block()->parent();
 
     auto rhs_block = cur_func->new_block();
-    rhs_block->append_comment("rhs");
+    rhs_block->append_comment("rhs_block");
     //! 1 visit lhs exp to get its value
     builder().push_tf(rhs_block,
                       builder().false_target());          //! diff with OrExp
@@ -422,7 +422,7 @@ std::any SysYIRGenerator::visitAndExp(SysYParser::AndExpContext* ctx) {
     ir::BasicBlock::block_link(builder().block(), lhs_f_target);
 
     //! 3 visit and generate code for rhs block
-    builder().set_pos(rhs_block, rhs_block->begin());
+    builder().set_pos(rhs_block, rhs_block->insts().begin());
 
     rhs_block->set_idx(builder().get_bbidx());
     auto rhs_value = any_cast_Value(visit(ctx->exp(1)));
@@ -441,7 +441,7 @@ std::any SysYIRGenerator::visitOrExp(SysYParser::OrExpContext* ctx) {
     auto cur_func = builder().block()->parent();
 
     auto rhs_block = cur_func->new_block();
-    rhs_block->append_comment("rhs");
+    rhs_block->append_comment("rhs_block");
 
     //! 1 visit lhs exp to get its value
     builder().push_tf(builder().true_target(), rhs_block);
@@ -459,7 +459,7 @@ std::any SysYIRGenerator::visitOrExp(SysYParser::OrExpContext* ctx) {
     ir::BasicBlock::block_link(builder().block(), lhs_f_target);
 
     //! 3 visit and generate code for rhs block
-    builder().set_pos(rhs_block, rhs_block->begin());
+    builder().set_pos(rhs_block, rhs_block->insts().begin());
 
     rhs_block->set_idx(builder().get_bbidx());
     auto rhs_value = any_cast_Value(visit(ctx->exp(1)));

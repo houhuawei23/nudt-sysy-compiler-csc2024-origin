@@ -78,6 +78,7 @@ class LoweringContext {
             auto ptr = new_vreg(_ptr_type);
         }
         // constant
+        return nullptr;
     }
 
     static OperandType get_optype(ir::Type* type) {
@@ -94,6 +95,8 @@ class LoweringContext {
 
         if (type->is_float()) {
         }
+        assert(false && "unsupported type");
+        return OperandType::Special;
     }
 };
 

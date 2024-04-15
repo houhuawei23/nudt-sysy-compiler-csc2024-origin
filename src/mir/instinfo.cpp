@@ -4,6 +4,6 @@
 namespace mir
 {
 InstInfo& get_instinfo(uint32_t opcode) {
-    
+    // return 
 }
 } // namespace mir

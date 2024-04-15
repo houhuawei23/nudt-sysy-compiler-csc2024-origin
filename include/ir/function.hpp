@@ -41,6 +41,7 @@ class Function : public User {
     int _arg_cnt = 0;  // formal arguments count
 
     bool _is_defined = false;
+
    public:
     Function(Type* func_type, const_str_ref name = "", Module* parent = nullptr)
         : User(func_type, vFUNCTION, name), _parent(parent) {
@@ -51,13 +52,10 @@ class Function : public User {
 
     //* get
     int getvarcnt() { return var_cnt++; }
-    void setvarcnt(int x) {var_cnt=x;}
-    void set_next(BasicBlock* next) {
-        _next = next;
-    }
-    BasicBlock* next() {
-        return _next;
-    }
+    void setvarcnt(int x) { var_cnt = x; }
+    void set_next(BasicBlock* next) { _next = next; }
+    
+    BasicBlock* next() { return _next; }
     Module* parent() const { return _parent; }
 
     //* return
@@ -120,9 +118,7 @@ class Function : public User {
     }
 
     //* print blocks in ascending order
-    void sort_blocks() { 
-        _blocks.sort(compareBB); 
-        }
+    void sort_blocks() { _blocks.sort(compareBB); }
 
    public:
     static bool classof(const Value* v) { return v->scid() == vFUNCTION; }

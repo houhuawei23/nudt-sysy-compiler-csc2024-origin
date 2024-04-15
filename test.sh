@@ -83,112 +83,120 @@ echo "result_file    ${result_file} " >>${result_file}
 echo "" >>${result_file}
 
 function run_llvm_test() {
-    single_file="$1"
-    output_dir="$2"
-    result_file="$3"
-    if [ -f "$single_file" ]; then
-        in_file="${single_file%.*}.in"
+    local single_file="$1"
+    local output_dir="$2"
+    local result_file="$3"
 
-        # llvm compiler
-        touch "${output_dir}/test.c"
-        cat ./test/link/sy.c >"${output_dir}/test.c"
-        cat "$single_file" >>"${output_dir}/test.c"
+    local in_file="${single_file%.*}.in"
 
-        clang --no-warnings -emit-llvm -S "${output_dir}/test.c" -o "${output_dir}/llvm.ll" -O0
-        llvm-link --suppress-warnings ./test/link/link.ll "${output_dir}/llvm.ll" -S -o "${output_dir}/llvm_linked.ll"
+    local sy_h="./test/link/sy.h"
+    local link_ll="./test/link/link.ll"
 
-        if [ -f "$in_file" ]; then
-            lli "${output_dir}/llvm_linked.ll" >"${output_dir}/llvm.out" <"${in_file}"
-        else
-            lli "${output_dir}/llvm_linked.ll" >"${output_dir}/llvm.out"
-        fi
-        llvmres=$?
-        # llvm compiler end
-        return $llvmres
-    else
-        echo "File not found: $single_file"
-        exit 1
+    local llvm_c="${output_dir}/llvm_test.c"
+    local llvm_ll="${output_dir}/llvm.ll"
+    local llvm_llinked="${output_dir}/llvm_linked.ll"
+
+    llvm_out="${output_dir}/llvm.out"
+
+    # llvm compiler
+    if [ -f "${llvm_c}" ]; then
+        rm "${llvm_c}"
     fi
+    touch "${llvm_c}"
+    cat "${sy_h}" >"${llvm_c}"
+    cat "${single_file}" >>"${llvm_c}"
+
+    clang --no-warnings -emit-llvm -S "${llvm_c}" -o "${llvm_ll}" -O0
+    llvm-link --suppress-warnings "${llvm_ll}" "${link_ll}" -S -o "${llvm_llinked}"
+
+    if [ -f "$in_file" ]; then
+        lli "${llvm_llinked}" >"${llvm_out}" <"${in_file}"
+    else
+        lli "${llvm_llinked}" >"${llvm_out}"
+    fi
+    local llvmres=$?
+    # llvm compiler end
+    return ${llvmres}
+
 }
 
 function run_gen_test() {
-    single_file="$1"
-    output_dir="$2"
-    result_file="$3"
+    local single_file="$1"
+    local output_dir="$2"
+    local result_file="$3"
 
-    if [ -f "$single_file" ]; then
-        in_file="${single_file%.*}.in"
+    local in_file="${single_file%.*}.in"
 
-        # sys-compiler
-        cat "$single_file" >"${output_dir}/test.c"
+    local gen_c="${output_dir}/gen_test.c"
+    local gen_ll="${output_dir}/gen.ll"
+    local gen_llinked="${output_dir}/gen_linked.ll"
+    gen_out="${output_dir}/gen.out"
 
-        ./main "$single_file" >"${output_dir}/gen.ll"
-        if [ $? != 0 ]; then
-            return $EC_MAIN
-        fi
+    if [ -f "${gen_c}" ]; then
+        rm "${gen_c}"
+    fi
+    touch "${gen_c}"
+    cat "${single_file}" >"${gen_c}"
 
-        llvm-link --suppress-warnings ./test/link/link.ll "${output_dir}/gen.ll" -S -o "${output_dir}/gen_linked.ll"
-        if [ $? != 0 ]; then
-            return $EC_LLVMLINK
-        fi
-
-        if [ -f "$in_file" ]; then
-            # echo "run with input file"
-            timeout $TIMEOUT lli "${output_dir}/gen_linked.ll" >"${output_dir}/gen.out" <"${in_file}"
-            if [ $? == $EC_TIMEOUT ]; then # time out
-                return $EC_TIMEOUT
-            fi
-            # not timeout, re-run
-            lli "${output_dir}/gen_linked.ll" >"${output_dir}/gen.out" <"${in_file}"
-        else
-            # echo "run without input file"
-            timeout $TIMEOUT lli "${output_dir}/gen_linked.ll" >"${output_dir}/gen.out"
-            if [ $? == $EC_TIMEOUT ]; then
-                return $EC_TIMEOUT
-            fi
-            # not timeout, re-run
-            lli "${output_dir}/gen_linked.ll" >"${output_dir}/gen.out"
-        fi
-
-        res=$?
-        # sys-compiler end
-        return $res
-    else
-        echo "File not found: $single_file"
-        exit 1
+    ./main "$single_file" >"${gen_ll}"
+    if [ $? != 0 ]; then
+        return $EC_MAIN
     fi
 
+    llvm-link --suppress-warnings ./test/link/link.ll "${gen_ll}" -S -o "${gen_llinked}"
+    if [ $? != 0 ]; then
+        return $EC_LLVMLINK
+    fi
+
+    if [ -f "$in_file" ]; then
+        timeout $TIMEOUT lli "${gen_llinked}" >"${gen_out}" <"${in_file}"
+        if [ $? == $EC_TIMEOUT ]; then # time out
+            return $EC_TIMEOUT
+        fi
+        # not timeout, re-run
+        lli "${gen_llinked}" >"${gen_out}" <"${in_file}"
+    else
+        timeout $TIMEOUT lli "${gen_llinked}" >"${gen_out}"
+        if [ $? == $EC_TIMEOUT ]; then
+            return $EC_TIMEOUT
+        fi
+        # not timeout, re-run
+        lli "${gen_llinked}" >"${gen_out}"
+    fi
+    local res=$?
+    # gen compiler end
+    return ${res}
 }
 # define a function that test one file
 function run_test() {
-    single_file="$1"
-    output_dir="$2"
-    result_file="$3"
+    local single_file="$1"
+    local output_dir="$2"
+    local result_file="$3"
 
     if [ -f "$single_file" ]; then
         echo "${YELLOW}[Testing]${RESET} $single_file"
-        in_file="${single_file%.*}.in"
 
-        run_llvm_test "$single_file" "$output_dir" "$result_file"
-        llvmres=$?
+        run_llvm_test "${single_file}" "${output_dir}" "${result_file}"
+        local llvmres=$?
 
-        run_gen_test "$single_file" "$output_dir" "$result_file"
-        res=$?
+        run_gen_test "${single_file}" "${output_dir}" "${result_file}"
+        local res=$?
 
-        diff "${output_dir}/gen.out" "${output_dir}/llvm.out" >"/dev/null"
-        diff_res=$?
+        # diff "${output_dir}/gen.out" "${output_dir}/llvm.out" >"/dev/null"
+        diff "${gen_out}" "${llvm_out}" >"${output_dir}/diff.out"
+        local diff_res=$?
         # diff res or diff stdout
         echo "[RESULT] res (${RED}${res}${RESET}), llvmres (${RED}${llvmres}${RESET})"
 
-        if [ $res != $llvmres ] || [ $diff_res != 0 ]; then
-            # echo "[RESULT] res (${RED}${res}${RESET}), llvmres (${RED}${llvmres}${RESET})"
-            if [ $res == $EC_MAIN ]; then
+        if [ ${res} != ${llvmres} ] || [ ${diff_res} != 0 ]; then
+
+            if [ ${res} == ${EC_MAIN} ]; then
                 echo "${RED}[MAIN ERROR]${RESET} ${single_file}"
-            elif [ $res == $EC_LLVMLINK ]; then
+            elif [ ${res} == ${EC_LLVMLINK} ]; then
                 echo "${RED}[LINK ERROR]${RESET} ${single_file}"
-            elif [ $res == $EC_LLI ]; then
+            elif [ ${res} == ${EC_LLI} ]; then
                 echo "${RED}[LLI ERROR]${RESET} ${single_file}"
-            elif [ $res == $EC_TIMEOUT ]; then
+            elif [ ${res} == ${EC_TIMEOUT} ]; then
                 echo "${RED}[TIMEOUT]${RESET} ${single_file}"
                 echo "[TIMEOUT] ${single_file}" >>${result_file}
             else
@@ -197,12 +205,12 @@ function run_test() {
                 echo "  [WRONG RES]: res (${res}), llvmres (${llvmres})" >>${result_file}
             fi
 
-            if [ $res == $EC_TIMEOUT ]; then
+            if [ ${res} == ${EC_TIMEOUT} ]; then
                 TIMEOUT_CNT=$((TIMEOUT_CNT + 1))
-                TIMEOUT_FILES+=($single_file)
+                TIMEOUT_FILES+=(${single_file})
             else
                 WRONG_CNT=$((WRONG_CNT + 1))
-                WRONG_FILES+=($single_file)
+                WRONG_FILES+=(${single_file})
             fi
         else
             echo "${GREEN}[CORRECT]${RESET} ${single_file}"
@@ -219,9 +227,9 @@ function run_test() {
 if [ -f "$test_path" ]; then
     run_test "$test_path" "$output_dir" "$result_file"
 fi
-file_types=("*.c" "*.sy")
 
 # if test_path is a directory
+file_types=("*.c" "*.sy")
 
 if [ -d "$test_path" ]; then
     for file_type in "${file_types[@]}"; do
@@ -229,7 +237,7 @@ if [ -d "$test_path" ]; then
             if [ ! -f "${file}" ]; then
                 break
             else
-                run_test "$file" "$output_dir" "$result_file"
+                run_test "${file}" "${output_dir}" "${result_file}"
             fi
         done
 
