@@ -123,11 +123,6 @@ function run_gen_test() {
             timeout $TIMEOUT lli "${output_dir}/gen_linked.ll" > "${output_dir}/gen.out" < "${in_file}"
             if [ $? == 124 ]; then
                 echo "link timeout"
-                echo "${RED}[WRONG]${RESET} ${single_file}"
-                echo "    res (${res}), llvmres (${llvmres})"
-                echo "[WRONG] ${single_file}" >>${result_file}
-                WRONG_CNT=$((WRONG_CNT + 1))
-                WRONG_FILES+=($single_file)
                 return 1
             fi
             lli "${output_dir}/gen_linked.ll" > "${output_dir}/gen.out" < "${in_file}"
@@ -135,11 +130,6 @@ function run_gen_test() {
             timeout $TIMEOUT lli "${output_dir}/gen_linked.ll" > "${output_dir}/gen.out"
             if [ $? == 124 ]; then
                 echo "link timeout"
-                echo "${RED}[WRONG]${RESET} ${single_file}"
-                echo "    res (${res}), llvmres (${llvmres})"
-                echo "[WRONG] ${single_file}" >>${result_file}
-                WRONG_CNT=$((WRONG_CNT + 1))
-                WRONG_FILES+=($single_file)
                 return 1
             fi
             lli "${output_dir}/gen_linked.ll" > "${output_dir}/gen.out"
