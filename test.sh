@@ -1,9 +1,14 @@
 #!/bin/bash
+# dont ignore unset variables
+set -u
+
 PASS_CNT=0
 WRONG_CNT=0
 ALL_CNT=0
-WRONG_FILES=()
+TIMEOUT_CNT=0
 
+WRONG_FILES=()
+TIMEOUT_FILES=()
 # Color setting
 RED=$(tput setaf 1)
 GREEN=$(tput setaf 2)
@@ -15,6 +20,13 @@ test_path="test/local_test"
 output_dir="test/.out"
 single_file=""
 result_file="test/.out/result.txt"
+
+error_code=0 # 0 for exe success
+
+EC_MAIN=1
+EC_LLVMLINK=2
+EC_LLI=3
+EC_TIMEOUT=124
 
 TIMEOUT=3
 
@@ -64,8 +76,8 @@ if [ ! -d "$output_dir" ]; then
     mkdir -p "$output_dir"
 fi
 
-echo "test_path      ${test_path} "   >>${result_file}
-echo "output_dir     ${output_dir} "  >>${result_file}
+echo "test_path      ${test_path} " >>${result_file}
+echo "output_dir     ${output_dir} " >>${result_file}
 echo "result_file    ${result_file} " >>${result_file}
 
 echo "" >>${result_file}
@@ -79,14 +91,16 @@ function run_llvm_test() {
 
         # llvm compiler
         touch "${output_dir}/test.c"
-        cat ./test/link/sy.c > "${output_dir}/test.c"
-        cat "$single_file" >> "${output_dir}/test.c"
+        cat ./test/link/sy.c >"${output_dir}/test.c"
+        cat "$single_file" >>"${output_dir}/test.c"
+
         clang --no-warnings -emit-llvm -S "${output_dir}/test.c" -o "${output_dir}/llvm.ll" -O0
         llvm-link --suppress-warnings ./test/link/link.ll "${output_dir}/llvm.ll" -S -o "${output_dir}/llvm_linked.ll"
+
         if [ -f "$in_file" ]; then
-            lli "${output_dir}/llvm_linked.ll" > "${output_dir}/llvm.out" < "${in_file}"
-        else 
-            lli "${output_dir}/llvm_linked.ll" > "${output_dir}/llvm.out"
+            lli "${output_dir}/llvm_linked.ll" >"${output_dir}/llvm.out" <"${in_file}"
+        else
+            lli "${output_dir}/llvm_linked.ll" >"${output_dir}/llvm.out"
         fi
         llvmres=$?
         # llvm compiler end
@@ -106,44 +120,36 @@ function run_gen_test() {
         in_file="${single_file%.*}.in"
 
         # sys-compiler
-        cat "$single_file" > "${output_dir}/test.c"
+        cat "$single_file" >"${output_dir}/test.c"
+
         ./main "$single_file" >"${output_dir}/gen.ll"
+        if [ $? != 0 ]; then
+            return $EC_MAIN
+        fi
+
         llvm-link --suppress-warnings ./test/link/link.ll "${output_dir}/gen.ll" -S -o "${output_dir}/gen_linked.ll"
         if [ $? != 0 ]; then
-            echo "link error"
-            echo "${RED}[WRONG]${RESET} ${single_file}"
-            echo "    res (${res}), llvmres (${llvmres})"
-            echo "[WRONG] ${single_file}" >>${result_file}
-            WRONG_CNT=$((WRONG_CNT + 1))
-            WRONG_FILES+=($single_file)
-            return 1
+            return $EC_LLVMLINK
         fi
 
         if [ -f "$in_file" ]; then
-            timeout $TIMEOUT lli "${output_dir}/gen_linked.ll" > "${output_dir}/gen.out" < "${in_file}"
-            if [ $? == 124 ]; then
-                echo "link timeout"
-                echo "${RED}[WRONG]${RESET} ${single_file}"
-                echo "    res (${res}), llvmres (${llvmres})"
-                echo "[WRONG] ${single_file}" >>${result_file}
-                WRONG_CNT=$((WRONG_CNT + 1))
-                WRONG_FILES+=($single_file)
-                return 1
+            # echo "run with input file"
+            timeout $TIMEOUT lli "${output_dir}/gen_linked.ll" >"${output_dir}/gen.out" <"${in_file}"
+            if [ $? == $EC_TIMEOUT ]; then # time out
+                return $EC_TIMEOUT
             fi
-            lli "${output_dir}/gen_linked.ll" > "${output_dir}/gen.out" < "${in_file}"
-        else 
-            timeout $TIMEOUT lli "${output_dir}/gen_linked.ll" > "${output_dir}/gen.out"
-            if [ $? == 124 ]; then
-                echo "link timeout"
-                echo "${RED}[WRONG]${RESET} ${single_file}"
-                echo "    res (${res}), llvmres (${llvmres})"
-                echo "[WRONG] ${single_file}" >>${result_file}
-                WRONG_CNT=$((WRONG_CNT + 1))
-                WRONG_FILES+=($single_file)
-                return 1
+            # not timeout, re-run
+            lli "${output_dir}/gen_linked.ll" >"${output_dir}/gen.out" <"${in_file}"
+        else
+            # echo "run without input file"
+            timeout $TIMEOUT lli "${output_dir}/gen_linked.ll" >"${output_dir}/gen.out"
+            if [ $? == $EC_TIMEOUT ]; then
+                return $EC_TIMEOUT
             fi
-            lli "${output_dir}/gen_linked.ll" > "${output_dir}/gen.out"
+            # not timeout, re-run
+            lli "${output_dir}/gen_linked.ll" >"${output_dir}/gen.out"
         fi
+    
         res=$?
         # sys-compiler end
         return $res
@@ -169,16 +175,35 @@ function run_test() {
         run_gen_test "$single_file" "$output_dir" "$result_file"
         res=$?
 
-        diff "${output_dir}/gen.out" "${output_dir}/llvm.out" > "/dev/null"
+        diff "${output_dir}/gen.out" "${output_dir}/llvm.out" >"/dev/null"
         diff_res=$?
-
+        # diff res or diff stdout
+        echo "[RESULT] res (${RED}${res}${RESET}), llvmres (${RED}${llvmres}${RESET})"
+        
         if [ $res != $llvmres ] || [ $diff_res != 0 ]; then
-            echo "${RED}[WRONG]${RESET} ${single_file}"
-            echo "    res (${res}), llvmres (${llvmres})"
-            echo "[WRONG] ${single_file}" >>${result_file}
-            echo "  [WRONG]: res (${res}), llvmres (${llvmres})" >>${result_file}
-            WRONG_CNT=$((WRONG_CNT + 1))
-            WRONG_FILES+=($single_file)
+            # echo "[RESULT] res (${RED}${res}${RESET}), llvmres (${RED}${llvmres}${RESET})"
+            if [ $res == $EC_MAIN ]; then
+                echo "${RED}[MAIN ERROR]${RESET} ${single_file}"
+            elif [ $res == $EC_LLVMLINK ]; then
+                echo "${RED}[LINK ERROR]${RESET} ${single_file}"
+            elif [ $res == $EC_LLI ]; then
+                echo "${RED}[LLI ERROR]${RESET} ${single_file}"
+            elif [ $res == $EC_TIMEOUT ]; then
+                echo "${RED}[TIMEOUT]${RESET} ${single_file}"
+                echo "[TIMEOUT] ${single_file}" >>${result_file}
+            else
+                echo "${RED}[WRONG RES]${RESET} ${single_file}"
+                echo "[WRONG RES] ${single_file}" >>${result_file}
+                echo "  [WRONG RES]: res (${res}), llvmres (${llvmres})" >>${result_file}
+            fi
+
+            if [ $res == $EC_TIMEOUT ]; then
+                TIMEOUT_CNT=$((TIMEOUT_CNT + 1))
+                TIMEOUT_FILES+=($single_file)
+            else
+                WRONG_CNT=$((WRONG_CNT + 1))
+                WRONG_FILES+=($single_file)
+            fi
         else
             echo "${GREEN}[CORRECT]${RESET} ${single_file}"
             echo "[CORRECT] ${single_file}" >>${result_file}
@@ -196,7 +221,6 @@ if [ -f "$test_path" ]; then
 fi
 file_types=("*.c" "*.sy")
 
-
 # if test_path is a directory
 
 if [ -d "$test_path" ]; then
@@ -210,13 +234,24 @@ if [ -d "$test_path" ]; then
         done
 
     done
+
+    echo "====  RESULT  ===="
+
     echo "${RED}[WRONG]${RESET} files:"
     for file in "${WRONG_FILES[@]}"; do
         echo "${file}"
     done
+    echo "${RED}[TIMEOUT]${RESET} files:"
+    for file in "${TIMEOUT_FILES[@]}"; do
+        echo "${file}"
+    done
+    
+    echo "====   INFO   ===="
 
     ALL_CNT=$((PASS_CNT + WRONG_CNT))
     echo "${GREEN}PASS ${RESET}: ${PASS_CNT}"
     echo "${RED}WRONG${RESET}: ${WRONG_CNT}"
+    echo "${RED}TIMEOUT${RESET}: ${TIMEOUT_CNT}"
     echo "${YELLOW}ALL  ${RESET}: ${ALL_CNT}"
 fi
+
