@@ -74,6 +74,8 @@ class AllocaInst : public Instruction {
    public:
     static bool classof(const Value* v) { return v->scid() == vALLOCA; }
     void print(std::ostream& os) override;
+    bool is_constprop(){return false;}
+    Constant* getConstantRepl(){return nullptr;}
 };
 
 class StoreInst : public Instruction {
@@ -93,6 +95,8 @@ class StoreInst : public Instruction {
    public:
     static bool classof(const Value* v) { return v->scid() == vSTORE; }
     void print(std::ostream& os) override;
+    bool is_constprop(){return false;}
+    Constant* getConstantRepl(){return nullptr;}
 };
 
 /*
@@ -124,6 +128,8 @@ class LoadInst : public Instruction {
    public:
     static bool classof(const Value* v) { return v->scid() == vLOAD; }
     void print(std::ostream& os) override;
+    bool is_constprop(){return false;}
+    Constant* getConstantRepl(){return nullptr;}
 };
 
 /*
@@ -154,6 +160,8 @@ class ReturnInst : public Instruction {
    public:
     static bool classof(const Value* v) { return v->scid() == vRETURN; }
     void print(std::ostream& os) override;
+    bool is_constprop(){return false;}
+    Constant* getConstantRepl(){return nullptr;}
 };
 
 /*
@@ -187,6 +195,8 @@ class UnaryInst : public Instruction {
 
    public:
     void print(std::ostream& os) override;
+    bool is_constprop() override;
+    Constant* getConstantRepl() override;
 };
 
 /*
@@ -224,6 +234,8 @@ class BinaryInst : public Instruction {
 
    public:
     void print(std::ostream& os) override;
+    bool is_constprop() override;
+    Constant* getConstantRepl() override;
 };
 
 class CallInst : public Instruction {
@@ -245,6 +257,8 @@ class CallInst : public Instruction {
 
     static bool classof(const Value* v) { return v->scid() == vCALL; }
     void print(std::ostream& os) override;
+    bool is_constprop(){return false;}
+    Constant* getConstantRepl(){return nullptr;}
 };
 
 //! Conditional or Unconditional Branch instruction.
@@ -295,6 +309,8 @@ class BranchInst : public Instruction {
    public:
     static bool classof(const Value* v) { return v->scid() == vBR; }
     void print(std::ostream& os) override;
+    bool is_constprop(){return false;}
+    Constant* getConstantRepl(){return nullptr;}
 };
 
 //! ICmpInst
@@ -322,6 +338,8 @@ class ICmpInst : public Instruction {
         return v->scid() >= vICMP_BEGIN && v->scid() <= vICMP_END;
     }
     void print(std::ostream& os) override;
+    bool is_constprop() override;
+    Constant* getConstantRepl() override;
 };
 
 //! FCmpInst
@@ -349,6 +367,8 @@ class FCmpInst : public Instruction {
         return v->scid() >= vFCMP_BEGIN && v->scid() <= vFCMP_END;
     }
     void print(std::ostream& os) override;
+    bool is_constprop() override;
+    Constant* getConstantRepl() override;
 };
 
 /*
@@ -434,13 +454,13 @@ class GetElementPtrInst : public Instruction {
    public:
     static bool classof(const Value* v) { return v->scid() == vGETELEMENTPTR; }
     void print(std::ostream& os) override;
+    bool is_constprop(){return false;}
+    Constant* getConstantRepl(){return nullptr;}
 };
 
 class PhiInst : public Instruction {
    protected:
     size_t size;
-    std::vector<Value*> _vals;
-    std::vector<BasicBlock*> _bbs;
 
    public:
     PhiInst(BasicBlock* bb,
@@ -448,33 +468,23 @@ class PhiInst : public Instruction {
             const std::vector<Value*>& vals = {},
             const std::vector<BasicBlock*>& bbs = {})
         : Instruction(vPHI, type, bb), size(vals.size()) {
-        add_operands(vals);  // _operands;
-        add_operands(bbs);
-        _vals = vals;
-        _bbs = bbs;
-        // f
+        assert(vals.size()==bbs.size() and "number of vals and bbs in phi must be equal!");
+        for(int i=0;i<size;i++){
+            add_operand(vals[i]);
+            add_operand(bbs[i]);
+        }
     }
-    auto vals() {
-        // return Util::range(_operands.begin(), _operands.begin() + size);
-        return _vals;
-    }
-    auto bbs() {
-        // return Util::range(_operands.begin() + size, _operands.begin() + 2 *
-        // size);
-        return _bbs;
-    }
-    Value* getvals(size_t k) { return operand(k); }
-    Value* getblos(size_t k) { return operand(k + size); }
+    Value* getval(size_t k) { return operand(2*k); }
+    Value* getbb(size_t k) { return operand(2*k+1); }
     void addIncoming(Value* val, BasicBlock* bb) {
         add_operand(val);
         add_operand(bb);
-        // parent()->parent()->print(std::cout);
-        _vals.push_back(val);
-        _bbs.push_back(bb);
         // 更新操作数的数量
         size++;
     }
     void print(std::ostream& os) override;
+    bool is_constprop() override;
+    Constant* getConstantRepl() override;
 };
 
 }  // namespace ir

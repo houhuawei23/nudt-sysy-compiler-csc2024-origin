@@ -41,6 +41,7 @@ use_ptr_vector& User::operands() {
 }
 
 Value* User::operand(size_t index) const {
+    assert(index<_operands.size());
     return _operands[index]->value();
     // TODO: need ->value ?
 }
@@ -57,6 +58,7 @@ void User::add_operand(Value* value) {
 }
 
 void User::set_operand(size_t index, Value* value) {
+    assert(index<_operands.size());
     _operands[index]->set_value(value);
     value->add_use(_operands[index]);
 }

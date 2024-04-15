@@ -197,6 +197,10 @@ class Instruction : public User {
     void setvarname();  // change varname to pass lli
 
     void virtual print(std::ostream& os) = 0;
+
+    bool virtual is_constprop()=0;
+
+    virtual Constant* getConstantRepl()=0;
 };
 
 }  // namespace ir
