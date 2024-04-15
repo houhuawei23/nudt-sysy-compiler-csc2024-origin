@@ -196,6 +196,7 @@ class Value {
 
         void set_name(const_str_ref name) { _name = name; }
         // manage
+        virtual std::string comment() const { return _comment; }
         void set_comment(const_str_ref comment) {
             if (!_comment.empty()) {
                 std::cerr << "re-set basicblock comment!" << std::endl;
@@ -204,7 +205,7 @@ class Value {
         }
         void append_comment(const_str_ref comment) {
             if (_comment.empty()) {
-                _comment += comment;
+                _comment = comment;
             } else {
                 _comment = _comment + ", " + comment;
             }

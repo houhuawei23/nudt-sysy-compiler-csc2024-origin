@@ -7,19 +7,21 @@ namespace ir {
 
 /*
  * @brief AllocaInst::print
- * @details: 
+ * @details:
  *      alloca <ty>
  */
 void AllocaInst::print(std::ostream& os) {
-
     os << name() << " = alloca " << *(base_type());
+    if (not _comment.empty()) {
+        os << " ; " << _comment << "*";
+    }
 }
 
 /*
  * @brief StoreInst::print
  * @details:
  *      store <ty> <value>, ptr <pointer>
- * @note: 
+ * @note:
  *      ptr: ArrayType or PointerType
  */
 void StoreInst::print(std::ostream& os) {
@@ -31,7 +33,8 @@ void StoreInst::print(std::ostream& os) {
     } else {
         os << value()->name() << ", ";
     }
-    if (ptr()->type()->is_pointer()) os << *(ptr()->type()) << " ";
+    if (ptr()->type()->is_pointer())
+        os << *(ptr()->type()) << " ";
     else {
         auto ptype = ptr()->type();
         ArrayType* atype = dyn_cast<ArrayType>(ptype);
@@ -51,6 +54,14 @@ void LoadInst::print(std::ostream& os) {
         os << *dyn_cast<ArrayType>(ptype)->base_type() << "* ";
     }
     os << ptr()->name();
+    // comment
+    // if (not ptr()->comment().empty()) {
+    //     os << " ; " << "from " << ptr()->comment();
+    // }
+    if (not _comment.empty()) {
+        os << " ; "
+           << "load " << _comment;
+    }
 }
 
 void ReturnInst::print(std::ostream& os) {
@@ -73,45 +84,33 @@ void ReturnInst::print(std::ostream& os) {
  */
 void BinaryInst::print(std::ostream& os) {
     os << name() << " = ";
-    switch (scid()) {
-        case vADD:
-            os << "add ";
-            break;
-        case vFADD:
-            os << "fadd ";
-            break;
-
-        case vSUB:
-            os << "sub ";
-            break;
-        case vFSUB:
-            os << "fsub ";
-            break;
-
-        case vMUL:
-            os << "mul ";
-            break;
-        case vFMUL:
-            os << "fmul ";
-            break;
-
-        case vSDIV:
-            os << "sdiv ";
-            break;
-        case vFDIV:
-            os << "fdiv ";
-            break;
-
-        case vSREM:
-            os << "srem ";
-            break;
-        case vFREM:
-            os << "frem ";
-            break;
-
-        default:
-            break;
-    }
+    auto opstr = [scid = scid()] {
+        switch (scid) {
+            case vADD:
+                return "add";
+            case vFADD:
+                return "fadd";
+            case vSUB:
+                return "sub";
+            case vFSUB:
+                return "fsub";
+            case vMUL:
+                return "mul";
+            case vFMUL:
+                return "fmul";
+            case vSDIV:
+                return "sdiv";
+            case vFDIV:
+                return "fdiv";
+            case vSREM:
+                return "srem";
+            case vFREM:
+                return "frem";
+            default:
+                return "unknown";
+        }
+    }();
+    os << opstr << " ";
     // <type>
     os << *type() << " ";
     // <op1>
@@ -124,6 +123,14 @@ void BinaryInst::print(std::ostream& os) {
         os << *(get_rvalue());
     else
         os << get_rvalue()->name();
+
+    /* comment */
+    if (not get_lvalue()->comment().empty() &&
+        not get_rvalue()->comment().empty()) {
+        os << " ; " << get_lvalue()->comment();
+        os << " " << opstr << " ";
+        os << get_rvalue()->comment();
+    }
 }
 
 /*
@@ -165,6 +172,11 @@ void UnaryInst::print(std::ostream& os) {
         os << get_value()->name() << " ";
         os << " to " << *type();
     }
+    /* comment */
+    if (not get_value()->comment().empty()) {
+        os << " ; "
+           << "uop " << get_value()->comment();
+    }
 }
 
 void ICmpInst::print(std::ostream& os) {
@@ -173,39 +185,42 @@ void ICmpInst::print(std::ostream& os) {
     os << name() << " = ";
 
     os << "icmp ";
+
+    auto cmpstr = [scid = scid()] {
+        switch (scid) {
+            case vIEQ:
+                return "eq";
+            case vINE:
+                return "ne";
+            case vISGT:
+                return "sgt";
+            case vISGE:
+                return "sge";
+            case vISLT:
+                return "slt";
+            case vISLE:
+                return "sle";
+            default:
+                // assert(false && "unimplemented");
+                std::cerr << "Error from ICmpInst::print(), wrong Inst Type!"
+                          << std::endl;
+                return "unknown";
+        }
+    }();
+
     // cond code
-    switch (scid()) {
-        case vIEQ:
-            os << "eq ";
-            break;
-        case vINE:
-            os << "ne ";
-            break;
-        case vISGT:
-            os << "sgt ";
-            break;
-        case vISGE:
-            os << "sge ";
-            break;
-        case vISLT:
-            os << "slt ";
-            break;
-        case vISLE:
-            os << "sle ";
-            break;
-        default:
-            // assert(false && "unimplemented");
-            std::cerr << "Error from ICmpInst::print(), wrong Inst Type!"
-                      << std::endl;
-            exit(EXIT_FAILURE);
-            break;
-    }
+    os << cmpstr << " ";
     // type
     os << *lhs()->type() << " ";
     // op1
     os << lhs()->name() << ", ";
     // op2
     os << rhs()->name();
+    /* comment */
+    if (not lhs()->comment().empty() && not rhs()->comment().empty()) {
+        os << " ; " << lhs()->comment() << " " << cmpstr << " "
+           << rhs()->comment();
+    }
 }
 
 void FCmpInst::print(std::ostream& os) {
@@ -215,42 +230,43 @@ void FCmpInst::print(std::ostream& os) {
 
     os << "fcmp ";
     // cond code
-    switch (scid()) {
-        case vFOEQ:
-            os << "oeq ";
-            break;
-        case vFONE:
-            os << "one ";
-            break;
-        case vFOGT:
-            os << "ogt ";
-            break;
-        case vFOGE:
-            os << "oge ";
-            break;
-        case vFOLT:
-            os << "olt ";
-            break;
-        case vFOLE:
-            os << "ole ";
-            break;
-        default:
-            // assert(false && "unimplemented");
-            std::cerr << "Error from FCmpInst::print(), wrong Inst Type!"
-                      << std::endl;
-            exit(EXIT_FAILURE);
-            break;
-    }
+    auto cmpstr = [scid = scid()] {
+        switch (scid) {
+            case vFOEQ:
+                return "oeq";
+            case vFONE:
+                return "one";
+            case vFOGT:
+                return "ogt";
+            case vFOGE:
+                return "oge";
+            case vFOLT:
+                return "olt";
+            case vFOLE:
+                return "ole";
+            default:
+                // assert(false && "unimplemented");
+                std::cerr << "Error from FCmpInst::print(), wrong Inst Type!"
+                          << std::endl;
+                return "unknown";
+        }
+    }();
+    os << cmpstr << " ";
     // type
     os << *lhs()->type() << " ";
     // op1
     os << lhs()->name() << ", ";
     // op2
     os << rhs()->name();
+    /* comment */
+    if (not lhs()->comment().empty() && not rhs()->comment().empty()) {
+        os << " ; " << lhs()->comment() << " " << cmpstr << " "
+           << rhs()->comment();
+    }
 }
 /*
  * @brief: BranchInst::print
- * @details: 
+ * @details:
  *      br i1 <cond>, label <iftrue>, label <iffalse>
  *      br label <dest>
  */
@@ -261,16 +277,28 @@ void BranchInst::print(std::ostream& os) {
         os << cond()->name() << ", ";
         os << "label %" << iftrue()->name() << ", ";
         os << "label %" << iffalse()->name();
+        /* comment */
+        if (not iftrue()->comment().empty() &&
+            not iffalse()->comment().empty()) {
+            os << " ; "
+               << "br " << iftrue()->comment() << ", " << iffalse()->comment();
+        }
+
     } else {
         os << "label %" << dest()->name();
+        /* comment */
+        if (not dest()->comment().empty()) {
+            os << " ; "
+               << "br " << dest()->comment();
+        }
     }
 }
 
 /*
  * @brief: GetElementPtrInst::print
- * @details: 
- *      数组: <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32 <idx> 
- *      指针: <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
+ * @details:
+ *      数组: <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32
+ * <idx> 指针: <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
  */
 void GetElementPtrInst::print(std::ostream& os) {
     if (is_arrayInst()) {
@@ -281,24 +309,31 @@ void GetElementPtrInst::print(std::ostream& os) {
             int value = cur_dims()[i];
             os << "[" << value << " x ";
         }
-        if (_id == 1) os << *(dyn_cast<ir::ArrayType>(base_type())->base_type());
-        else os << *(base_type());
-        for (int i = 0; i < dimensions; i++) os << "]";
+        if (_id == 1)
+            os << *(dyn_cast<ir::ArrayType>(base_type())->base_type());
+        else
+            os << *(base_type());
+        for (int i = 0; i < dimensions; i++)
+            os << "]";
         os << ", ";
 
         for (int i = 0; i < dimensions; i++) {
             int value = cur_dims()[i];
             os << "[" << value << " x ";
         }
-        if (_id == 1) os << *(dyn_cast<ir::ArrayType>(base_type())->base_type());
-        else os << *(base_type());
-        for (int i = 0; i < dimensions; i++) os << "]";
+        if (_id == 1)
+            os << *(dyn_cast<ir::ArrayType>(base_type())->base_type());
+        else
+            os << *(base_type());
+        for (int i = 0; i < dimensions; i++)
+            os << "]";
         os << "* ";
 
         os << get_value()->name() << ", ";
         os << "i32 0, i32 " << get_index()->name();
     } else {
-        os << name() << " = getelementptr " << *(base_type()) << ", " << *type() << " ";
+        os << name() << " = getelementptr " << *(base_type()) << ", " << *type()
+           << " ";
         os << get_value()->name() << ", i32 " << get_index()->name();
     }
 }
@@ -317,7 +352,7 @@ void CallInst::print(std::ostream& os) {
 
     if (operands().size() > 0) {
         // Iterator pointing to the last element
-        auto last = operands().end() - 1;  
+        auto last = operands().end() - 1;
         for (auto it = operands().begin(); it != last; ++it) {
             // it is a iterator, *it get the element in operands,
             // which is the Value* ptr
@@ -333,19 +368,20 @@ void CallInst::print(std::ostream& os) {
     os << ")";
 }
 
-void PhiInst::print(std::ostream& os){
+void PhiInst::print(std::ostream& os) {
     os << name() << " = ";
     os << "phi " << *(type()) << " ";
     // for all vals, bbs
-    if(size > 0)
-    {
-        for(int i = 0;i <size-1;i++)
-        {
-            os <<"[ "<<_vals[i]->name()<<", %"<<_bbs[i]->name()<<" ]"<<",";
+    if (size > 0) {
+        for (int i = 0; i < size - 1; i++) {
+            os << "[ " << _vals[i]->name() << ", %" << _bbs[i]->name() << " ]"
+               << ", ";
         }
-        os <<"[ "<<_vals[size-1]->name()<<", %"<<_bbs[size-1]->name()<<" ]";
+        os << "[ " << _vals[size - 1]->name() << ", %" << _bbs[size - 1]->name()
+           << " ]";
     }
-    
+    /* comment */
+    // TODO: add comment for phi inst
 }
 
 }  // namespace ir

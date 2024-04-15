@@ -13,7 +13,8 @@ void BasicBlock::print(std::ostream& os) {
     // print all instructions
 
     os << name() << ":" ;
-    if(!_comment.empty()) {
+    /* comment begin */
+    if(not _comment.empty()) {
         os << " ; " << _comment << std::endl;
     } else {
         os << std::endl;
@@ -40,6 +41,7 @@ void BasicBlock::print(std::ostream& os) {
         }
         os << std::endl;
     }
+    /* comment end */
 
     for (auto& inst : _insts) {
         os << "    " << *inst << std::endl;

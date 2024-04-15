@@ -38,8 +38,6 @@ class Argument : public Value {
 
     // ir print
     void print(std::ostream& os) override;
-
-    void setname(std::string name) { _name = name; }
 };
 
 /**
@@ -55,8 +53,8 @@ class BasicBlock : public Value {
    public:
     BasicBlock* idom;
     BasicBlock* sdom;
-    std::vector<BasicBlock*> domTree;//sons in dom Tree
-    std::vector<BasicBlock*> domFrontier;//dom frontier
+    std::vector<BasicBlock*> domTree;      // sons in dom Tree
+    std::vector<BasicBlock*> domFrontier;  // dom frontier
     // std::set<BasicBlock*> dom;//those bb was dominated by self
     int domLevel;
 
@@ -71,7 +69,7 @@ class BasicBlock : public Value {
     int _depth = 0;
     bool _is_terminal = false;
 
-    // std::string _comment;
+    uint32_t _idx = 0;
 
    public:
     BasicBlock(const_str_ref name = "", Function* parent = nullptr)
@@ -79,7 +77,9 @@ class BasicBlock : public Value {
           _parent(parent){
 
           };
-
+    uint32_t idx() const { return _idx; }
+    void set_idx(uint32_t idx) { _idx = idx; }
+    std::string name() const { return "bb" + std::to_string(_idx); }
     // get
     int depth() const { return _depth; }
 
@@ -102,27 +102,14 @@ class BasicBlock : public Value {
     inst_iterator begin() { return _insts.begin(); }
     inst_iterator end() { return _insts.end(); }
 
-    // // manage
-    // void set_comment(const_str_ref comment) {
-    //     if (!_comment.empty()) {
-    //         std::cerr << "re-set basicblock comment!" << std::endl;
-    //     }
-    //     _comment = comment;
-    // }
-    // void append_comment(const_str_ref comment) {
-    //     if (_comment.empty()) {
-    //         _comment += comment;
-    //     } else {
-    //         _comment = _comment + ", " + comment;
-    //     }
-    // }
     void set_depth(int d) { _depth = d; }  // ?
 
     void emplace_back_inst(Instruction* i);
 
-    void emplace_inst(inst_iterator pos, Instruction* i);// didn't check is_terminal 
+    void emplace_inst(inst_iterator pos,
+                      Instruction* i);  // didn't check is_terminal
 
-    void emplace_first_inst(Instruction* i);// didn't check is_terminal
+    void emplace_first_inst(Instruction* i);  // didn't check is_terminal
 
     void delete_inst(Instruction* inst);
 
@@ -139,10 +126,12 @@ class BasicBlock : public Value {
         next->add_pre_block(pre);
     }
 
-    bool dominate(BasicBlock *bb){
-        if(this==bb)return true;
-        for(auto bbnext:domTree){
-            if(bbnext->dominate(bb)) return true;
+    bool dominate(BasicBlock* bb) {
+        if (this == bb)
+            return true;
+        for (auto bbnext : domTree) {
+            if (bbnext->dominate(bb))
+                return true;
         }
         return false;
     }
@@ -164,10 +153,10 @@ class Instruction : public User {
 
    public:
     // Construct a new Instruction object
-    Instruction(ValueId itype=vINSTRUCTION,
-                Type* ret_type=Type::void_type(),
-                BasicBlock* pblock=nullptr,
-                const_str_ref name="")
+    Instruction(ValueId itype = vINSTRUCTION,
+                Type* ret_type = Type::void_type(),
+                BasicBlock* pblock = nullptr,
+                const_str_ref name = "")
         : User(ret_type, itype, name), _parent(pblock) {}
     // get
     BasicBlock* parent() { return _parent; };
@@ -189,7 +178,7 @@ class Instruction : public User {
     bool is_icmp();
     bool is_fcmp();
     bool is_math();
-    bool is_noname(){return is_terminator() or scid()==vSTORE;}
+    bool is_noname() { return is_terminator() or scid() == vSTORE; }
 
     // for isa, cast and dyn_cast
     static bool classof(const Value* v) { return v->scid() >= vINSTRUCTION; }

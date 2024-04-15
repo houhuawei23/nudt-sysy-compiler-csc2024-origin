@@ -133,21 +133,23 @@ function run_gen_test() {
         fi
 
         if [ -f "$in_file" ]; then
-            timeout $TIMEOUT lli "${output_dir}/gen_linked.ll" > "${output_dir}/gen.out" < "${in_file}"
-            if [ $? == 124 ]; then
-                echo "link timeout"
-                return 1
+            # echo "run with input file"
+            timeout $TIMEOUT lli "${output_dir}/gen_linked.ll" >"${output_dir}/gen.out" <"${in_file}"
+            if [ $? == $EC_TIMEOUT ]; then # time out
+                return $EC_TIMEOUT
             fi
-            lli "${output_dir}/gen_linked.ll" > "${output_dir}/gen.out" < "${in_file}"
-        else 
-            timeout $TIMEOUT lli "${output_dir}/gen_linked.ll" > "${output_dir}/gen.out"
-            if [ $? == 124 ]; then
-                echo "link timeout"
-                return 1
+            # not timeout, re-run
+            lli "${output_dir}/gen_linked.ll" >"${output_dir}/gen.out" <"${in_file}"
+        else
+            # echo "run without input file"
+            timeout $TIMEOUT lli "${output_dir}/gen_linked.ll" >"${output_dir}/gen.out"
+            if [ $? == $EC_TIMEOUT ]; then
+                return $EC_TIMEOUT
             fi
-            lli "${output_dir}/gen_linked.ll" > "${output_dir}/gen.out"
+            # not timeout, re-run
+            lli "${output_dir}/gen_linked.ll" >"${output_dir}/gen.out"
         fi
-    
+
         res=$?
         # sys-compiler end
         return $res
@@ -177,7 +179,7 @@ function run_test() {
         diff_res=$?
         # diff res or diff stdout
         echo "[RESULT] res (${RED}${res}${RESET}), llvmres (${RED}${llvmres}${RESET})"
-        
+
         if [ $res != $llvmres ] || [ $diff_res != 0 ]; then
             # echo "[RESULT] res (${RED}${res}${RESET}), llvmres (${RED}${llvmres}${RESET})"
             if [ $res == $EC_MAIN ]; then
@@ -243,7 +245,7 @@ if [ -d "$test_path" ]; then
     for file in "${TIMEOUT_FILES[@]}"; do
         echo "${file}"
     done
-    
+
     echo "====   INFO   ===="
 
     ALL_CNT=$((PASS_CNT + WRONG_CNT))
@@ -252,4 +254,3 @@ if [ -d "$test_path" ]; then
     echo "${RED}TIMEOUT${RESET}: ${TIMEOUT_CNT}"
     echo "${YELLOW}ALL  ${RESET}: ${ALL_CNT}"
 fi
-

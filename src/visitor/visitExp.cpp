@@ -423,7 +423,8 @@ std::any SysYIRGenerator::visitAndExp(SysYParser::AndExpContext* ctx) {
 
     //! 3 visit and generate code for rhs block
     builder().set_pos(rhs_block, rhs_block->begin());
-    rhs_block->set_name(builder().get_bbname());
+
+    rhs_block->set_idx(builder().get_bbidx());
     auto rhs_value = any_cast_Value(visit(ctx->exp(1)));
 
     return rhs_value;
@@ -459,7 +460,8 @@ std::any SysYIRGenerator::visitOrExp(SysYParser::OrExpContext* ctx) {
 
     //! 3 visit and generate code for rhs block
     builder().set_pos(rhs_block, rhs_block->begin());
-    rhs_block->set_name(builder().get_bbname());
+
+    rhs_block->set_idx(builder().get_bbidx());
     auto rhs_value = any_cast_Value(visit(ctx->exp(1)));
 
     return rhs_value;
