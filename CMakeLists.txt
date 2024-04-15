@@ -49,3 +49,17 @@ include_directories(
 
 # Project source files
 add_subdirectory(src)
+
+# Add Src Files
+file(GLOB_RECURSE ALL_SRC_FILES 
+      "${CMAKE_SOURCE_DIR}/src/*.[ch]"
+      "${CMAKE_SOURCE_DIR}/src/*.[ch]pp" 
+      "${CMAKE_SOURCE_DIR}/include/*.[ch]"
+      "${CMAKE_SOURCE_DIR}/include/*.[ch]pp")
+
+# Format Check
+project(formatting)
+include(formatting.cmake)
+
+clang_format(format ${ALL_SRC_FILES})
+clang_format_check(format_check ${ALL_SRC_FILES})

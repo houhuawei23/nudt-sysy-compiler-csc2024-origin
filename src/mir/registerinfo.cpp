@@ -1,4 +1,5 @@
-#include "mir/insts.hpp"
+#include "mir/registerinfo.hpp"
+
 namespace mir
 {
     

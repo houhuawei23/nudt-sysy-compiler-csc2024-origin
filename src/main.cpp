@@ -1,10 +1,20 @@
+// clang-format off
 #include <iostream>
 #include "SysYLexer.h"
 #include "visitor/visitor.hpp"
-#include "mir/mir.hpp"
+
 #include "pass/pass.hpp"
 #include "pass/analysis/dom.hpp"
 #include "pass/optimize/mem2reg.hpp"
+
+#include "mir/mir.hpp"
+#include "mir/target.hpp"
+#include "mir/lowering.hpp"
+
+#include "target/riscv.hpp"
+#include "target/riscvtarget.hpp"
+// clang-format on
+#include "pass/optimize/DCE.hpp"
 using namespace std;
 
 int main(int argc, char** argv) {
@@ -24,7 +34,7 @@ int main(int argc, char** argv) {
 
     SysYParser::CompUnitContext* ast_root = parser.compUnit();
 
-    // IR Generation
+    //! 1. IR Generation
     ir::Module* base_module = new ir::Module();
     sysy::SysYIRGenerator gen(base_module, ast_root);  // forget to pass module
     gen.build_ir();
@@ -35,14 +45,38 @@ int main(int argc, char** argv) {
         module_ir->print(std::cout);
     }
 
+    //! 2. Optimization Pass
     // pass::FunctionPassManager fpm;
     // //mem2reg
     // fpm.add_pass(new pass::preProcDom());
     // fpm.add_pass(new pass::idomGen());
-    // // fpm.add_pass(new pass::domFrontierGen());
-    // fpm.add_pass(new pass::domInfoCheck());
+    // fpm.add_pass(new pass::domFrontierGen());
+    // // fpm.add_pass(new pass::domInfoCheck());
+    // fpm.add_pass(new pass::Mem2Reg());
     // for(auto f : module_ir->funcs()){
     //     fpm.run(f);
+    // }
+
+    // if (genir) {
+    //     module_ir->print(std::cout);
+    // }
+
+    // auto target = mir::RISCVTarget();
+    // auto mir_module = mir::create_mir_module(*module_ir, target);
+    // pass::FunctionPassManager fpm;
+    //mem2reg
+    // fpm.add_pass(new pass::preProcDom());
+    // fpm.add_pass(new pass::idomGen());
+    // // fpm.add_pass(new pass::domFrontierGen());
+    // fpm.add_pass(new pass::domInfoCheck());
+    // fpm.add_pass(new pass::Mem2Reg());
+    // fpm.add_pass(new pass::DCE());
+    // for(auto f : module_ir->funcs()){
+    //     fpm.run(f);
+    // }
+
+    // if (genir) {
+    //     module_ir->print(std::cout);
     // }
     
     // MIR Generation

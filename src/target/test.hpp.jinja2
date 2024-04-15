@@ -1,0 +1,18 @@
+// Automatically generated file, do not edit!
+
+#pragma once
+
+
+#define TARGET_NAMESPACE_BEGIN namespace mir::{{target_name}} {
+#define TARGET_NAMESPACE_END }
+
+TARGET_NAMESPACE_BEGIN
+enum {{target_name}}Inst {
+    {{target_name}}InstBegin = ISASpecificBegin,
+    {% for name, inst in insts.items() %}{{name}},{% endfor %}
+    {{target_name}}InstEnd
+};
+
+const TargetInstInfo& get{{target}}InstInfo();
+
+TARGET_NAMESPACE_END

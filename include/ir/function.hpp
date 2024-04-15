@@ -9,14 +9,16 @@
 namespace ir {
 
 // for BasicBlock sort
-inline bool compareBB(const BasicBlock* a1, const BasicBlock* a2) {
+inline bool compareBB(const BasicBlock* b1, const BasicBlock* b2) {
     // return a1->priority < a2->priority;
-    if (a1->name().size() > 1 && a2->name().size() > 1)
-        return std::stoi(a1->name().substr(2)) <
-               std::stoi(a2->name().substr(2));
-    else {
-        assert(false && "compareBB error");
-    }
+    return b1->idx() < b2->idx();
+
+    // if (a1->name().size() > 1 && a2->name().size() > 1)
+    //     return std::stoi(a1->name().substr(2)) <
+    //            std::stoi(a2->name().substr(2));
+    // else {
+    //     assert(false && "compareBB error");
+    // }
 }
 
 class Function : public User {
@@ -34,13 +36,12 @@ class Function : public User {
     Value* _ret_value_ptr = nullptr;  // return value
     BasicBlock* _entry = nullptr;     // entry block
     BasicBlock* _exit = nullptr;      // exit block
-
+    BasicBlock* _next = nullptr;
     int var_cnt = 0;   // for local variables count
     int _arg_cnt = 0;  // formal arguments count
 
     bool _is_defined = false;
-    // for alloca
-    inst_list _alloca_insts;  // alloca insts for this function
+
    public:
     Function(Type* func_type, const_str_ref name = "", Module* parent = nullptr)
         : User(func_type, vFUNCTION, name), _parent(parent) {
@@ -51,17 +52,12 @@ class Function : public User {
 
     //* get
     int getvarcnt() { return var_cnt++; }
-
+    void setvarcnt(int x) { var_cnt = x; }
+    void set_next(BasicBlock* next) { _next = next; }
+    
+    BasicBlock* next() { return _next; }
     Module* parent() const { return _parent; }
 
-    inst_list& alloca_insts() { return _alloca_insts; }
-    using inst_reverse_iterator = std::reverse_iterator<inst_list::iterator>;
-    void add_allocas_to_entry() {
-        for (auto iter = _alloca_insts.rbegin(); iter != _alloca_insts.rend();
-             ++iter) {
-            _entry->emplace_first_inst(*iter);
-        }
-    }
     //* return
     Type* ret_type() const {
         FunctionType* ftype = dyn_cast<FunctionType>(type());
@@ -127,5 +123,7 @@ class Function : public User {
    public:
     static bool classof(const Value* v) { return v->scid() == vFUNCTION; }
     void print(std::ostream& os) override;
+
+    void rename();
 };
 }  // namespace ir

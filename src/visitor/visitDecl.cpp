@@ -209,16 +209,18 @@ ir::Value* SysYIRGenerator::visitArray_local(SysYParser::VarDefContext* ctx,
                                              std::vector<int> dims, int capacity) {
     auto name = ctx->lValue()->ID()->getText();
     int dimensions = dims.size();
+    std::vector<int> cur_dims(dims);
 
     std::vector<ir::Value*> Arrayinit;
-    for (int i = 0; i < capacity; i++) {
-        if (btype->is_float()) Arrayinit.push_back(ir::Constant::gen_f32(0.0));
-        else if (btype->is_i32()) Arrayinit.push_back(ir::Constant::gen_i32(0));
-        else assert(false && "Invalid type.");
-    }
 
     //! get initial value (将数组元素的初始化值存储在Arrayinit中)
     if (ctx->ASSIGN()) {
+        for (int i = 0; i < capacity; i++) {
+            if (btype->is_float()) Arrayinit.push_back(ir::Constant::gen_f32(0.0));
+            else if (btype->is_i32()) Arrayinit.push_back(ir::Constant::gen_i32(0));
+            else assert(false && "Invalid type.");
+        }
+
         _d = 0; _n = 0;
         _path.clear(); _path = std::vector<int>(dims.size(), 0);
         _current_type = btype; _is_alloca = true;
@@ -228,13 +230,16 @@ ir::Value* SysYIRGenerator::visitArray_local(SysYParser::VarDefContext* ctx,
     }
 
     //! allca and assign
-    auto alloca_ptr = _builder.create_alloca(btype, is_const, dims);
+    auto alloca_ptr = _builder.create_alloca(btype, is_const, dims, name);
     _tables.insert(name, alloca_ptr);
+
     ir::Value* element_ptr = dyn_cast<ir::Value>(alloca_ptr);
     for (int cur = 1; cur <= dimensions; cur++) {
-        element_ptr = _builder.create_getelementptr(btype, element_ptr, ir::Constant::gen_i32(0), dims);
         dims.erase(dims.begin());
+        element_ptr = _builder.create_getelementptr(btype, element_ptr, ir::Constant::gen_i32(0), dims, cur_dims);
+        cur_dims.erase(cur_dims.begin());
     }
+
     int cnt = 0;
     for (int i = 0; i < Arrayinit.size(); i++) {
         if (i != 0) {
@@ -282,9 +287,9 @@ ir::Value* SysYIRGenerator::visitScalar_local(SysYParser::VarDefContext* ctx,
 
         return init;
     } else {  //! 变量
-        auto alloca_ptr = _builder.create_alloca(btype, is_const);
+        auto alloca_ptr = _builder.create_alloca(btype, is_const, {}, name);
         _tables.insert(name, alloca_ptr);
-        
+
         if (ctx->ASSIGN()) {
             init = any_cast_Value(visit(ctx->initValue()->exp()));
             if (ir::isa<ir::Constant>(init)) {  //! 1. 右值为常量
