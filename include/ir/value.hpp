@@ -175,6 +175,8 @@ class Value {
         std::string _name;
         use_ptr_list _uses;  // uses list
 
+        std::string _comment;
+
     public:
         Value(Type* type, ValueId scid = vValue, const_str_ref name = "")
             : _type(type), _scid(scid), _name(name), _uses() {}
@@ -193,7 +195,20 @@ class Value {
         void replace_all_use_with(Value* _value);
 
         void set_name(const_str_ref name) { _name = name; }
-
+        // manage
+        void set_comment(const_str_ref comment) {
+            if (!_comment.empty()) {
+                std::cerr << "re-set basicblock comment!" << std::endl;
+            }
+            _comment = comment;
+        }
+        void append_comment(const_str_ref comment) {
+            if (_comment.empty()) {
+                _comment += comment;
+            } else {
+                _comment = _comment + ", " + comment;
+            }
+        }
     public:  // check
         bool is_i1() const { return _type->is_i1(); }
         bool is_i32() const { return _type->is_i32(); }

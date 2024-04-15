@@ -71,7 +71,7 @@ class BasicBlock : public Value {
     int _depth = 0;
     bool _is_terminal = false;
 
-    std::string _comment;
+    // std::string _comment;
 
    public:
     BasicBlock(const_str_ref name = "", Function* parent = nullptr)
@@ -102,20 +102,20 @@ class BasicBlock : public Value {
     inst_iterator begin() { return _insts.begin(); }
     inst_iterator end() { return _insts.end(); }
 
-    // manage
-    void set_comment(const_str_ref comment) {
-        if (!_comment.empty()) {
-            std::cerr << "re-set basicblock comment!" << std::endl;
-        }
-        _comment = comment;
-    }
-    void append_comment(const_str_ref comment) {
-        if (_comment.empty()) {
-            _comment += comment;
-        } else {
-            _comment = _comment + ", " + comment;
-        }
-    }
+    // // manage
+    // void set_comment(const_str_ref comment) {
+    //     if (!_comment.empty()) {
+    //         std::cerr << "re-set basicblock comment!" << std::endl;
+    //     }
+    //     _comment = comment;
+    // }
+    // void append_comment(const_str_ref comment) {
+    //     if (_comment.empty()) {
+    //         _comment += comment;
+    //     } else {
+    //         _comment = _comment + ", " + comment;
+    //     }
+    // }
     void set_depth(int d) { _depth = d; }  // ?
 
     void emplace_back_inst(Instruction* i);
