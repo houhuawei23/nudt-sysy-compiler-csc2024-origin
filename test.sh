@@ -133,21 +133,19 @@ function run_gen_test() {
         fi
 
         if [ -f "$in_file" ]; then
-            # echo "run with input file"
-            timeout $TIMEOUT lli "${output_dir}/gen_linked.ll" >"${output_dir}/gen.out" <"${in_file}"
-            if [ $? == $EC_TIMEOUT ]; then # time out
-                return $EC_TIMEOUT
+            timeout $TIMEOUT lli "${output_dir}/gen_linked.ll" > "${output_dir}/gen.out" < "${in_file}"
+            if [ $? == 124 ]; then
+                echo "link timeout"
+                return 1
             fi
-            # not timeout, re-run
-            lli "${output_dir}/gen_linked.ll" >"${output_dir}/gen.out" <"${in_file}"
-        else
-            # echo "run without input file"
-            timeout $TIMEOUT lli "${output_dir}/gen_linked.ll" >"${output_dir}/gen.out"
-            if [ $? == $EC_TIMEOUT ]; then
-                return $EC_TIMEOUT
+            lli "${output_dir}/gen_linked.ll" > "${output_dir}/gen.out" < "${in_file}"
+        else 
+            timeout $TIMEOUT lli "${output_dir}/gen_linked.ll" > "${output_dir}/gen.out"
+            if [ $? == 124 ]; then
+                echo "link timeout"
+                return 1
             fi
-            # not timeout, re-run
-            lli "${output_dir}/gen_linked.ll" >"${output_dir}/gen.out"
+            lli "${output_dir}/gen_linked.ll" > "${output_dir}/gen.out"
         fi
     
         res=$?
