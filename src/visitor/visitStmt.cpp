@@ -84,8 +84,9 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
 
     // 生成 return 语句后立马创建一个新块，并设置 builder
     auto new_block = func->new_block();
-    new_block->set_name(builder().get_bbname());
-    builder().set_pos(new_block, new_block->begin());
+
+    new_block->set_idx(builder().get_bbidx());
+    builder().set_pos(new_block, new_block->insts().begin());
 
     return dyn_cast_Value(res);
 }
@@ -175,8 +176,8 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
     }
 
     {  //! VISIT then block
-        then_block->set_name(builder().get_bbname());
-        builder().set_pos(then_block, then_block->begin());
+        then_block->set_idx(builder().get_bbidx());
+        builder().set_pos(then_block, then_block->insts().begin());
         visit(ctx->stmt(0));  //* may change the basic block
 
         builder().create_br(merge_block);
@@ -185,8 +186,8 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
 
     //! VISIT else block
     {
-        else_block->set_name(builder().get_bbname());
-        builder().set_pos(else_block, else_block->begin());
+        else_block->set_idx(builder().get_bbidx());
+        builder().set_pos(else_block, else_block->insts().begin());
         if (auto elsestmt = ctx->stmt(1))
             visit(elsestmt);
 
@@ -195,8 +196,8 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
     }
 
     //! SETUP builder fo merge block
-    builder().set_pos(merge_block, merge_block->begin());
-    merge_block->set_name(builder().get_bbname());
+    builder().set_pos(merge_block, merge_block->insts().begin());
+    merge_block->set_idx(builder().get_bbidx());
 
     return dyn_cast_Value(merge_block);
 }
@@ -226,8 +227,8 @@ std::any SysYIRGenerator::visitWhileStmt(SysYParser::WhileStmtContext* ctx) {
     builder().create_br(judge_block);
     ir::BasicBlock::block_link(builder().block(), judge_block);
 
-    judge_block->set_name(builder().get_bbname());
-    builder().set_pos(judge_block, judge_block->begin());
+    judge_block->set_idx(builder().get_bbidx());
+    builder().set_pos(judge_block, judge_block->insts().begin());
 
     builder().push_tf(loop_block, next_block);
     auto cond = any_cast_Value((visit(ctx->exp())));
@@ -243,8 +244,8 @@ std::any SysYIRGenerator::visitWhileStmt(SysYParser::WhileStmtContext* ctx) {
     ir::BasicBlock::block_link(builder().block(), fTarget);
 
     // visit loop block
-    loop_block->set_name(builder().get_bbname());
-    builder().set_pos(loop_block, loop_block->begin());
+    loop_block->set_idx(builder().get_bbidx());
+    builder().set_pos(loop_block, loop_block->insts().begin());
     visit(ctx->stmt());
 
     builder().create_br(judge_block);
@@ -254,8 +255,8 @@ std::any SysYIRGenerator::visitWhileStmt(SysYParser::WhileStmtContext* ctx) {
     builder().pop_loop();
 
     // visit next block
-    next_block->set_name(builder().get_bbname());
-    builder().set_pos(next_block, next_block->begin());
+    next_block->set_idx(builder().get_bbidx());
+    builder().set_pos(next_block, next_block->insts().begin());
 
     return dyn_cast_Value(next_block);
 }
@@ -272,8 +273,9 @@ std::any SysYIRGenerator::visitBreakStmt(SysYParser::BreakStmtContext* ctx) {
     // create a basic block
     auto cur_func = builder().block()->parent();
     auto next_block = cur_func->new_block();
-    next_block->set_name(builder().get_bbname());
-    builder().set_pos(next_block, next_block->begin());
+
+    next_block->set_idx(builder().get_bbidx());
+    builder().set_pos(next_block, next_block->insts().begin());
     return dyn_cast_Value(next_block);
 }
 std::any SysYIRGenerator::visitContinueStmt(
@@ -288,8 +290,9 @@ std::any SysYIRGenerator::visitContinueStmt(
     // create a basic block
     auto cur_func = builder().block()->parent();
     auto next_block = cur_func->new_block();
-    next_block->set_name(builder().get_bbname());
-    builder().set_pos(next_block, next_block->begin());
+
+    next_block->set_idx(builder().get_bbidx());
+    builder().set_pos(next_block, next_block->insts().begin());
     return dyn_cast_Value(res);
 }
 

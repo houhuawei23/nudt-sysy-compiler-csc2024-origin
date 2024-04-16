@@ -110,6 +110,8 @@ class LoweringContext {
 
         if (type->is_float()) {
         }
+        assert(false && "unsupported type");
+        return OperandType::Special;
     }
 };
 

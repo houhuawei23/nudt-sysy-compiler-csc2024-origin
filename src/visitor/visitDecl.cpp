@@ -230,8 +230,9 @@ ir::Value* SysYIRGenerator::visitArray_local(SysYParser::VarDefContext* ctx,
     }
 
     //! allca and assign
-    auto alloca_ptr = _builder.create_alloca(btype, is_const, dims);
+    auto alloca_ptr = _builder.create_alloca(btype, is_const, dims, name);
     _tables.insert(name, alloca_ptr);
+
     ir::Value* element_ptr = dyn_cast<ir::Value>(alloca_ptr);
     for (int cur = 1; cur <= dimensions; cur++) {
         dims.erase(dims.begin());
@@ -286,9 +287,9 @@ ir::Value* SysYIRGenerator::visitScalar_local(SysYParser::VarDefContext* ctx,
 
         return init;
     } else {  //! 变量
-        auto alloca_ptr = _builder.create_alloca(btype, is_const);
+        auto alloca_ptr = _builder.create_alloca(btype, is_const, {}, name);
         _tables.insert(name, alloca_ptr);
-        
+
         if (ctx->ASSIGN()) {
             init = any_cast_Value(visit(ctx->initValue()->exp()));
             if (ir::isa<ir::Constant>(init)) {  //! 1. 右值为常量

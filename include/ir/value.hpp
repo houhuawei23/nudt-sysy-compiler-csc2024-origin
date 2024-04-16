@@ -64,7 +64,34 @@ using reverse_iterator = inst_list::reverse_iterator;
 // look up function in function table
 using str_fun_map = std::map<std::string, Function*>;
 
-// type, name
+/**
+ * @brief 表征操作数本身的信息, 连接 value 和 user
+ * index in the _operands, _user, _value
+ *
+ */
+class Use {
+    // friend class Value;
+    // friend class
+   protected:
+    size_t _index;
+    User* _user;
+    Value* _value;
+
+   public:
+    Use() = default;
+    Use(size_t index, User* user, Value* value)
+        : _index(index), _user(user), _value(value){};
+
+    // get
+    size_t index() const;
+    User* user() const;
+    Value* value() const;
+    // set
+    void set_index(size_t index);
+    void set_value(Value* value);
+    void set_user(User* user);
+};
+
 /**
  * @brief Base Class for all classes having 'value' to be used.?
  * @attention
@@ -89,11 +116,11 @@ class Value {
         SUB, /* - */
         MUL, /* * */
         DIV, /* / */
-        REM /* %*/
+        REM  /* %*/
     };
 
     enum UnaryOp {
-        NEG, 
+        NEG,
     };
     enum ValueId {
         vValue,
@@ -169,71 +196,83 @@ class Value {
         vPHI
     };
 
-    protected:
-        Type* _type;    // type of the value
-        ValueId _scid;  // subclass id of Value
-        std::string _name;
-        use_ptr_list _uses;  // uses list
-
-    public:
-        Value(Type* type, ValueId scid = vValue, const_str_ref name = "")
-            : _type(type), _scid(scid), _name(name), _uses() {}
-        virtual ~Value() = default;
-        // Value is all base, return true
-        static bool classof(const Value* v) { return true; }
-
-        // get
-        Type* type() const { return _type; }
-        std::string name() const { return _name; }
-        use_ptr_list& uses() { return _uses; }
-
-        // manage
-        void add_use(Use* use);
-        void del_use(Use* use);
-        void replace_all_use_with(Value* _value);
-
-        void set_name(const_str_ref name) { _name = name; }
-
-    public:  // check
-        bool is_i1() const { return _type->is_i1(); }
-        bool is_i32() const { return _type->is_i32(); }
-        bool is_float32() const { return _type->is_float32(); }
-        bool is_double() const { return _type->is_double(); }
-        bool is_float() const { return _type->is_float(); }
-        bool is_pointer() const { return _type->is_pointer(); }
-        bool is_void()const {return _type->is_void(); }
-
-    public:
-        ValueId scid() const { return _scid; }
-        virtual void print(std::ostream& os){};
-};
-
-/**
- * @brief 表征操作数本身的信息, 连接 value 和 user
- * index in the _operands, _user, _value
- *
- */
-class Use {
-    // friend class Value;
-    // friend class
    protected:
-    size_t _index;
-    User* _user;
-    Value* _value;
+    Type* _type;    // type of the value
+    ValueId _scid;  // subclass id of Value
+    std::string _name;
+    use_ptr_list _uses; /* uses list, this value is used by users throw use */
+
+    std::string _comment;
 
    public:
-    Use() = default;
-    Use(size_t index, User* user, Value* value)
-        : _index(index), _user(user), _value(value){};
+    Value(Type* type, ValueId scid = vValue, const_str_ref name = "")
+        : _type(type), _scid(scid), _name(name), _uses() {}
+    virtual ~Value() = default;
+    // Value is all base, return true
+    static bool classof(const Value* v) { return true; }
 
     // get
-    size_t index() const;
-    User* user() const;
-    Value* value() const;
-    // set
-    void set_index(size_t index);
-    void set_value(Value* value);
-    void set_user(User* user);
+    Type* type() const { return _type; }
+    virtual std::string name() const { return _name; }
+    void set_name(const_str_ref name) { _name = name; }
+
+    /*! manage use-def relation !*/
+    use_ptr_list& uses() { return _uses; }
+
+    /* one user use this value, add the use relation */
+    void add_use(Use* use);
+    Use* add_use_by_user(User* user) {
+        assert(user != nullptr);
+        auto use = new Use(_uses.size(), user, this);
+        // list
+        _uses.emplace_back(use);
+    }
+
+    /* one user want to unuse this value, remove the use relation */
+    void del_use(Use* use);
+    void del_use_by_user(User* user) {
+        for (auto it = _uses.begin(); it != _uses.end(); it++) {
+            if ((*it)->user() == user) {
+                _uses.erase(it);
+                return;
+            }
+        }
+        assert(false && "cant find the user use this value");
+    }
+
+    /* replace this value with another value, for all user use this value */
+    void replace_all_use_with(Value* _value);
+
+    // manage
+    virtual std::string comment() const { return _comment; }
+
+    void set_comment(const_str_ref comment) {
+        if (!_comment.empty()) {
+            std::cerr << "re-set basicblock comment!" << std::endl;
+        }
+        _comment = comment;
+    }
+
+    void append_comment(const_str_ref comment) {
+        if (_comment.empty()) {
+            _comment = comment;
+        } else {
+            _comment = _comment + ", " + comment;
+        }
+    }
+
+   public:  // check
+    bool is_i1() const { return _type->is_i1(); }
+    bool is_i32() const { return _type->is_i32(); }
+    bool is_float32() const { return _type->is_float32(); }
+    bool is_double() const { return _type->is_double(); }
+    bool is_float() const { return _type->is_float(); }
+    bool is_pointer() const { return _type->is_pointer(); }
+    bool is_void() const { return _type->is_void(); }
+
+   public:
+    ValueId scid() const { return _scid; }
+    virtual void print(std::ostream& os){};
 };
 
 /**
@@ -257,8 +296,8 @@ class User : public Value {
 
    public:
     // get function
-    use_ptr_vector& operands();
-    Value* operand(size_t index) const;
+    use_ptr_vector& operands();          //! return uses vector
+    Value* operand(size_t index) const;  // return value, not use relation
     int operands_cnt() const { return _operands.size(); }
 
    public:
@@ -272,10 +311,34 @@ class User : public Value {
             add_operand(value);
         }
     }
+    /* del use relation of all operand values, may do this before delete this
+     * user*/
+    void unuse_allvalue() {
+        for (auto& operand : _operands) {
+            operand->value()->del_use(operand);
+        }
+    }
 
-    void unuse_allvalue() { int a = 5; };
-    void replace_operand_with(size_t index, Value* value) { int a = 5; };
+    /* this user use one value, want to replace the value with another value */
+    void replace_operand_with(size_t index, Value* value) {
+        assert(index < _operands.size());
+        assert(value != nullptr);
+        _operands[index]->value()->del_use(_operands[index]);
+        auto use = new Use(index, this, value);
+        _operands[index] = value->add_use_by_user(this);
+    }
 
-    virtual void print(std::ostream& os){};
+    virtual void print(std::ostream& os) {}
 };
+
+/*
+user use value
+只需要 调用 user.add_operand(value), 
+会把 use 加入 user._operands 和 value._uses
+user.add_operand(value){
+    use = new Use(...);
+    user._operands.emplace_back(use);
+    value.add_use(user)
+}
+*/
 }  // namespace ir

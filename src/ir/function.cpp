@@ -26,6 +26,21 @@ void Function::delete_block(BasicBlock* bb){
     // delete bb;
 }
 
+void Function::force_delete_block(BasicBlock* bb){
+    for(auto bbpre:bb->pre_blocks()){
+        bbpre->next_blocks().remove(bb);
+    }
+    for(auto bbnext:bb->next_blocks()){
+        bbnext->pre_blocks().remove(bb);
+    }
+    for(auto bbinstIter=bb->insts().begin();bbinstIter!=bb->insts().end();){
+        auto delinst=*bbinstIter;
+        bbinstIter++;
+        bb->force_delete_inst(delinst);
+    }
+    _blocks.remove(bb);
+}
+
 void Function::print(std::ostream& os) {
     auto return_type = ret_type();
     rename();
