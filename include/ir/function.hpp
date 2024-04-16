@@ -84,6 +84,8 @@ class Function : public User {
 
     void delete_block(BasicBlock* bb);
 
+    void force_delete_block(BasicBlock* bb);
+
     BasicBlock* new_entry(const_str_ref name = "") {
         assert(_entry == nullptr);
         _entry = new BasicBlock(name, this);
