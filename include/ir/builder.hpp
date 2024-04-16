@@ -288,7 +288,7 @@ class IRBuilder {
         AllocaInst* inst = nullptr;
         auto entryBlock=block()->parent()->entry();
         if (dims.size() == 0) {
-            inst = new AllocaInst(base_type, entryBlock, name, is_const);
+            inst = new AllocaInst(base_type, entryBlock, "", is_const);
             // if (!base_type->is_pointer()) {
             //     auto next = block()->parent()->next();
             //     StoreInst* store_inst = nullptr;
