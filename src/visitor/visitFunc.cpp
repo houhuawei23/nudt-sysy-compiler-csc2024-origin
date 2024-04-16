@@ -90,14 +90,15 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
         exit->append_comment("exit");
         auto next = func->new_block();
         func->set_next(next);
-        entry->set_name(builder().get_bbname());
+
+        entry->set_idx(builder().get_bbidx());
         ir::BasicBlock::block_link(entry, next);
 
-        builder().set_pos(next, next->begin());
+        builder().set_pos(next, next->insts().begin());
         // create return value alloca
         auto fz = ir::Constant::gen_f32(0.0);
         if (not func->ret_type()->is_void()) {
-            auto ret_value_ptr = builder().create_alloca(func->ret_type(), {});
+            auto ret_value_ptr = builder().create_alloca(func->ret_type(), false, {}, "retval");
             switch (func->ret_type()->btype()) {
                 case ir::INT32: 
                     builder().create_store(ir::Constant::gen_i32(0), ret_value_ptr);
@@ -139,8 +140,8 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
             }
 
             // init return value ptr and first block
-            next->set_name(builder().get_bbname());
 
+            next->set_idx(builder().get_bbidx());
             // allca all params and store
             int idx = 0;
             for (auto pram : ctx->funcFParams()->funcFParam()) {
@@ -163,7 +164,8 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
                     arg_type = ir::Type::pointer_type(arg_type);
                 }
 
-                auto alloca_ptr = builder().create_alloca(arg_type);
+                auto alloca_ptr = builder().create_alloca(arg_type, false, {}, arg_name);
+                
                 auto store = builder().create_store(func->arg_i(idx), alloca_ptr);
                 _tables.insert(arg_name, alloca_ptr);
                 idx++;
@@ -171,7 +173,8 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
 
         }
         else {
-            next->set_name(builder().get_bbname());
+
+            next->set_idx(builder().get_bbidx());
         }
 
 
@@ -180,8 +183,9 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
         builder().create_br(exit);
         ir::BasicBlock::block_link(builder().block(), exit);
         
-        exit->set_name(builder().get_bbname());
-        builder().set_pos(exit, exit->begin());
+
+        exit->set_idx(builder().get_bbidx());
+        builder().set_pos(exit, exit->insts().begin());
 
         if (not func->ret_type()->is_void()) {
             auto ret_value = builder().create_load(func->ret_value_ptr());
@@ -190,7 +194,7 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
             builder().create_return();
         }
         // for entry to next
-        builder().set_pos(entry, entry->begin());
+        builder().set_pos(entry, entry->insts().begin());
         builder().create_br(next);
 
         func->sort_blocks();

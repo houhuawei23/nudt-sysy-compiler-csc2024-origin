@@ -35,8 +35,10 @@ class SysYIRGenerator : public SysYBaseVisitor {
 
     ir::IRBuilder& builder() { return _builder; }
 
-    void build_ir() { visit(_root); }
-
+    ir::Module* build_ir() {
+        visit(_root);
+        return _module;
+    }
 
     //! Override all visit methods
     virtual std::any visitCompUnit(SysYParser::CompUnitContext* ctx) override;
@@ -45,9 +47,8 @@ class SysYIRGenerator : public SysYBaseVisitor {
     virtual std::any visitFuncType(SysYParser::FuncTypeContext* ctx) override;
 
     virtual std::any visitFuncDef(SysYParser::FuncDefContext* ctx) override;
-    
-    ir::Function* create_func(SysYParser::FuncDefContext* ctx);
 
+    ir::Function* create_func(SysYParser::FuncDefContext* ctx);
 
     virtual std::any visitBlockStmt(SysYParser::BlockStmtContext* ctx) override;
 
@@ -60,24 +61,42 @@ class SysYIRGenerator : public SysYBaseVisitor {
                               const int capacity,
                               const std::vector<int> dims,
                               std::vector<ir::Value*>& init);
-    // 局部变量    
-    ir::Value* visitVarDef_local(SysYParser::VarDefContext* ctx, ir::Type* btype, bool is_const);
-    ir::Value* visitArray_local(SysYParser::VarDefContext* ctx, ir::Type* btype, bool is_const, std::vector<int>dims, int capacity);
-    ir::Value* visitScalar_local(SysYParser::VarDefContext* ctx, ir::Type* btype, bool is_const);
+    // 局部变量
+    ir::Value* visitVarDef_local(SysYParser::VarDefContext* ctx,
+                                 ir::Type* btype,
+                                 bool is_const);
+    ir::Value* visitArray_local(SysYParser::VarDefContext* ctx,
+                                ir::Type* btype,
+                                bool is_const,
+                                std::vector<int> dims,
+                                int capacity);
+    ir::Value* visitScalar_local(SysYParser::VarDefContext* ctx,
+                                 ir::Type* btype,
+                                 bool is_const);
 
     // 全局变量
-    ir::Value* visitVarDef_global(SysYParser::VarDefContext* ctx, ir::Type* btype, bool is_const);
-    ir::Value* visitArray_global(SysYParser::VarDefContext* ctx, ir::Type* btype, bool is_const, std::vector<int>dims, int capacity);
-    ir::Value* visitScalar_global(SysYParser::VarDefContext* ctx, ir::Type* btype, bool is_const);
-    
+    ir::Value* visitVarDef_global(SysYParser::VarDefContext* ctx,
+                                  ir::Type* btype,
+                                  bool is_const);
+    ir::Value* visitArray_global(SysYParser::VarDefContext* ctx,
+                                 ir::Type* btype,
+                                 bool is_const,
+                                 std::vector<int> dims,
+                                 int capacity);
+    ir::Value* visitScalar_global(SysYParser::VarDefContext* ctx,
+                                  ir::Type* btype,
+                                  bool is_const);
+
     virtual std::any visitBtype(SysYParser::BtypeContext* ctx) override;
 
     virtual std::any visitLValue(SysYParser::LValueContext* ctx) override;
 
     //! visit Stmt
-    virtual std::any visitReturnStmt(SysYParser::ReturnStmtContext* ctx) override;
+    virtual std::any visitReturnStmt(
+        SysYParser::ReturnStmtContext* ctx) override;
 
-    virtual std::any visitAssignStmt(SysYParser::AssignStmtContext* ctx) override;
+    virtual std::any visitAssignStmt(
+        SysYParser::AssignStmtContext* ctx) override;
 
     virtual std::any visitIfStmt(SysYParser::IfStmtContext* ctx) override;
 
@@ -85,7 +104,8 @@ class SysYIRGenerator : public SysYBaseVisitor {
 
     virtual std::any visitBreakStmt(SysYParser::BreakStmtContext* ctx) override;
 
-    virtual std::any visitContinueStmt(SysYParser::ContinueStmtContext* ctx) override;
+    virtual std::any visitContinueStmt(
+        SysYParser::ContinueStmtContext* ctx) override;
 
     //! visit EXP
     virtual std::any visitVarExp(SysYParser::VarExpContext* ctx) override;
@@ -96,11 +116,14 @@ class SysYIRGenerator : public SysYBaseVisitor {
 
     virtual std::any visitUnaryExp(SysYParser::UnaryExpContext* ctx) override;
 
-    virtual std::any visitMultiplicativeExp(SysYParser::MultiplicativeExpContext* ctx) override;
+    virtual std::any visitMultiplicativeExp(
+        SysYParser::MultiplicativeExpContext* ctx) override;
 
-    virtual std::any visitAdditiveExp(SysYParser::AdditiveExpContext* ctx) override;
+    virtual std::any visitAdditiveExp(
+        SysYParser::AdditiveExpContext* ctx) override;
 
-    virtual std::any visitRelationExp(SysYParser::RelationExpContext* ctx) override;
+    virtual std::any visitRelationExp(
+        SysYParser::RelationExpContext* ctx) override;
 
     virtual std::any visitEqualExp(SysYParser::EqualExpContext* ctx) override;
 
@@ -109,6 +132,6 @@ class SysYIRGenerator : public SysYBaseVisitor {
     virtual std::any visitOrExp(SysYParser::OrExpContext* ctx) override;
 
     //! call
-    virtual std::any visitCall(SysYParser::CallContext *ctx) override;
+    virtual std::any visitCall(SysYParser::CallContext* ctx) override;
 };
 }  // namespace sysy

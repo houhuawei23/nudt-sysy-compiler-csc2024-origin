@@ -218,6 +218,8 @@ class IRBuilder {
     }
     //! get
     std::string get_bbname() { return "bb" + std::to_string(_bb_cnt++); }
+    uint32_t get_bbidx() { return _bb_cnt++; }
+    
     BasicBlock* block() const { return _block; }
     inst_iterator position() const { return _pos; }
 
@@ -282,7 +284,7 @@ class IRBuilder {
     //! Create Alloca Instruction
     AllocaInst* create_alloca(Type* base_type, bool is_const=false, 
                               std::vector<int> dims={}, 
-                              const_str_ref name="") {
+                              const_str_ref comment="") {
         AllocaInst* inst = nullptr;
         auto entryBlock=block()->parent()->entry();
         if (dims.size() == 0) {
@@ -301,9 +303,10 @@ class IRBuilder {
             //     next->emplace_first_inst(store_inst);
             // }
         }
-        else inst = new AllocaInst(base_type, dims, entryBlock, name, is_const);
+        else inst = new AllocaInst(base_type, dims, entryBlock, "", is_const);
         /* hhw, add alloca to function entry block*/
         block()->parent()->entry()->emplace_back_inst(inst);
+        inst->set_comment(comment);
         return inst;
     }
 
@@ -322,6 +325,9 @@ class IRBuilder {
     LoadInst* create_load(Value* ptr) {
         auto inst = LoadInst::gen(ptr, _block);
         block()->emplace_back_inst(inst);
+        if (not ptr->comment().empty()) {
+            inst->set_comment(ptr->comment());
+        }
         return inst;
     }
 
@@ -336,10 +342,10 @@ class IRBuilder {
 
     BinaryInst* create_binary(Value::ValueId kind,
                               Type* type,
-                              Value* lvalue,
-                              Value* rvalue,
+                              Value* op1,
+                              Value* op2,
                               const_str_ref name = "") {
-        auto inst = new BinaryInst(kind, type, lvalue, rvalue, _block, name);
+        auto inst = new BinaryInst(kind, type, op1, op2, _block, name);
         block()->emplace_back_inst(inst);
         return inst;
     }
@@ -367,20 +373,20 @@ class IRBuilder {
     //! ICMP inst family
     // (itype, lhs, rhs, parent, name)
     Instruction* create_icmp(Value::ValueId itype,
-                             Value* lhs,
-                             Value* rhs,
+                             Value* op1,
+                             Value* op2,
                              const_str_ref name = "") {
-        auto inst = new ICmpInst(itype, lhs, rhs, _block, name);
+        auto inst = new ICmpInst(itype, op1, op2, _block, name);
         block()->emplace_back_inst(inst);  // _pos++
         return inst;
     }
 
     //! FCMP inst family
     Instruction* create_fcmp(Value::ValueId itype,
-                             Value* lhs,
-                             Value* rhs,
+                             Value* op1,
+                             Value* op2,
                              const_str_ref name = "") {
-        auto inst = new FCmpInst(itype, lhs, rhs, _block, name);
+        auto inst = new FCmpInst(itype, op1, op2, _block, name);
         block()->emplace_back_inst(inst);  // _pos++
         return inst;
     }

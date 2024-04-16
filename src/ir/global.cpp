@@ -15,12 +15,8 @@ void GlobalVariable::print(std::ostream& os) {
     os << *(base_type()) << " ";
     
     if (is_array()) {
-        if (init_cnt()) {
-            int idx = 0, dimensions = dims_cnt();
-            print_ArrayInit(os, dimensions, 0, &idx);
-        } else {  // default initialization
-            os << "zeroinitializer";
-        }
+        int idx = 0, dimensions = dims_cnt();
+        print_ArrayInit(os, dimensions, 0, &idx);
     } else {
         os << *scalar_value();
     }
@@ -31,17 +27,28 @@ void GlobalVariable::print(std::ostream& os) {
 void GlobalVariable::print_ArrayInit(std::ostream& os, const int dimension, const int begin, int* idx) const {
     auto atype = dyn_cast<ArrayType>(base_type());
     auto baseType = atype->base_type();
+    bool is_zero = true;
     if (begin + 1 == dimension) {
-        os << "[";
-
         int num = atype->dim(begin);
-        for (int i = 0; i < num - 1; i++) {
-            os << *(baseType) << " " << *init(*idx + i) << ", ";
+
+        is_zero = true;
+        for (int i = 0; i < num; i++) {
+            auto cinit = dyn_cast<ir::Constant>(init(*idx + i));
+            if (!cinit->is_zero()) {
+                is_zero = false;
+                break;
+            }
         }
-        os << *(baseType) << " " << *init(*idx + num - 1);
         
-        os << "]";
-        
+        if (is_zero) os << "zeroinitializer";
+        else {
+            os << "[";
+            for (int i = 0; i < num - 1; i++) {
+                os << *(baseType) << " " << *init(*idx + i) << ", ";
+            }
+            os << *(baseType) << " " << *init(*idx + num - 1);
+            os << "]";
+        }
         *idx = *idx + num;
     } else if (dimension == 2 + begin) {
         os << "[";
@@ -50,23 +57,45 @@ void GlobalVariable::print_ArrayInit(std::ostream& os, const int dimension, cons
         for (int i = 0; i < num1 - 1; i++) {
             os << "[" << num2 << " x " << *(baseType) << "] ";
 
-            os << "[";
-            for (int j = 0; j < num2 - 1; j++) {
-                os << *(baseType) << " " << *init(*idx + i * num2 + j) << ", ";
+            is_zero = true;
+            for (int j = 0; j < num2; j++) {
+                auto cinit = dyn_cast<ir::Constant>(init(*idx + i * num2 + j));
+                if (!cinit->is_zero()) {
+                    is_zero = false;
+                    break;
+                }
             }
-            os << *(baseType) << " " << *init(*idx + i * num2 + num2 - 1);
-            os << "], ";
+            if (is_zero) os << "zeroinitializer, ";
+            else {
+                os << "[";
+                for (int j = 0; j < num2 - 1; j++) {
+                    os << *(baseType) << " " << *init(*idx + i * num2 + j) << ", ";
+                }
+                os << *(baseType) << " " << *init(*idx + i * num2 + num2 - 1);
+                os << "], ";
+            }
         }
         os << "[" << num2 << " x " << *(baseType) << "] ";
 
-        os << "[";
-        for (int j = 0; j < num2 - 1; j++) {
-            os << *(baseType) << " " << *init(*idx + (num1 - 1) * num2 + j) << ", ";
+        is_zero = true;
+        for (int j = 0; j < num2; j++) {
+            auto cinit = dyn_cast<ir::Constant>(init(*idx + (num1 - 1) * num2 + j));
+            if (!cinit->is_zero()) {
+                is_zero = false;
+                break;
+            }
         }
-        os << *(baseType) << " " << *init(*idx + (num1 - 1) * num2 + num2 - 1);
-        os << "]";
+        if (is_zero) os << "zeroinitializer";
+        else {
+            os << "[";
+            for (int j = 0; j < num2 - 1; j++) {
+                os << *(baseType) << " " << *init(*idx + (num1 - 1) * num2 + j) << ", ";
+            }
+            os << *(baseType) << " " << *init(*idx + (num1 - 1) * num2 + num2 - 1);
+            os << "]";
+        }
+        
         *idx = *idx + (num1 - 1) * num2 + num2;
-
         os << "]";
     } else {
         os << "[";

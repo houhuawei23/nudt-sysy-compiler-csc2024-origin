@@ -1,8 +1,19 @@
 #!/bin/bash
+# dont ignore unset variables
+set -u
+
 PASS_CNT=0
 WRONG_CNT=0
 ALL_CNT=0
+TIMEOUT_CNT=0
+
 WRONG_FILES=()
+TIMEOUT_FILES=()
+
+PASSES=()
+
+OPT_LEVEL="-O0"
+LOG_LEVEL="-L0"
 
 # Color setting
 RED=$(tput setaf 1)
@@ -16,6 +27,13 @@ output_dir="test/.out"
 single_file=""
 result_file="test/.out/result.txt"
 
+error_code=0 # 0 for exe success
+
+EC_MAIN=1
+EC_LLVMLINK=2
+EC_LLI=3
+EC_TIMEOUT=124
+
 TIMEOUT=3
 
 # Function to print usage information
@@ -27,158 +45,213 @@ usage() {
     echo "  -r <result_file>    Specify the file to store the test results (default: test/result.txt)"
     echo "  -h                  Print this help message"
 }
-
+# ./test.sh -t test/2021/functional/001_var_defn.sy -p mem2reg -p dce
 # Parse command line arguments
-while getopts ":ht:o:r:" opt; do
-    case $opt in
-    h)
+
+# getopt
+SHORT="h,t:,o:,r:,p:,O:,L:"
+LONG="help,test_path:,output_dir:,result_file:,pass:opt_level:,log_level:"
+OPTS=$(getopt --options $SHORT --longoptions $LONG --name "$0" -- "$@")
+
+if [ $? -ne 0 ]; then
+    echo "Error parsing command line arguments" >&2
+    usage
+    exit 1
+fi
+
+eval set -- "$OPTS"
+
+while true; do
+    case "$1" in
+    -h | --help)
         usage
         exit 0
         ;;
-    t)
-        test_path="$OPTARG"
+    -t | --test_path)
+        test_path="$2"
+        shift 2
         ;;
-    o)
-        output_dir="$OPTARG"
+    -o | --output_dir)
+        output_dir="$2"
+        shift 2
         ;;
-    r)
-        result_file="$OPTARG"
+    -r | --result_file)
+        result_file="$2"
+        shift 2
         ;;
-    :)
-        echo "Option -$OPTARG requires an argument." >&2
-        usage
-        exit 1
+    -p | --pass)
+        # check not empty and not start with --
+        PASSES+=("$2")
+        shift 2
         ;;
-    ?)
-        echo "Invalid option: -$OPTARG" >&2
+    -O | --opt_level)
+        OPT_LEVEL="-O$2"
+        shift 2
+        ;;
+    -L | --log_level)
+        LOG_LEVEL="-L$2"
+        shift 2
+        ;;
+    --)
+        shift
+        break
+        ;;
+    *)
+        echo "Invalid option: $1" >&2
         usage
         exit 1
         ;;
     esac
 done
 
-shift $((OPTIND - 1))
+# Handle remaining arguments (non-option arguments)
+# Use $@ or $1, $2, etc. depending on the specific needs
+
+PASSES_STR=$(IFS=" "; echo "${PASSES[*]}")
+
 
 # Ensure output directory exists
 if [ ! -d "$output_dir" ]; then
     mkdir -p "$output_dir"
 fi
 
-echo "test_path      ${test_path} "   >>${result_file}
-echo "output_dir     ${output_dir} "  >>${result_file}
+echo "test_path      ${test_path} " >>${result_file}
+echo "output_dir     ${output_dir} " >>${result_file}
 echo "result_file    ${result_file} " >>${result_file}
 
 echo "" >>${result_file}
 
 function run_llvm_test() {
-    single_file="$1"
-    output_dir="$2"
-    result_file="$3"
-    if [ -f "$single_file" ]; then
-        in_file="${single_file%.*}.in"
+    local single_file="$1"
+    local output_dir="$2"
+    local result_file="$3"
 
-        # llvm compiler
-        touch "${output_dir}/test.c"
-        cat ./test/link/sy.c > "${output_dir}/test.c"
-        cat "$single_file" >> "${output_dir}/test.c"
-        clang --no-warnings -emit-llvm -S "${output_dir}/test.c" -o "${output_dir}/llvm.ll" -O0
-        llvm-link --suppress-warnings ./test/link/link.ll "${output_dir}/llvm.ll" -S -o "${output_dir}/llvm_linked.ll"
-        if [ -f "$in_file" ]; then
-            lli "${output_dir}/llvm_linked.ll" > "${output_dir}/llvm.out" < "${in_file}"
-        else 
-            lli "${output_dir}/llvm_linked.ll" > "${output_dir}/llvm.out"
-        fi
-        llvmres=$?
-        # llvm compiler end
-        return $llvmres
-    else
-        echo "File not found: $single_file"
-        exit 1
+    local in_file="${single_file%.*}.in"
+
+    local sy_h="./test/link/sy.h"
+    local link_ll="./test/link/link.ll"
+
+    local llvm_c="${output_dir}/llvm_test.c"
+    local llvm_ll="${output_dir}/llvm.ll"
+    local llvm_llinked="${output_dir}/llvm_linked.ll"
+
+    llvm_out="${output_dir}/llvm.out"
+
+    # llvm compiler
+    if [ -f "${llvm_c}" ]; then
+        rm "${llvm_c}"
     fi
+    touch "${llvm_c}"
+    cat "${sy_h}" >"${llvm_c}"
+    cat "${single_file}" >>"${llvm_c}"
+
+    clang --no-warnings -emit-llvm -S "${llvm_c}" -o "${llvm_ll}" -O0
+    llvm-link --suppress-warnings "${llvm_ll}" "${link_ll}" -S -o "${llvm_llinked}"
+
+    if [ -f "$in_file" ]; then
+        lli "${llvm_llinked}" >"${llvm_out}" <"${in_file}"
+    else
+        lli "${llvm_llinked}" >"${llvm_out}"
+    fi
+    local llvmres=$?
+    # llvm compiler end
+    return ${llvmres}
+
 }
 
 function run_gen_test() {
-    single_file="$1"
-    output_dir="$2"
-    result_file="$3"
+    local single_file="$1"
+    local output_dir="$2"
+    local result_file="$3"
 
-    if [ -f "$single_file" ]; then
-        in_file="${single_file%.*}.in"
+    local in_file="${single_file%.*}.in"
 
-        # sys-compiler
-        cat "$single_file" > "${output_dir}/test.c"
-        ./main "$single_file" >"${output_dir}/gen.ll"
-        llvm-link --suppress-warnings ./test/link/link.ll "${output_dir}/gen.ll" -S -o "${output_dir}/gen_linked.ll"
-        if [ $? != 0 ]; then
-            echo "link error"
-            echo "${RED}[WRONG]${RESET} ${single_file}"
-            echo "    res (${res}), llvmres (${llvmres})"
-            echo "[WRONG] ${single_file}" >>${result_file}
-            WRONG_CNT=$((WRONG_CNT + 1))
-            WRONG_FILES+=($single_file)
-            return 1
-        fi
+    local gen_c="${output_dir}/gen_test.c"
+    local gen_ll="${output_dir}/gen.ll"
+    local gen_llinked="${output_dir}/gen_linked.ll"
+    gen_out="${output_dir}/gen.out"
 
-        if [ -f "$in_file" ]; then
-            timeout $TIMEOUT lli "${output_dir}/gen_linked.ll" > "${output_dir}/gen.out" < "${in_file}"
-            if [ $? == 124 ]; then
-                echo "link timeout"
-                echo "${RED}[WRONG]${RESET} ${single_file}"
-                echo "    res (${res}), llvmres (${llvmres})"
-                echo "[WRONG] ${single_file}" >>${result_file}
-                WRONG_CNT=$((WRONG_CNT + 1))
-                WRONG_FILES+=($single_file)
-                return 1
-            fi
-            lli "${output_dir}/gen_linked.ll" > "${output_dir}/gen.out" < "${in_file}"
-        else 
-            timeout $TIMEOUT lli "${output_dir}/gen_linked.ll" > "${output_dir}/gen.out"
-            if [ $? == 124 ]; then
-                echo "link timeout"
-                echo "${RED}[WRONG]${RESET} ${single_file}"
-                echo "    res (${res}), llvmres (${llvmres})"
-                echo "[WRONG] ${single_file}" >>${result_file}
-                WRONG_CNT=$((WRONG_CNT + 1))
-                WRONG_FILES+=($single_file)
-                return 1
-            fi
-            lli "${output_dir}/gen_linked.ll" > "${output_dir}/gen.out"
-        fi
-        res=$?
-        # sys-compiler end
-        return $res
-    else
-        echo "File not found: $single_file"
-        exit 1
+    if [ -f "${gen_c}" ]; then
+        rm "${gen_c}"
+    fi
+    touch "${gen_c}"
+    cat "${single_file}" >"${gen_c}"
+
+    # ./main "$single_file" >"${gen_ll}"
+    ./main -f "${single_file}" -i -t "${PASSES_STR}" -o "${gen_ll}" "${OPT_LEVEL}" "${LOG_LEVEL}"
+    if [ $? != 0 ]; then
+        return $EC_MAIN
     fi
 
+    llvm-link --suppress-warnings ./test/link/link.ll "${gen_ll}" -S -o "${gen_llinked}"
+    if [ $? != 0 ]; then
+        return $EC_LLVMLINK
+    fi
+
+    if [ -f "$in_file" ]; then
+        timeout $TIMEOUT lli "${gen_llinked}" >"${gen_out}" <"${in_file}"
+        if [ $? == $EC_TIMEOUT ]; then # time out
+            return $EC_TIMEOUT
+        fi
+        # not timeout, re-run
+        lli "${gen_llinked}" >"${gen_out}" <"${in_file}"
+    else
+        timeout $TIMEOUT lli "${gen_llinked}" >"${gen_out}"
+        if [ $? == $EC_TIMEOUT ]; then
+            return $EC_TIMEOUT
+        fi
+        # not timeout, re-run
+        lli "${gen_llinked}" >"${gen_out}"
+    fi
+    local res=$?
+    # gen compiler end
+    return ${res}
 }
 # define a function that test one file
 function run_test() {
-    single_file="$1"
-    output_dir="$2"
-    result_file="$3"
+    local single_file="$1"
+    local output_dir="$2"
+    local result_file="$3"
 
     if [ -f "$single_file" ]; then
         echo "${YELLOW}[Testing]${RESET} $single_file"
-        in_file="${single_file%.*}.in"
 
-        run_llvm_test "$single_file" "$output_dir" "$result_file"
-        llvmres=$?
+        run_llvm_test "${single_file}" "${output_dir}" "${result_file}"
+        local llvmres=$?
 
-        run_gen_test "$single_file" "$output_dir" "$result_file"
-        res=$?
+        run_gen_test "${single_file}" "${output_dir}" "${result_file}"
+        local res=$?
 
-        diff "${output_dir}/gen.out" "${output_dir}/llvm.out" > "/dev/null"
-        diff_res=$?
+        # diff "${output_dir}/gen.out" "${output_dir}/llvm.out" >"/dev/null"
+        diff "${gen_out}" "${llvm_out}" >"${output_dir}/diff.out"
+        local diff_res=$?
+        # diff res or diff stdout
+        echo "[RESULT] res (${RED}${res}${RESET}), llvmres (${RED}${llvmres}${RESET})"
 
-        if [ $res != $llvmres ] || [ $diff_res != 0 ]; then
-            echo "${RED}[WRONG]${RESET} ${single_file}"
-            echo "    res (${res}), llvmres (${llvmres})"
-            echo "[WRONG] ${single_file}" >>${result_file}
-            echo "  [WRONG]: res (${res}), llvmres (${llvmres})" >>${result_file}
-            WRONG_CNT=$((WRONG_CNT + 1))
-            WRONG_FILES+=($single_file)
+        if [ ${res} != ${llvmres} ] || [ ${diff_res} != 0 ]; then
+
+            if [ ${res} == ${EC_MAIN} ]; then
+                echo "${RED}[MAIN ERROR]${RESET} ${single_file}"
+            elif [ ${res} == ${EC_LLVMLINK} ]; then
+                echo "${RED}[LINK ERROR]${RESET} ${single_file}"
+            elif [ ${res} == ${EC_LLI} ]; then
+                echo "${RED}[LLI ERROR]${RESET} ${single_file}"
+            elif [ ${res} == ${EC_TIMEOUT} ]; then
+                echo "${RED}[TIMEOUT]${RESET} ${single_file}"
+                echo "[TIMEOUT] ${single_file}" >>${result_file}
+            else
+                echo "${RED}[WRONG RES]${RESET} ${single_file}"
+                echo "[WRONG RES] ${single_file}" >>${result_file}
+                echo "  [WRONG RES]: res (${res}), llvmres (${llvmres})" >>${result_file}
+            fi
+
+            if [ ${res} == ${EC_TIMEOUT} ]; then
+                TIMEOUT_CNT=$((TIMEOUT_CNT + 1))
+                TIMEOUT_FILES+=(${single_file})
+            else
+                WRONG_CNT=$((WRONG_CNT + 1))
+                WRONG_FILES+=(${single_file})
+            fi
         else
             echo "${GREEN}[CORRECT]${RESET} ${single_file}"
             echo "[CORRECT] ${single_file}" >>${result_file}
@@ -190,14 +263,16 @@ function run_test() {
     fi
 }
 
+## main run
+
 # if test_path is a file
 if [ -f "$test_path" ]; then
     run_test "$test_path" "$output_dir" "$result_file"
+    echo "${GREEN}OPT PASSES${RESET}: ${PASSES_STR}"
 fi
-file_types=("*.c" "*.sy")
-
 
 # if test_path is a directory
+file_types=("*.c" "*.sy")
 
 if [ -d "$test_path" ]; then
     for file_type in "${file_types[@]}"; do
@@ -205,18 +280,29 @@ if [ -d "$test_path" ]; then
             if [ ! -f "${file}" ]; then
                 break
             else
-                run_test "$file" "$output_dir" "$result_file"
+                run_test "${file}" "${output_dir}" "${result_file}"
             fi
         done
 
     done
+
+    echo "====  RESULT  ===="
+
     echo "${RED}[WRONG]${RESET} files:"
     for file in "${WRONG_FILES[@]}"; do
         echo "${file}"
     done
+    echo "${RED}[TIMEOUT]${RESET} files:"
+    for file in "${TIMEOUT_FILES[@]}"; do
+        echo "${file}"
+    done
+
+    echo "====   INFO   ===="
+    echo "PASSES: ${PASSES_STR}"
 
     ALL_CNT=$((PASS_CNT + WRONG_CNT))
     echo "${GREEN}PASS ${RESET}: ${PASS_CNT}"
     echo "${RED}WRONG${RESET}: ${WRONG_CNT}"
+    echo "${RED}TIMEOUT${RESET}: ${TIMEOUT_CNT}"
     echo "${YELLOW}ALL  ${RESET}: ${ALL_CNT}"
 fi

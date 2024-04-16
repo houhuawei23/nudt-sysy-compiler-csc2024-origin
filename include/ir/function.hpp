@@ -9,14 +9,16 @@
 namespace ir {
 
 // for BasicBlock sort
-inline bool compareBB(const BasicBlock* a1, const BasicBlock* a2) {
+inline bool compareBB(const BasicBlock* b1, const BasicBlock* b2) {
     // return a1->priority < a2->priority;
-    if (a1->name().size() > 1 && a2->name().size() > 1)
-        return std::stoi(a1->name().substr(2)) <
-               std::stoi(a2->name().substr(2));
-    else {
-        assert(false && "compareBB error");
-    }
+    return b1->idx() < b2->idx();
+
+    // if (a1->name().size() > 1 && a2->name().size() > 1)
+    //     return std::stoi(a1->name().substr(2)) <
+    //            std::stoi(a2->name().substr(2));
+    // else {
+    //     assert(false && "compareBB error");
+    // }
 }
 
 class Function : public User {
@@ -39,6 +41,7 @@ class Function : public User {
     int _arg_cnt = 0;  // formal arguments count
 
     bool _is_defined = false;
+
    public:
     Function(Type* func_type, const_str_ref name = "", Module* parent = nullptr)
         : User(func_type, vFUNCTION, name), _parent(parent) {
@@ -49,13 +52,10 @@ class Function : public User {
 
     //* get
     int getvarcnt() { return var_cnt++; }
-    void setvarcnt(int x) {var_cnt=x;}
-    void set_next(BasicBlock* next) {
-        _next = next;
-    }
-    BasicBlock* next() {
-        return _next;
-    }
+    void setvarcnt(int x) { var_cnt = x; }
+    void set_next(BasicBlock* next) { _next = next; }
+    
+    BasicBlock* next() { return _next; }
     Module* parent() const { return _parent; }
 
     //* return
@@ -83,6 +83,8 @@ class Function : public User {
     BasicBlock* new_block();
 
     void delete_block(BasicBlock* bb);
+
+    void force_delete_block(BasicBlock* bb);
 
     BasicBlock* new_entry(const_str_ref name = "") {
         assert(_entry == nullptr);

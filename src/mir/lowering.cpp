@@ -140,6 +140,7 @@ MIRFunction* create_mir_function(ir::Function* ir_func,
             create_mir_inst(ir_inst, lowering_ctx);
         }
     }
+    return mir_func;
 }
 
 MIRInst* create_mir_inst(ir::Instruction* ir_inst, LoweringContext& ctx) {
