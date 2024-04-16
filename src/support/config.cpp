@@ -25,6 +25,10 @@ Usage: ./main [options]
   -S                    gen assembly
   -O[0-3]               opt level
   -L[0-2]               log level: 0=SILENT, 1=INFO, 2=DEBUG
+
+Examples:
+$ ./main -f test.c -i -t mem2reg -o gen.ll -O0 -L0
+$ ./main -f test.c -i -t mem2reg dce -o gen.ll
 )";
 
 void Config::print_help() {

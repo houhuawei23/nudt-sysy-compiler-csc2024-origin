@@ -9,6 +9,12 @@ TIMEOUT_CNT=0
 
 WRONG_FILES=()
 TIMEOUT_FILES=()
+
+PASSES=()
+
+OPT_LEVEL="-O0"
+LOG_LEVEL="-L0"
+
 # Color setting
 RED=$(tput setaf 1)
 GREEN=$(tput setaf 2)
@@ -39,37 +45,70 @@ usage() {
     echo "  -r <result_file>    Specify the file to store the test results (default: test/result.txt)"
     echo "  -h                  Print this help message"
 }
-
+# ./test.sh -t test/2021/functional/001_var_defn.sy -p mem2reg -p dce
 # Parse command line arguments
-while getopts ":ht:o:r:" opt; do
-    case $opt in
-    h)
+
+# getopt
+SHORT="h,t:,o:,r:,p:,O:,L:"
+LONG="help,test_path:,output_dir:,result_file:,pass:opt_level:,log_level:"
+OPTS=$(getopt --options $SHORT --longoptions $LONG --name "$0" -- "$@")
+
+if [ $? -ne 0 ]; then
+    echo "Error parsing command line arguments" >&2
+    usage
+    exit 1
+fi
+
+eval set -- "$OPTS"
+
+while true; do
+    case "$1" in
+    -h | --help)
         usage
         exit 0
         ;;
-    t)
-        test_path="$OPTARG"
+    -t | --test_path)
+        test_path="$2"
+        shift 2
         ;;
-    o)
-        output_dir="$OPTARG"
+    -o | --output_dir)
+        output_dir="$2"
+        shift 2
         ;;
-    r)
-        result_file="$OPTARG"
+    -r | --result_file)
+        result_file="$2"
+        shift 2
         ;;
-    :)
-        echo "Option -$OPTARG requires an argument." >&2
-        usage
-        exit 1
+    -p | --pass)
+        # check not empty and not start with --
+        PASSES+=("$2")
+        shift 2
         ;;
-    ?)
-        echo "Invalid option: -$OPTARG" >&2
+    -O | --opt_level)
+        OPT_LEVEL="-O$2"
+        shift 2
+        ;;
+    -L | --log_level)
+        LOG_LEVEL="-L$2"
+        shift 2
+        ;;
+    --)
+        shift
+        break
+        ;;
+    *)
+        echo "Invalid option: $1" >&2
         usage
         exit 1
         ;;
     esac
 done
 
-shift $((OPTIND - 1))
+# Handle remaining arguments (non-option arguments)
+# Use $@ or $1, $2, etc. depending on the specific needs
+
+PASSES_STR=$(IFS=" "; echo "${PASSES[*]}")
+
 
 # Ensure output directory exists
 if [ ! -d "$output_dir" ]; then
@@ -139,7 +178,7 @@ function run_gen_test() {
     cat "${single_file}" >"${gen_c}"
 
     # ./main "$single_file" >"${gen_ll}"
-    ./main -f "${single_file}" -i -o "${gen_ll}" -O0 -L0
+    ./main -f "${single_file}" -i -t "${PASSES_STR}" -o "${gen_ll}" "${OPT_LEVEL}" "${LOG_LEVEL}"
     if [ $? != 0 ]; then
         return $EC_MAIN
     fi
@@ -224,9 +263,12 @@ function run_test() {
     fi
 }
 
+## main run
+
 # if test_path is a file
 if [ -f "$test_path" ]; then
     run_test "$test_path" "$output_dir" "$result_file"
+    echo "${GREEN}OPT PASSES${RESET}: ${PASSES_STR}"
 fi
 
 # if test_path is a directory
@@ -256,6 +298,7 @@ if [ -d "$test_path" ]; then
     done
 
     echo "====   INFO   ===="
+    echo "PASSES: ${PASSES_STR}"
 
     ALL_CNT=$((PASS_CNT + WRONG_CNT))
     echo "${GREEN}PASS ${RESET}: ${PASS_CNT}"
