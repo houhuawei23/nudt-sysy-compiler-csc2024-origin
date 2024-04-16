@@ -138,7 +138,8 @@ function run_gen_test() {
     touch "${gen_c}"
     cat "${single_file}" >"${gen_c}"
 
-    ./main "$single_file" >"${gen_ll}"
+    # ./main "$single_file" >"${gen_ll}"
+    ./main -f "${single_file}" -i -o "${gen_ll}" -O0 -L0
     if [ $? != 0 ]; then
         return $EC_MAIN
     fi
