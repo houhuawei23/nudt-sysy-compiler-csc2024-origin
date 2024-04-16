@@ -79,7 +79,8 @@ class BasicBlock : public Value {
           };
     uint32_t idx() const { return _idx; }
     void set_idx(uint32_t idx) { _idx = idx; }
-    std::string name() const { return "bb" + std::to_string(_idx); }
+    /* must override */
+    std::string name() const override { return "bb" + std::to_string(_idx); }
     // get
     int depth() const { return _depth; }
 

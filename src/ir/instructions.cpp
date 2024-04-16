@@ -180,54 +180,7 @@ Constant* BinaryInst::getConstantRepl() {
     }
 }
 
-bool BinaryInst::is_constprop() {
-    auto lconst = dyn_cast<Constant>(get_lvalue());
-    auto rconst = dyn_cast<Constant>(get_rvalue());
-    return lconst and rconst;
-}
 
-Constant* BinaryInst::getConstantRepl() {
-    auto lval = dyn_cast<Constant>(get_lvalue());
-    auto rval = dyn_cast<Constant>(get_rvalue());
-    if (get_lvalue()->is_i32()) {
-        auto lvali32 = lval->i32();
-        auto rvali32 = rval->i32();
-        switch (scid()) {
-            case vADD:
-                return Constant::gen_i32(lvali32 + rvali32);
-            case vSUB:
-                return Constant::gen_i32(lvali32 - rvali32);
-            case vMUL:
-                return Constant::gen_i32(lvali32 * rvali32);
-            case vSDIV:
-                return Constant::gen_i32(lvali32 / rvali32);
-            case vSREM:
-                return Constant::gen_i32(lvali32 % rvali32);
-            default:
-                assert(false and "Error in BinaryInst::getConstantRepl");
-                break;
-        }
-    } else if (get_lvalue()->is_float32()) {
-        auto lvalf32 = lval->f32();
-        auto rvalf32 = rval->f32();
-        switch (scid()) {
-            case vFADD:
-                return Constant::gen_f32(lvalf32 + rvalf32);
-            case vFSUB:
-                return Constant::gen_f32(lvalf32 - rvalf32);
-            case vFMUL:
-                return Constant::gen_f32(lvalf32 * rvalf32);
-            case vFDIV:
-                return Constant::gen_f32(lvalf32 / rvalf32);
-            default:
-                assert(false and "Error in BinaryInst::getConstantRepl");
-                break;
-        }
-    } else {
-        assert(false &&
-               "Not implemented type of binary inst const propagation");
-    }
-}
 
 /*
  * @brief Unary Instruction Output
@@ -294,24 +247,6 @@ Constant* UnaryInst::getConstantRepl() {
     }
 }
 
-bool UnaryInst::is_constprop() {
-    return dyn_cast<Constant>(get_value());
-}
-
-Constant* UnaryInst::getConstantRepl() {
-    auto cval = dyn_cast<Constant>(get_value());
-    switch (scid()) {
-        case vSITOFP:
-            return Constant::gen_f32(float(cval->i32()));
-        case vFPTOSI:
-            return Constant::gen_i32(int(cval->f32()));
-        case vZEXT:  // only i1->i32
-            assert(cval->is_i1() and "ZEXT must be i1 -> i32");
-            return Constant::gen_i32(cval->i1() ? 1 : 0);
-        default:
-            assert(false and "unary const flod error");
-    }
-}
 
 void ICmpInst::print(std::ostream& os) {
     // <result> = icmp <cond> <ty> <op1>, <op2>   ; yields i1 or <N x i1>:result
@@ -354,32 +289,6 @@ void ICmpInst::print(std::ostream& os) {
     if (not lhs()->comment().empty() && not rhs()->comment().empty()) {
         os << " ; " << lhs()->comment() << " " << cmpstr << " "
            << rhs()->comment();
-    }
-}
-bool ICmpInst::is_constprop() {
-    auto lconst = dyn_cast<Constant>(lhs());
-    auto rconst = dyn_cast<Constant>(rhs());
-    return lconst and rconst;
-}
-
-Constant* ICmpInst::getConstantRepl() {
-    auto lhsval = dyn_cast<Constant>(lhs())->i32();
-    auto rhsval = dyn_cast<Constant>(rhs())->i32();
-    switch (scid()) {
-        case vIEQ:
-            return Constant::gen_i1(lhsval == rhsval);
-        case vINE:
-            return Constant::gen_i1(lhsval != rhsval);
-        case vISGT:
-            return Constant::gen_i1(lhsval > rhsval);
-        case vISLT:
-            return Constant::gen_i1(lhsval < rhsval);
-        case vISGE:
-            return Constant::gen_i1(lhsval >= rhsval);
-        case vISLE:
-            return Constant::gen_i1(lhsval <= rhsval);
-        default:
-            assert(false and "icmpinst const flod error");
     }
 }
 bool ICmpInst::is_constprop() {
@@ -478,32 +387,7 @@ Constant* FCmpInst::getConstantRepl() {
     }
 }
 
-bool FCmpInst::is_constprop() {
-    auto lconst = dyn_cast<Constant>(lhs());
-    auto rconst = dyn_cast<Constant>(rhs());
-    return lconst and rconst;
-}
 
-Constant* FCmpInst::getConstantRepl() {
-    auto lhsval = dyn_cast<Constant>(lhs())->f32();
-    auto rhsval = dyn_cast<Constant>(rhs())->f32();
-    switch (scid()) {
-        case vFOEQ:
-            return Constant::gen_i1(lhsval == rhsval);
-        case vFONE:
-            return Constant::gen_i1(lhsval != rhsval);
-        case vFOGT:
-            return Constant::gen_i1(lhsval > rhsval);
-        case vFOLT:
-            return Constant::gen_i1(lhsval < rhsval);
-        case vFOGE:
-            return Constant::gen_i1(lhsval >= rhsval);
-        case vFOLE:
-            return Constant::gen_i1(lhsval <= rhsval);
-        default:
-            assert(false and "fcmpinst const flod error");
-    }
-}
 /*
  * @brief: BranchInst::print
  * @details:

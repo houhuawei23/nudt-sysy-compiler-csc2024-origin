@@ -213,7 +213,7 @@ class Value {
 
     // get
     Type* type() const { return _type; }
-    std::string name() const { return _name; }
+    virtual std::string name() const { return _name; }
     void set_name(const_str_ref name) { _name = name; }
 
     /*! manage use-def relation !*/
