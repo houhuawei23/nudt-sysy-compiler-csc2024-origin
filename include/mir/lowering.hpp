@@ -15,8 +15,11 @@ class LoweringContext {
     MIRBlock* _mir_block = nullptr;
     // map
     std::unordered_map<ir::Value*, MIROperand*> _val_map;
+
     std::unordered_map<ir::Function*, MIRFunction*> func_map;
     std::unordered_map<ir::GlobalVariable*, MIRGlobalObject*> gvar_map;
+
+    std::unordered_map<ir::BasicBlock*, MIRBlock*> _block_map;
 
     uint32_t _idx = 0;
 
@@ -84,8 +87,15 @@ class LoweringContext {
             auto ptr = new_vreg(_ptr_type);
         }
         // constant
+        return nullptr;
     }
-
+    MIRBlock* map2block(ir::BasicBlock* ir_block) {
+        auto iter = _block_map.find(ir_block);
+        if (iter != _block_map.end()) {
+            return iter->second;
+        }
+        assert(false && "block not found");
+    }
     static OperandType get_optype(ir::Type* type) {
         if (type->is_int()) {
             switch (type->btype()) {

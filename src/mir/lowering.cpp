@@ -24,7 +24,8 @@ std::unique_ptr<MIRModule> create_mir_module(ir::Module& ir_module,
 }
 
 void create_mir_module(ir::Module& ir_module, LoweringContext& lowering_ctx) {
-    auto& mir_module = lowering_ctx._mir_module;  // return ref, using ref to use
+    auto& mir_module =
+        lowering_ctx._mir_module;  // return ref, using ref to use
     auto& functions = mir_module.functions();
     auto& global_objs = mir_module.global_objs();
 
@@ -108,7 +109,8 @@ MIRFunction* create_mir_function(ir::Function* ir_func,
     /* dom */
 
     // map from ir to mir
-    std::unordered_map<ir::BasicBlock*, MIRBlock*> block_map;
+    // std::unordered_map<ir::BasicBlock*, MIRBlock*> block_map;
+    auto& block_map = lowering_ctx._block_map;  // return ref, using ref to use
     std::unordered_map<ir::Value*, MIROperand> value_map;
     std::unordered_map<ir::Value*, MIROperand*> storage_map;
 
@@ -194,8 +196,8 @@ void lower(ir::StoreInst* ir_inst, LoweringContext& ctx) {
     // ir: store type val, type* ptr
     // align = 4
     auto inst = new MIRInst(InstStore);
-    inst->set_operand(0, ctx.map2operand(ir_inst->operand(0)));
-    inst->set_operand(1, ctx.map2operand(ir_inst->operand(1)));
+    inst->set_operand(0, ctx.map2operand(ir_inst->value()));
+    inst->set_operand(1, ctx.map2operand(ir_inst->ptr()));
 
     ctx.emit_inst(inst);
 }
@@ -206,9 +208,7 @@ void lower(ir::ReturnInst* ir_inst, LoweringContext& ctx) {
 }
 
 //! branch
-void lower(ir::BranchInst* ir_inst, LoweringContext& ctx) {
-    // auto ir_cur_block = ir_inst->block();
-}
+void lower(ir::BranchInst* ir_inst, LoweringContext& ctx);
 
 MIRInst* create_mir_inst(ir::Instruction* ir_inst, LoweringContext& ctx) {
     // auto scid = ir_inst->scid();
@@ -261,22 +261,82 @@ MIRInst* create_mir_inst(ir::Instruction* ir_inst, LoweringContext& ctx) {
 }
 
 void lower(ir::BinaryInst* ir_inst, LoweringContext& ctx) {
-    // case ir::Value::vADD: {
-    //     auto ret = ctx.new_vreg(ir_inst->type());
-    //     auto inst = new MIRInst(InstAdd);
-    //     inst->set_operand(0, ret);
-    //     inst->set_operand(1, ctx.map2operand(ir_inst->operand(0)));
-    //     inst->set_operand(2, ctx.map2operand(ir_inst->operand(1)));
-    //     ctx.emit_inst(inst);
-    //     break;
-    // }
+    MIRGenericInst gc_instid;
+    switch (ir_inst->scid()) {
+        case ir::Value::vADD:
+            gc_instid = InstAdd;
+            break;
+        case ir::Value::vFADD:
+            gc_instid = InstFAdd;
+            break;
+        case ir::Value::vSUB:
+            gc_instid = InstSub;
+            break;
+        case ir::Value::vFSUB:
+            gc_instid = InstFSub;
+            break;
+        case ir::Value::vMUL:
+            gc_instid = InstMul;
+            break;
+        case ir::Value::vFMUL:
+            gc_instid = InstFMul;
+            break;
+        case ir::Value::vUDIV:
+            gc_instid = InstUDiv;
+            break;
+        case ir::Value::vSDIV:
+            gc_instid = InstSDiv;
+            break;
+        case ir::Value::vFDIV:
+            gc_instid = InstFDiv;
+            break;
+        case ir::Value::vUREM:
+            gc_instid = InstURem;
+            break;
+        case ir::Value::vSREM:
+            gc_instid = InstSRem;
+            break;
+        // case ir::Value::vFREM:
+        //     gc_instid = InstFRem;
+        //     break;
+        default:
+            assert(false && "not supported binary inst");
+            break;
+    }
+    auto ret = ctx.new_vreg(ir_inst->type());
+    auto inst = new MIRInst(gc_instid);
+    inst->set_operand(0, ret);
+    inst->set_operand(1, ctx.map2operand(ir_inst->operand(0)));
+    inst->set_operand(2, ctx.map2operand(ir_inst->operand(1)));
+    ctx.emit_inst(inst);
+    ctx.add_valmap(ir_inst, ret);
 }
 
-// void lower(ir::BranchInst* ir_inst, LoweringContext& ctx) {
-//     if (!ir_inst->is_cond()) {
-//         // unconditional branch
-//         // emit_branch();
-//     }
-// }
+void emit_branch(ir::BasicBlock* srcblock,
+                 ir::BasicBlock* dstblock,
+                 LoweringContext& lctx);
+
+void lower(ir::BranchInst* ir_inst, LoweringContext& ctx) {
+    auto src_block = ir_inst->parent();
+
+    if (ir_inst->is_cond()) {
+        // TODO: conditional branch
+    } else {
+        // unconditional branch
+        auto dst_block = ir_inst->dest();
+        emit_branch(src_block, dst_block, ctx);
+    }
+}
+
+void emit_branch(ir::BasicBlock* srcblock,
+                 ir::BasicBlock* dstblock,
+                 LoweringContext& lctx) {
+    auto dst_mblock = lctx.map2block(dstblock);
+    auto src_mblock = lctx.map2block(srcblock);
+    auto operand = MIROperand::as_reloc(dst_mblock);
+    auto inst = new MIRInst(InstJump);
+    inst->set_operand(0, operand);
+    lctx.emit_inst(inst);
+}
 
 }  // namespace mir

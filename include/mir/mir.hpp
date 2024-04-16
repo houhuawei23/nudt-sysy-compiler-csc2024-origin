@@ -208,6 +208,9 @@ class MIROperand {
     }
     // as invalid reg
     // as reloc
+    static MIROperand* as_reloc(MIRRelocable* reloc) {
+        return new MIROperand(reloc, OperandType::Special);
+    }
     // as prob?
 
    public:
