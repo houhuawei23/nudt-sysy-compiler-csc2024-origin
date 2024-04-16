@@ -287,19 +287,19 @@ class IRBuilder {
         auto entryBlock=block()->parent()->entry();
         if (dims.size() == 0) {
             inst = new AllocaInst(base_type, entryBlock, name, is_const);
-            if (!base_type->is_pointer()) {
-                auto next = block()->parent()->next();
-                StoreInst* store_inst = nullptr;
-                switch(inst->base_type()->btype()) {
-                    case ir::INT32:
-                        store_inst = new StoreInst(ir::Constant::gen_i32(0), inst, next);
-                        break;
-                    case ir::FLOAT:
-                        store_inst = new StoreInst(ir::Constant::gen_f32(0.0), inst, next);
-                        break;
-                }
-                next->emplace_first_inst(store_inst);
-            }
+            // if (!base_type->is_pointer()) {
+            //     auto next = block()->parent()->next();
+            //     StoreInst* store_inst = nullptr;
+            //     switch(inst->base_type()->btype()) {
+            //         case ir::INT32:
+            //             store_inst = new StoreInst(ir::Constant::gen_i32(0), inst, next);
+            //             break;
+            //         case ir::FLOAT:
+            //             store_inst = new StoreInst(ir::Constant::gen_f32(0.0), inst, next);
+            //             break;
+            //     }
+            //     next->emplace_first_inst(store_inst);
+            // }
         }
         else inst = new AllocaInst(base_type, dims, entryBlock, name, is_const);
         /* hhw, add alloca to function entry block*/

@@ -38,7 +38,7 @@ class Constant : public User {
         : User(Type::double_type(), vCONSTANT, name), _f64(f64) {}
 
     Constant() : User(Type::void_type(), vCONSTANT, "VOID") {}
-    Constant(const_str_ref name) : User(Type::undefine_type(), vCONSTANT, "UNDEFINE") {}
+    Constant(const_str_ref name) : User(Type::undefine_type(), vCONSTANT, "undef") {}
      
 
    public:
@@ -141,7 +141,7 @@ class Constant : public User {
     }
 
     static Constant* gen_undefine(){
-        std::string name="UNDEFINE";
+        std::string name="undef";
         auto iter = cache.find(name);
         if (iter != cache.end()) {
             return iter->second;

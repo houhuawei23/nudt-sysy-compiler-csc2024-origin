@@ -20,6 +20,7 @@ typedef enum : size_t {
     INT32,
     FLOAT,   // represent f32 in C
     DOUBLE,  // represent f64
+    
 
     LABEL,  // BasicBlock
     POINTER,
@@ -65,7 +66,8 @@ class Type {
         bool is_float32();
         bool is_double();
         bool is_float() { return is_float32() || is_double(); }
-        
+        bool is_undef();
+
         bool is_label();
         bool is_pointer();
         bool is_array();

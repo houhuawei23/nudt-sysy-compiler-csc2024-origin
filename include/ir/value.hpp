@@ -200,6 +200,7 @@ class Value {
         bool is_float32() const { return _type->is_float32(); }
         bool is_double() const { return _type->is_double(); }
         bool is_float() const { return _type->is_float(); }
+        bool is_undef() const {return _type->is_undef(); }
         bool is_pointer() const { return _type->is_pointer(); }
         bool is_void()const {return _type->is_void(); }
 

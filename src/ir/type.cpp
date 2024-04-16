@@ -72,6 +72,10 @@ bool Type::is_double() {
     return _btype == DOUBLE;
 }
 
+bool Type::is_undef(){
+    return _btype == UNDEFINE;
+}
+
 bool Type::is_label() {
     return _btype == LABEL;
 }
