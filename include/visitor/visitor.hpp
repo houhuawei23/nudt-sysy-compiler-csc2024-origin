@@ -12,33 +12,30 @@
 
 namespace sysy {
 class SysYIRGenerator : public SysYBaseVisitor {
-   private:
-    ir::Module* _module = nullptr;
-    ir::IRBuilder _builder;
-    ir::SymbolTableBeta _tables;
-    antlr4::ParserRuleContext* _root;
+    private:
+        ir::Module* _module = nullptr;
+        ir::IRBuilder _builder;
+        ir::SymbolTableBeta _tables;
+        antlr4::ParserRuleContext* _root;
 
-    int _d = 0, _n = 0;
-    ir::Type* _current_type = nullptr;
-    std::vector<int> _path;
-    bool _is_alloca = false;
+        int _d = 0, _n = 0;
+        ir::Type* _current_type = nullptr;
+        std::vector<int> _path;
+        bool _is_alloca = false;
 
-   public:
-    SysYIRGenerator(){};
-    SysYIRGenerator(ir::Module* module, antlr4::ParserRuleContext* root)
-        : _module(module), _root(root) {}
+    public:
+        SysYIRGenerator(){};
+        SysYIRGenerator(ir::Module* module, antlr4::ParserRuleContext* root) : _module(module), _root(root) {}
 
-    // 'get' means get the same obj int the class
-    // 'copy' means get the copy of obj
+    public:
+        ir::Module* module() { return _module; }
+        ir::IRBuilder& builder() { return _builder; }
 
-    ir::Module* module() { return _module; }
-
-    ir::IRBuilder& builder() { return _builder; }
-
-    ir::Module* build_ir() {
-        visit(_root);
-        return _module;
-    }
+    public:
+        ir::Module* build_ir() {
+            visit(_root);
+            return _module;
+        }
 
     //! Override all visit methods
     virtual std::any visitCompUnit(SysYParser::CompUnitContext* ctx) override;

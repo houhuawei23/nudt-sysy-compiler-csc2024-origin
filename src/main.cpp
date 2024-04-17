@@ -9,6 +9,8 @@
 #include "pass/pass.hpp"
 #include "pass/analysis/dom.hpp"
 #include "pass/optimize/mem2reg.hpp"
+#include "pass/optimize/DCE.hpp"
+#include "pass/optimize/SCP.hpp"
 
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
@@ -17,17 +19,12 @@
 #include "target/riscv.hpp"
 #include "target/riscvtarget.hpp"
 
-#include "pass/optimize/DCE.hpp"
-#include "pass/optimize/SCP.hpp"
-
-// clang-format on
-
 using namespace std;
 
 /*
-./main -f test.c -i -t mem2reg -o gen.ll -O0 -L0
-*/
-
+ * @brief: main
+ *      ./main -f test.c -i -t mem2reg -o gen.ll -O0 -L0
+ */
 int main(int argc, char* argv[]) {
     sysy::Config config;
     config.parse_cmd_args(argc, argv);
@@ -46,8 +43,6 @@ int main(int argc, char* argv[]) {
     ir::Module* base_module = new ir::Module();
     sysy::SysYIRGenerator gen(base_module, ast_root);
     auto module_ir = gen.build_ir();
-
-    // auto module_ir = gen.module();
 
     //! 2. Optimization Passes
     pass::FunctionPassManager fpm;
@@ -72,8 +67,8 @@ int main(int argc, char* argv[]) {
             fpm.run(f);
         }
     }
-    // ir print
-    if (config.gen_ir) {
+
+    if (config.gen_ir) {  // ir print
         if (config.outfile.empty()) {
             module_ir->print(std::cout);
         } else {
@@ -82,6 +77,7 @@ int main(int argc, char* argv[]) {
             module_ir->print(fout);
         }
     }
+
     //! 3. Code Generation
     if (config.gen_asm) {
         auto target = mir::RISCVTarget();
