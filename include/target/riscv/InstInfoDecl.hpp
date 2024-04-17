@@ -3,10 +3,10 @@
 #pragma once
 #include "mir/mir.hpp"
 
-#define TARGET_NAMESPACE_BEGIN namespace mir::RISCV {
-#define TARGET_NAMESPACE_END }
+#define RISCV_NAMESPACE_BEGIN namespace mir::RISCV {
+#define RISCV_NAMESPACE_END }
 
-TARGET_NAMESPACE_BEGIN
+RISCV_NAMESPACE_BEGIN
 enum RISCVInst {
     RISCVInstBegin = ISASpecificBegin,
     ADD,
@@ -66,4 +66,4 @@ enum RISCVInst {
 
 TargetInstInfo& getRISCVInstInfo();
 
-TARGET_NAMESPACE_END
+RISCV_NAMESPACE_END

@@ -3,16 +3,18 @@
 #pragma once
 #include "mir/mir.hpp"
 
-#define TARGET_NAMESPACE_BEGIN namespace mir::{{target_name}} {
-#define TARGET_NAMESPACE_END }
+#define {{target_name}}_NAMESPACE_BEGIN namespace mir::{{target_name}} {
+#define {{target_name}}_NAMESPACE_END }
 
-TARGET_NAMESPACE_BEGIN
+{{target_name}}_NAMESPACE_BEGIN
 enum {{target_name}}Inst {
     {{target_name}}InstBegin = ISASpecificBegin,
-    {% for name, inst in insts.items() %}{{name}},{% endfor %}
+    {% for inst in insts -%}
+        {{inst['name']}},
+    {%- endfor %}
     {{target_name}}InstEnd
 };
 
 TargetInstInfo& get{{target_name}}InstInfo();
 
-TARGET_NAMESPACE_END
+{{target_name}}_NAMESPACE_END

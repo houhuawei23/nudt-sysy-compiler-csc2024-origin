@@ -75,7 +75,9 @@ void create_mir_module(ir::Module& ir_module, LoweringContext& lowering_ctx) {
     //! codegen
     auto& target = lowering_ctx._target;  // Target*
     CodeGenContext codegen_ctx{target, target.get_datalayout(),
-                               target.get_inst_info(), target.get_frame_info(),
+                               target.get_target_inst_info(), 
+                               target.get_target_isel_info(), //! segmentation fault, not implemented
+                               target.get_target_frame_info(),
                                MIRFlags{}};
     lowering_ctx.set_code_gen_ctx(&codegen_ctx);
     //! lower all functions
@@ -88,8 +90,8 @@ void create_mir_module(ir::Module& ir_module, LoweringContext& lowering_ctx) {
         create_mir_function(ir_func, mir_func, lowering_ctx);
 
         // 2: inst selection
-        // ISelContext isel_ctx(&codegen_ctx);
-        // isel_ctx.run_isel(mir_func);
+        ISelContext isel_ctx(codegen_ctx);
+        isel_ctx.run_isel(mir_func);
 
         // register coalescing
         // peephole optimization
@@ -343,7 +345,7 @@ void lower(ir::StoreInst* ir_inst, LoweringContext& ctx) {
 }
 //! ReturnInst
 void lower(ir::ReturnInst* ir_inst, LoweringContext& ctx) {
-    ctx._target.get_frame_info().emit_return(ir_inst, ctx);
+    ctx._target.get_target_frame_info().emit_return(ir_inst, ctx);
 }
 
 }  // namespace mir

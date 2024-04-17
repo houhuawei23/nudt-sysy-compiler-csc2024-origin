@@ -224,7 +224,7 @@ class MIRInst {
     static const int max_operand_num = 7;
 
    protected:
-    uint32_t _code;
+    uint32_t _opcode;
     MIRBlock* _parent;
     std::array<MIROperand*, max_operand_num> _operands;
     // std::vector<MIROperand*> _operands;
@@ -232,10 +232,10 @@ class MIRInst {
    public:
     MIRInst() = default;
     // MIRInst(ir::Instruction* ir_inst, MIRBlock* parent);
-    MIRInst(uint32_t code) : _code(code) {}
+    MIRInst(uint32_t opcode) : _opcode(opcode) {}
 
     // get
-    uint32_t code() { return _code; }
+    uint32_t opcode() { return _opcode; }
     MIROperand* operand(int idx) { return _operands[idx]; }
 
     // set
@@ -262,7 +262,8 @@ class MIRBlock : public MIRRelocable {
 
     void inst_sel(ir::BasicBlock* ir_bb);
     void add_inst(MIRInst* inst) { _insts.push_back(inst); }
-
+    
+    std::list<MIRInst*>& insts() { return _insts; }
    public:
     void print(std::ostream& os);
 };

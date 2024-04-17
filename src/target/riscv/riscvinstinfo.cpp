@@ -23,7 +23,7 @@ static std::ostream& operator<<(std::ostream& out, mir::MIROperand& mop) {
         std::cerr << "unknown operand type" << std::endl;
     }
 
-
+    return out;
 }
 
 }  // namespace RISCV

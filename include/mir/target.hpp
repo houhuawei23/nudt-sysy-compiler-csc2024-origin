@@ -18,10 +18,12 @@ class Target {
     virtual ~Target() = default;
     virtual DataLayout& get_datalayout() = 0;
     // virtual  TargetScheduleModel& get_schedule_model()  = 0;
-    virtual TargetInstInfo& get_inst_info() = 0;
-    // virtual  TargetISelInfo& get_isel_info()  = 0;
-    virtual TargetFrameInfo& get_frame_info() = 0;
+    virtual TargetInstInfo& get_target_inst_info() = 0;
+    virtual TargetISelInfo& get_target_isel_info() = 0;
+    virtual TargetFrameInfo& get_target_frame_info() = 0;
     // virtual  TargetRegisterInfo* get_register_info()  = 0;
+
+    virtual void emit_assembly(std::ostream& out, MIRModule& module) = 0;
 };
 
 struct MIRFlags final {
@@ -38,7 +40,7 @@ struct CodeGenContext final {
     //  TargetScheduleModel& scheduleModel;
     DataLayout& dataLayout;
     TargetInstInfo& instInfo;
-    //  TargetISelInfo& iselInfo;
+    TargetISelInfo& iselInfo;
     TargetFrameInfo& frameInfo;
     //  TargetRegisterInfo* registerInfo;
     MIRFlags flags;

@@ -74,13 +74,22 @@ class RISCVTarget : public Target {
     RISCVFrameInfo _frameinfo;
     // RISCVRegisterInfo mRegisterInfo;
 
-    DataLayout& get_datalayout() override { return _datalayout; }
-    TargetInstInfo& get_inst_info() override {
-        return RISCV::getRISCVInstInfo();
-    }
-    TargetFrameInfo& get_frame_info() override { return _frameinfo; }
-
    public:
     RISCVTarget() = default;
+    //! getXXX
+    DataLayout& get_datalayout() override { return _datalayout; }
+    TargetInstInfo& get_target_inst_info() override {
+        return RISCV::getRISCVInstInfo();
+    }
+    TargetISelInfo& get_target_isel_info() override {
+        std::cerr << "Not Impl get_isel_info" << std::endl;
+        // return RISCV::getRISCVISelInfo();
+    }
+    TargetFrameInfo& get_target_frame_info() override { return _frameinfo; }
+    
+    // emit_assembly
+    void emit_assembly(std::ostream& out, MIRModule& module) override {
+        std::cerr << "Not Impl emit_assembly" << std::endl;
+    }
 };
 }  // namespace mir

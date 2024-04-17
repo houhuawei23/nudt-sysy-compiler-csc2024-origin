@@ -17,6 +17,9 @@
 #include "target/riscv/riscv.hpp"
 #include "target/riscv/riscvtarget.hpp"
 
+#include "target/generic/generic.hpp"
+#include "target/generic/generictarget.hpp"
+
 #include "pass/optimize/DCE.hpp"
 #include "pass/optimize/SimpleConstPropagation.hpp"
 
@@ -89,6 +92,7 @@ int main(int argc, char* argv[]) {
     //! 3. Code Generation
     if (config.gen_asm) {
         auto target = mir::RISCVTarget();
+        // auto target = mir::GENERICTarget();
         auto mir_module = mir::create_mir_module(*module_ir, target);
     }
 
