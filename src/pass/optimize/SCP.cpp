@@ -1,11 +1,11 @@
 #include "pass/optimize/optimize.hpp"
-#include "pass/optimize/SimpleConstPropagation.hpp"
+#include "pass/optimize/SCP.hpp"
 #include <vector>
 //当前是简单常量传播遍
 static std::set<ir::Instruction*>worklist;
 
 namespace pass{
-    void SimpleConstPropagation::run(ir::Function* func){
+    void SCP::run(ir::Function* func){
         if(!func->entry())return;
         // func->print(std::cout);
         for(auto bb:func->blocks()){
@@ -22,7 +22,7 @@ namespace pass{
         }
     }
 
-    void SimpleConstPropagation::addConstFlod(ir::Instruction* inst){
+    void SCP::addConstFlod(ir::Instruction* inst){
         auto replval=inst->getConstantRepl();
         for(auto puse:inst->uses()){
             auto puser=puse->user();
@@ -37,5 +37,5 @@ namespace pass{
         inst->parent()->delete_inst(inst);
     }
 
-    std::string SimpleConstPropagation::name(){return "SimpleConstPropagation";}
+    std::string SCP::name(){return "SCP";}
 }

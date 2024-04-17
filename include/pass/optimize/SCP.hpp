@@ -6,7 +6,7 @@
 #include "pass/pass.hpp"
 
 namespace pass{
-    class SimpleConstPropagation:public FunctionPass{
+    class SCP:public FunctionPass{
         public:
             void run(ir::Function* func)override;
             std::string name()override;

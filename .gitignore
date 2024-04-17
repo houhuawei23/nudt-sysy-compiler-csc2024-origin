@@ -1,6 +1,6 @@
 *.local
 *.s
-
+mytest.sh
 **/build
 **/lib
 **/local
