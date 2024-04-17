@@ -181,14 +181,14 @@ class Constant : public User {
     int32_t i32() const {
         if (not is_i32()) {
             std::cerr << "Implicit type conversion!" << std::endl;
-            return (int32_t)_i32;
+            return (int32_t)_f32;
         }
         return _i32;
     }
     float f32() const {
         if (not is_float32()) {
             std::cerr << "Implicit type conversion!" << std::endl;
-            return (float)_f32;
+            return (float)_i32;
         }
         return _f32;
     }

@@ -218,7 +218,7 @@ void UnaryInst::print(std::ostream& os) {
                 break;
         }
         os << *(get_value()->type()) << " ";
-        os << get_value()->name() << " ";
+        os << get_value()->name();
         os << " to " << *type();
     }
     /* comment */
@@ -421,8 +421,8 @@ void BranchInst::print(std::ostream& os) {
 /*
  * @brief: GetElementPtrInst::print
  * @details:
- *      数组: <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32
- * <idx> 指针: <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
+ *      数组: <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32 <idx>
+ *      指针: <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
  */
 void GetElementPtrInst::print(std::ostream& os) {
     if (is_arrayInst()) {
@@ -519,6 +519,28 @@ bool PhiInst::is_constprop() {
 
 Constant* PhiInst::getConstantRepl() {
     return dyn_cast<Constant>(getval(0));
+}
+
+/*
+ * @brief: BitcastInst::print
+ * @details: 
+ *      <result> = bitcast <ty> <value> to i8*
+ */
+void BitCastInst::print(std::ostream& os) {
+    os << name() << " = bitcast ";
+    os << *type() << " " << value()->name();
+    os << " to i8*";
+}
+
+/*
+ * @brief: memset
+ * @details:
+ *      call void @llvm.memset.p0i8.i64(i8* <dest>, i8 0, i64 <len>, i1 false)
+ */
+void MemsetInst::print(std::ostream& os) {
+    assert(dyn_cast<PointerType>(type()) && "type error");
+    os << "call void @llvm.memset.p0i8.i64(i8* ";
+    os << value()->name() << ", i8 0, i64 " << dyn_cast<PointerType>(type())->base_type()->size() << ", i1 false)";
 }
 
 }  // namespace ir

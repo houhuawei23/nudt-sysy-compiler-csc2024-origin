@@ -1,4 +1,4 @@
-/**
+/*
  * @file builder.hpp
  *
  */
@@ -9,8 +9,8 @@
 #include "ir/instructions.hpp"
 namespace ir {
 
-/**
- * @brief IR Builder for Module.
+/*
+ * @brief: IR Builder for Module.
  *
  */
 class IRBuilder {
@@ -284,7 +284,7 @@ class IRBuilder {
     //! Create Alloca Instruction
     AllocaInst* create_alloca(Type* base_type, bool is_const=false, 
                               std::vector<int> dims={}, 
-                              const_str_ref comment="") {
+                              const_str_ref comment="", int capacity=1) {
         AllocaInst* inst = nullptr;
         auto entryBlock=block()->parent()->entry();
         if (dims.size() == 0) {
@@ -303,7 +303,7 @@ class IRBuilder {
             //     next->emplace_first_inst(store_inst);
             // }
         }
-        else inst = new AllocaInst(base_type, dims, entryBlock, "", is_const);
+        else inst = new AllocaInst(base_type, dims, entryBlock, "", is_const, capacity);
         /* hhw, add alloca to function entry block*/
         block()->parent()->entry()->emplace_back_inst(inst);
         inst->set_comment(comment);
@@ -398,6 +398,20 @@ class IRBuilder {
         if (dims.size() == 0 && cur_dims.size() == 0) inst = new GetElementPtrInst(base_type, value, _block, idx);
         else if (dims.size() == 0 && cur_dims.size() != 0) inst = new GetElementPtrInst(base_type, value, _block, idx, cur_dims);
         else inst = new GetElementPtrInst(base_type, value, _block, idx, dims, cur_dims);
+        block()->emplace_back_inst(inst);
+        return inst;
+    }
+
+    //! create BitCast Instruction
+    BitCastInst* create_bitcast(Type* type, Value* value) {
+        BitCastInst* inst = new BitCastInst(type, value, _block);
+        block()->emplace_back_inst(inst);
+        return inst;
+    }
+
+    //! create Memset Instruction
+    MemsetInst* create_memset(Type* type, Value* value) {
+        MemsetInst* inst = new MemsetInst(type, value, _block);
         block()->emplace_back_inst(inst);
         return inst;
     }

@@ -39,8 +39,8 @@ Type* Type::undefine_type(){
 Type* Type::pointer_type(Type* baseType) {
     return PointerType::gen(baseType);
 }
-Type* Type::array_type(Type* baseType, std::vector<int> dims) {
-    return ArrayType::gen(baseType, dims);
+Type* Type::array_type(Type* baseType, std::vector<int> dims, int capacity) {
+    return ArrayType::gen(baseType, dims, capacity);
 }
 Type* Type::func_type(Type* ret_type, const type_ptr_vector& arg_types) {
     return FunctionType::gen(ret_type, arg_types);
@@ -140,8 +140,8 @@ PointerType* PointerType::gen(Type* base_type) {
     PointerType* ptype = new PointerType(base_type);
     return ptype;
 }
-ArrayType* ArrayType::gen(Type* baseType, std::vector<int> dims) {
-    ArrayType* ptype = new ArrayType(baseType, dims);
+ArrayType* ArrayType::gen(Type* baseType, std::vector<int> dims, int capacity) {
+    ArrayType* ptype = new ArrayType(baseType, dims, capacity);
     return ptype;
 }
 FunctionType* FunctionType::gen(Type* ret_type, const type_ptr_vector& arg_types) {

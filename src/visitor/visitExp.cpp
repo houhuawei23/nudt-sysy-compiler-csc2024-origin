@@ -69,7 +69,7 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
             if (ctx->var()->exp().empty()) {
                 dims.erase(dims.begin());
                 ptr = _builder.create_getelementptr(base_type, ptr, ir::Constant::gen_i32(0), dims, cur_dims);
-            } else if (delta == 1) {
+            } else if (delta > 0) {
                 dims.erase(dims.begin());
                 ptr = _builder.create_getelementptr(base_type, ptr, ir::Constant::gen_i32(0), dims, cur_dims);
             }
@@ -197,8 +197,7 @@ std::any SysYIRGenerator::visitMultiplicativeExp(
     if (ir::isa<ir::Constant>(op1) && ir::isa<ir::Constant>(op2)) {  //! both constant (常数折叠)
         ir::Constant* cop1 = dyn_cast<ir::Constant>(op1);
         ir::Constant* cop2 = dyn_cast<ir::Constant>(op2);
-        auto higher_Btype =
-            std::max(cop1->type()->btype(), cop2->type()->btype());
+        auto higher_Btype = std::max(cop1->type()->btype(), cop2->type()->btype());
 
         int32_t ans_i32;
         float ans_f32;

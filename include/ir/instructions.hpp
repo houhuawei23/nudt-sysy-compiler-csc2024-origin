@@ -11,6 +11,7 @@ class AllocaInst;
 class LoadInst;
 class StoreInst;
 class GetElementPtrInst;
+class BitcastInst;
 
 class ReturnInst;
 class BranchInst;
@@ -35,22 +36,18 @@ class AllocaInst : public Instruction {
 
    public:  // 构造函数
     //! 1. Alloca Scalar
-    AllocaInst(Type* base_type,
-               BasicBlock* parent = nullptr,
-               const_str_ref name = "",
-               bool is_const = false)
+    AllocaInst(Type* base_type, BasicBlock* parent=nullptr,
+               const_str_ref name="", bool is_const=false)
         : Instruction(vALLOCA, ir::Type::pointer_type(base_type), parent, name),
           _is_const(is_const) {}
 
     //! 2. Alloca Array
-    AllocaInst(Type* base_type,
-               std::vector<int> dims,
-               BasicBlock* parent = nullptr,
-               const_str_ref name = "",
-               bool is_const = false)
+    AllocaInst(Type* base_type, std::vector<int> dims,
+               BasicBlock* parent=nullptr, const_str_ref name="",
+               bool is_const=false, int capacity=1)
         : Instruction(
               vALLOCA,
-              ir::Type::pointer_type(ir::Type::array_type(base_type, dims)),
+              ir::Type::pointer_type(ir::Type::array_type(base_type, dims, capacity)),
               parent,
               name),
           _is_const(is_const) {}
@@ -81,22 +78,24 @@ class AllocaInst : public Instruction {
 class StoreInst : public Instruction {
     friend class IRBuilder;
 
-   public:
-    StoreInst(Value* value, Value* ptr, BasicBlock* parent = nullptr)
-        : Instruction(vSTORE, Type::void_type(), parent) {
-        add_operand(value);
-        add_operand(ptr);
-    }
+    public:
+        StoreInst(Value* value, Value* ptr, BasicBlock* parent = nullptr)
+            : Instruction(vSTORE, Type::void_type(), parent) {
+            add_operand(value);
+            add_operand(ptr);
+        }
 
-   public:
-    Value* value() const { return operand(0); }
-    Value* ptr() const { return operand(1); }
+    public:
+        Value* value() const { return operand(0); }
+        Value* ptr() const { return operand(1); }
 
-   public:
-    static bool classof(const Value* v) { return v->scid() == vSTORE; }
-    void print(std::ostream& os) override;
-    bool is_constprop(){return false;}
-    Constant* getConstantRepl(){return nullptr;}
+    public:
+        static bool classof(const Value* v) { return v->scid() == vSTORE; }
+        void print(std::ostream& os) override;
+
+    public: 
+        bool is_constprop() { return false; }
+        Constant* getConstantRepl() { return nullptr; }
 };
 
 /*
@@ -368,10 +367,62 @@ class FCmpInst : public Instruction {
 };
 
 /*
+ * @brief bitcast Instruction
+ * @details:
+ *      <result> = bitcast <ty> <value> to i8*
+ */
+class BitCastInst : public Instruction {
+    friend class IRBuilder;
+
+    public: 
+        BitCastInst(Type* type, Value* value, BasicBlock* parent)
+            : Instruction(vBITCAST, type, parent) {
+            add_operand(value);
+        }
+    
+    public:
+        Value* value() const { return operand(0); }
+
+    public:
+            bool is_constprop() { return false; }
+            Constant* getConstantRepl() { return nullptr; }
+    
+    public:
+        static bool classof(const Value* v) { return v->scid() == vBITCAST; }
+        void print(std::ostream& os) override;
+};
+
+/*
+ * @brief: memset
+ * @details: 
+ *      call void @llvm.memset.inline.p0.p0.i64(i8* <dest>, i8 0, i64 <len>, i1 <isvolatile>)
+ */
+class MemsetInst : public Instruction {
+    friend class IRBuilder;
+
+    public:
+        MemsetInst(Type* type, Value* value, BasicBlock* parent)
+            : Instruction(vMEMSET, type, parent) {
+            add_operand(value);
+        }
+    
+    public:
+        Value* value() const { return operand(0); }
+    
+    public:
+        static bool classof(const Value* v) { return v->scid() == vMEMSET; }
+        void print(std::ostream& os) override;
+
+    public:
+            bool is_constprop() { return false; }
+            Constant* getConstantRepl() { return nullptr; }
+};
+
+/*
  * @brief GetElementPtr Instruction
  * @details:
- *      数组: <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32
- * <idx> 指针: <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
+ *      数组: <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32 <idx>
+ *      指针: <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
  * @param:
  *      1. _idx: 数组各个维度的下标索引
  *      2. _id : calculate array address OR pointer address
@@ -449,8 +500,8 @@ class GetElementPtrInst : public Instruction {
    public:
     static bool classof(const Value* v) { return v->scid() == vGETELEMENTPTR; }
     void print(std::ostream& os) override;
-    bool is_constprop(){return false;}
-    Constant* getConstantRepl(){return nullptr;}
+    bool is_constprop() { return false; }
+    Constant* getConstantRepl() { return nullptr; }
 };
 
 class PhiInst : public Instruction {

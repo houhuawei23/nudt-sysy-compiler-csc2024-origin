@@ -130,6 +130,9 @@ class Value {
         vBASIC_BLOCK,
         vGLOBAL_VAR,
 
+        vBITCAST, 
+        vMEMSET, 
+
         // instructions class id
         vINSTRUCTION,
         // vMEM_BEGIN,
@@ -273,7 +276,7 @@ class Value {
 
    public:
     ValueId scid() const { return _scid; }
-    virtual void print(std::ostream& os){};
+    virtual void print(std::ostream& os) {};
 };
 
 /**
