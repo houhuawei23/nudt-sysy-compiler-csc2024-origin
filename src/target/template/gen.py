@@ -59,7 +59,6 @@ def load_inst_info(file):
         info["format"] = format
         info["operands"] = copy.deepcopy(template["operands"])
         # print(info)
-    print(target_name)
     return target_name, instances
     # print(yaml.dump(isa_data, sort_keys=False, default_flow_style=False))
 
