@@ -152,9 +152,9 @@ class ReturnInst : public Instruction {
     }
 
    public:
-    bool has_return_value() const { return not _operands.empty(); }
+
     Value* return_value() const {
-        return has_return_value() ? operand(0) : nullptr;
+        return _operands.empty() ? nullptr : operand(0);
     }
 
    public:

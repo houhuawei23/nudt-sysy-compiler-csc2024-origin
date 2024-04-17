@@ -170,14 +170,14 @@ class MIROperand {
     // hash?
 
     intmax_t imm() { return std::get<intmax_t>(_storage); }
-    uint32_t reg() { return std::get<MIRRegister*>(_storage)->reg(); }
+    uint32_t reg() const { return std::get<MIRRegister*>(_storage)->reg(); }
     MIRRelocable* reloc() { return std::get<MIRRelocable*>(_storage); }
 
-    bool is_imm() { return std::holds_alternative<intmax_t>(_storage); }
-    bool is_reg() { return std::holds_alternative<MIRRegister*>(_storage); }
+    constexpr bool is_imm() { return std::holds_alternative<intmax_t>(_storage); }
+    constexpr bool is_reg() { return std::holds_alternative<MIRRegister*>(_storage); }
     bool is_reloc() { return std::holds_alternative<MIRRelocable*>(_storage); }
-    bool is_prob() { return false; }
-    bool is_init() { return !std::holds_alternative<std::monostate>(_storage); }
+    constexpr bool is_prob() { return false; }
+    constexpr bool is_init() { return !std::holds_alternative<std::monostate>(_storage); }
 
     template <typename T>
     bool is() {
@@ -359,7 +359,7 @@ class MIRDataStorage : public MIRRelocable {
  */
 using MIRRelocable_UPtr = std::unique_ptr<MIRRelocable>;
 class MIRGlobalObject {
-   private:
+   public:
     MIRModule* _parent;
     ir::Value* _ir_global;
     size_t align;
@@ -377,6 +377,7 @@ class MIRGlobalObject {
         : _parent(parent), align(align), _reloc(std::move(reloc)) {}
 
    public:
+
     void print(std::ostream& os);
 };
 

@@ -29,4 +29,12 @@ class TargetISelInfo {
     virtual bool match_select(MIRInst* inst, ISelContext* ctx) const = 0;
 };
 
+
+
+
+//! helper function to create a new MIRInstq
+
+uint32_t select_copy_opcode(MIROperand* dst, MIROperand* src);
+
+
 }  // namespace mir

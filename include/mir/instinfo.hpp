@@ -55,4 +55,11 @@ class TargetInstInfo {
 
     // virtual bool match_branch(const MIRInst* inst, MIRBlock* target)
 };
+
+//! helper functions
+constexpr bool isOperandVReg(MIROperand* operand) {
+    return operand->is_reg();
+    // && isVirtualReg(operand->reg())
+}
+
 }  // namespace mir

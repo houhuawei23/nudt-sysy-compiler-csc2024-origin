@@ -37,12 +37,28 @@ void Config::print_help() {
 
 void Config::print_info() {
     if (log_level > LogLevel::SILENT) {
-        std::cout << "In File  : " << infile << std::endl;
-        std::cout << "Out File : " << outfile << std::endl;
+        std::cout << "In       : " << infile << std::endl;
+        if (outfile.empty()) {
+            std::cout << "Out      : "
+                      << "std::cout" << std::endl;
+            // std::cout << "Out      : ";
+            // if (gen_ir) {
+            //     std::cout << "gen.ll" << std::endl;
+            // } else {
+            //     std::cout << "gen.s" << std::endl;
+            // }
+        } else {
+            std::cout << "Out      : " << outfile << std::endl;
+        }
+
         std::cout << "Gen IR   : " << (gen_ir ? "Yes" : "No") << std::endl;
+
         std::cout << "Gen ASM  : " << (gen_asm ? "Yes" : "No") << std::endl;
+
         std::cout << "Opt Level: " << opt_level << std::endl;
+
         std::cout << "Log Level: " << log_level << std::endl;
+
         if (not pass_names.empty()) {
             std::cout << "Passes   : ";
             for (const auto& pass : pass_names) {

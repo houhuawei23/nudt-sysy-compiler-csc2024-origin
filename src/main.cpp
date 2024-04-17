@@ -32,7 +32,11 @@ int main(int argc, char* argv[]) {
     sysy::Config config;
     config.parse_cmd_args(argc, argv);
     config.print_info();
-
+    if (config.infile.empty()) {
+        cerr << "Error: input file not specified" << endl;
+        config.print_help();
+        return EXIT_FAILURE;
+    }
     ifstream fin(config.infile);
 
     antlr4::ANTLRInputStream input(fin);

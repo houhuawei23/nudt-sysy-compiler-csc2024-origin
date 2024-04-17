@@ -1,6 +1,6 @@
 #pragma once
 #include "mir/mir.hpp"
-namespace RISCV {
+namespace mir::RISCV {
 // clang-format off
 enum RISCVRegister : uint32_t {
     GPRBegin,

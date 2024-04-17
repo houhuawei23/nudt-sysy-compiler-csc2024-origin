@@ -24,8 +24,8 @@ std::unique_ptr<MIRModule> create_mir_module(ir::Module& ir_module,
 }
 
 void create_mir_module(ir::Module& ir_module, LoweringContext& lowering_ctx) {
-    auto& mir_module =
-        lowering_ctx._mir_module;  // return ref, using ref to use
+    // return ref, using ref to use
+    auto& mir_module = lowering_ctx._mir_module;
     auto& functions = mir_module.functions();
     auto& global_objs = mir_module.global_objs();
 
@@ -111,7 +111,7 @@ MIRFunction* create_mir_function(ir::Function* ir_func,
     // map from ir to mir
     // std::unordered_map<ir::BasicBlock*, MIRBlock*> block_map;
     auto& block_map = lowering_ctx._block_map;  // return ref, using ref to use
-    std::unordered_map<ir::Value*, MIROperand> value_map;
+
     std::unordered_map<ir::Value*, MIROperand*> storage_map;
 
     auto& target = lowering_ctx._target;         // Target&
@@ -144,14 +144,15 @@ MIRFunction* create_mir_function(ir::Function* ir_func,
         if (ir_inst->scid() != ir::Value::vALLOCA)
             continue;
         // else: alloca inst
-        auto type = dyn_cast<ir::PointerType>(ir_inst->type());
+        auto pointee_type =
+            dyn_cast<ir::PointerType>(ir_inst->type())->base_type();
         uint32_t align = 4;  // TODO: align, need bind to ir object
         auto storage = mir_func->add_stack_obj(
             lowering_ctx.next_id(),  // id
             static_cast<uint32_t>(
-                type->size()),  //! size, datalayout; if array??
-            align,              // align
-            0,                  // offset
+                pointee_type->size()),  //! size, datalayout; if array??
+            align,                      // align
+            0,                          // offset
             StackObjectUsage::Local);
         storage_map.emplace(ir_inst, storage);
         // emit load stack object addr inst
@@ -170,6 +171,9 @@ MIRFunction* create_mir_function(ir::Function* ir_func,
         // set current block
         lowering_ctx.set_mir_block(mir_block);
         for (auto ir_inst : ir_block->insts()) {
+            // lowering inst
+            if (ir_inst->scid() == ir::Value::vALLOCA)
+                continue;  // jump alloca
             create_mir_inst(ir_inst, lowering_ctx);
         }
     }
@@ -178,34 +182,12 @@ MIRFunction* create_mir_function(ir::Function* ir_func,
 
 void lower(ir::BinaryInst* ir_inst, LoweringContext& ctx);
 void lower(ir::BranchInst* ir_inst, LoweringContext& ctx);
-void lower(ir::LoadInst* ir_inst, LoweringContext& ctx) {
-    // ir: %13 = load i32, i32* %12
-    auto ret = ctx.new_vreg(ir_inst->type());
-    auto ptr = ctx.map2operand(ir_inst->operand(0));
-    auto align = 4;
-    auto inst = new MIRInst(InstLoad);
-    inst->set_operand(0, ret);
-    inst->set_operand(1, ptr);
+void lower(ir::LoadInst* ir_inst, LoweringContext& ctx);
 
-    ctx.emit_inst(inst);
-    //   .set_operand(2, MIROperand::as_imm(
-    //                       align, OperandType::Special))
-}
-void lower(ir::StoreInst* ir_inst, LoweringContext& ctx) {
-    // auto& ir_store = dyn_cast<ir::StoreInst>(ir_inst);
-    // ir: store type val, type* ptr
-    // align = 4
-    auto inst = new MIRInst(InstStore);
-    inst->set_operand(0, ctx.map2operand(ir_inst->value()));
-    inst->set_operand(1, ctx.map2operand(ir_inst->ptr()));
-
-    ctx.emit_inst(inst);
-}
+void lower(ir::StoreInst* ir_inst, LoweringContext& ctx);
 
 //! return
-void lower(ir::ReturnInst* ir_inst, LoweringContext& ctx) {
-    auto inst = new MIRInst(InstRet);
-}
+void lower(ir::ReturnInst* ir_inst, LoweringContext& ctx);
 
 //! branch
 void lower(ir::BranchInst* ir_inst, LoweringContext& ctx);
@@ -255,54 +237,46 @@ MIRInst* create_mir_inst(ir::Instruction* ir_inst, LoweringContext& ctx) {
             lower(dyn_cast<ir::BranchInst>(ir_inst), ctx);
             break;
         default:
+            assert(false && "not supported inst");
             break;
     }
     return nullptr;
 }
 
+//! BinaryInst
 void lower(ir::BinaryInst* ir_inst, LoweringContext& ctx) {
-    MIRGenericInst gc_instid;
-    switch (ir_inst->scid()) {
-        case ir::Value::vADD:
-            gc_instid = InstAdd;
-            break;
-        case ir::Value::vFADD:
-            gc_instid = InstFAdd;
-            break;
-        case ir::Value::vSUB:
-            gc_instid = InstSub;
-            break;
-        case ir::Value::vFSUB:
-            gc_instid = InstFSub;
-            break;
-        case ir::Value::vMUL:
-            gc_instid = InstMul;
-            break;
-        case ir::Value::vFMUL:
-            gc_instid = InstFMul;
-            break;
-        case ir::Value::vUDIV:
-            gc_instid = InstUDiv;
-            break;
-        case ir::Value::vSDIV:
-            gc_instid = InstSDiv;
-            break;
-        case ir::Value::vFDIV:
-            gc_instid = InstFDiv;
-            break;
-        case ir::Value::vUREM:
-            gc_instid = InstURem;
-            break;
-        case ir::Value::vSREM:
-            gc_instid = InstSRem;
-            break;
-        // case ir::Value::vFREM:
-        //     gc_instid = InstFRem;
-        //     break;
-        default:
-            assert(false && "not supported binary inst");
-            break;
-    }
+    // MIRGenericInst gc_instid;
+    auto gc_instid = [scid = ir_inst->scid()] {
+        switch (scid) {
+            case ir::Value::vADD:
+                return InstAdd;
+            case ir::Value::vFADD:
+                return InstFAdd;
+            case ir::Value::vSUB:
+                return InstSub;
+            case ir::Value::vFSUB:
+                return InstFSub;
+            case ir::Value::vMUL:
+                return InstMul;
+            case ir::Value::vFMUL:
+                return InstFMul;
+            case ir::Value::vUDIV:
+                return InstUDiv;
+            case ir::Value::vSDIV:
+                return InstSDiv;
+            case ir::Value::vFDIV:
+                return InstFDiv;
+            case ir::Value::vUREM:
+                return InstURem;
+            case ir::Value::vSREM:
+                return InstSRem;
+            // case ir::Value::vFREM:
+            //     return InstFRem;
+            default:
+                assert(false && "not supported binary inst");
+        }
+    }();
+
     auto ret = ctx.new_vreg(ir_inst->type());
     auto inst = new MIRInst(gc_instid);
     inst->set_operand(0, ret);
@@ -312,6 +286,7 @@ void lower(ir::BinaryInst* ir_inst, LoweringContext& ctx) {
     ctx.add_valmap(ir_inst, ret);
 }
 
+//! BranchInst
 void emit_branch(ir::BasicBlock* srcblock,
                  ir::BasicBlock* dstblock,
                  LoweringContext& lctx);
@@ -337,6 +312,38 @@ void emit_branch(ir::BasicBlock* srcblock,
     auto inst = new MIRInst(InstJump);
     inst->set_operand(0, operand);
     lctx.emit_inst(inst);
+}
+//! LoadInst and StoreInst
+void lower(ir::LoadInst* ir_inst, LoweringContext& ctx) {
+    // ir: %13 = load i32, i32* %12
+    //! ret = load ptr
+    // load ret, ptr
+    auto ret = ctx.new_vreg(ir_inst->type());
+    auto ptr = ctx.map2operand(ir_inst->operand(0));
+    assert(ret != nullptr && ptr != nullptr);
+    auto align = 4;
+    auto inst = new MIRInst(InstLoad);
+    inst->set_operand(0, ret);
+    inst->set_operand(1, ptr);
+
+    ctx.emit_inst(inst);
+    ctx.add_valmap(ir_inst, ret);
+}
+
+void lower(ir::StoreInst* ir_inst, LoweringContext& ctx) {
+    // auto& ir_store = dyn_cast<ir::StoreInst>(ir_inst);
+    // ir: store type val, type* ptr
+    //! store val, ptr
+    // align = 4
+    auto inst = new MIRInst(InstStore);
+    inst->set_operand(0, ctx.map2operand(ir_inst->value()));
+    inst->set_operand(1, ctx.map2operand(ir_inst->ptr()));
+
+    ctx.emit_inst(inst);
+}
+//! ReturnInst
+void lower(ir::ReturnInst* ir_inst, LoweringContext& ctx) {
+    ctx._target.get_frame_info().emit_return(ir_inst, ctx);
 }
 
 }  // namespace mir

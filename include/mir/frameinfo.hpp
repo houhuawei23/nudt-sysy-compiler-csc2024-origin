@@ -26,10 +26,10 @@ class TargetFrameInfo {
     TargetFrameInfo() = default;
     virtual ~TargetFrameInfo() = default;
     // lowering stage
-    virtual void emit_call(ir::CallInst* inst) = 0;
+    virtual void emit_call(ir::CallInst* inst, LoweringContext& lowering_ctx) = 0;
     virtual void emit_prologue(MIRFunction* func,
                                LoweringContext& lowering_ctx) = 0;
-    virtual void emit_return(ir::ReturnInst* inst) = 0;
+    virtual void emit_return(ir::ReturnInst* inst, LoweringContext& lowering_ctx) = 0;
     // ra stage
     virtual bool is_caller_saved(MIROperand& op) = 0;
     virtual bool is_callee_saved(MIROperand& op) = 0;

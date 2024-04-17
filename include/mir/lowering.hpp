@@ -2,6 +2,7 @@
 
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
+#include "mir/iselinfo.hpp"
 
 /*
 lowering context
@@ -22,8 +23,8 @@ class LoweringContext {
     std::unordered_map<ir::BasicBlock*, MIRBlock*> _block_map;
 
     uint32_t _idx = 0;
-
-    OperandType _ptr_type = OperandType::Int64;  // pointer type for target platform
+    // pointer type for target platform
+    OperandType _ptr_type = OperandType::Int64;
 
     // code gen context
     CodeGenContext* _code_gen_ctx = nullptr;
@@ -59,16 +60,15 @@ class LoweringContext {
     }
     void emit_inst(MIRInst* inst) { _mir_block->add_inst(inst); }
 
-    // void emit_copy(MIROperand* dst, MIROperand* src) {
-    //     uint32_t mir_opcode;
-    //     if (dst->is_reg() && isISAReg(dst->reg())) {
-    //         // dst is a isa reg
-    //         if (src->is_imm()) {
-    //             return InstLoadImmToReg;
-    //         }
-    //         return InstCopyToReg;
-    //     }
-    // }
+    // emit copy generic inst
+    void emit_copy(MIROperand* dst, MIROperand* src) {
+        uint32_t mir_opcode;
+        auto inst = new MIRInst(select_copy_opcode(dst, src));
+        inst->set_operand(0, dst);
+        inst->set_operand(1, src);
+        emit_inst(inst);
+    }
+
     // ir_val -> mir_operand
     void add_valmap(ir::Value* ir_val, MIROperand* mir_operand) {
         if (_val_map.count(ir_val)) {
@@ -79,16 +79,40 @@ class LoweringContext {
 
     MIROperand* map2operand(ir::Value* ir_val) {
         auto iter = _val_map.find(ir_val);
+        // ptr create by alloca inst has already been
+        // stored as stackobj, can find in _val_map
+        // load ret value also has been stored
         if (iter != _val_map.end()) {
             return iter->second;
         }
         // gen the operand
-        if (dyn_cast<ir::GlobalVariable>(ir_val)) {
+        if (auto gvar = dyn_cast<ir::GlobalVariable>(ir_val)) {
             auto ptr = new_vreg(_ptr_type);
+            // must find in gvar_map
+            auto inst = new MIRInst(InstLoadGlobalAddress);
+            auto g_reloc = gvar_map.at(gvar)->_reloc.get();  // MIRRelocable*
+            auto operand = MIROperand::as_reloc(g_reloc);
+            inst->set_operand(0, ptr);
+            inst->set_operand(1, operand);
+            emit_inst(inst);
+            return ptr;
         }
         // constant
+        // NOTE: constant cant not be cached in _val_map
+        if (not ir::isa<ir::Constant>(ir_val)) {
+            std::cerr << "error: must be constant" << std::endl;
+            assert(false);
+        }
+        auto const_val = dyn_cast<ir::Constant>(ir_val);
+        if (ir_val->type()->is_int()) {
+            auto imm = MIROperand::as_imm(const_val->i32(), OperandType::Int32);
+            return imm;
+        }
+        std::cerr << "TODO: map2operand not implemented for type" << std::endl;
+        assert(false);
         return nullptr;
     }
+
     MIRBlock* map2block(ir::BasicBlock* ir_block) {
         auto iter = _block_map.find(ir_block);
         if (iter != _block_map.end()) {
