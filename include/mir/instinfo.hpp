@@ -40,18 +40,25 @@ enum InstFlag : uint32_t {
 class InstInfo {
    public:
     InstInfo() = default;
-    ~InstInfo() = default;
-    OperandFlag operand_flag(uint32_t idx);
-    uint32_t inst_flag();
-    void print(std::ostream& out, MIRInst& inst, bool printComment);
-    uint32_t operand_num();
+    virtual ~InstInfo() = default;
+
+    virtual uint32_t operand_num() = 0;
+
+    virtual OperandFlag operand_flag(uint32_t idx) = 0;
+
+    virtual uint32_t inst_flag() = 0;
+
+    virtual void print(std::ostream& out, MIRInst& inst, bool printComment) = 0;
 };
 
 class TargetInstInfo {
    public:
     TargetInstInfo() = default;
     ~TargetInstInfo() = default;
-    InstInfo& get_instinfo(uint32_t opcode);
+    virtual InstInfo& get_instinfo(uint32_t opcode);
+    InstInfo& get_instinfo(MIRInst* inst) {
+        return get_instinfo(inst->opcode());
+    }
 
     // virtual bool match_branch(const MIRInst* inst, MIRBlock* target)
 };
