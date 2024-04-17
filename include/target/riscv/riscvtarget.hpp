@@ -4,9 +4,9 @@
 #include "mir/target.hpp"
 #include "mir/datalayout.hpp"
 
-#include "target/riscv.hpp"
-#include "target/InstInfoDecl.hpp"
-#include "target/InstInfoImpl.hpp"
+#include "target/riscv/riscv.hpp"
+#include "target/riscv/InstInfoDecl.hpp"
+#include "target/riscv/InstInfoImpl.hpp"
 
 // clang-format on
 

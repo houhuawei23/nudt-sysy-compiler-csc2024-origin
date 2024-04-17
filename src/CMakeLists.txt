@@ -10,6 +10,7 @@ add_subdirectory(visitor)
 add_subdirectory(pass)
 add_subdirectory(mir)
 add_subdirectory(support)
+add_subdirectory(target)
 
 add_executable(main
     ${SRC_FILES}
@@ -21,4 +22,5 @@ target_link_libraries(main PUBLIC
     pass
     mir
     support
+    target
 )

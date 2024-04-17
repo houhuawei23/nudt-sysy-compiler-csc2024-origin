@@ -3,7 +3,7 @@
 #pragma once
 #include "mir/mir.hpp"
 #include "mir/instinfo.hpp"
-#include "target/InstInfoDecl.hpp"
+#include "target/riscv/InstInfoDecl.hpp"
 
 TARGET_NAMESPACE_BEGIN
 

@@ -14,8 +14,8 @@
 #include "mir/target.hpp"
 #include "mir/lowering.hpp"
 
-#include "target/riscv.hpp"
-#include "target/riscvtarget.hpp"
+#include "target/riscv/riscv.hpp"
+#include "target/riscv/riscvtarget.hpp"
 
 #include "pass/optimize/DCE.hpp"
 #include "pass/optimize/SimpleConstPropagation.hpp"
