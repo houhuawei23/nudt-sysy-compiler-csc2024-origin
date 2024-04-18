@@ -91,8 +91,8 @@ int main(int argc, char* argv[]) {
     }
     //! 3. Code Generation
     if (config.gen_asm) {
-        auto target = mir::RISCVTarget();
-        // auto target = mir::GENERICTarget();
+        // auto target = mir::RISCVTarget();
+        auto target = mir::GENERICTarget();
         auto mir_module = mir::create_mir_module(*module_ir, target);
     }
 

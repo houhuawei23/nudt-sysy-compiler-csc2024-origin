@@ -3,10 +3,10 @@
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
 #include "mir/datalayout.hpp"
+#include "mir/registerinfo.hpp"
 
 #include "target/riscv/riscv.hpp"
 #include "target/riscv/InstInfoDecl.hpp"
-#include "target/riscv/InstInfoImpl.hpp"
 
 // clang-format on
 
@@ -69,10 +69,31 @@ class RISCVFrameInfo : public TargetFrameInfo {
     void emit_postsa_epilogue(MIRBlock* exit, int32_t stack_size) override {}
 };
 
+class RISCVRegisterInfo : public TargetRegisterInfo {
+    uint32_t get_alloca_class_cnt() {
+        std::cerr << "Not Impl get_alloca_class_cnt" << std::endl;
+        return 0;
+    }
+    uint32_t get_alloca_class(OperandType type) {
+        std::cerr << "Not Impl get_alloca_class" << std::endl;
+        return 0;
+    }
+
+    bool is_legal_isa_reg_operand(MIROperand& op) {
+        std::cerr << "Not Impl is_legal_isa_reg_operand" << std::endl;
+        return false;
+    }
+    // ..
+    bool is_zero_reg() {
+        std::cerr << "Not Impl is_zero_reg" << std::endl;
+        return false;
+    }
+};
+
 class RISCVTarget : public Target {
     RISCVDataLayout _datalayout;
     RISCVFrameInfo _frameinfo;
-    // RISCVRegisterInfo mRegisterInfo;
+    RISCVRegisterInfo mRegisterInfo;
 
    public:
     RISCVTarget() = default;
@@ -86,7 +107,8 @@ class RISCVTarget : public Target {
         // return RISCV::getRISCVISelInfo();
     }
     TargetFrameInfo& get_target_frame_info() override { return _frameinfo; }
-    
+    TargetRegisterInfo& get_register_info() override { return mRegisterInfo; }
+
     // emit_assembly
     void emit_assembly(std::ostream& out, MIRModule& module) override {
         std::cerr << "Not Impl emit_assembly" << std::endl;

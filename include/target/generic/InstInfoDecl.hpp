@@ -2,6 +2,7 @@
 
 #pragma once
 #include "mir/mir.hpp"
+#include "mir/instinfo.hpp"
 
 #define GENERIC_NAMESPACE_BEGIN namespace mir::GENERIC {
 #define GENERIC_NAMESPACE_END }

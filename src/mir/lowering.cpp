@@ -75,10 +75,12 @@ void create_mir_module(ir::Module& ir_module, LoweringContext& lowering_ctx) {
     //! codegen
     auto& target = lowering_ctx._target;  // Target*
     CodeGenContext codegen_ctx{target, target.get_datalayout(),
-                               target.get_target_inst_info(), 
-                               target.get_target_isel_info(), //! segmentation fault, not implemented
-                               target.get_target_frame_info(),
-                               MIRFlags{}};
+                               target.get_target_inst_info(),
+                               target.get_target_frame_info(), MIRFlags{}};
+    // target.get_target_isel_info(),  //! segmentation fault, not implemented
+    // target.get_register_info(),
+    codegen_ctx.iselInfo = &target.get_target_isel_info();
+    // codegen_ctx.registerInfo = &target.get_register_info();
     lowering_ctx.set_code_gen_ctx(&codegen_ctx);
     //! lower all functions
     for (auto& ir_func : ir_module.funcs()) {  // for all funcs
@@ -93,11 +95,28 @@ void create_mir_module(ir::Module& ir_module, LoweringContext& lowering_ctx) {
         ISelContext isel_ctx(codegen_ctx);
         isel_ctx.run_isel(mir_func);
 
-        // register coalescing
-        // peephole optimization
-        // register allocation
-        // stack allocation
+        /* register coalescing */
+
+        /* peephole optimization */
+
+        /* pre-RA legalization */
+
+        /* pre-RA scheduling, minimize register usage */
+
+        /* register allocation */
+        if (codegen_ctx.registerInfo) {
+            // allocate_registers(mir_func, codegen_ctx);
+        }
+
+        /* stack allocation */
+
+        /* post-RA scheduling, minimize cycles */
+
+        /* post legalization */
+
+        /* verify */
     }
+    /* module verify */
 }
 
 MIRFunction* create_mir_function(ir::Function* ir_func,
@@ -183,7 +202,9 @@ MIRFunction* create_mir_function(ir::Function* ir_func,
 }
 
 void lower(ir::BinaryInst* ir_inst, LoweringContext& ctx);
+
 void lower(ir::BranchInst* ir_inst, LoweringContext& ctx);
+
 void lower(ir::LoadInst* ir_inst, LoweringContext& ctx);
 
 void lower(ir::StoreInst* ir_inst, LoweringContext& ctx);

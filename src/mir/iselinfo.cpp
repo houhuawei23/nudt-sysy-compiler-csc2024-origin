@@ -20,12 +20,31 @@ std::unordered_map<MIROperand*, uint32_t> collect_def_count(
     return std::unordered_map<MIROperand*, uint32_t>();
 }
 
+void ISelContext::remove_inst(MIRInst* inst){
+    std::cerr << "remove_inst not implemented yet!" << std::endl;
+}
+void ISelContext::replace_operand(MIROperand* src, MIROperand* dst){
+    std::cerr << "replace_operand not implemented yet!" << std::endl;
+}
+MIROperand* ISelContext::get_inst_def(MIRInst* inst) {
+    auto& instinfo = _codegen_ctx.instInfo.get_instinfo(inst);
+    for (uint32_t idx = 0; idx < instinfo.operand_num(); idx++) {
+        if (instinfo.operand_flag(idx) & OperandFlagDef) {
+            return inst->operand(idx);
+        }
+    }
+    // assert(false && "no def operand found");
+    std::cerr << "no def operand found" << std::endl;
+    return nullptr;
+}
+
 void ISelContext::run_isel(MIRFunction* func) {
     // TODO: implement
     auto& isel_info = _codegen_ctx.iselInfo;
 
     //! fix point algorithm: 循环执行指令选择和替换，直到不再变化。
     while (true) {
+        std::cout << "while loop start1" << std::endl;
         bool modified = false;
         bool has_illegal = false;
         _remove_work_list.clear();
@@ -51,6 +70,7 @@ void ISelContext::run_isel(MIRFunction* func) {
 
         //! 指令遍历和分析: 对每个基本块的指令进行遍历，执行指令选择和替换。
         for (auto& block : func->blocks()) {
+            std::cout << "for loop start1" << std::endl;
             _inst_map.clear();
             // check ssa form
             // for (auto& inst : block->insts()) {
@@ -62,26 +82,33 @@ void ISelContext::run_isel(MIRFunction* func) {
                 continue;
 
             auto it = std::prev(insts.end());
+            /* in this block */
             while (true) {
+                std::cout << "while loop start2" << std::endl;
                 _insert_point = it;
                 auto& inst = *it;
                 std::optional<std::list<MIRInst*>::iterator> prev;
 
                 if (it != insts.begin()) {
                     prev = std::prev(it);
-                    // if inst not in remove list
-                    if (not _remove_work_list.count(inst)) {
-                        auto opcode = inst->opcode();
-                        //! do pattern match and select inst
-                        auto res = isel_info.match_select(inst, this);
-                        if (res) {
-                            modified = true;
-                        }
+                }
+                // if inst not in remove list
+                if (not _remove_work_list.count(inst)) {
+                    std::cout << "do match and select" << std::endl;
+                    auto opcode = inst->opcode();
+                    //! do pattern match and select inst
+                    auto res = isel_info->match_select(inst, *this);
+                    if (res) {
+                        std::cout << "match and select success" << std::endl;
+                        modified = true;
                     }
                 }
+
                 if (prev) {
+                    std::cout << "prev inst" << std::endl;
                     it = *prev;
                 } else {
+                    std::cout << "break" << std::endl;
                     break;
                 }
             }

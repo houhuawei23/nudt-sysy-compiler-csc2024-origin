@@ -3,8 +3,9 @@
 #include "mir/mir.hpp"
 #include "mir/instinfo.hpp"
 
-#include "target/riscv/InstInfoDecl.hpp"
 #include "target/riscv/riscv.hpp"
+#include "target/riscv/InstInfoDecl.hpp"
+#include "target/riscv/InstInfoImpl.hpp"
 
 #include <iostream>
 

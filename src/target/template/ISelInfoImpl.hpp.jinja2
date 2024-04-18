@@ -1,10 +1,89 @@
 // Automatically generated file, do not edit!
 
 #pragma once
+#include "mir/mir.hpp"
+#include "mir/iselinfo.hpp"
 #include "target/{{target_name}}/ISelInfoDecl.hpp"
 
 {{target_name}}_NAMESPACE_BEGIN
 
-{% for inst in %}
+{# matchXXX Inst format #}
+{# inst is inst name? #}
+{% for inst in match_insts %}
+static bool match{{inst}}(
+    MIRInst* inst
+    {% for operand in insts_map[inst].operands -%}
+    , MIROperand* {{operand.name}}
+    {%- endfor %}
+)
+{
+    if(inst->opcode() != {{inst}})
+        return false;
+    {% for operand in insts_map[inst].operands -%}
+        {{operand.name}} = inst.operand({{operand.idx}});
+    {%- endfor%}
+}
+
+{% endfor %}
+
+{# matchAndSelectPattern #}
+{% for inst, patterns in isel_patterns.items() -%}
+/* {{inst}} matchAndSelectPatternXX begin */
+{% for pattern in patterns -%}
+
+static bool matchAndSelectPattern{{pattern.match_id}} (
+    MIRInst* inst,
+    ISelContext& ctx)
+{
+    uint32_t root_opcode = {{patten.match_inst}};
+    /* Match Inst */
+    {% for match in pattern.match_list %}
+
+    {% endfor%}
+    /* Select Inst */
+    {% for select in pattern.select_list %}
+
+    {% endfor%}
+    ctx.remove_inst(inst);
+    return true;
+} 
+
+
+
+{%- endfor %}
+/* {{inst}} matchAndSelectPatternXX end */
+{%- endfor %}
+
+static bool matchAndSelectImpl(MIRInst* inst, ISelContext& ctx) {
+    switch (inst->opcode()) {
+        {% for inst, patterns in isel_patterns.items() -%}
+        case {{inst}}:{
+            {% for pattern in patterns -%}
+            if(matchAndSelectPattern{{pattern.match_id}}(inst, ctx)) 
+                return true
+            {%- endfor %}
+            break;
+        }
+        {%- endfor %}
+        default:
+            break;
+    }
+    return false;
+}
+
+class {{target_name}}IselInfo final : public TargetISelInfo {
+public:
+    bool is_legal_geninst(uint32_t opcode) const override;
+    bool match_select(MIRInst* inst, ISelContext* ctx) const override;
+};
+
+
+
+TargetISelInfo& get{{target_name}}ISelInfo() {
+    static {{target_name}}ISelInfo iselInfo;
+    return iselInfo;
+}
+
+
 
 {{target_name}}_NAMESPACE_END

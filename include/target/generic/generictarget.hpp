@@ -5,8 +5,9 @@
 
 #include "target/generic/generic.hpp"
 #include "target/generic/InstInfoDecl.hpp"
-#include "target/generic/InstInfoImpl.hpp"
 
+#include "target/generic/ISelInfoDecl.hpp"
+// #include "target/generic/ISelInfoImpl.hpp"
 namespace mir {
 class GNERICDataLayout final : public DataLayout {
     // just for fun
@@ -78,10 +79,13 @@ class GENERICTarget final : public Target {
 
     TargetISelInfo& get_target_isel_info() override {
         std::cerr << "Not Impl get_isel_info" << std::endl;
-        assert(false);
-        // return GENERIC::getGENERICISelInfo();
+        // assert(false);
+        return GENERIC::getGENERICISelInfo();
     }
-
+    TargetRegisterInfo& get_register_info() override {
+        std::cerr << "Not Impl get_register_info" << std::endl;
+        assert(false);
+    }
     TargetFrameInfo& get_target_frame_info() override { return _frameinfo; }
 
     // emit_assembly

@@ -130,7 +130,7 @@ enum MIRGenericInst : uint32_t {
     InstSelect,
     InstLoadGlobalAddress,
     InstLoadImm,
-    InstLoadStackObjectAddr,
+    InstLoadStackObjectAddr, // 42
     InstCopyFromReg,
     InstCopyToReg,
     InstLoadImmToReg,
