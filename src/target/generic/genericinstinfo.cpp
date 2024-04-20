@@ -10,7 +10,28 @@
 #include "target/generic/InstInfoImpl.hpp"
 
 #include <iostream>
-namespace mir::GENERIC
-{
-    
-} // namespace mir::GENERIC
+namespace mir::GENERIC {
+
+// static std::ostream& operator<<(std::ostream& os, MIROperand* operand) {
+//     if (operand->is_reg()) {
+//         if (isVirtualReg(operand->reg())) {
+//             dumpVirtualReg(os, operand);
+//         }
+//         os << "reg: " << operand->reg();
+//     }
+//     if (operand->is_imm()) {
+//         os << "imm: " << operand->imm();
+//     } else if (operand->is_prob()) {
+//         // os << "prob: " << operand->prob();
+//         os << "prob ";
+//     } else if (operand->is_reloc()) {
+//         // operand->reloc()-
+//         os << "reloc ";
+//     } else {
+//         std::cerr << "unknown operand type" << std::endl;
+//     }
+
+//     return os;
+// }
+
+}  // namespace mir::GENERIC

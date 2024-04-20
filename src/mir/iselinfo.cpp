@@ -1,3 +1,5 @@
+#include "ir/ir.hpp"
+
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
 #include "mir/instinfo.hpp"
@@ -20,13 +22,20 @@ std::unordered_map<MIROperand*, uint32_t> collect_def_count(
     return std::unordered_map<MIROperand*, uint32_t>();
 }
 
-void ISelContext::remove_inst(MIRInst* inst){
+void ISelContext::remove_inst(MIRInst* inst) {
+    assert(inst != nullptr);
+    _remove_work_list.insert(inst);
     std::cerr << "remove_inst not implemented yet!" << std::endl;
 }
-void ISelContext::replace_operand(MIROperand* src, MIROperand* dst){
+void ISelContext::replace_operand(MIROperand* src, MIROperand* dst) {
+    assert(src->is_reg());
+    if (src != dst) {
+        _replace_map.emplace(src, dst);
+    }
     std::cerr << "replace_operand not implemented yet!" << std::endl;
 }
 MIROperand* ISelContext::get_inst_def(MIRInst* inst) {
+    assert(inst != nullptr);
     auto& instinfo = _codegen_ctx.instInfo.get_instinfo(inst);
     for (uint32_t idx = 0; idx < instinfo.operand_num(); idx++) {
         if (instinfo.operand_flag(idx) & OperandFlagDef) {
@@ -70,7 +79,9 @@ void ISelContext::run_isel(MIRFunction* func) {
 
         //! 指令遍历和分析: 对每个基本块的指令进行遍历，执行指令选择和替换。
         for (auto& block : func->blocks()) {
-            std::cout << "for loop start1" << std::endl;
+            ir::BasicBlock* ir_block = block->ir_block();
+            std::cout << "for loop start1: ir_block: ";
+            std::cout << ir_block->name() << std::endl;
             _inst_map.clear();
             // check ssa form
             // for (auto& inst : block->insts()) {
@@ -112,6 +123,7 @@ void ISelContext::run_isel(MIRFunction* func) {
                     break;
                 }
             }
+            std::cout << "for loop end1" << std::endl;
         }
 
         //! 指令移除和替换: 根据之前的分析结果，移除和替换旧的指令。
@@ -119,7 +131,8 @@ void ISelContext::run_isel(MIRFunction* func) {
             // remove old insts
             block->insts().remove_if(
                 [&](auto inst) { return _remove_work_list.count(inst); });
-            // replace old insts
+
+            // replace defs
             for (auto& inst : block->insts()) {
                 if (_replace_block_list.count(inst)) {
                     //? in replace block list, jump
@@ -127,16 +140,17 @@ void ISelContext::run_isel(MIRFunction* func) {
                 }
                 auto& info = _codegen_ctx.instInfo.get_instinfo(inst);
 
-                // for (uint32_t idx = 0; idx < info.operand_num(); idx++) {
-                //     auto op = inst->operand(idx);
-                //     if (not op->is_reg()) {
-                //         continue;
-                //     }
-                //     auto iter = _replace_map.find(op);
-                //     if (iter != _replace_map.end()) {
-                //         inst->set_operand(idx, iter->second);
-                //     }
-                // }
+                for (uint32_t idx = 0; idx < info.operand_num(); idx++) {
+                    auto op = inst->operand(idx);
+                    if (not op->is_reg()) {
+                        continue;
+                    }
+                    // replace map: old operand* -> new operand*
+                    auto iter = _replace_map.find(op);
+                    if (iter != _replace_map.end()) {
+                        inst->set_operand(idx, iter->second);
+                    }
+                }
             }
         }
 
@@ -145,8 +159,10 @@ void ISelContext::run_isel(MIRFunction* func) {
         }
         // not modified, check illegal inst
         //! 检查和处理非法指令
-
         //! 如果存在非法指令，根据情况决定是继续尝试合法化还是报告错误。
+
+        std::cout << "run_isel success!" << std::endl;
+        return ;
     }  // while end
 }
 

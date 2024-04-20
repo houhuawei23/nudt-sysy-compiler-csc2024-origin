@@ -2,6 +2,10 @@
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
 #include "mir/datalayout.hpp"
+// #include "mir/iselinfo.hpp"
+#include "mir/registerinfo.hpp"
+
+#include "mir/lowering.hpp"
 
 #include "target/generic/generic.hpp"
 #include "target/generic/InstInfoDecl.hpp"
@@ -9,6 +13,8 @@
 #include "target/generic/ISelInfoDecl.hpp"
 // #include "target/generic/ISelInfoImpl.hpp"
 namespace mir {
+
+
 class GNERICDataLayout final : public DataLayout {
     // just for fun
    public:
@@ -37,6 +43,8 @@ class GENERICFrameInfo final : public TargetFrameInfo {
 
     void emit_return(ir::ReturnInst* ir_inst,
                      LoweringContext& lowering_ctx) override {
+        auto inst = new MIRInst(InstReturn);
+        lowering_ctx.emit_inst(inst);
         std::cerr << "GENERIC emit_return not implemented" << std::endl;
     }
 

@@ -2,7 +2,6 @@
 
 #pragma once
 #include "mir/mir.hpp"
-#include "mir/instinfo.hpp"
 
 #define GENERIC_NAMESPACE_BEGIN namespace mir::GENERIC {
 #define GENERIC_NAMESPACE_END }
@@ -10,6 +9,12 @@
 GENERIC_NAMESPACE_BEGIN
 enum GENERICInst {
     GENERICInstBegin = ISASpecificBegin,
+
+    Jump,
+    Branch,
+    Unreachable, /* not implemented yet */
+    Load,
+    Store,
     Add,
     Sub,
     Mul,
@@ -21,14 +26,21 @@ enum GENERICInst {
     Shl,
     LShr,
     AShr,
+    SDiv, /* not implemented yet */
+    SRem, /* not implemented yet */
     SMin,
     SMax,
+    Neg,
+    Abs,
     FAdd,
     FSub,
     FMul,
     FDiv,
-    Neg,
-    Abs,
+    FNeg, /* not implemented yet */
+    FAbs, /* not implemented yet */
+    FFma, /* not implemented yet */
+    ICmp, /* not implemented yet */
+    FCmp, /* not implemented yet */
     SExt,
     ZExt,
     Trunc,
@@ -37,14 +49,18 @@ enum GENERICInst {
     U2F,
     S2F,
     FCast,
-    Load,
-    Store,
-    Jump,
-    Branch,
     Copy,
+    Select, /* not implemented yet */
     LoadGlobalAddress,
     LoadImm,
-    LoadStackObjAddr,
+    LoadStackObjectAddr,
+    CopyFromReg,      /* not implemented yet */
+    CopyToReg,        /* not implemented yet */
+    LoadImmToReg,     /* not implemented yet */
+    LoadRegFromStack, /* not implemented yet */
+    StoreRegToStack,  /* not implemented yet */
+    Return,
+
     GENERICInstEnd
 };
 

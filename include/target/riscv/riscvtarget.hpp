@@ -56,7 +56,7 @@ class RISCVFrameInfo : public TargetFrameInfo {
                     lowering_ctx.map2operand(retval));
             }
         }
-        auto inst = new MIRInst(InstRet);
+        auto inst = new MIRInst(InstReturn);
         lowering_ctx.emit_inst(inst);
     }
 

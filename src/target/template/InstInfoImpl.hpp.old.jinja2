@@ -7,19 +7,18 @@
 
 {{target_name}}_NAMESPACE_BEGIN
 
-{% for inst_name in insts_list %}
-{% if inst_name in insts_dict %}
-class {{target_name}}InstInfo{{inst_name}} final: public InstInfo {
+{%for inst in insts %}
+class {{target_name}}InstInfo{{inst.name}} final: public InstInfo {
 public:
-    {{target_name}}InstInfo{{inst_name}}() = default;
+    {{target_name}}InstInfo{{inst.name}}() = default;
 
     uint32_t operand_num() override {
-        return {{insts_dict[inst_name].operands|length}};
+        return {{inst.operands|length}};
     }
 
     OperandFlag operand_flag(uint32_t idx) override{
         switch (idx) {
-            {%- for idx, op in insts_dict[inst_name].operands.items() -%}
+            {%- for idx, op in inst.operands.items() -%}
                 case {{idx}}:
                     return OperandFlag{{op.flag}};
             {%- endfor -%}
@@ -30,32 +29,32 @@ public:
     
     uint32_t inst_flag() override {
         return InstFlagNone 
-            {%- for flag in insts_dict[inst_name].flag -%}
+            {%- for flag in inst.flag -%}
                 | InstFlag{{flag}} 
             {%- endfor -%};
     }
 
     std::string_view name() {
-        return "{{target_name}}.{{inst_name}}";
+        return "{{target_name}}.{{inst.name}}";
     }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override{        
         out 
-        {%- for part in insts_dict[inst_name].format -%}
+        {%- for part in inst.format -%}
             <<
             {%- if part is integer -%}
-            mir::{{target_name}}::OperandDumper{ inst.operand({{part}}) }
+                inst.operand({{part}})
             {%- else -%}
                 "{{part}}"
             {%- endif -%}
         {%- endfor %};
 
-        {%- if insts_dict[inst_name].comment|length != 0 -%}
+        {%- if inst.comment|length != 0 -%}
             if (comment) {
                 out 
-                {%- for part in insts_dict[inst_name].comment -%}
+                {%- for part in inst.comment -%}
                     {%- if part is integer -%} 
-                        << insts_dict[inst_name].operand({{part}})
+                        << inst.operand({{part}})
                     {%- else -%}
                         "{{part}}"
                     {%- endif -%}
@@ -66,26 +65,19 @@ public:
 
 
 };
-{% endif %}
 {% endfor %}
 
 class {{target_name}}InstInfo final: public TargetInstInfo {
-    {%- for inst_name in insts_list -%}
-    {% if inst_name in insts_dict -%}
-    {{target_name}}InstInfo{{inst_name}} _instinfo{{inst_name}};
-    {% endif -%}
+    {%- for inst in insts -%}
+    {{target_name}}InstInfo{{inst.name}} _instinfo{{inst.name}};
     {%- endfor -%}
 public:
     {{target_name}}InstInfo() = default;
     InstInfo& get_instinfo(uint32_t opcode) {
         switch (opcode) {
-            {% for inst_name in insts_list -%}
-            case {{target_name}}Inst::{{inst_name}}:
-            {% if inst_name in insts_dict -%}
-                return _instinfo{{inst_name}};
-            {%- else -%}
-                break; /* not supported */
-            {%- endif %}
+            {% for inst in insts -%}
+            case {{target_name}}Inst::{{inst.name}}:
+                return _instinfo{{inst.name}};
             {%- endfor %}
             default:
                 return TargetInstInfo::get_instinfo(opcode);

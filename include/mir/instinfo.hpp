@@ -69,4 +69,39 @@ constexpr bool isOperandVReg(MIROperand* operand) {
     // && isVirtualReg(operand->reg())
 }
 
+void dumpVirtualReg(std::ostream& os, MIROperand* operand);
+
 }  // namespace mir
+
+namespace mir::GENERIC {
+struct OperandDumper {
+    MIROperand* operand;
+};
+
+static std::ostream& operator<<(std::ostream& os, OperandDumper opdp) {
+    auto operand = opdp.operand;
+    if (operand->is_reg()) {
+        if (isVirtualReg(operand->reg())) {
+            dumpVirtualReg(os, operand);
+        } else if (isStackObject(operand->reg())) {
+            os << "so" << (operand->reg() ^ stackObjectBegin);
+        } else {
+            os << "[reg]";
+        }
+        // os << "reg: " << operand->reg() ;
+
+    } else if (operand->is_imm()) {
+        os << "imm: " << operand->imm();
+    } else if (operand->is_prob()) {
+        // os << "prob: " << operand->prob();
+        os << "prob ";
+    } else if (operand->is_reloc()) {
+        // operand->reloc()-
+        os << "reloc ";
+    } else {
+        os << "unknown ";
+    }
+    return os;
+}
+
+}  // namespace mir::GENERIC

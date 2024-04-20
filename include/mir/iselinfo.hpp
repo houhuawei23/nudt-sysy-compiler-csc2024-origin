@@ -31,6 +31,7 @@ class ISelContext {
     MIROperand* get_inst_def(MIRInst* inst);
 
     void insert_inst(MIRInst* inst) {
+        assert(inst != nullptr);
         _curr_block->insts().emplace(_insert_point, inst);
     }
     CodeGenContext& codegen_ctx() { return _codegen_ctx; }

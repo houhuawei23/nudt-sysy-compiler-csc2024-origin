@@ -94,7 +94,6 @@ void create_mir_module(ir::Module& ir_module, LoweringContext& lowering_ctx) {
         // 2: inst selection
         ISelContext isel_ctx(codegen_ctx);
         isel_ctx.run_isel(mir_func);
-
         /* register coalescing */
 
         /* peephole optimization */
@@ -344,10 +343,11 @@ void lower(ir::LoadInst* ir_inst, LoweringContext& ctx) {
     auto ret = ctx.new_vreg(ir_inst->type());
     auto ptr = ctx.map2operand(ir_inst->operand(0));
     assert(ret != nullptr && ptr != nullptr);
-    auto align = 4;
+    uint32_t align = 4;
     auto inst = new MIRInst(InstLoad);
     inst->set_operand(0, ret);
     inst->set_operand(1, ptr);
+    inst->set_operand(2, MIROperand::as_imm(align, OperandType::Special));
 
     ctx.emit_inst(inst);
     ctx.add_valmap(ir_inst, ret);
@@ -361,6 +361,8 @@ void lower(ir::StoreInst* ir_inst, LoweringContext& ctx) {
     auto inst = new MIRInst(InstStore);
     inst->set_operand(0, ctx.map2operand(ir_inst->value()));
     inst->set_operand(1, ctx.map2operand(ir_inst->ptr()));
+    uint32_t align = 4;
+    inst->set_operand(2, MIROperand::as_imm(align, OperandType::Special));
 
     ctx.emit_inst(inst);
 }

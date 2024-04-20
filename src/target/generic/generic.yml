@@ -54,22 +54,97 @@ InstInfo: {
               { 0: { name: dst, flag: Def }, 1: { name: src, flag: Use } },
             instances: [Neg, Abs, SExt, ZExt, Trunc, F2U, F2S, U2F, S2F, FCast],
           },
-
-        LoadStore: {
-            # format: "{mnem} {dst}, {src}, {align}"
-            format: [mnem, 0, ", ", 1, ", ", 2],
-            operands:
-              {
-                0: { name: dst, type: VREG, flag: Def },
-                1: { name: src, type: VAL, flag: Use },
-                2: { name: align, type: ALIGN, flag: Metadata },
-              },
-            instances: [Load, Store],
-          },
       },
+    InstList: [
+        Jump,
+        Branch,
+        Unreachable,
+        # memory
+        Load,
+        Store,
+        # arth
+        Add,
+        Sub,
+        Mul,
+        UDiv,
+        URem,
+        # bitwise
+        And,
+        Or,
+        Xor,
+        Shl, # logic shift left
+        LShr, # logic shift right
+        AShr, # arth shift right
+        # Signed div/rem
+        SDiv,
+        SRem,
+        # minmax
+        SMin,
+        SMax,
+        # unary
+        Neg,
+        Abs,
+        # fp
+        FAdd,
+        FSub,
+        FMul,
+        FDiv,
+        FNeg,
+        FAbs,
+        FFma,
+        # comp
+        ICmp,
+        FCmp,
+        # conversion
+        SExt,
+        ZExt,
+        Trunc,
+        F2U,
+        F2S,
+        U2F,
+        S2F,
+        FCast,
+
+        # misc
+        Copy,
+        Select,
+        LoadGlobalAddress,
+        LoadImm,
+        LoadStackObjectAddr, # 42
+        CopyFromReg,
+        CopyToReg,
+        LoadImmToReg,
+        LoadRegFromStack,
+        StoreRegToStack,
+        # hhw add
+        Return,
+        # ISA specific
+        # ISASpecificBegin,
+      ],
     # instruction instances
     Instances: {
         #
+        Return: { format: ["Return"], operands: {} },
+        Store: {
+            # format: "{mnem} {addr}, {src}, {align}"
+            format: ["Store ", 0, ", ", 1, ", ", 2],
+            operands:
+              {
+                0: { name: addr, type: VREG, flag: Use },
+                1: { name: src, type: VAL, flag: Use },
+                2: { name: align, type: ALIGN, flag: Metadata },
+              },
+          },
+        Load: {
+            # format: "{mnem} {dst}, {src}, {align}"
+            format: ["Load ", 0, ", ", 1, ", ", 2],
+            operands:
+              {
+                0: { name: dst, type: VREG, flag: Def },
+                1: { name: addr, type: VREG, flag: Use },
+                2: { name: align, type: ALIGN, flag: Metadata },
+              },
+          },
         Jump: {
             # format: "Jump {label}"
             format: ["Jump ", 0],
@@ -81,8 +156,8 @@ InstInfo: {
             operands:
               {
                 0: { name: cond, type: BOOL, flag: Use },
-                1: { name: then, type: LABEL, flag: Metadata },
-                2: { name: else, type: LABEL, flag: Metadata },
+                1: { name: thenb, type: LABEL, flag: Metadata },
+                2: { name: elseb, type: LABEL, flag: Metadata },
               },
           },
         Copy: {
@@ -114,9 +189,9 @@ InstInfo: {
                 1: { name: imm, type: IMM, flag: Metadata },
               },
           },
-        LoadStackObjAddr: {
+        LoadStackObjectAddr: {
             # format: "LoadStackObjAddr {dst}, {stack_obj}"
-            format: ["LoadStackObjAddr ", 0, ", ", 1],
+            format: ["LoadStackObjectAddr ", 0, ", ", 1],
             operands:
               {
                 0: { name: dst, type: INTREG, flag: Def },
@@ -128,24 +203,87 @@ InstInfo: {
 
 InstSelInfo: {
     # templates
-    Templates: {},
+    Templates: {
+        IntBinaryIsel: {
+            pattern: { name: pname, dst: $0, src1: $1, src2: $2 },
+            replace: { name: rname, dst: $0, src1: $1, src2: $2 }, # define
+            instances:
+              {
+                InstAdd: Add,
+                InstSub: Sub,
+                InstMul: Mul,
+                InstUDiv: UDiv,
+                InstURem: URem,
+                InstAnd: And,
+                InstOr: Or,
+                InstXor: Xor,
+                InstShl: Shl,
+                InstLShr: LShr,
+                InstAShr: AShr,
+                InstSMin: SMin,
+                InstSMax: SMax,
+              },
+          }, # use
+        # aaa
+        # LoadStoreIsel: {
+        #     # define
+        #     pattern: { name: pname, dst: $0, src: $1, align: $2 },
+        #     # use
+        #     replace: { name: rname, dst: $0, src: $1, align: $2 },
+        #     instances: { InstLoad: Load, InstStore: Store },
+        #   },
+      },
+
+    # { pattern: {
+    #       name: InstAdd,
+    #       # constraints on operands
+    #       dst: $dst,
+    #       lhs: { InstShl: { lhs: $lhs, rhs: $imm } },
+    #       rhs: $rhs,
+
+    #     }, replace: { name: rname, dst: $dst, src1: $lhs, src2: $rhs } },
     # instances
-    Instances:
-      [
-        #IntBinary
+    Instances: [
         {
-          pattern: { name: InstAdd, dst: $dst, lhs: $lhs, rhs: $rhs },
-          replace: { name: Add, dst: $dst, src1: $lhs, src2: $rhs },
+          # Return
+          pattern: { name: InstReturn },
+          replace: { name: Return },
+        },
+        {
+          pattern: { name: InstLoad, dst: $dst, addr: $addr, align: $align },
+          replace: { name: Load, dst: $dst, addr: $addr, align: $align },
         },
 
         {
-          pattern: { name: InstSub, dst: $dst, lhs: $lhs, rhs: $rhs },
-          replace: { name: Sub, dst: $dst, src1: $lhs, src2: $rhs },
+          pattern: { name: InstStore, addr: $addr, src: $src, align: $align },
+          replace: { name: Store, addr: $addr, src: $src, align: $align },
         },
         {
-          pattern: { name: InstMul, dst: $dst, lhs: $lhs, rhs: $rhs },
-          replace: { name: Mul, dst: $dst, src1: $lhs, src2: $rhs },
+          pattern: { name: InstJump, label: $label },
+          replace: { name: Jump, label: $label },
         },
-      ]
-      #,,
+        {
+          pattern:
+            { name: InstBranch, cond: $cond, thenb: $thenb, elseb: $elseb },
+          replace: { name: Branch, cond: $cond, thenb: $thenb, elseb: $elseb },
+        },
+        {
+          pattern: { name: InstCopy, dst: $dst, src: $src },
+          replace: { name: Copy, dst: $dst, src: $src },
+        },
+        {
+          pattern: { name: InstLoadGlobalAddress, dst: $dst, reloc: $reloc },
+          replace: { name: LoadGlobalAddress, dst: $dst, reloc: $reloc },
+        },
+        {
+          pattern: { name: InstLoadImm, dst: $dst, imm: $imm },
+          replace: { name: LoadImm, dst: $dst, imm: $imm },
+        },
+        {
+          pattern:
+            { name: InstLoadStackObjectAddr, dst: $dst, stack_obj: $stack_obj },
+          replace:
+            { name: LoadStackObjectAddr, dst: $dst, stack_obj: $stack_obj },
+        },
+      ],
   }

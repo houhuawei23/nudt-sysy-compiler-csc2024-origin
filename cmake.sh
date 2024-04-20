@@ -13,7 +13,8 @@ for target in ${targets[@]}; do
     python3 ./src/target/template/gen.py ./src/target/${target}/${target}.yml ./include/target/${target}/
 done
 
-# python3 ./src/target/template/gen.py ./src/target/generic/generic.yml ./include/target/generic/
+# python3 ./src/target/template/gen.py ./src/target/generic/generic.yml \
+# ./src/target/generic/generic.yml ./include/target/generic/
 
 # cmake config and build
 cmake -S . -B build

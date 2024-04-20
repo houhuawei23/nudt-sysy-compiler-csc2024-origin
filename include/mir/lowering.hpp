@@ -58,7 +58,10 @@ class LoweringContext {
         // auto optype = get_optype(type);
         return MIROperand::as_vreg(next_id(), type);
     }
-    void emit_inst(MIRInst* inst) { _mir_block->add_inst(inst); }
+    void emit_inst(MIRInst* inst) {
+        // _mir_block->add_inst(inst);
+        _mir_block->insts().emplace_back(inst);
+    }
 
     // emit copy generic inst
     void emit_copy(MIROperand* dst, MIROperand* src) {
@@ -114,6 +117,7 @@ class LoweringContext {
     }
 
     MIRBlock* map2block(ir::BasicBlock* ir_block) {
+        assert(ir_block != nullptr);
         auto iter = _block_map.find(ir_block);
         if (iter != _block_map.end()) {
             return iter->second;

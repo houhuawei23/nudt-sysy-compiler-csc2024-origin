@@ -94,6 +94,7 @@ enum MIRGenericInst : uint32_t {
     InstAnd,
     InstOr,
     InstXor,
+    InstShl,
     InstLShr,  // logic shift right
     InstAShr,  // arth shift right
     // Signed div/rem
@@ -130,7 +131,7 @@ enum MIRGenericInst : uint32_t {
     InstSelect,
     InstLoadGlobalAddress,
     InstLoadImm,
-    InstLoadStackObjectAddr, // 42
+    InstLoadStackObjectAddr,  // 43
     InstCopyFromReg,
     InstCopyToReg,
     InstLoadImmToReg,
@@ -138,7 +139,7 @@ enum MIRGenericInst : uint32_t {
     InstStoreRegToStack,
 
     // hhw add
-    InstRet,
+    InstReturn,
 
     // ISA specific
     ISASpecificBegin,
@@ -173,11 +174,17 @@ class MIROperand {
     uint32_t reg() const { return std::get<MIRRegister*>(_storage)->reg(); }
     MIRRelocable* reloc() { return std::get<MIRRelocable*>(_storage); }
 
-    constexpr bool is_imm() { return std::holds_alternative<intmax_t>(_storage); }
-    constexpr bool is_reg() { return std::holds_alternative<MIRRegister*>(_storage); }
+    constexpr bool is_imm() {
+        return std::holds_alternative<intmax_t>(_storage);
+    }
+    constexpr bool is_reg() {
+        return std::holds_alternative<MIRRegister*>(_storage);
+    }
     bool is_reloc() { return std::holds_alternative<MIRRelocable*>(_storage); }
     constexpr bool is_prob() { return false; }
-    constexpr bool is_init() { return !std::holds_alternative<std::monostate>(_storage); }
+    constexpr bool is_init() {
+        return !std::holds_alternative<std::monostate>(_storage);
+    }
 
     template <typename T>
     bool is() {
@@ -236,11 +243,15 @@ class MIRInst {
 
     // get
     uint32_t opcode() { return _opcode; }
-    MIROperand* operand(int idx) { return _operands[idx]; }
+    MIROperand* operand(int idx) {
+        assert(_operands[idx] != nullptr);
+        return _operands[idx];
+    }
 
     // set
     MIRInst* set_operand(int idx, MIROperand* opeand) {
         assert(idx < max_operand_num);
+        assert(opeand != nullptr);
         _operands[idx] = opeand;
         return this;
     }
@@ -262,8 +273,9 @@ class MIRBlock : public MIRRelocable {
 
     void inst_sel(ir::BasicBlock* ir_bb);
     void add_inst(MIRInst* inst) { _insts.push_back(inst); }
-    
+
     std::list<MIRInst*>& insts() { return _insts; }
+    ir::BasicBlock* ir_block() { return _ir_block; }
    public:
     void print(std::ostream& os);
 };
@@ -374,11 +386,12 @@ class MIRGlobalObject {
     //     var_name = var_name.substr(1, var_name.length() - 1);
     //     _ir_global->set_name(var_name);
     // }
-    MIRGlobalObject(size_t align, std::unique_ptr<MIRRelocable> reloc, MIRModule* parent)
+    MIRGlobalObject(size_t align,
+                    std::unique_ptr<MIRRelocable> reloc,
+                    MIRModule* parent)
         : _parent(parent), align(align), _reloc(std::move(reloc)) {}
 
    public:
-
     void print(std::ostream& os);
 };
 
