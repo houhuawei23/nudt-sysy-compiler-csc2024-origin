@@ -95,7 +95,7 @@ static bool matchAndSelectPattern{{isel_item.idx}} (
     {% else %}
     {% endif -%}
     ctx.remove_inst(inst{{isel_item.match_id}});
-    std::cout << "match and select {{inst}} success!" << std::endl;
+    std::cout << "    {{inst}} success!" << std::endl;
     return true;
 } 
 {% endfor %}

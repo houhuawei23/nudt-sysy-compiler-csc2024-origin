@@ -19,6 +19,8 @@ class MIRDataStorage;
 struct StackObject;
 // class MIR
 
+struct CodeGenContext;
+
 class MIRRelocable {
     std::string _name;
 
@@ -27,7 +29,7 @@ class MIRRelocable {
     virtual ~MIRRelocable() = default;
     auto name() const { return _name; }
 
-    void print(std::ostream& os);  // as dump
+    virtual void print(std::ostream& os, CodeGenContext& ctx) = 0;  // as dump
 };
 
 constexpr uint32_t virtualRegBegin = 0b0101U << 28;
@@ -268,16 +270,17 @@ class MIRBlock : public MIRRelocable {
 
    public:
     MIRBlock() = default;
-    MIRBlock(ir::BasicBlock* ir_block, MIRFunction* parent)
-        : _ir_block(ir_block), _parent(parent) {}
+    MIRBlock(ir::BasicBlock* ir_block, MIRFunction* parent, const std::string& name="")
+        : MIRRelocable(name), _ir_block(ir_block), _parent(parent) {}
 
     void inst_sel(ir::BasicBlock* ir_bb);
     void add_inst(MIRInst* inst) { _insts.push_back(inst); }
 
     std::list<MIRInst*>& insts() { return _insts; }
     ir::BasicBlock* ir_block() { return _ir_block; }
+
    public:
-    void print(std::ostream& os);
+    void print(std::ostream& os, CodeGenContext& ctx) override;
 };
 
 enum class StackObjectUsage {
@@ -326,7 +329,7 @@ class MIRFunction : public MIRRelocable {
     }
 
    public:
-    void print(std::ostream& os);
+    void print(std::ostream& os, CodeGenContext& ctx) override;
     void print_cfg(std::ostream& os);
 };
 
@@ -338,7 +341,7 @@ class MIRZeroStorage : public MIRRelocable {
     MIRZeroStorage(size_t size, const std::string& name = "")
         : MIRRelocable(name), _size(size) {}
 
-    void print(std::ostream& os);
+    void print(std::ostream& os, CodeGenContext& ctx) override;
 };
 
 // data storage
@@ -356,7 +359,7 @@ class MIRDataStorage : public MIRRelocable {
                    const std::string& name = "")
         : MIRRelocable(name), _data(data), _readonly(readonly) {}
 
-    bool is_ro() const { return _readonly; }
+    bool is_readonly() const { return _readonly; }
 
     uint32_t append_word(uint32_t word) {
         auto idx = static_cast<uint32_t>(_data.size());
@@ -364,7 +367,7 @@ class MIRDataStorage : public MIRRelocable {
         return idx;  // idx of the last word
     }
 
-    void print(std::ostream& os);
+    void print(std::ostream& os, CodeGenContext& ctx) override;
 };
 
 /*

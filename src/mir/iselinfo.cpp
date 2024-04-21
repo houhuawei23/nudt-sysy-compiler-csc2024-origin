@@ -25,14 +25,12 @@ std::unordered_map<MIROperand*, uint32_t> collect_def_count(
 void ISelContext::remove_inst(MIRInst* inst) {
     assert(inst != nullptr);
     _remove_work_list.insert(inst);
-    std::cerr << "remove_inst not implemented yet!" << std::endl;
 }
 void ISelContext::replace_operand(MIROperand* src, MIROperand* dst) {
     assert(src->is_reg());
     if (src != dst) {
         _replace_map.emplace(src, dst);
     }
-    std::cerr << "replace_operand not implemented yet!" << std::endl;
 }
 MIROperand* ISelContext::get_inst_def(MIRInst* inst) {
     assert(inst != nullptr);
@@ -53,7 +51,7 @@ void ISelContext::run_isel(MIRFunction* func) {
 
     //! fix point algorithm: 循环执行指令选择和替换，直到不再变化。
     while (true) {
-        std::cout << "while loop start1" << std::endl;
+        std::cout << "[run_isel] fix point while loop start" << std::endl;
         bool modified = false;
         bool has_illegal = false;
         _remove_work_list.clear();
@@ -80,7 +78,7 @@ void ISelContext::run_isel(MIRFunction* func) {
         //! 指令遍历和分析: 对每个基本块的指令进行遍历，执行指令选择和替换。
         for (auto& block : func->blocks()) {
             ir::BasicBlock* ir_block = block->ir_block();
-            std::cout << "for loop start1: ir_block: ";
+            std::cout << "for all ir_block: ";
             std::cout << ir_block->name() << std::endl;
             _inst_map.clear();
             // check ssa form
@@ -94,8 +92,7 @@ void ISelContext::run_isel(MIRFunction* func) {
 
             auto it = std::prev(insts.end());
             /* in this block */
-            while (true) {
-                std::cout << "while loop start2" << std::endl;
+            while (true) { // for all insts in block
                 _insert_point = it;
                 auto& inst = *it;
                 std::optional<std::list<MIRInst*>::iterator> prev;
@@ -105,25 +102,21 @@ void ISelContext::run_isel(MIRFunction* func) {
                 }
                 // if inst not in remove list
                 if (not _remove_work_list.count(inst)) {
-                    std::cout << "do match and select" << std::endl;
+                    std::cout << "  [match&select] inst: " << inst->opcode()<<  std::endl;
                     auto opcode = inst->opcode();
                     //! do pattern match and select inst
                     auto res = isel_info->match_select(inst, *this);
                     if (res) {
-                        std::cout << "match and select success" << std::endl;
                         modified = true;
                     }
                 }
 
                 if (prev) {
-                    std::cout << "prev inst" << std::endl;
                     it = *prev;
                 } else {
-                    std::cout << "break" << std::endl;
                     break;
                 }
             }
-            std::cout << "for loop end1" << std::endl;
         }
 
         //! 指令移除和替换: 根据之前的分析结果，移除和替换旧的指令。
@@ -155,6 +148,7 @@ void ISelContext::run_isel(MIRFunction* func) {
         }
 
         if (modified) {
+            std::cout << "run_isel modified, continue!\n" << std::endl;
             continue;
         }
         // not modified, check illegal inst

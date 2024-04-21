@@ -408,7 +408,7 @@ static bool matchAndSelectPattern1(MIRInst* inst1, ISelContext& ctx) {
     /* Replace Operand */
     ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst2));
     ctx.remove_inst(inst1);
-    std::cout << "match and select InstAdd success!" << std::endl;
+    std::cout << "    InstAdd success!" << std::endl;
     return true;
 }
 
@@ -441,7 +441,7 @@ static bool matchAndSelectPattern2(MIRInst* inst1, ISelContext& ctx) {
     /* Replace Operand */
     ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst2));
     ctx.remove_inst(inst1);
-    std::cout << "match and select InstSub success!" << std::endl;
+    std::cout << "    InstSub success!" << std::endl;
     return true;
 }
 
@@ -474,7 +474,7 @@ static bool matchAndSelectPattern3(MIRInst* inst1, ISelContext& ctx) {
     /* Replace Operand */
     ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst2));
     ctx.remove_inst(inst1);
-    std::cout << "match and select InstMul success!" << std::endl;
+    std::cout << "    InstMul success!" << std::endl;
     return true;
 }
 
@@ -507,7 +507,7 @@ static bool matchAndSelectPattern4(MIRInst* inst1, ISelContext& ctx) {
     /* Replace Operand */
     ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst2));
     ctx.remove_inst(inst1);
-    std::cout << "match and select InstUDiv success!" << std::endl;
+    std::cout << "    InstUDiv success!" << std::endl;
     return true;
 }
 
@@ -540,7 +540,7 @@ static bool matchAndSelectPattern5(MIRInst* inst1, ISelContext& ctx) {
     /* Replace Operand */
     ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst2));
     ctx.remove_inst(inst1);
-    std::cout << "match and select InstURem success!" << std::endl;
+    std::cout << "    InstURem success!" << std::endl;
     return true;
 }
 
@@ -573,7 +573,7 @@ static bool matchAndSelectPattern6(MIRInst* inst1, ISelContext& ctx) {
     /* Replace Operand */
     ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst2));
     ctx.remove_inst(inst1);
-    std::cout << "match and select InstAnd success!" << std::endl;
+    std::cout << "    InstAnd success!" << std::endl;
     return true;
 }
 
@@ -606,7 +606,7 @@ static bool matchAndSelectPattern7(MIRInst* inst1, ISelContext& ctx) {
     /* Replace Operand */
     ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst2));
     ctx.remove_inst(inst1);
-    std::cout << "match and select InstOr success!" << std::endl;
+    std::cout << "    InstOr success!" << std::endl;
     return true;
 }
 
@@ -639,7 +639,7 @@ static bool matchAndSelectPattern8(MIRInst* inst1, ISelContext& ctx) {
     /* Replace Operand */
     ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst2));
     ctx.remove_inst(inst1);
-    std::cout << "match and select InstXor success!" << std::endl;
+    std::cout << "    InstXor success!" << std::endl;
     return true;
 }
 
@@ -672,7 +672,7 @@ static bool matchAndSelectPattern9(MIRInst* inst1, ISelContext& ctx) {
     /* Replace Operand */
     ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst2));
     ctx.remove_inst(inst1);
-    std::cout << "match and select InstShl success!" << std::endl;
+    std::cout << "    InstShl success!" << std::endl;
     return true;
 }
 
@@ -705,7 +705,7 @@ static bool matchAndSelectPattern10(MIRInst* inst1, ISelContext& ctx) {
     /* Replace Operand */
     ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst2));
     ctx.remove_inst(inst1);
-    std::cout << "match and select InstLShr success!" << std::endl;
+    std::cout << "    InstLShr success!" << std::endl;
     return true;
 }
 
@@ -738,7 +738,7 @@ static bool matchAndSelectPattern11(MIRInst* inst1, ISelContext& ctx) {
     /* Replace Operand */
     ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst2));
     ctx.remove_inst(inst1);
-    std::cout << "match and select InstAShr success!" << std::endl;
+    std::cout << "    InstAShr success!" << std::endl;
     return true;
 }
 
@@ -771,7 +771,7 @@ static bool matchAndSelectPattern12(MIRInst* inst1, ISelContext& ctx) {
     /* Replace Operand */
     ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst2));
     ctx.remove_inst(inst1);
-    std::cout << "match and select InstSMin success!" << std::endl;
+    std::cout << "    InstSMin success!" << std::endl;
     return true;
 }
 
@@ -804,7 +804,7 @@ static bool matchAndSelectPattern13(MIRInst* inst1, ISelContext& ctx) {
     /* Replace Operand */
     ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst2));
     ctx.remove_inst(inst1);
-    std::cout << "match and select InstSMax success!" << std::endl;
+    std::cout << "    InstSMax success!" << std::endl;
     return true;
 }
 
@@ -827,7 +827,7 @@ static bool matchAndSelectPattern14(MIRInst* inst1, ISelContext& ctx) {
 
     ctx.insert_inst(inst2);
     ctx.remove_inst(inst1);
-    std::cout << "match and select InstReturn success!" << std::endl;
+    std::cout << "    InstReturn success!" << std::endl;
     return true;
 }
 
@@ -860,7 +860,7 @@ static bool matchAndSelectPattern15(MIRInst* inst1, ISelContext& ctx) {
     /* Replace Operand */
     ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst2));
     ctx.remove_inst(inst1);
-    std::cout << "match and select InstLoad success!" << std::endl;
+    std::cout << "    InstLoad success!" << std::endl;
     return true;
 }
 
@@ -891,7 +891,7 @@ static bool matchAndSelectPattern16(MIRInst* inst1, ISelContext& ctx) {
 
     ctx.insert_inst(inst2);
     ctx.remove_inst(inst1);
-    std::cout << "match and select InstStore success!" << std::endl;
+    std::cout << "    InstStore success!" << std::endl;
     return true;
 }
 
@@ -916,7 +916,7 @@ static bool matchAndSelectPattern17(MIRInst* inst1, ISelContext& ctx) {
 
     ctx.insert_inst(inst2);
     ctx.remove_inst(inst1);
-    std::cout << "match and select InstJump success!" << std::endl;
+    std::cout << "    InstJump success!" << std::endl;
     return true;
 }
 
@@ -947,7 +947,7 @@ static bool matchAndSelectPattern18(MIRInst* inst1, ISelContext& ctx) {
 
     ctx.insert_inst(inst2);
     ctx.remove_inst(inst1);
-    std::cout << "match and select InstBranch success!" << std::endl;
+    std::cout << "    InstBranch success!" << std::endl;
     return true;
 }
 
@@ -977,7 +977,7 @@ static bool matchAndSelectPattern19(MIRInst* inst1, ISelContext& ctx) {
     /* Replace Operand */
     ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst2));
     ctx.remove_inst(inst1);
-    std::cout << "match and select InstCopy success!" << std::endl;
+    std::cout << "    InstCopy success!" << std::endl;
     return true;
 }
 
@@ -1007,7 +1007,7 @@ static bool matchAndSelectPattern20(MIRInst* inst1, ISelContext& ctx) {
     /* Replace Operand */
     ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst2));
     ctx.remove_inst(inst1);
-    std::cout << "match and select InstLoadGlobalAddress success!" << std::endl;
+    std::cout << "    InstLoadGlobalAddress success!" << std::endl;
     return true;
 }
 
@@ -1037,7 +1037,7 @@ static bool matchAndSelectPattern21(MIRInst* inst1, ISelContext& ctx) {
     /* Replace Operand */
     ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst2));
     ctx.remove_inst(inst1);
-    std::cout << "match and select InstLoadImm success!" << std::endl;
+    std::cout << "    InstLoadImm success!" << std::endl;
     return true;
 }
 
@@ -1067,8 +1067,7 @@ static bool matchAndSelectPattern22(MIRInst* inst1, ISelContext& ctx) {
     /* Replace Operand */
     ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst2));
     ctx.remove_inst(inst1);
-    std::cout << "match and select InstLoadStackObjectAddr success!"
-              << std::endl;
+    std::cout << "    InstLoadStackObjectAddr success!" << std::endl;
     return true;
 }
 

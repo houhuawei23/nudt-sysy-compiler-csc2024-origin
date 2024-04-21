@@ -35,7 +35,7 @@ public:
             {%- endfor -%};
     }
 
-    std::string_view name() {
+    std::string_view name() override{
         return "{{target_name}}.{{inst_name}}";
     }
 

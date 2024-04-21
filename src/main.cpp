@@ -94,8 +94,13 @@ int main(int argc, char* argv[]) {
         // auto target = mir::RISCVTarget();
         auto target = mir::GENERICTarget();
         auto mir_module = mir::create_mir_module(*module_ir, target);
-        target.emit_assembly(std::cout, *mir_module);
+        if (config.outfile.empty()) {
+            target.emit_assembly(std::cout, *mir_module);
+        } else {
+            ofstream fout;
+            fout.open(config.outfile);
+            target.emit_assembly(fout, *mir_module);
+        }
     }
-
     return EXIT_SUCCESS;
 }

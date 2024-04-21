@@ -1,7 +1,9 @@
 Target:
   name: RISCV
   infos: [InstInfo, InstSelInfo]
-InstInfo: { Templates: {
+InstInfo: {
+    # Templates
+    Templates: {
         Rtype: {
             # format: "{mnem} {rd}, {rs1}, {rs2}",
             format: [mnem, 0, ", ", 1, ", ", 2],
@@ -46,7 +48,9 @@ InstInfo: { Templates: {
         #   format: "$mnem $rd, $rs",
 
         # }
-      }, Instances: {
+      },
+    # Instances
+    Instances: {
         # RV32I Base Integer Instructions
         # RRR
         ADD: { mnem: "add", template: Rtype },
@@ -135,7 +139,8 @@ InstInfo: { Templates: {
 
         # MV: { }
 
-      } }
+      },
+  }
 InstSelInfo: {
     # templates
     Templates: {},
@@ -151,5 +156,5 @@ InstSelInfo: {
           Replace: a,
         },
       ]
-      #,
+      #,,
   }

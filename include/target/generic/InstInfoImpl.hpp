@@ -24,7 +24,7 @@ class GENERICInstInfoJump final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.Jump"; }
+    std::string_view name() override { return "GENERIC.Jump"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Jump " << mir::GENERIC::OperandDumper{inst.operand(0)};
@@ -52,7 +52,7 @@ class GENERICInstInfoBranch final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.Branch"; }
+    std::string_view name() override { return "GENERIC.Branch"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Branch " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
@@ -82,7 +82,7 @@ class GENERICInstInfoLoad final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.Load"; }
+    std::string_view name() override { return "GENERIC.Load"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Load " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
@@ -112,7 +112,7 @@ class GENERICInstInfoStore final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.Store"; }
+    std::string_view name() override { return "GENERIC.Store"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Store " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
@@ -142,7 +142,7 @@ class GENERICInstInfoAdd final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.Add"; }
+    std::string_view name() override { return "GENERIC.Add"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Add" << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
@@ -172,7 +172,7 @@ class GENERICInstInfoSub final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.Sub"; }
+    std::string_view name() override { return "GENERIC.Sub"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Sub" << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
@@ -202,7 +202,7 @@ class GENERICInstInfoMul final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.Mul"; }
+    std::string_view name() override { return "GENERIC.Mul"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Mul" << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
@@ -232,7 +232,7 @@ class GENERICInstInfoUDiv final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.UDiv"; }
+    std::string_view name() override { return "GENERIC.UDiv"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "UDiv" << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
@@ -262,7 +262,7 @@ class GENERICInstInfoURem final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.URem"; }
+    std::string_view name() override { return "GENERIC.URem"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "URem" << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
@@ -292,7 +292,7 @@ class GENERICInstInfoAnd final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.And"; }
+    std::string_view name() override { return "GENERIC.And"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "And" << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
@@ -322,7 +322,7 @@ class GENERICInstInfoOr final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.Or"; }
+    std::string_view name() override { return "GENERIC.Or"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Or" << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
@@ -352,7 +352,7 @@ class GENERICInstInfoXor final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.Xor"; }
+    std::string_view name() override { return "GENERIC.Xor"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Xor" << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
@@ -382,7 +382,7 @@ class GENERICInstInfoShl final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.Shl"; }
+    std::string_view name() override { return "GENERIC.Shl"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Shl" << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
@@ -412,7 +412,7 @@ class GENERICInstInfoLShr final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.LShr"; }
+    std::string_view name() override { return "GENERIC.LShr"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "LShr" << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
@@ -442,7 +442,7 @@ class GENERICInstInfoAShr final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.AShr"; }
+    std::string_view name() override { return "GENERIC.AShr"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "AShr" << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
@@ -472,7 +472,7 @@ class GENERICInstInfoSMin final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.SMin"; }
+    std::string_view name() override { return "GENERIC.SMin"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "SMin" << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
@@ -502,7 +502,7 @@ class GENERICInstInfoSMax final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.SMax"; }
+    std::string_view name() override { return "GENERIC.SMax"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "SMax" << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
@@ -530,7 +530,7 @@ class GENERICInstInfoNeg final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.Neg"; }
+    std::string_view name() override { return "GENERIC.Neg"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Neg" << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
@@ -557,7 +557,7 @@ class GENERICInstInfoAbs final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.Abs"; }
+    std::string_view name() override { return "GENERIC.Abs"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Abs" << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
@@ -586,7 +586,7 @@ class GENERICInstInfoFAdd final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.FAdd"; }
+    std::string_view name() override { return "GENERIC.FAdd"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "FAdd" << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
@@ -616,7 +616,7 @@ class GENERICInstInfoFSub final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.FSub"; }
+    std::string_view name() override { return "GENERIC.FSub"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "FSub" << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
@@ -646,7 +646,7 @@ class GENERICInstInfoFMul final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.FMul"; }
+    std::string_view name() override { return "GENERIC.FMul"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "FMul" << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
@@ -676,7 +676,7 @@ class GENERICInstInfoFDiv final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.FDiv"; }
+    std::string_view name() override { return "GENERIC.FDiv"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "FDiv" << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
@@ -704,7 +704,7 @@ class GENERICInstInfoSExt final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.SExt"; }
+    std::string_view name() override { return "GENERIC.SExt"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "SExt" << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
@@ -731,7 +731,7 @@ class GENERICInstInfoZExt final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.ZExt"; }
+    std::string_view name() override { return "GENERIC.ZExt"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "ZExt" << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
@@ -758,7 +758,7 @@ class GENERICInstInfoTrunc final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.Trunc"; }
+    std::string_view name() override { return "GENERIC.Trunc"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Trunc" << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
@@ -785,7 +785,7 @@ class GENERICInstInfoF2U final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.F2U"; }
+    std::string_view name() override { return "GENERIC.F2U"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "F2U" << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
@@ -812,7 +812,7 @@ class GENERICInstInfoF2S final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.F2S"; }
+    std::string_view name() override { return "GENERIC.F2S"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "F2S" << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
@@ -839,7 +839,7 @@ class GENERICInstInfoU2F final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.U2F"; }
+    std::string_view name() override { return "GENERIC.U2F"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "U2F" << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
@@ -866,7 +866,7 @@ class GENERICInstInfoS2F final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.S2F"; }
+    std::string_view name() override { return "GENERIC.S2F"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "S2F" << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
@@ -893,7 +893,7 @@ class GENERICInstInfoFCast final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.FCast"; }
+    std::string_view name() override { return "GENERIC.FCast"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "FCast" << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
@@ -920,7 +920,7 @@ class GENERICInstInfoCopy final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.Copy"; }
+    std::string_view name() override { return "GENERIC.Copy"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Copy " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
@@ -947,7 +947,7 @@ class GENERICInstInfoLoadGlobalAddress final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.LoadGlobalAddress"; }
+    std::string_view name() override { return "GENERIC.LoadGlobalAddress"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "LoadGlobalAddress "
@@ -975,7 +975,7 @@ class GENERICInstInfoLoadImm final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.LoadImm"; }
+    std::string_view name() override { return "GENERIC.LoadImm"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "LoadImm " << mir::GENERIC::OperandDumper{inst.operand(0)}
@@ -1002,7 +1002,7 @@ class GENERICInstInfoLoadStackObjectAddr final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.LoadStackObjectAddr"; }
+    std::string_view name() override { return "GENERIC.LoadStackObjectAddr"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "LoadStackObjectAddr "
@@ -1026,7 +1026,7 @@ class GENERICInstInfoReturn final : public InstInfo {
 
     uint32_t inst_flag() override { return InstFlagNone; }
 
-    std::string_view name() { return "GENERIC.Return"; }
+    std::string_view name() override { return "GENERIC.Return"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Return";

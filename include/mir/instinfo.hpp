@@ -48,6 +48,8 @@ class InstInfo {
 
     virtual uint32_t inst_flag() = 0;
 
+    virtual std::string_view name() = 0;
+
     virtual void print(std::ostream& out, MIRInst& inst, bool printComment) = 0;
 };
 
@@ -97,7 +99,8 @@ static std::ostream& operator<<(std::ostream& os, OperandDumper opdp) {
         os << "prob ";
     } else if (operand->is_reloc()) {
         // operand->reloc()-
-        os << "reloc ";
+        // os << "reloc ";
+        os << operand->reloc()->name();
     } else {
         os << "unknown ";
     }

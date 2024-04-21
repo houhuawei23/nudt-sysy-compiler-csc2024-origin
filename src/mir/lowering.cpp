@@ -139,8 +139,8 @@ MIRFunction* create_mir_function(ir::Function* ir_func,
 
     // map all blocks
     for (auto ir_block : ir_func->blocks()) {  // dom.blocks()?
-        mir_func->blocks().push_back(
-            std::make_unique<MIRBlock>(ir_block, mir_func));
+        mir_func->blocks().push_back(std::make_unique<MIRBlock>(
+            ir_block, mir_func, "label" + std::to_string(lowering_ctx.next_id())));
         block_map.emplace(ir_block, mir_func->blocks().back().get());
     }
 
