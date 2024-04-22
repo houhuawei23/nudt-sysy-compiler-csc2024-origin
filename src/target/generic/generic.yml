@@ -10,7 +10,7 @@ InstInfo: {
         # Template
         IntBinary: {
             # format: "{mnem} {dst}, {src1}, {src2}",
-            format: [mnem, 0, ", ", 1, ", ", 2],
+            format: [mnem, " ", 0, ", ", 1, ", ", 2],
             operands:
               {
                 0: { name: dst, type: INTREG, flag: Def },
@@ -37,7 +37,7 @@ InstInfo: {
 
         FloatBinary: {
             # format: "{mnem} {dst}, {src1}, {src2}",
-            format: [mnem, 0, ", ", 1, ", ", 2],
+            format: [mnem, " ", 0, ", ", 1, ", ", 2],
             operands:
               {
                 0: { name: dst, type: FPREG, flag: Def },
@@ -49,7 +49,7 @@ InstInfo: {
 
         Unary: {
             # format: "{mnem} {dst}, {src}",
-            format: [mnem, 0, ", ", 1],
+            format: [mnem, " ", 0, ", ", 1],
             operands:
               { 0: { name: dst, flag: Def }, 1: { name: src, flag: Use } },
             instances: [Neg, Abs, SExt, ZExt, Trunc, F2U, F2S, U2F, S2F, FCast],
@@ -127,7 +127,7 @@ InstInfo: {
         Return: { format: ["Return"], operands: {} },
         Store: {
             # format: "{mnem} {addr}, {src}, {align}"
-            format: ["Store ", 0, ", ", 1, ", ", 2],
+            format: ["Store", " ", 0, ", ", 1, ", ", 2],
             operands:
               {
                 0: { name: addr, type: VREG, flag: Use },
@@ -137,7 +137,7 @@ InstInfo: {
           },
         Load: {
             # format: "{mnem} {dst}, {src}, {align}"
-            format: ["Load ", 0, ", ", 1, ", ", 2],
+            format: ["Load", " ", 0, ", ", 1, ", ", 2],
             operands:
               {
                 0: { name: dst, type: VREG, flag: Def },
@@ -147,12 +147,12 @@ InstInfo: {
           },
         Jump: {
             # format: "Jump {label}"
-            format: ["Jump ", 0],
+            format: ["Jump", " ", 0],
             operands: { 0: { name: label, flag: Metadata } },
           },
         Branch: {
             # format: "Branch {cond}, {then}, {else}"
-            format: ["Branch ", 0, ", ", 1, ", ", 2],
+            format: ["Branch", " ", 0, ", ", 1, ", ", 2],
             operands:
               {
                 0: { name: cond, type: BOOL, flag: Use },
@@ -162,7 +162,7 @@ InstInfo: {
           },
         Copy: {
             # format: "Copy {dst}, {src}"
-            format: ["Copy ", 0, ", ", 1],
+            format: ["Copy", " ", 0, ", ", 1],
             operands: {
                 #! type
                 0: { name: dst, type: VREGorISAREG, flag: Def },
@@ -173,7 +173,7 @@ InstInfo: {
             # dst, reloc; Def, Metadata
             # int_reg, reloc
             # format: "LoadGlobalAddress {dst}, {reloc}"
-            format: ["LoadGlobalAddress ", 0, ", ", 1],
+            format: ["LoadGlobalAddress", " ", 0, ", ", 1],
             operands:
               {
                 0: { name: dst, type: INTREG, flag: Def },
@@ -182,7 +182,7 @@ InstInfo: {
           },
         LoadImm: {
             # format: "LoadImm {dst}, {imm}"
-            format: ["LoadImm ", 0, ", ", 1],
+            format: ["LoadImm", " ", 0, ", ", 1],
             operands:
               {
                 0: { name: dst, type: INTREG, flag: Def },
@@ -191,7 +191,7 @@ InstInfo: {
           },
         LoadStackObjectAddr: {
             # format: "LoadStackObjAddr {dst}, {stack_obj}"
-            format: ["LoadStackObjectAddr ", 0, ", ", 1],
+            format: ["LoadStackObjectAddr", " ", 0, ", ", 1],
             operands:
               {
                 0: { name: dst, type: INTREG, flag: Def },

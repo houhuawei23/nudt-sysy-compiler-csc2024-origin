@@ -148,13 +148,58 @@ InstSelInfo: {
     Instances:
       [
         {
-          Pattern: { InstLoadGlobalAddress: { Dst: $Dst, Addr: $Addr } },
-          Replace: a,
+          pattern: { name: InstLoadGlobalAddress, dst: $dst, addr: $addr },
+          replace:
+            {
+              name: ADDI,
+              rd: $dst,
+              rs1:
+                {
+                  name: AUIPC,
+                  rd: "getVRegAs(ctx, $dst)",
+                  imm: getHighBits($addr),
+                },
+              imm: getLowBits($addr),
+            },
+        },
+        { pattern: { name: InstLoadStackObjectAddr } },
+        # load and store
+        {
+          pattern:
+            {
+              name: InstLoad,
+              dst: $dst,
+              addr: $addr,
+              align: $align,
+              predicate: "selectAddrOffset($addr, ctx, [$base], [$offset])",
+            },
+          replace: {
+              name: getLoadOpcode($dst),
+              rd: $dst,
+              rs1: $base,
+              imm: $offset,
+              align: $align, # todo, process load inst info
+            },
         },
         {
-          Pattern: { InstLoadGlobalAddress: a, InstLoadGlobalValue: b },
-          Replace: a,
+          pattern:
+            {
+              name: InstStore,
+              src: $src,
+              addr: $addr,
+              align: $align,
+              predicate: "isOperandVRegOrISAReg($src) && selectAddrOffset($addr, ctx, [$base], [$offset])",
+            },
+          replace:
+            {
+              template: Stype,
+              name: getStoreOpcode($src),
+              rs2: $src,
+              rs1: $base,
+              offset: $offset,
+              align: $align,
+            },
         },
       ]
-      #,,
+      #,,,,,,,,,,,,,,
   }

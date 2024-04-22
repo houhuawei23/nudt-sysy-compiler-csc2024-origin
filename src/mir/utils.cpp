@@ -67,6 +67,30 @@ void dump_assembly(std::ostream& os, MIRModule& module, CodeGenContext& ctx) {
             // os << bb->name() << ":\n";
             if (bb == func->blocks().front()) {
                 os << func->name() << ":\n";
+                /* dump stack usage comment */
+                uint32_t calleeArgument = 0, loacl = 0, reSpill = 0,
+                         calleeSaved = 0;
+                for (auto& [operand, stackobj] : func->stack_objs()) {
+                    switch (stackobj.usage) {
+                        case StackObjectUsage::CalleeArgument:
+                            calleeArgument += stackobj.size;
+                            break;
+                        case StackObjectUsage::Local:
+                            loacl += stackobj.size;
+                            break;
+                        case StackObjectUsage::RegSpill:
+                            reSpill += stackobj.size;
+                            break;
+                        case StackObjectUsage::CalleeSaved:
+                            calleeSaved += stackobj.size;
+                            break;
+                    }
+                }
+                os << "\t" << "# stack usage: \n";
+                os << "\t# CalleeArgument=" << calleeArgument << ", ";
+                os << "Local=" << loacl << ", \n";
+                os << "\t# RegSpill=" << reSpill << ", ";
+                os << "CalleeSaved=" << calleeSaved << "\n";
             } else {
                 os << bb->name() << ":\n";
             }

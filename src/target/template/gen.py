@@ -85,7 +85,7 @@ def load_inst_info(file):
     isa_instinfo = isa_data["InstInfo"]
     templates = isa_instinfo["Templates"]
     instances = isa_instinfo["Instances"]
-    insts_list = isa_instinfo["InstList"]
+
     insts = list()
     insts_dict = dict()
     for template_name, template_info in templates.items():
@@ -113,7 +113,10 @@ def load_inst_info(file):
 
         # insts.append(info)
         insts_dict[name] = info
-
+    if "InstList" in isa_instinfo:
+        insts_list = isa_instinfo["InstList"]
+    else:
+        insts_list = list(insts_dict.keys())
     return target_name, insts_dict, insts_list
 
 
@@ -386,7 +389,7 @@ if __name__ == "__main__":
     }
     gen_file_jinja2("InstInfoDecl.hpp.jinja2", output_dir, params)
     gen_file_jinja2("InstInfoImpl.hpp.jinja2", output_dir, params)
-
+    exit(0)
     # gen_data_yml = "generic.yml"
     _, gen_insts_dict, gen_insts_list = load_inst_info(gen_data_yml)
     # mirgen_insts_list = ["Inst" + name for name in gen_insts_list]

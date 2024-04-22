@@ -17,6 +17,8 @@ done
 
 # python3 ./src/target/template/gen.py ./src/target/generic/generic.yml \
 # ./src/target/generic/generic.yml ./include/target/generic/
+# python3 ./src/target/template/gen.py ./src/target/generic/generic.yml \
+# ./src/target/riscv/riscv.yml ./include/target/riscv/
 
 # cmake config and build
 # cmake -S . -B build

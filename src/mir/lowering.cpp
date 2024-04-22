@@ -23,6 +23,11 @@ std::unique_ptr<MIRModule> create_mir_module(ir::Module& ir_module,
     return mir_module_uptr;
 }
 
+union FloatUint32 {
+    float f;
+    uint32_t u;
+} fu32;
+
 void create_mir_module(ir::Module& ir_module, LoweringContext& lowering_ctx) {
     // return ref, using ref to use
     auto& mir_module = lowering_ctx._mir_module;
@@ -39,7 +44,7 @@ void create_mir_module(ir::Module& ir_module, LoweringContext& lowering_ctx) {
     for (auto ir_gval : ir_module.gvalues()) {
         auto ir_gvar = dyn_cast<ir::GlobalVariable>(ir_gval);
         auto type = dyn_cast<ir::PointerType>(ir_gvar->type())->base_type();
-        size_t size = ir_gvar->type()->size();
+        size_t size = type->size();  // data size, not pointer size
 
         if (ir_gvar->is_init()) {  //! gvar init: .data
             // TODO: now only support scalar, need to support array
@@ -48,12 +53,19 @@ void create_mir_module(ir::Module& ir_module, LoweringContext& lowering_ctx) {
             if (type->is_int()) {
                 if (type->is_i32()) {
                     data.push_back(static_cast<uint32_t>(val->i32()));
+                    // how to handle i1?
+                } else if (type->is_float32()) {
+                    /* float to uint32_t, type cast, doesnt change the memory */
+                    fu32.f = val->f32();
+                    data.push_back(fu32.u);
+                } else if (type->is_array()) {
+                    // TODO: handle array init
                 }
             } else if (type->is_float()) {
             }
             size_t align = 4;  // TODO: align
-            auto mir_storage =
-                std::make_unique<MIRDataStorage>(std::move(data), false);
+            auto mir_storage = std::make_unique<MIRDataStorage>(
+                std::move(data), false, ir_gval->name());
             auto mir_gobj = std::make_unique<MIRGlobalObject>(
                 align, std::move(mir_storage), &mir_module);
             mir_module.global_objs().push_back(std::move(mir_gobj));
@@ -140,7 +152,8 @@ MIRFunction* create_mir_function(ir::Function* ir_func,
     // map all blocks
     for (auto ir_block : ir_func->blocks()) {  // dom.blocks()?
         mir_func->blocks().push_back(std::make_unique<MIRBlock>(
-            ir_block, mir_func, "label" + std::to_string(lowering_ctx.next_id())));
+            ir_block, mir_func,
+            "label" + std::to_string(lowering_ctx.next_id())));
         block_map.emplace(ir_block, mir_func->blocks().back().get());
     }
 
@@ -199,20 +212,20 @@ MIRFunction* create_mir_function(ir::Function* ir_func,
     }
     return mir_func;
 }
-
+void lower(ir::UnaryInst* ir_inst, LoweringContext& ctx);
 void lower(ir::BinaryInst* ir_inst, LoweringContext& ctx);
+void lower(ir::ICmpInst* ir_inst, LoweringContext& ctx);
+void lower(ir::FCmpInst* ir_inst, LoweringContext& ctx);
 
-void lower(ir::BranchInst* ir_inst, LoweringContext& ctx);
-
+/* Memory Inst */
 void lower(ir::LoadInst* ir_inst, LoweringContext& ctx);
-
 void lower(ir::StoreInst* ir_inst, LoweringContext& ctx);
+void lower(ir::GetElementPtrInst* ir_inst, LoweringContext& ctx);
 
-//! return
-void lower(ir::ReturnInst* ir_inst, LoweringContext& ctx);
-
-//! branch
+/* Terminator Inst */
 void lower(ir::BranchInst* ir_inst, LoweringContext& ctx);
+void lower(ir::ReturnInst* ir_inst, LoweringContext& ctx);
+void lower(ir::CallInst* ir_inst, LoweringContext& ctx);
 
 MIRInst* create_mir_inst(ir::Instruction* ir_inst, LoweringContext& ctx) {
     // auto scid = ir_inst->scid();
@@ -230,6 +243,15 @@ MIRInst* create_mir_inst(ir::Instruction* ir_inst, LoweringContext& ctx) {
     // }
 
     switch (ir_inst->scid()) {
+        case ir::Value::vFNEG:
+        case ir::Value::vTRUNC:
+        case ir::Value::vZEXT:
+        case ir::Value::vSEXT:
+        case ir::Value::vFPTRUNC:
+        case ir::Value::vFPTOSI:
+        case ir::Value::vSITOFP:
+            lower(dyn_cast<ir::UnaryInst>(ir_inst), ctx);
+            break;
         case ir::Value::vADD:
         case ir::Value::vFADD:
         case ir::Value::vSUB:
@@ -244,7 +266,24 @@ MIRInst* create_mir_inst(ir::Instruction* ir_inst, LoweringContext& ctx) {
         case ir::Value::vFREM:
             lower(dyn_cast<ir::BinaryInst>(ir_inst), ctx);
             break;
+        case ir::Value::vIEQ:
+        case ir::Value::vINE:
+        case ir::Value::vISGT:
+        case ir::Value::vISGE:
+        case ir::Value::vISLT:
+        case ir::Value::vISLE:
+            lower(dyn_cast<ir::ICmpInst>(ir_inst), ctx);
+            break;
+        case ir::Value::vFOEQ:
+        case ir::Value::vFONE:
+        case ir::Value::vFOGT:
+        case ir::Value::vFOGE:
+        case ir::Value::vFOLT:
+        case ir::Value::vFOLE:
+            lower(dyn_cast<ir::FCmpInst>(ir_inst), ctx);
+            break;
         case ir::Value::vALLOCA:
+            std::cerr << "alloca not supported" << std::endl;
             break;
         case ir::Value::vLOAD:
             lower(dyn_cast<ir::LoadInst>(ir_inst), ctx);
@@ -252,17 +291,46 @@ MIRInst* create_mir_inst(ir::Instruction* ir_inst, LoweringContext& ctx) {
         case ir::Value::vSTORE:
             lower(dyn_cast<ir::StoreInst>(ir_inst), ctx);
             break;
+        case ir::Value::vGETELEMENTPTR:
+            lower(dyn_cast<ir::GetElementPtrInst>(ir_inst), ctx);
+            break;
         case ir::Value::vRETURN:
             lower(dyn_cast<ir::ReturnInst>(ir_inst), ctx);
             break;
         case ir::Value::vBR:
             lower(dyn_cast<ir::BranchInst>(ir_inst), ctx);
             break;
+        case ir::Value::vCALL:
+            lower(dyn_cast<ir::CallInst>(ir_inst), ctx);
+            break;
         default:
             assert(false && "not supported inst");
             break;
     }
     return nullptr;
+}
+void lower(ir::UnaryInst* ir_inst, LoweringContext& ctx) {
+    // TODO: implement unary inst
+    std::cerr << "unary inst not supported" << std::endl;
+}
+
+void lower(ir::ICmpInst* ir_inst, LoweringContext& ctx) {
+    // TODO: implement icmp inst
+    std::cerr << "icmp inst not supported" << std::endl;
+}
+void lower(ir::FCmpInst* ir_inst, LoweringContext& ctx) {
+    // TODO: implement fcmp inst
+    std::cerr << "fcmp inst not supported" << std::endl;
+}
+
+void lower(ir::CallInst* ir_inst, LoweringContext& ctx) {
+    // TODO: implement call
+    std::cerr << "call not supported" << std::endl;
+}
+
+void lower(ir::GetElementPtrInst* ir_inst, LoweringContext& ctx) {
+    // TODO: implement getelementptr
+    std::cerr << "getelementptr not supported" << std::endl;
 }
 
 //! BinaryInst

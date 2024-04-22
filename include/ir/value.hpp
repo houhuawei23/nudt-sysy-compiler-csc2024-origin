@@ -142,8 +142,8 @@ class Value {
         // vTERMINATOR_BEGIN
         vRETURN,
         vBR,
-        // vTERMINATOR_END
         vCALL,
+        // vTERMINATOR_END
 
         // icmp
         vICMP_BEGIN,
