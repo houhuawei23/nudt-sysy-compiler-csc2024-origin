@@ -1,13 +1,15 @@
 // clang-format off
 #pragma once
 #include "mir/mir.hpp"
+#include "mir/utils.hpp"
 #include "mir/target.hpp"
 #include "mir/datalayout.hpp"
 #include "mir/registerinfo.hpp"
 
 #include "target/riscv/riscv.hpp"
 #include "target/riscv/InstInfoDecl.hpp"
-
+#include "target/riscv/ISelInfoDecl.hpp"
+#include "target/riscv/ISelInfoImpl.hpp"
 // clang-format on
 
 namespace mir {
@@ -71,10 +73,11 @@ class RISCVFrameInfo : public TargetFrameInfo {
     void emit_postsa_epilogue(MIRBlock* exit, int32_t stack_size) override {
         std::cerr << "Not Impl emit_postsa_epilogue" << std::endl;
     }
-    int32_t insert_prologue_epilogue(MIRFunction* func,
-                                     std::unordered_set<MIROperand*>& call_saved_regs,
-                                     CodeGenContext& ctx,
-                                     MIROperand* return_addr_reg) override {
+    int32_t insert_prologue_epilogue(
+        MIRFunction* func,
+        std::unordered_set<MIROperand*>& call_saved_regs,
+        CodeGenContext& ctx,
+        MIROperand* return_addr_reg) override {
         std::cerr << "Not Impl insert_prologue_epilogue" << std::endl;
         return 0;
     }
@@ -119,7 +122,7 @@ class RISCVTarget : public Target {
     }
     TargetISelInfo& get_target_isel_info() override {
         std::cerr << "Not Impl get_isel_info" << std::endl;
-        // return RISCV::getRISCVISelInfo();
+        return RISCV::getRISCVISelInfo();
     }
     TargetFrameInfo& get_target_frame_info() override { return _frameinfo; }
     TargetRegisterInfo& get_register_info() override { return mRegisterInfo; }
@@ -127,6 +130,11 @@ class RISCVTarget : public Target {
     // emit_assembly
     void emit_assembly(std::ostream& out, MIRModule& module) override {
         std::cerr << "Not Impl emit_assembly" << std::endl;
+        auto& target = *this;
+        CodeGenContext codegen_ctx{
+            target, target.get_datalayout(), target.get_target_inst_info(),
+            target.get_target_frame_info(), MIRFlags{false, false}};
+        dump_assembly(out, module, codegen_ctx);
     }
 };
 }  // namespace mir

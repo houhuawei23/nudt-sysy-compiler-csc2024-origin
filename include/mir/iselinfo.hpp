@@ -34,6 +34,11 @@ class ISelContext {
         assert(inst != nullptr);
         _curr_block->insts().emplace(_insert_point, inst);
     }
+    MIRInst* new_inst(uint32_t opcode) {
+        MIRInst* inst = new MIRInst(opcode);
+        insert_inst(inst);
+        return inst;
+    }
     CodeGenContext& codegen_ctx() { return _codegen_ctx; }
     MIRBlock* curr_block() { return _curr_block; }
 };
@@ -48,5 +53,16 @@ class TargetISelInfo {
 //! helper function to create a new MIRInstq
 
 uint32_t select_copy_opcode(MIROperand* dst, MIROperand* src);
+
+
+inline MIROperand* getHighBits(MIROperand* operand) {
+    assert(isOperandReloc(operand));
+    return new MIROperand{ operand->getStorage(), OperandType::HighBits };
+}
+inline MIROperand* getLowBits(MIROperand* operand) {
+    assert(isOperandReloc(operand));
+    return new MIROperand{ operand->getStorage(), OperandType::LowBits };
+}
+
 
 }  // namespace mir

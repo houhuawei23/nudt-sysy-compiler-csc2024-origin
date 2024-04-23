@@ -41,6 +41,16 @@ MIROperand* ISelContext::get_inst_def(MIRInst* inst) {
     return nullptr;
 }
 
+MIRInst* ISelContext::lookup_def(MIROperand* op) {
+    assert(op != nullptr);
+    auto iter = _inst_map.find(op);
+    if (iter != _inst_map.end()) {
+        return iter->second;
+    }
+
+    assert(false && "def not found");
+}
+
 void ISelContext::run_isel(MIRFunction* func) {
     // TODO: implement
     auto& isel_info = _codegen_ctx.iselInfo;
@@ -56,6 +66,7 @@ void ISelContext::run_isel(MIRFunction* func) {
 
         _constant_map.clear();
         _use_cnt.clear();
+        _inst_map.clear(); //! here!
         //! 定义和使用计数收集: 遍历所有指令，收集每个定义的计数和使用情况。
         // get def count
         // auto def_count = collect_def_count(func, _codegen_ctx);
@@ -76,10 +87,18 @@ void ISelContext::run_isel(MIRFunction* func) {
             ir::BasicBlock* ir_block = block->ir_block();
             std::cout << "for all ir_block: ";
             std::cout << ir_block->name() << std::endl;
-            _inst_map.clear();
-            // check ssa form
-            // for (auto& inst : block->insts()) {
-            // }
+            // check ssa form, get inst map
+            for (auto& inst : block->insts()) {
+                auto& instinfo = _codegen_ctx.instInfo.get_instinfo(inst);
+                for (uint32_t idx = 0; idx < instinfo.operand_num(); idx++) {
+                    if (instinfo.operand_flag(idx) & OperandFlagDef) {
+                        auto def = inst->operand(idx);
+                        if (def->is_reg() && isVirtualReg(def->reg())) {
+                            _inst_map.emplace(def, inst);
+                        }
+                    }
+                }
+            }
             _curr_block = block.get();
             auto& insts = block->insts();
 
@@ -88,7 +107,7 @@ void ISelContext::run_isel(MIRFunction* func) {
 
             auto it = std::prev(insts.end());
             /* in this block */
-            while (true) { // for all insts in block
+            while (true) {  // for all insts in block
                 _insert_point = it;
                 auto& inst = *it;
                 std::optional<std::list<MIRInst*>::iterator> prev;
@@ -98,7 +117,8 @@ void ISelContext::run_isel(MIRFunction* func) {
                 }
                 // if inst not in remove list
                 if (not _remove_work_list.count(inst)) {
-                    std::cout << "  [match&select] inst: " << inst->opcode()<<  std::endl;
+                    std::cout << "  [match&select] inst: " << inst->opcode()
+                              << std::endl;
                     auto opcode = inst->opcode();
                     //! do pattern match and select inst
                     auto res = isel_info->match_select(inst, *this);
@@ -152,7 +172,7 @@ void ISelContext::run_isel(MIRFunction* func) {
         //! 如果存在非法指令，根据情况决定是继续尝试合法化还是报告错误。
 
         std::cout << "run_isel success!" << std::endl;
-        return ;
+        return;
     }  // while end
 }
 

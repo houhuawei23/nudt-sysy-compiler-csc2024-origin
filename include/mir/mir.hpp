@@ -188,7 +188,7 @@ class MIROperand {
     bool operator!=(const MIROperand& rhs) { return _storage != rhs._storage; }
 
     // hash?
-
+    auto& getStorage() const noexcept { return _storage; }
     intmax_t imm() { return std::get<intmax_t>(_storage); }
     uint32_t reg() const { return std::get<MIRRegister*>(_storage)->reg(); }
     MIRRelocable* reloc() { return std::get<MIRRelocable*>(_storage); }
@@ -199,7 +199,7 @@ class MIROperand {
     constexpr bool is_reg() {
         return std::holds_alternative<MIRRegister*>(_storage);
     }
-    bool is_reloc() { return std::holds_alternative<MIRRelocable*>(_storage); }
+    constexpr bool is_reloc() { return std::holds_alternative<MIRRelocable*>(_storage); }
     constexpr bool is_prob() { return false; }
     constexpr bool is_init() {
         return !std::holds_alternative<std::monostate>(_storage);

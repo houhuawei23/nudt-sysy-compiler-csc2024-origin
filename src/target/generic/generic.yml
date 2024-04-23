@@ -177,7 +177,7 @@ InstInfo: {
             operands:
               {
                 0: { name: dst, type: INTREG, flag: Def },
-                1: { name: reloc, type: RELOC, flag: Metadata },
+                1: { name: addr, type: RELOC, flag: Metadata },
               },
           },
         LoadImm: {
@@ -272,8 +272,8 @@ InstSelInfo: {
           replace: { name: Copy, dst: $dst, src: $src },
         },
         {
-          pattern: { name: InstLoadGlobalAddress, dst: $dst, reloc: $reloc },
-          replace: { name: LoadGlobalAddress, dst: $dst, reloc: $reloc },
+          pattern: { name: InstLoadGlobalAddress, dst: $dst, addr: $addr },
+          replace: { name: LoadGlobalAddress, dst: $dst, addr: $addr },
         },
         {
           pattern: { name: InstLoadImm, dst: $dst, imm: $imm },

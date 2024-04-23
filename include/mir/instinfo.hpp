@@ -16,7 +16,7 @@ enum InstFlag : uint32_t {
     InstFlagTerminator = 1 << 2,
     InstFlagBranch = 1 << 3,
     InstFlagCall = 1 << 4,
-    InstFlagNoFallthrough = 1 << 5,
+    InstFlagNoFallThrough = 1 << 5,
     InstFlagPush = 1 << 6,
     InstFlagLoadConstant = 1 << 7,
     InstFlagRegDef = 1 << 8,  // def ISA register
@@ -76,7 +76,17 @@ constexpr bool isOperandVReg(MIROperand* operand) {
     return operand->is_reg();
     // && isVirtualReg(operand->reg())
 }
+constexpr bool isOperandIReg(MIROperand* operand) {
+    // TODO: not implemented yet
 
+    return false;
+}
+constexpr bool isOperandReloc(MIROperand* operand) {
+    return operand->is_reloc() && operand->type() == OperandType::Special;
+}
+constexpr bool isOperandVRegOrISAReg(MIROperand* operand) {
+    return operand->is_reg() && (isVirtualReg(operand->reg()) || isISAReg(operand->reg()));
+}
 void dumpVirtualReg(std::ostream& os, MIROperand* operand);
 
 }  // namespace mir

@@ -9,8 +9,8 @@
 {{target_name}}_NAMESPACE_BEGIN
 enum {{target_name}}Inst {
     {{target_name}}InstBegin = ISASpecificBegin,
-    {% for inst_name in insts_list %}
-            {{inst_name}}, {%- if inst_name not in insts_dict %} /* not implemented yet */ {% endif -%}
+    {% for inst_name in inst_name_list %}
+            {{inst_name}}, {%- if inst_name not in inst_info_dict %} /* not implemented yet */ {% endif -%}
     {% endfor %}
 
     {{target_name}}InstEnd

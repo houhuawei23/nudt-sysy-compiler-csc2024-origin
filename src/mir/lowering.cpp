@@ -122,7 +122,7 @@ void create_mir_module(ir::Module& ir_module, LoweringContext& lowering_ctx) {
         }
 
         /* stack allocation */
-        allocateStackObjects(*mir_func, codegen_ctx);
+        // allocateStackObjects(*mir_func, codegen_ctx);
         /* post-RA scheduling, minimize cycles */
 
         /* post legalization */
@@ -426,11 +426,11 @@ void lower(ir::LoadInst* ir_inst, LoweringContext& ctx) {
 void lower(ir::StoreInst* ir_inst, LoweringContext& ctx) {
     // auto& ir_store = dyn_cast<ir::StoreInst>(ir_inst);
     // ir: store type val, type* ptr
-    //! store val, ptr
+    //! store addr, val
     // align = 4
     auto inst = new MIRInst(InstStore);
-    inst->set_operand(0, ctx.map2operand(ir_inst->value()));
-    inst->set_operand(1, ctx.map2operand(ir_inst->ptr()));
+    inst->set_operand(0, ctx.map2operand(ir_inst->ptr()));
+    inst->set_operand(1, ctx.map2operand(ir_inst->value()));
     uint32_t align = 4;
     inst->set_operand(2, MIROperand::as_imm(align, OperandType::Special));
 

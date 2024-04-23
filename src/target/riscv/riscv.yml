@@ -6,7 +6,7 @@ InstInfo: {
     Templates: {
         Rtype: {
             # format: "{mnem} {rd}, {rs1}, {rs2}",
-            format: [mnem, 0, ", ", 1, ", ", 2],
+            format: [mnem, " ", 0, ", ", 1, ", ", 2],
             operands:
               {
                 0: { name: rd, type: GPR, flag: Def },
@@ -16,7 +16,7 @@ InstInfo: {
           },
         Itype: {
             # format: "$mnem $rd, $rs1, $imm",
-            format: [mnem, 0, ", ", 1, ", ", 2],
+            format: [mnem, " ", 0, ", ", 1, ", ", 2],
             operands:
               {
                 0: { name: rd, type: GPR, flag: Def },
@@ -26,7 +26,7 @@ InstInfo: {
           },
         Stype: {
             # format: "$mnem $rs2, $offset($rs1)",
-            format: [mnem, 0, ", ", 1, "(", 2, ")"],
+            format: [mnem, " ", 0, ", ", 1, "(", 2, ")"],
             operands:
               {
                 0: { name: rs2, type: GPR, flag: Use },
@@ -36,7 +36,7 @@ InstInfo: {
           },
         Utype: {
             # format: "$mnem $rd, $imm",
-            format: [mnem, 0, ", ", 1],
+            format: [mnem, " ", 0, ", ", 1],
             operands:
               {
                 0: { name: rd, type: GPR, flag: Def },
@@ -95,10 +95,12 @@ InstInfo: {
         LW: { mnem: "lw", template: Itype, flag: [Load] },
         LBU: { mnem: "lbu", template: Itype, flag: [Load] },
         LHU: { mnem: "lhu", template: Itype, flag: [Load] },
+        LD: { mnem: "ld", template: Itype, flag: [Load] }, # RV64
         # Store
         SB: { mnem: "sb", template: Stype, flag: [Store] },
         SH: { mnem: "sh", template: Stype, flag: [Store] },
         SW: { mnem: "sw", template: Stype, flag: [Store] },
+        SD: { mnem: "sd", template: Stype, flag: [Store] }, # RV64
         # branch Btype-Itype offset-imm
         BEQ: { mnem: "beq", template: Itype, flag: [Branch, Terminator] },
         BNE: { mnem: "bne", template: Itype, flag: [Branch, Terminator] },
@@ -109,7 +111,18 @@ InstInfo: {
         # J JType-Utype
         JAL: { mnem: "jal", template: Utype, flag: [Call] },
         JALR: { mnem: "jalr", template: Itype, flag: [Call] },
-
+        J:
+          {
+            format: ["j", " ", 0],
+            operands: { 0: { name: tgt, type: reloc, flag: Metadata } },
+            flag: [Branch, Terminator, NoFallThrough],
+          },
+        RET:
+          {
+            format: ["ret"],
+            operands: {},
+            flag: [Branch, Terminator, NoFallThrough],
+          },
         # RIU lui, auipc
         LUI: { mnem: "lui", template: Utype, flag: [LoadConstant] },
         AUIPC: { mnem: "auipc", template: Utype, flag: [PCRel, LoadConstant] },
@@ -145,61 +158,79 @@ InstSelInfo: {
     # templates
     Templates: {},
     # instances
-    Instances:
-      [
-        {
-          pattern: { name: InstLoadGlobalAddress, dst: $dst, addr: $addr },
-          replace:
-            {
-              name: ADDI,
-              rd: $dst,
-              rs1:
-                {
-                  name: AUIPC,
-                  rd: "getVRegAs(ctx, $dst)",
-                  imm: getHighBits($addr),
-                },
-              imm: getLowBits($addr),
-            },
-        },
-        { pattern: { name: InstLoadStackObjectAddr } },
+    Instances: [
+        # {
+        #   pattern: { name: InstLoadGlobalAddress, dst: $dst, addr: $addr },
+        #   replace:
+        #     {
+        #       name: ADDI,
+        #       rd: $dst,
+        #       rs1:
+        #         {
+        #           name: AUIPC,
+        #           rd: "getVRegAs(ctx, $dst)",
+        #           imm: getHighBits($addr),
+        #         },
+        #       imm: getLowBits($addr),
+        #     },
+        # },
+        # { pattern: { name: InstLoadStackObjectAddr } },
+        # {
+        #   pattern:
+        #     {
+        #       name: InstAdd,
+        #       dst: $dst,
+        #       src1: { name: InstShl, src1: $src1, src2: $imm },
+        #       src2: $src2,
+        #       predicate: "isOperandIReg($dst) && isOperandIReg($src1) && isOperandIReg($src2) && ($imm).isImm() && ($imm).imm() == 1",
+        #     },
+        #   replace: { name: SH1ADD, rd: $dst, rs1: $src1, rs2: $src2 },
+        # },
         # load and store
         {
-          pattern:
-            {
+          # InstLoad
+          pattern: {
               name: InstLoad,
               dst: $dst,
               addr: $addr,
-              align: $align,
+              ## align: $align,
               predicate: "selectAddrOffset($addr, ctx, [$base], [$offset])",
             },
           replace: {
               name: getLoadOpcode($dst),
+              ref: LB,
               rd: $dst,
               rs1: $base,
-              imm: $offset,
-              align: $align, # todo, process load inst info
+              imm: $offset, # align: $align, # todo, process load inst info
+
             },
         },
         {
-          pattern:
-            {
+          # InstStore
+          pattern: {
               name: InstStore,
+              addr: $addr, # align: $align,
               src: $src,
-              addr: $addr,
-              align: $align,
               predicate: "isOperandVRegOrISAReg($src) && selectAddrOffset($addr, ctx, [$base], [$offset])",
             },
           replace:
             {
-              template: Stype,
               name: getStoreOpcode($src),
+              ref: SB,
               rs2: $src,
               rs1: $base,
               offset: $offset,
-              align: $align,
             },
         },
-      ]
-      #,,,,,,,,,,,,,,
+        # Control Flow
+        {
+          pattern: { name: InstJump, label: $label },
+          replace: { name: J, tgt: $label },
+        },
+        {
+          # Return
+          pattern: { name: InstReturn },
+          replace: { name: RET },
+        },
+      ],
   }
