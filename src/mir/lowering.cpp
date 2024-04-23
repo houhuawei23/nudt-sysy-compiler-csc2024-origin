@@ -2,6 +2,8 @@
 #include "mir/lowering.hpp"
 #include "mir/target.hpp"
 #include "mir/iselinfo.hpp"
+
+#include "mir/utils.hpp"
 namespace mir {
 //! declare
 void create_mir_module(ir::Module& ir_module, LoweringContext& ctx);
@@ -120,7 +122,7 @@ void create_mir_module(ir::Module& ir_module, LoweringContext& lowering_ctx) {
         }
 
         /* stack allocation */
-
+        allocateStackObjects(*mir_func, codegen_ctx);
         /* post-RA scheduling, minimize cycles */
 
         /* post legalization */

@@ -65,8 +65,19 @@ class RISCVFrameInfo : public TargetFrameInfo {
     bool is_callee_saved(MIROperand& op) override { return true; }
     // sa stage
     int stack_pointer_align() override { return 8; }
-    void emit_postsa_prologue(MIRBlock* entry, int32_t stack_size) override {}
-    void emit_postsa_epilogue(MIRBlock* exit, int32_t stack_size) override {}
+    void emit_postsa_prologue(MIRBlock* entry, int32_t stack_size) override {
+        std::cerr << "Not Impl emit_postsa_prologue" << std::endl;
+    }
+    void emit_postsa_epilogue(MIRBlock* exit, int32_t stack_size) override {
+        std::cerr << "Not Impl emit_postsa_epilogue" << std::endl;
+    }
+    int32_t insert_prologue_epilogue(MIRFunction* func,
+                                     std::unordered_set<MIROperand*>& call_saved_regs,
+                                     CodeGenContext& ctx,
+                                     MIROperand* return_addr_reg) override {
+        std::cerr << "Not Impl insert_prologue_epilogue" << std::endl;
+        return 0;
+    }
 };
 
 class RISCVRegisterInfo : public TargetRegisterInfo {
@@ -87,6 +98,10 @@ class RISCVRegisterInfo : public TargetRegisterInfo {
     bool is_zero_reg() {
         std::cerr << "Not Impl is_zero_reg" << std::endl;
         return false;
+    }
+    OperandType getCanonicalizedRegisterType(OperandType type) {
+        std::cerr << "Not Impl getCanonicalizedRegisterType" << std::endl;
+        return type;
     }
 };
 

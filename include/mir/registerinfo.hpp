@@ -11,6 +11,7 @@ public:
     virtual bool is_legal_isa_reg_operand(MIROperand& op) = 0;
     // ..
     virtual bool is_zero_reg() = 0;
+    virtual OperandType getCanonicalizedRegisterType(OperandType type) = 0;
 
 };
 } // namespace mir

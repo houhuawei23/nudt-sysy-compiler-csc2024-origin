@@ -46,6 +46,7 @@ class InstInfo {
 
     virtual OperandFlag operand_flag(uint32_t idx) = 0;
 
+    /* uint32_t for multiple flags logical ORed*/
     virtual uint32_t inst_flag() = 0;
 
     virtual std::string_view name() = 0;
@@ -66,6 +67,11 @@ class TargetInstInfo {
 };
 
 //! helper functions
+constexpr bool requireFlag(uint32_t flag, InstFlag required) noexcept {
+    return (static_cast<uint32_t>(flag) & static_cast<uint32_t>(required)) ==
+           static_cast<uint32_t>(required);
+}
+
 constexpr bool isOperandVReg(MIROperand* operand) {
     return operand->is_reg();
     // && isVirtualReg(operand->reg())

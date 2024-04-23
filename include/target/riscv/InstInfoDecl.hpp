@@ -9,6 +9,7 @@
 RISCV_NAMESPACE_BEGIN
 enum RISCVInst {
     RISCVInstBegin = ISASpecificBegin,
+
     ADD,
     SUB,
     XOR,
@@ -61,6 +62,7 @@ enum RISCVInst {
     AMOAND,
     AMOOR,
     AMOXOR,
+
     RISCVInstEnd
 };
 

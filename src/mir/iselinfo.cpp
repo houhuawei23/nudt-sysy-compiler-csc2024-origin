@@ -10,10 +10,6 @@
 #include <optional>
 
 namespace mir {
-constexpr bool requireFlag(InstFlag flag, uint32_t required) noexcept {
-    return (static_cast<uint32_t>(flag) & static_cast<uint32_t>(required)) ==
-           static_cast<uint32_t>(required);
-}
 
 std::unordered_map<MIROperand*, uint32_t> collect_def_count(
     MIRFunction* func,

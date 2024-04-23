@@ -58,6 +58,23 @@ enum class OperandType : uint32_t {
     LowBits,
 };
 
+constexpr uint32_t getOperandSize(const OperandType type) {
+    switch (type) {
+        case OperandType::Int8:
+            return 1;
+        case OperandType::Int16:
+            return 2;
+        case OperandType::Int32:
+            return 4;
+        case OperandType::Int64:
+            return 8;
+        case OperandType::Float32:
+            return 4;
+        default:
+            return 0;  // unsupported
+    }
+}
+
 class MIRRegister {
     uint32_t _reg;
     // MIRRegisterFlag flag =;
@@ -270,7 +287,9 @@ class MIRBlock : public MIRRelocable {
 
    public:
     MIRBlock() = default;
-    MIRBlock(ir::BasicBlock* ir_block, MIRFunction* parent, const std::string& name="")
+    MIRBlock(ir::BasicBlock* ir_block,
+             MIRFunction* parent,
+             const std::string& name = "")
         : MIRRelocable(name), _ir_block(ir_block), _parent(parent) {}
 
     void inst_sel(ir::BasicBlock* ir_bb);

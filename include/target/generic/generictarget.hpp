@@ -14,7 +14,6 @@
 // #include "target/generic/ISelInfoImpl.hpp"
 namespace mir {
 
-
 class GNERICDataLayout final : public DataLayout {
     // just for fun
    public:
@@ -69,6 +68,14 @@ class GENERICFrameInfo final : public TargetFrameInfo {
     void emit_postsa_epilogue(MIRBlock* exit, int32_t stack_size) override {
         std::cerr << "GENERIC emit_postsa_epilogue not implemented"
                   << std::endl;
+    }
+    int32_t insert_prologue_epilogue(
+        MIRFunction* func,
+        std::unordered_set<MIROperand*>& call_saved_regs,
+        CodeGenContext& ctx,
+        MIROperand* return_addr_reg) override {
+        std::cerr << "Not Impl insert_prologue_epilogue" << std::endl;
+        return 0;
     }
 };
 

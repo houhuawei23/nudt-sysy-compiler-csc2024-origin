@@ -86,7 +86,8 @@ void dump_assembly(std::ostream& os, MIRModule& module, CodeGenContext& ctx) {
                             break;
                     }
                 }
-                os << "\t" << "# stack usage: \n";
+                os << "\t"
+                   << "# stack usage: \n";
                 os << "\t# CalleeArgument=" << calleeArgument << ", ";
                 os << "Local=" << loacl << ", \n";
                 os << "\t# RegSpill=" << reSpill << ", ";
@@ -96,6 +97,27 @@ void dump_assembly(std::ostream& os, MIRModule& module, CodeGenContext& ctx) {
             }
             bb->print(os, ctx);
         }
+    }
+}
+
+void forEachDefOperand(MIRBlock& block,
+                       CodeGenContext& ctx,
+                       const std::function<void(MIROperand* op)>& functor) {
+    for (auto& inst : block.insts()) {
+        auto& inst_info = ctx.instInfo.get_instinfo(inst);
+        for (uint32_t idx = 0; idx < inst_info.operand_num(); idx++) {
+            if (inst_info.operand_flag(idx) & OperandFlagDef) {
+                functor(inst->operand(idx));
+            }
+        }
+    }
+}
+
+void forEachDefOperand(MIRFunction& func,
+                       CodeGenContext& ctx,
+                       const std::function<void(MIROperand* op)>& functor) {
+    for (auto& block : func.blocks()) {
+        forEachDefOperand(*block, ctx, functor);
     }
 }
 }  // namespace mir
