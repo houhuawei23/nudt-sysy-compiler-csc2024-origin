@@ -1,65 +1,62 @@
 #pragma once
-
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
 #include "mir/iselinfo.hpp"
 
-/*
-lowering context
-*/
 namespace mir {
+/*
+ * @brief: LoweringContext
+ * @note: 
+ *      将IR转换为MIR --> 转换数据结构 (ir --> mir)
+ */
 class LoweringContext {
-   public:
-    Target& _target;
-    MIRModule& _mir_module;
-    MIRFunction* _mir_func = nullptr;
-    MIRBlock* _mir_block = nullptr;
-    // map
-    std::unordered_map<ir::Value*, MIROperand*> _val_map;
+    public:
+        Target& _target;
+        MIRModule& _mir_module;
+        MIRFunction* _mir_func = nullptr;
+        MIRBlock* _mir_block = nullptr;
 
-    std::unordered_map<ir::Function*, MIRFunction*> func_map;
-    std::unordered_map<ir::GlobalVariable*, MIRGlobalObject*> gvar_map;
-
-    std::unordered_map<ir::BasicBlock*, MIRBlock*> _block_map;
+     public:  // map
+        std::unordered_map<ir::Value*, MIROperand*> _val_map;
+        std::unordered_map<ir::Function*, MIRFunction*> func_map;
+        std::unordered_map<ir::GlobalVariable*, MIRGlobalObject*> gvar_map;
+        std::unordered_map<ir::BasicBlock*, MIRBlock*> _block_map;
 
     uint32_t _idx = 0;
     // pointer type for target platform
     OperandType _ptr_type = OperandType::Int64;
 
-    // code gen context
-    CodeGenContext* _code_gen_ctx = nullptr;
+    public:  // code gen context
+        CodeGenContext* _code_gen_ctx = nullptr;
 
-   public:
-    LoweringContext(MIRModule& mir_module, Target& target)
-        : _mir_module(mir_module), _target(target) {}
-
-    void set_code_gen_ctx(CodeGenContext* code_gen_ctx) {
-        _code_gen_ctx = code_gen_ctx;
-    }
+    public:
+        LoweringContext(MIRModule& mir_module, Target& target)
+            : _mir_module(mir_module), _target(target) {}
 
     uint32_t next_id() { return ++_idx; }
 
     // void set_mir_module(MIRModule& mir_module) { _mir_module = mir_module; }
 
-   public:  // set function
-    void set_mir_func(MIRFunction* mir_func) { _mir_func = mir_func; }
-    void set_mir_block(MIRBlock* mir_block) { _mir_block = mir_block; }
+    public:  // set function
+        void set_code_gen_ctx(CodeGenContext* code_gen_ctx) { _code_gen_ctx = code_gen_ctx; }
+        void set_mir_func(MIRFunction* mir_func) { _mir_func = mir_func; }
+        void set_mir_block(MIRBlock* mir_block) { _mir_block = mir_block; }
 
-   public:  // get function
-    MIRModule& get_mir_module() { return _mir_module; };
-    MIRBlock* get_mir_block() const { return _mir_block; }
-    OperandType get_ptr_type() { return _ptr_type; }
+    public:  // get function
+        MIRModule& get_mir_module() { return _mir_module; };
+        MIRBlock* get_mir_block() const { return _mir_block; }
+        OperandType get_ptr_type() { return _ptr_type; }
 
-    MIROperand* new_vreg(ir::Type* type) {
-        auto optype = get_optype(type);
-        return MIROperand::as_vreg(next_id(), optype);
-    }
-    MIROperand* new_vreg(OperandType type) {
-        // auto optype = get_optype(type);
-        return MIROperand::as_vreg(next_id(), type);
-    }
+    public: 
+        MIROperand* new_vreg(ir::Type* type) {
+            auto optype = get_optype(type);
+            return MIROperand::as_vreg(next_id(), optype);
+        }
+        MIROperand* new_vreg(OperandType type) {
+            return MIROperand::as_vreg(next_id(), type);
+        }
+
     void emit_inst(MIRInst* inst) {
-        // _mir_block->add_inst(inst);
         _mir_block->insts().emplace_back(inst);
     }
 
@@ -124,6 +121,7 @@ class LoweringContext {
         }
         assert(false && "block not found");
     }
+    
     static OperandType get_optype(ir::Type* type) {
         if (type->is_int()) {
             switch (type->btype()) {

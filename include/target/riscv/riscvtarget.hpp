@@ -97,7 +97,6 @@ class RISCVRegisterInfo : public TargetRegisterInfo {
         std::cerr << "Not Impl is_legal_isa_reg_operand" << std::endl;
         return false;
     }
-    // ..
     bool is_zero_reg() {
         std::cerr << "Not Impl is_zero_reg" << std::endl;
         return false;

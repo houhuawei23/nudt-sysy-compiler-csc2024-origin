@@ -19,14 +19,9 @@ void dump_assembly(std::ostream& os, MIRModule& module, CodeGenContext& ctx) {
     /* data section */
     os << ".data\n";
 
-    // auto dumpSymbol = [&](MIRGlobalObject* gobj) {
-
-    // }
-
     auto select_data_section = [](MIRRelocable* reloc) {
         if (auto data = dynamic_cast<MIRDataStorage*>(reloc)) {
-            return data->is_readonly() ? DataSection::RoData
-                                       : DataSection::Data;
+            return data->is_readonly() ? DataSection::RoData : DataSection::Data;
         }
         if (auto zero = dynamic_cast<MIRZeroStorage*>(reloc)) {
             return DataSection::Bss;
@@ -35,12 +30,10 @@ void dump_assembly(std::ostream& os, MIRModule& module, CodeGenContext& ctx) {
         assert(false && "Unsupported data section");
     };
 
-    std::unordered_map<DataSection, std::vector<MIRGlobalObject*>>
-        data_sections;
+    std::unordered_map<DataSection, std::vector<MIRGlobalObject*>> data_sections;
 
     for (auto& gobj : module.global_objs()) {
-        data_sections[select_data_section(gobj->_reloc.get())].emplace_back(
-            gobj.get());
+        data_sections[select_data_section(gobj->_reloc.get())].emplace_back(gobj.get());
     }
 
     for (auto ds : {DataSection::Data, DataSection::RoData, DataSection::Bss}) {
