@@ -1,4 +1,5 @@
-int a[10][10];
-int main(){
-    return 0;
+int g = 2;
+
+int main() {
+    return g;
 }

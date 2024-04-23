@@ -39,10 +39,10 @@ class ISelContext {
 };
 
 class TargetISelInfo {
-   public:
-    virtual ~TargetISelInfo() = default;
-    virtual bool is_legal_geninst(uint32_t opcode) const = 0;
-    virtual bool match_select(MIRInst* inst, ISelContext& ctx) const = 0;
+    public:
+        virtual ~TargetISelInfo() = default;
+        virtual bool is_legal_geninst(uint32_t opcode) const = 0;
+        virtual bool match_select(MIRInst* inst, ISelContext& ctx) const = 0;
 };
 
 //! helper function to create a new MIRInstq

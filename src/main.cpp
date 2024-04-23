@@ -28,8 +28,8 @@
 using namespace std;
 
 /*
-./main -f test.c -i -t mem2reg -o gen.ll -O0 -L0
-*/
+ * @brief: ./main -f test.c -i -t mem2reg -o gen.ll -O0 -L0
+ */
 
 int main(int argc, char* argv[]) {
     sysy::Config config;
@@ -54,22 +54,17 @@ int main(int argc, char* argv[]) {
     sysy::SysYIRGenerator gen(base_module, ast_root);
     auto module_ir = gen.build_ir();
 
-    // auto module_ir = gen.module();
-
     //! 2. Optimization Passes
     pass::FunctionPassManager fpm;
-
     if (not config.pass_names.empty()) {
         for (auto pass_name : config.pass_names) {
             if (pass_name.compare("mem2reg") == 0) {
-                // mem2reg
                 fpm.add_pass(new pass::preProcDom());
                 fpm.add_pass(new pass::idomGen());
                 fpm.add_pass(new pass::domFrontierGen());
             }
 
             if (pass_name.compare("dce") == 0) {
-                // fpm.add_pass(new pass::domInfoCheck());
                 fpm.add_pass(new pass::Mem2Reg());
                 fpm.add_pass(new pass::DCE());
                 fpm.add_pass(new pass::SimpleConstPropagation());
@@ -79,8 +74,8 @@ int main(int argc, char* argv[]) {
             fpm.run(f);
         }
     }
-    // ir print
-    if (config.gen_ir) {
+
+    if (config.gen_ir) {  // ir print
         if (config.outfile.empty()) {
             module_ir->print(std::cout);
         } else {
@@ -91,7 +86,6 @@ int main(int argc, char* argv[]) {
     }
     //! 3. Code Generation
     if (config.gen_asm) {
-        // auto target = mir::RISCVTarget();
         auto target = mir::GENERICTarget();
         auto mir_module = mir::create_mir_module(*module_ir, target);
         if (config.outfile.empty()) {

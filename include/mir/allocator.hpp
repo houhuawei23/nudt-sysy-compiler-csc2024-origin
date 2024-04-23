@@ -9,10 +9,10 @@ using RegAllocFunction = void (*)(MIRFunction& mfunc, CodeGenContext& ctx);
 class RegAllocator final {
     std::unordered_map<std::string, RegAllocFunction> _methods;
 
-public:
-    void addMethod(std::string name, RegAllocFunction func) { _methods.emplace(name, func); }
+    public:
+        void addMethod(std::string name, RegAllocFunction func) { _methods.emplace(name, func); }
 
-public:
-    static RegAllocator& get();
+    public:
+        static RegAllocator& get();
 };
 }  // namespace mir

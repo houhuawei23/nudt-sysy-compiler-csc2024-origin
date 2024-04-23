@@ -1,4 +1,3 @@
-// clang-format off
 #pragma once
 #include "mir/mir.hpp"
 #include "mir/datalayout.hpp"
@@ -6,8 +5,13 @@
 #include "mir/instinfo.hpp"
 #include "mir/frameinfo.hpp"
 #include "mir/registerinfo.hpp"
-// clang-format on
+
 namespace mir {
+/*
+ * @brief: Target Class (抽象基类)
+ * @note: 
+ *      存储目标架构 (RISC-V OR ARM)相关信息
+ */
 class Target {
     // getDataLayout
     // getScheduleModel
@@ -15,16 +19,19 @@ class Target {
     // getFrameInfo
     // getRegisterInfo
     // emitAssembly
-   public:
-    virtual ~Target() = default;
-    virtual DataLayout& get_datalayout() = 0;
-    // virtual  TargetScheduleModel& get_schedule_model()  = 0;
-    virtual TargetInstInfo& get_target_inst_info() = 0;
-    virtual TargetISelInfo& get_target_isel_info() = 0;
-    virtual TargetFrameInfo& get_target_frame_info() = 0;
-    virtual TargetRegisterInfo& get_register_info() = 0;
+    public:
+        virtual ~Target() = default;
+    
+    public:  // get function
+        virtual DataLayout& get_datalayout() = 0;
+        // virtual  TargetScheduleModel& get_schedule_model()  = 0;
+        virtual TargetInstInfo& get_target_inst_info() = 0;
+        virtual TargetISelInfo& get_target_isel_info() = 0;
+        virtual TargetFrameInfo& get_target_frame_info() = 0;
+        virtual TargetRegisterInfo& get_register_info() = 0;
 
-    virtual void emit_assembly(std::ostream& out, MIRModule& module) = 0;
+    public:  // assembly
+        virtual void emit_assembly(std::ostream& out, MIRModule& module) = 0;
 };
 
 struct MIRFlags final {
@@ -36,6 +43,9 @@ struct MIRFlags final {
     bool postLegal = false;
 };
 
+/*
+ * @brief: CodeGenContext Struct
+ */
 struct CodeGenContext final {
     Target& target;
     //  TargetScheduleModel& scheduleModel;
