@@ -207,6 +207,10 @@ void lower(ir::BinaryInst* ir_inst, LoweringContext& ctx);
 void lower(ir::BranchInst* ir_inst, LoweringContext& ctx);
 void lower(ir::LoadInst* ir_inst, LoweringContext& ctx);
 void lower(ir::StoreInst* ir_inst, LoweringContext& ctx);
+void lower(ir::GetElementPtrInst* ir_inst, LoweringContext& ctx);
+void lower(ir::ICmpInst* ir_inst, LoweringContext& ctx);
+void lower(ir::FCmpInst* ir_inst, LoweringContext& ctx);
+void lower(ir::CallInst* ir_inst, LoweringContext& ctx);
 
 //! return
 void lower(ir::ReturnInst* ir_inst, LoweringContext& ctx);

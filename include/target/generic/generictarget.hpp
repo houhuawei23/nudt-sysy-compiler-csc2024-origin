@@ -104,4 +104,24 @@ class GENERICTarget final : public Target {
         void emit_assembly(std::ostream& out, MIRModule& module) override;
 };
 
+class GENERICRegisterInfo : public TargetRegisterInfo {
+    uint32_t get_alloca_class_cnt() {
+        std::cerr << "Not Impl get_alloca_class_cnt" << std::endl;
+        return 0;
+    }
+    uint32_t get_alloca_class(OperandType type) {
+        std::cerr << "Not Impl get_alloca_class" << std::endl;
+        return 0;
+    }
+
+    bool is_legal_isa_reg_operand(MIROperand& op) {
+        std::cerr << "Not Impl is_legal_isa_reg_operand" << std::endl;
+        return false;
+    }
+    bool is_zero_reg() {
+        std::cerr << "Not Impl is_zero_reg" << std::endl;
+        return false;
+    }
+};
+
 }  // namespace mir
