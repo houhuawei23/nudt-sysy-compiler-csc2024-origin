@@ -7,7 +7,7 @@
 set -Eeux
 
 # gen target files from template
-targets=("generic") #  "riscv"
+targets=("generic" "riscv") #  "riscv"
 
 # gen.py generic_data.yml isa_data.yml output_dir
 for target in ${targets[@]}; do
@@ -21,5 +21,5 @@ done
 # ./src/target/riscv/riscv.yml ./include/target/riscv/
 
 # cmake config and build
-# cmake -S . -B build
-# cmake --build build -j16
+cmake -S . -B build -G Ninja
+cmake --build build -j16
