@@ -175,9 +175,7 @@ class Instruction : public User {
 
     void virtual print(std::ostream& os) = 0;
 
-    bool virtual is_constprop()=0;
-
-    virtual Constant* getConstantRepl()=0;
+    virtual Value* getConstantRepl()=0;
 };
 
 }  // namespace ir

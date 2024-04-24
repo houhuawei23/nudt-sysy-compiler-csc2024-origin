@@ -12,7 +12,7 @@ namespace pass{
             for(auto instIter=bb->insts().begin();instIter!=bb->insts().end();){
                 auto curInst=*instIter;
                 instIter++;
-                if(curInst->is_constprop())worklist.insert(curInst);
+                if(curInst->getConstantRepl())worklist.insert(curInst);
             }
         }
         while(!worklist.empty()){
@@ -29,7 +29,7 @@ namespace pass{
             puser->set_operand(puse->index(),replval);
             auto puserInst=dyn_cast<ir::Instruction>(puser);
             assert(puserInst);
-            if(puserInst->is_constprop()){
+            if(puserInst->getConstantRepl()){
                 worklist.insert(puserInst);
             }
         }

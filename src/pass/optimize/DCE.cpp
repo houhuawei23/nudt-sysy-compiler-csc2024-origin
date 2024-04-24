@@ -20,6 +20,7 @@ namespace pass{
                     bb->force_delete_inst(curIter);
             }
         }
+        // func->print(std::cout);
     }
 
     bool DCE::isAlive(ir::Instruction* inst){//只有store,terminator和call inst是活的

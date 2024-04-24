@@ -71,8 +71,7 @@ class AllocaInst : public Instruction {
    public:
     static bool classof(const Value* v) { return v->scid() == vALLOCA; }
     void print(std::ostream& os) override;
-    bool is_constprop(){return false;}
-    Constant* getConstantRepl(){return nullptr;}
+    Value* getConstantRepl(){return nullptr;}
 };
 
 class StoreInst : public Instruction {
@@ -94,8 +93,7 @@ class StoreInst : public Instruction {
         void print(std::ostream& os) override;
 
     public: 
-        bool is_constprop() { return false; }
-        Constant* getConstantRepl() { return nullptr; }
+        Value* getConstantRepl() { return nullptr; }
 };
 
 /*
@@ -127,8 +125,7 @@ class LoadInst : public Instruction {
    public:
     static bool classof(const Value* v) { return v->scid() == vLOAD; }
     void print(std::ostream& os) override;
-    bool is_constprop(){return false;}
-    Constant* getConstantRepl(){return nullptr;}
+    Value* getConstantRepl(){return nullptr;}
 };
 
 /*
@@ -159,8 +156,7 @@ class ReturnInst : public Instruction {
    public:
     static bool classof(const Value* v) { return v->scid() == vRETURN; }
     void print(std::ostream& os) override;
-    bool is_constprop(){return false;}
-    Constant* getConstantRepl(){return nullptr;}
+    Value* getConstantRepl(){return nullptr;}
 };
 
 /*
@@ -194,8 +190,7 @@ class UnaryInst : public Instruction {
 
    public:
     void print(std::ostream& os) override;
-    bool is_constprop() override;
-    Constant* getConstantRepl() override;
+    Value* getConstantRepl() override;
 };
 
 /*
@@ -230,8 +225,7 @@ class BinaryInst : public Instruction {
 
    public:
     void print(std::ostream& os) override;
-    bool is_constprop() override;
-    Constant* getConstantRepl() override;
+    Value* getConstantRepl() override;
 };
 
 class CallInst : public Instruction {
@@ -253,8 +247,7 @@ class CallInst : public Instruction {
 
     static bool classof(const Value* v) { return v->scid() == vCALL; }
     void print(std::ostream& os) override;
-    bool is_constprop(){return false;}
-    Constant* getConstantRepl(){return nullptr;}
+    Value* getConstantRepl(){return nullptr;}
 };
 
 //! Conditional or Unconditional Branch instruction.
@@ -305,8 +298,7 @@ class BranchInst : public Instruction {
    public:
     static bool classof(const Value* v) { return v->scid() == vBR; }
     void print(std::ostream& os) override;
-    bool is_constprop(){return false;}
-    Constant* getConstantRepl(){return nullptr;}
+    Value* getConstantRepl(){return nullptr;}
 };
 
 //! ICmpInst
@@ -333,8 +325,7 @@ class ICmpInst : public Instruction {
         return v->scid() >= vICMP_BEGIN && v->scid() <= vICMP_END;
     }
     void print(std::ostream& os) override;
-    bool is_constprop() override;
-    Constant* getConstantRepl() override;
+    Value* getConstantRepl() override;
 };
 
 //! FCmpInst
@@ -362,8 +353,7 @@ class FCmpInst : public Instruction {
         return v->scid() >= vFCMP_BEGIN && v->scid() <= vFCMP_END;
     }
     void print(std::ostream& os) override;
-    bool is_constprop() override;
-    Constant* getConstantRepl() override;
+    Value* getConstantRepl() override;
 };
 
 /*
@@ -384,8 +374,7 @@ class BitCastInst : public Instruction {
         Value* value() const { return operand(0); }
 
     public:
-            bool is_constprop() { return false; }
-            Constant* getConstantRepl() { return nullptr; }
+            Value* getConstantRepl() { return nullptr; }
     
     public:
         static bool classof(const Value* v) { return v->scid() == vBITCAST; }
@@ -414,8 +403,7 @@ class MemsetInst : public Instruction {
         void print(std::ostream& os) override;
 
     public:
-            bool is_constprop() { return false; }
-            Constant* getConstantRepl() { return nullptr; }
+            Value* getConstantRepl() { return nullptr; }
 };
 
 /*
@@ -500,8 +488,7 @@ class GetElementPtrInst : public Instruction {
    public:
     static bool classof(const Value* v) { return v->scid() == vGETELEMENTPTR; }
     void print(std::ostream& os) override;
-    bool is_constprop() { return false; }
-    Constant* getConstantRepl() { return nullptr; }
+    Value* getConstantRepl() { return nullptr; }
 };
 
 class PhiInst : public Instruction {
@@ -528,9 +515,10 @@ class PhiInst : public Instruction {
         // 更新操作数的数量
         size++;
     }
+    void delval(Value* val);
+    void delbb(BasicBlock* bb);
     void print(std::ostream& os) override;
-    bool is_constprop() override;
-    Constant* getConstantRepl() override;
+    Value* getConstantRepl() override;
 };
 
 }  // namespace ir

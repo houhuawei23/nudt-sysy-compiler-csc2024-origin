@@ -11,6 +11,7 @@
 #include "pass/optimize/mem2reg.hpp"
 #include "pass/optimize/DCE.hpp"
 #include "pass/optimize/SCP.hpp"
+#include "pass/optimize/SCCP.hpp"
 
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
@@ -49,7 +50,7 @@ int main(int argc, char* argv[]) {
 
     if (not config.pass_names.empty()) {
         for (auto pass_name : config.pass_names) {
-            if (true) {
+            if (pass_name.compare("mem2reg") == 0) {
                 // mem2reg
                 fpm.add_pass(new pass::preProcDom());
                 fpm.add_pass(new pass::idomGen());
@@ -60,7 +61,12 @@ int main(int argc, char* argv[]) {
 
             if (pass_name.compare("dce") == 0) {
                 fpm.add_pass(new pass::DCE());
+            }
+            if (pass_name.compare("scp") == 0) {
                 fpm.add_pass(new pass::SCP());
+            }
+            if (pass_name.compare("sccp")==0){
+                fpm.add_pass(new pass::SCCP());
             }
         }
         for (auto f : module_ir->funcs()) {

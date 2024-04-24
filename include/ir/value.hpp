@@ -332,6 +332,14 @@ class User : public Value {
         _operands[index] = value->add_use_by_user(this);
     }
 
+    /* delete an operand of a value */
+    void delete_operands(int index){
+        _operands[index]->value()->del_use(_operands[index]);
+        _operands.erase(_operands.begin()+index);
+        for(int idx=index+1;idx<_operands.size();idx++)
+            _operands[idx]->set_index(idx);
+    }
+
     virtual void print(std::ostream& os) {}
 };
 
