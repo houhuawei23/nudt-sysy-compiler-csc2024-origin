@@ -198,6 +198,15 @@ InstInfo: {
                 1: { name: stack_obj, type: STACK_OBJ, flag: Metadata },
               },
           },
+        LoadImmToReg:
+          {
+            format: ["LoadImmToReg", " ", 0, ", ", 1],
+            operands:
+              {
+                0: { name: dst, type: ISAReg, flag: Def },
+                1: { name: imm, type: IMM, flag: Metadata },
+              },
+          },
       },
   }
 

@@ -49,7 +49,14 @@ static std::ostream& operator<<(std::ostream& os, OperandDumper opdp) {
     return os;
 }
 
+constexpr bool isOperandImm12(MIROperand* operand) {
+    if(operand->is_reloc() && operand->type() == OperandType::LowBits)
+        return true;
+    return operand->is_imm() && isSignedImm<12>(operand->imm());
+}
 
-
+constexpr bool isOperandNonZeroImm12(MIROperand* operand) {
+    return isOperandImm12(operand) && operand->imm() != 0;
+}
 
 } // namespace RISCV

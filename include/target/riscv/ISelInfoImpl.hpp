@@ -373,6 +373,16 @@ static bool matchInstLoadStackObjectAddr(MIRInst* inst,
     return true;
 }
 
+static bool matchInstLoadImmToReg(MIRInst* inst,
+                                  MIROperand*& dst,
+                                  MIROperand*& imm) {
+    if (inst->opcode() != InstLoadImmToReg)
+        return false;
+    dst = inst->operand(0);
+    imm = inst->operand(1);
+    return true;
+}
+
 static bool matchInstReturn(MIRInst* inst) {
     if (inst->opcode() != InstReturn)
         return false;
@@ -380,9 +390,49 @@ static bool matchInstReturn(MIRInst* inst) {
     return true;
 }
 
-/* InstLoad matchAndSelectPatternInstLoad begin */
+/* InstLoadGlobalAddress matchAndSelectPatternInstLoadGlobalAddress begin */
 static bool matchAndSelectPattern1(MIRInst* inst1, ISelContext& ctx) {
-    uint32_t opcode = InstLoad;
+    uint32_t rootOpcode = InstLoadGlobalAddress;
+    /** Match Inst **/
+    /* match inst InstLoadGlobalAddress */
+    MIROperand* op1 = nullptr;
+    MIROperand* op2 = nullptr;
+    if (not matchInstLoadGlobalAddress(inst1, op1, op2)) {
+        return false;
+    }
+
+    /** Select Inst **/
+    auto op4 = (op1);
+    auto op6 = (getVRegAs(ctx, op1));
+    auto op7 = (getHighBits(op2));
+    /* select inst AUIPC */
+    auto inst2 = new MIRInst(AUIPC);
+    inst2->set_operand(0, op6);
+    inst2->set_operand(1, op7);
+    ctx.insert_inst(inst2);
+
+    auto op5 = ctx.get_inst_def(inst2);
+
+    auto op8 = (getLowBits(op2));
+    /* select inst ADDI */
+    auto inst3 = new MIRInst(ADDI);
+    inst3->set_operand(0, op4);
+    inst3->set_operand(1, op5);
+    inst3->set_operand(2, op8);
+    ctx.insert_inst(inst3);
+
+    /* Replace Operand */
+    ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst3));
+    ctx.remove_inst(inst1);
+    std::cout << "    InstLoadGlobalAddress success!" << std::endl;
+    return true;
+}
+
+/* InstLoadGlobalAddress matchAndSelectPatternInstLoadGlobalAddressend */
+
+/* InstLoad matchAndSelectPatternInstLoad begin */
+static bool matchAndSelectPattern2(MIRInst* inst1, ISelContext& ctx) {
+    uint32_t rootOpcode = InstLoad;
     /** Match Inst **/
     /* match inst InstLoad */
     MIROperand* op1 = nullptr;
@@ -400,14 +450,14 @@ static bool matchAndSelectPattern1(MIRInst* inst1, ISelContext& ctx) {
     }
 
     /** Select Inst **/
-    auto op6 = (op1);
-    auto op7 = (op4);
-    auto op8 = (op5);
+    auto op7 = (op1);
+    auto op8 = (op4);
+    auto op9 = (op5);
     /* select inst getLoadOpcode(op1) */
     auto inst2 = new MIRInst(getLoadOpcode(op1));
-    inst2->set_operand(0, op6);
-    inst2->set_operand(1, op7);
-    inst2->set_operand(2, op8);
+    inst2->set_operand(0, op7);
+    inst2->set_operand(1, op8);
+    inst2->set_operand(2, op9);
     ctx.insert_inst(inst2);
 
     /* Replace Operand */
@@ -420,8 +470,8 @@ static bool matchAndSelectPattern1(MIRInst* inst1, ISelContext& ctx) {
 /* InstLoad matchAndSelectPatternInstLoadend */
 
 /* InstStore matchAndSelectPatternInstStore begin */
-static bool matchAndSelectPattern2(MIRInst* inst1, ISelContext& ctx) {
-    uint32_t opcode = InstStore;
+static bool matchAndSelectPattern3(MIRInst* inst1, ISelContext& ctx) {
+    uint32_t rootOpcode = InstStore;
     /** Match Inst **/
     /* match inst InstStore */
     MIROperand* op1 = nullptr;
@@ -440,14 +490,14 @@ static bool matchAndSelectPattern2(MIRInst* inst1, ISelContext& ctx) {
     }
 
     /** Select Inst **/
-    auto op6 = (op2);
-    auto op7 = (op4);
-    auto op8 = (op5);
+    auto op7 = (op2);
+    auto op8 = (op4);
+    auto op9 = (op5);
     /* select inst getStoreOpcode(op2) */
     auto inst2 = new MIRInst(getStoreOpcode(op2));
-    inst2->set_operand(0, op6);
-    inst2->set_operand(1, op8);
-    inst2->set_operand(2, op7);
+    inst2->set_operand(0, op7);
+    inst2->set_operand(1, op9);
+    inst2->set_operand(2, op8);
     ctx.insert_inst(inst2);
 
     ctx.remove_inst(inst1);
@@ -458,8 +508,8 @@ static bool matchAndSelectPattern2(MIRInst* inst1, ISelContext& ctx) {
 /* InstStore matchAndSelectPatternInstStoreend */
 
 /* InstJump matchAndSelectPatternInstJump begin */
-static bool matchAndSelectPattern3(MIRInst* inst1, ISelContext& ctx) {
-    uint32_t opcode = InstJump;
+static bool matchAndSelectPattern4(MIRInst* inst1, ISelContext& ctx) {
+    uint32_t rootOpcode = InstJump;
     /** Match Inst **/
     /* match inst InstJump */
     MIROperand* op1 = nullptr;
@@ -468,10 +518,10 @@ static bool matchAndSelectPattern3(MIRInst* inst1, ISelContext& ctx) {
     }
 
     /** Select Inst **/
-    auto op2 = (op1);
+    auto op3 = (op1);
     /* select inst J */
     auto inst2 = new MIRInst(J);
-    inst2->set_operand(0, op2);
+    inst2->set_operand(0, op3);
     ctx.insert_inst(inst2);
 
     ctx.remove_inst(inst1);
@@ -482,8 +532,8 @@ static bool matchAndSelectPattern3(MIRInst* inst1, ISelContext& ctx) {
 /* InstJump matchAndSelectPatternInstJumpend */
 
 /* InstReturn matchAndSelectPatternInstReturn begin */
-static bool matchAndSelectPattern4(MIRInst* inst1, ISelContext& ctx) {
-    uint32_t opcode = InstReturn;
+static bool matchAndSelectPattern5(MIRInst* inst1, ISelContext& ctx) {
+    uint32_t rootOpcode = InstReturn;
     /** Match Inst **/
     /* match inst InstReturn */
 
@@ -503,25 +553,739 @@ static bool matchAndSelectPattern4(MIRInst* inst1, ISelContext& ctx) {
 
 /* InstReturn matchAndSelectPatternInstReturnend */
 
+/* InstLoadImm matchAndSelectPatternInstLoadImm begin */
+static bool matchAndSelectPattern6(MIRInst* inst1, ISelContext& ctx) {
+    uint32_t rootOpcode = InstLoadImm;
+    /** Match Inst **/
+    /* match inst InstLoadImm */
+    MIROperand* op1 = nullptr;
+    MIROperand* op2 = nullptr;
+    if (not matchInstLoadImm(inst1, op1, op2)) {
+        return false;
+    }
+
+    /* match predicate for operands  */
+    if (not(isZero(op2))) {
+        return false;
+    }
+
+    /** Select Inst **/
+    auto op4 = (op1);
+    auto op5 = (getZero(op1));
+    /* select inst MV */
+    auto inst2 = new MIRInst(MV);
+    inst2->set_operand(0, op4);
+    inst2->set_operand(1, op5);
+    ctx.insert_inst(inst2);
+
+    /* Replace Operand */
+    ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst2));
+    ctx.remove_inst(inst1);
+    std::cout << "    InstLoadImm success!" << std::endl;
+    return true;
+}
+static bool matchAndSelectPattern8(MIRInst* inst1, ISelContext& ctx) {
+    uint32_t rootOpcode = InstLoadImm;
+    /** Match Inst **/
+    /* match inst InstLoadImm */
+    MIROperand* op1 = nullptr;
+    MIROperand* op2 = nullptr;
+    if (not matchInstLoadImm(inst1, op1, op2)) {
+        return false;
+    }
+
+    /* match predicate for operands  */
+    if (not(isOperandNonZeroImm12(op2))) {
+        return false;
+    }
+
+    /** Select Inst **/
+    auto op4 = (op1);
+    auto op5 = (op2);
+    /* select inst LoadImm12 */
+    auto inst2 = new MIRInst(LoadImm12);
+    inst2->set_operand(0, op4);
+    inst2->set_operand(1, op5);
+    ctx.insert_inst(inst2);
+
+    /* Replace Operand */
+    ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst2));
+    ctx.remove_inst(inst1);
+    std::cout << "    InstLoadImm success!" << std::endl;
+    return true;
+}
+
+/* InstLoadImm matchAndSelectPatternInstLoadImmend */
+
+/* InstLoadImmToReg matchAndSelectPatternInstLoadImmToReg begin */
+static bool matchAndSelectPattern7(MIRInst* inst1, ISelContext& ctx) {
+    uint32_t rootOpcode = InstLoadImmToReg;
+    /** Match Inst **/
+    /* match inst InstLoadImmToReg */
+    MIROperand* op1 = nullptr;
+    MIROperand* op2 = nullptr;
+    if (not matchInstLoadImmToReg(inst1, op1, op2)) {
+        return false;
+    }
+
+    /* match predicate for operands  */
+    if (not(isZero(op2))) {
+        return false;
+    }
+
+    /** Select Inst **/
+    auto op4 = (op1);
+    auto op5 = (getZero(op1));
+    /* select inst MV */
+    auto inst2 = new MIRInst(MV);
+    inst2->set_operand(0, op4);
+    inst2->set_operand(1, op5);
+    ctx.insert_inst(inst2);
+
+    /* Replace Operand */
+    ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst2));
+    ctx.remove_inst(inst1);
+    std::cout << "    InstLoadImmToReg success!" << std::endl;
+    return true;
+}
+static bool matchAndSelectPattern9(MIRInst* inst1, ISelContext& ctx) {
+    uint32_t rootOpcode = InstLoadImmToReg;
+    /** Match Inst **/
+    /* match inst InstLoadImmToReg */
+    MIROperand* op1 = nullptr;
+    MIROperand* op2 = nullptr;
+    if (not matchInstLoadImmToReg(inst1, op1, op2)) {
+        return false;
+    }
+
+    /* match predicate for operands  */
+    if (not(isOperandNonZeroImm12(op2))) {
+        return false;
+    }
+
+    /** Select Inst **/
+    auto op4 = (op1);
+    auto op5 = (op2);
+    /* select inst LoadImm12 */
+    auto inst2 = new MIRInst(LoadImm12);
+    inst2->set_operand(0, op4);
+    inst2->set_operand(1, op5);
+    ctx.insert_inst(inst2);
+
+    /* Replace Operand */
+    ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst2));
+    ctx.remove_inst(inst1);
+    std::cout << "    InstLoadImmToReg success!" << std::endl;
+    return true;
+}
+
+/* InstLoadImmToReg matchAndSelectPatternInstLoadImmToRegend */
+
+/* InstAdd matchAndSelectPatternInstAdd begin */
+static bool matchAndSelectPattern10(MIRInst* inst5, ISelContext& ctx) {
+    uint32_t rootOpcode = InstAdd;
+    /** Match Inst **/
+    /* match inst InstAdd */
+    MIROperand* op21 = nullptr;
+    MIROperand* op22 = nullptr;
+    MIROperand* op23 = nullptr;
+    if (not matchInstAdd(inst5, op21, op22, op23)) {
+        return false;
+    }
+
+    /* match predicate for operands  */
+    if (not(isOperandI64(op21) && isOperandIReg(op22) && isOperandIReg(op23))) {
+        return false;
+    }
+
+    /** Select Inst **/
+    auto op25 = (op21);
+    auto op26 = (op22);
+    auto op27 = (op23);
+    /* select inst ADD */
+    auto inst6 = new MIRInst(ADD);
+    inst6->set_operand(0, op25);
+    inst6->set_operand(1, op26);
+    inst6->set_operand(2, op27);
+    ctx.insert_inst(inst6);
+
+    /* Replace Operand */
+    ctx.replace_operand(ctx.get_inst_def(inst5), ctx.get_inst_def(inst6));
+    ctx.remove_inst(inst5);
+    std::cout << "    InstAdd success!" << std::endl;
+    return true;
+}
+
+/* InstAdd matchAndSelectPatternInstAddend */
+
+/* InstSub matchAndSelectPatternInstSub begin */
+static bool matchAndSelectPattern11(MIRInst* inst2, ISelContext& ctx) {
+    uint32_t rootOpcode = InstSub;
+    /** Match Inst **/
+    /* match inst InstSub */
+    MIROperand* op8 = nullptr;
+    MIROperand* op9 = nullptr;
+    MIROperand* op10 = nullptr;
+    if (not matchInstSub(inst2, op8, op9, op10)) {
+        return false;
+    }
+
+    /* match predicate for operands  */
+    if (not(isOperandI64(op8) && isOperandIReg(op9) && isOperandIReg(op10))) {
+        return false;
+    }
+
+    /** Select Inst **/
+    auto op12 = (op8);
+    auto op13 = (op9);
+    auto op14 = (op10);
+    /* select inst SUB */
+    auto inst3 = new MIRInst(SUB);
+    inst3->set_operand(0, op12);
+    inst3->set_operand(1, op13);
+    inst3->set_operand(2, op14);
+    ctx.insert_inst(inst3);
+
+    /* Replace Operand */
+    ctx.replace_operand(ctx.get_inst_def(inst2), ctx.get_inst_def(inst3));
+    ctx.remove_inst(inst2);
+    std::cout << "    InstSub success!" << std::endl;
+    return true;
+}
+
+/* InstSub matchAndSelectPatternInstSubend */
+
+/* InstMul matchAndSelectPatternInstMul begin */
+static bool matchAndSelectPattern12(MIRInst* inst2, ISelContext& ctx) {
+    uint32_t rootOpcode = InstMul;
+    /** Match Inst **/
+    /* match inst InstMul */
+    MIROperand* op8 = nullptr;
+    MIROperand* op9 = nullptr;
+    MIROperand* op10 = nullptr;
+    if (not matchInstMul(inst2, op8, op9, op10)) {
+        return false;
+    }
+
+    /* match predicate for operands  */
+    if (not(isOperandI64(op8) && isOperandIReg(op9) && isOperandIReg(op10))) {
+        return false;
+    }
+
+    /** Select Inst **/
+    auto op12 = (op8);
+    auto op13 = (op9);
+    auto op14 = (op10);
+    /* select inst MUL */
+    auto inst3 = new MIRInst(MUL);
+    inst3->set_operand(0, op12);
+    inst3->set_operand(1, op13);
+    inst3->set_operand(2, op14);
+    ctx.insert_inst(inst3);
+
+    /* Replace Operand */
+    ctx.replace_operand(ctx.get_inst_def(inst2), ctx.get_inst_def(inst3));
+    ctx.remove_inst(inst2);
+    std::cout << "    InstMul success!" << std::endl;
+    return true;
+}
+
+/* InstMul matchAndSelectPatternInstMulend */
+
+/* InstUDiv matchAndSelectPatternInstUDiv begin */
+static bool matchAndSelectPattern13(MIRInst* inst2, ISelContext& ctx) {
+    uint32_t rootOpcode = InstUDiv;
+    /** Match Inst **/
+    /* match inst InstUDiv */
+    MIROperand* op8 = nullptr;
+    MIROperand* op9 = nullptr;
+    MIROperand* op10 = nullptr;
+    if (not matchInstUDiv(inst2, op8, op9, op10)) {
+        return false;
+    }
+
+    /* match predicate for operands  */
+    if (not(isOperandI64(op8) && isOperandIReg(op9) && isOperandIReg(op10))) {
+        return false;
+    }
+
+    /** Select Inst **/
+    auto op12 = (op8);
+    auto op13 = (op9);
+    auto op14 = (op10);
+    /* select inst DIVU */
+    auto inst3 = new MIRInst(DIVU);
+    inst3->set_operand(0, op12);
+    inst3->set_operand(1, op13);
+    inst3->set_operand(2, op14);
+    ctx.insert_inst(inst3);
+
+    /* Replace Operand */
+    ctx.replace_operand(ctx.get_inst_def(inst2), ctx.get_inst_def(inst3));
+    ctx.remove_inst(inst2);
+    std::cout << "    InstUDiv success!" << std::endl;
+    return true;
+}
+
+/* InstUDiv matchAndSelectPatternInstUDivend */
+
+/* InstURem matchAndSelectPatternInstURem begin */
+static bool matchAndSelectPattern14(MIRInst* inst2, ISelContext& ctx) {
+    uint32_t rootOpcode = InstURem;
+    /** Match Inst **/
+    /* match inst InstURem */
+    MIROperand* op8 = nullptr;
+    MIROperand* op9 = nullptr;
+    MIROperand* op10 = nullptr;
+    if (not matchInstURem(inst2, op8, op9, op10)) {
+        return false;
+    }
+
+    /* match predicate for operands  */
+    if (not(isOperandI64(op8) && isOperandIReg(op9) && isOperandIReg(op10))) {
+        return false;
+    }
+
+    /** Select Inst **/
+    auto op12 = (op8);
+    auto op13 = (op9);
+    auto op14 = (op10);
+    /* select inst REMU */
+    auto inst3 = new MIRInst(REMU);
+    inst3->set_operand(0, op12);
+    inst3->set_operand(1, op13);
+    inst3->set_operand(2, op14);
+    ctx.insert_inst(inst3);
+
+    /* Replace Operand */
+    ctx.replace_operand(ctx.get_inst_def(inst2), ctx.get_inst_def(inst3));
+    ctx.remove_inst(inst2);
+    std::cout << "    InstURem success!" << std::endl;
+    return true;
+}
+
+/* InstURem matchAndSelectPatternInstURemend */
+
+/* InstAnd matchAndSelectPatternInstAnd begin */
+static bool matchAndSelectPattern15(MIRInst* inst2, ISelContext& ctx) {
+    uint32_t rootOpcode = InstAnd;
+    /** Match Inst **/
+    /* match inst InstAnd */
+    MIROperand* op8 = nullptr;
+    MIROperand* op9 = nullptr;
+    MIROperand* op10 = nullptr;
+    if (not matchInstAnd(inst2, op8, op9, op10)) {
+        return false;
+    }
+
+    /* match predicate for operands  */
+    if (not(isOperandIReg(op9) && isOperandIReg(op10))) {
+        return false;
+    }
+
+    /** Select Inst **/
+    auto op12 = (op8);
+    auto op13 = (op9);
+    auto op14 = (op10);
+    /* select inst getIntegerBinaryRegOpcode(rootOpcode) */
+    auto inst3 = new MIRInst(getIntegerBinaryRegOpcode(rootOpcode));
+    inst3->set_operand(0, op12);
+    inst3->set_operand(1, op13);
+    inst3->set_operand(2, op14);
+    ctx.insert_inst(inst3);
+
+    /* Replace Operand */
+    ctx.replace_operand(ctx.get_inst_def(inst2), ctx.get_inst_def(inst3));
+    ctx.remove_inst(inst2);
+    std::cout << "    InstAnd success!" << std::endl;
+    return true;
+}
+static bool matchAndSelectPattern18(MIRInst* inst1, ISelContext& ctx) {
+    uint32_t rootOpcode = InstAnd;
+    /** Match Inst **/
+    /* match inst InstAnd */
+    MIROperand* op1 = nullptr;
+    MIROperand* op2 = nullptr;
+    MIROperand* op3 = nullptr;
+    if (not matchInstAnd(inst1, op1, op2, op3)) {
+        return false;
+    }
+
+    /* match predicate for operands  */
+    if (not(isOperandIReg(op2) && isOperandImm12(op3))) {
+        return false;
+    }
+
+    /** Select Inst **/
+    auto op5 = (op1);
+    auto op6 = (op2);
+    auto op7 = (op3);
+    /* select inst getIntegerBinaryImmOpcode(rootOpcode) */
+    auto inst2 = new MIRInst(getIntegerBinaryImmOpcode(rootOpcode));
+    inst2->set_operand(0, op5);
+    inst2->set_operand(1, op6);
+    inst2->set_operand(2, op7);
+    ctx.insert_inst(inst2);
+
+    /* Replace Operand */
+    ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst2));
+    ctx.remove_inst(inst1);
+    std::cout << "    InstAnd success!" << std::endl;
+    return true;
+}
+
+/* InstAnd matchAndSelectPatternInstAndend */
+
+/* InstOr matchAndSelectPatternInstOr begin */
+static bool matchAndSelectPattern16(MIRInst* inst1, ISelContext& ctx) {
+    uint32_t rootOpcode = InstOr;
+    /** Match Inst **/
+    /* match inst InstOr */
+    MIROperand* op1 = nullptr;
+    MIROperand* op2 = nullptr;
+    MIROperand* op3 = nullptr;
+    if (not matchInstOr(inst1, op1, op2, op3)) {
+        return false;
+    }
+
+    /* match predicate for operands  */
+    if (not(isOperandIReg(op2) && isOperandIReg(op3))) {
+        return false;
+    }
+
+    /** Select Inst **/
+    auto op5 = (op1);
+    auto op6 = (op2);
+    auto op7 = (op3);
+    /* select inst getIntegerBinaryRegOpcode(rootOpcode) */
+    auto inst2 = new MIRInst(getIntegerBinaryRegOpcode(rootOpcode));
+    inst2->set_operand(0, op5);
+    inst2->set_operand(1, op6);
+    inst2->set_operand(2, op7);
+    ctx.insert_inst(inst2);
+
+    /* Replace Operand */
+    ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst2));
+    ctx.remove_inst(inst1);
+    std::cout << "    InstOr success!" << std::endl;
+    return true;
+}
+static bool matchAndSelectPattern19(MIRInst* inst1, ISelContext& ctx) {
+    uint32_t rootOpcode = InstOr;
+    /** Match Inst **/
+    /* match inst InstOr */
+    MIROperand* op1 = nullptr;
+    MIROperand* op2 = nullptr;
+    MIROperand* op3 = nullptr;
+    if (not matchInstOr(inst1, op1, op2, op3)) {
+        return false;
+    }
+
+    /* match predicate for operands  */
+    if (not(isOperandIReg(op2) && isOperandImm12(op3))) {
+        return false;
+    }
+
+    /** Select Inst **/
+    auto op5 = (op1);
+    auto op6 = (op2);
+    auto op7 = (op3);
+    /* select inst getIntegerBinaryImmOpcode(rootOpcode) */
+    auto inst2 = new MIRInst(getIntegerBinaryImmOpcode(rootOpcode));
+    inst2->set_operand(0, op5);
+    inst2->set_operand(1, op6);
+    inst2->set_operand(2, op7);
+    ctx.insert_inst(inst2);
+
+    /* Replace Operand */
+    ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst2));
+    ctx.remove_inst(inst1);
+    std::cout << "    InstOr success!" << std::endl;
+    return true;
+}
+
+/* InstOr matchAndSelectPatternInstOrend */
+
+/* InstXor matchAndSelectPatternInstXor begin */
+static bool matchAndSelectPattern17(MIRInst* inst1, ISelContext& ctx) {
+    uint32_t rootOpcode = InstXor;
+    /** Match Inst **/
+    /* match inst InstXor */
+    MIROperand* op1 = nullptr;
+    MIROperand* op2 = nullptr;
+    MIROperand* op3 = nullptr;
+    if (not matchInstXor(inst1, op1, op2, op3)) {
+        return false;
+    }
+
+    /* match predicate for operands  */
+    if (not(isOperandIReg(op2) && isOperandIReg(op3))) {
+        return false;
+    }
+
+    /** Select Inst **/
+    auto op5 = (op1);
+    auto op6 = (op2);
+    auto op7 = (op3);
+    /* select inst getIntegerBinaryRegOpcode(rootOpcode) */
+    auto inst2 = new MIRInst(getIntegerBinaryRegOpcode(rootOpcode));
+    inst2->set_operand(0, op5);
+    inst2->set_operand(1, op6);
+    inst2->set_operand(2, op7);
+    ctx.insert_inst(inst2);
+
+    /* Replace Operand */
+    ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst2));
+    ctx.remove_inst(inst1);
+    std::cout << "    InstXor success!" << std::endl;
+    return true;
+}
+static bool matchAndSelectPattern20(MIRInst* inst1, ISelContext& ctx) {
+    uint32_t rootOpcode = InstXor;
+    /** Match Inst **/
+    /* match inst InstXor */
+    MIROperand* op1 = nullptr;
+    MIROperand* op2 = nullptr;
+    MIROperand* op3 = nullptr;
+    if (not matchInstXor(inst1, op1, op2, op3)) {
+        return false;
+    }
+
+    /* match predicate for operands  */
+    if (not(isOperandIReg(op2) && isOperandImm12(op3))) {
+        return false;
+    }
+
+    /** Select Inst **/
+    auto op5 = (op1);
+    auto op6 = (op2);
+    auto op7 = (op3);
+    /* select inst getIntegerBinaryImmOpcode(rootOpcode) */
+    auto inst2 = new MIRInst(getIntegerBinaryImmOpcode(rootOpcode));
+    inst2->set_operand(0, op5);
+    inst2->set_operand(1, op6);
+    inst2->set_operand(2, op7);
+    ctx.insert_inst(inst2);
+
+    /* Replace Operand */
+    ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst2));
+    ctx.remove_inst(inst1);
+    std::cout << "    InstXor success!" << std::endl;
+    return true;
+}
+
+/* InstXor matchAndSelectPatternInstXorend */
+
+/* InstShl matchAndSelectPatternInstShl begin */
+static bool matchAndSelectPattern21(MIRInst* inst1, ISelContext& ctx) {
+    uint32_t rootOpcode = InstShl;
+    /** Match Inst **/
+    /* match inst InstShl */
+    MIROperand* op1 = nullptr;
+    MIROperand* op2 = nullptr;
+    MIROperand* op3 = nullptr;
+    if (not matchInstShl(inst1, op1, op2, op3)) {
+        return false;
+    }
+
+    /* match predicate for operands  */
+    if (not(isOperandI64(op1) && isOperandIReg(op2) && isOperandIReg(op3))) {
+        return false;
+    }
+
+    /** Select Inst **/
+    auto op5 = (op1);
+    auto op6 = (op2);
+    auto op7 = (op3);
+    /* select inst SLL */
+    auto inst2 = new MIRInst(SLL);
+    inst2->set_operand(0, op5);
+    inst2->set_operand(1, op6);
+    inst2->set_operand(2, op7);
+    ctx.insert_inst(inst2);
+
+    /* Replace Operand */
+    ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst2));
+    ctx.remove_inst(inst1);
+    std::cout << "    InstShl success!" << std::endl;
+    return true;
+}
+
+/* InstShl matchAndSelectPatternInstShlend */
+
+/* InstLShr matchAndSelectPatternInstLShr begin */
+static bool matchAndSelectPattern22(MIRInst* inst2, ISelContext& ctx) {
+    uint32_t rootOpcode = InstLShr;
+    /** Match Inst **/
+    /* match inst InstLShr */
+    MIROperand* op8 = nullptr;
+    MIROperand* op9 = nullptr;
+    MIROperand* op10 = nullptr;
+    if (not matchInstLShr(inst2, op8, op9, op10)) {
+        return false;
+    }
+
+    /* match predicate for operands  */
+    if (not(isOperandI64(op8) && isOperandIReg(op9) && isOperandIReg(op10))) {
+        return false;
+    }
+
+    /** Select Inst **/
+    auto op12 = (op8);
+    auto op13 = (op9);
+    auto op14 = (op10);
+    /* select inst SRL */
+    auto inst3 = new MIRInst(SRL);
+    inst3->set_operand(0, op12);
+    inst3->set_operand(1, op13);
+    inst3->set_operand(2, op14);
+    ctx.insert_inst(inst3);
+
+    /* Replace Operand */
+    ctx.replace_operand(ctx.get_inst_def(inst2), ctx.get_inst_def(inst3));
+    ctx.remove_inst(inst2);
+    std::cout << "    InstLShr success!" << std::endl;
+    return true;
+}
+
+/* InstLShr matchAndSelectPatternInstLShrend */
+
+/* InstAShr matchAndSelectPatternInstAShr begin */
+static bool matchAndSelectPattern23(MIRInst* inst2, ISelContext& ctx) {
+    uint32_t rootOpcode = InstAShr;
+    /** Match Inst **/
+    /* match inst InstAShr */
+    MIROperand* op8 = nullptr;
+    MIROperand* op9 = nullptr;
+    MIROperand* op10 = nullptr;
+    if (not matchInstAShr(inst2, op8, op9, op10)) {
+        return false;
+    }
+
+    /* match predicate for operands  */
+    if (not(isOperandI64(op8) && isOperandIReg(op9) && isOperandIReg(op10))) {
+        return false;
+    }
+
+    /** Select Inst **/
+    auto op12 = (op8);
+    auto op13 = (op9);
+    auto op14 = (op10);
+    /* select inst SRA */
+    auto inst3 = new MIRInst(SRA);
+    inst3->set_operand(0, op12);
+    inst3->set_operand(1, op13);
+    inst3->set_operand(2, op14);
+    ctx.insert_inst(inst3);
+
+    /* Replace Operand */
+    ctx.replace_operand(ctx.get_inst_def(inst2), ctx.get_inst_def(inst3));
+    ctx.remove_inst(inst2);
+    std::cout << "    InstAShr success!" << std::endl;
+    return true;
+}
+
+/* InstAShr matchAndSelectPatternInstAShrend */
+
 static bool matchAndSelectImpl(MIRInst* inst, ISelContext& ctx) {
     switch (inst->opcode()) {
-        case InstLoad: {
+        case InstLoadGlobalAddress: {
             if (matchAndSelectPattern1(inst, ctx))
                 return true;
             break;
         }
-        case InstStore: {
+        case InstLoad: {
             if (matchAndSelectPattern2(inst, ctx))
                 return true;
             break;
         }
-        case InstJump: {
+        case InstStore: {
             if (matchAndSelectPattern3(inst, ctx))
                 return true;
             break;
         }
-        case InstReturn: {
+        case InstJump: {
             if (matchAndSelectPattern4(inst, ctx))
+                return true;
+            break;
+        }
+        case InstReturn: {
+            if (matchAndSelectPattern5(inst, ctx))
+                return true;
+            break;
+        }
+        case InstLoadImm: {
+            if (matchAndSelectPattern6(inst, ctx))
+                return true;
+            if (matchAndSelectPattern8(inst, ctx))
+                return true;
+            break;
+        }
+        case InstLoadImmToReg: {
+            if (matchAndSelectPattern7(inst, ctx))
+                return true;
+            if (matchAndSelectPattern9(inst, ctx))
+                return true;
+            break;
+        }
+        case InstAdd: {
+            if (matchAndSelectPattern10(inst, ctx))
+                return true;
+            break;
+        }
+        case InstSub: {
+            if (matchAndSelectPattern11(inst, ctx))
+                return true;
+            break;
+        }
+        case InstMul: {
+            if (matchAndSelectPattern12(inst, ctx))
+                return true;
+            break;
+        }
+        case InstUDiv: {
+            if (matchAndSelectPattern13(inst, ctx))
+                return true;
+            break;
+        }
+        case InstURem: {
+            if (matchAndSelectPattern14(inst, ctx))
+                return true;
+            break;
+        }
+        case InstAnd: {
+            if (matchAndSelectPattern15(inst, ctx))
+                return true;
+            if (matchAndSelectPattern18(inst, ctx))
+                return true;
+            break;
+        }
+        case InstOr: {
+            if (matchAndSelectPattern16(inst, ctx))
+                return true;
+            if (matchAndSelectPattern19(inst, ctx))
+                return true;
+            break;
+        }
+        case InstXor: {
+            if (matchAndSelectPattern17(inst, ctx))
+                return true;
+            if (matchAndSelectPattern20(inst, ctx))
+                return true;
+            break;
+        }
+        case InstShl: {
+            if (matchAndSelectPattern21(inst, ctx))
+                return true;
+            break;
+        }
+        case InstLShr: {
+            if (matchAndSelectPattern22(inst, ctx))
+                return true;
+            break;
+        }
+        case InstAShr: {
+            if (matchAndSelectPattern23(inst, ctx))
                 return true;
             break;
         }

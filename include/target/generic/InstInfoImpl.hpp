@@ -1044,6 +1044,34 @@ class GENERICInstInfoLoadStackObjectAddr final : public InstInfo {
     }
 };
 
+class GENERICInstInfoLoadImmToReg final : public InstInfo {
+   public:
+    GENERICInstInfoLoadImmToReg() = default;
+
+    uint32_t operand_num() override { return 2; }
+
+    OperandFlag operand_flag(uint32_t idx) override {
+        switch (idx) {
+            case 0:
+                return OperandFlagDef;
+            case 1:
+                return OperandFlagMetadata;
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() override { return InstFlagNone; }
+
+    std::string_view name() override { return "GENERIC.LoadImmToReg"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "LoadImmToReg"
+            << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+            << mir::GENERIC::OperandDumper{inst.operand(1)};
+    }
+};
+
 class GENERICInstInfoReturn final : public InstInfo {
    public:
     GENERICInstInfoReturn() = default;
@@ -1102,6 +1130,7 @@ class GENERICInstInfo final : public TargetInstInfo {
     GENERICInstInfoLoadGlobalAddress _instinfoLoadGlobalAddress;
     GENERICInstInfoLoadImm _instinfoLoadImm;
     GENERICInstInfoLoadStackObjectAddr _instinfoLoadStackObjectAddr;
+    GENERICInstInfoLoadImmToReg _instinfoLoadImmToReg;
     GENERICInstInfoReturn _instinfoReturn;
 
    public:
@@ -1201,7 +1230,7 @@ class GENERICInstInfo final : public TargetInstInfo {
             case GENERICInst::CopyToReg:
                 break; /* not supported */
             case GENERICInst::LoadImmToReg:
-                break; /* not supported */
+                return _instinfoLoadImmToReg;
             case GENERICInst::LoadRegFromStack:
                 break; /* not supported */
             case GENERICInst::StoreRegToStack:

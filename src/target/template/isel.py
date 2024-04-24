@@ -72,7 +72,13 @@ def load_isel_info(file: str) -> Tuple[str, List]:
             isel_item_list.append(isel_item)
 
     for isel_item in isel_info["Instances"]:
-        isel_item_list.append(isel_item)
+        if isinstance(isel_item["pattern"]["name"], str):
+            isel_item_list.append(isel_item)
+        elif isinstance(isel_item["pattern"]["name"], list):
+            for name in isel_item["pattern"]["name"]:
+                item = copy.deepcopy(isel_item)
+                item["pattern"]["name"] = name
+                isel_item_list.append(item)
     return isel_item_list
 
 
@@ -101,13 +107,17 @@ def parse_isel_match(
     In one inst, opearnd_name -> $xxx (global_name),
     local_map: operand_name -> $xxx -> id in select_item
     """
-
+    res = True
     capture_list = list()  # 捕获列表, 用于匹配 pattern inst 后捕获其操作数
     lookup_list = list()  # 递归匹配前，需要 lookup 的操作数列表
     local_map = dict()  # just for this pattern, opearnd_name -> global_id
     # match_item = dict()
 
     pinst_name = pattern["name"]
+    if pinst_name not in genmir_insts_dict:
+        print(f"Error: {pinst_name} not in genmir_insts_dict")
+        return False
+
     pinst_info = genmir_insts_dict[pinst_name]
 
     for op_idx, op_info in pinst_info["operands"].items():
@@ -147,7 +157,7 @@ def parse_isel_match(
                 # append to lookup_list, same to the before!
                 lookup_list.append(local_map[k])
                 # 递归地处理
-                parse_isel_match(
+                res = parse_isel_match(
                     v,
                     iselindex.get_inst_idx(),
                     match_item_list,
@@ -156,6 +166,7 @@ def parse_isel_match(
                 )
             else:
                 raise ValueError("Invalid operand type")
+    return res
 
 
 def replace_operad(code, operand_map):
@@ -166,13 +177,14 @@ def replace_operad(code, operand_map):
 
 def parse_isel_select(
     replace: dict | str,
+    operand_idx: int,
     select_item_list: list,
     operand_map: dict,
     target_insts_dict: dict,
     used_as_operand: bool = False,
 ):
     local_map = dict()
-    
+
     if "$" in replace["name"]:
         rinst_name = replace_operad(replace["name"], operand_map)
     else:
@@ -180,7 +192,7 @@ def parse_isel_select(
 
     inst_ref = rinst_name
     for k, v in replace.items():
-        if k == "name": # 
+        if k == "name":  #
             continue
         elif k == "ref":
             inst_ref = v
@@ -196,22 +208,30 @@ def parse_isel_select(
             )
         elif isinstance(v, dict):
             # v is a sub-pattern
-            local_map[k] = parse_isel_select(
+            local_map[k] = iselindex.get_operand_idx()
+
+            res = parse_isel_select(
                 v,
+                local_map[k],
                 select_item_list,
                 operand_map,
                 target_insts_dict,
                 used_as_operand=True,
             )
+            if not res:
+                return False
 
     # select inst
     operands = list()
+    if inst_ref not in target_insts_dict:
+        print(f"Error: {inst_ref} not in target_insts_dict")
+        return False
     inst_info = target_insts_dict[inst_ref]
     for op_idx, op_info in inst_info["operands"].items():
         operands.append(local_map[op_info["name"]])
 
     inst_idx = iselindex.get_inst_idx()  # select inst id
-    operand_idx = iselindex.get_operand_idx()  # select operand id
+    # operand_idx = iselindex.get_operand_idx()  # select operand id
     select_item_list.append(
         {
             "type": "select_inst",
@@ -223,7 +243,7 @@ def parse_isel_select(
             "used_as_operand": used_as_operand,
         }
     )
-    return operand_idx
+    return True
 
 
 def has_reg_def(inst_info):
@@ -245,16 +265,25 @@ def parse_isel_item(isel_item: dict, mirgen_insts_dict: dict, target_insts_dict:
     match_item_list = list()
     select_item_list = list()
     pattern_id = iselindex.get_inst_idx()  # 根节点 id
-    parse_isel_match(
+    res = parse_isel_match(
         isel_item["pattern"],
         pattern_id,
         match_item_list,
         operand_map,
         mirgen_insts_dict,
     )
-    parse_isel_select(
-        isel_item["replace"], select_item_list, operand_map, target_insts_dict, False
+    if not res:
+        return False
+    res = parse_isel_select(
+        isel_item["replace"],
+        iselindex.get_operand_idx(),
+        select_item_list,
+        operand_map,
+        target_insts_dict,
+        False,
     )
+    if not res:
+        return False
     repalce_id = select_item_list[-1]["idx"]
     match_inst_name = match_item_list[0]["inst_name"]
 
@@ -279,5 +308,5 @@ def parse_isel_item(isel_item: dict, mirgen_insts_dict: dict, target_insts_dict:
     isel_item["replace_operand"] = replace_operand
     iselindex.reset_inst_idx()
     iselindex.reset_operand_idx()
-
+    return True
     # return isel_item

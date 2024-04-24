@@ -1,11 +1,37 @@
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
 #include "mir/iselinfo.hpp"
-
+#include "target/riscv/riscv.hpp"
 namespace mir::RISCV {
 static MIROperand* getVRegAs(ISelContext& ctx, MIROperand* ref) {
     return MIROperand::as_vreg(ctx.codegen_ctx().next_id(), ref->type());
 }
+
+constexpr RISCVInst getIntegerBinaryRegOpcode(uint32_t opcode) {
+    switch (opcode) {
+        case InstAnd:
+            return AND;
+        case InstOr:
+            return OR;
+        case InstXor:
+            return XOR;
+        default:
+            assert(false && "Unsupported binary register instruction");
+    }
+}
+constexpr RISCVInst getIntegerBinaryImmOpcode(uint32_t opcode) {
+    switch (opcode) {
+        case InstAnd:
+            return ANDI;
+        case InstOr:
+            return ORI;
+        case InstXor:
+            return XORI;
+        default:
+            assert(false && "Unsupported binary immediate instruction");
+    }
+}
+
 static RISCVInst getLoadOpcode(MIROperand* dst) {
     switch (dst->type()) {
         case OperandType::Bool:
@@ -56,9 +82,26 @@ static bool selectAddrOffset(MIROperand* addr,
             offset = MIROperand::as_imm(0, OperandType::Int64);
             return true;
         }
-
     }
 
     return false;
 }
+static bool isOperandI64(MIROperand* op) {
+    return op->type() == OperandType::Int64;
+}
+
+static bool isZero(MIROperand* operand) {
+    if (operand->is_reg() && operand->reg() == RISCV::X0)
+        return true;
+    return operand->is_imm() && operand->imm() == 0;
+}
+
+static MIROperand* getZero(MIROperand* operand) {
+    return MIROperand::as_isareg(RISCV::X0, operand->type());
+}
+
+static MIROperand* getOne(MIROperand* operand) {
+    return MIROperand::as_imm(1, operand->type());
+}
+
 }  // namespace mir::RISCV

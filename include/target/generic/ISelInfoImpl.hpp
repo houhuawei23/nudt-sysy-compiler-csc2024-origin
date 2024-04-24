@@ -373,6 +373,16 @@ static bool matchInstLoadStackObjectAddr(MIRInst* inst,
     return true;
 }
 
+static bool matchInstLoadImmToReg(MIRInst* inst,
+                                  MIROperand*& dst,
+                                  MIROperand*& imm) {
+    if (inst->opcode() != InstLoadImmToReg)
+        return false;
+    dst = inst->operand(0);
+    imm = inst->operand(1);
+    return true;
+}
+
 static bool matchInstReturn(MIRInst* inst) {
     if (inst->opcode() != InstReturn)
         return false;
@@ -382,7 +392,7 @@ static bool matchInstReturn(MIRInst* inst) {
 
 /* InstAdd matchAndSelectPatternInstAdd begin */
 static bool matchAndSelectPattern1(MIRInst* inst1, ISelContext& ctx) {
-    uint32_t opcode = InstAdd;
+    uint32_t rootOpcode = InstAdd;
     /** Match Inst **/
     /* match inst InstAdd */
     MIROperand* op1 = nullptr;
@@ -393,14 +403,14 @@ static bool matchAndSelectPattern1(MIRInst* inst1, ISelContext& ctx) {
     }
 
     /** Select Inst **/
-    auto op4 = (op1);
-    auto op5 = (op2);
-    auto op6 = (op3);
+    auto op5 = (op1);
+    auto op6 = (op2);
+    auto op7 = (op3);
     /* select inst Add */
     auto inst2 = new MIRInst(Add);
-    inst2->set_operand(0, op4);
-    inst2->set_operand(1, op5);
-    inst2->set_operand(2, op6);
+    inst2->set_operand(0, op5);
+    inst2->set_operand(1, op6);
+    inst2->set_operand(2, op7);
     ctx.insert_inst(inst2);
 
     /* Replace Operand */
@@ -414,7 +424,7 @@ static bool matchAndSelectPattern1(MIRInst* inst1, ISelContext& ctx) {
 
 /* InstSub matchAndSelectPatternInstSub begin */
 static bool matchAndSelectPattern2(MIRInst* inst1, ISelContext& ctx) {
-    uint32_t opcode = InstSub;
+    uint32_t rootOpcode = InstSub;
     /** Match Inst **/
     /* match inst InstSub */
     MIROperand* op1 = nullptr;
@@ -425,14 +435,14 @@ static bool matchAndSelectPattern2(MIRInst* inst1, ISelContext& ctx) {
     }
 
     /** Select Inst **/
-    auto op4 = (op1);
-    auto op5 = (op2);
-    auto op6 = (op3);
+    auto op5 = (op1);
+    auto op6 = (op2);
+    auto op7 = (op3);
     /* select inst Sub */
     auto inst2 = new MIRInst(Sub);
-    inst2->set_operand(0, op4);
-    inst2->set_operand(1, op5);
-    inst2->set_operand(2, op6);
+    inst2->set_operand(0, op5);
+    inst2->set_operand(1, op6);
+    inst2->set_operand(2, op7);
     ctx.insert_inst(inst2);
 
     /* Replace Operand */
@@ -446,7 +456,7 @@ static bool matchAndSelectPattern2(MIRInst* inst1, ISelContext& ctx) {
 
 /* InstMul matchAndSelectPatternInstMul begin */
 static bool matchAndSelectPattern3(MIRInst* inst1, ISelContext& ctx) {
-    uint32_t opcode = InstMul;
+    uint32_t rootOpcode = InstMul;
     /** Match Inst **/
     /* match inst InstMul */
     MIROperand* op1 = nullptr;
@@ -457,14 +467,14 @@ static bool matchAndSelectPattern3(MIRInst* inst1, ISelContext& ctx) {
     }
 
     /** Select Inst **/
-    auto op4 = (op1);
-    auto op5 = (op2);
-    auto op6 = (op3);
+    auto op5 = (op1);
+    auto op6 = (op2);
+    auto op7 = (op3);
     /* select inst Mul */
     auto inst2 = new MIRInst(Mul);
-    inst2->set_operand(0, op4);
-    inst2->set_operand(1, op5);
-    inst2->set_operand(2, op6);
+    inst2->set_operand(0, op5);
+    inst2->set_operand(1, op6);
+    inst2->set_operand(2, op7);
     ctx.insert_inst(inst2);
 
     /* Replace Operand */
@@ -478,7 +488,7 @@ static bool matchAndSelectPattern3(MIRInst* inst1, ISelContext& ctx) {
 
 /* InstUDiv matchAndSelectPatternInstUDiv begin */
 static bool matchAndSelectPattern4(MIRInst* inst1, ISelContext& ctx) {
-    uint32_t opcode = InstUDiv;
+    uint32_t rootOpcode = InstUDiv;
     /** Match Inst **/
     /* match inst InstUDiv */
     MIROperand* op1 = nullptr;
@@ -489,14 +499,14 @@ static bool matchAndSelectPattern4(MIRInst* inst1, ISelContext& ctx) {
     }
 
     /** Select Inst **/
-    auto op4 = (op1);
-    auto op5 = (op2);
-    auto op6 = (op3);
+    auto op5 = (op1);
+    auto op6 = (op2);
+    auto op7 = (op3);
     /* select inst UDiv */
     auto inst2 = new MIRInst(UDiv);
-    inst2->set_operand(0, op4);
-    inst2->set_operand(1, op5);
-    inst2->set_operand(2, op6);
+    inst2->set_operand(0, op5);
+    inst2->set_operand(1, op6);
+    inst2->set_operand(2, op7);
     ctx.insert_inst(inst2);
 
     /* Replace Operand */
@@ -510,7 +520,7 @@ static bool matchAndSelectPattern4(MIRInst* inst1, ISelContext& ctx) {
 
 /* InstURem matchAndSelectPatternInstURem begin */
 static bool matchAndSelectPattern5(MIRInst* inst1, ISelContext& ctx) {
-    uint32_t opcode = InstURem;
+    uint32_t rootOpcode = InstURem;
     /** Match Inst **/
     /* match inst InstURem */
     MIROperand* op1 = nullptr;
@@ -521,14 +531,14 @@ static bool matchAndSelectPattern5(MIRInst* inst1, ISelContext& ctx) {
     }
 
     /** Select Inst **/
-    auto op4 = (op1);
-    auto op5 = (op2);
-    auto op6 = (op3);
+    auto op5 = (op1);
+    auto op6 = (op2);
+    auto op7 = (op3);
     /* select inst URem */
     auto inst2 = new MIRInst(URem);
-    inst2->set_operand(0, op4);
-    inst2->set_operand(1, op5);
-    inst2->set_operand(2, op6);
+    inst2->set_operand(0, op5);
+    inst2->set_operand(1, op6);
+    inst2->set_operand(2, op7);
     ctx.insert_inst(inst2);
 
     /* Replace Operand */
@@ -542,7 +552,7 @@ static bool matchAndSelectPattern5(MIRInst* inst1, ISelContext& ctx) {
 
 /* InstAnd matchAndSelectPatternInstAnd begin */
 static bool matchAndSelectPattern6(MIRInst* inst1, ISelContext& ctx) {
-    uint32_t opcode = InstAnd;
+    uint32_t rootOpcode = InstAnd;
     /** Match Inst **/
     /* match inst InstAnd */
     MIROperand* op1 = nullptr;
@@ -553,14 +563,14 @@ static bool matchAndSelectPattern6(MIRInst* inst1, ISelContext& ctx) {
     }
 
     /** Select Inst **/
-    auto op4 = (op1);
-    auto op5 = (op2);
-    auto op6 = (op3);
+    auto op5 = (op1);
+    auto op6 = (op2);
+    auto op7 = (op3);
     /* select inst And */
     auto inst2 = new MIRInst(And);
-    inst2->set_operand(0, op4);
-    inst2->set_operand(1, op5);
-    inst2->set_operand(2, op6);
+    inst2->set_operand(0, op5);
+    inst2->set_operand(1, op6);
+    inst2->set_operand(2, op7);
     ctx.insert_inst(inst2);
 
     /* Replace Operand */
@@ -574,7 +584,7 @@ static bool matchAndSelectPattern6(MIRInst* inst1, ISelContext& ctx) {
 
 /* InstOr matchAndSelectPatternInstOr begin */
 static bool matchAndSelectPattern7(MIRInst* inst1, ISelContext& ctx) {
-    uint32_t opcode = InstOr;
+    uint32_t rootOpcode = InstOr;
     /** Match Inst **/
     /* match inst InstOr */
     MIROperand* op1 = nullptr;
@@ -585,14 +595,14 @@ static bool matchAndSelectPattern7(MIRInst* inst1, ISelContext& ctx) {
     }
 
     /** Select Inst **/
-    auto op4 = (op1);
-    auto op5 = (op2);
-    auto op6 = (op3);
+    auto op5 = (op1);
+    auto op6 = (op2);
+    auto op7 = (op3);
     /* select inst Or */
     auto inst2 = new MIRInst(Or);
-    inst2->set_operand(0, op4);
-    inst2->set_operand(1, op5);
-    inst2->set_operand(2, op6);
+    inst2->set_operand(0, op5);
+    inst2->set_operand(1, op6);
+    inst2->set_operand(2, op7);
     ctx.insert_inst(inst2);
 
     /* Replace Operand */
@@ -606,7 +616,7 @@ static bool matchAndSelectPattern7(MIRInst* inst1, ISelContext& ctx) {
 
 /* InstXor matchAndSelectPatternInstXor begin */
 static bool matchAndSelectPattern8(MIRInst* inst1, ISelContext& ctx) {
-    uint32_t opcode = InstXor;
+    uint32_t rootOpcode = InstXor;
     /** Match Inst **/
     /* match inst InstXor */
     MIROperand* op1 = nullptr;
@@ -617,14 +627,14 @@ static bool matchAndSelectPattern8(MIRInst* inst1, ISelContext& ctx) {
     }
 
     /** Select Inst **/
-    auto op4 = (op1);
-    auto op5 = (op2);
-    auto op6 = (op3);
+    auto op5 = (op1);
+    auto op6 = (op2);
+    auto op7 = (op3);
     /* select inst Xor */
     auto inst2 = new MIRInst(Xor);
-    inst2->set_operand(0, op4);
-    inst2->set_operand(1, op5);
-    inst2->set_operand(2, op6);
+    inst2->set_operand(0, op5);
+    inst2->set_operand(1, op6);
+    inst2->set_operand(2, op7);
     ctx.insert_inst(inst2);
 
     /* Replace Operand */
@@ -638,7 +648,7 @@ static bool matchAndSelectPattern8(MIRInst* inst1, ISelContext& ctx) {
 
 /* InstShl matchAndSelectPatternInstShl begin */
 static bool matchAndSelectPattern9(MIRInst* inst1, ISelContext& ctx) {
-    uint32_t opcode = InstShl;
+    uint32_t rootOpcode = InstShl;
     /** Match Inst **/
     /* match inst InstShl */
     MIROperand* op1 = nullptr;
@@ -649,14 +659,14 @@ static bool matchAndSelectPattern9(MIRInst* inst1, ISelContext& ctx) {
     }
 
     /** Select Inst **/
-    auto op4 = (op1);
-    auto op5 = (op2);
-    auto op6 = (op3);
+    auto op5 = (op1);
+    auto op6 = (op2);
+    auto op7 = (op3);
     /* select inst Shl */
     auto inst2 = new MIRInst(Shl);
-    inst2->set_operand(0, op4);
-    inst2->set_operand(1, op5);
-    inst2->set_operand(2, op6);
+    inst2->set_operand(0, op5);
+    inst2->set_operand(1, op6);
+    inst2->set_operand(2, op7);
     ctx.insert_inst(inst2);
 
     /* Replace Operand */
@@ -670,7 +680,7 @@ static bool matchAndSelectPattern9(MIRInst* inst1, ISelContext& ctx) {
 
 /* InstLShr matchAndSelectPatternInstLShr begin */
 static bool matchAndSelectPattern10(MIRInst* inst1, ISelContext& ctx) {
-    uint32_t opcode = InstLShr;
+    uint32_t rootOpcode = InstLShr;
     /** Match Inst **/
     /* match inst InstLShr */
     MIROperand* op1 = nullptr;
@@ -681,14 +691,14 @@ static bool matchAndSelectPattern10(MIRInst* inst1, ISelContext& ctx) {
     }
 
     /** Select Inst **/
-    auto op4 = (op1);
-    auto op5 = (op2);
-    auto op6 = (op3);
+    auto op5 = (op1);
+    auto op6 = (op2);
+    auto op7 = (op3);
     /* select inst LShr */
     auto inst2 = new MIRInst(LShr);
-    inst2->set_operand(0, op4);
-    inst2->set_operand(1, op5);
-    inst2->set_operand(2, op6);
+    inst2->set_operand(0, op5);
+    inst2->set_operand(1, op6);
+    inst2->set_operand(2, op7);
     ctx.insert_inst(inst2);
 
     /* Replace Operand */
@@ -702,7 +712,7 @@ static bool matchAndSelectPattern10(MIRInst* inst1, ISelContext& ctx) {
 
 /* InstAShr matchAndSelectPatternInstAShr begin */
 static bool matchAndSelectPattern11(MIRInst* inst1, ISelContext& ctx) {
-    uint32_t opcode = InstAShr;
+    uint32_t rootOpcode = InstAShr;
     /** Match Inst **/
     /* match inst InstAShr */
     MIROperand* op1 = nullptr;
@@ -713,14 +723,14 @@ static bool matchAndSelectPattern11(MIRInst* inst1, ISelContext& ctx) {
     }
 
     /** Select Inst **/
-    auto op4 = (op1);
-    auto op5 = (op2);
-    auto op6 = (op3);
+    auto op5 = (op1);
+    auto op6 = (op2);
+    auto op7 = (op3);
     /* select inst AShr */
     auto inst2 = new MIRInst(AShr);
-    inst2->set_operand(0, op4);
-    inst2->set_operand(1, op5);
-    inst2->set_operand(2, op6);
+    inst2->set_operand(0, op5);
+    inst2->set_operand(1, op6);
+    inst2->set_operand(2, op7);
     ctx.insert_inst(inst2);
 
     /* Replace Operand */
@@ -734,7 +744,7 @@ static bool matchAndSelectPattern11(MIRInst* inst1, ISelContext& ctx) {
 
 /* InstSMin matchAndSelectPatternInstSMin begin */
 static bool matchAndSelectPattern12(MIRInst* inst1, ISelContext& ctx) {
-    uint32_t opcode = InstSMin;
+    uint32_t rootOpcode = InstSMin;
     /** Match Inst **/
     /* match inst InstSMin */
     MIROperand* op1 = nullptr;
@@ -745,14 +755,14 @@ static bool matchAndSelectPattern12(MIRInst* inst1, ISelContext& ctx) {
     }
 
     /** Select Inst **/
-    auto op4 = (op1);
-    auto op5 = (op2);
-    auto op6 = (op3);
+    auto op5 = (op1);
+    auto op6 = (op2);
+    auto op7 = (op3);
     /* select inst SMin */
     auto inst2 = new MIRInst(SMin);
-    inst2->set_operand(0, op4);
-    inst2->set_operand(1, op5);
-    inst2->set_operand(2, op6);
+    inst2->set_operand(0, op5);
+    inst2->set_operand(1, op6);
+    inst2->set_operand(2, op7);
     ctx.insert_inst(inst2);
 
     /* Replace Operand */
@@ -766,7 +776,7 @@ static bool matchAndSelectPattern12(MIRInst* inst1, ISelContext& ctx) {
 
 /* InstSMax matchAndSelectPatternInstSMax begin */
 static bool matchAndSelectPattern13(MIRInst* inst1, ISelContext& ctx) {
-    uint32_t opcode = InstSMax;
+    uint32_t rootOpcode = InstSMax;
     /** Match Inst **/
     /* match inst InstSMax */
     MIROperand* op1 = nullptr;
@@ -777,14 +787,14 @@ static bool matchAndSelectPattern13(MIRInst* inst1, ISelContext& ctx) {
     }
 
     /** Select Inst **/
-    auto op4 = (op1);
-    auto op5 = (op2);
-    auto op6 = (op3);
+    auto op5 = (op1);
+    auto op6 = (op2);
+    auto op7 = (op3);
     /* select inst SMax */
     auto inst2 = new MIRInst(SMax);
-    inst2->set_operand(0, op4);
-    inst2->set_operand(1, op5);
-    inst2->set_operand(2, op6);
+    inst2->set_operand(0, op5);
+    inst2->set_operand(1, op6);
+    inst2->set_operand(2, op7);
     ctx.insert_inst(inst2);
 
     /* Replace Operand */
@@ -798,7 +808,7 @@ static bool matchAndSelectPattern13(MIRInst* inst1, ISelContext& ctx) {
 
 /* InstReturn matchAndSelectPatternInstReturn begin */
 static bool matchAndSelectPattern14(MIRInst* inst1, ISelContext& ctx) {
-    uint32_t opcode = InstReturn;
+    uint32_t rootOpcode = InstReturn;
     /** Match Inst **/
     /* match inst InstReturn */
 
@@ -820,7 +830,7 @@ static bool matchAndSelectPattern14(MIRInst* inst1, ISelContext& ctx) {
 
 /* InstLoad matchAndSelectPatternInstLoad begin */
 static bool matchAndSelectPattern15(MIRInst* inst1, ISelContext& ctx) {
-    uint32_t opcode = InstLoad;
+    uint32_t rootOpcode = InstLoad;
     /** Match Inst **/
     /* match inst InstLoad */
     MIROperand* op1 = nullptr;
@@ -831,14 +841,14 @@ static bool matchAndSelectPattern15(MIRInst* inst1, ISelContext& ctx) {
     }
 
     /** Select Inst **/
-    auto op4 = (op1);
-    auto op5 = (op2);
-    auto op6 = (op3);
+    auto op5 = (op1);
+    auto op6 = (op2);
+    auto op7 = (op3);
     /* select inst Load */
     auto inst2 = new MIRInst(Load);
-    inst2->set_operand(0, op4);
-    inst2->set_operand(1, op5);
-    inst2->set_operand(2, op6);
+    inst2->set_operand(0, op5);
+    inst2->set_operand(1, op6);
+    inst2->set_operand(2, op7);
     ctx.insert_inst(inst2);
 
     /* Replace Operand */
@@ -852,7 +862,7 @@ static bool matchAndSelectPattern15(MIRInst* inst1, ISelContext& ctx) {
 
 /* InstStore matchAndSelectPatternInstStore begin */
 static bool matchAndSelectPattern16(MIRInst* inst1, ISelContext& ctx) {
-    uint32_t opcode = InstStore;
+    uint32_t rootOpcode = InstStore;
     /** Match Inst **/
     /* match inst InstStore */
     MIROperand* op1 = nullptr;
@@ -863,14 +873,14 @@ static bool matchAndSelectPattern16(MIRInst* inst1, ISelContext& ctx) {
     }
 
     /** Select Inst **/
-    auto op4 = (op1);
-    auto op5 = (op2);
-    auto op6 = (op3);
+    auto op5 = (op1);
+    auto op6 = (op2);
+    auto op7 = (op3);
     /* select inst Store */
     auto inst2 = new MIRInst(Store);
-    inst2->set_operand(0, op4);
-    inst2->set_operand(1, op5);
-    inst2->set_operand(2, op6);
+    inst2->set_operand(0, op5);
+    inst2->set_operand(1, op6);
+    inst2->set_operand(2, op7);
     ctx.insert_inst(inst2);
 
     ctx.remove_inst(inst1);
@@ -882,7 +892,7 @@ static bool matchAndSelectPattern16(MIRInst* inst1, ISelContext& ctx) {
 
 /* InstJump matchAndSelectPatternInstJump begin */
 static bool matchAndSelectPattern17(MIRInst* inst1, ISelContext& ctx) {
-    uint32_t opcode = InstJump;
+    uint32_t rootOpcode = InstJump;
     /** Match Inst **/
     /* match inst InstJump */
     MIROperand* op1 = nullptr;
@@ -891,10 +901,10 @@ static bool matchAndSelectPattern17(MIRInst* inst1, ISelContext& ctx) {
     }
 
     /** Select Inst **/
-    auto op2 = (op1);
+    auto op3 = (op1);
     /* select inst Jump */
     auto inst2 = new MIRInst(Jump);
-    inst2->set_operand(0, op2);
+    inst2->set_operand(0, op3);
     ctx.insert_inst(inst2);
 
     ctx.remove_inst(inst1);
@@ -906,7 +916,7 @@ static bool matchAndSelectPattern17(MIRInst* inst1, ISelContext& ctx) {
 
 /* InstBranch matchAndSelectPatternInstBranch begin */
 static bool matchAndSelectPattern18(MIRInst* inst1, ISelContext& ctx) {
-    uint32_t opcode = InstBranch;
+    uint32_t rootOpcode = InstBranch;
     /** Match Inst **/
     /* match inst InstBranch */
     MIROperand* op1 = nullptr;
@@ -917,14 +927,14 @@ static bool matchAndSelectPattern18(MIRInst* inst1, ISelContext& ctx) {
     }
 
     /** Select Inst **/
-    auto op4 = (op1);
-    auto op5 = (op2);
-    auto op6 = (op3);
+    auto op5 = (op1);
+    auto op6 = (op2);
+    auto op7 = (op3);
     /* select inst Branch */
     auto inst2 = new MIRInst(Branch);
-    inst2->set_operand(0, op4);
-    inst2->set_operand(1, op5);
-    inst2->set_operand(2, op6);
+    inst2->set_operand(0, op5);
+    inst2->set_operand(1, op6);
+    inst2->set_operand(2, op7);
     ctx.insert_inst(inst2);
 
     ctx.remove_inst(inst1);
@@ -936,7 +946,7 @@ static bool matchAndSelectPattern18(MIRInst* inst1, ISelContext& ctx) {
 
 /* InstCopy matchAndSelectPatternInstCopy begin */
 static bool matchAndSelectPattern19(MIRInst* inst1, ISelContext& ctx) {
-    uint32_t opcode = InstCopy;
+    uint32_t rootOpcode = InstCopy;
     /** Match Inst **/
     /* match inst InstCopy */
     MIROperand* op1 = nullptr;
@@ -946,12 +956,12 @@ static bool matchAndSelectPattern19(MIRInst* inst1, ISelContext& ctx) {
     }
 
     /** Select Inst **/
-    auto op3 = (op1);
-    auto op4 = (op2);
+    auto op4 = (op1);
+    auto op5 = (op2);
     /* select inst Copy */
     auto inst2 = new MIRInst(Copy);
-    inst2->set_operand(0, op3);
-    inst2->set_operand(1, op4);
+    inst2->set_operand(0, op4);
+    inst2->set_operand(1, op5);
     ctx.insert_inst(inst2);
 
     /* Replace Operand */
@@ -965,7 +975,7 @@ static bool matchAndSelectPattern19(MIRInst* inst1, ISelContext& ctx) {
 
 /* InstLoadGlobalAddress matchAndSelectPatternInstLoadGlobalAddress begin */
 static bool matchAndSelectPattern20(MIRInst* inst1, ISelContext& ctx) {
-    uint32_t opcode = InstLoadGlobalAddress;
+    uint32_t rootOpcode = InstLoadGlobalAddress;
     /** Match Inst **/
     /* match inst InstLoadGlobalAddress */
     MIROperand* op1 = nullptr;
@@ -975,12 +985,12 @@ static bool matchAndSelectPattern20(MIRInst* inst1, ISelContext& ctx) {
     }
 
     /** Select Inst **/
-    auto op3 = (op1);
-    auto op4 = (op2);
+    auto op4 = (op1);
+    auto op5 = (op2);
     /* select inst LoadGlobalAddress */
     auto inst2 = new MIRInst(LoadGlobalAddress);
-    inst2->set_operand(0, op3);
-    inst2->set_operand(1, op4);
+    inst2->set_operand(0, op4);
+    inst2->set_operand(1, op5);
     ctx.insert_inst(inst2);
 
     /* Replace Operand */
@@ -994,7 +1004,7 @@ static bool matchAndSelectPattern20(MIRInst* inst1, ISelContext& ctx) {
 
 /* InstLoadImm matchAndSelectPatternInstLoadImm begin */
 static bool matchAndSelectPattern21(MIRInst* inst1, ISelContext& ctx) {
-    uint32_t opcode = InstLoadImm;
+    uint32_t rootOpcode = InstLoadImm;
     /** Match Inst **/
     /* match inst InstLoadImm */
     MIROperand* op1 = nullptr;
@@ -1004,12 +1014,12 @@ static bool matchAndSelectPattern21(MIRInst* inst1, ISelContext& ctx) {
     }
 
     /** Select Inst **/
-    auto op3 = (op1);
-    auto op4 = (op2);
+    auto op4 = (op1);
+    auto op5 = (op2);
     /* select inst LoadImm */
     auto inst2 = new MIRInst(LoadImm);
-    inst2->set_operand(0, op3);
-    inst2->set_operand(1, op4);
+    inst2->set_operand(0, op4);
+    inst2->set_operand(1, op5);
     ctx.insert_inst(inst2);
 
     /* Replace Operand */
@@ -1023,7 +1033,7 @@ static bool matchAndSelectPattern21(MIRInst* inst1, ISelContext& ctx) {
 
 /* InstLoadStackObjectAddr matchAndSelectPatternInstLoadStackObjectAddr begin */
 static bool matchAndSelectPattern22(MIRInst* inst1, ISelContext& ctx) {
-    uint32_t opcode = InstLoadStackObjectAddr;
+    uint32_t rootOpcode = InstLoadStackObjectAddr;
     /** Match Inst **/
     /* match inst InstLoadStackObjectAddr */
     MIROperand* op1 = nullptr;
@@ -1033,12 +1043,12 @@ static bool matchAndSelectPattern22(MIRInst* inst1, ISelContext& ctx) {
     }
 
     /** Select Inst **/
-    auto op3 = (op1);
-    auto op4 = (op2);
+    auto op4 = (op1);
+    auto op5 = (op2);
     /* select inst LoadStackObjectAddr */
     auto inst2 = new MIRInst(LoadStackObjectAddr);
-    inst2->set_operand(0, op3);
-    inst2->set_operand(1, op4);
+    inst2->set_operand(0, op4);
+    inst2->set_operand(1, op5);
     ctx.insert_inst(inst2);
 
     /* Replace Operand */

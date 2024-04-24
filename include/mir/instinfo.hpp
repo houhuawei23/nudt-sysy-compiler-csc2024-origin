@@ -85,6 +85,16 @@ constexpr bool isOperandReloc(MIROperand* operand) {
 constexpr bool isOperandVRegOrISAReg(MIROperand* operand) {
     return operand->is_reg() && (isVirtualReg(operand->reg()) || isISAReg(operand->reg()));
 }
+
+
+template <uint32_t N>
+constexpr bool isSignedImm(intmax_t imm) {
+    static_assert(N < 64);
+    constexpr auto x = static_cast<intmax_t>(1) << (N - 1);
+    return -x <= imm && imm < x;
+}
+
+
 void dumpVirtualReg(std::ostream& os, MIROperand* operand);
 
 }  // namespace mir

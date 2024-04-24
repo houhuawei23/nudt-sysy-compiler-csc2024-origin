@@ -45,7 +45,9 @@ class Target:
         self.isel_item_list = load_isel_info(isa_data_yml)
 
         for isel_item in self.isel_item_list:
-            parse_isel_item(isel_item, self.generic_insts_dict, self.inst_info_dict)
+            res = parse_isel_item(isel_item, self.generic_insts_dict, self.inst_info_dict)
+            if not res:
+                continue
             if isel_item["match_inst_name"] not in self.isel_dict:
                 self.isel_dict[isel_item["match_inst_name"]] = []
             self.isel_dict[isel_item["match_inst_name"]].append(isel_item)

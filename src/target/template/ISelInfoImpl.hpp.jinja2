@@ -38,7 +38,7 @@ static bool matchAndSelectPattern{{isel_item.idx}} (
     MIRInst* inst{{isel_item.match_id}},
     ISelContext& ctx)
 {
-    uint32_t opcode = {{isel_item.match_inst_name}};
+    uint32_t rootOpcode = {{isel_item.match_inst_name}};
     /** Match Inst **/
     {%- for match in isel_item.match_list %}
         {% if match.type == 'match_inst' -%}

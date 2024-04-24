@@ -54,9 +54,9 @@ enum GENERICInst {
     LoadGlobalAddress,
     LoadImm,
     LoadStackObjectAddr,
-    CopyFromReg,      /* not implemented yet */
-    CopyToReg,        /* not implemented yet */
-    LoadImmToReg,     /* not implemented yet */
+    CopyFromReg, /* not implemented yet */
+    CopyToReg,   /* not implemented yet */
+    LoadImmToReg,
     LoadRegFromStack, /* not implemented yet */
     StoreRegToStack,  /* not implemented yet */
     Return,
