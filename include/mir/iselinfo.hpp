@@ -44,24 +44,53 @@ class ISelContext {
 };
 
 class TargetISelInfo {
-    public:
-        virtual ~TargetISelInfo() = default;
-        virtual bool is_legal_geninst(uint32_t opcode) const = 0;
-        virtual bool match_select(MIRInst* inst, ISelContext& ctx) const = 0;
+   public:
+    virtual ~TargetISelInfo() = default;
+    virtual bool is_legal_geninst(uint32_t opcode) const = 0;
+    virtual bool match_select(MIRInst* inst, ISelContext& ctx) const = 0;
 };
+
+enum CompareOp : uint32_t {
+    ICmpEqual,
+    ICmpNotEqual,
+    ICmpSignedLessThan,
+    ICmpSignedLessEqual,
+    ICmpSignedGreaterThan,
+    ICmpSignedGreaterEqual,
+    ICmpUnsignedLessThan,
+    ICmpUnsignedLessEqual,
+    ICmpUnsignedGreaterThan,
+    ICmpUnsignedGreaterEqual,
+
+    FCmpOrderedEqual,
+    FCmpOrderedNotEqual,
+    FCmpOrderedLessThan,
+    FCmpOrderedLessEqual,
+    FCmpOrderedGreaterThan,
+    FCmpOrderedGreaterEqual,
+    FCmpUnorderedEqual,
+    FCmpUnorderedNotEqual,
+    FCmpUnorderedLessThan,
+    FCmpUnorderedLessEqual,
+    FCmpUnorderedGreaterThan,
+    FCmpUnorderedGreaterEqual
+};
+static bool isCompareOp(MIROperand* operand, CompareOp cmpOp) {
+    auto op = static_cast<uint32_t>(operand->imm());
+    return op == static_cast<uint32_t>(cmpOp);
+}
 
 //! helper function to create a new MIRInstq
 
 uint32_t select_copy_opcode(MIROperand* dst, MIROperand* src);
 
-
 inline MIROperand* getHighBits(MIROperand* operand) {
     assert(isOperandReloc(operand));
-    return new MIROperand{ operand->getStorage(), OperandType::HighBits };
+    return new MIROperand{operand->getStorage(), OperandType::HighBits};
 }
 inline MIROperand* getLowBits(MIROperand* operand) {
     assert(isOperandReloc(operand));
-    return new MIROperand{ operand->getStorage(), OperandType::LowBits };
+    return new MIROperand{operand->getStorage(), OperandType::LowBits};
 }
 
 

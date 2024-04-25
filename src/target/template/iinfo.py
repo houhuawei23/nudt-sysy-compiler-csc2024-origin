@@ -53,14 +53,27 @@ def load_inst_info(file: str) -> Tuple[str, Dict, List]:
     # parse templates
     for template_name, template_info in templates.items():
         template_instances = template_info.get("instances", [])
-        for name in template_instances:
-            info = {
-                "name": name,
-                "format": copy.deepcopy(template_info["format"]),
-                "operands": copy.deepcopy(template_info["operands"]),
-            }
-            info["format"][0] = name
-            inst_info_dict[name] = info
+        # list
+        for instance in template_instances:
+            info = dict()
+            # instance can be str or dict
+            if isinstance(instance, str):
+                # if str, it is inst name
+                info["name"] = instance
+                info["format"] = copy.deepcopy(template_info["format"])
+                info["format"][0] = instance
+            elif isinstance(instance, dict):
+                # if dict, it is inst info
+                info["name"] = instance.get("name")
+                info["format"] = copy.deepcopy(template_info["format"])
+                info["format"][0] = instance.get("mnem", info["name"])
+                info["flag"] = instance.get("flag", [])
+            else:
+                print("Error: invalid instance info: {}".format(info))
+            
+            info["operands"] = copy.deepcopy(template_info["operands"])
+
+            inst_info_dict[info["name"]] = info
 
     # parse instances
     for name, info in instances.items():

@@ -12,7 +12,7 @@ enum GENERICInst {
 
     Jump,
     Branch,
-    Unreachable, /* not implemented yet */
+    Unreachable,
     Load,
     Store,
     Add,
@@ -26,8 +26,8 @@ enum GENERICInst {
     Shl,
     LShr,
     AShr,
-    SDiv, /* not implemented yet */
-    SRem, /* not implemented yet */
+    SDiv,
+    SRem,
     SMin,
     SMax,
     Neg,
@@ -36,11 +36,11 @@ enum GENERICInst {
     FSub,
     FMul,
     FDiv,
-    FNeg, /* not implemented yet */
-    FAbs, /* not implemented yet */
-    FFma, /* not implemented yet */
-    ICmp, /* not implemented yet */
-    FCmp, /* not implemented yet */
+    FNeg,
+    FAbs,
+    FFma,
+    ICmp,
+    FCmp,
     SExt,
     ZExt,
     Trunc,
@@ -50,15 +50,15 @@ enum GENERICInst {
     S2F,
     FCast,
     Copy,
-    Select, /* not implemented yet */
+    Select,
     LoadGlobalAddress,
     LoadImm,
     LoadStackObjectAddr,
-    CopyFromReg, /* not implemented yet */
-    CopyToReg,   /* not implemented yet */
+    CopyFromReg,
+    CopyToReg,
     LoadImmToReg,
-    LoadRegFromStack, /* not implemented yet */
-    StoreRegToStack,  /* not implemented yet */
+    LoadRegFromStack,
+    StoreRegToStack,
     Return,
 
     GENERICInstEnd

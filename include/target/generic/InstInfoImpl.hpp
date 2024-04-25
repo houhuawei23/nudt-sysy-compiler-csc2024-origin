@@ -22,7 +22,10 @@ class GENERICInstInfoJump final : public InstInfo {
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() override {
+        return InstFlagNone | InstFlagTerminator | InstFlagBranch |
+               InstFlagNoFallThrough;
+    }
 
     std::string_view name() override { return "GENERIC.Jump"; }
 
@@ -51,7 +54,9 @@ class GENERICInstInfoBranch final : public InstInfo {
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() override {
+        return InstFlagNone | InstFlagTerminator | InstFlagBranch;
+    }
 
     std::string_view name() override { return "GENERIC.Branch"; }
 
@@ -60,6 +65,30 @@ class GENERICInstInfoBranch final : public InstInfo {
             << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
             << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
             << mir::GENERIC::OperandDumper{inst.operand(2)};
+    }
+};
+
+class GENERICInstInfoUnreachable final : public InstInfo {
+   public:
+    GENERICInstInfoUnreachable() = default;
+
+    uint32_t operand_num() override { return 0; }
+
+    OperandFlag operand_flag(uint32_t idx) override {
+        switch (idx) {
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() override {
+        return InstFlagNone | InstFlagTerminator | InstFlagNoFallThrough;
+    }
+
+    std::string_view name() override { return "GENERIC.Unreachable"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "Unreachable";
     }
 };
 
@@ -82,7 +111,7 @@ class GENERICInstInfoLoad final : public InstInfo {
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() override { return InstFlagNone | InstFlagLoad; }
 
     std::string_view name() override { return "GENERIC.Load"; }
 
@@ -113,7 +142,7 @@ class GENERICInstInfoStore final : public InstInfo {
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() override { return InstFlagNone | InstFlagStore; }
 
     std::string_view name() override { return "GENERIC.Store"; }
 
@@ -144,7 +173,7 @@ class GENERICInstInfoAdd final : public InstInfo {
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() override { return InstFlagNone | InstFlagCommutative; }
 
     std::string_view name() override { return "GENERIC.Add"; }
 
@@ -206,7 +235,7 @@ class GENERICInstInfoMul final : public InstInfo {
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() override { return InstFlagNone | InstFlagCommutative; }
 
     std::string_view name() override { return "GENERIC.Mul"; }
 
@@ -299,7 +328,7 @@ class GENERICInstInfoAnd final : public InstInfo {
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() override { return InstFlagNone | InstFlagCommutative; }
 
     std::string_view name() override { return "GENERIC.And"; }
 
@@ -330,7 +359,7 @@ class GENERICInstInfoOr final : public InstInfo {
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() override { return InstFlagNone | InstFlagCommutative; }
 
     std::string_view name() override { return "GENERIC.Or"; }
 
@@ -361,7 +390,7 @@ class GENERICInstInfoXor final : public InstInfo {
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() override { return InstFlagNone | InstFlagCommutative; }
 
     std::string_view name() override { return "GENERIC.Xor"; }
 
@@ -466,6 +495,68 @@ class GENERICInstInfoAShr final : public InstInfo {
     }
 };
 
+class GENERICInstInfoSDiv final : public InstInfo {
+   public:
+    GENERICInstInfoSDiv() = default;
+
+    uint32_t operand_num() override { return 3; }
+
+    OperandFlag operand_flag(uint32_t idx) override {
+        switch (idx) {
+            case 0:
+                return OperandFlagDef;
+            case 1:
+                return OperandFlagUse;
+            case 2:
+                return OperandFlagUse;
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() override { return InstFlagNone; }
+
+    std::string_view name() override { return "GENERIC.SDiv"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "SDiv"
+            << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+            << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
+            << mir::GENERIC::OperandDumper{inst.operand(2)};
+    }
+};
+
+class GENERICInstInfoSRem final : public InstInfo {
+   public:
+    GENERICInstInfoSRem() = default;
+
+    uint32_t operand_num() override { return 3; }
+
+    OperandFlag operand_flag(uint32_t idx) override {
+        switch (idx) {
+            case 0:
+                return OperandFlagDef;
+            case 1:
+                return OperandFlagUse;
+            case 2:
+                return OperandFlagUse;
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() override { return InstFlagNone; }
+
+    std::string_view name() override { return "GENERIC.SRem"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "SRem"
+            << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+            << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
+            << mir::GENERIC::OperandDumper{inst.operand(2)};
+    }
+};
+
 class GENERICInstInfoSMin final : public InstInfo {
    public:
     GENERICInstInfoSMin() = default;
@@ -485,7 +576,7 @@ class GENERICInstInfoSMin final : public InstInfo {
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() override { return InstFlagNone | InstFlagCommutative; }
 
     std::string_view name() override { return "GENERIC.SMin"; }
 
@@ -516,7 +607,7 @@ class GENERICInstInfoSMax final : public InstInfo {
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() override { return InstFlagNone | InstFlagCommutative; }
 
     std::string_view name() override { return "GENERIC.SMax"; }
 
@@ -603,7 +694,7 @@ class GENERICInstInfoFAdd final : public InstInfo {
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() override { return InstFlagNone | InstFlagCommutative; }
 
     std::string_view name() override { return "GENERIC.FAdd"; }
 
@@ -665,7 +756,7 @@ class GENERICInstInfoFMul final : public InstInfo {
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() override { return InstFlagNone | InstFlagCommutative; }
 
     std::string_view name() override { return "GENERIC.FMul"; }
 
@@ -705,6 +796,164 @@ class GENERICInstInfoFDiv final : public InstInfo {
             << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
             << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
             << mir::GENERIC::OperandDumper{inst.operand(2)};
+    }
+};
+
+class GENERICInstInfoFNeg final : public InstInfo {
+   public:
+    GENERICInstInfoFNeg() = default;
+
+    uint32_t operand_num() override { return 2; }
+
+    OperandFlag operand_flag(uint32_t idx) override {
+        switch (idx) {
+            case 0:
+                return OperandFlagDef;
+            case 1:
+                return OperandFlagUse;
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() override { return InstFlagNone; }
+
+    std::string_view name() override { return "GENERIC.FNeg"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "FNeg"
+            << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+            << mir::GENERIC::OperandDumper{inst.operand(1)};
+    }
+};
+
+class GENERICInstInfoFAbs final : public InstInfo {
+   public:
+    GENERICInstInfoFAbs() = default;
+
+    uint32_t operand_num() override { return 2; }
+
+    OperandFlag operand_flag(uint32_t idx) override {
+        switch (idx) {
+            case 0:
+                return OperandFlagDef;
+            case 1:
+                return OperandFlagUse;
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() override { return InstFlagNone; }
+
+    std::string_view name() override { return "GENERIC.FAbs"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "FAbs"
+            << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+            << mir::GENERIC::OperandDumper{inst.operand(1)};
+    }
+};
+
+class GENERICInstInfoFFma final : public InstInfo {
+   public:
+    GENERICInstInfoFFma() = default;
+
+    uint32_t operand_num() override { return 4; }
+
+    OperandFlag operand_flag(uint32_t idx) override {
+        switch (idx) {
+            case 0:
+                return OperandFlagDef;
+            case 1:
+                return OperandFlagUse;
+            case 2:
+                return OperandFlagUse;
+            case 3:
+                return OperandFlagUse;
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() override { return InstFlagNone; }
+
+    std::string_view name() override { return "GENERIC.FFma"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "FFma"
+            << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+            << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
+            << mir::GENERIC::OperandDumper{inst.operand(2)} << ", "
+            << mir::GENERIC::OperandDumper{inst.operand(3)};
+    }
+};
+
+class GENERICInstInfoICmp final : public InstInfo {
+   public:
+    GENERICInstInfoICmp() = default;
+
+    uint32_t operand_num() override { return 4; }
+
+    OperandFlag operand_flag(uint32_t idx) override {
+        switch (idx) {
+            case 0:
+                return OperandFlagDef;
+            case 1:
+                return OperandFlagUse;
+            case 2:
+                return OperandFlagUse;
+            case 3:
+                return OperandFlagMetadata;
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() override { return InstFlagNone; }
+
+    std::string_view name() override { return "GENERIC.ICmp"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "ICmp"
+            << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+            << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
+            << mir::GENERIC::OperandDumper{inst.operand(2)} << ", "
+            << mir::GENERIC::OperandDumper{inst.operand(3)};
+    }
+};
+
+class GENERICInstInfoFCmp final : public InstInfo {
+   public:
+    GENERICInstInfoFCmp() = default;
+
+    uint32_t operand_num() override { return 4; }
+
+    OperandFlag operand_flag(uint32_t idx) override {
+        switch (idx) {
+            case 0:
+                return OperandFlagDef;
+            case 1:
+                return OperandFlagUse;
+            case 2:
+                return OperandFlagUse;
+            case 3:
+                return OperandFlagMetadata;
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() override { return InstFlagNone; }
+
+    std::string_view name() override { return "GENERIC.FCmp"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "FCmp"
+            << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+            << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
+            << mir::GENERIC::OperandDumper{inst.operand(2)} << ", "
+            << mir::GENERIC::OperandDumper{inst.operand(3)};
     }
 };
 
@@ -908,14 +1157,12 @@ class GENERICInstInfoFCast final : public InstInfo {
    public:
     GENERICInstInfoFCast() = default;
 
-    uint32_t operand_num() override { return 2; }
+    uint32_t operand_num() override { return 1; }
 
     OperandFlag operand_flag(uint32_t idx) override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
-            case 1:
-                return OperandFlagUse;
             default:
                 assert(false && "Invalid operand index");
         }
@@ -949,7 +1196,7 @@ class GENERICInstInfoCopy final : public InstInfo {
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() override { return InstFlagNone | InstFlagRegCopy; }
 
     std::string_view name() override { return "GENERIC.Copy"; }
 
@@ -957,6 +1204,40 @@ class GENERICInstInfoCopy final : public InstInfo {
         out << "Copy"
             << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
             << mir::GENERIC::OperandDumper{inst.operand(1)};
+    }
+};
+
+class GENERICInstInfoSelect final : public InstInfo {
+   public:
+    GENERICInstInfoSelect() = default;
+
+    uint32_t operand_num() override { return 4; }
+
+    OperandFlag operand_flag(uint32_t idx) override {
+        switch (idx) {
+            case 0:
+                return OperandFlagDef;
+            case 1:
+                return OperandFlagUse;
+            case 2:
+                return OperandFlagUse;
+            case 3:
+                return OperandFlagUse;
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() override { return InstFlagNone; }
+
+    std::string_view name() override { return "GENERIC.Select"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "Select"
+            << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+            << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
+            << mir::GENERIC::OperandDumper{inst.operand(2)} << ", "
+            << mir::GENERIC::OperandDumper{inst.operand(3)};
     }
 };
 
@@ -977,7 +1258,9 @@ class GENERICInstInfoLoadGlobalAddress final : public InstInfo {
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() override {
+        return InstFlagNone | InstFlagLoadConstant;
+    }
 
     std::string_view name() override { return "GENERIC.LoadGlobalAddress"; }
 
@@ -1033,12 +1316,72 @@ class GENERICInstInfoLoadStackObjectAddr final : public InstInfo {
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() override {
+        return InstFlagNone | InstFlagLoadConstant;
+    }
 
     std::string_view name() override { return "GENERIC.LoadStackObjectAddr"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "LoadStackObjectAddr"
+            << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+            << mir::GENERIC::OperandDumper{inst.operand(1)};
+    }
+};
+
+class GENERICInstInfoCopyFromReg final : public InstInfo {
+   public:
+    GENERICInstInfoCopyFromReg() = default;
+
+    uint32_t operand_num() override { return 2; }
+
+    OperandFlag operand_flag(uint32_t idx) override {
+        switch (idx) {
+            case 0:
+                return OperandFlagDef;
+            case 1:
+                return OperandFlagUse;
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() override { return InstFlagNone | InstFlagRegCopy; }
+
+    std::string_view name() override { return "GENERIC.CopyFromReg"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "CopyFromReg"
+            << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+            << mir::GENERIC::OperandDumper{inst.operand(1)};
+    }
+};
+
+class GENERICInstInfoCopyToReg final : public InstInfo {
+   public:
+    GENERICInstInfoCopyToReg() = default;
+
+    uint32_t operand_num() override { return 2; }
+
+    OperandFlag operand_flag(uint32_t idx) override {
+        switch (idx) {
+            case 0:
+                return OperandFlagDef;
+            case 1:
+                return OperandFlagUse;
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() override {
+        return InstFlagNone | InstFlagRegCopy | InstFlagRegDef;
+    }
+
+    std::string_view name() override { return "GENERIC.CopyToReg"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "CopyToReg"
             << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
             << mir::GENERIC::OperandDumper{inst.operand(1)};
     }
@@ -1061,12 +1404,68 @@ class GENERICInstInfoLoadImmToReg final : public InstInfo {
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() override { return InstFlagNone | InstFlagRegDef; }
 
     std::string_view name() override { return "GENERIC.LoadImmToReg"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "LoadImmToReg"
+            << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+            << mir::GENERIC::OperandDumper{inst.operand(1)};
+    }
+};
+
+class GENERICInstInfoLoadRegFromStack final : public InstInfo {
+   public:
+    GENERICInstInfoLoadRegFromStack() = default;
+
+    uint32_t operand_num() override { return 2; }
+
+    OperandFlag operand_flag(uint32_t idx) override {
+        switch (idx) {
+            case 0:
+                return OperandFlagDef;
+            case 1:
+                return OperandFlagMetadata;
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() override { return InstFlagNone | InstFlagLoad; }
+
+    std::string_view name() override { return "GENERIC.LoadRegFromStack"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "LoadRegFromStack"
+            << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+            << mir::GENERIC::OperandDumper{inst.operand(1)};
+    }
+};
+
+class GENERICInstInfoStoreRegToStack final : public InstInfo {
+   public:
+    GENERICInstInfoStoreRegToStack() = default;
+
+    uint32_t operand_num() override { return 2; }
+
+    OperandFlag operand_flag(uint32_t idx) override {
+        switch (idx) {
+            case 0:
+                return OperandFlagMetadata;
+            case 1:
+                return OperandFlagUse;
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() override { return InstFlagNone | InstFlagStore; }
+
+    std::string_view name() override { return "GENERIC.StoreRegToStack"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "StoreRegToStack"
             << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
             << mir::GENERIC::OperandDumper{inst.operand(1)};
     }
@@ -1097,6 +1496,7 @@ class GENERICInstInfoReturn final : public InstInfo {
 class GENERICInstInfo final : public TargetInstInfo {
     GENERICInstInfoJump _instinfoJump;
     GENERICInstInfoBranch _instinfoBranch;
+    GENERICInstInfoUnreachable _instinfoUnreachable;
     GENERICInstInfoLoad _instinfoLoad;
     GENERICInstInfoStore _instinfoStore;
     GENERICInstInfoAdd _instinfoAdd;
@@ -1110,6 +1510,8 @@ class GENERICInstInfo final : public TargetInstInfo {
     GENERICInstInfoShl _instinfoShl;
     GENERICInstInfoLShr _instinfoLShr;
     GENERICInstInfoAShr _instinfoAShr;
+    GENERICInstInfoSDiv _instinfoSDiv;
+    GENERICInstInfoSRem _instinfoSRem;
     GENERICInstInfoSMin _instinfoSMin;
     GENERICInstInfoSMax _instinfoSMax;
     GENERICInstInfoNeg _instinfoNeg;
@@ -1118,6 +1520,11 @@ class GENERICInstInfo final : public TargetInstInfo {
     GENERICInstInfoFSub _instinfoFSub;
     GENERICInstInfoFMul _instinfoFMul;
     GENERICInstInfoFDiv _instinfoFDiv;
+    GENERICInstInfoFNeg _instinfoFNeg;
+    GENERICInstInfoFAbs _instinfoFAbs;
+    GENERICInstInfoFFma _instinfoFFma;
+    GENERICInstInfoICmp _instinfoICmp;
+    GENERICInstInfoFCmp _instinfoFCmp;
     GENERICInstInfoSExt _instinfoSExt;
     GENERICInstInfoZExt _instinfoZExt;
     GENERICInstInfoTrunc _instinfoTrunc;
@@ -1127,10 +1534,15 @@ class GENERICInstInfo final : public TargetInstInfo {
     GENERICInstInfoS2F _instinfoS2F;
     GENERICInstInfoFCast _instinfoFCast;
     GENERICInstInfoCopy _instinfoCopy;
+    GENERICInstInfoSelect _instinfoSelect;
     GENERICInstInfoLoadGlobalAddress _instinfoLoadGlobalAddress;
     GENERICInstInfoLoadImm _instinfoLoadImm;
     GENERICInstInfoLoadStackObjectAddr _instinfoLoadStackObjectAddr;
+    GENERICInstInfoCopyFromReg _instinfoCopyFromReg;
+    GENERICInstInfoCopyToReg _instinfoCopyToReg;
     GENERICInstInfoLoadImmToReg _instinfoLoadImmToReg;
+    GENERICInstInfoLoadRegFromStack _instinfoLoadRegFromStack;
+    GENERICInstInfoStoreRegToStack _instinfoStoreRegToStack;
     GENERICInstInfoReturn _instinfoReturn;
 
    public:
@@ -1142,7 +1554,7 @@ class GENERICInstInfo final : public TargetInstInfo {
             case GENERICInst::Branch:
                 return _instinfoBranch;
             case GENERICInst::Unreachable:
-                break; /* not supported */
+                return _instinfoUnreachable;
             case GENERICInst::Load:
                 return _instinfoLoad;
             case GENERICInst::Store:
@@ -1170,9 +1582,9 @@ class GENERICInstInfo final : public TargetInstInfo {
             case GENERICInst::AShr:
                 return _instinfoAShr;
             case GENERICInst::SDiv:
-                break; /* not supported */
+                return _instinfoSDiv;
             case GENERICInst::SRem:
-                break; /* not supported */
+                return _instinfoSRem;
             case GENERICInst::SMin:
                 return _instinfoSMin;
             case GENERICInst::SMax:
@@ -1190,15 +1602,15 @@ class GENERICInstInfo final : public TargetInstInfo {
             case GENERICInst::FDiv:
                 return _instinfoFDiv;
             case GENERICInst::FNeg:
-                break; /* not supported */
+                return _instinfoFNeg;
             case GENERICInst::FAbs:
-                break; /* not supported */
+                return _instinfoFAbs;
             case GENERICInst::FFma:
-                break; /* not supported */
+                return _instinfoFFma;
             case GENERICInst::ICmp:
-                break; /* not supported */
+                return _instinfoICmp;
             case GENERICInst::FCmp:
-                break; /* not supported */
+                return _instinfoFCmp;
             case GENERICInst::SExt:
                 return _instinfoSExt;
             case GENERICInst::ZExt:
@@ -1218,7 +1630,7 @@ class GENERICInstInfo final : public TargetInstInfo {
             case GENERICInst::Copy:
                 return _instinfoCopy;
             case GENERICInst::Select:
-                break; /* not supported */
+                return _instinfoSelect;
             case GENERICInst::LoadGlobalAddress:
                 return _instinfoLoadGlobalAddress;
             case GENERICInst::LoadImm:
@@ -1226,15 +1638,15 @@ class GENERICInstInfo final : public TargetInstInfo {
             case GENERICInst::LoadStackObjectAddr:
                 return _instinfoLoadStackObjectAddr;
             case GENERICInst::CopyFromReg:
-                break; /* not supported */
+                return _instinfoCopyFromReg;
             case GENERICInst::CopyToReg:
-                break; /* not supported */
+                return _instinfoCopyToReg;
             case GENERICInst::LoadImmToReg:
                 return _instinfoLoadImmToReg;
             case GENERICInst::LoadRegFromStack:
-                break; /* not supported */
+                return _instinfoLoadRegFromStack;
             case GENERICInst::StoreRegToStack:
-                break; /* not supported */
+                return _instinfoStoreRegToStack;
             case GENERICInst::Return:
                 return _instinfoReturn;
             default:
