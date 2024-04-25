@@ -509,6 +509,7 @@ class PhiInst : public Instruction {
     }
     Value* getval(size_t k) { return operand(2*k); }
     Value* getbb(size_t k) { return operand(2*k+1); }
+    size_t getsize(){ return size;}
     void addIncoming(Value* val, BasicBlock* bb) {
         add_operand(val);
         add_operand(bb);
