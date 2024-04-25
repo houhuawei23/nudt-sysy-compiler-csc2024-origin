@@ -54,11 +54,11 @@ class RISCVFrameInfo : public TargetFrameInfo {
                 auto retval = ir_inst->return_value();
                 if (retval->type()->is_float()) {
                     lowering_ctx.emit_copy(
-                        MIROperand::as_preg(RISCV::F10, OperandType::Float32),
+                        MIROperand::as_isareg(RISCV::F10, OperandType::Float32),
                         lowering_ctx.map2operand(retval));
                 } else if (retval->type()->is_int()) {
                     lowering_ctx.emit_copy(
-                        MIROperand::as_preg(RISCV::X10, OperandType::Int64),
+                        MIROperand::as_isareg(RISCV::X10, OperandType::Int64),
                         lowering_ctx.map2operand(retval));
                 }
             }
@@ -142,13 +142,6 @@ class RISCVTarget : public Target {
         }
 
     // emit_assembly
-    void emit_assembly(std::ostream& out, MIRModule& module) override {
-        std::cerr << "Not Impl emit_assembly" << std::endl;
-        auto& target = *this;
-        CodeGenContext codegen_ctx{
-            target, target.get_datalayout(), target.get_target_inst_info(),
-            target.get_target_frame_info(), MIRFlags{false, false}};
-        dump_assembly(out, module, codegen_ctx);
-    }
+    void emit_assembly(std::ostream& out, MIRModule& module) override;
 };
 }  // namespace mir

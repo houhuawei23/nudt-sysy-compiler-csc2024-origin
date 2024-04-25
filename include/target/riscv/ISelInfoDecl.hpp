@@ -5,6 +5,7 @@
 
 RISCV_NAMESPACE_BEGIN
 
-TargetISelInfo& getRISCVISelInfo();
+static TargetISelInfo &getRISCVISelInfo();
+
 
 RISCV_NAMESPACE_END

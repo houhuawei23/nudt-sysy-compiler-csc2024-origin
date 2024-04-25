@@ -232,7 +232,7 @@ class MIROperand {
             return new MIROperand(static_cast<intmax_t>(val), type);
         }
         
-        static MIROperand* as_preg(uint32_t reg, OperandType type) {  // physical register
+        static MIROperand* as_isareg(uint32_t reg, OperandType type) {  // physical register
             auto reg_obj = new MIRRegister(reg);
             auto operand = new MIROperand(reg_obj, type);
             return operand;

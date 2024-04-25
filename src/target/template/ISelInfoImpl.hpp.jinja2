@@ -132,7 +132,7 @@ public:
 
 
 
-TargetISelInfo& get{{target_name}}ISelInfo() {
+static TargetISelInfo& get{{target_name}}ISelInfo() {
     static {{target_name}}ISelInfo iselInfo;
     return iselInfo;
 }

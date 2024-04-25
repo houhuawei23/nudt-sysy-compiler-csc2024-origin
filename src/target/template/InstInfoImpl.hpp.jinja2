@@ -93,7 +93,7 @@ public:
     }
 };
 
-TargetInstInfo& get{{target_name}}InstInfo() {
+static TargetInstInfo& get{{target_name}}InstInfo() {
     static {{target_name}}InstInfo instance;
     return instance;
 }

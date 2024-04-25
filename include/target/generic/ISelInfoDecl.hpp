@@ -5,6 +5,6 @@
 
 GENERIC_NAMESPACE_BEGIN
 
-TargetISelInfo& getGENERICISelInfo();
+static TargetISelInfo &getGENERICISelInfo();
 
 GENERIC_NAMESPACE_END

@@ -1,5 +1,6 @@
 #pragma once
 #include "mir/mir.hpp"
+#include "mir/instinfo.hpp"
 
 namespace mir::RISCV {
 /*
@@ -27,10 +28,10 @@ enum RISCVRegister : uint32_t {
 };
 
 // return address
-static auto ra = MIROperand::as_preg(RISCVRegister::X1, OperandType::Int64);
+static auto ra = MIROperand::as_isareg(RISCVRegister::X1, OperandType::Int64);
 
 // stack pointer
-static auto sp = MIROperand::as_preg(RISCVRegister::X2, OperandType::Int64);
+static auto sp = MIROperand::as_isareg(RISCVRegister::X2, OperandType::Int64);
 
 // utils function
 constexpr bool isOperandGR(MIROperand& operand) {
