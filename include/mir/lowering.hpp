@@ -22,9 +22,12 @@ class LoweringContext {
         std::unordered_map<ir::GlobalVariable*, MIRGlobalObject*> gvar_map;
         std::unordered_map<ir::BasicBlock*, MIRBlock*> _block_map;
 
-    uint32_t _idx = 0;
-    // pointer type for target platform
-    OperandType _ptr_type = OperandType::Int64;
+    public:
+        uint32_t _idx_label = 0;
+        uint32_t _idx = 0;
+
+        // pointer type for target platform
+        OperandType _ptr_type = OperandType::Int64;
 
     public:  // code gen context
         CodeGenContext* _code_gen_ctx = nullptr;
@@ -33,7 +36,9 @@ class LoweringContext {
         LoweringContext(MIRModule& mir_module, Target& target)
             : _mir_module(mir_module), _target(target) {}
 
-    uint32_t next_id() { return ++_idx; }
+    public:  // virtual id
+        uint32_t next_id() { return ++_idx; }
+        uint32_t next_id_label() { return ++_idx_label; }
 
     // void set_mir_module(MIRModule& mir_module) { _mir_module = mir_module; }
 
@@ -56,9 +61,7 @@ class LoweringContext {
             return MIROperand::as_vreg(next_id(), type);
         }
 
-    void emit_inst(MIRInst* inst) {
-        _mir_block->insts().emplace_back(inst);
-    }
+        void emit_inst(MIRInst* inst) { _mir_block->insts().emplace_back(inst); }
 
     // emit copy generic inst
     void emit_copy(MIROperand* dst, MIROperand* src) {
@@ -69,22 +72,15 @@ class LoweringContext {
         emit_inst(inst);
     }
 
-    // ir_val -> mir_operand
-    void add_valmap(ir::Value* ir_val, MIROperand* mir_operand) {
-        if (_val_map.count(ir_val)) {
-            assert(false && "value already mapped");
+    public:  // ir_val -> mir_operand
+        void add_valmap(ir::Value* ir_val, MIROperand* mir_operand) {
+            if (_val_map.count(ir_val)) assert(false && "value already mapped");
+            _val_map.emplace(ir_val, mir_operand);
         }
-        _val_map.emplace(ir_val, mir_operand);
-    }
 
     MIROperand* map2operand(ir::Value* ir_val) {
         auto iter = _val_map.find(ir_val);
-        // ptr create by alloca inst has already been
-        // stored as stackobj, can find in _val_map
-        // load ret value also has been stored
-        if (iter != _val_map.end()) {
-            return iter->second;
-        }
+        if (iter != _val_map.end()) return iter->second;
         // gen the operand
         if (auto gvar = dyn_cast<ir::GlobalVariable>(ir_val)) {
             auto ptr = new_vreg(_ptr_type);
@@ -122,26 +118,30 @@ class LoweringContext {
         assert(false && "block not found");
     }
     
-    static OperandType get_optype(ir::Type* type) {
-        if (type->is_int()) {
-            switch (type->btype()) {
-                case ir::INT1:
-                    return OperandType::Bool;
-                case ir::INT32:
-                    return OperandType::Int32;
+    public:  // utils function
+        static OperandType get_optype(ir::Type* type) {
+            if (type->is_int()) {
+                switch (type->btype()) {
+                    case ir::INT1:
+                        return OperandType::Bool;
+                    case ir::INT32:
+                        return OperandType::Int32;
+                    default:
+                        assert(false && "unsupported int type");
+                }
+            } else if (type->is_float()) {
+                switch (type->btype()) {
+                case ir::FLOAT:
+                    return OperandType::Float32;
+                    break;
                 default:
-                    assert(false && "unsupported int type");
+                    assert(false && "unsupported float type");
+                }
             }
-        }
 
-        if (type->is_float()) {
+            return OperandType::Special;
         }
-        assert(false && "unsupported type");
-        return OperandType::Special;
-    }
 };
 
-std::unique_ptr<MIRModule> create_mir_module(ir::Module& ir_module,
-                                             Target& target);
-
+std::unique_ptr<MIRModule> create_mir_module(ir::Module& ir_module, Target& target);
 }  // namespace mir

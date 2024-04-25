@@ -88,40 +88,14 @@ class GENERICTarget final : public Target {
     
     public:  // get
         DataLayout& get_datalayout() override { return _datalayout; }
-        TargetInstInfo& get_target_inst_info() override { return GENERIC::getGENERICInstInfo(); }
-        TargetISelInfo& get_target_isel_info() override {
-            std::cerr << "Not Impl get_isel_info" << std::endl;
-            // assert(false);
-            return GENERIC::getGENERICISelInfo();
-        }
-        TargetRegisterInfo& get_register_info() override {
-            std::cerr << "Not Impl get_register_info" << std::endl;
-            assert(false);
-        }
         TargetFrameInfo& get_target_frame_info() override { return _frameinfo; }
+        
+        TargetInstInfo& get_target_inst_info() override { return GENERIC::getGENERICInstInfo(); }
+        TargetISelInfo& get_target_isel_info() override { return GENERIC::getGENERICISelInfo(); }
+        
+        TargetRegisterInfo& get_register_info() override { assert(false); }
 
     public:  // emit_assembly
         void emit_assembly(std::ostream& out, MIRModule& module) override;
 };
-
-class GENERICRegisterInfo : public TargetRegisterInfo {
-    uint32_t get_alloca_class_cnt() {
-        std::cerr << "Not Impl get_alloca_class_cnt" << std::endl;
-        return 0;
-    }
-    uint32_t get_alloca_class(OperandType type) {
-        std::cerr << "Not Impl get_alloca_class" << std::endl;
-        return 0;
-    }
-
-    bool is_legal_isa_reg_operand(MIROperand& op) {
-        std::cerr << "Not Impl is_legal_isa_reg_operand" << std::endl;
-        return false;
-    }
-    bool is_zero_reg() {
-        std::cerr << "Not Impl is_zero_reg" << std::endl;
-        return false;
-    }
-};
-
 }  // namespace mir

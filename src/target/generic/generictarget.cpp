@@ -9,7 +9,6 @@
 
 namespace mir {
 void GENERICTarget::emit_assembly(std::ostream& out, MIRModule& module) {
-
     auto& target = *this;
     CodeGenContext codegen_ctx {
         target,
@@ -19,6 +18,5 @@ void GENERICTarget::emit_assembly(std::ostream& out, MIRModule& module) {
         MIRFlags{false, false}
     };
     dump_assembly(out, module, codegen_ctx);
-
 }
 }  // namespace mir

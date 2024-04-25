@@ -5,6 +5,9 @@
 
 #include "mir/utils.hpp"
 #include "mir/fastAllocator.hpp"
+#include "mir/linearAllocator.hpp"
+
+#include "target/riscv/riscvtarget.hpp"
 namespace mir {
 //! declare
 void create_mir_module(ir::Module& ir_module, LoweringContext& ctx);
@@ -84,43 +87,40 @@ void create_mir_module(ir::Module& ir_module, LoweringContext& lowering_ctx) {
     CodeGenContext codegen_ctx{target, target.get_datalayout(),
                                target.get_target_inst_info(),
                                target.get_target_frame_info(), MIRFlags{}};
-    // target.get_target_isel_info(),  //! segmentation fault, not implemented
-    // target.get_register_info(),
     codegen_ctx.iselInfo = &target.get_target_isel_info();
-    // codegen_ctx.registerInfo = &target.get_register_info();
     lowering_ctx.set_code_gen_ctx(&codegen_ctx);
 
-    //! lower all functions
+    //! 4. lower all functions
     for (auto& ir_func : ir_module.funcs()) {  // for all funcs
         auto mir_func = lowering_ctx.func_map[ir_func];
-        if (ir_func->blocks().empty()) {
-            continue;
-        }
+        if (ir_func->blocks().empty()) continue;
 
-        // 1: lower function body to generic MIR
+        /* 4.1: lower function body to generic MIR */
         create_mir_function(ir_func, mir_func, lowering_ctx);
 
-        // 2: instruction selection
+        /* 4.2: instruction selection */
         ISelContext isel_ctx(codegen_ctx);
         isel_ctx.run_isel(mir_func);
-        /* register coalescing */
+        
+        /* 4.3 register coalescing */
 
-        /* peephole optimization */
+        /* 4.4 peephole optimization */
 
-        /* pre-RA legalization */
+        /* 4.5 pre-RA legalization */
 
-        /* pre-RA scheduling, minimize register usage */
+        /* 4.6 pre-RA scheduling, minimize register usage */
 
-        /* register allocation */
+        /* 4.7 register allocation */
+        codegen_ctx.registerInfo = new RISCVRegisterInfo();
         if (codegen_ctx.registerInfo) {
-            fastAllocator(*mir_func, codegen_ctx);
+            linearAllocator(*mir_func, codegen_ctx);
         }
 
         /* stack allocation */
         // allocateStackObjects(*mir_func, codegen_ctx);
         /* post-RA scheduling, minimize cycles */
 
-        /* post legalization */
+        /* 4.10 post legalization */
 
         /* verify */
     }
@@ -137,22 +137,21 @@ MIRFunction* create_mir_function(ir::Function* ir_func,
     /* range */
     /* dom */
 
-    // map from ir to mir
+    //! 1. map from ir to mir
     auto& block_map = lowering_ctx._block_map;
     std::unordered_map<ir::Value*, MIROperand*> storage_map;
 
     auto& target = lowering_ctx._target;
     auto& datalayout = target.get_datalayout();
 
-    // map all blocks
-    for (auto ir_block : ir_func->blocks()) {  // dom.blocks()?
+    for (auto ir_block : ir_func->blocks()) {
         mir_func->blocks().push_back(std::make_unique<MIRBlock>(
             ir_block, mir_func,
-            "label" + std::to_string(lowering_ctx.next_id())));
+            "label" + std::to_string(lowering_ctx.next_id_label())));
         block_map.emplace(ir_block, mir_func->blocks().back().get());
     }
 
-    //! emitPrologue for function
+    //! 2. emitPrologue for function
     {
         for (auto ir_arg : ir_func->args()) {  // assign vreg to arg
             auto vreg = lowering_ctx.new_vreg(ir_arg->type());
@@ -164,12 +163,11 @@ MIRFunction* create_mir_function(ir::Function* ir_func,
         codegen_ctx->frameInfo.emit_prologue(mir_func, lowering_ctx);
     }
 
-    //! process alloca, new stack object for each alloca
+    //! 3. process alloca, new stack object for each alloca
     lowering_ctx.set_mir_block(block_map.at(ir_func->entry()));  // entry
-    for (auto& ir_inst : ir_func->entry()->insts()) {
-        // all alloca in entry
+    for (auto& ir_inst : ir_func->entry()->insts()) {  // note: all alloca in entry
         if (ir_inst->scid() != ir::Value::vALLOCA) continue;
-        // else: alloca inst
+
         auto pointee_type = dyn_cast<ir::PointerType>(ir_inst->type())->base_type();
         uint32_t align = 4;  // TODO: align, need bind to ir object
         auto storage = mir_func->add_stack_obj(
@@ -190,15 +188,12 @@ MIRFunction* create_mir_function(ir::Function* ir_func,
         lowering_ctx.add_valmap(ir_inst, addr);
     }
 
-    // lowering blocks
+    //! lowering blocks
     for (auto ir_block : ir_func->blocks()) {
         auto mir_block = block_map[ir_block];
-        // set current block
         lowering_ctx.set_mir_block(mir_block);
         for (auto ir_inst : ir_block->insts()) {
-            // lowering inst
-            if (ir_inst->scid() == ir::Value::vALLOCA)
-                continue;  // jump alloca
+            if (ir_inst->scid() == ir::Value::vALLOCA) continue;
             create_mir_inst(ir_inst, lowering_ctx);
         }
     }
@@ -221,20 +216,6 @@ void lower(ir::ReturnInst* ir_inst, LoweringContext& ctx);
 void lower(ir::BranchInst* ir_inst, LoweringContext& ctx);
 
 MIRInst* create_mir_inst(ir::Instruction* ir_inst, LoweringContext& ctx) {
-    // auto scid = ir_inst->scid();
-    // if (scid > ir::Value::vBINARY_BEGIN and scid < ir::Value::vBINARY_END) {
-    //     lower(dyn_cast<ir::BinaryInst>(ir_inst), ctx);
-    // } else if (scid > ir::Value::vUNARY_BEGIN and scid <
-    // ir::Value::vUNARY_END) {
-    //     lower(dyn_cast<ir::UnaryInst>(ir_inst), ctx);
-    // } else if (scid > ir::Value::vICMP_BEGIN and scid < ir::Value::vICMP_END)
-    // {
-    //     lower(dyn_cast<ir::ICmpInst>(ir_inst), ctx);
-    // } else if (scid > ir::Value::vFCMP_BEGIN and scid < ir::Value::vFCMP_END)
-    // {
-    //     lower(dyn_cast<ir::FCmpInst>(ir_inst), ctx);
-    // }
-
     switch (ir_inst->scid()) {
         case ir::Value::vFNEG:
         case ir::Value::vTRUNC:
@@ -353,8 +334,6 @@ void lower(ir::BinaryInst* ir_inst, LoweringContext& ctx) {
                 return InstURem;
             case ir::Value::vSREM:
                 return InstSRem;
-            // case ir::Value::vFREM:
-            //     return InstFRem;
             default:
                 assert(false && "not supported binary inst");
         }
@@ -370,17 +349,14 @@ void lower(ir::BinaryInst* ir_inst, LoweringContext& ctx) {
 }
 
 //! BranchInst
-void emit_branch(ir::BasicBlock* srcblock,
-                 ir::BasicBlock* dstblock,
-                 LoweringContext& lctx);
+void emit_branch(ir::BasicBlock* srcblock, ir::BasicBlock* dstblock, LoweringContext& lctx);
 
 void lower(ir::BranchInst* ir_inst, LoweringContext& ctx) {
     auto src_block = ir_inst->parent();
 
     if (ir_inst->is_cond()) {
         // TODO: conditional branch
-    } else {
-        // unconditional branch
+    } else {  // unconditional branch
         auto dst_block = ir_inst->dest();
         emit_branch(src_block, dst_block, ctx);
     }

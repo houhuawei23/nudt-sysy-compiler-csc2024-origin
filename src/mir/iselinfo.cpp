@@ -190,7 +190,7 @@ uint32_t select_copy_opcode(MIROperand* dst, MIROperand* src) {
     if (src->is_reg() && isISAReg(src->reg())) {
         return InstCopyFromReg;
     }
-    assert(isOperandVReg(src) and isOperandVReg(dst));
+    assert(isOperandVRegORISAReg(src) and isOperandVRegORISAReg(dst));
     return InstCopy;
 }
 

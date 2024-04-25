@@ -19,7 +19,7 @@ class ISelContext {
 
     std::unordered_map<MIROperand*, uint32_t> _use_cnt;
 
-   public:
+    public:
     ISelContext(CodeGenContext& codegen_ctx) : _codegen_ctx(codegen_ctx) {}
     void run_isel(MIRFunction* func);
     bool has_one_use(MIROperand* op);

@@ -1,5 +1,7 @@
 #pragma once
-#include "mir/allocator.hpp"
+#include "mir/mir.hpp"
+
+#include <unordered_set>
 
 namespace mir {
 static void fastAllocator(MIRFunction& mfunc, CodeGenContext& ctx) {

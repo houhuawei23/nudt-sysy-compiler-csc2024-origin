@@ -13,12 +13,6 @@ namespace mir {
  *      存储目标架构 (RISC-V OR ARM)相关信息
  */
 class Target {
-    // getDataLayout
-    // getScheduleModel
-    // getISelInfo
-    // getFrameInfo
-    // getRegisterInfo
-    // emitAssembly
     public:
         virtual ~Target() = default;
     
@@ -48,12 +42,14 @@ struct MIRFlags final {
  */
 struct CodeGenContext final {
     Target& target;
-    //  TargetScheduleModel& scheduleModel;
     DataLayout& dataLayout;
     TargetInstInfo& instInfo;
     TargetFrameInfo& frameInfo;
+
     MIRFlags flags;
+    
     TargetISelInfo* iselInfo;
+    
     TargetRegisterInfo* registerInfo;
 
     uint32_t idx = 0;

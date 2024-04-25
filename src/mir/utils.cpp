@@ -16,7 +16,7 @@ static const std::unordered_map<DataSection, std::string_view>
 };
 
 void dump_assembly(std::ostream& os, MIRModule& module, CodeGenContext& ctx) {
-    /* data section */
+    /* 1: data section */
     os << ".data\n";
 
     auto select_data_section = [](MIRRelocable* reloc) {
@@ -26,7 +26,6 @@ void dump_assembly(std::ostream& os, MIRModule& module, CodeGenContext& ctx) {
         if (auto zero = dynamic_cast<MIRZeroStorage*>(reloc)) {
             return DataSection::Bss;
         }
-        // else jumptable
         assert(false && "Unsupported data section");
     };
 
@@ -47,17 +46,14 @@ void dump_assembly(std::ostream& os, MIRModule& module, CodeGenContext& ctx) {
         }
     }
 
-    /* text section */
+    /* 2: text section */
     os << ".text\n";
 
     for (auto& func : module.functions()) {
-        if (func->blocks().empty()) {
-            continue;
-        }
+        if (func->blocks().empty()) continue;
         os << ".globl " << func->name() << "\n";
 
         for (auto& bb : func->blocks()) {
-            // os << bb->name() << ":\n";
             if (bb == func->blocks().front()) {
                 os << func->name() << ":\n";
                 /* dump stack usage comment */
@@ -85,9 +81,7 @@ void dump_assembly(std::ostream& os, MIRModule& module, CodeGenContext& ctx) {
                 os << "Local=" << loacl << ", \n";
                 os << "\t# RegSpill=" << reSpill << ", ";
                 os << "CalleeSaved=" << calleeSaved << "\n";
-            } else {
-                os << bb->name() << ":\n";
-            }
+            } else  os << bb->name() << ":\n";
             bb->print(os, ctx);
         }
     }

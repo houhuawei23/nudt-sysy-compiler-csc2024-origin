@@ -1,14 +1,16 @@
-// clang-format off
 #include <iostream>
 
 #include "support/config.hpp"
 
 #include "SysYLexer.h"
+
 #include "visitor/visitor.hpp"
 
 #include "pass/pass.hpp"
 #include "pass/analysis/dom.hpp"
 #include "pass/optimize/mem2reg.hpp"
+#include "pass/optimize/DCE.hpp"
+#include "pass/optimize/SimpleConstPropagation.hpp"
 
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
@@ -16,14 +18,8 @@
 
 #include "target/riscv/riscv.hpp"
 #include "target/riscv/riscvtarget.hpp"
-
 #include "target/generic/generic.hpp"
 #include "target/generic/generictarget.hpp"
-
-#include "pass/optimize/DCE.hpp"
-#include "pass/optimize/SimpleConstPropagation.hpp"
-
-// clang-format on
 
 using namespace std;
 

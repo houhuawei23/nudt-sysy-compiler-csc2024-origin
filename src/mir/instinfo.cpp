@@ -4,10 +4,19 @@
 #include "target/generic/InstInfoDecl.hpp"
 
 namespace mir {
+
+// TargetInstInfo
 uint32_t offset = GENERIC::GENERICInstBegin + 1;
-InstInfo& TargetInstInfo::get_instinfo(uint32_t opcode) {
-    return GENERIC::getGENERICInstInfo().get_instinfo(opcode + offset);
+InstInfo& TargetInstInfo::get_instinfo(uint32_t opcode) { return GENERIC::getGENERICInstInfo().get_instinfo(opcode + offset); }
+
+bool TargetInstInfo::matchBranch(MIRInst& inst, MIRBlock* target, double& prob) const {
+    auto oldOpcode = inst.opcode();
+    inst.set_opcode(oldOpcode + offset);
+    bool res = GENERIC::getGENERICInstInfo().matchBranch(inst, target, prob);
+    inst.set_opcode(oldOpcode);
+    return false;
 }
+
 static std::string_view getType(OperandType type) {
     switch (type) {
         case OperandType::Bool:
@@ -31,22 +40,14 @@ static std::string_view getType(OperandType type) {
         default:
             assert(false && "Invalid operand type");
             return "unknown ";
-            // reportUnreachable(CMMC_LOCATION());
     }
 };
 
-// void dumpVirtualReg(std::ostream& out, const MIROperand& operand) {
-//     out << '[' << getType(operand.type()) << 'v'
-//         << (operand.reg() ^ virtualRegBegin)
-//         << (operand.regFlag() & RegisterFlagDead ? " <dead>" : "") << ']';
-// }
 void dumpVirtualReg(std::ostream& os, MIROperand* operand) {
     assert(operand != nullptr);
-    os << '[' << getType(operand->type()) << "vreg"
-       << (operand->reg() ^ virtualRegBegin) << ']';
-    //    << (operand->regFlag() & RegisterFlagDead ? " <dead>" : "") << ']';
+    os << '[' << getType(operand->type()) << "vreg";
+    os << (operand->reg() ^ virtualRegBegin) << ']';
 }
-
 }  // namespace mir
 
 namespace mir::GENERIC {
