@@ -71,7 +71,8 @@ namespace pass{
         for(auto bbIter=func->blocks().begin();bbIter!=func->blocks().end();){
             auto bb=*bbIter;
             bbIter++;
-            if(deadFlag[bb])
+            // bb->parent()->print(std::cout);
+            if(getDeadFlag(bb))
                 func->force_delete_block(bb);
         }
 
@@ -109,8 +110,9 @@ namespace pass{
         assert(getExecutableFlag(bbcur,bbjmp));
         bbcur->delete_inst(brInst);
         bbcur->emplace_inst(bbcur->insts().end(),new ir::BranchInst(bbjmp,bbcur));
-        if(executableFlag[bbcur][bbdel])livePreNum[bbdel]--;
+        if(getExecutableFlag(bbcur,bbdel))livePreNum[bbdel]--;
         executableFlag[bbcur][bbdel]=false;//这条边不再可执行  
+        ir::BasicBlock::delete_block_link(bbcur,bbdel);
         if(livePreNum[bbdel]==0){//如果产生了新的死块
             deadFlag[bbdel]=true;
             deleteDeadBlock(bbdel);
@@ -130,7 +132,7 @@ namespace pass{
     }
 
     void SCCP::deleteDeadBlock(ir::BasicBlock* bb){//删除死块
-        assert(deadFlag[bb]);
+        assert(getDeadFlag(bb));
         // bb->parent()->print(std::cout);
         for(auto puseIter=bb->uses().begin();puseIter!=bb->uses().end();){//将所有的使用bb的phi进行删除其中的bb以及对应的val
             auto puse=*puseIter;
@@ -150,7 +152,7 @@ namespace pass{
             // bb->parent()->print(std::cout);
         }
         for(auto bbnext:bb->next_blocks()){//将自己的后继边删除,看看有无产生新的块
-            if(executableFlag[bb][bbnext])livePreNum[bbnext]--;
+            if(getExecutableFlag(bb,bbnext))livePreNum[bbnext]--;
             executableFlag[bb][bbnext]=false;
             if(not livePreNum[bbnext]){//产生的是死块
                 deadFlag[bbnext]=true;

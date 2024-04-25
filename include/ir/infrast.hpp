@@ -113,6 +113,11 @@ class BasicBlock : public Value {
         next->pre_blocks().emplace_back(pre);
     }
 
+    static void delete_block_link(ir::BasicBlock* pre, ir::BasicBlock* next) {
+        pre->next_blocks().remove(next);
+        next->pre_blocks().remove(pre);
+    }
+
     bool dominate(BasicBlock* bb) {
         if (this == bb)
             return true;
