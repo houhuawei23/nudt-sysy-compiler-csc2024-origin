@@ -5,7 +5,7 @@
 #include "mir/instinfo.hpp"
 #include "mir/frameinfo.hpp"
 #include "mir/registerinfo.hpp"
-
+#include "mir/ScheduleModel.hpp"
 namespace mir {
 /*
  * @brief: Target Class (抽象基类)
@@ -51,6 +51,7 @@ struct CodeGenContext final {
     TargetISelInfo* iselInfo;
     
     TargetRegisterInfo* registerInfo;
+    TargetScheduleModel* scheduleModel;
 
     uint32_t idx = 0;
     uint32_t next_id() { return ++idx; }

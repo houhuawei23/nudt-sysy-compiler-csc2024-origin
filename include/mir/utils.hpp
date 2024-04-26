@@ -21,4 +21,7 @@ void forEachDefOperand(MIRBlock& block,
 void forEachDefOperand(MIRFunction& func,
                        CodeGenContext& ctx,
                        const std::function<void(MIROperand* op)>& functor);
+
+bool genericPeepholeOpt(MIRFunction& func, CodeGenContext& ctx);
+
 }  // namespace mir
