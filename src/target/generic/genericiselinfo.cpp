@@ -8,7 +8,7 @@ namespace mir::GENERIC {
 
 }  // namespace mir::GENERIC
 
-#include "autogen/generic/ISelInfoImpl.hpp"
+#include "autogen/generic/ISelInfoImpl.cpp"
 
 namespace mir::GENERIC {
 bool GENERICISelInfo::is_legal_geninst(uint32_t opcode) const {

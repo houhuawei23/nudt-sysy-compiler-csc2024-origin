@@ -35,4 +35,4 @@ namespace mir::GENERIC {
 
 }  // namespace mir::GENERIC
 
-#include "autogen/generic/InstInfoImpl.hpp"
+#include "autogen/generic/InstInfoImpl.cpp"

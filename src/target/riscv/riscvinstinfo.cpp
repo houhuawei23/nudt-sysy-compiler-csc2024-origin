@@ -29,4 +29,4 @@ static std::ostream& operator<<(std::ostream& out, mir::MIROperand& mop) {
 }  // namespace RISCV
 
 //! Dont Change This Line!
-#include "autogen/riscv/InstInfoImpl.hpp"
+#include "autogen/riscv/InstInfoImpl.cpp"
