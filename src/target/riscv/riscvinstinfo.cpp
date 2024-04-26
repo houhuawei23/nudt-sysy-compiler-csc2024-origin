@@ -4,8 +4,7 @@
 #include "mir/instinfo.hpp"
 
 #include "target/riscv/riscv.hpp"
-#include "target/riscv/InstInfoDecl.hpp"
-#include "target/riscv/InstInfoImpl.hpp"
+#include "autogen/riscv/InstInfoDecl.hpp"
 
 #include <iostream>
 
@@ -28,3 +27,6 @@ static std::ostream& operator<<(std::ostream& out, mir::MIROperand& mop) {
 }
 
 }  // namespace RISCV
+
+//! Dont Change This Line!
+#include "autogen/riscv/InstInfoImpl.hpp"

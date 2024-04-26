@@ -1,7 +1,7 @@
 #include "mir/mir.hpp"
 #include "mir/instinfo.hpp"
 
-#include "target/generic/InstInfoDecl.hpp"
+#include "autogen/generic/InstInfoDecl.hpp"
 
 namespace mir {
 

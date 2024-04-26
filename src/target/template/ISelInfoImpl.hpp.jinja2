@@ -1,10 +1,6 @@
 // Automatically generated file, do not edit!
 
-#pragma once
-#include "mir/mir.hpp"
-#include "mir/iselinfo.hpp"
-#include "target/{{target_name.lower()}}/{{target_name.lower()}}iselinfo.hpp"
-#include "target/{{target_name.lower()}}/ISelInfoDecl.hpp"
+#include "autogen/{{target_name.lower()}}/ISelInfoDecl.hpp"
 
 {{target_name}}_NAMESPACE_BEGIN
 
@@ -132,7 +128,7 @@ public:
 
 
 
-static TargetISelInfo& get{{target_name}}ISelInfo() {
+TargetISelInfo& get{{target_name}}ISelInfo() {
     static {{target_name}}ISelInfo iselInfo;
     return iselInfo;
 }

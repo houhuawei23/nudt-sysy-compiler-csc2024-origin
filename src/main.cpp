@@ -31,6 +31,9 @@ int main(int argc, char* argv[]) {
     sysy::Config config;
     config.parse_cmd_args(argc, argv);
     config.print_info();
+    
+    std::cout << "Build time: " << __TIME__ << " " << __DATE__ << std::endl;
+    
     if (config.infile.empty()) {
         cerr << "Error: input file not specified" << endl;
         config.print_help();

@@ -6,8 +6,8 @@
 #include "mir/lowering.hpp"
 
 #include "target/generic/generic.hpp"
-#include "target/generic/InstInfoDecl.hpp"
-#include "target/generic/ISelInfoDecl.hpp"
+#include "autogen/generic/InstInfoDecl.hpp"
+#include "autogen/generic/ISelInfoDecl.hpp"
 
 namespace mir {
 /*

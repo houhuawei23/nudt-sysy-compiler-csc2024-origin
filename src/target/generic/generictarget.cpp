@@ -3,7 +3,7 @@
 
 #include "target/generic/generic.hpp"
 #include "target/generic/generictarget.hpp"
-#include "target/generic/InstInfoDecl.hpp"
+#include "autogen/generic/InstInfoDecl.hpp"
 
 #include <iostream>
 

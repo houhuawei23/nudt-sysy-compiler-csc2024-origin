@@ -1,11 +1,10 @@
 // Automatically generated file, do not edit!
 
 #pragma once
-#include "target/riscv/InstInfoDecl.hpp"
+#include "autogen/riscv/InstInfoDecl.hpp"
 
 RISCV_NAMESPACE_BEGIN
 
-static TargetISelInfo &getRISCVISelInfo();
-
+TargetISelInfo& getRISCVISelInfo();
 
 RISCV_NAMESPACE_END

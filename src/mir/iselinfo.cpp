@@ -5,7 +5,7 @@
 #include "mir/instinfo.hpp"
 #include "mir/iselinfo.hpp"
 
-#include "target/generic/InstInfoDecl.hpp"
+// #include "target/generic/InstInfoDecl.hpp"
 
 #include <optional>
 

@@ -1,9 +1,8 @@
 // Automatically generated file, do not edit!
 
-#pragma once
 #include "mir/mir.hpp"
 #include "mir/instinfo.hpp"
-#include "target/{{target_name.lower()}}/InstInfoDecl.hpp"
+#include "autogen/{{target_name.lower()}}/InstInfoDecl.hpp"
 
 {{target_name}}_NAMESPACE_BEGIN
 
@@ -93,7 +92,7 @@ public:
     }
 };
 
-static TargetInstInfo& get{{target_name}}InstInfo() {
+TargetInstInfo& get{{target_name}}InstInfo() {
     static {{target_name}}InstInfo instance;
     return instance;
 }

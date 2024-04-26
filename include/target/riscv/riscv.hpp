@@ -1,7 +1,7 @@
 #pragma once
 #include "mir/mir.hpp"
 #include "mir/instinfo.hpp"
-
+#include "autogen/riscv/InstInfoDecl.hpp"
 namespace mir::RISCV {
 /*
  * @brief: RISCVRegister enum
