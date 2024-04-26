@@ -46,7 +46,7 @@ enum RISCVInst {
     BLTU,
     BGEU,
     JAL,
-    JALR,
+    JALR, /* not implemented yet */
     J,
     RET,
     LUI,

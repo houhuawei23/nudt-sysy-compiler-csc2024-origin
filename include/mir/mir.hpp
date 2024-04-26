@@ -203,6 +203,7 @@ class MIROperand {
 
         // 操作数
         intmax_t imm() { return std::get<intmax_t>(_storage); }
+        double prob() { return std::get<double>(_storage); }
         uint32_t reg() const { return std::get<MIRRegister*>(_storage)->reg(); }
         MIRRelocable* reloc() { return std::get<MIRRelocable*>(_storage); }
 

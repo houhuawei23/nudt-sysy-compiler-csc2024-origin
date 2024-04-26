@@ -2,6 +2,70 @@ Target:
   name: RISCV
   infos: [InstInfo, InstSelInfo]
 InstInfo: {
+    # InstList
+    InstList:
+      [
+        ADD,
+        SUB,
+        XOR,
+        OR,
+        AND,
+        SLL,
+        SRL,
+        SRA,
+        SLT,
+        SLTU,
+        ADDI,
+        XORI,
+        ORI,
+        ANDI,
+        SLTI,
+        SLTIU,
+        SLLI,
+        SRLI,
+        SRAI,
+        LB,
+        LH,
+        LW,
+        LBU,
+        LHU,
+        LD,
+        SB,
+        SH,
+        SW,
+        SD,
+        BEQ,
+        BNE,
+        BLT,
+        BGE,
+        BLTU,
+        BGEU,
+        JAL,
+        JALR,
+        J,
+        RET,
+        LUI,
+        AUIPC,
+        MUL,
+        MULH,
+        MULHSU,
+        MULHU,
+        DIV,
+        DIVU,
+        REM,
+        REMU,
+        LR,
+        SC,
+        AMOSWAP,
+        AMOADD,
+        AMOAND,
+        AMOOR,
+        AMOXOR,
+        LoadImm12,
+        LoadImm32,
+        LoadImm64,
+        MV,
+      ],
     # Templates
     Templates: {
         Rtype: {
@@ -44,10 +108,28 @@ InstInfo: {
               },
           },
         # for Pseudos
-        # R2Type: {
-        #   format: "$mnem $rd, $rs",
-
-        # }
+        # branch Btype-Itype offset-imm
+        Branches:
+          {
+            format: ["mnem", " ", 0, ", ", 1, ", ", 2, "# ", 3],
+            operands:
+              {
+                0: { name: rs1, type: GPR, flag: Use },
+                1: { name: rs2, type: GPR, flag: Use },
+                2: { name: target, type: reloc, flag: Metadata },
+                3: { name: prob, type: prob, flag: Metadata },
+              },
+            flag: [Branch, Terminator],
+            instances:
+              [
+                { name: BEQ, mnem: "beq" },
+                { name: BNE, mnem: "bne" },
+                { name: BLT, mnem: "blt" },
+                { name: BGE, mnem: "bge" },
+                { name: BLTU, mnem: "bltu" },
+                { name: BGEU, mnem: "bgeu" },
+              ],
+          },
       },
     # Instances
     Instances: {
@@ -101,27 +183,33 @@ InstInfo: {
         SH: { mnem: "sh", template: Stype, flag: [Store] },
         SW: { mnem: "sw", template: Stype, flag: [Store] },
         SD: { mnem: "sd", template: Stype, flag: [Store] }, # RV64
-        # branch Btype-Itype offset-imm
-        BEQ: { mnem: "beq", template: Itype, flag: [Branch, Terminator] },
-        BNE: { mnem: "bne", template: Itype, flag: [Branch, Terminator] },
-        BLT: { mnem: "blt", template: Itype, flag: [Branch, Terminator] },
-        BGE: { mnem: "bge", template: Itype, flag: [Branch, Terminator] },
-        BLTU: { mnem: "bltu", template: Itype, flag: [Branch, Terminator] },
-        BGEU: { mnem: "bgeu", template: Itype, flag: [Branch, Terminator] },
+
+        # BEQ: { mnem: "beq", template: Itype, flag: [Branch, Terminator] },
+        # BNE: { mnem: "bne", template: Itype, flag: [Branch, Terminator] },
+        # BLT: { mnem: "blt", template: Itype, flag: [Branch, Terminator] },
+        # BGE: { mnem: "bge", template: Itype, flag: [Branch, Terminator] },
+        # BLTU: { mnem: "bltu", template: Itype, flag: [Branch, Terminator] },
+        # BGEU: { mnem: "bgeu", template: Itype, flag: [Branch, Terminator] },
         # J JType-Utype
-        JAL: { mnem: "jal", template: Utype, flag: [Call] },
-        JALR: { mnem: "jalr", template: Itype, flag: [Call] },
+        # JAL: { mnem: "jal", template: Utype, flag: [Call] },
+        # JALR: { mnem: "jalr", template: Itype, flag: [Call] },
+        JAL:
+          {
+            format: ["jal", " ", 0],
+            operands: { 0: { name: target, type: reloc, flag: Metadata } },
+            flag: [Call],
+          },
         J:
           {
             format: ["j", " ", 0],
-            operands: { 0: { name: tgt, type: reloc, flag: Metadata } },
+            operands: { 0: { name: target, type: reloc, flag: Metadata } },
             flag: [Branch, Terminator, NoFallThrough],
           },
         RET:
           {
             format: ["ret"],
             operands: {},
-            flag: [Branch, Terminator, NoFallThrough],
+            flag: [Return, Terminator, NoFallThrough],
           },
         # RIU lui, auipc
         LUI: { mnem: "lui", template: Utype, flag: [LoadConstant] },
@@ -252,8 +340,8 @@ InstSelInfo: {
         },
         # Control Flow
         {
-          pattern: { name: InstJump, label: $label },
-          replace: { name: J, tgt: $label },
+          pattern: { name: InstJump, target: $target },
+          replace: { name: J, target: $target },
         },
         {
           # Return
@@ -646,8 +734,7 @@ InstSelInfo: {
               src1: $src1,
               src2: $src2,
               op: $op,
-              predicate:
-                "isOperandIReg($src1) && isOperandIReg($src2) && isCompareOp($op, CompareOp::ICmpUnsignedGreaterThan)",
+              predicate: "isOperandIReg($src1) && isOperandIReg($src2) && isCompareOp($op, CompareOp::ICmpUnsignedGreaterThan)",
             },
           replace: { name: SLTU, rd: $dst, rs1: $src2, rs2: $src1 },
         },

@@ -9,11 +9,11 @@ namespace mir {
 uint32_t offset = GENERIC::GENERICInstBegin + 1;
 InstInfo& TargetInstInfo::get_instinfo(uint32_t opcode) { return GENERIC::getGENERICInstInfo().get_instinfo(opcode + offset); }
 
-bool TargetInstInfo::matchBranch(MIRInst& inst, MIRBlock* target, double& prob) const {
-    auto oldOpcode = inst.opcode();
-    inst.set_opcode(oldOpcode + offset);
+bool TargetInstInfo::matchBranch(MIRInst* inst, MIRBlock*& target, double& prob) {
+    auto oldOpcode = inst->opcode();
+    inst->set_opcode(oldOpcode + offset);
     bool res = GENERIC::getGENERICInstInfo().matchBranch(inst, target, prob);
-    inst.set_opcode(oldOpcode);
+    inst->set_opcode(oldOpcode);
     return false;
 }
 

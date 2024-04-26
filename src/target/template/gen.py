@@ -45,8 +45,9 @@ if __name__ == "__main__":
         "inst_info_dict": tar.inst_info_dict,
         "match_insts_list": tar.generic_insts_list,
         "match_insts_dict": tar.generic_insts_dict,
+        "branch_list": tar.branch_list,
     }
-
+    # print(tar.branch_list)
     gen_file_jinja2("InstInfoDecl.hpp.jinja2", output_dir, params)
     gen_file_jinja2("InstInfoImpl.cpp.jinja2", output_dir, params)
 

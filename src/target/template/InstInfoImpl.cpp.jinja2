@@ -90,6 +90,28 @@ public:
                 return TargetInstInfo::get_instinfo(opcode);
         }
     }
+    bool matchBranch(MIRInst* inst, MIRBlock*& target, double& prob) override{
+        auto& instInfo = get_instinfo(inst->opcode());
+        if (requireFlag(instInfo.inst_flag(), InstFlagBranch)) {
+            if (inst->opcode() < ISASpecificBegin) {
+                return TargetInstInfo::matchBranch(inst, target, prob); 
+            }
+            switch (inst->opcode()) {
+                {% for branch in branch_list -%}
+                    case {{branch.name}}: target = dynamic_cast<MIRBlock*>(inst->operand({{branch.target}})->reloc());
+                        prob = {% if branch.prob != -1 %} inst->operand({{branch.prob}})->prob()
+                                {%- else -%} 1.0
+                                {%- endif -%};
+                        break;
+                {%- endfor %}
+                default:    
+                    std::cerr << "Error: unknown branch instruction: " << instInfo.name() << std::endl;
+
+            }
+            return true;
+        }
+        return false;
+    }
 };
 
 TargetInstInfo& get{{target_name}}InstInfo() {

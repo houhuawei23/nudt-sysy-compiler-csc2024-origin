@@ -909,15 +909,17 @@ class RISCVInstInfoBEQ final : public InstInfo {
    public:
     RISCVInstInfoBEQ() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() override { return 4; }
 
     OperandFlag operand_flag(uint32_t idx) override {
         switch (idx) {
             case 0:
-                return OperandFlagDef;
+                return OperandFlagUse;
             case 1:
                 return OperandFlagUse;
             case 2:
+                return OperandFlagMetadata;
+            case 3:
                 return OperandFlagMetadata;
             default:
                 assert(false && "Invalid operand index");
@@ -934,7 +936,8 @@ class RISCVInstInfoBEQ final : public InstInfo {
         out << "beq"
             << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
             << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(2)};
+            << mir::RISCV::OperandDumper{inst.operand(2)} << "# "
+            << mir::RISCV::OperandDumper{inst.operand(3)};
     }
 };
 
@@ -942,15 +945,17 @@ class RISCVInstInfoBNE final : public InstInfo {
    public:
     RISCVInstInfoBNE() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() override { return 4; }
 
     OperandFlag operand_flag(uint32_t idx) override {
         switch (idx) {
             case 0:
-                return OperandFlagDef;
+                return OperandFlagUse;
             case 1:
                 return OperandFlagUse;
             case 2:
+                return OperandFlagMetadata;
+            case 3:
                 return OperandFlagMetadata;
             default:
                 assert(false && "Invalid operand index");
@@ -967,7 +972,8 @@ class RISCVInstInfoBNE final : public InstInfo {
         out << "bne"
             << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
             << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(2)};
+            << mir::RISCV::OperandDumper{inst.operand(2)} << "# "
+            << mir::RISCV::OperandDumper{inst.operand(3)};
     }
 };
 
@@ -975,15 +981,17 @@ class RISCVInstInfoBLT final : public InstInfo {
    public:
     RISCVInstInfoBLT() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() override { return 4; }
 
     OperandFlag operand_flag(uint32_t idx) override {
         switch (idx) {
             case 0:
-                return OperandFlagDef;
+                return OperandFlagUse;
             case 1:
                 return OperandFlagUse;
             case 2:
+                return OperandFlagMetadata;
+            case 3:
                 return OperandFlagMetadata;
             default:
                 assert(false && "Invalid operand index");
@@ -1000,7 +1008,8 @@ class RISCVInstInfoBLT final : public InstInfo {
         out << "blt"
             << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
             << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(2)};
+            << mir::RISCV::OperandDumper{inst.operand(2)} << "# "
+            << mir::RISCV::OperandDumper{inst.operand(3)};
     }
 };
 
@@ -1008,15 +1017,17 @@ class RISCVInstInfoBGE final : public InstInfo {
    public:
     RISCVInstInfoBGE() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() override { return 4; }
 
     OperandFlag operand_flag(uint32_t idx) override {
         switch (idx) {
             case 0:
-                return OperandFlagDef;
+                return OperandFlagUse;
             case 1:
                 return OperandFlagUse;
             case 2:
+                return OperandFlagMetadata;
+            case 3:
                 return OperandFlagMetadata;
             default:
                 assert(false && "Invalid operand index");
@@ -1033,7 +1044,8 @@ class RISCVInstInfoBGE final : public InstInfo {
         out << "bge"
             << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
             << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(2)};
+            << mir::RISCV::OperandDumper{inst.operand(2)} << "# "
+            << mir::RISCV::OperandDumper{inst.operand(3)};
     }
 };
 
@@ -1041,15 +1053,17 @@ class RISCVInstInfoBLTU final : public InstInfo {
    public:
     RISCVInstInfoBLTU() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() override { return 4; }
 
     OperandFlag operand_flag(uint32_t idx) override {
         switch (idx) {
             case 0:
-                return OperandFlagDef;
+                return OperandFlagUse;
             case 1:
                 return OperandFlagUse;
             case 2:
+                return OperandFlagMetadata;
+            case 3:
                 return OperandFlagMetadata;
             default:
                 assert(false && "Invalid operand index");
@@ -1066,7 +1080,8 @@ class RISCVInstInfoBLTU final : public InstInfo {
         out << "bltu"
             << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
             << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(2)};
+            << mir::RISCV::OperandDumper{inst.operand(2)} << "# "
+            << mir::RISCV::OperandDumper{inst.operand(3)};
     }
 };
 
@@ -1074,15 +1089,17 @@ class RISCVInstInfoBGEU final : public InstInfo {
    public:
     RISCVInstInfoBGEU() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() override { return 4; }
 
     OperandFlag operand_flag(uint32_t idx) override {
         switch (idx) {
             case 0:
-                return OperandFlagDef;
+                return OperandFlagUse;
             case 1:
                 return OperandFlagUse;
             case 2:
+                return OperandFlagMetadata;
+            case 3:
                 return OperandFlagMetadata;
             default:
                 assert(false && "Invalid operand index");
@@ -1099,7 +1116,8 @@ class RISCVInstInfoBGEU final : public InstInfo {
         out << "bgeu"
             << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
             << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(2)};
+            << mir::RISCV::OperandDumper{inst.operand(2)} << "# "
+            << mir::RISCV::OperandDumper{inst.operand(3)};
     }
 };
 
@@ -1107,13 +1125,11 @@ class RISCVInstInfoJAL final : public InstInfo {
    public:
     RISCVInstInfoJAL() = default;
 
-    uint32_t operand_num() override { return 2; }
+    uint32_t operand_num() override { return 1; }
 
     OperandFlag operand_flag(uint32_t idx) override {
         switch (idx) {
             case 0:
-                return OperandFlagDef;
-            case 1:
                 return OperandFlagMetadata;
             default:
                 assert(false && "Invalid operand index");
@@ -1126,39 +1142,7 @@ class RISCVInstInfoJAL final : public InstInfo {
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "jal"
-            << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(1)};
-    }
-};
-
-class RISCVInstInfoJALR final : public InstInfo {
-   public:
-    RISCVInstInfoJALR() = default;
-
-    uint32_t operand_num() override { return 3; }
-
-    OperandFlag operand_flag(uint32_t idx) override {
-        switch (idx) {
-            case 0:
-                return OperandFlagDef;
-            case 1:
-                return OperandFlagUse;
-            case 2:
-                return OperandFlagMetadata;
-            default:
-                assert(false && "Invalid operand index");
-        }
-    }
-
-    uint32_t inst_flag() override { return InstFlagNone | InstFlagCall; }
-
-    std::string_view name() override { return "RISCV.JALR"; }
-
-    void print(std::ostream& out, MIRInst& inst, bool comment) override {
-        out << "jalr"
-            << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(2)};
+            << " " << mir::RISCV::OperandDumper{inst.operand(0)};
     }
 };
 
@@ -1204,7 +1188,7 @@ class RISCVInstInfoRET final : public InstInfo {
     }
 
     uint32_t inst_flag() override {
-        return InstFlagNone | InstFlagBranch | InstFlagTerminator |
+        return InstFlagNone | InstFlagReturn | InstFlagTerminator |
                InstFlagNoFallThrough;
     }
 
@@ -1895,7 +1879,6 @@ class RISCVInstInfo final : public TargetInstInfo {
     RISCVInstInfoBLTU _instinfoBLTU;
     RISCVInstInfoBGEU _instinfoBGEU;
     RISCVInstInfoJAL _instinfoJAL;
-    RISCVInstInfoJALR _instinfoJALR;
     RISCVInstInfoJ _instinfoJ;
     RISCVInstInfoRET _instinfoRET;
     RISCVInstInfoLUI _instinfoLUI;
@@ -1997,7 +1980,7 @@ class RISCVInstInfo final : public TargetInstInfo {
             case RISCVInst::JAL:
                 return _instinfoJAL;
             case RISCVInst::JALR:
-                return _instinfoJALR;
+                break; /* not supported */
             case RISCVInst::J:
                 return _instinfoJ;
             case RISCVInst::RET:
@@ -2047,6 +2030,49 @@ class RISCVInstInfo final : public TargetInstInfo {
             default:
                 return TargetInstInfo::get_instinfo(opcode);
         }
+    }
+    bool matchBranch(MIRInst* inst, MIRBlock*& target, double& prob) override {
+        auto& instInfo = get_instinfo(inst->opcode());
+        if (requireFlag(instInfo.inst_flag(), InstFlagBranch)) {
+            if (inst->opcode() < ISASpecificBegin) {
+                return TargetInstInfo::matchBranch(inst, target, prob);
+            }
+            switch (inst->opcode()) {
+                case BEQ:
+                    target = dynamic_cast<MIRBlock*>(inst->operand(2)->reloc());
+                    prob = inst->operand(3)->prob();
+                    break;
+                case BNE:
+                    target = dynamic_cast<MIRBlock*>(inst->operand(2)->reloc());
+                    prob = inst->operand(3)->prob();
+                    break;
+                case BLT:
+                    target = dynamic_cast<MIRBlock*>(inst->operand(2)->reloc());
+                    prob = inst->operand(3)->prob();
+                    break;
+                case BGE:
+                    target = dynamic_cast<MIRBlock*>(inst->operand(2)->reloc());
+                    prob = inst->operand(3)->prob();
+                    break;
+                case BLTU:
+                    target = dynamic_cast<MIRBlock*>(inst->operand(2)->reloc());
+                    prob = inst->operand(3)->prob();
+                    break;
+                case BGEU:
+                    target = dynamic_cast<MIRBlock*>(inst->operand(2)->reloc());
+                    prob = inst->operand(3)->prob();
+                    break;
+                case J:
+                    target = dynamic_cast<MIRBlock*>(inst->operand(0)->reloc());
+                    prob = 1.0;
+                    break;
+                default:
+                    std::cerr << "Error: unknown branch instruction: "
+                              << instInfo.name() << std::endl;
+            }
+            return true;
+        }
+        return false;
     }
 };
 

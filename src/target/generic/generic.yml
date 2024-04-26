@@ -148,17 +148,28 @@ InstInfo: {
         Jump: {
             # format: "Jump {label}"
             format: ["Jump", " ", 0],
-            operands: { 0: { name: label, type: RELOC, flag: Metadata } },
+            operands: { 0: { name: target, type: RELOC, flag: Metadata } },
             flag: [Terminator, Branch, NoFallThrough],
           },
+        # Branch: {
+        #     # format: "Branch {cond}, {then}, {else}"
+        #     format: ["Branch", " ", 0, ", ", 1, ", ", 2],
+        #     operands:
+        #       {
+        #         0: { name: cond, type: BOOL, flag: Use },
+        #         1: { name: thenb, type: LABEL, flag: Metadata },
+        #         2: { name: elseb, type: LABEL, flag: Metadata },
+        #       },
+        #     flag: [Terminator, Branch],
+        #   },
         Branch: {
-            # format: "Branch {cond}, {then}, {else}"
+            # format: "Branch {cond}, {target}, {prob}"
             format: ["Branch", " ", 0, ", ", 1, ", ", 2],
             operands:
               {
                 0: { name: cond, type: BOOL, flag: Use },
-                1: { name: thenb, type: LABEL, flag: Metadata },
-                2: { name: elseb, type: LABEL, flag: Metadata },
+                1: { name: target, type: RELOC, flag: Metadata },
+                2: { name: prob, type: PROB, flag: Metadata },
               },
             flag: [Terminator, Branch],
           },
@@ -485,13 +496,13 @@ InstSelInfo: {
           replace: { name: Store, addr: $addr, src: $src, align: $align },
         },
         {
-          pattern: { name: InstJump, label: $label },
-          replace: { name: Jump, label: $label },
+          pattern: { name: InstJump, target: $target },
+          replace: { name: Jump, target: $target },
         },
         {
           pattern:
-            { name: InstBranch, cond: $cond, thenb: $thenb, elseb: $elseb },
-          replace: { name: Branch, cond: $cond, thenb: $thenb, elseb: $elseb },
+            { name: InstBranch, cond: $cond, target: $target, prob: $prob },
+          replace: { name: Branch, cond: $cond, target: $target, prob: $prob },
         },
         {
           pattern: { name: InstCopy, dst: $dst, src: $src },

@@ -1660,20 +1660,20 @@ class GENERICInstInfo final : public TargetInstInfo {
             }
             switch (inst->opcode()) {
                 case Jump:
-                    target = dynamic_cast<MIRBlock*>(inst->operand(0)->reloc());
+                    target = dynamic_cast<MIRBlock*>(inst.operand(0).reloc());
                     prob = 1.0;
                     break;
                 case Branch:
-                    target = dynamic_cast<MIRBlock*>(inst->operand(1)->reloc());
-                    prob = inst->operand(2)->prob();
+                    target = dynamic_cast<MIRBlock*>(inst.operand(1).reloc());
+                    prob = inst.operand(2).prob();
                     break;
                 default:
-                    std::cerr << "Error: unknown branch instruction: "
-                              << instInfo.name() << std::endl;
+                    std::cerr
+                        << "Error: unknown branch instruction: " << inst->name()
+                        << std::endl;
             }
-            return true;
+            return false;
         }
-        return false;
     }
 };
 

@@ -4,22 +4,22 @@
 
 RISCV_NAMESPACE_BEGIN
 
-static bool matchInstJump(MIRInst* inst, MIROperand*& label) {
+static bool matchInstJump(MIRInst* inst, MIROperand*& target) {
     if (inst->opcode() != InstJump)
         return false;
-    label = inst->operand(0);
+    target = inst->operand(0);
     return true;
 }
 
 static bool matchInstBranch(MIRInst* inst,
                             MIROperand*& cond,
-                            MIROperand*& thenb,
-                            MIROperand*& elseb) {
+                            MIROperand*& target,
+                            MIROperand*& prob) {
     if (inst->opcode() != InstBranch)
         return false;
     cond = inst->operand(0);
-    thenb = inst->operand(1);
-    elseb = inst->operand(2);
+    target = inst->operand(1);
+    prob = inst->operand(2);
     return true;
 }
 

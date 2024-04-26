@@ -27,13 +27,16 @@ class Target:
     generic_insts_dict = dict()
     generic_insts_list = list()
 
+    # branch list
+    branch_list = list()
+
     def __init__(self, gen_data_yml=str, isa_data_yml=str, output_dir=str):
         self.gen_data_yml = gen_data_yml
         self.isa_data_yml = isa_data_yml
         self.output_dir = output_dir
 
         # 1. Load isa_data_yml, gen isa target inst info decl/impl files
-        self.target_name, self.inst_info_dict, self.inst_name_list = load_inst_info(
+        self.target_name, self.inst_info_dict, self.inst_name_list, self.branch_list = load_inst_info(
             self.isa_data_yml
         )
         # 2.1 Load MIR Generic Inst Info, for isel

@@ -92,9 +92,9 @@ class TargetInstInfo {
         InstInfo& get_instinfo(MIRInst* inst) { return get_instinfo(inst->opcode()); }
 
     public:  // match function
-        virtual bool matchBranch(MIRInst& inst, MIRBlock* target, double& prob) const;
-        bool matchConditionalBranch(MIRInst& inst, MIRBlock* target, double& prob) const;
-        bool matchUnconditionalBranch(MIRInst& inst, MIRBlock* Target, double& prob) const;
+        virtual bool matchBranch(MIRInst* inst, MIRBlock*& target, double& prob) ;
+        bool matchConditionalBranch(MIRInst* inst, MIRBlock*& target, double& prob) ;
+        bool matchUnconditionalBranch(MIRInst* inst, MIRBlock*& Target, double& prob) ;
 
 };
 

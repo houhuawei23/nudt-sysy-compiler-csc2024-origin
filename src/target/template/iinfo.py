@@ -8,6 +8,7 @@ from jinja2 import Environment, FileSystemLoader
 # import typing
 from typing import List, Dict, Tuple
 
+
 def load_inst_info(file: str) -> Tuple[str, Dict, List]:
     """load inst_info.yml, parse it to insts_dict and insts_list.
     - args:
@@ -50,7 +51,8 @@ def load_inst_info(file: str) -> Tuple[str, Dict, List]:
     templates = isa_instinfo["Templates"]
     instances = isa_instinfo["Instances"]
 
-    # parse templates
+    branch_list = []
+    # parse Templates
     for template_name, template_info in templates.items():
         template_instances = template_info.get("instances", [])
         # list
@@ -67,15 +69,14 @@ def load_inst_info(file: str) -> Tuple[str, Dict, List]:
                 info["name"] = instance.get("name")
                 info["format"] = copy.deepcopy(template_info["format"])
                 info["format"][0] = instance.get("mnem", info["name"])
-                info["flag"] = instance.get("flag", [])
+                info["flag"] = instance.get("flag", template_info.get("flag", []))
             else:
                 print("Error: invalid instance info: {}".format(info))
-            
-            info["operands"] = copy.deepcopy(template_info["operands"])
 
+            info["operands"] = copy.deepcopy(template_info["operands"])
             inst_info_dict[info["name"]] = info
 
-    # parse instances
+    # parse Instances
     for name, info in instances.items():
         info["name"] = name
         if "template" in info:
@@ -83,7 +84,7 @@ def load_inst_info(file: str) -> Tuple[str, Dict, List]:
             info["format"] = copy.deepcopy(template["format"])
             info["operands"] = copy.deepcopy(template["operands"])
 
-            info["format"][0] = info["mnem"] #! mnem
+            info["format"][0] = info["mnem"]  #! mnem
         elif "format" in info:
             pass
         else:
@@ -91,11 +92,28 @@ def load_inst_info(file: str) -> Tuple[str, Dict, List]:
 
         inst_info_dict[name] = info
 
+    for inst_name, inst_info in inst_info_dict.items():
+        if "Branch" in inst_info.get("flag", []):
+            idx_map = dict()
+            for idx, operand_info in inst_info["operands"].items():
+                idx_map[operand_info["name"]] = idx
+            inst_info["target"] = idx_map.get("target", -1)
+            if inst_info["target"] == -1:
+                print(
+                    "Error: branch instruction {} has no target operand".format(
+                        inst_name
+                    )
+                )
+            inst_info["prob"] = (
+                -1 if "NoFallThrough" in inst_info["flag"] else idx_map["prob"]
+            )
+            branch_list.append(inst_info)
+
     if "InstList" in isa_instinfo:
         inst_name_list = isa_instinfo["InstList"]
     else:
         inst_name_list = list(inst_info_dict.keys())
-    return target_name, inst_info_dict, inst_name_list
+    return target_name, inst_info_dict, inst_name_list, branch_list
 
 
 def get_mirgen_insts(gen_data_yml: str) -> Tuple[Dict, List]:
@@ -107,7 +125,7 @@ def get_mirgen_insts(gen_data_yml: str) -> Tuple[Dict, List]:
         - mirgen_insts_dict: inst_name -> inst_info
         - mirgen_insts_list: inst_name list
     """
-    _, gen_insts_dict, gen_insts_list = load_inst_info(gen_data_yml)
+    _, gen_insts_dict, gen_insts_list, _ = load_inst_info(gen_data_yml)
     mirgen_insts_list = ["Inst" + name for name in gen_insts_list]
     mirgen_insts_dict = dict()
     for gen_inst_name, gen_inst_info in gen_insts_dict.items():
