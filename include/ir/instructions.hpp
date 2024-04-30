@@ -24,7 +24,6 @@ class FCmpInst;
 class CallInst;
 
 class PhiInst;
-
 /*
  * @brief: AllocaInst
  */
@@ -508,7 +507,9 @@ class PhiInst : public Instruction {
         }
     }
     Value* getval(size_t k) { return operand(2*k); }
-    Value* getbb(size_t k) { return operand(2*k+1); }
+    BasicBlock* getbb(size_t k) { return dyn_cast<BasicBlock>(operand(2*k+1)); }
+    Value* getvalfromBB(BasicBlock* bb);
+    BasicBlock* getbbfromVal(Value* val);
     size_t getsize(){ return size;}
     void addIncoming(Value* val, BasicBlock* bb) {
         add_operand(val);

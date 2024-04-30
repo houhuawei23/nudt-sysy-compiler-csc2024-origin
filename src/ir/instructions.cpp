@@ -533,6 +533,22 @@ void PhiInst::print(std::ostream& os) {
     }
 }
 
+BasicBlock* PhiInst::getbbfromVal(Value* val){
+    for(int i=0;i<size;i++){
+        if(getval(i)==val)
+            return getbb(i);
+    }
+    return nullptr;
+}
+
+Value* PhiInst::getvalfromBB(BasicBlock* bb){
+    for(int i=0;i<size;i++){
+        if(getbb(i)==bb)
+            return getval(i);
+    }
+    return nullptr;
+}
+
 
 Value* PhiInst::getConstantRepl() {
     if(size==0)return nullptr;

@@ -5,7 +5,6 @@
 #include "ir/value.hpp"
 
 namespace ir {
-
 /**
  * @brief Argument represents an incoming formal argument to a Function.
  * 形式参数，因为它是“形式的”，所以不包含实际值，而是表示特定函数的参数的类型、参数编号和属性。
@@ -57,6 +56,7 @@ class BasicBlock : public Value {
     std::vector<BasicBlock*> domFrontier;  // dom frontier
     // std::set<BasicBlock*> dom;//those bb was dominated by self
     int domLevel;
+    int looplevel;
 
    protected:
     Function* _parent;
@@ -65,6 +65,8 @@ class BasicBlock : public Value {
     // for CFG
     block_ptr_list _next_blocks;
     block_ptr_list _pre_blocks;
+    // specially for Phi
+    inst_list _phi_insts;
 
     int _depth = 0;
     bool _is_terminal = false;
@@ -90,6 +92,8 @@ class BasicBlock : public Value {
     Function* parent() const { return _parent; }
 
     inst_list& insts() { return _insts; }
+
+   inst_list& phi_insts(){ return _phi_insts; }
 
     block_ptr_list& next_blocks() { return _next_blocks; }
     block_ptr_list& pre_blocks() { return _pre_blocks; }

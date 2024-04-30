@@ -12,6 +12,7 @@
 #include "pass/optimize/DCE.hpp"
 #include "pass/optimize/SCP.hpp"
 #include "pass/optimize/SCCP.hpp"
+#include "pass/optimize/simplifyCFG.hpp"
 
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
@@ -67,6 +68,9 @@ int main(int argc, char* argv[]) {
             }
             if (pass_name.compare("sccp")==0){
                 fpm.add_pass(new pass::SCCP());
+            }
+            if (pass_name.compare("simplifycfg")==0){
+                fpm.add_pass(new pass::simplifyCFG());
             }
         }
         for (auto f : module_ir->funcs()) {
