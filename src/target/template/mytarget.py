@@ -48,6 +48,8 @@ class Target:
         self.isel_item_list = load_isel_info(isa_data_yml)
 
         for isel_item in self.isel_item_list:
+            if isel_item["pattern"]["name"] == "InstAdd":
+                print("InstAdd")
             res = parse_isel_item(isel_item, self.generic_insts_dict, self.inst_info_dict)
             if not res:
                 continue

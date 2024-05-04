@@ -103,6 +103,9 @@ static bool selectAddrOffset(MIROperand* addr,
 static bool isOperandI64(MIROperand* op) {
     return op->type() == OperandType::Int64;
 }
+static bool isOperandI32(MIROperand* op) {
+    return op->type() == OperandType::Int32;
+}
 
 static bool isZero(MIROperand* operand) {
     if (operand->is_reg() && operand->reg() == RISCV::X0)

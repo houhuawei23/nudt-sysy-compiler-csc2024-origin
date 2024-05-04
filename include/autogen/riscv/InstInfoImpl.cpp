@@ -6,6 +6,222 @@
 
 RISCV_NAMESPACE_BEGIN
 
+class RISCVInstInfoBEQ final : public InstInfo {
+   public:
+    RISCVInstInfoBEQ() = default;
+
+    uint32_t operand_num() override { return 4; }
+
+    OperandFlag operand_flag(uint32_t idx) override {
+        switch (idx) {
+            case 0:
+                return OperandFlagUse;
+            case 1:
+                return OperandFlagUse;
+            case 2:
+                return OperandFlagMetadata;
+            case 3:
+                return OperandFlagMetadata;
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() override {
+        return InstFlagNone | InstFlagBranch | InstFlagTerminator;
+    }
+
+    std::string_view name() override { return "RISCV.BEQ"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "beq"
+            << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(2)} << "# "
+            << mir::RISCV::OperandDumper{inst.operand(3)};
+    }
+};
+
+class RISCVInstInfoBNE final : public InstInfo {
+   public:
+    RISCVInstInfoBNE() = default;
+
+    uint32_t operand_num() override { return 4; }
+
+    OperandFlag operand_flag(uint32_t idx) override {
+        switch (idx) {
+            case 0:
+                return OperandFlagUse;
+            case 1:
+                return OperandFlagUse;
+            case 2:
+                return OperandFlagMetadata;
+            case 3:
+                return OperandFlagMetadata;
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() override {
+        return InstFlagNone | InstFlagBranch | InstFlagTerminator;
+    }
+
+    std::string_view name() override { return "RISCV.BNE"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "bne"
+            << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(2)} << "# "
+            << mir::RISCV::OperandDumper{inst.operand(3)};
+    }
+};
+
+class RISCVInstInfoBLT final : public InstInfo {
+   public:
+    RISCVInstInfoBLT() = default;
+
+    uint32_t operand_num() override { return 4; }
+
+    OperandFlag operand_flag(uint32_t idx) override {
+        switch (idx) {
+            case 0:
+                return OperandFlagUse;
+            case 1:
+                return OperandFlagUse;
+            case 2:
+                return OperandFlagMetadata;
+            case 3:
+                return OperandFlagMetadata;
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() override {
+        return InstFlagNone | InstFlagBranch | InstFlagTerminator;
+    }
+
+    std::string_view name() override { return "RISCV.BLT"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "blt"
+            << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(2)} << "# "
+            << mir::RISCV::OperandDumper{inst.operand(3)};
+    }
+};
+
+class RISCVInstInfoBGE final : public InstInfo {
+   public:
+    RISCVInstInfoBGE() = default;
+
+    uint32_t operand_num() override { return 4; }
+
+    OperandFlag operand_flag(uint32_t idx) override {
+        switch (idx) {
+            case 0:
+                return OperandFlagUse;
+            case 1:
+                return OperandFlagUse;
+            case 2:
+                return OperandFlagMetadata;
+            case 3:
+                return OperandFlagMetadata;
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() override {
+        return InstFlagNone | InstFlagBranch | InstFlagTerminator;
+    }
+
+    std::string_view name() override { return "RISCV.BGE"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "bge"
+            << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(2)} << "# "
+            << mir::RISCV::OperandDumper{inst.operand(3)};
+    }
+};
+
+class RISCVInstInfoBLTU final : public InstInfo {
+   public:
+    RISCVInstInfoBLTU() = default;
+
+    uint32_t operand_num() override { return 4; }
+
+    OperandFlag operand_flag(uint32_t idx) override {
+        switch (idx) {
+            case 0:
+                return OperandFlagUse;
+            case 1:
+                return OperandFlagUse;
+            case 2:
+                return OperandFlagMetadata;
+            case 3:
+                return OperandFlagMetadata;
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() override {
+        return InstFlagNone | InstFlagBranch | InstFlagTerminator;
+    }
+
+    std::string_view name() override { return "RISCV.BLTU"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "bltu"
+            << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(2)} << "# "
+            << mir::RISCV::OperandDumper{inst.operand(3)};
+    }
+};
+
+class RISCVInstInfoBGEU final : public InstInfo {
+   public:
+    RISCVInstInfoBGEU() = default;
+
+    uint32_t operand_num() override { return 4; }
+
+    OperandFlag operand_flag(uint32_t idx) override {
+        switch (idx) {
+            case 0:
+                return OperandFlagUse;
+            case 1:
+                return OperandFlagUse;
+            case 2:
+                return OperandFlagMetadata;
+            case 3:
+                return OperandFlagMetadata;
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() override {
+        return InstFlagNone | InstFlagBranch | InstFlagTerminator;
+    }
+
+    std::string_view name() override { return "RISCV.BGEU"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "bgeu"
+            << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(2)} << "# "
+            << mir::RISCV::OperandDumper{inst.operand(3)};
+    }
+};
+
 class RISCVInstInfoADD final : public InstInfo {
    public:
     RISCVInstInfoADD() = default;
@@ -37,6 +253,37 @@ class RISCVInstInfoADD final : public InstInfo {
     }
 };
 
+class RISCVInstInfoADDW final : public InstInfo {
+   public:
+    RISCVInstInfoADDW() = default;
+
+    uint32_t operand_num() override { return 3; }
+
+    OperandFlag operand_flag(uint32_t idx) override {
+        switch (idx) {
+            case 0:
+                return OperandFlagDef;
+            case 1:
+                return OperandFlagUse;
+            case 2:
+                return OperandFlagUse;
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() override { return InstFlagNone; }
+
+    std::string_view name() override { return "RISCV.ADDW"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "addw"
+            << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(2)};
+    }
+};
+
 class RISCVInstInfoSUB final : public InstInfo {
    public:
     RISCVInstInfoSUB() = default;
@@ -62,6 +309,37 @@ class RISCVInstInfoSUB final : public InstInfo {
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "sub"
+            << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(2)};
+    }
+};
+
+class RISCVInstInfoSUBW final : public InstInfo {
+   public:
+    RISCVInstInfoSUBW() = default;
+
+    uint32_t operand_num() override { return 3; }
+
+    OperandFlag operand_flag(uint32_t idx) override {
+        switch (idx) {
+            case 0:
+                return OperandFlagDef;
+            case 1:
+                return OperandFlagUse;
+            case 2:
+                return OperandFlagUse;
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() override { return InstFlagNone; }
+
+    std::string_view name() override { return "RISCV.SUBW"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "subw"
             << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
             << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
             << mir::RISCV::OperandDumper{inst.operand(2)};
@@ -905,222 +1183,6 @@ class RISCVInstInfoSD final : public InstInfo {
     }
 };
 
-class RISCVInstInfoBEQ final : public InstInfo {
-   public:
-    RISCVInstInfoBEQ() = default;
-
-    uint32_t operand_num() override { return 4; }
-
-    OperandFlag operand_flag(uint32_t idx) override {
-        switch (idx) {
-            case 0:
-                return OperandFlagUse;
-            case 1:
-                return OperandFlagUse;
-            case 2:
-                return OperandFlagMetadata;
-            case 3:
-                return OperandFlagMetadata;
-            default:
-                assert(false && "Invalid operand index");
-        }
-    }
-
-    uint32_t inst_flag() override {
-        return InstFlagNone | InstFlagBranch | InstFlagTerminator;
-    }
-
-    std::string_view name() override { return "RISCV.BEQ"; }
-
-    void print(std::ostream& out, MIRInst& inst, bool comment) override {
-        out << "beq"
-            << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(2)} << "# "
-            << mir::RISCV::OperandDumper{inst.operand(3)};
-    }
-};
-
-class RISCVInstInfoBNE final : public InstInfo {
-   public:
-    RISCVInstInfoBNE() = default;
-
-    uint32_t operand_num() override { return 4; }
-
-    OperandFlag operand_flag(uint32_t idx) override {
-        switch (idx) {
-            case 0:
-                return OperandFlagUse;
-            case 1:
-                return OperandFlagUse;
-            case 2:
-                return OperandFlagMetadata;
-            case 3:
-                return OperandFlagMetadata;
-            default:
-                assert(false && "Invalid operand index");
-        }
-    }
-
-    uint32_t inst_flag() override {
-        return InstFlagNone | InstFlagBranch | InstFlagTerminator;
-    }
-
-    std::string_view name() override { return "RISCV.BNE"; }
-
-    void print(std::ostream& out, MIRInst& inst, bool comment) override {
-        out << "bne"
-            << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(2)} << "# "
-            << mir::RISCV::OperandDumper{inst.operand(3)};
-    }
-};
-
-class RISCVInstInfoBLT final : public InstInfo {
-   public:
-    RISCVInstInfoBLT() = default;
-
-    uint32_t operand_num() override { return 4; }
-
-    OperandFlag operand_flag(uint32_t idx) override {
-        switch (idx) {
-            case 0:
-                return OperandFlagUse;
-            case 1:
-                return OperandFlagUse;
-            case 2:
-                return OperandFlagMetadata;
-            case 3:
-                return OperandFlagMetadata;
-            default:
-                assert(false && "Invalid operand index");
-        }
-    }
-
-    uint32_t inst_flag() override {
-        return InstFlagNone | InstFlagBranch | InstFlagTerminator;
-    }
-
-    std::string_view name() override { return "RISCV.BLT"; }
-
-    void print(std::ostream& out, MIRInst& inst, bool comment) override {
-        out << "blt"
-            << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(2)} << "# "
-            << mir::RISCV::OperandDumper{inst.operand(3)};
-    }
-};
-
-class RISCVInstInfoBGE final : public InstInfo {
-   public:
-    RISCVInstInfoBGE() = default;
-
-    uint32_t operand_num() override { return 4; }
-
-    OperandFlag operand_flag(uint32_t idx) override {
-        switch (idx) {
-            case 0:
-                return OperandFlagUse;
-            case 1:
-                return OperandFlagUse;
-            case 2:
-                return OperandFlagMetadata;
-            case 3:
-                return OperandFlagMetadata;
-            default:
-                assert(false && "Invalid operand index");
-        }
-    }
-
-    uint32_t inst_flag() override {
-        return InstFlagNone | InstFlagBranch | InstFlagTerminator;
-    }
-
-    std::string_view name() override { return "RISCV.BGE"; }
-
-    void print(std::ostream& out, MIRInst& inst, bool comment) override {
-        out << "bge"
-            << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(2)} << "# "
-            << mir::RISCV::OperandDumper{inst.operand(3)};
-    }
-};
-
-class RISCVInstInfoBLTU final : public InstInfo {
-   public:
-    RISCVInstInfoBLTU() = default;
-
-    uint32_t operand_num() override { return 4; }
-
-    OperandFlag operand_flag(uint32_t idx) override {
-        switch (idx) {
-            case 0:
-                return OperandFlagUse;
-            case 1:
-                return OperandFlagUse;
-            case 2:
-                return OperandFlagMetadata;
-            case 3:
-                return OperandFlagMetadata;
-            default:
-                assert(false && "Invalid operand index");
-        }
-    }
-
-    uint32_t inst_flag() override {
-        return InstFlagNone | InstFlagBranch | InstFlagTerminator;
-    }
-
-    std::string_view name() override { return "RISCV.BLTU"; }
-
-    void print(std::ostream& out, MIRInst& inst, bool comment) override {
-        out << "bltu"
-            << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(2)} << "# "
-            << mir::RISCV::OperandDumper{inst.operand(3)};
-    }
-};
-
-class RISCVInstInfoBGEU final : public InstInfo {
-   public:
-    RISCVInstInfoBGEU() = default;
-
-    uint32_t operand_num() override { return 4; }
-
-    OperandFlag operand_flag(uint32_t idx) override {
-        switch (idx) {
-            case 0:
-                return OperandFlagUse;
-            case 1:
-                return OperandFlagUse;
-            case 2:
-                return OperandFlagMetadata;
-            case 3:
-                return OperandFlagMetadata;
-            default:
-                assert(false && "Invalid operand index");
-        }
-    }
-
-    uint32_t inst_flag() override {
-        return InstFlagNone | InstFlagBranch | InstFlagTerminator;
-    }
-
-    std::string_view name() override { return "RISCV.BGEU"; }
-
-    void print(std::ostream& out, MIRInst& inst, bool comment) override {
-        out << "bgeu"
-            << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(2)} << "# "
-            << mir::RISCV::OperandDumper{inst.operand(3)};
-    }
-};
-
 class RISCVInstInfoJAL final : public InstInfo {
    public:
     RISCVInstInfoJAL() = default;
@@ -1843,8 +1905,16 @@ class RISCVInstInfoMV final : public InstInfo {
 };
 
 class RISCVInstInfo final : public TargetInstInfo {
+    RISCVInstInfoBEQ _instinfoBEQ;
+    RISCVInstInfoBNE _instinfoBNE;
+    RISCVInstInfoBLT _instinfoBLT;
+    RISCVInstInfoBGE _instinfoBGE;
+    RISCVInstInfoBLTU _instinfoBLTU;
+    RISCVInstInfoBGEU _instinfoBGEU;
     RISCVInstInfoADD _instinfoADD;
+    RISCVInstInfoADDW _instinfoADDW;
     RISCVInstInfoSUB _instinfoSUB;
+    RISCVInstInfoSUBW _instinfoSUBW;
     RISCVInstInfoXOR _instinfoXOR;
     RISCVInstInfoOR _instinfoOR;
     RISCVInstInfoAND _instinfoAND;
@@ -1872,12 +1942,6 @@ class RISCVInstInfo final : public TargetInstInfo {
     RISCVInstInfoSH _instinfoSH;
     RISCVInstInfoSW _instinfoSW;
     RISCVInstInfoSD _instinfoSD;
-    RISCVInstInfoBEQ _instinfoBEQ;
-    RISCVInstInfoBNE _instinfoBNE;
-    RISCVInstInfoBLT _instinfoBLT;
-    RISCVInstInfoBGE _instinfoBGE;
-    RISCVInstInfoBLTU _instinfoBLTU;
-    RISCVInstInfoBGEU _instinfoBGEU;
     RISCVInstInfoJAL _instinfoJAL;
     RISCVInstInfoJ _instinfoJ;
     RISCVInstInfoRET _instinfoRET;
@@ -1907,10 +1971,26 @@ class RISCVInstInfo final : public TargetInstInfo {
     RISCVInstInfo() = default;
     InstInfo& get_instinfo(uint32_t opcode) {
         switch (opcode) {
+            case RISCVInst::BEQ:
+                return _instinfoBEQ;
+            case RISCVInst::BNE:
+                return _instinfoBNE;
+            case RISCVInst::BLT:
+                return _instinfoBLT;
+            case RISCVInst::BGE:
+                return _instinfoBGE;
+            case RISCVInst::BLTU:
+                return _instinfoBLTU;
+            case RISCVInst::BGEU:
+                return _instinfoBGEU;
             case RISCVInst::ADD:
                 return _instinfoADD;
+            case RISCVInst::ADDW:
+                return _instinfoADDW;
             case RISCVInst::SUB:
                 return _instinfoSUB;
+            case RISCVInst::SUBW:
+                return _instinfoSUBW;
             case RISCVInst::XOR:
                 return _instinfoXOR;
             case RISCVInst::OR:
@@ -1965,22 +2045,8 @@ class RISCVInstInfo final : public TargetInstInfo {
                 return _instinfoSW;
             case RISCVInst::SD:
                 return _instinfoSD;
-            case RISCVInst::BEQ:
-                return _instinfoBEQ;
-            case RISCVInst::BNE:
-                return _instinfoBNE;
-            case RISCVInst::BLT:
-                return _instinfoBLT;
-            case RISCVInst::BGE:
-                return _instinfoBGE;
-            case RISCVInst::BLTU:
-                return _instinfoBLTU;
-            case RISCVInst::BGEU:
-                return _instinfoBGEU;
             case RISCVInst::JAL:
                 return _instinfoJAL;
-            case RISCVInst::JALR:
-                break; /* not supported */
             case RISCVInst::J:
                 return _instinfoJ;
             case RISCVInst::RET:
