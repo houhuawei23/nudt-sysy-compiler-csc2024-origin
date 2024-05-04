@@ -31,9 +31,9 @@ int main(int argc, char* argv[]) {
     sysy::Config config;
     config.parse_cmd_args(argc, argv);
     config.print_info();
-    
+
     std::cout << "Build time: " << __TIME__ << " " << __DATE__ << std::endl;
-    
+
     if (config.infile.empty()) {
         cerr << "Error: input file not specified" << endl;
         config.print_help();
@@ -95,6 +95,12 @@ int main(int argc, char* argv[]) {
             fout.open(config.outfile);
             target.emit_assembly(fout, *mir_module);
         }
+    }
+    if (config.gen_asm) {
+        auto target = mir::GENERICTarget();
+        auto mir_module = mir::create_mir_module(*module_ir, target);
+
+        target.emit_assembly(std::cout, *mir_module);
     }
     return EXIT_SUCCESS;
 }

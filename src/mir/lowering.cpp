@@ -66,11 +66,17 @@ void create_mir_module(ir::Module& ir_module, LoweringContext& lowering_ctx) {
             } else if (type->is_float()) {
             }
             size_t align = 4;  // TODO: align
-            auto mir_storage = std::make_unique<MIRDataStorage>(
-                std::move(data), false, ir_gval->name());
-            auto mir_gobj = std::make_unique<MIRGlobalObject>(
-                align, std::move(mir_storage), &mir_module);
+            auto mir_storage = std::make_unique<MIRDataStorage>(std::move(data), false, ir_gvar->name());
+            auto mir_gobj = std::make_unique<MIRGlobalObject>(align, std::move(mir_storage), &mir_module);
             mir_module.global_objs().push_back(std::move(mir_gobj));
+
+            // mir_module.global_objs().push_back(
+            //     std::make_unique<MIRGlobalObject>(
+            //         align,
+            //         std::make_unique<MIRDataStorage>(std::move(data), false,
+            //                                          ir_gvar->name()),
+            //         &mir_module));
+
         } else {  //! gvar not init: .bss
             size_t align = 4;  // TODO: align
             auto mir_storage = std::make_unique<MIRZeroStorage>(size, ir_gvar->name());
@@ -351,17 +357,30 @@ void lower(ir::BinaryInst* ir_inst, LoweringContext& ctx) {
 //! BranchInst
 void emit_branch(ir::BasicBlock* srcblock, ir::BasicBlock* dstblock, LoweringContext& lctx);
 
+/**
+ * 
+*/
 void lower(ir::BranchInst* ir_inst, LoweringContext& ctx) {
     auto src_block = ir_inst->parent();
 
     if (ir_inst->is_cond()) {
         // TODO: conditional branch
+        int a = 5;
+        int b = 10;
+        std::cout << "conditional branch" << std::endl;
     } else {  // unconditional branch
         auto dst_block = ir_inst->dest();
         emit_branch(src_block, dst_block, ctx);
     }
 }
-
+/**
+ * IR: 
+ *  br dest 
+ *  br cond, iftrue, iffalse
+ * MIRGeneric: 
+ *  Jump {target}
+ *  Branch {cond}, {target}, {prob}
+*/
 void emit_branch(ir::BasicBlock* srcblock,
                  ir::BasicBlock* dstblock,
                  LoweringContext& lctx) {

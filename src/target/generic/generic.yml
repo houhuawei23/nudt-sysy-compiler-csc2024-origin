@@ -146,7 +146,7 @@ InstInfo: {
     Instances: {
         # Instances
         Jump: {
-            # format: "Jump {label}"
+            # format: "Jump {target}"
             format: ["Jump", " ", 0],
             operands: { 0: { name: target, type: RELOC, flag: Metadata } },
             flag: [Terminator, Branch, NoFallThrough],

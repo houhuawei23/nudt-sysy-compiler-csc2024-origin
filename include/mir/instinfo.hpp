@@ -111,9 +111,7 @@ constexpr bool isOperandVReg(MIROperand* operand) {
     return operand->is_reg() && isVirtualReg(operand->reg());
 }
 constexpr bool isOperandIReg(MIROperand* operand) {
-    // TODO: not implemented yet
-
-    return false;
+    return operand->is_reg() && operand->type() <= OperandType::Int64;
 }
 constexpr bool isOperandReloc(MIROperand* operand) {
     return operand->is_reloc() && operand->type() == OperandType::Special;

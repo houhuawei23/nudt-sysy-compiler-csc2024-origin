@@ -82,15 +82,24 @@ static bool selectAddrOffset(MIROperand* addr,
     std::cerr << "selectAddrOffset not implemented for RISCV" << std::endl;
     const auto addrInst = ctx.lookup_def(addr);
     if (addrInst) {
+        std::cout << "addrInst->opcode() " << addrInst->opcode() << std::endl;
         if (addrInst->opcode() == InstLoadStackObjectAddr) {
             base = addrInst->operand(1);
             offset = MIROperand::as_imm(0, OperandType::Int64);
             return true;
         }
-    }
+        if (addrInst->opcode() == InstLoadGlobalAddress) {
 
+        }
+    }
+    if(isOperandIReg(addr)) {
+        base = addr;
+        offset = MIROperand::as_imm(0, OperandType::Int64);
+        return true;
+    }
     return false;
 }
+
 static bool isOperandI64(MIROperand* op) {
     return op->type() == OperandType::Int64;
 }
