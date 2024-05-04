@@ -89,10 +89,9 @@ static bool selectAddrOffset(MIROperand* addr,
             return true;
         }
         if (addrInst->opcode() == InstLoadGlobalAddress) {
-
         }
     }
-    if(isOperandIReg(addr)) {
+    if (isOperandIReg(addr)) {
         base = addr;
         offset = MIROperand::as_imm(0, OperandType::Int64);
         return true;
@@ -121,8 +120,6 @@ static MIROperand* getOne(MIROperand* operand) {
     return MIROperand::as_imm(1, operand->type());
 }
 
-
-
 }  // namespace mir::RISCV
 
 //! Dont Change !!
@@ -139,8 +136,6 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
     auto imm2reg = [&](MIROperand*& op) {
         if (op->is_imm()) {
             auto reg = getVRegAs(ctx, op);
-            auto tmp = isOperandVRegOrISAReg(reg);
-            std::cout << "imm2reg" << tmp << std::endl;
             auto inst = ctx.new_inst(InstLoadImm);
             inst->set_operand(0, reg);
             inst->set_operand(1, op);
@@ -149,19 +144,12 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
         }
     };
 
+
     switch (inst->opcode()) {
         case InstStore: {
-            std::cout << "Store !!!!!" << std::endl;
-            auto val = inst->operand(1);
-            // imm2reg(val);
-            auto reg = getVRegAs(ctx, val);
-            auto tmp = isOperandVRegOrISAReg(reg);
-            std::cout << "imm2reg" << tmp << std::endl;
-            auto new_inst = ctx.new_inst(InstLoadImm);
-            new_inst->set_operand(0, reg);
-            new_inst->set_operand(1, val);
-            inst->set_operand(1, reg);
-            modified = true;
+            MIROperand* val = inst->operand(1);
+            imm2reg(val);
+            inst->set_operand(1, val);
             break;
         }
     }

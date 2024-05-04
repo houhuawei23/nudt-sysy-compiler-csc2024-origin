@@ -251,7 +251,8 @@ class CallInst : public Instruction {
 
    public:
     Function* callee() const { return _callee; }
-
+    /* real arguments */
+    auto& rargs() const { return _operands; }
     static bool classof(const Value* v) { return v->scid() == vCALL; }
     void print(std::ostream& os) override;
     bool is_constprop(){return false;}
