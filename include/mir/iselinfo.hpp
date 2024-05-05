@@ -86,11 +86,11 @@ uint32_t select_copy_opcode(MIROperand* dst, MIROperand* src);
 
 inline MIROperand* getHighBits(MIROperand* operand) {
     assert(isOperandReloc(operand));
-    return new MIROperand{operand->getStorage(), OperandType::HighBits};
+    return new MIROperand{operand->storage(), OperandType::HighBits};
 }
 inline MIROperand* getLowBits(MIROperand* operand) {
     assert(isOperandReloc(operand));
-    return new MIROperand{operand->getStorage(), OperandType::LowBits};
+    return new MIROperand{operand->storage(), OperandType::LowBits};
 }
 
 

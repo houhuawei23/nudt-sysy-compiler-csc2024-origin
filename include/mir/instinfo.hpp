@@ -102,13 +102,15 @@ class TargetInstInfo {
 constexpr bool isOperandVRegORISAReg(MIROperand* operand) {
     return operand->is_reg() && (isVirtualReg(operand->reg()) || isISAReg(operand->reg()));
 }
+constexpr bool isOperandISAReg(MIROperand* operand) {
+    return operand->is_reg() && isISAReg(operand->reg());
+}
+constexpr bool isOperandVReg(MIROperand* operand) {
+    return operand->is_reg() && isVirtualReg(operand->reg());
+}
 constexpr bool requireFlag(uint32_t flag, InstFlag required) noexcept {
     return (static_cast<uint32_t>(flag) & static_cast<uint32_t>(required)) ==
            static_cast<uint32_t>(required);
-}
-
-constexpr bool isOperandVReg(MIROperand* operand) {
-    return operand->is_reg() && isVirtualReg(operand->reg());
 }
 constexpr bool isOperandIReg(MIROperand* operand) {
     return operand->is_reg() && operand->type() <= OperandType::Int64;
@@ -148,7 +150,6 @@ static std::ostream& operator<<(std::ostream& os, OperandDumper opdp) {
         } else {
             os << "[reg]";
         }
-
     } else if (operand->is_imm()) {
         os << "imm: " << operand->imm();
     } else if (operand->is_prob()) {
@@ -160,5 +161,4 @@ static std::ostream& operator<<(std::ostream& os, OperandDumper opdp) {
     }
     return os;
 }
-
 }  // namespace mir::GENERIC
