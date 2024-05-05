@@ -15,7 +15,6 @@ void allocateStackObjects(MIRFunction& func, CodeGenContext& ctx) {
         }
     });
 
-    // ctx.frameInfo.
     /* callee arguments */
 
     /* local variables */

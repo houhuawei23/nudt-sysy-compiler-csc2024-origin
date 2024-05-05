@@ -114,10 +114,12 @@ void create_mir_module(ir::Module& ir_module, LoweringContext& lowering_ctx) {
         codegen_ctx.registerInfo = new RISCVRegisterInfo();
         if (codegen_ctx.registerInfo) {
             linearAllocator(*mir_func, codegen_ctx);
+            // fastAllocator(*mir_func, codegen_ctx);
         }
 
         /* stack allocation */
-        // allocateStackObjects(*mir_func, codegen_ctx);
+        allocateStackObjects(*mir_func, codegen_ctx);
+        
         /* post-RA scheduling, minimize cycles */
 
         /* 4.10 post legalization */

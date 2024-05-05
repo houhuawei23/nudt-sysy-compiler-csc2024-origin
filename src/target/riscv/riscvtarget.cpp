@@ -13,6 +13,4 @@ void RISCVTarget::emit_assembly(std::ostream& out, MIRModule& module) {
         target.get_target_frame_info(), MIRFlags{false, false}};
     dump_assembly(out, module, codegen_ctx);
 }
-
-
 }  // namespace mir

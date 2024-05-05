@@ -4,8 +4,6 @@
 #include "autogen/generic/InstInfoDecl.hpp"
 
 namespace mir {
-
-// TargetInstInfo
 uint32_t offset = GENERIC::GENERICInstBegin + 1;
 InstInfo& TargetInstInfo::get_instinfo(uint32_t opcode) { return GENERIC::getGENERICInstInfo().get_instinfo(opcode + offset); }
 
@@ -39,7 +37,6 @@ static std::string_view getType(OperandType type) {
             return "lo ";
         default:
             assert(false && "Invalid operand type");
-            return "unknown ";
     }
 };
 

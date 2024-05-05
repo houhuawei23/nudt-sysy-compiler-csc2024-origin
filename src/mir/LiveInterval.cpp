@@ -102,7 +102,7 @@ LiveVariablesInfo calcLiveIntervals(MIRFunction& mfunc, CodeGenContext& ctx) {
                 auto operand = inst->operand(idx);
 
                 // 非虚拟寄存器 --> continue
-                if (not isOperandVReg(operand)) continue;
+                if (!isOperandVReg(operand)) continue;
 
                 auto id = regNum(*operand);
                 if (flag & OperandFlagDef) {  // 变量定义 --> defs insert the id

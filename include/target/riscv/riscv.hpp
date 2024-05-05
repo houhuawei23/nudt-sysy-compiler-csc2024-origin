@@ -27,6 +27,100 @@ enum RISCVRegister : uint32_t {
     FREnd,
 };
 
+static void dumpISAReg(std::ostream& os, MIROperand* operand) {
+    assert(operand != nullptr);
+    auto reg = operand->reg();
+    switch (reg) {
+    case RISCV::X10:
+        os << "a0";
+        break;
+    case RISCV::X11:
+        os << "a1";
+        break;
+    case RISCV::X12:
+        os << "a2";
+        break;
+    case RISCV::X13:
+        os << "a3";
+        break;
+    case RISCV::X14:
+        os << "a4";
+        break;
+    case RISCV::X15:
+        os << "a5";
+        break;
+    case RISCV::X16:
+        os << "a6";
+        break;
+    case RISCV::X17:
+        os << "a7";
+        break;
+    case RISCV::X5:
+        os << "t0";
+        break;
+    case RISCV::X6:
+        os << "t1";
+        break;
+    case RISCV::X7:
+        os << "t2";
+        break;
+    case RISCV::X28:
+        os << "t3";
+        break;
+    case RISCV::X29:
+        os << "t4";
+        break;
+    case RISCV::X30:
+        os << "t5";
+        break;
+    case RISCV::X31:
+        os << "t6";
+        break;
+    case RISCV::X8:
+        os << "s0";
+        break;
+    case RISCV::X9:
+        os << "s1";
+        break;
+    case RISCV::X18:
+        os << "s2";
+        break;
+    case RISCV::X19:
+        os << "s3";
+        break;
+    case RISCV::X20:
+        os << "s4";
+        break;
+    case RISCV::X21:
+        os << "s5";
+        break;
+    case RISCV::X22:
+        os << "s6";
+        break;
+    case RISCV::X23:
+        os << "s7";
+        break;
+    case RISCV::X24:
+        os << "s8";
+        break;
+    case RISCV::X25:
+        os << "s9";
+        break;
+    case RISCV::X26:
+        os << "s10";
+        break;
+    case RISCV::X27:
+        os << "s11";
+        break;
+    case RISCV::X3:
+        os << "gp";
+        break;
+
+    default:
+        break;
+    }
+}
+
 // return address
 static auto ra = MIROperand::as_isareg(RISCVRegister::X1, OperandType::Int64);
 
@@ -50,6 +144,8 @@ static std::ostream& operator<<(std::ostream& os, OperandDumper opdp) {
             dumpVirtualReg(os, operand);
         } else if (isStackObject(operand->reg())) {
             os << "so" << (operand->reg() ^ stackObjectBegin);
+        } else if (isISAReg(operand->reg())) {
+            dumpISAReg(os, operand);
         } else {
             os << "[reg]";
         }

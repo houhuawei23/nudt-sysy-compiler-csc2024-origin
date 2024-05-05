@@ -95,13 +95,77 @@ class RISCVFrameInfo : public TargetFrameInfo {
  */
 class RISCVRegisterInfo : public TargetRegisterInfo {
     // get function
-    uint32_t get_alloca_class_cnt() {
-        std::cerr << "Not Impl get_alloca_class_cnt" << std::endl;
-        return 0;
-    }
+    uint32_t get_alloca_class_cnt() { return 2; }  // GPR(General Purpose Registers)/FPR(Floating Point Registers)
     uint32_t get_alloca_class(OperandType type) {
-        std::cerr << "Not Impl get_alloca_class" << std::endl;
-        return 0;
+        switch (type) {
+            case OperandType::Bool:
+            case OperandType::Int8:
+            case OperandType::Int16:
+            case OperandType::Int32:
+            case OperandType::Int64:
+                return 0;
+            case OperandType::Float32:
+                return 1;
+            default:
+                assert(false && "invalid alloca class");
+        }
+    }
+    std::vector<uint32_t>& get_allocation_list(uint32_t classId) {
+        if (classId == 0) {  // General Purpose Registers
+            static std::vector<uint32_t> list{
+                // $a0-$a5
+                RISCV::X10, RISCV::X11, RISCV::X12, RISCV::X13, RISCV::X14,
+                RISCV::X15,
+                // $a6-$a7
+                RISCV::X16, RISCV::X17,
+                // $t0-$t6
+                RISCV::X5, RISCV::X6, RISCV::X7, RISCV::X28, RISCV::X29,
+                RISCV::X30, RISCV::X31, 
+                // $s0-$s1
+                RISCV::X8, RISCV::X9,
+                // $s2-$s11
+                RISCV::X18, RISCV::X19, RISCV::X20, RISCV::X21, RISCV::X22, 
+                RISCV::X23, RISCV::X24, RISCV::X25, RISCV::X26, RISCV::X27,
+                // $gp
+                RISCV::X3,
+            };
+            return list;
+        } else if (classId == 1) {  // Floating Point Registers
+            static std::vector<uint32_t> list{
+                // $fa0-$fa5
+                RISCV::F10, RISCV::F11, RISCV::F12, RISCV::F13, RISCV::F14,
+                RISCV::F15,
+                // $fa6-$fa7
+                RISCV::F16, RISCV::F17, 
+                // $ft0-$ft11
+                RISCV::F0, RISCV::F1, RISCV::F2, RISCV::F3, RISCV::F4, 
+                RISCV::F5, RISCV::F6, RISCV::F7, RISCV::F28, RISCV::F29, 
+                RISCV::F30, RISCV::F31,
+                // $fs0-$fs1
+                RISCV::F8, RISCV::F9,
+                // $fs2-$fs11
+                RISCV::F18, RISCV::F19, RISCV::F20, RISCV::F21, RISCV::F22, 
+                RISCV::F23, RISCV::F24, RISCV::F25, RISCV::F26, RISCV::F27,
+            };
+            return list;
+        } else {
+            assert(false && "invalid type regoster");
+        }
+    }
+
+    OperandType getCanonicalizedRegisterType(OperandType type) {
+        switch (type) {
+            case OperandType::Bool:
+            case OperandType::Int8: 
+            case OperandType::Int16:
+            case OperandType::Int32:
+            case OperandType::Int64:
+                return OperandType::Int64;
+            case OperandType::Float32:
+                return OperandType::Float32;
+            default:
+                assert(false && "valid operand type");
+        }
     }
 
     MIROperand* get_return_address_register() { return RISCV::ra; }
@@ -112,13 +176,7 @@ class RISCVRegisterInfo : public TargetRegisterInfo {
         std::cerr << "Not Impl is_legal_isa_reg_operand" << std::endl;
         return false;
     }
-    bool is_zero_reg(const uint32_t x) const {
-        return x == RISCV::RISCVRegister::X0;
-    }
-    OperandType getCanonicalizedRegisterType(OperandType type) {
-        std::cerr << "Not Impl getCanonicalizedRegisterType" << std::endl;
-        return type;
-    }
+    bool is_zero_reg(const uint32_t x) const { return x == RISCV::RISCVRegister::X0; }
 };
 
 /*

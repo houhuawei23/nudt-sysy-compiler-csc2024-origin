@@ -41,7 +41,6 @@ class MIRRelocable {
 constexpr uint32_t virtualRegBegin = 0b0101U << 28;
 constexpr uint32_t stackObjectBegin = 0b1010U << 28;
 constexpr uint32_t invalidReg = 0b1100U << 28;
-
 constexpr bool isISAReg(uint32_t x) { return x < virtualRegBegin; }
 constexpr bool isVirtualReg(uint32_t x) { return (x & virtualRegBegin) == virtualRegBegin; }
 constexpr bool isStackObject(uint32_t x) { return (x & stackObjectBegin) == stackObjectBegin; }
@@ -78,7 +77,7 @@ constexpr uint32_t getOperandSize(const OperandType type) {
         case OperandType::Float32:
             return 4;
         default:
-            return 0;  // unsupported
+            return 0;  // invalid
     }
 }
 
@@ -113,18 +112,22 @@ class MIRRegister {
 };
 
 enum MIRGenericInst : uint32_t {
+    // jump
     InstJump,
     InstBranch,
     InstUnreachable,
+    
     // memory
     InstLoad,
     InstStore,
+    
     // arth
     InstAdd,
     InstSub,
     InstMul,
     InstUDiv,
     InstURem,
+    
     // bitwise
     InstAnd,
     InstOr,
@@ -132,15 +135,19 @@ enum MIRGenericInst : uint32_t {
     InstShl,
     InstLShr,  // logic shift right
     InstAShr,  // arth shift right
+    
     // Signed div/rem
     InstSDiv,
     InstSRem,
+    
     // minmax
     InstSMin,
     InstSMax,
+    
     // unary
     InstNeg,
     InstAbs,
+    
     // fp
     InstFAdd,
     InstFSub,
@@ -149,9 +156,11 @@ enum MIRGenericInst : uint32_t {
     InstFNeg,
     InstFAbs,
     InstFFma,
+
     // comp
     InstICmp,
     InstFCmp,
+    
     // conversion
     InstSExt,
     InstZExt,
@@ -161,6 +170,7 @@ enum MIRGenericInst : uint32_t {
     InstU2F,
     InstS2F,
     InstFCast,
+    
     // misc
     InstCopy,
     InstSelect,
@@ -207,21 +217,16 @@ class MIROperand {
         uint32_t reg() const { return std::get<MIRRegister*>(_storage)->reg(); }
         MIRRelocable* reloc() { return std::get<MIRRelocable*>(_storage); }
 
-    public:
+    public:  // operator重载
         bool operator==(const MIROperand& rhs) { return _storage == rhs._storage; }
         bool operator!=(const MIROperand& rhs) { return _storage != rhs._storage; }
 
-    // hash?
-    auto& getStorage() const noexcept { return _storage; }
     public:  // check function
+        constexpr bool is_unused() { return std::holds_alternative<std::monostate>(_storage); }
         constexpr bool is_imm() { return std::holds_alternative<intmax_t>(_storage); }
-        
         constexpr bool is_reg() { return std::holds_alternative<MIRRegister*>(_storage); }
-        
         constexpr bool is_reloc() { return std::holds_alternative<MIRRelocable*>(_storage); }
-
         constexpr bool is_prob() { return false; }
-    
         constexpr bool is_init() { return !std::holds_alternative<std::monostate>(_storage); }
 
         template <typename T>
@@ -232,27 +237,33 @@ class MIROperand {
         static MIROperand* as_imm(T val, OperandType type) {  // immediates
             return new MIROperand(static_cast<intmax_t>(val), type);
         }
-        
         static MIROperand* as_isareg(uint32_t reg, OperandType type) {  // physical register
             auto reg_obj = new MIRRegister(reg);
             auto operand = new MIROperand(reg_obj, type);
             return operand;
         }
-        
         static MIROperand* as_vreg(uint32_t reg, OperandType type) {  // virtual register
             return new MIROperand(new MIRRegister(reg + virtualRegBegin), type);
         }
-    
         static MIROperand* as_stack_obj(uint32_t reg, OperandType type) {  // stack
             return new MIROperand(new MIRRegister(reg + stackObjectBegin), type);
         }
-
         static MIROperand* as_reloc(MIRRelocable* reloc) {  // reloc
             return new MIROperand(reloc, OperandType::Special);
         }
 
     public:
+        size_t hash() const { return std::hash<std::decay_t<decltype(_storage)>>{}(_storage); }
+
+    public:
         // void print(std::ostream& os);
+};
+
+/*
+ * @brief: MIROperandHasher Struct
+ */
+struct MIROperandHasher final {
+    size_t operator()(const MIROperand* operand) const { return operand->hash(); }
 };
 
 /*
@@ -294,6 +305,7 @@ class MIRInst {
     public:
         void print(std::ostream& os);
 };
+using MIRInstList = std::list<MIRInst*>;
 
 /*
  * @brief: MIRBlock Class
@@ -369,7 +381,7 @@ class MIRFunction : public MIRRelocable {
             return ref;
         }
 
-    public:
+    public:  // utils function
         void print(std::ostream& os, CodeGenContext& ctx) override;
         void print_cfg(std::ostream& os);
 };
