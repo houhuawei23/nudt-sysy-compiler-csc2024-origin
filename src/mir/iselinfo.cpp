@@ -70,7 +70,7 @@ void ISelContext::run_isel(MIRFunction* func) {
 
         _constant_map.clear();
         _use_cnt.clear();
-        _inst_map.clear(); //! here!
+        _inst_map.clear();  //! here!
         //! 定义和使用计数收集: 遍历所有指令，收集每个定义的计数和使用情况。
         // get def count
         // auto def_count = collect_def_count(func, _codegen_ctx);
@@ -196,6 +196,31 @@ uint32_t select_copy_opcode(MIROperand* dst, MIROperand* src) {
     }
     assert(isOperandVRegORISAReg(src) and isOperandVRegORISAReg(dst));
     return InstCopy;
+}
+
+void postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) {
+    // TODO: implement
+    std::cerr << "postLegalizeFunc not implemented yet!" << std::endl;
+
+    /* legalize stack operands */
+    for (auto& block : func.blocks()) {
+        auto& insts = block->insts();
+        for (auto it = insts.begin(); it != insts.end();) {
+            auto next = std::next(it);
+            auto& inst = *it;
+            auto& info = ctx.instInfo.get_instinfo(inst);
+            for (uint32_t idx = 0; idx < info.operand_num(); idx++) {
+                auto op = inst->operand(idx);
+                auto lctx = InstLegalizeContext{inst, insts,        it,
+                                                ctx,  std::nullopt, func};
+                if (isOperandStackObject(op)) {
+                    ctx.iselInfo->legalizeInstWithStackOperand(
+                        lctx, op, func.stack_objs().at(op));
+                }
+            }
+            it = next;
+        }
+    }
 }
 
 }  // namespace mir

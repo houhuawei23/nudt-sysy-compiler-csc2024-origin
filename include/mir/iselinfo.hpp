@@ -3,6 +3,7 @@
 #include "mir/mir.hpp"
 #include "mir/instinfo.hpp"
 // #include "mir/target.hpp"
+#include <optional>
 
 namespace mir {
 class CodeGenContext;
@@ -19,7 +20,7 @@ class ISelContext {
 
     std::unordered_map<MIROperand*, uint32_t> _use_cnt;
 
-    public:
+   public:
     ISelContext(CodeGenContext& codegen_ctx) : _codegen_ctx(codegen_ctx) {}
     void run_isel(MIRFunction* func);
     bool has_one_use(MIROperand* op);
@@ -43,11 +44,24 @@ class ISelContext {
     MIRBlock* curr_block() { return _curr_block; }
 };
 
+struct InstLegalizeContext final {
+    MIRInst*& inst;
+    MIRInstList& instructions;
+    MIRInstList::iterator iter;
+    CodeGenContext& ctx;
+    std::optional<std::list<std::unique_ptr<MIRBlock>>::iterator> blockIter;
+    MIRFunction& func;
+};
+
 class TargetISelInfo {
    public:
     virtual ~TargetISelInfo() = default;
     virtual bool is_legal_geninst(uint32_t opcode) const = 0;
     virtual bool match_select(MIRInst* inst, ISelContext& ctx) const = 0;
+
+    virtual void legalizeInstWithStackOperand(InstLegalizeContext& ctx,
+                                              MIROperand* op,
+                                              StackObject& obj) const = 0;
 };
 
 enum CompareOp : uint32_t {
@@ -92,6 +106,5 @@ inline MIROperand* getLowBits(MIROperand* operand) {
     assert(isOperandReloc(operand));
     return new MIROperand{operand->storage(), OperandType::LowBits};
 }
-
 
 }  // namespace mir

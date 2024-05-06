@@ -131,6 +131,12 @@ bool removeUnusedInsts(MIRFunction& func, CodeGenContext& ctx) {
             [&](MIRInst* inst) { return remove.count(inst); });
     }
 
+    if(not remove.empty()) {
+        int a = 12;
+        int b = remove.size();
+        std::cout << "removed " << b << " insts" << std::endl;
+    }
+
     return not remove.empty();
 }
 
@@ -163,7 +169,7 @@ bool genericPeepholeOpt(MIRFunction& func, CodeGenContext& ctx) {
     modified |= eliminateStackLoads(func, ctx);
     modified |= removeIndirectCopy(func, ctx);
     modified |= removeIdentityCopies(func, ctx);
-    modified |= removeUnusedInsts(func, ctx);
+    // modified |= removeUnusedInsts(func, ctx);
     modified |= applySSAPropagation(func, ctx);
     modified |= machineConstantCSE(func, ctx);
     modified |= machineConstantHoist(func, ctx);

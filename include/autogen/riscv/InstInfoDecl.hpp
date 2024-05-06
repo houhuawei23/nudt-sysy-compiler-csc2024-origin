@@ -67,6 +67,8 @@ enum RISCVInst {
     AMOAND,
     AMOOR,
     AMOXOR,
+    FLW,
+    FSW,
     LoadImm12,
     LoadImm32,
     LoadImm64,

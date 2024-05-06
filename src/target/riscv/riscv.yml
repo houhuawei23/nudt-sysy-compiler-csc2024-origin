@@ -151,6 +151,7 @@ InstInfo: {
           },
         # RIU lui, auipc
         LUI: { mnem: "lui", template: Utype, flag: [LoadConstant] },
+        # auipc rd, imm: x[rd] = pc + sext(imm[31:12] << 12)
         AUIPC: { mnem: "auipc", template: Utype, flag: [PCRel, LoadConstant] },
 
         # RV32M Multiply Extension
@@ -172,6 +173,29 @@ InstInfo: {
         AMOOR: { mnem: "amoor.w", template: Rtype },
         AMOXOR: { mnem: "amoxor.w", template: Rtype },
         # RV32F Single-Precision Floating-Point Instructions
+
+        FLW:
+          {
+            format: ["flw", " ", 0, ", ", 1, "(", 2, ")"],
+            operands:
+              {
+                0: { name: rd, type: FPR, flag: Def },
+                1: { name: offset, type: IMM12, flag: Metadata },
+                2: { name: rs1, type: BaseLike, flag: Use }, # BaseLike
+              },
+            flag: [Load],
+          },
+        FSW:
+          {
+            format: ["fsw", " ", 0, ", ", 1, "(", 2, ")"],
+            operands:
+              {
+                0: { name: rs2, type: FPR, flag: Use },
+                1: { name: offset, type: IMM12, flag: Metadata },
+                2: { name: rs1, type: BaseLike, flag: Use }, # BaseLike
+              },
+            flag: [Store],
+          },
 
         # Pseudos
         # nop

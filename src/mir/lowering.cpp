@@ -127,20 +127,21 @@ void create_mir_module(ir::Module& ir_module, LoweringContext& lowering_ctx) {
         /* 4.7 register allocation */
         codegen_ctx.registerInfo = new RISCVRegisterInfo();
         if (codegen_ctx.registerInfo) {
-            linearAllocator(*mir_func, codegen_ctx);
+            // linearAllocator(*mir_func, codegen_ctx);
             // fastAllocator(*mir_func, codegen_ctx);
         }
 
         /* 4.8 stack allocation */
         if (codegen_ctx.registerInfo) {
-            allocateStackObjects(mir_func, codegen_ctx);
+            /* after sa, all stack objects are allocated with .offset */
+            // allocateStackObjects(mir_func, codegen_ctx);
             codegen_ctx.flags.postSA = true;
         }
         
         /* 4.9 post-RA scheduling, minimize cycles */
 
         /* 4.10 post legalization */
-
+        postLegalizeFunc(*mir_func, codegen_ctx);
         /* 4.11 verify */
     }
     /* module verify */

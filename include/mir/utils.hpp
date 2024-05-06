@@ -24,4 +24,7 @@ void forEachDefOperand(MIRFunction& func,
 
 bool genericPeepholeOpt(MIRFunction& func, CodeGenContext& ctx);
 
+
+void postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx);
+
 }  // namespace mir

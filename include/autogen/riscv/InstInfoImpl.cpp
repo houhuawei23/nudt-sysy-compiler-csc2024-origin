@@ -1786,6 +1786,68 @@ class RISCVInstInfoAMOXOR final : public InstInfo {
     }
 };
 
+class RISCVInstInfoFLW final : public InstInfo {
+   public:
+    RISCVInstInfoFLW() = default;
+
+    uint32_t operand_num() override { return 3; }
+
+    OperandFlag operand_flag(uint32_t idx) override {
+        switch (idx) {
+            case 0:
+                return OperandFlagDef;
+            case 1:
+                return OperandFlagMetadata;
+            case 2:
+                return OperandFlagUse;
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() override { return InstFlagNone | InstFlagLoad; }
+
+    std::string_view name() override { return "RISCV.FLW"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "flw"
+            << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(1)} << "("
+            << mir::RISCV::OperandDumper{inst.operand(2)} << ")";
+    }
+};
+
+class RISCVInstInfoFSW final : public InstInfo {
+   public:
+    RISCVInstInfoFSW() = default;
+
+    uint32_t operand_num() override { return 3; }
+
+    OperandFlag operand_flag(uint32_t idx) override {
+        switch (idx) {
+            case 0:
+                return OperandFlagUse;
+            case 1:
+                return OperandFlagMetadata;
+            case 2:
+                return OperandFlagUse;
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() override { return InstFlagNone | InstFlagStore; }
+
+    std::string_view name() override { return "RISCV.FSW"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "fsw"
+            << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(1)} << "("
+            << mir::RISCV::OperandDumper{inst.operand(2)} << ")";
+    }
+};
+
 class RISCVInstInfoLoadImm12 final : public InstInfo {
    public:
     RISCVInstInfoLoadImm12() = default;
@@ -1962,6 +2024,8 @@ class RISCVInstInfo final : public TargetInstInfo {
     RISCVInstInfoAMOAND _instinfoAMOAND;
     RISCVInstInfoAMOOR _instinfoAMOOR;
     RISCVInstInfoAMOXOR _instinfoAMOXOR;
+    RISCVInstInfoFLW _instinfoFLW;
+    RISCVInstInfoFSW _instinfoFSW;
     RISCVInstInfoLoadImm12 _instinfoLoadImm12;
     RISCVInstInfoLoadImm32 _instinfoLoadImm32;
     RISCVInstInfoLoadImm64 _instinfoLoadImm64;
@@ -2085,6 +2149,10 @@ class RISCVInstInfo final : public TargetInstInfo {
                 return _instinfoAMOOR;
             case RISCVInst::AMOXOR:
                 return _instinfoAMOXOR;
+            case RISCVInst::FLW:
+                return _instinfoFLW;
+            case RISCVInst::FSW:
+                return _instinfoFSW;
             case RISCVInst::LoadImm12:
                 return _instinfoLoadImm12;
             case RISCVInst::LoadImm32:

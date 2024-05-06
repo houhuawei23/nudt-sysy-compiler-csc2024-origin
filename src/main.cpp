@@ -96,11 +96,11 @@ int main(int argc, char* argv[]) {
             target.emit_assembly(fout, *mir_module);
         }
     }
-    if (config.gen_asm) {
-        auto target = mir::GENERICTarget();
-        auto mir_module = mir::create_mir_module(*module_ir, target);
+    // if (config.gen_asm) {
+    //     auto target = mir::GENERICTarget();
+    //     auto mir_module = mir::create_mir_module(*module_ir, target);
 
-        target.emit_assembly(std::cout, *mir_module);
-    }
+    //     target.emit_assembly(std::cout, *mir_module);
+    // }
     return EXIT_SUCCESS;
 }

@@ -1746,6 +1746,9 @@ class RISCVISelInfo final : public TargetISelInfo {
    public:
     bool is_legal_geninst(uint32_t opcode) const override;
     bool match_select(MIRInst* inst, ISelContext& ctx) const override;
+    void legalizeInstWithStackOperand(InstLegalizeContext& ctx,
+                                      MIROperand* op,
+                                      StackObject& obj) const override;
 };
 
 TargetISelInfo& getRISCVISelInfo() {

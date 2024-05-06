@@ -144,7 +144,6 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
         }
     };
 
-
     switch (inst->opcode()) {
         case InstStore: {
             MIROperand* val = inst->operand(1);
@@ -159,5 +158,121 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
 bool RISCVISelInfo::match_select(MIRInst* inst, ISelContext& ctx) const {
     bool ret = legalizeInst(inst, ctx);
     return matchAndSelectImpl(inst, ctx);
+}
+
+static MIROperand* getAlign(int64_t immVal) {
+    return MIROperand::as_imm(immVal, OperandType::Special);
+}
+/**
+ * sw rs2, offset(rs1)
+ * M[x[rs1] + sext(offset)] = x[rs2][31: 0]
+ * lw rd, offset(rs1) or lw rd, rs1, offset
+ * x[rd] = sext(M[x[rs1] + sext(offset)][31:0])
+ */
+void RISCVISelInfo::legalizeInstWithStackOperand(InstLegalizeContext& ctx,
+                                                 MIROperand* op,
+                                                 StackObject& obj) const {
+    auto& inst = ctx.inst;
+
+    int64_t immVal = obj.offset;
+
+    std::cout << "opcode: " << inst->opcode() << std::endl;
+    switch (inst->opcode()) {
+        case SD:
+        case SW:
+        case SH:
+        case SB:
+        case FSW: {
+            immVal += inst->operand(1)->imm();
+            break;
+        }
+        case LD:
+        case LW:
+        // case LWU:
+        case LH:
+        case LHU:
+        case LB:
+        case LBU:
+        case FLW: {
+            immVal += inst->operand(2)->imm();
+            break;
+        }
+        default:
+            std::cerr
+                << "Unsupported instruction for legalizeInstWithStackOperand"
+                << std::endl;
+    }
+
+    MIROperand* base = sp;
+    auto offset = MIROperand::as_imm(immVal, OperandType::Int64);
+
+    switch (inst->opcode()) {
+        case InstLoadStackObjectAddr: {
+            /**
+             * addi rd, rs1, imm
+             * x[rd] = x[rs1] + sext(imm)
+             */
+            std::cout << "addi rd, rs1, imm" << std::endl;
+            inst->set_opcode(ADDI);
+            inst->set_operand(1, base);
+            inst->set_operand(2, offset);
+            break;
+        }
+        case InstStoreRegToStack: {
+            /**
+             * sw rs2, offset(rs1)
+             * M[x[rs1] + sext(offset)] = x[rs2][31: 0]
+             */
+            std::cout << "sw rs2, offset(rs1)" << std::endl;
+            inst->set_opcode(isOperandGR(*inst->operand(0)) ? SD : FSW);
+            inst->set_operand(1, offset);
+            inst->set_operand(2, base);
+            inst->set_operand(3,
+                              getAlign(isOperandGR(*inst->operand(0)) ? 8 : 4));
+
+            break;
+        }
+        case InstLoadRegFromStack: {
+            /**
+             * lw rd, rs1, offset
+             */
+            std::cout << "lw rd, rs1, offset" << std::endl;
+            inst->set_opcode(isOperandGR(*inst->operand(0)) ? LD : FLW);
+            inst->set_operand(1, base);
+            inst->set_operand(2, offset);
+            inst->set_operand(3,
+                              getAlign(isOperandGR(*inst->operand(0)) ? 8 : 4));
+            break;
+        }
+        case SD:
+        case SW:
+        case SH:
+        case SB:
+        case FSW: {
+            std::cout << "sw rs2, offset(rs1)" << std::endl;
+            inst->set_operand(1, offset);
+            inst->set_operand(2, base);
+            break;
+        }
+        case LD:
+        case LW:
+        // case LWU:
+        case LH:
+        case LHU:
+        case LB:
+        case LBU:
+        case FLW: {
+            std::cout << "lw rd, rs1, offset" << std::endl;
+            //! careful with the order of operands,
+            //! sw and lw have different order
+            inst->set_operand(1, base);
+            inst->set_operand(2, offset);
+            break;
+        }
+        default:
+            std::cerr
+                << "Unsupported instruction for legalizeInstWithStackOperand"
+                << std::endl;
+    }
 }
 }  // namespace mir::RISCV

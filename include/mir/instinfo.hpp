@@ -129,6 +129,9 @@ constexpr bool isOperandVRegOrISAReg(MIROperand* operand) {
     return operand->is_reg() && (isVirtualReg(operand->reg()) || isISAReg(operand->reg()));
 }
 
+constexpr bool isOperandStackObject(MIROperand* operand) {
+    return operand->is_reg() && isStackObject(operand->reg());
+}
 
 template <uint32_t N>
 constexpr bool isSignedImm(intmax_t imm) {
