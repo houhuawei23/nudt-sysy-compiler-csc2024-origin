@@ -119,7 +119,7 @@ enum MIRGenericInst : uint32_t {
     
     // memory
     InstLoad,
-    InstStore,
+    InstStore, /* 4 */
     
     // arth
     InstAdd,

@@ -5,6 +5,7 @@
 #include "mir/instinfo.hpp"
 #include "mir/iselinfo.hpp"
 
+#include "mir/utils.hpp"
 // #include "target/generic/InstInfoDecl.hpp"
 
 #include <optional>
@@ -58,6 +59,9 @@ void ISelContext::run_isel(MIRFunction* func) {
     //! fix point algorithm: 循环执行指令选择和替换，直到不再变化。
     while (true) {
         std::cout << "[run_isel] fix point while loop start" << std::endl;
+
+        genericPeepholeOpt(*func, _codegen_ctx);
+
         bool modified = false;
         bool has_illegal = false;
         _remove_work_list.clear();

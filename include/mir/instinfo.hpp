@@ -52,9 +52,6 @@ enum InstFlag : uint32_t {
         InstFlagWithDelaySlot | InstFlagPadding | InstFlagIndirectJump,
 };
 
-constexpr bool requireFlag(InstFlag flag, InstFlag required) {
-    return (static_cast<uint32_t>(flag) & static_cast<uint32_t>(required)) == static_cast<uint32_t>(required);
-}
 
 /*
  * @brief: InstInfo Class (抽象基类)
@@ -108,10 +105,20 @@ constexpr bool isOperandISAReg(MIROperand* operand) {
 constexpr bool isOperandVReg(MIROperand* operand) {
     return operand->is_reg() && isVirtualReg(operand->reg());
 }
+
+constexpr bool requireFlag(InstFlag flag, InstFlag required) {
+    return (static_cast<uint32_t>(flag) & static_cast<uint32_t>(required)) == static_cast<uint32_t>(required);
+}
+
 constexpr bool requireFlag(uint32_t flag, InstFlag required) noexcept {
     return (static_cast<uint32_t>(flag) & static_cast<uint32_t>(required)) ==
            static_cast<uint32_t>(required);
 }
+
+constexpr bool requireOneFlag(uint32_t flag, uint32_t required) {
+    return (static_cast<uint32_t>(flag) & static_cast<uint32_t>(required)) != 0;
+}
+
 constexpr bool isOperandIReg(MIROperand* operand) {
     return operand->is_reg() && operand->type() <= OperandType::Int64;
 }
@@ -148,7 +155,7 @@ static std::ostream& operator<<(std::ostream& os, OperandDumper opdp) {
         } else if (isStackObject(operand->reg())) {
             os << "so" << (operand->reg() ^ stackObjectBegin);
         } else {
-            os << "[reg]";
+            os << "isa " << operand->reg();
         }
     } else if (operand->is_imm()) {
         os << "imm: " << operand->imm();

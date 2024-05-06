@@ -60,8 +60,6 @@ static std::ostream& operator<<(std::ostream& os, OperandDumper opdp) {
             dumpVirtualReg(os, operand);
         } else if (isStackObject(operand->reg())) {
             os << "so" << (operand->reg() ^ stackObjectBegin);
-        } else if (isISAReg(operand->reg())) {
-            os  << getRISCVGPRTextualName(operand->reg());
         } else if (isOperandGR(*operand)) {
             os << getRISCVGPRTextualName(operand->reg());
         } else {
