@@ -10,7 +10,7 @@ namespace mir {
 void dump_assembly(std::ostream& os, MIRModule& module, CodeGenContext& ctx);
 
 /* allocate stack space for local variables */
-void allocateStackObjects(MIRFunction& func, CodeGenContext& ctx);
+void allocateStackObjects(MIRFunction* func, CodeGenContext& ctx);
 
 /* for each def operand in a block, apply functor */
 void forEachDefOperand(MIRBlock& block,

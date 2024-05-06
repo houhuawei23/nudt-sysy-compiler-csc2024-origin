@@ -49,8 +49,8 @@ struct CodeGenContext final {
     MIRFlags flags;
     
     TargetISelInfo* iselInfo;
-    
     TargetRegisterInfo* registerInfo;
+    
     TargetScheduleModel* scheduleModel;
 
     uint32_t idx = 0;

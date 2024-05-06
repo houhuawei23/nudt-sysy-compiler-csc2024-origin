@@ -77,7 +77,7 @@ constexpr uint32_t getOperandSize(const OperandType type) {
         case OperandType::Float32:
             return 4;
         default:
-            return 0;  // invalid
+            assert(false && "invalid operand type");
     }
 }
 

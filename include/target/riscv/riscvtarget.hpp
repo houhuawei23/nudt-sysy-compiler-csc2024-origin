@@ -35,40 +35,84 @@ class RISCVDataLayout final : public DataLayout {
  *      RISC-V Frame Information (特定于相关架构) -- 帧信息
  */
 class RISCVFrameInfo : public TargetFrameInfo {
-   public:
-    // lowering stage
-    void emit_call(ir::CallInst* inst, LoweringContext& lowering_ctx) override;
-    // 在函数调用前生成序言代码，用于设置栈帧和保存寄存器状态。
-    void emit_prologue(MIRFunction* func,
-                       LoweringContext& lowering_ctx) override;
-    void emit_return(ir::ReturnInst* ir_inst,
-                     LoweringContext& lowering_ctx) override;
+    public: // lowering stage
+        void emit_call(ir::CallInst* inst, LoweringContext& lowering_ctx) override;
+        // 在函数调用前生成序言代码，用于设置栈帧和保存寄存器状态。
+        void emit_prologue(MIRFunction* func,
+                        LoweringContext& lowering_ctx) override;
+        void emit_return(ir::ReturnInst* ir_inst,
+                        LoweringContext& lowering_ctx) override;
 
-    // ra stage
-    bool is_caller_saved(MIROperand& op) override {
-        std::cerr << "Not Impl is_caller_saved" << std::endl;
-        return true;
-    }
-    bool is_callee_saved(MIROperand& op) override {
-        std::cerr << "Not Impl is_callee_saved" << std::endl;
-        return true;
-    }
-    // sa stage
-    int stack_pointer_align() override { return 8; }
-    void emit_postsa_prologue(MIRBlock* entry, int32_t stack_size) override {
-        std::cerr << "Not Impl emit_postsa_prologue" << std::endl;
-    }
-    void emit_postsa_epilogue(MIRBlock* exit, int32_t stack_size) override {
-        std::cerr << "Not Impl emit_postsa_epilogue" << std::endl;
-    }
-    int32_t insert_prologue_epilogue(
-        MIRFunction* func,
-        std::unordered_set<MIROperand*>& call_saved_regs,
-        CodeGenContext& ctx,
-        MIROperand* return_addr_reg) override {
-        std::cerr << "Not Impl insert_prologue_epilogue" << std::endl;
-        return 0;
-    }
+    public: // ra stage (register allocation)
+        // 调用者保存寄存器
+        bool is_caller_saved(MIROperand& op) override {
+            const auto reg = op.reg();
+            // $ra $t0-$t6 $a0-$a7 $ft0-$ft11 $fa0-$fa7
+            return reg == RISCV::X1 || (RISCV::X5 <= reg && reg <= RISCV::X7) || 
+                   (RISCV::X10 <= reg && reg <= RISCV::X17) || 
+                   (RISCV::X28 <= reg && reg <= RISCV::X31) || 
+                   (RISCV::F0 <= reg && reg <= RISCV::F7) || 
+                   (RISCV::F10 <= reg && reg <= RISCV::F17) || 
+                   (RISCV::F28 <= reg && reg <= RISCV::F31);
+        }
+        // 被调用者保存寄存器
+        bool is_callee_saved(MIROperand& op) override {
+            const auto reg = op.reg();
+            // $sp $s0-$s7 $f20-$f30 $gp
+            return reg == RISCV::X2 || (RISCV::X8 <= reg && reg << RISCV::X9) || 
+                   (RISCV::X18 <= reg && reg <= RISCV::X27) || 
+                   (RISCV::F8 <= reg && reg <= RISCV::F9) || 
+                   (RISCV::F18 <= reg && reg <= RISCV::F27) || reg == RISCV::X3;
+        }
+        
+    public: // sa stage (stack allocation)
+        int stack_pointer_align() override { return 8; }
+        void emit_postsa_prologue(MIRBlock* entry, int32_t stack_size) override {
+            std::cerr << "Not Impl emit_postsa_prologue" << std::endl;
+        }
+        void emit_postsa_epilogue(MIRBlock* exit, int32_t stack_size) override {
+            std::cerr << "Not Impl emit_postsa_epilogue" << std::endl;
+        }
+        
+        int32_t insert_prologue_epilogue(MIRFunction* func,
+                                         std::unordered_set<MIROperand*>& callee_saved_regs,
+                                         CodeGenContext& ctx,
+                                         MIROperand* return_addr_reg) override {
+            std::vector<std::pair<MIROperand*, MIROperand*>> overwrited;
+            for (auto op : callee_saved_regs) {
+                auto size = getOperandSize(ctx.registerInfo->getCanonicalizedRegisterType(op->type()));
+                auto alignment = size;
+                auto storage = func->add_stack_obj(ctx.next_id(), size, alignment, 0, StackObjectUsage::CalleeSaved);
+
+                overwrited.emplace_back(op, storage);
+            }
+            
+            for (auto& block : func->blocks()) {
+                auto& instructions = block->insts();
+
+                // 1. 开始执行指令之前保存相关的调用者维护寄存器
+                if (&block == &func->blocks().front()) {
+                    for (auto [op, stack] : overwrited) {
+                        // auto inst = new MIRInst{ InstStoreRegToStack };
+                        // inst->set_operand(0, op); inst->set_operand(1, stack);
+                    }
+                }
+
+                // 2. 函数返回之前将相关的调用者维护寄存器释放
+                auto terminator = instructions.back();
+                auto& instInfo = ctx.instInfo.get_instinfo(terminator);
+                if (requireFlag(instInfo.inst_flag(), InstFlagReturn)) {
+                    auto pos = std::prev(instructions.end());
+                    for (auto it = overwrited.begin(); it != overwrited.end(); it++) {
+                        auto [op, stack] = *it;
+                        // auto inst = new MIRInst{ InstLoadRegFromStack };
+                        // inst->set_operand(0, op); inst->set_operand(1, stack);
+                        // instructions.insert(pos, )
+                    }
+                }
+            }
+            return 0;
+        }
 };
 
 /*
