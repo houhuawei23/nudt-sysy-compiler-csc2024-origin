@@ -23,17 +23,17 @@ namespace mir {
 class LoweringContext;
 // struct CodeGenContext;
 class TargetFrameInfo {
-   public:
-    TargetFrameInfo() = default;
-    virtual ~TargetFrameInfo() = default;
+    public:
+        TargetFrameInfo() = default;
+        virtual ~TargetFrameInfo() = default;
 
-   public:  // lowering stage
-    virtual void emit_call(ir::CallInst* inst,
-                           LoweringContext& lowering_ctx) = 0;
-    virtual void emit_prologue(MIRFunction* func,
+    public:  // lowering stage
+        virtual void emit_call(ir::CallInst* inst,
                                LoweringContext& lowering_ctx) = 0;
-    virtual void emit_return(ir::ReturnInst* inst,
-                             LoweringContext& lowering_ctx) = 0;
+        virtual void emit_prologue(MIRFunction* func,
+                                   LoweringContext& lowering_ctx) = 0;
+        virtual void emit_return(ir::ReturnInst* inst,
+                                 LoweringContext& lowering_ctx) = 0;
 
     public:  // ra stage (register allocation)
         virtual bool is_caller_saved(MIROperand& op) = 0;
@@ -47,5 +47,8 @@ class TargetFrameInfo {
                                                  std::unordered_set<MIROperand*>& callee_saved_regs,
                                                  CodeGenContext& ctx,
                                                  MIROperand* return_addr_reg);
+
+    public:  // alignment
+        virtual size_t get_stackpointer_alignment() = 0;
 };
 }  // namespace mir

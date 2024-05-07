@@ -139,7 +139,7 @@ void create_mir_module(ir::Module& ir_module,
         /* 4.8 stack allocation */
         if (codegen_ctx.registerInfo) {
             /* after sa, all stack objects are allocated with .offset */
-            // allocateStackObjects(mir_func, codegen_ctx);
+            allocateStackObjects(mir_func, codegen_ctx);
             codegen_ctx.flags.postSA = true;
         }
 
@@ -221,8 +221,7 @@ MIRFunction* create_mir_function(ir::Function* ir_func,
         auto mir_block = block_map[ir_block];
         lowering_ctx.set_mir_block(mir_block);
         for (auto ir_inst : ir_block->insts()) {
-            if (ir_inst->scid() == ir::Value::vALLOCA)
-                continue;
+            if (ir_inst->scid() == ir::Value::vALLOCA) continue;
             create_mir_inst(ir_inst, lowering_ctx);
         }
     }

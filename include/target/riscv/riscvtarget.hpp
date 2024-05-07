@@ -67,52 +67,65 @@ class RISCVFrameInfo : public TargetFrameInfo {
         
     public: // sa stage (stack allocation)
         int stack_pointer_align() override { return 8; }
+
         void emit_postsa_prologue(MIRBlock* entry, int32_t stack_size) override {
-            std::cerr << "Not Impl emit_postsa_prologue" << std::endl;
+            auto& instructions = entry->insts();
+            RISCV::adjust_reg(instructions, instructions.begin(), RISCV::sp, RISCV::sp, -stack_size);
         }
         void emit_postsa_epilogue(MIRBlock* exit, int32_t stack_size) override {
-            std::cerr << "Not Impl emit_postsa_epilogue" << std::endl;
+            auto& instructions = exit->insts();
+            RISCV::adjust_reg(instructions, std::prev(instructions.end()), RISCV::sp, RISCV::sp, stack_size);
         }
         
         int32_t insert_prologue_epilogue(MIRFunction* func,
                                          std::unordered_set<MIROperand*>& callee_saved_regs,
                                          CodeGenContext& ctx,
                                          MIROperand* return_addr_reg) override {
-            std::vector<std::pair<MIROperand*, MIROperand*>> overwrited;
-            for (auto op : callee_saved_regs) {
-                auto size = getOperandSize(ctx.registerInfo->getCanonicalizedRegisterType(op->type()));
-                auto alignment = size;
-                auto storage = func->add_stack_obj(ctx.next_id(), size, alignment, 0, StackObjectUsage::CalleeSaved);
+            std::vector<std::pair<MIROperand*, MIROperand*>> saved;
 
-                overwrited.emplace_back(op, storage);
+            /* find the callee saved registers */
+            {
+                for (auto op : callee_saved_regs) {
+                    auto size = getOperandSize(ctx.registerInfo->getCanonicalizedRegisterType(op->type()));
+                    auto alignment = size;
+                    auto stack = func->add_stack_obj(ctx.next_id(), size, alignment, 0, StackObjectUsage::CalleeSaved);
+
+                    saved.emplace_back(op, stack);
+                }
             }
             
-            for (auto& block : func->blocks()) {
-                auto& instructions = block->insts();
+            /* insert the prologue and epilogue */
+            {
+                for (auto& block : func->blocks()) {
+                    auto& instructions = block->insts();
 
-                // 1. 开始执行指令之前保存相关的调用者维护寄存器
-                if (&block == &func->blocks().front()) {
-                    for (auto [op, stack] : overwrited) {
-                        // auto inst = new MIRInst{ InstStoreRegToStack };
-                        // inst->set_operand(0, op); inst->set_operand(1, stack);
+                    // 1. 开始执行指令之前保存相关的调用者维护寄存器
+                    if (&block == &func->blocks().front()) {
+                        for (auto [op, stack] : saved) {
+                            auto inst = new MIRInst{ InstStoreRegToStack };
+                            inst->set_operand(0, stack); inst->set_operand(1, op);
+                            instructions.push_front(inst);
+                        }
                     }
-                }
 
-                // 2. 函数返回之前将相关的调用者维护寄存器释放
-                auto terminator = instructions.back();
-                auto& instInfo = ctx.instInfo.get_instinfo(terminator);
-                if (requireFlag(instInfo.inst_flag(), InstFlagReturn)) {
-                    auto pos = std::prev(instructions.end());
-                    for (auto it = overwrited.begin(); it != overwrited.end(); it++) {
-                        auto [op, stack] = *it;
-                        // auto inst = new MIRInst{ InstLoadRegFromStack };
-                        // inst->set_operand(0, op); inst->set_operand(1, stack);
-                        // instructions.insert(pos, )
+                    // 2. 函数返回之前将相关的调用者维护寄存器释放
+                    auto exit = instructions.back();
+                    auto& instInfo = ctx.instInfo.get_instinfo(exit);
+                    if (requireFlag(instInfo.inst_flag(), InstFlagReturn)) {
+                        auto pos = std::prev(instructions.end());
+                        for (auto [op, stack] : saved) {
+                            auto inst = new MIRInst{ InstLoadRegFromStack };
+                            inst->set_operand(0, op); inst->set_operand(1, stack);
+                            instructions.insert(pos, inst);
+                        }
                     }
                 }
             }
             return 0;
         }
+
+    public:  // alignment
+        size_t get_stackpointer_alignment() override { return 8; }
 };
 
 /*
@@ -137,6 +150,7 @@ class RISCVRegisterInfo : public TargetRegisterInfo {
                 assert(false && "invalid alloca class");
         }
     }
+
     std::vector<uint32_t>& get_allocation_list(uint32_t classId) {
         if (classId == 0) {  // General Purpose Registers
             static std::vector<uint32_t> list{

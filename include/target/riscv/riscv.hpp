@@ -86,12 +86,21 @@ static std::ostream& operator<<(std::ostream& os, OperandDumper opdp) {
 }
 
 constexpr bool isOperandImm12(MIROperand* operand) {
-    if (operand->is_reloc() && operand->type() == OperandType::LowBits)
-        return true;
+    if (operand->is_reloc() && operand->type() == OperandType::LowBits) return true;
     return operand->is_imm() && isSignedImm<12>(operand->imm());
 }
 
 constexpr bool isOperandNonZeroImm12(MIROperand* operand) {
     return isOperandImm12(operand) && operand->imm() != 0;
+}
+
+// dst = src + imm
+static void adjust_reg(MIRInstList& instructions, MIRInstList::iterator it, MIROperand* dst, MIROperand* src, int64_t imm) {
+    if (dst == src && imm == 0) return;
+
+    MIROperand* base = src;
+    auto inst = new MIRInst{ ADDI };
+    inst->set_operand(0, dst); inst->set_operand(1, base); inst->set_operand(2, MIROperand::as_imm<int64_t>(imm, OperandType::Int64));
+    instructions.insert(it, inst);
 }
 }  // namespace mir::RISCV

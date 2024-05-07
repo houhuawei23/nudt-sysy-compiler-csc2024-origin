@@ -299,8 +299,7 @@ class MIRInst {
             return this;
         }
         MIRInst* set_operand(int idx, MIROperand* opeand) {
-            assert(idx < max_operand_num);
-            assert(opeand != nullptr);
+            assert(idx < max_operand_num && opeand != nullptr);
             _operands[idx] = opeand;
             return this;
         }
@@ -346,10 +345,18 @@ enum class StackObjectUsage {
     CalleeSaved
 };
 
+/*
+ * @brief: StackObject Struct
+ * @note: 
+ *      1. alignment - 对齐
+ *      2. usage - 使用情况
+ *      3. size - 大小
+ *      4. offset - 偏移量
+ */
 struct StackObject final {
     uint32_t size;
     uint32_t alignment;
-    int32_t offset;  // positive
+    int32_t offset;
     StackObjectUsage usage;
 };
 

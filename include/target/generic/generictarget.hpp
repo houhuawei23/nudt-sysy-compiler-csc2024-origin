@@ -72,6 +72,13 @@ class GENERICFrameInfo final : public TargetFrameInfo {
             std::cerr << "GENERIC emit_postsa_epilogue not implemented"
                     << std::endl;
         }
+
+    public:  // alignment
+        size_t get_stackpointer_alignment() override {
+            std::cerr << "GENERIC emit_postsa_epilogue not implemented"
+                    << std::endl;
+            return 0;
+        }
 };
 
 /*
