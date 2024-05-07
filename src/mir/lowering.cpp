@@ -10,11 +10,14 @@
 #include "target/riscv/riscvtarget.hpp"
 namespace mir {
 //! declare
-void create_mir_module(ir::Module& ir_module, LoweringContext& ctx);
+void create_mir_module(ir::Module& ir_module,
+                       MIRModule& mir_module,
+                       Target& target);
 
 MIRFunction* create_mir_function(ir::Function* ir_func,
                                  MIRFunction* mir_func,
-                                 LoweringContext& ctx);
+                                 CodeGenContext& codegen_ctx,
+                                 LoweringContext& lowering_ctx);
 
 MIRInst* create_mir_inst(ir::Instruction* ir_inst, LoweringContext& ctx);
 
@@ -22,8 +25,7 @@ MIRInst* create_mir_inst(ir::Instruction* ir_inst, LoweringContext& ctx);
 std::unique_ptr<MIRModule> create_mir_module(ir::Module& ir_module,
                                              Target& target) {
     auto mir_module_uptr = std::make_unique<MIRModule>(&ir_module, target);
-    LoweringContext ctx = LoweringContext(*mir_module_uptr, target);
-    create_mir_module(ir_module, ctx);
+    create_mir_module(ir_module, *mir_module_uptr, target);
     return mir_module_uptr;
 }
 
@@ -32,16 +34,22 @@ union FloatUint32 {
     uint32_t u;
 } fu32;
 
-void create_mir_module(ir::Module& ir_module, LoweringContext& lowering_ctx) {
-    auto& mir_module = lowering_ctx._mir_module;
+void create_mir_module(ir::Module& ir_module,
+                       MIRModule& mir_module,
+                       Target& target) {
     auto& functions = mir_module.functions();
     auto& global_objs = mir_module.global_objs();
+
+    LoweringContext lowering_ctx(mir_module, target);
+
+    auto& func_map = lowering_ctx.func_map;
+    auto& gvar_map = lowering_ctx.gvar_map;
 
     //! 1. for all functions, create MIRFunction
     for (auto func : ir_module.funcs()) {
         functions.push_back(
             std::make_unique<MIRFunction>(func->name(), &mir_module));
-        lowering_ctx.func_map.emplace(func, functions.back().get());
+        func_map.emplace(func, functions.back().get());
     }
 
     //! 2. for all global variables, create MIRGlobalObject
@@ -89,28 +97,25 @@ void create_mir_module(ir::Module& ir_module, LoweringContext& lowering_ctx) {
                 align, std::move(mir_storage), &mir_module);
             mir_module.global_objs().push_back(std::move(mir_gobj));
         }
-        lowering_ctx.gvar_map.emplace(ir_gvar,
-                                      mir_module.global_objs().back().get());
+        gvar_map.emplace(ir_gvar, mir_module.global_objs().back().get());
     }
 
     // TODO: transformModuleBeforeCodeGen
 
     //! 3. codegen
-    auto& target = lowering_ctx._target;  // Target*
     CodeGenContext codegen_ctx{target, target.get_datalayout(),
                                target.get_target_inst_info(),
                                target.get_target_frame_info(), MIRFlags{}};
     codegen_ctx.iselInfo = &target.get_target_isel_info();
-    lowering_ctx.set_code_gen_ctx(&codegen_ctx);
-
+    lowering_ctx._code_gen_ctx = &codegen_ctx;
     //! 4. lower all functions
     for (auto& ir_func : ir_module.funcs()) {  // for all funcs
-        auto mir_func = lowering_ctx.func_map[ir_func];
+        auto mir_func = func_map[ir_func];
         if (ir_func->blocks().empty())
             continue;
 
         /* 4.1: lower function body to generic MIR */
-        create_mir_function(ir_func, mir_func, lowering_ctx);
+        create_mir_function(ir_func, mir_func, codegen_ctx, lowering_ctx);
 
         /* 4.2: instruction selection */
         ISelContext isel_ctx(codegen_ctx);
@@ -137,7 +142,7 @@ void create_mir_module(ir::Module& ir_module, LoweringContext& lowering_ctx) {
             // allocateStackObjects(mir_func, codegen_ctx);
             codegen_ctx.flags.postSA = true;
         }
-        
+
         /* 4.9 post-RA scheduling, minimize cycles */
 
         /* 4.10 post legalization */
@@ -149,25 +154,25 @@ void create_mir_module(ir::Module& ir_module, LoweringContext& lowering_ctx) {
 
 MIRFunction* create_mir_function(ir::Function* ir_func,
                                  MIRFunction* mir_func,
+                                 CodeGenContext& codegen_ctx,
                                  LoweringContext& lowering_ctx) {
-    auto codegen_ctx = lowering_ctx._code_gen_ctx;  // *
-
     // TODO: before lowering, ge some analysis pass result
     /* aligenment */
     /* range */
     /* dom */
 
     //! 1. map from ir to mir
+    // std::unordered_map<ir::BasicBlock*, MIRBlock*> block_map;
     auto& block_map = lowering_ctx._block_map;
     std::unordered_map<ir::Value*, MIROperand*> storage_map;
 
-    auto& target = lowering_ctx._target;
+    auto& target = codegen_ctx.target;
     auto& datalayout = target.get_datalayout();
 
     for (auto ir_block : ir_func->blocks()) {
         mir_func->blocks().push_back(std::make_unique<MIRBlock>(
             ir_block, mir_func,
-            "label" + std::to_string(lowering_ctx.next_id_label())));
+            "label" + std::to_string(codegen_ctx.next_id_label())));
         block_map.emplace(ir_block, mir_func->blocks().back().get());
     }
 
@@ -180,7 +185,7 @@ MIRFunction* create_mir_function(ir::Function* ir_func,
         }
         lowering_ctx.set_mir_block(block_map.at(ir_func->entry()));  // entry
         // TODO: implement riscv frameinfo.emit_prologue()
-        codegen_ctx->frameInfo.emit_prologue(mir_func, lowering_ctx);
+        codegen_ctx.frameInfo.emit_prologue(mir_func, lowering_ctx);
     }
 
     //! 3. process alloca, new stack object for each alloca
@@ -194,7 +199,7 @@ MIRFunction* create_mir_function(ir::Function* ir_func,
             dyn_cast<ir::PointerType>(ir_inst->type())->base_type();
         uint32_t align = 4;  // TODO: align, need bind to ir object
         auto storage = mir_func->add_stack_obj(
-            lowering_ctx.next_id(),  // id
+            codegen_ctx.next_id(),  // id
             static_cast<uint32_t>(
                 pointee_type->size()),  //! size, datalayout; if array??
             align,                      // align

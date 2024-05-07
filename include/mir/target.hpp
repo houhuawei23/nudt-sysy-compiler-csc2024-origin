@@ -55,6 +55,9 @@ struct CodeGenContext final {
 
     uint32_t idx = 0;
     uint32_t next_id() { return ++idx; }
+
+    uint32_t label_idx = 0;
+    uint32_t next_id_label() { return ++label_idx; }
 };
 
 // using TargetBuilder = std::pair<std::string_view, std::function<Targe*()> >;
