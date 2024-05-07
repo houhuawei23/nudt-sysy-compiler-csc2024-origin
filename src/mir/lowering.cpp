@@ -132,7 +132,7 @@ void create_mir_module(ir::Module& ir_module,
         /* 4.7 register allocation */
         codegen_ctx.registerInfo = new RISCVRegisterInfo();
         if (codegen_ctx.registerInfo) {
-            // linearAllocator(*mir_func, codegen_ctx);
+            linearAllocator(*mir_func, codegen_ctx);
             // fastAllocator(*mir_func, codegen_ctx);
         }
 
@@ -354,12 +354,33 @@ void lower(ir::UnaryInst* ir_inst, LoweringContext& ctx) {
  */
 void lower(ir::ICmpInst* ir_inst, LoweringContext& ctx) {
     // TODO: Need Test
+    auto op = [scid = ir_inst->scid()] {
+        switch (scid) {
+            case ir::Value::vIEQ:
+                return CompareOp::ICmpEqual;
+            case ir::Value::vINE:
+                return CompareOp::ICmpNotEqual;
+            case ir::Value::vISGT:
+                return CompareOp::ICmpSignedGreaterThan;
+            case ir::Value::vISGE:
+                return CompareOp::ICmpSignedGreaterEqual;
+            case ir::Value::vISLT:
+                return CompareOp::ICmpSignedLessThan;
+            case ir::Value::vISLE:
+                return CompareOp::ICmpSignedLessEqual;
+            default:
+                assert(false && "not supported icmp inst");
+        }
+    }();
+
     auto ret = ctx.new_vreg(ir_inst->type());
     auto inst = new MIRInst(InstICmp);
     inst->set_operand(0, ret);
     inst->set_operand(1, ctx.map2operand(ir_inst->operand(0)));
     inst->set_operand(2, ctx.map2operand(ir_inst->operand(1)));
     // TODO: set condition code: eq, ne, sgt, sge, slt, sle
+    inst->set_operand(
+        3, MIROperand::as_imm(static_cast<uint32_t>(op), OperandType::Special));
     ctx.emit_inst(inst);
     ctx.add_valmap(ir_inst, ret);
 }
@@ -373,12 +394,33 @@ void lower(ir::ICmpInst* ir_inst, LoweringContext& ctx) {
  */
 void lower(ir::FCmpInst* ir_inst, LoweringContext& ctx) {
     // TODO: Need Test
+    auto op = [scid = ir_inst->scid()] {
+        switch (scid) {
+            case ir::Value::vFOEQ:
+                return CompareOp::FCmpOrderedEqual;
+            case ir::Value::vFONE:
+                return CompareOp::FCmpOrderedNotEqual;
+            case ir::Value::vFOGT:
+                return CompareOp::FCmpOrderedGreaterThan;
+            case ir::Value::vFOGE:
+                return CompareOp::FCmpOrderedGreaterEqual;
+            case ir::Value::vFOLT:
+                return CompareOp::FCmpOrderedLessThan;
+            case ir::Value::vFOLE:
+                return CompareOp::FCmpOrderedLessEqual;
+            default:
+                assert(false && "not supported fcmp inst");
+        }
+    }();
+
     auto ret = ctx.new_vreg(ir_inst->type());
     auto inst = new MIRInst(InstFCmp);
     inst->set_operand(0, ret);
     inst->set_operand(1, ctx.map2operand(ir_inst->operand(0)));
     inst->set_operand(2, ctx.map2operand(ir_inst->operand(1)));
     // TODO: set condition code: oeq, one, ogt, oge, olt, ole
+    inst->set_operand(
+        3, MIROperand::as_imm(static_cast<uint32_t>(op), OperandType::Special));
     ctx.emit_inst(inst);
     ctx.add_valmap(ir_inst, ret);
 }
@@ -451,6 +493,21 @@ void lower(ir::BranchInst* ir_inst, LoweringContext& ctx) {
         int a = 5;
         int b = 10;
         std::cout << "conditional branch" << std::endl;
+
+        // branch
+        auto inst = new MIRInst(InstBranch);
+        inst->set_operand(0, ctx.map2operand(ir_inst->cond()));
+        inst->set_operand(
+            1, MIROperand::as_reloc(ctx.map2block(ir_inst->iftrue())));
+        inst->set_operand(2, MIROperand::as_prob(0.5));
+        ctx.emit_inst(inst);
+        /* fallthrough, jump */
+        auto jump_inst = new MIRInst(InstJump);
+        jump_inst->set_operand(
+            0, MIROperand::as_reloc(ctx.map2block(ir_inst->iffalse())));
+        ctx.emit_inst(jump_inst);
+
+
     } else {  // unconditional branch
         auto dst_block = ir_inst->dest();
         emit_branch(src_block, dst_block, ctx);

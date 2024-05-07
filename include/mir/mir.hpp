@@ -251,6 +251,9 @@ class MIROperand {
         static MIROperand* as_reloc(MIRRelocable* reloc) {  // reloc
             return new MIROperand(reloc, OperandType::Special);
         }
+        static MIROperand* as_prob(double prob) {  // probability
+            return new MIROperand(prob, OperandType::Special);
+        }
 
     public:
         size_t hash() const { return std::hash<std::decay_t<decltype(_storage)>>{}(_storage); }
