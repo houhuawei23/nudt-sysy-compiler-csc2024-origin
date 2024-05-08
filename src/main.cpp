@@ -11,8 +11,11 @@
 #include "pass/optimize/mem2reg.hpp"
 #include "pass/optimize/DCE.hpp"
 #include "pass/optimize/SCP.hpp"
-#include "pass/optimize/SCCP.hpp"
+#include "pass/optimize/mySCCP.hpp"
 #include "pass/optimize/simplifyCFG.hpp"
+#include "pass/analysis/loop.hpp"
+#include "pass/optimize/GCM.hpp"
+#include "pass/optimize/GVN.hpp"
 
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
@@ -67,11 +70,25 @@ int main(int argc, char* argv[]) {
                 fpm.add_pass(new pass::SCP());
             }
             if (pass_name.compare("sccp")==0){
-                fpm.add_pass(new pass::SCCP());
+                fpm.add_pass(new pass::mySCCP());
             }
             if (pass_name.compare("simplifycfg")==0){
                 fpm.add_pass(new pass::simplifyCFG());
             }
+            if (pass_name.compare("loopanalysis")==0){
+                fpm.add_pass(new pass::preProcDom());
+                fpm.add_pass(new pass::idomGen());
+                fpm.add_pass(new pass::domFrontierGen());
+                // fpm.add_pass(new pass::domInfoCheck());
+                fpm.add_pass(new pass::loopAnalysis());
+                // fpm.add_pass(new pass::loopInfoCheck());
+            }
+            if (pass_name.compare("gcm")==0){
+                fpm.add_pass(new pass::GCM());
+            }
+            // if (pass_name.compare("gvn")==0){
+            //     fpm.add_pass(new pass::GVN());
+            // }
         }
         for (auto f : module_ir->funcs()) {
             fpm.run(f);

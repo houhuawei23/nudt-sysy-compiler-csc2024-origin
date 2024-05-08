@@ -22,6 +22,7 @@ namespace pass{
             isWhile|=removeNoPreBlock(func);
             isWhile|=MergeBlock(func);
             isWhile|=removeSingleBrBlock(func);
+            isWhile|=removeSingleIncomingPhi(func);
         }
 
         
@@ -82,20 +83,40 @@ namespace pass{
     }
 
     bool simplifyCFG::removeNoPreBlock(ir::Function* func){
+        //原来只是对于没有前驱的块进行删除, 现在是要对于不可达块作删除
         bool ischanged=false;
-        std::vector<ir::BasicBlock*>worklist;
+        std::queue<ir::BasicBlock*>worklist;
+        std::unordered_map<ir::BasicBlock*,bool>reachable;
         for(auto bb:func->blocks()){
-            if(noPredBlock(bb))worklist.push_back(bb);
+            reachable[bb]=false;
         }
+        worklist.push(func->entry());
         while(not worklist.empty()){
-            auto curBB=worklist.back();
-            worklist.pop_back();
-            for(auto nextbb:curBB->next_blocks()){
-                if(nextbb->pre_blocks().size()==1)
-                    worklist.push_back(nextbb);
+            auto curBB=worklist.front();
+            worklist.pop();
+            if(not reachable[curBB]){
+                reachable[curBB]=true;
+                for(auto nextCurBB:curBB->next_blocks()){
+                    if(not reachable[nextCurBB])worklist.push(nextCurBB);
+                }
             }
-            func->force_delete_block(curBB);
-            if(not ischanged)ischanged=true;
+        }
+        for(auto bbIter=func->blocks().begin();bbIter!=func->blocks().end();){
+            auto bb=*bbIter;
+            bbIter++;
+            if(not reachable[bb]){
+                ischanged=true;
+                for(auto puseIter=bb->uses().begin();puseIter!=bb->uses().end();){
+                    auto puse=*puseIter;
+                    puseIter++;
+                    auto bbUser=puse->user();
+                    auto phiInstUser=dyn_cast<ir::PhiInst>(bbUser);
+                    if(phiInstUser){
+                        phiInstUser->delbb(bb);
+                    }
+                }
+                func->force_delete_block(bb);
+            }
         }
         return ischanged;
     }
@@ -226,4 +247,22 @@ namespace pass{
         }
         return ischanged;
     }
+
+    bool simplifyCFG::removeSingleIncomingPhi(ir::Function* func){
+        bool ischanged=false;
+        for(auto bb:func->blocks()){
+            for(auto instIter=bb->phi_insts().begin();instIter!=bb->phi_insts().end();){
+                auto inst=*instIter;
+                instIter++;
+                auto phiInst=dyn_cast<ir::PhiInst>(inst);
+                if(phiInst->getsize()==1){
+                    phiInst->replace_all_use_with(phiInst->getval(0));
+                    bb->delete_inst(phiInst);
+                    ischanged=true;
+                }
+            }
+        }
+        return ischanged;
+    }
+    
 }

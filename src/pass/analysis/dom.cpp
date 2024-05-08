@@ -115,6 +115,10 @@ namespace pass
             child[bb]=nullptr;
             label[bb]=bb;
             size[bb]=1;
+            bb->idom=nullptr;
+            bb->sdom=nullptr;
+            bb->domTree.clear();
+            bb->domFrontier.clear();
         }
         semi[nullptr]=0;
         label[nullptr]=nullptr;
