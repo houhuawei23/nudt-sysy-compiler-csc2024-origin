@@ -24,7 +24,9 @@ void forEachDefOperand(MIRFunction& func,
 
 bool genericPeepholeOpt(MIRFunction& func, CodeGenContext& ctx);
 
-
 void postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx);
 
+/** Schedule */
+void preRASchedule(MIRFunction& func, const CodeGenContext& ctx);
+void postRASchedule(MIRFunction& func, const CodeGenContext& ctx);
 }  // namespace mir

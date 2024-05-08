@@ -128,7 +128,7 @@ void create_mir_module(ir::Module& ir_module,
         /* 4.5 pre-RA legalization */
 
         /* 4.6 pre-RA scheduling, minimize register usage */
-
+        preRASchedule(*mir_func, codegen_ctx);
         /* 4.7 register allocation */
         codegen_ctx.registerInfo = new RISCVRegisterInfo();
         if (codegen_ctx.registerInfo) {

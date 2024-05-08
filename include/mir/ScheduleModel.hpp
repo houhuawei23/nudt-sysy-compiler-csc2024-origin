@@ -40,17 +40,21 @@ class TargetScheduleModel {
 
 class ScheduleState {
     uint32_t mCycleCount;
+
     std::unordered_map<uint32_t, uint32_t> mNextPipelineAvailable;
+
     std::unordered_map<uint32_t, uint32_t> mRegisterAvailableTime;
+
     // idx -> register
-    std::unordered_map<MIRInst*, std::unordered_map<uint32_t, uint32_t>>&
+    const std::unordered_map<const MIRInst*, std::unordered_map<uint32_t, uint32_t>>&
         mRegRenameMap;
     uint32_t mIssuedFlag;
 
    public:
     ScheduleState(
-        std::unordered_map<MIRInst*, std::unordered_map<uint32_t, uint32_t>>&
-            regRenameMap);
+        const std::unordered_map<const MIRInst*, std::unordered_map<uint32_t, uint32_t>>&
+            regRenameMap)
+        : mCycleCount(0), mRegRenameMap(regRenameMap), mIssuedFlag(0) {}
     // query
     uint32_t queryRegisterLatency(MIRInst& inst, uint32_t idx);
     bool isPipelineReady(uint32_t pipelineId);
@@ -60,6 +64,10 @@ class ScheduleState {
     void resetPipeline(uint32_t pipelineId, uint32_t duration);
     void makeRegisterReady(MIRInst& inst, uint32_t idx, uint32_t latency);
 
-    uint32_t nextCycle();
+    uint32_t nextCycle() {
+        mCycleCount++;
+        mIssuedFlag = 0;
+        return mCycleCount;
+    }
 };
 }  // namespace mir
