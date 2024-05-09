@@ -702,3 +702,12 @@ InstSelInfo: {
         },
       ],
   }
+
+ScheduleModel: {
+  sifive_u74: {
+    Classes: {
+      IntegerArithmetic: [],
+      
+    }
+  }
+}
