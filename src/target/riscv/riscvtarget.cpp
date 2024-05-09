@@ -72,22 +72,23 @@ void RISCVFrameInfo::emit_prologue(MIRFunction* func,
 
 void RISCVFrameInfo::emit_return(ir::ReturnInst* ir_inst,
                                  LoweringContext& lowering_ctx) {
-    return;
     // TODO: implement emit return
     if (not ir_inst->operands().empty()) {  // has return value
         // TODO
         auto retval = ir_inst->return_value();
         if (retval->type()->is_float()) {
+            /* return by $fa0 */
             lowering_ctx.emit_copy(
                 MIROperand::as_isareg(RISCV::F10, OperandType::Float32),
                 lowering_ctx.map2operand(retval));
         } else if (retval->type()->is_int()) {
+            /* return by $a0 */
             lowering_ctx.emit_copy(
                 MIROperand::as_isareg(RISCV::X10, OperandType::Int64),
                 lowering_ctx.map2operand(retval));
         }
     }
-    auto inst = new MIRInst(InstReturn);
+    auto inst = new MIRInst(RISCV::RET);
     lowering_ctx.emit_inst(inst);
 }
 

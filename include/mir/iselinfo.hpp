@@ -57,11 +57,15 @@ class TargetISelInfo {
    public:
     virtual ~TargetISelInfo() = default;
     virtual bool is_legal_geninst(uint32_t opcode) const = 0;
+
     virtual bool match_select(MIRInst* inst, ISelContext& ctx) const = 0;
 
+    /* */
     virtual void legalizeInstWithStackOperand(InstLegalizeContext& ctx,
                                               MIROperand* op,
                                               StackObject& obj) const = 0;
+
+    virtual void postLegalizeInst(const InstLegalizeContext& ctx) const = 0;
 };
 
 enum CompareOp : uint32_t {

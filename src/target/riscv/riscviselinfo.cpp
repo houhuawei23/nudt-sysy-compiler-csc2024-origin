@@ -194,7 +194,7 @@ void RISCVISelInfo::legalizeInstWithStackOperand(InstLegalizeContext& ctx,
         case LB:
         case LBU:
         case FLW: {
-            immVal += inst->operand(2)->imm();
+            immVal += inst->operand(1)->imm();
             break;
         }
         default:
@@ -220,26 +220,32 @@ void RISCVISelInfo::legalizeInstWithStackOperand(InstLegalizeContext& ctx,
         }
         case InstStoreRegToStack: {
             /**
-             * sw rs2, offset(rs1)
+             * StoreRegToStack obj[0 Metadata], src[1 Use]
+             * sw rs2[0 Use], offset[1 Metadata](rs1[2 Use])
              * M[x[rs1] + sext(offset)] = x[rs2][31: 0]
              */
             std::cout << "sw rs2, offset(rs1)" << std::endl;
-            inst->set_opcode(isOperandGR(*inst->operand(0)) ? SD : FSW);
-            inst->set_operand(1, offset);
-            inst->set_operand(2, base);
-            inst->set_operand(3,
-                              getAlign(isOperandGR(*inst->operand(0)) ? 8 : 4));
+            inst->set_opcode(isOperandGR(*inst->operand(1)) ? SD : FSW);
+            auto oldSrc = inst->operand(1);
+            inst->set_operand(0, oldSrc); /* src2 := src */
+            inst->set_operand(1, offset); /* offset */
+            inst->set_operand(2, base);   /* base */
+            inst->set_operand(
+                3,
+                getAlign(isOperandGR(*inst->operand(0)) ? 8 : 4)); /* align */
 
             break;
         }
         case InstLoadRegFromStack: {
             /**
-             * lw rd, rs1, offset
+             * LoadRegFromStack dst[0 Def], obj[1 Metadata]
+             * lw rd, offset(rs1)
              */
-            std::cout << "lw rd, rs1, offset" << std::endl;
+            std::cout << "lw rd, offset(rs1)" << std::endl;
             inst->set_opcode(isOperandGR(*inst->operand(0)) ? LD : FLW);
-            inst->set_operand(1, base);
-            inst->set_operand(2, offset);
+
+            inst->set_operand(1, offset);
+            inst->set_operand(2, base);
             inst->set_operand(3,
                               getAlign(isOperandGR(*inst->operand(0)) ? 8 : 4));
             break;
@@ -262,17 +268,41 @@ void RISCVISelInfo::legalizeInstWithStackOperand(InstLegalizeContext& ctx,
         case LB:
         case LBU:
         case FLW: {
-            std::cout << "lw rd, rs1, offset" << std::endl;
+            std::cout << "lw rd, offset(rs1)" << std::endl;
             //! careful with the order of operands,
             //! sw and lw have different order
-            inst->set_operand(1, base);
-            inst->set_operand(2, offset);
+            inst->set_operand(1, offset);
+            inst->set_operand(2, base);
             break;
         }
         default:
             std::cerr
                 << "Unsupported instruction for legalizeInstWithStackOperand"
                 << std::endl;
+    }
+}
+
+void RISCVISelInfo::postLegalizeInst(const InstLegalizeContext& ctx) const {
+    auto& inst = ctx.inst;
+    switch (inst->opcode()) {
+        case InstCopy:
+        case InstCopyFromReg:
+        case InstCopyToReg: {
+            const auto& dst = inst->operand(0);
+            const auto& src = inst->operand(1);
+            if (isOperandIReg(dst) && isOperandIReg(src)) {
+                inst->set_opcode(MV);
+            }
+            // else if
+            else {
+                std::cerr << "Unsupported instruction for postLegalizeInst"
+                          << std::endl;
+            }
+            break;
+        }
+        default:
+            std::cerr << "Unsupported instruction for postLegalizeInst"
+                      << std::endl;
     }
 }
 }  // namespace mir::RISCV

@@ -221,6 +221,18 @@ void postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) {
             it = next;
         }
     }
+
+    /* iselInfo postLegaliseInst */
+    for (auto& block : func.blocks()) {
+        auto& insts = block->insts();
+        for (auto iter = insts.begin(); iter != insts.end(); iter++) {
+            auto& inst = *iter;
+            if (inst->opcode() < ISASpecificBegin) {
+                ctx.iselInfo->postLegalizeInst(InstLegalizeContext{
+                    inst, insts, iter, ctx, std::nullopt, func});
+            }
+        }
+    }
 }
 
 }  // namespace mir

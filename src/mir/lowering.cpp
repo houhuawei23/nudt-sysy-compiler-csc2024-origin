@@ -116,7 +116,8 @@ void create_mir_module(ir::Module& ir_module,
 
         /* 4.1: lower function body to generic MIR */
         create_mir_function(ir_func, mir_func, codegen_ctx, lowering_ctx);
-
+        mir_func->print(std::cerr, codegen_ctx);
+        
         /* 4.2: instruction selection */
         ISelContext isel_ctx(codegen_ctx);
         isel_ctx.run_isel(mir_func);
@@ -128,7 +129,7 @@ void create_mir_module(ir::Module& ir_module,
         /* 4.5 pre-RA legalization */
 
         /* 4.6 pre-RA scheduling, minimize register usage */
-        preRASchedule(*mir_func, codegen_ctx);
+        // preRASchedule(*mir_func, codegen_ctx);
         /* 4.7 register allocation */
         codegen_ctx.registerInfo = new RISCVRegisterInfo();
         if (codegen_ctx.registerInfo) {

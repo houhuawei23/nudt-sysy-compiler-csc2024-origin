@@ -43,6 +43,8 @@ class TargetFrameInfo {
         virtual int stack_pointer_align() = 0;
         virtual void emit_postsa_prologue(MIRBlock* entry, int32_t stack_size) = 0;
         virtual void emit_postsa_epilogue(MIRBlock* exit, int32_t stack_size) = 0;
+
+        /** 插入序言和尾声代码: 寄存器保护与恢复 */
         virtual int32_t insert_prologue_epilogue(MIRFunction* func,
                                                  std::unordered_set<MIROperand*>& callee_saved_regs,
                                                  CodeGenContext& ctx,

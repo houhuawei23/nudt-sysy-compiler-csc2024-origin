@@ -35,97 +35,106 @@ class RISCVDataLayout final : public DataLayout {
  *      RISC-V Frame Information (特定于相关架构) -- 帧信息
  */
 class RISCVFrameInfo : public TargetFrameInfo {
-    public: // lowering stage
-        void emit_call(ir::CallInst* inst, LoweringContext& lowering_ctx) override;
-        // 在函数调用前生成序言代码，用于设置栈帧和保存寄存器状态。
-        void emit_prologue(MIRFunction* func,
-                        LoweringContext& lowering_ctx) override;
-        void emit_return(ir::ReturnInst* ir_inst,
-                        LoweringContext& lowering_ctx) override;
+   public:  // lowering stage
+    void emit_call(ir::CallInst* inst, LoweringContext& lowering_ctx) override;
+    // 在函数调用前生成序言代码，用于设置栈帧和保存寄存器状态。
+    void emit_prologue(MIRFunction* func,
+                       LoweringContext& lowering_ctx) override;
+    void emit_return(ir::ReturnInst* ir_inst,
+                     LoweringContext& lowering_ctx) override;
 
-    public: // ra stage (register allocation)
-        // 调用者保存寄存器
-        bool is_caller_saved(MIROperand& op) override {
-            const auto reg = op.reg();
-            // $ra $t0-$t6 $a0-$a7 $ft0-$ft11 $fa0-$fa7
-            return reg == RISCV::X1 || (RISCV::X5 <= reg && reg <= RISCV::X7) || 
-                   (RISCV::X10 <= reg && reg <= RISCV::X17) || 
-                   (RISCV::X28 <= reg && reg <= RISCV::X31) || 
-                   (RISCV::F0 <= reg && reg <= RISCV::F7) || 
-                   (RISCV::F10 <= reg && reg <= RISCV::F17) || 
-                   (RISCV::F28 <= reg && reg <= RISCV::F31);
-        }
-        // 被调用者保存寄存器
-        bool is_callee_saved(MIROperand& op) override {
-            const auto reg = op.reg();
-            // $sp $s0-$s7 $f20-$f30 $gp
-            return reg == RISCV::X2 || (RISCV::X8 <= reg && reg << RISCV::X9) || 
-                   (RISCV::X18 <= reg && reg <= RISCV::X27) || 
-                   (RISCV::F8 <= reg && reg <= RISCV::F9) || 
-                   (RISCV::F18 <= reg && reg <= RISCV::F27) || reg == RISCV::X3;
-        }
-        
-    public: // sa stage (stack allocation)
-        int stack_pointer_align() override { return 8; }
+   public:  // ra stage (register allocation)
+    // 调用者保存寄存器
+    bool is_caller_saved(MIROperand& op) override {
+        const auto reg = op.reg();
+        // $ra $t0-$t6 $a0-$a7 $ft0-$ft11 $fa0-$fa7
+        return reg == RISCV::X1 || (RISCV::X5 <= reg && reg <= RISCV::X7) ||
+               (RISCV::X10 <= reg && reg <= RISCV::X17) ||
+               (RISCV::X28 <= reg && reg <= RISCV::X31) ||
+               (RISCV::F0 <= reg && reg <= RISCV::F7) ||
+               (RISCV::F10 <= reg && reg <= RISCV::F17) ||
+               (RISCV::F28 <= reg && reg <= RISCV::F31);
+    }
+    // 被调用者保存寄存器
+    bool is_callee_saved(MIROperand& op) override {
+        const auto reg = op.reg();
+        // $sp $s0-$s7 $f20-$f30 $gp
+        return reg == RISCV::X2 || (RISCV::X8 <= reg && reg << RISCV::X9) ||
+               (RISCV::X18 <= reg && reg <= RISCV::X27) ||
+               (RISCV::F8 <= reg && reg <= RISCV::F9) ||
+               (RISCV::F18 <= reg && reg <= RISCV::F27) || reg == RISCV::X3;
+    }
 
-        void emit_postsa_prologue(MIRBlock* entry, int32_t stack_size) override {
-            auto& instructions = entry->insts();
-            RISCV::adjust_reg(instructions, instructions.begin(), RISCV::sp, RISCV::sp, -stack_size);
-        }
-        void emit_postsa_epilogue(MIRBlock* exit, int32_t stack_size) override {
-            auto& instructions = exit->insts();
-            RISCV::adjust_reg(instructions, std::prev(instructions.end()), RISCV::sp, RISCV::sp, stack_size);
-        }
-        
-        int32_t insert_prologue_epilogue(MIRFunction* func,
-                                         std::unordered_set<MIROperand*>& callee_saved_regs,
-                                         CodeGenContext& ctx,
-                                         MIROperand* return_addr_reg) override {
-            std::vector<std::pair<MIROperand*, MIROperand*>> saved;
+   public:  // sa stage (stack allocation)
+    int stack_pointer_align() override { return 8; }
 
-            /* find the callee saved registers */
-            {
-                for (auto op : callee_saved_regs) {
-                    auto size = getOperandSize(ctx.registerInfo->getCanonicalizedRegisterType(op->type()));
-                    auto alignment = size;
-                    auto stack = func->add_stack_obj(ctx.next_id(), size, alignment, 0, StackObjectUsage::CalleeSaved);
+    void emit_postsa_prologue(MIRBlock* entry, int32_t stack_size) override {
+        auto& instructions = entry->insts();
+        RISCV::adjust_reg(instructions, instructions.begin(), RISCV::sp,
+                          RISCV::sp, -stack_size);
+    }
+    void emit_postsa_epilogue(MIRBlock* exit, int32_t stack_size) override {
+        auto& instructions = exit->insts();
+        RISCV::adjust_reg(instructions, std::prev(instructions.end()),
+                          RISCV::sp, RISCV::sp, stack_size);
+    }
 
-                    saved.emplace_back(op, stack);
-                }
+    int32_t insert_prologue_epilogue(
+        MIRFunction* func,
+        std::unordered_set<MIROperand*>& callee_saved_regs,
+        CodeGenContext& ctx,
+        MIROperand* return_addr_reg) override {
+        std::vector<std::pair<MIROperand*, MIROperand*>> saved;
+
+        /* find the callee saved registers */
+        /* allocate stack space for callee-saved registers */
+        {
+            for (auto op : callee_saved_regs) {
+                auto size = getOperandSize(
+                    ctx.registerInfo->getCanonicalizedRegisterType(op->type()));
+                auto alignment = size;
+                auto stack =
+                    func->add_stack_obj(ctx.next_id(), size, alignment, 0,
+                                        StackObjectUsage::CalleeSaved);
+
+                saved.emplace_back(op, stack);
             }
-            
-            /* insert the prologue and epilogue */
-            {
-                for (auto& block : func->blocks()) {
-                    auto& instructions = block->insts();
+        }
 
-                    // 1. 开始执行指令之前保存相关的调用者维护寄存器
-                    if (&block == &func->blocks().front()) {
-                        for (auto [op, stack] : saved) {
-                            auto inst = new MIRInst{ InstStoreRegToStack };
-                            inst->set_operand(0, stack); inst->set_operand(1, op);
-                            instructions.push_front(inst);
-                        }
-                    }
+        /* insert the prologue and epilogue */
+        {
+            for (auto& block : func->blocks()) {
+                auto& instructions = block->insts();
 
-                    // 2. 函数返回之前将相关的调用者维护寄存器释放
-                    auto exit = instructions.back();
-                    auto& instInfo = ctx.instInfo.get_instinfo(exit);
-                    if (requireFlag(instInfo.inst_flag(), InstFlagReturn)) {
-                        auto pos = std::prev(instructions.end());
-                        for (auto [op, stack] : saved) {
-                            auto inst = new MIRInst{ InstLoadRegFromStack };
-                            inst->set_operand(0, op); inst->set_operand(1, stack);
-                            instructions.insert(pos, inst);
-                        }
+                // 1. 开始执行指令之前保存相关的调用者维护寄存器
+                if (&block == &func->blocks().front()) {
+                    for (auto [op, stack] : saved) {
+                        auto inst = new MIRInst{InstStoreRegToStack};
+                        inst->set_operand(0, stack);
+                        inst->set_operand(1, op);
+                        instructions.push_front(inst);
                     }
                 }
-            }
-            return 0;
-        }
 
-    public:  // alignment
-        size_t get_stackpointer_alignment() override { return 8; }
+                // 2. 函数返回之前将相关的调用者维护寄存器释放
+                auto exit = instructions.back();
+                auto& instInfo = ctx.instInfo.get_instinfo(exit);
+                if (requireFlag(instInfo.inst_flag(), InstFlagReturn)) {
+                    auto pos = std::prev(instructions.end());
+                    for (auto [op, stack] : saved) {
+                        auto inst = new MIRInst{InstLoadRegFromStack};
+                        inst->set_operand(0, op);
+                        inst->set_operand(1, stack);
+                        instructions.insert(pos, inst);
+                    }
+                }
+            }
+        }
+        return 0;
+    }
+
+   public:  // alignment
+    size_t get_stackpointer_alignment() override { return 8; }
 };
 
 /*
@@ -135,7 +144,9 @@ class RISCVFrameInfo : public TargetFrameInfo {
  */
 class RISCVRegisterInfo : public TargetRegisterInfo {
     // get function
-    uint32_t get_alloca_class_cnt() { return 2; }  // GPR(General Purpose Registers)/FPR(Floating Point Registers)
+    uint32_t get_alloca_class_cnt() {
+        return 2;
+    }  // GPR(General Purpose Registers)/FPR(Floating Point Registers)
     uint32_t get_alloca_class(OperandType type) {
         switch (type) {
             case OperandType::Bool:
@@ -155,18 +166,37 @@ class RISCVRegisterInfo : public TargetRegisterInfo {
         if (classId == 0) {  // General Purpose Registers
             static std::vector<uint32_t> list{
                 // $a0-$a5
-                RISCV::X10, RISCV::X11, RISCV::X12, RISCV::X13, RISCV::X14,
+                RISCV::X10,
+                RISCV::X11,
+                RISCV::X12,
+                RISCV::X13,
+                RISCV::X14,
                 RISCV::X15,
                 // $a6-$a7
-                RISCV::X16, RISCV::X17,
+                RISCV::X16,
+                RISCV::X17,
                 // $t0-$t6
-                RISCV::X5, RISCV::X6, RISCV::X7, RISCV::X28, RISCV::X29,
-                RISCV::X30, RISCV::X31, 
+                RISCV::X5,
+                RISCV::X6,
+                RISCV::X7,
+                RISCV::X28,
+                RISCV::X29,
+                RISCV::X30,
+                RISCV::X31,
                 // $s0-$s1
-                RISCV::X8, RISCV::X9,
+                RISCV::X8,
+                RISCV::X9,
                 // $s2-$s11
-                RISCV::X18, RISCV::X19, RISCV::X20, RISCV::X21, RISCV::X22, 
-                RISCV::X23, RISCV::X24, RISCV::X25, RISCV::X26, RISCV::X27,
+                RISCV::X18,
+                RISCV::X19,
+                RISCV::X20,
+                RISCV::X21,
+                RISCV::X22,
+                RISCV::X23,
+                RISCV::X24,
+                RISCV::X25,
+                RISCV::X26,
+                RISCV::X27,
                 // $gp
                 RISCV::X3,
             };
@@ -174,30 +204,52 @@ class RISCVRegisterInfo : public TargetRegisterInfo {
         } else if (classId == 1) {  // Floating Point Registers
             static std::vector<uint32_t> list{
                 // $fa0-$fa5
-                RISCV::F10, RISCV::F11, RISCV::F12, RISCV::F13, RISCV::F14,
+                RISCV::F10,
+                RISCV::F11,
+                RISCV::F12,
+                RISCV::F13,
+                RISCV::F14,
                 RISCV::F15,
                 // $fa6-$fa7
-                RISCV::F16, RISCV::F17, 
+                RISCV::F16,
+                RISCV::F17,
                 // $ft0-$ft11
-                RISCV::F0, RISCV::F1, RISCV::F2, RISCV::F3, RISCV::F4, 
-                RISCV::F5, RISCV::F6, RISCV::F7, RISCV::F28, RISCV::F29, 
-                RISCV::F30, RISCV::F31,
+                RISCV::F0,
+                RISCV::F1,
+                RISCV::F2,
+                RISCV::F3,
+                RISCV::F4,
+                RISCV::F5,
+                RISCV::F6,
+                RISCV::F7,
+                RISCV::F28,
+                RISCV::F29,
+                RISCV::F30,
+                RISCV::F31,
                 // $fs0-$fs1
-                RISCV::F8, RISCV::F9,
+                RISCV::F8,
+                RISCV::F9,
                 // $fs2-$fs11
-                RISCV::F18, RISCV::F19, RISCV::F20, RISCV::F21, RISCV::F22, 
-                RISCV::F23, RISCV::F24, RISCV::F25, RISCV::F26, RISCV::F27,
+                RISCV::F18,
+                RISCV::F19,
+                RISCV::F20,
+                RISCV::F21,
+                RISCV::F22,
+                RISCV::F23,
+                RISCV::F24,
+                RISCV::F25,
+                RISCV::F26,
+                RISCV::F27,
             };
             return list;
         } else {
             assert(false && "invalid type regoster");
         }
     }
-
     OperandType getCanonicalizedRegisterType(OperandType type) {
         switch (type) {
             case OperandType::Bool:
-            case OperandType::Int8: 
+            case OperandType::Int8:
             case OperandType::Int16:
             case OperandType::Int32:
             case OperandType::Int64:
@@ -217,7 +269,9 @@ class RISCVRegisterInfo : public TargetRegisterInfo {
         std::cerr << "Not Impl is_legal_isa_reg_operand" << std::endl;
         return false;
     }
-    bool is_zero_reg(const uint32_t x) const { return x == RISCV::RISCVRegister::X0; }
+    bool is_zero_reg(const uint32_t x) const {
+        return x == RISCV::RISCVRegister::X0;
+    }
 };
 
 /*

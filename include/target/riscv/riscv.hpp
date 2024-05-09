@@ -66,7 +66,7 @@ static std::ostream& operator<<(std::ostream& os, OperandDumper opdp) {
             os << "[reg]";
         }
     } else if (operand->is_imm()) {
-        os << "imm: " << operand->imm();
+        os << operand->imm();
     } else if (operand->is_prob()) {
         os << "prob ";
     } else if (operand->is_reloc()) {

@@ -127,6 +127,7 @@ public:
     void legalizeInstWithStackOperand(InstLegalizeContext& ctx,
                                     MIROperand* op,
                                     StackObject& obj) const override;
+    void postLegalizeInst(const InstLegalizeContext& ctx) const override;
 };
 
 

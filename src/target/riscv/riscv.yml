@@ -34,6 +34,16 @@ InstInfo: {
                 2: { name: rs1, type: GPR, flag: Use }, # BaseLike
               },
           },
+        Ltype:
+          {
+            format: [mnem, " ", 0, ", ", 1, "(", 2, ")"],
+            operands:
+              {
+                0: { name: rd, type: GPR, flag: Def },
+                1: { name: offset, type: IMM12, flag: Metadata },
+                2: { name: rs1, type: GPR, flag: Use }, # BaseLike
+              },
+          },
         Utype: {
             # format: "$mnem $rd, $imm",
             format: [mnem, " ", 0, ", ", 1],
@@ -110,12 +120,12 @@ InstInfo: {
             operands: { imm: { type: UIMM6, flag: Metadata } },
           },
         # Load
-        LB: { mnem: "lb", template: Itype, flag: [Load] },
-        LH: { mnem: "lh", template: Itype, flag: [Load] },
-        LW: { mnem: "lw", template: Itype, flag: [Load] },
-        LBU: { mnem: "lbu", template: Itype, flag: [Load] },
-        LHU: { mnem: "lhu", template: Itype, flag: [Load] },
-        LD: { mnem: "ld", template: Itype, flag: [Load] }, # RV64
+        LB: { mnem: "lb", template: Ltype, flag: [Load] },
+        LH: { mnem: "lh", template: Ltype, flag: [Load] },
+        LW: { mnem: "lw", template: Ltype, flag: [Load] },
+        LBU: { mnem: "lbu", template: Ltype, flag: [Load] },
+        LHU: { mnem: "lhu", template: Ltype, flag: [Load] },
+        LD: { mnem: "ld", template: Ltype, flag: [Load] }, # RV64
         # Store
         SB: { mnem: "sb", template: Stype, flag: [Store] },
         SH: { mnem: "sh", template: Stype, flag: [Store] },
@@ -279,8 +289,7 @@ InstSelInfo: {
               ref: LB,
               rd: $dst,
               rs1: $base,
-              imm: $offset, # align: $align, # todo, process load inst info
-
+              offset: $offset, # align: $align, # todo, process load inst info
             },
         },
         {
@@ -703,11 +712,4 @@ InstSelInfo: {
       ],
   }
 
-ScheduleModel: {
-  sifive_u74: {
-    Classes: {
-      IntegerArithmetic: [],
-      
-    }
-  }
-}
+ScheduleModel: { sifive_u74: { Classes: { IntegerArithmetic: [] } } }

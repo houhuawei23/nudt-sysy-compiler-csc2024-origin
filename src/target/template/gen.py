@@ -51,6 +51,8 @@ if __name__ == "__main__":
     gen_file_jinja2("InstInfoDecl.hpp.jinja2", output_dir, params)
     gen_file_jinja2("InstInfoImpl.cpp.jinja2", output_dir, params)
 
+    if tar.target_name.lower() == "generic":
+        exit(0)
     gen_file_jinja2("ISelInfoDecl.hpp.jinja2", output_dir, params)
     gen_file_jinja2("ISelInfoImpl.cpp.jinja2", output_dir, params)
 

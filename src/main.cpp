@@ -18,8 +18,8 @@
 
 #include "target/riscv/riscv.hpp"
 #include "target/riscv/riscvtarget.hpp"
-#include "target/generic/generic.hpp"
-#include "target/generic/generictarget.hpp"
+// #include "target/generic/generic.hpp"
+// #include "target/generic/generictarget.hpp"
 
 using namespace std;
 

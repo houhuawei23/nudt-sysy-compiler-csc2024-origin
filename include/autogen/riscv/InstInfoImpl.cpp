@@ -884,9 +884,9 @@ class RISCVInstInfoLB final : public InstInfo {
             case 0:
                 return OperandFlagDef;
             case 1:
-                return OperandFlagUse;
-            case 2:
                 return OperandFlagMetadata;
+            case 2:
+                return OperandFlagUse;
             default:
                 assert(false && "Invalid operand index");
         }
@@ -899,8 +899,8 @@ class RISCVInstInfoLB final : public InstInfo {
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "lb"
             << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(2)};
+            << mir::RISCV::OperandDumper{inst.operand(1)} << "("
+            << mir::RISCV::OperandDumper{inst.operand(2)} << ")";
     }
 };
 
@@ -915,9 +915,9 @@ class RISCVInstInfoLH final : public InstInfo {
             case 0:
                 return OperandFlagDef;
             case 1:
-                return OperandFlagUse;
-            case 2:
                 return OperandFlagMetadata;
+            case 2:
+                return OperandFlagUse;
             default:
                 assert(false && "Invalid operand index");
         }
@@ -930,8 +930,8 @@ class RISCVInstInfoLH final : public InstInfo {
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "lh"
             << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(2)};
+            << mir::RISCV::OperandDumper{inst.operand(1)} << "("
+            << mir::RISCV::OperandDumper{inst.operand(2)} << ")";
     }
 };
 
@@ -946,9 +946,9 @@ class RISCVInstInfoLW final : public InstInfo {
             case 0:
                 return OperandFlagDef;
             case 1:
-                return OperandFlagUse;
-            case 2:
                 return OperandFlagMetadata;
+            case 2:
+                return OperandFlagUse;
             default:
                 assert(false && "Invalid operand index");
         }
@@ -961,8 +961,8 @@ class RISCVInstInfoLW final : public InstInfo {
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "lw"
             << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(2)};
+            << mir::RISCV::OperandDumper{inst.operand(1)} << "("
+            << mir::RISCV::OperandDumper{inst.operand(2)} << ")";
     }
 };
 
@@ -977,9 +977,9 @@ class RISCVInstInfoLBU final : public InstInfo {
             case 0:
                 return OperandFlagDef;
             case 1:
-                return OperandFlagUse;
-            case 2:
                 return OperandFlagMetadata;
+            case 2:
+                return OperandFlagUse;
             default:
                 assert(false && "Invalid operand index");
         }
@@ -992,8 +992,8 @@ class RISCVInstInfoLBU final : public InstInfo {
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "lbu"
             << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(2)};
+            << mir::RISCV::OperandDumper{inst.operand(1)} << "("
+            << mir::RISCV::OperandDumper{inst.operand(2)} << ")";
     }
 };
 
@@ -1008,9 +1008,9 @@ class RISCVInstInfoLHU final : public InstInfo {
             case 0:
                 return OperandFlagDef;
             case 1:
-                return OperandFlagUse;
-            case 2:
                 return OperandFlagMetadata;
+            case 2:
+                return OperandFlagUse;
             default:
                 assert(false && "Invalid operand index");
         }
@@ -1023,8 +1023,8 @@ class RISCVInstInfoLHU final : public InstInfo {
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "lhu"
             << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(2)};
+            << mir::RISCV::OperandDumper{inst.operand(1)} << "("
+            << mir::RISCV::OperandDumper{inst.operand(2)} << ")";
     }
 };
 
@@ -1039,9 +1039,9 @@ class RISCVInstInfoLD final : public InstInfo {
             case 0:
                 return OperandFlagDef;
             case 1:
-                return OperandFlagUse;
-            case 2:
                 return OperandFlagMetadata;
+            case 2:
+                return OperandFlagUse;
             default:
                 assert(false && "Invalid operand index");
         }
@@ -1054,8 +1054,8 @@ class RISCVInstInfoLD final : public InstInfo {
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "ld"
             << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(2)};
+            << mir::RISCV::OperandDumper{inst.operand(1)} << "("
+            << mir::RISCV::OperandDumper{inst.operand(2)} << ")";
     }
 };
 

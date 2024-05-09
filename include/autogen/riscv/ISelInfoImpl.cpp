@@ -594,8 +594,8 @@ static bool matchAndSelectPattern2(MIRInst* inst1, ISelContext& ctx) {
     /* select inst getLoadOpcode(op1) */
     auto inst2 = new MIRInst(getLoadOpcode(op1));
     inst2->set_operand(0, op7);
-    inst2->set_operand(1, op8);
-    inst2->set_operand(2, op9);
+    inst2->set_operand(1, op9);
+    inst2->set_operand(2, op8);
     ctx.insert_inst(inst2);
 
     /* Replace Operand */
@@ -1749,6 +1749,7 @@ class RISCVISelInfo final : public TargetISelInfo {
     void legalizeInstWithStackOperand(InstLegalizeContext& ctx,
                                       MIROperand* op,
                                       StackObject& obj) const override;
+    void postLegalizeInst(const InstLegalizeContext& ctx) const override;
 };
 
 TargetISelInfo& getRISCVISelInfo() {

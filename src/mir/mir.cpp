@@ -14,7 +14,17 @@ void MIRBlock::print(std::ostream& os, CodeGenContext& ctx) {
     }
 }
 
-void MIRFunction::print(std::ostream& os, CodeGenContext& ctx) {}
+void MIRFunction::print(std::ostream& os, CodeGenContext& ctx) {
+    for (auto &[ref, obj] : _stack_objs) {
+        os << " so" << (ref->reg() ^ stackObjectBegin)
+           << " size = " << obj.size << " align = " << obj.alignment
+           << " offset = " << obj.offset << std::endl;
+    }
+    for (auto& block : _blocks) {
+        os << block->name() << ":" << std::endl;
+        block->print(os, ctx);
+    }
+}
 
 void MIRZeroStorage::print(std::ostream& os, CodeGenContext& ctx) {}
 

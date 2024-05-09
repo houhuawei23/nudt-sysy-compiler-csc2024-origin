@@ -2,6 +2,7 @@
 #include "mir/instinfo.hpp"
 
 #include "autogen/generic/InstInfoDecl.hpp"
+#include "autogen/generic/InstInfoImpl.cpp"
 
 namespace mir {
 uint32_t offset = GENERIC::GENERICInstBegin + 1;
