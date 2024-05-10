@@ -70,28 +70,25 @@ int main(int argc, char* argv[]) {
                 // fpm.add_pass(new pass::domInfoCheck());
             }
 
-            if (pass_name.compare("dce") == 0) {
+            else if (pass_name.compare("dce") == 0) {
                 fpm.add_pass(new pass::DCE());
-            }
-            if (pass_name.compare("scp") == 0) {
+            } else if (pass_name.compare("scp") == 0) {
                 fpm.add_pass(new pass::SCP());
-            }
-            if (pass_name.compare("sccp")==0){
+            } else if (pass_name.compare("sccp") == 0) {
                 fpm.add_pass(new pass::mySCCP());
-            }
-            if (pass_name.compare("simplifycfg")==0){
+            } else if (pass_name.compare("simplifycfg") == 0) {
                 fpm.add_pass(new pass::simplifyCFG());
-            }
-            if (pass_name.compare("loopanalysis")==0){
+            } else if (pass_name.compare("loopanalysis") == 0) {
                 fpm.add_pass(new pass::preProcDom());
                 fpm.add_pass(new pass::idomGen());
                 fpm.add_pass(new pass::domFrontierGen());
                 // fpm.add_pass(new pass::domInfoCheck());
                 fpm.add_pass(new pass::loopAnalysis());
                 // fpm.add_pass(new pass::loopInfoCheck());
-            }
-            if (pass_name.compare("gcm")==0){
+            } else if (pass_name.compare("gcm") == 0) {
                 fpm.add_pass(new pass::GCM());
+            } else {
+                assert(false && "Invalid pass name");
             }
             // if (pass_name.compare("gvn")==0){
             //     fpm.add_pass(new pass::GVN());
