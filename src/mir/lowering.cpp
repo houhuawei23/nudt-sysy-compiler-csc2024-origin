@@ -91,6 +91,15 @@ void create_mir_module(ir::Module& ir_module,
             //         &mir_module));
 
         } else {               //! gvar not init: .bss
+
+            // mir_module.global_objs().push_back(
+            //     std::make_unique<MIRGlobalObject>(
+            //         align,
+            //         std::make_unique<MIRDataStorage>(std::move(data), false,
+            //                                          ir_gvar->name()),
+            //         &mir_module));
+
+        } else {               //! gvar not init: .bss
             size_t align = 4;  // TODO: align
             auto mir_storage = std::make_unique<MIRZeroStorage>(size, name);
             auto mir_gobj = std::make_unique<MIRGlobalObject>(
@@ -98,10 +107,12 @@ void create_mir_module(ir::Module& ir_module,
             mir_module.global_objs().push_back(std::move(mir_gobj));
         }
         gvar_map.emplace(ir_gvar, mir_module.global_objs().back().get());
+        gvar_map.emplace(ir_gvar, mir_module.global_objs().back().get());
     }
 
     // TODO: transformModuleBeforeCodeGen
 
+    //! 3. codegen
     //! 3. codegen
     CodeGenContext codegen_ctx{target, target.get_datalayout(),
                                target.get_target_inst_info(),
@@ -109,7 +120,14 @@ void create_mir_module(ir::Module& ir_module,
     codegen_ctx.iselInfo = &target.get_target_isel_info();
     lowering_ctx._code_gen_ctx = &codegen_ctx;
     //! 4. lower all functions
+                               target.get_target_inst_info(),
+                               target.get_target_frame_info(), MIRFlags{}};
+    codegen_ctx.iselInfo = &target.get_target_isel_info();
+    lowering_ctx._code_gen_ctx = &codegen_ctx;
+    //! 4. lower all functions
     for (auto& ir_func : ir_module.funcs()) {  // for all funcs
+        auto mir_func = func_map[ir_func];
+        if (ir_func->blocks().empty())
         auto mir_func = func_map[ir_func];
         if (ir_func->blocks().empty())
             continue;
@@ -151,16 +169,58 @@ void create_mir_module(ir::Module& ir_module,
         /* 4.11 verify */
     }
     /* module verify */
+        /* 4.3 register coalescing */
+
+        /* 4.4 peephole optimization */
+
+        /* 4.5 pre-RA legalization */
+
+        /* 4.6 pre-RA scheduling, minimize register usage */
+        // preRASchedule(*mir_func, codegen_ctx);
+        /* 4.7 register allocation */
+        codegen_ctx.registerInfo = new RISCVRegisterInfo();
+        if (codegen_ctx.registerInfo) {
+            linearAllocator(*mir_func, codegen_ctx);
+            // fastAllocator(*mir_func, codegen_ctx);
+        }
+
+        /* 4.8 stack allocation */
+        if (codegen_ctx.registerInfo) {
+            /* after sa, all stack objects are allocated with .offset */
+            allocateStackObjects(mir_func, codegen_ctx);
+            codegen_ctx.flags.postSA = true;
+        }
+
+        /* 4.9 post-RA scheduling, minimize cycles */
+
+        /* 4.10 post legalization */
+        postLegalizeFunc(*mir_func, codegen_ctx);
+        /* 4.11 verify */
+    }
+    /* module verify */
 }
 
 MIRFunction* create_mir_function(ir::Function* ir_func,
                                  MIRFunction* mir_func,
+                                 CodeGenContext& codegen_ctx,
                                  CodeGenContext& codegen_ctx,
                                  LoweringContext& lowering_ctx) {
     // TODO: before lowering, ge some analysis pass result
     /* aligenment */
     /* range */
     /* dom */
+    // TODO: before lowering, ge some analysis pass result
+    /* aligenment */
+    /* range */
+    /* dom */
+
+    //! 1. map from ir to mir
+    // std::unordered_map<ir::BasicBlock*, MIRBlock*> block_map;
+    auto& block_map = lowering_ctx._block_map;
+    std::unordered_map<ir::Value*, MIROperand*> storage_map;
+
+    auto& target = codegen_ctx.target;
+    auto& datalayout = target.get_datalayout();
 
     //! 1. map from ir to mir
     // std::unordered_map<ir::BasicBlock*, MIRBlock*> block_map;
@@ -175,10 +235,18 @@ MIRFunction* create_mir_function(ir::Function* ir_func,
             ir_block, mir_func,
             "label" + std::to_string(codegen_ctx.next_id_label())));
         block_map.emplace(ir_block, mir_func->blocks().back().get());
+        mir_func->blocks().push_back(std::make_unique<MIRBlock>(
+            ir_block, mir_func,
+            "label" + std::to_string(codegen_ctx.next_id_label())));
+        block_map.emplace(ir_block, mir_func->blocks().back().get());
     }
 
     //! 2. emitPrologue for function
+    //! 2. emitPrologue for function
     {
+        for (auto ir_arg : ir_func->args()) {  // assign vreg to arg
+            auto vreg = lowering_ctx.new_vreg(ir_arg->type());
+            lowering_ctx.add_valmap(ir_arg, vreg);
         for (auto ir_arg : ir_func->args()) {  // assign vreg to arg
             auto vreg = lowering_ctx.new_vreg(ir_arg->type());
             lowering_ctx.add_valmap(ir_arg, vreg);
