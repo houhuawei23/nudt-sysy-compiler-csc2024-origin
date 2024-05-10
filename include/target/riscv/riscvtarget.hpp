@@ -298,7 +298,6 @@ class RISCVTarget : public Target {
         return RISCV::getRISCVInstInfo();
     }
     TargetISelInfo& get_target_isel_info() override {
-        std::cerr << "Not Impl get_isel_info" << std::endl;
         return RISCV::getRISCVISelInfo();
     }
 

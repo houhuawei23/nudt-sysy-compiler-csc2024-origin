@@ -127,14 +127,32 @@ function run_gcc_test() {
     local single_file="$1"
     local output_dir="$2"
     local result_file="$3"
-    echo "Running GCC test for "s
+
+    local in_file="${single_file%.*}.in"
+
+    local gcc_c="${output_dir}/gcc_test.c"
+    local gcc_s="${output_dir}/gcc.s"
+    local gcc_o="${output_dir}/gcc.o"
+
+    gcc_out="${output_dir}/gcc_out"
+
+    if [ -f "${gcc_c}" ]; then
+        rm "${gcc_c}"
+    fi
+    touch "${gcc_c}"
+    cat "${single_file}" >"${gcc_c}"
+
+    riscv64-linux-gnu-gcc -S -march=rv64gc "${gcc_c}" -o "${gcc_s}" -O0
+    riscv64-linux-gnu-gcc -march=rv64gc "${gcc_c}" -o "${gcc_o}" -O0
+    qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gcc_o}" >"${gcc_out}"
+    local qemu_res=$?
+    return $qemu_res
 }
 
 function run_compiler_test() {
     local single_file="$1"
     local output_dir="$2"
     local result_file="$3"
-    echo "Running compiler test for ${single_file}"
 
     local in_file="${single_file%.*}.in"
 
@@ -148,7 +166,7 @@ function run_compiler_test() {
 
     local gen_o="${output_dir}/gen.o"
 
-    local gen_out="${output_dir}/gen_out"
+    gen_out="${output_dir}/gen_out"
 
     if [ -f "${gen_c}" ]; then
         rm "${gen_c}"
@@ -162,9 +180,9 @@ function run_compiler_test() {
         return $EC_MAIN
     fi
     riscv64-linux-gnu-gcc -march=rv64gc "${gen_s}" -o "${gen_o}"
-    qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gen_o}"
+    qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gen_o}" >"${gen_out}"
     local qemu_res=$?
-    echo "QEMU result: $qemu_res" 
+
     return $qemu_res
 
 }
@@ -175,6 +193,7 @@ function run_test_asm() {
     local result_file="$3"
 
     if [ -f "$single_file" ]; then
+        echo "${YELLOW}[Testing]${RESET} $single_file"
 
         run_gcc_test "${single_file}" "${output_dir}" "${result_file}"
         local gccres=$?
@@ -182,12 +201,12 @@ function run_test_asm() {
         run_compiler_test "${single_file}" "${output_dir}" "${result_file}"
         local res=$?
 
-        diff "${gen_out}" "${llvm_out}" >"${output_dir}/diff.out"
+        diff "${gen_out}" "${gcc_out}" >"${output_dir}/diff.out"
         local diff_res=$?
         # diff res or diff stdout
-        echo "[RESULT] res (${RED}${res}${RESET}), llvmres (${RED}${llvmres}${RESET})"
+        echo "[RESULT] res (${RED}${res}${RESET}), gccres (${RED}${gccres}${RESET})"
 
-        if [ ${res} != ${llvmres} ] || [ ${diff_res} != 0 ]; then
+        if [ ${res} != ${gccres} ] || [ ${diff_res} != 0 ]; then
 
             if [ ${res} == ${EC_MAIN} ]; then
                 echo "${RED}[MAIN ERROR]${RESET} ${single_file}"
@@ -201,7 +220,7 @@ function run_test_asm() {
             else
                 echo "${RED}[WRONG RES]${RESET} ${single_file}"
                 echo "[WRONG RES] ${single_file}" >>${result_file}
-                echo "  [WRONG RES]: res (${res}), llvmres (${llvmres})" >>${result_file}
+                echo "  [WRONG RES]: res (${res}), gccres (${gccres})" >>${result_file}
             fi
 
             if [ ${res} == ${EC_TIMEOUT} ]; then
@@ -224,7 +243,7 @@ function run_test_asm() {
 
 # if test_path is a file
 if [ -f "$test_path" ]; then
-    run_compiler_test "$test_path" "$output_dir" "$result_file"
+    run_test_asm "$test_path" "$output_dir" "$result_file"
     echo "${GREEN}OPT PASSES${RESET}: ${PASSES_STR}"
 fi
 
@@ -237,7 +256,7 @@ if [ -d "$test_path" ]; then
             if [ ! -f "${file}" ]; then
                 break
             else
-                run_compiler_test "${file}" "${output_dir}" "${result_file}"
+                run_test_asm "${file}" "${output_dir}" "${result_file}"
             fi
         done
 

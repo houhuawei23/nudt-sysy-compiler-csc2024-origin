@@ -116,7 +116,7 @@ void create_mir_module(ir::Module& ir_module,
 
         /* 4.1: lower function body to generic MIR */
         create_mir_function(ir_func, mir_func, codegen_ctx, lowering_ctx);
-        mir_func->print(std::cerr, codegen_ctx);
+        // mir_func->print(std::cerr, codegen_ctx);
         
         /* 4.2: instruction selection */
         ISelContext isel_ctx(codegen_ctx);
