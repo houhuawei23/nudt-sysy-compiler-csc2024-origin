@@ -28,13 +28,11 @@ class SysYIRGenerator : public SysYBaseVisitor {
     SysYIRGenerator(ir::Module* module, antlr4::ParserRuleContext* root)
         : _module(module), _root(root) {}
 
-    // 'get' means get the same obj int the class
-    // 'copy' means get the copy of obj
-
+   public:
     ir::Module* module() { return _module; }
-
     ir::IRBuilder& builder() { return _builder; }
 
+   public:
     ir::Module* build_ir() {
         visit(_root);
         return _module;

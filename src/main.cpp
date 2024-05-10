@@ -10,7 +10,9 @@
 #include "pass/analysis/dom.hpp"
 #include "pass/optimize/mem2reg.hpp"
 #include "pass/optimize/DCE.hpp"
-#include "pass/optimize/SimpleConstPropagation.hpp"
+#include "pass/optimize/SCP.hpp"
+#include "pass/optimize/SCCP.hpp"
+#include "pass/optimize/simplifyCFG.hpp"
 
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
@@ -18,8 +20,6 @@
 
 #include "target/riscv/riscv.hpp"
 #include "target/riscv/riscvtarget.hpp"
-// #include "target/generic/generic.hpp"
-// #include "target/generic/generictarget.hpp"
 
 using namespace std;
 
@@ -55,18 +55,29 @@ int main(int argc, char* argv[]) {
 
     //! 2. Optimization Passes
     pass::FunctionPassManager fpm;
+
     if (not config.pass_names.empty()) {
         for (auto pass_name : config.pass_names) {
             if (pass_name.compare("mem2reg") == 0) {
+                // mem2reg
                 fpm.add_pass(new pass::preProcDom());
                 fpm.add_pass(new pass::idomGen());
                 fpm.add_pass(new pass::domFrontierGen());
+                fpm.add_pass(new pass::Mem2Reg());
+                // fpm.add_pass(new pass::domInfoCheck());
             }
 
             if (pass_name.compare("dce") == 0) {
-                fpm.add_pass(new pass::Mem2Reg());
                 fpm.add_pass(new pass::DCE());
-                fpm.add_pass(new pass::SimpleConstPropagation());
+            }
+            if (pass_name.compare("scp") == 0) {
+                fpm.add_pass(new pass::SCP());
+            }
+            if (pass_name.compare("sccp")==0){
+                fpm.add_pass(new pass::SCCP());
+            }
+            if (pass_name.compare("simplifycfg")==0){
+                fpm.add_pass(new pass::simplifyCFG());
             }
         }
         for (auto f : module_ir->funcs()) {
@@ -83,6 +94,7 @@ int main(int argc, char* argv[]) {
             module_ir->print(fout);
         }
     }
+
     //! 3. Code Generation
     if (config.gen_asm) {
         auto target = mir::RISCVTarget();
@@ -96,11 +108,6 @@ int main(int argc, char* argv[]) {
             target.emit_assembly(fout, *mir_module);
         }
     }
-    // if (config.gen_asm) {
-    //     auto target = mir::GENERICTarget();
-    //     auto mir_module = mir::create_mir_module(*module_ir, target);
 
-    //     target.emit_assembly(std::cout, *mir_module);
-    // }
     return EXIT_SUCCESS;
 }

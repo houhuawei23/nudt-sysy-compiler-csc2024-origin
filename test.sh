@@ -1,4 +1,7 @@
 #!/bin/bash
+
+# ./test.sh -t test/2021/functional/ -p mem2reg -p dce -p scp -p sccp -p simplifycfg -L1
+
 # dont ignore unset variables
 set -u
 
@@ -145,7 +148,7 @@ function run_llvm_test() {
     cat "${sy_h}" >"${llvm_c}"
     cat "${single_file}" >>"${llvm_c}"
 
-    clang --no-warnings -emit-llvm -S "${llvm_c}" -o "${llvm_ll}" -O0
+    clang --no-warnings -emit-llvm -S "${llvm_c}" -o "${llvm_ll}" -O3
     llvm-link --suppress-warnings "${llvm_ll}" "${link_ll}" -S -o "${llvm_llinked}"
 
     if [ -f "$in_file" ]; then
@@ -178,7 +181,7 @@ function run_gen_test() {
     cat "${single_file}" >"${gen_c}"
 
     # ./main "$single_file" >"${gen_ll}"
-    ./main -f "${single_file}" -i -t "${PASSES_STR}" -o "${gen_ll}" "${OPT_LEVEL}" "${LOG_LEVEL}"
+    ./main -f "${single_file}" -i -t ${PASSES_STR} -o "${gen_ll}" "${OPT_LEVEL}" "${LOG_LEVEL}"
     if [ $? != 0 ]; then
         return $EC_MAIN
     fi

@@ -130,6 +130,9 @@ class Value {
         vBASIC_BLOCK,
         vGLOBAL_VAR,
 
+        vBITCAST, 
+        vMEMSET, 
+
         // instructions class id
         vINSTRUCTION,
         // vMEM_BEGIN,
@@ -261,18 +264,19 @@ class Value {
         }
     }
 
-   public:  // check
-    bool is_i1() const { return _type->is_i1(); }
-    bool is_i32() const { return _type->is_i32(); }
-    bool is_float32() const { return _type->is_float32(); }
-    bool is_double() const { return _type->is_double(); }
-    bool is_float() const { return _type->is_float(); }
-    bool is_pointer() const { return _type->is_pointer(); }
-    bool is_void() const { return _type->is_void(); }
+    public:  // check
+        bool is_i1() const { return _type->is_i1(); }
+        bool is_i32() const { return _type->is_i32(); }
+        bool is_float32() const { return _type->is_float32(); }
+        bool is_double() const { return _type->is_double(); }
+        bool is_float() const { return _type->is_float(); }
+        bool is_undef() const {return _type->is_undef(); }
+        bool is_pointer() const { return _type->is_pointer(); }
+        bool is_void()const {return _type->is_void(); }
 
    public:
     ValueId scid() const { return _scid; }
-    virtual void print(std::ostream& os){};
+    virtual void print(std::ostream& os) {};
 };
 
 /**
@@ -326,6 +330,14 @@ class User : public Value {
         _operands[index]->value()->del_use(_operands[index]);
         auto use = new Use(index, this, value);
         _operands[index] = value->add_use_by_user(this);
+    }
+
+    /* delete an operand of a value */
+    void delete_operands(int index){
+        _operands[index]->value()->del_use(_operands[index]);
+        _operands.erase(_operands.begin()+index);
+        for(int idx=index+1;idx<_operands.size();idx++)
+            _operands[idx]->set_index(idx);
     }
 
     virtual void print(std::ostream& os) {}

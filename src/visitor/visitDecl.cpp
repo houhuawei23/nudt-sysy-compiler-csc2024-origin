@@ -213,13 +213,16 @@ ir::Value* SysYIRGenerator::visitArray_local(SysYParser::VarDefContext* ctx,
 
     std::vector<ir::Value*> Arrayinit;
 
+    //! alloca
+    auto alloca_ptr = _builder.create_alloca(btype, is_const, dims, name, capacity);
+    _tables.insert(name, alloca_ptr);
+
     //! get initial value (将数组元素的初始化值存储在Arrayinit中)
     if (ctx->ASSIGN()) {
-        for (int i = 0; i < capacity; i++) {
-            if (btype->is_float()) Arrayinit.push_back(ir::Constant::gen_f32(0.0));
-            else if (btype->is_i32()) Arrayinit.push_back(ir::Constant::gen_i32(0));
-            else assert(false && "Invalid type.");
-        }
+        for (int i = 0; i < capacity; i++) Arrayinit.push_back(nullptr);
+
+        auto tmp = _builder.create_bitcast(alloca_ptr->type(), alloca_ptr);
+        _builder.create_memset(tmp->type(), tmp);
 
         _d = 0; _n = 0;
         _path.clear(); _path = std::vector<int>(dims.size(), 0);
@@ -229,10 +232,7 @@ ir::Value* SysYIRGenerator::visitArray_local(SysYParser::VarDefContext* ctx,
         }
     }
 
-    //! allca and assign
-    auto alloca_ptr = _builder.create_alloca(btype, is_const, dims, name);
-    _tables.insert(name, alloca_ptr);
-
+    //! assign
     ir::Value* element_ptr = dyn_cast<ir::Value>(alloca_ptr);
     for (int cur = 1; cur <= dimensions; cur++) {
         dims.erase(dims.begin());
@@ -242,11 +242,11 @@ ir::Value* SysYIRGenerator::visitArray_local(SysYParser::VarDefContext* ctx,
 
     int cnt = 0;
     for (int i = 0; i < Arrayinit.size(); i++) {
-        if (i != 0) {
+        if (Arrayinit[i] != nullptr) {
             element_ptr = _builder.create_getelementptr(btype, element_ptr, ir::Constant::gen_i32(cnt));
+            _builder.create_store(Arrayinit[i], element_ptr);
             cnt = 0;
         }
-        auto store = _builder.create_store(Arrayinit[i], element_ptr);
         cnt++;
     }
 

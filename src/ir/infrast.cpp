@@ -52,11 +52,17 @@ void BasicBlock::emplace_back_inst(Instruction* i) {
     if (not _is_terminal)
         _insts.emplace_back(i);
     _is_terminal = i->is_terminator();
+    if(auto phiInst=dyn_cast<PhiInst>(i))
+        assert(false and "a phi can not be inserted at the back of a bb");
 }
 void BasicBlock::emplace_inst(inst_iterator pos, Instruction* i) {
     // Warning: didn't check _is_terminal
     _insts.emplace(pos, i);
     _is_terminal = i->is_terminator();
+    if(auto phiInst=dyn_cast<PhiInst>(i)){// assume that Phi insts are all at the front of a bb
+        int index=std::distance(_insts.begin(),pos);
+        _phi_insts.emplace(std::next(_phi_insts.begin(),index),phiInst);
+    }
 }
 
 // void BasicBlock::delete_inst(Instruction* inst){
@@ -86,6 +92,8 @@ void BasicBlock::delete_inst(Instruction* inst) {
         op->del_use(op_use);
     }
     _insts.remove(inst);
+    if(auto phiInst=dyn_cast<PhiInst>(inst))
+        _phi_insts.remove(phiInst);
 
     // delete inst;
 }
@@ -97,6 +105,8 @@ void BasicBlock::force_delete_inst(Instruction* inst) {
         op->del_use(op_use);
     }
     _insts.remove(inst);
+    if(auto phiInst=dyn_cast<PhiInst>(inst))
+        _phi_insts.remove(phiInst);
 }
 
 void BasicBlock::emplace_first_inst(Instruction* inst) {
@@ -104,6 +114,8 @@ void BasicBlock::emplace_first_inst(Instruction* inst) {
     auto pos = _insts.begin();
     _insts.emplace(pos, inst);
     _is_terminal = inst->is_terminator();
+    if(auto phiInst=dyn_cast<PhiInst>(inst))
+        _phi_insts.emplace_front(phiInst);
 }
 
 }  // namespace ir

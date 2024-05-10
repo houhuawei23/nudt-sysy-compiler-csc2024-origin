@@ -121,13 +121,11 @@ std::any SysYIRGenerator::visitAssignStmt(SysYParser::AssignStmtContext* ctx) {
     } else {  //! 2. 右值为变量
         if (lvar_pointee_type == exp->type()) {
             exp = exp;
-        }
-        else if (lvar_pointee_type->is_i32() && exp->is_float32()) {
+        } else if (lvar_pointee_type->is_i32() && exp->is_float32()) {
             exp = _builder.create_unary_beta(ir::Value::vFPTOSI, exp, ir::Type::i32_type());
 
         } else if (lvar_pointee_type->is_float32() && exp->is_i32()) {
             exp = builder().create_unary_beta(ir::Value::vSITOFP, exp, ir::Type::float_type());
-
         }
     }
     res = _builder.create_store(exp, lvalue_ptr);
@@ -304,16 +302,13 @@ std::any SysYIRGenerator::visitContinueStmt(
 std::any SysYIRGenerator::visitLValue(SysYParser::LValueContext* ctx) {
     //! lvalue must be a pointer
     std::string name = ctx->ID()->getText();
-    ir::Value* ptr = _tables.lookup(name); // pointer type
+    ir::Value* ptr = _tables.lookup(name);
     assert(ptr && "use undefined variable");
-
-    auto ptype = dyn_cast<ir::PointerType>(ptr->type());
-    assert(ptype && "lvalue is not a pointer type");
-
-    bool isArray = false;
     
-    isArray = ptype->base_type()->is_array() || ptype->base_type()->is_pointer();
-
+    bool isArray = false;
+    if (auto ptype = dyn_cast<ir::PointerType>(ptr->type())) {
+        isArray = ptype->base_type()->is_array() || ptype->base_type()->is_pointer();
+    }
     if (!isArray) {  //! 1. scalar
         return dyn_cast_Value(ptr);
     } else {  //! 2. array
@@ -331,9 +326,22 @@ std::any SysYIRGenerator::visitLValue(SysYParser::LValueContext* ctx) {
         } else if (type->is_pointer()) {  // 指针 (eg. int a[] OR int a[][5]) -> 函数参数
             ptr = _builder.create_load(ptr);
             type = dyn_cast<ir::PointerType>(type)->base_type();
-            if (type->is_array()) {  // 二级及以上指针
 
-            } else {  // 一级指针
+            if (type->is_array()) {
+                auto expr_vec = ctx->exp();
+                
+                ir::Value* idx = any_cast_Value(visit(expr_vec[0]));
+                ptr = _builder.create_getelementptr(type, ptr, idx);
+                auto base_type = dyn_cast<ir::ArrayType>(type)->base_type();
+                std::vector<int> dims = dyn_cast<ir::ArrayType>(type)->dims(), cur_dims(dims);
+
+                for (int i = 1; i < expr_vec.size(); i++) {
+                    idx = any_cast_Value(visit(expr_vec[i]));
+                    dims.erase(dims.begin());
+                    ptr = _builder.create_getelementptr(base_type, ptr, idx, dims, cur_dims);
+                    cur_dims.erase(cur_dims.begin());
+                }
+            } else {
                 for (auto expr : ctx->exp()) {
                     ir::Value* idx = any_cast_Value(visit(expr));
                     ptr = _builder.create_getelementptr(type, ptr, idx);

@@ -47,6 +47,9 @@ void Module::print(std::ostream& os) {
         }
     }
 
+    // llvm inline function
+    os << "declare void @llvm.memset.p0i8.i64(i8* nocapture writeonly, i8, i64, i1 immarg)" << std::endl;
+
     //! print all functions
     for (auto func : _funcs) {
         os << *func << std::endl;

@@ -4,6 +4,18 @@
 #include <getopt.h>
 
 namespace sysy {
+
+/*
+-i: Generate IR
+-t {passname} {pasename} ...: opt passes names to run
+-o {filename}:  output file, default gen.ll (-ir) or gen.s (-S)
+-S: gen assembly
+-O[0-3]: opt level
+
+./main -f test.c -i -t mem2reg dce -o gen.ll
+./main -f test.c -i -t mem2reg -o gen.ll -O0 -L0
+*/
+
 std::string_view HELP = R"(
 Usage: ./main [options]
   -f {filename}         input file
@@ -25,22 +37,12 @@ void Config::print_help() {
 
 void Config::print_info() {
     if (log_level > LogLevel::SILENT) {
-        std::cout << "In       : " << infile << std::endl;
-        if (outfile.empty()) {
-            std::cout << "Out      : "
-                      << "std::cout" << std::endl;
-        } else {
-            std::cout << "Out      : " << outfile << std::endl;
-        }
-
+        std::cout << "In File  : " << infile << std::endl;
+        std::cout << "Out File : " << outfile << std::endl;
         std::cout << "Gen IR   : " << (gen_ir ? "Yes" : "No") << std::endl;
-
         std::cout << "Gen ASM  : " << (gen_asm ? "Yes" : "No") << std::endl;
-
         std::cout << "Opt Level: " << opt_level << std::endl;
-
         std::cout << "Log Level: " << log_level << std::endl;
-
         if (not pass_names.empty()) {
             std::cout << "Passes   : ";
             for (const auto& pass : pass_names) {
@@ -61,12 +63,13 @@ void Config::parse_cmd_args(int argc, char* argv[]) {
             case 'i':
                 gen_ir = true;
                 break;
-            case 't':  // note: optind start from 1, so we need to minus 1
+            case 't':
+                // optind start from 1, so we need to minus 1
                 while (optind <= argc && *argv[optind - 1] != '-') {
                     pass_names.push_back(argv[optind - 1]);
                     optind++;
                 }
-                optind--;
+                optind--;  // must!
                 break;
             case 'o':
                 outfile = optarg;

@@ -12,7 +12,10 @@ void Constant::print(std::ostream& os) {
         os << i32();
     } else if (type()->is_float()) {
         os << name(); // 0x...
-    } else {
+    } else if (type()->is_undef()){
+        os << "undef";
+    } 
+    else {
         assert(false);
     }
 }

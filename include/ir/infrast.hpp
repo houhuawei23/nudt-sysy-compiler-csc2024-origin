@@ -5,7 +5,6 @@
 #include "ir/value.hpp"
 
 namespace ir {
-
 /**
  * @brief Argument represents an incoming formal argument to a Function.
  * 形式参数，因为它是“形式的”，所以不包含实际值，而是表示特定函数的参数的类型、参数编号和属性。
@@ -57,6 +56,7 @@ class BasicBlock : public Value {
     std::vector<BasicBlock*> domFrontier;  // dom frontier
     // std::set<BasicBlock*> dom;//those bb was dominated by self
     int domLevel;
+    int looplevel;
 
    protected:
     Function* _parent;
@@ -65,6 +65,8 @@ class BasicBlock : public Value {
     // for CFG
     block_ptr_list _next_blocks;
     block_ptr_list _pre_blocks;
+    // specially for Phi
+    inst_list _phi_insts;
 
     int _depth = 0;
     bool _is_terminal = false;
@@ -91,6 +93,8 @@ class BasicBlock : public Value {
 
     inst_list& insts() { return _insts; }
 
+   inst_list& phi_insts(){ return _phi_insts; }
+
     block_ptr_list& next_blocks() { return _next_blocks; }
     block_ptr_list& pre_blocks() { return _pre_blocks; }
 
@@ -111,6 +115,11 @@ class BasicBlock : public Value {
     static void block_link(ir::BasicBlock* pre, ir::BasicBlock* next) {
         pre->next_blocks().emplace_back(next);
         next->pre_blocks().emplace_back(pre);
+    }
+
+    static void delete_block_link(ir::BasicBlock* pre, ir::BasicBlock* next) {
+        pre->next_blocks().remove(next);
+        next->pre_blocks().remove(pre);
     }
 
     bool dominate(BasicBlock* bb) {
@@ -166,7 +175,7 @@ class Instruction : public User {
     bool is_icmp();
     bool is_fcmp();
     bool is_math();
-    bool is_noname() { return is_terminator() or _scid == vSTORE; }
+    bool is_noname() { return is_terminator() or _scid == vSTORE or _scid == vMEMSET; }
 
     // for isa, cast and dyn_cast
     static bool classof(const Value* v) { return v->scid() >= vINSTRUCTION; }
@@ -175,9 +184,7 @@ class Instruction : public User {
 
     void virtual print(std::ostream& os) = 0;
 
-    bool virtual is_constprop()=0;
-
-    virtual Constant* getConstantRepl()=0;
+    virtual Value* getConstantRepl()=0;
 };
 
 }  // namespace ir
