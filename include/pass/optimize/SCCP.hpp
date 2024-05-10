@@ -12,10 +12,11 @@ namespace pass{
             void run(ir::Function* func)override;
             std::string name()override;
         private:
-            bool getExecutableFlag(ir::BasicBlock* a, ir::BasicBlock* b);
-            void addConstFlod(ir::Instruction*inst);
-            bool getDeadFlag(ir::BasicBlock* a);
-            void branchInstFlod(ir::BranchInst* brInst);
-            void deleteDeadBlock(ir::BasicBlock* bb);
+            using FlowEdge=std::pair<ir::BasicBlock*,ir::BasicBlock*>;
+            using SSAEdge=std::pair<ir::Instruction*,ir::Instruction*>;
+            static std::queue<FlowEdge>FlowWorkList;
+            static std::queue<SSAEdge>SSAWorkList;
+            using valueEdge=std::pair<ir::Value*,ir::Value*>;
+            valueEdge getEdge();
     };
 }

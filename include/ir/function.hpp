@@ -21,6 +21,21 @@ inline bool compareBB(const BasicBlock* b1, const BasicBlock* b2) {
     // }
 }
 
+class Loop{
+    protected:
+        std::set<BasicBlock*> _blocks;
+        BasicBlock* _header;
+        Function* _parent;
+    public:
+        Loop(BasicBlock* header, Function* parent){
+            _header=header;
+            _parent=parent;
+        }
+        BasicBlock* header(){return _header;}
+        Function* parent(){return _parent;}
+        std::set<BasicBlock*>& blocks(){return _blocks;}
+};
+
 class Function : public User {
     friend class Module;
 
@@ -30,6 +45,8 @@ class Function : public User {
     block_ptr_list _blocks;       // blocks of the function
     block_ptr_list _exit_blocks;  // exit blocks
     arg_ptr_vector _args;         // formal args
+    std::list<Loop*> _loops;
+    std::map<ir::BasicBlock*,ir::Loop*>_headToLoop;
 
     //* function has concrete local var for return value,
     //* addressed by _ret_value_ptr
@@ -57,6 +74,8 @@ class Function : public User {
     
     BasicBlock* next() { return _next; }
     Module* parent() const { return _parent; }
+    std::list<Loop*>& Loops(){ return _loops; }
+    std::map<BasicBlock*,Loop*>& headToLoop(){ return _headToLoop; }
 
     //* return
     Type* ret_type() const {

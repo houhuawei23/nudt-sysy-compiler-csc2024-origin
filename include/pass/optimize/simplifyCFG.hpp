@@ -18,5 +18,6 @@ namespace pass{
             bool MergeBlock(ir::Function* func);
             bool removeNoPreBlock(ir::Function* func);
             bool removeSingleBrBlock(ir::Function* func);
+            bool removeSingleIncomingPhi(ir::Function* func);
     };
 }
