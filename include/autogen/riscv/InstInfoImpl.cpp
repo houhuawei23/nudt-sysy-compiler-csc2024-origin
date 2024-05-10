@@ -7,7 +7,7 @@
 RISCV_NAMESPACE_BEGIN
 
 class RISCVInstInfoBEQ final : public InstInfo {
-   public:
+public:
     RISCVInstInfoBEQ() = default;
 
     uint32_t operand_num() override { return 4; }
@@ -43,7 +43,7 @@ class RISCVInstInfoBEQ final : public InstInfo {
 };
 
 class RISCVInstInfoBNE final : public InstInfo {
-   public:
+public:
     RISCVInstInfoBNE() = default;
 
     uint32_t operand_num() override { return 4; }
@@ -79,7 +79,7 @@ class RISCVInstInfoBNE final : public InstInfo {
 };
 
 class RISCVInstInfoBLT final : public InstInfo {
-   public:
+public:
     RISCVInstInfoBLT() = default;
 
     uint32_t operand_num() override { return 4; }
@@ -115,7 +115,7 @@ class RISCVInstInfoBLT final : public InstInfo {
 };
 
 class RISCVInstInfoBGE final : public InstInfo {
-   public:
+public:
     RISCVInstInfoBGE() = default;
 
     uint32_t operand_num() override { return 4; }
@@ -151,7 +151,7 @@ class RISCVInstInfoBGE final : public InstInfo {
 };
 
 class RISCVInstInfoBLTU final : public InstInfo {
-   public:
+public:
     RISCVInstInfoBLTU() = default;
 
     uint32_t operand_num() override { return 4; }
@@ -187,7 +187,7 @@ class RISCVInstInfoBLTU final : public InstInfo {
 };
 
 class RISCVInstInfoBGEU final : public InstInfo {
-   public:
+public:
     RISCVInstInfoBGEU() = default;
 
     uint32_t operand_num() override { return 4; }
@@ -223,7 +223,7 @@ class RISCVInstInfoBGEU final : public InstInfo {
 };
 
 class RISCVInstInfoADD final : public InstInfo {
-   public:
+public:
     RISCVInstInfoADD() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -254,7 +254,7 @@ class RISCVInstInfoADD final : public InstInfo {
 };
 
 class RISCVInstInfoADDW final : public InstInfo {
-   public:
+public:
     RISCVInstInfoADDW() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -285,7 +285,7 @@ class RISCVInstInfoADDW final : public InstInfo {
 };
 
 class RISCVInstInfoSUB final : public InstInfo {
-   public:
+public:
     RISCVInstInfoSUB() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -316,7 +316,7 @@ class RISCVInstInfoSUB final : public InstInfo {
 };
 
 class RISCVInstInfoSUBW final : public InstInfo {
-   public:
+public:
     RISCVInstInfoSUBW() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -347,7 +347,7 @@ class RISCVInstInfoSUBW final : public InstInfo {
 };
 
 class RISCVInstInfoXOR final : public InstInfo {
-   public:
+public:
     RISCVInstInfoXOR() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -378,7 +378,7 @@ class RISCVInstInfoXOR final : public InstInfo {
 };
 
 class RISCVInstInfoOR final : public InstInfo {
-   public:
+public:
     RISCVInstInfoOR() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -409,7 +409,7 @@ class RISCVInstInfoOR final : public InstInfo {
 };
 
 class RISCVInstInfoAND final : public InstInfo {
-   public:
+public:
     RISCVInstInfoAND() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -440,7 +440,7 @@ class RISCVInstInfoAND final : public InstInfo {
 };
 
 class RISCVInstInfoSLL final : public InstInfo {
-   public:
+public:
     RISCVInstInfoSLL() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -471,7 +471,7 @@ class RISCVInstInfoSLL final : public InstInfo {
 };
 
 class RISCVInstInfoSRL final : public InstInfo {
-   public:
+public:
     RISCVInstInfoSRL() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -502,7 +502,7 @@ class RISCVInstInfoSRL final : public InstInfo {
 };
 
 class RISCVInstInfoSRA final : public InstInfo {
-   public:
+public:
     RISCVInstInfoSRA() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -533,7 +533,7 @@ class RISCVInstInfoSRA final : public InstInfo {
 };
 
 class RISCVInstInfoSLT final : public InstInfo {
-   public:
+public:
     RISCVInstInfoSLT() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -564,7 +564,7 @@ class RISCVInstInfoSLT final : public InstInfo {
 };
 
 class RISCVInstInfoSLTU final : public InstInfo {
-   public:
+public:
     RISCVInstInfoSLTU() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -595,7 +595,7 @@ class RISCVInstInfoSLTU final : public InstInfo {
 };
 
 class RISCVInstInfoADDI final : public InstInfo {
-   public:
+public:
     RISCVInstInfoADDI() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -626,7 +626,7 @@ class RISCVInstInfoADDI final : public InstInfo {
 };
 
 class RISCVInstInfoXORI final : public InstInfo {
-   public:
+public:
     RISCVInstInfoXORI() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -657,7 +657,7 @@ class RISCVInstInfoXORI final : public InstInfo {
 };
 
 class RISCVInstInfoORI final : public InstInfo {
-   public:
+public:
     RISCVInstInfoORI() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -688,7 +688,7 @@ class RISCVInstInfoORI final : public InstInfo {
 };
 
 class RISCVInstInfoANDI final : public InstInfo {
-   public:
+public:
     RISCVInstInfoANDI() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -719,7 +719,7 @@ class RISCVInstInfoANDI final : public InstInfo {
 };
 
 class RISCVInstInfoSLTI final : public InstInfo {
-   public:
+public:
     RISCVInstInfoSLTI() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -750,7 +750,7 @@ class RISCVInstInfoSLTI final : public InstInfo {
 };
 
 class RISCVInstInfoSLTIU final : public InstInfo {
-   public:
+public:
     RISCVInstInfoSLTIU() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -781,7 +781,7 @@ class RISCVInstInfoSLTIU final : public InstInfo {
 };
 
 class RISCVInstInfoSLLI final : public InstInfo {
-   public:
+public:
     RISCVInstInfoSLLI() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -812,7 +812,7 @@ class RISCVInstInfoSLLI final : public InstInfo {
 };
 
 class RISCVInstInfoSRLI final : public InstInfo {
-   public:
+public:
     RISCVInstInfoSRLI() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -843,7 +843,7 @@ class RISCVInstInfoSRLI final : public InstInfo {
 };
 
 class RISCVInstInfoSRAI final : public InstInfo {
-   public:
+public:
     RISCVInstInfoSRAI() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -874,7 +874,7 @@ class RISCVInstInfoSRAI final : public InstInfo {
 };
 
 class RISCVInstInfoLB final : public InstInfo {
-   public:
+public:
     RISCVInstInfoLB() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -905,7 +905,7 @@ class RISCVInstInfoLB final : public InstInfo {
 };
 
 class RISCVInstInfoLH final : public InstInfo {
-   public:
+public:
     RISCVInstInfoLH() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -936,7 +936,7 @@ class RISCVInstInfoLH final : public InstInfo {
 };
 
 class RISCVInstInfoLW final : public InstInfo {
-   public:
+public:
     RISCVInstInfoLW() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -967,7 +967,7 @@ class RISCVInstInfoLW final : public InstInfo {
 };
 
 class RISCVInstInfoLBU final : public InstInfo {
-   public:
+public:
     RISCVInstInfoLBU() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -998,7 +998,7 @@ class RISCVInstInfoLBU final : public InstInfo {
 };
 
 class RISCVInstInfoLHU final : public InstInfo {
-   public:
+public:
     RISCVInstInfoLHU() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -1029,7 +1029,7 @@ class RISCVInstInfoLHU final : public InstInfo {
 };
 
 class RISCVInstInfoLD final : public InstInfo {
-   public:
+public:
     RISCVInstInfoLD() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -1060,7 +1060,7 @@ class RISCVInstInfoLD final : public InstInfo {
 };
 
 class RISCVInstInfoSB final : public InstInfo {
-   public:
+public:
     RISCVInstInfoSB() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -1091,7 +1091,7 @@ class RISCVInstInfoSB final : public InstInfo {
 };
 
 class RISCVInstInfoSH final : public InstInfo {
-   public:
+public:
     RISCVInstInfoSH() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -1122,7 +1122,7 @@ class RISCVInstInfoSH final : public InstInfo {
 };
 
 class RISCVInstInfoSW final : public InstInfo {
-   public:
+public:
     RISCVInstInfoSW() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -1153,7 +1153,7 @@ class RISCVInstInfoSW final : public InstInfo {
 };
 
 class RISCVInstInfoSD final : public InstInfo {
-   public:
+public:
     RISCVInstInfoSD() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -1184,7 +1184,7 @@ class RISCVInstInfoSD final : public InstInfo {
 };
 
 class RISCVInstInfoJAL final : public InstInfo {
-   public:
+public:
     RISCVInstInfoJAL() = default;
 
     uint32_t operand_num() override { return 1; }
@@ -1209,7 +1209,7 @@ class RISCVInstInfoJAL final : public InstInfo {
 };
 
 class RISCVInstInfoJ final : public InstInfo {
-   public:
+public:
     RISCVInstInfoJ() = default;
 
     uint32_t operand_num() override { return 1; }
@@ -1237,7 +1237,7 @@ class RISCVInstInfoJ final : public InstInfo {
 };
 
 class RISCVInstInfoRET final : public InstInfo {
-   public:
+public:
     RISCVInstInfoRET() = default;
 
     uint32_t operand_num() override { return 0; }
@@ -1262,7 +1262,7 @@ class RISCVInstInfoRET final : public InstInfo {
 };
 
 class RISCVInstInfoLUI final : public InstInfo {
-   public:
+public:
     RISCVInstInfoLUI() = default;
 
     uint32_t operand_num() override { return 2; }
@@ -1292,7 +1292,7 @@ class RISCVInstInfoLUI final : public InstInfo {
 };
 
 class RISCVInstInfoAUIPC final : public InstInfo {
-   public:
+public:
     RISCVInstInfoAUIPC() = default;
 
     uint32_t operand_num() override { return 2; }
@@ -1322,7 +1322,7 @@ class RISCVInstInfoAUIPC final : public InstInfo {
 };
 
 class RISCVInstInfoMUL final : public InstInfo {
-   public:
+public:
     RISCVInstInfoMUL() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -1353,7 +1353,7 @@ class RISCVInstInfoMUL final : public InstInfo {
 };
 
 class RISCVInstInfoMULH final : public InstInfo {
-   public:
+public:
     RISCVInstInfoMULH() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -1384,7 +1384,7 @@ class RISCVInstInfoMULH final : public InstInfo {
 };
 
 class RISCVInstInfoMULHSU final : public InstInfo {
-   public:
+public:
     RISCVInstInfoMULHSU() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -1415,7 +1415,7 @@ class RISCVInstInfoMULHSU final : public InstInfo {
 };
 
 class RISCVInstInfoMULHU final : public InstInfo {
-   public:
+public:
     RISCVInstInfoMULHU() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -1446,7 +1446,7 @@ class RISCVInstInfoMULHU final : public InstInfo {
 };
 
 class RISCVInstInfoDIV final : public InstInfo {
-   public:
+public:
     RISCVInstInfoDIV() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -1477,7 +1477,7 @@ class RISCVInstInfoDIV final : public InstInfo {
 };
 
 class RISCVInstInfoDIVU final : public InstInfo {
-   public:
+public:
     RISCVInstInfoDIVU() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -1508,7 +1508,7 @@ class RISCVInstInfoDIVU final : public InstInfo {
 };
 
 class RISCVInstInfoREM final : public InstInfo {
-   public:
+public:
     RISCVInstInfoREM() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -1539,7 +1539,7 @@ class RISCVInstInfoREM final : public InstInfo {
 };
 
 class RISCVInstInfoREMU final : public InstInfo {
-   public:
+public:
     RISCVInstInfoREMU() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -1570,7 +1570,7 @@ class RISCVInstInfoREMU final : public InstInfo {
 };
 
 class RISCVInstInfoLR final : public InstInfo {
-   public:
+public:
     RISCVInstInfoLR() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -1601,7 +1601,7 @@ class RISCVInstInfoLR final : public InstInfo {
 };
 
 class RISCVInstInfoSC final : public InstInfo {
-   public:
+public:
     RISCVInstInfoSC() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -1632,7 +1632,7 @@ class RISCVInstInfoSC final : public InstInfo {
 };
 
 class RISCVInstInfoAMOSWAP final : public InstInfo {
-   public:
+public:
     RISCVInstInfoAMOSWAP() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -1663,7 +1663,7 @@ class RISCVInstInfoAMOSWAP final : public InstInfo {
 };
 
 class RISCVInstInfoAMOADD final : public InstInfo {
-   public:
+public:
     RISCVInstInfoAMOADD() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -1694,7 +1694,7 @@ class RISCVInstInfoAMOADD final : public InstInfo {
 };
 
 class RISCVInstInfoAMOAND final : public InstInfo {
-   public:
+public:
     RISCVInstInfoAMOAND() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -1725,7 +1725,7 @@ class RISCVInstInfoAMOAND final : public InstInfo {
 };
 
 class RISCVInstInfoAMOOR final : public InstInfo {
-   public:
+public:
     RISCVInstInfoAMOOR() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -1756,7 +1756,7 @@ class RISCVInstInfoAMOOR final : public InstInfo {
 };
 
 class RISCVInstInfoAMOXOR final : public InstInfo {
-   public:
+public:
     RISCVInstInfoAMOXOR() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -1787,7 +1787,7 @@ class RISCVInstInfoAMOXOR final : public InstInfo {
 };
 
 class RISCVInstInfoFLW final : public InstInfo {
-   public:
+public:
     RISCVInstInfoFLW() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -1818,7 +1818,7 @@ class RISCVInstInfoFLW final : public InstInfo {
 };
 
 class RISCVInstInfoFSW final : public InstInfo {
-   public:
+public:
     RISCVInstInfoFSW() = default;
 
     uint32_t operand_num() override { return 3; }
@@ -1849,7 +1849,7 @@ class RISCVInstInfoFSW final : public InstInfo {
 };
 
 class RISCVInstInfoLoadImm12 final : public InstInfo {
-   public:
+public:
     RISCVInstInfoLoadImm12() = default;
 
     uint32_t operand_num() override { return 2; }
@@ -1879,7 +1879,7 @@ class RISCVInstInfoLoadImm12 final : public InstInfo {
 };
 
 class RISCVInstInfoLoadImm32 final : public InstInfo {
-   public:
+public:
     RISCVInstInfoLoadImm32() = default;
 
     uint32_t operand_num() override { return 2; }
@@ -1909,7 +1909,7 @@ class RISCVInstInfoLoadImm32 final : public InstInfo {
 };
 
 class RISCVInstInfoLoadImm64 final : public InstInfo {
-   public:
+public:
     RISCVInstInfoLoadImm64() = default;
 
     uint32_t operand_num() override { return 2; }
@@ -1939,7 +1939,7 @@ class RISCVInstInfoLoadImm64 final : public InstInfo {
 };
 
 class RISCVInstInfoMV final : public InstInfo {
-   public:
+public:
     RISCVInstInfoMV() = default;
 
     uint32_t operand_num() override { return 2; }
@@ -2031,7 +2031,7 @@ class RISCVInstInfo final : public TargetInstInfo {
     RISCVInstInfoLoadImm64 _instinfoLoadImm64;
     RISCVInstInfoMV _instinfoMV;
 
-   public:
+public:
     RISCVInstInfo() = default;
     InstInfo& get_instinfo(uint32_t opcode) {
         switch (opcode) {

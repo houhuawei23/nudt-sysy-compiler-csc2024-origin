@@ -37,6 +37,8 @@ union FloatUint32 {
 void create_mir_module(ir::Module& ir_module,
                        MIRModule& mir_module,
                        Target& target) {
+    bool debugLowering = false;
+
     auto& functions = mir_module.functions();
     auto& global_objs = mir_module.global_objs();
 
@@ -90,7 +92,7 @@ void create_mir_module(ir::Module& ir_module,
             //                                          ir_gvar->name()),
             //         &mir_module));
 
-        }  else {               //! gvar not init: .bss
+        } else {               //! gvar not init: .bss
             size_t align = 4;  // TODO: align
             auto mir_storage = std::make_unique<MIRZeroStorage>(size, name);
             auto mir_gobj = std::make_unique<MIRGlobalObject>(
@@ -104,25 +106,24 @@ void create_mir_module(ir::Module& ir_module,
     // TODO: transformModuleBeforeCodeGen
 
     //! 3. codegen
-    //! 3. codegen
     CodeGenContext codegen_ctx{target, target.get_datalayout(),
                                target.get_target_inst_info(),
                                target.get_target_frame_info(), MIRFlags{}};
     codegen_ctx.iselInfo = &target.get_target_isel_info();
     lowering_ctx._code_gen_ctx = &codegen_ctx;
 
-
     //! 4. lower all functions
     for (auto& ir_func : ir_module.funcs()) {  // for all funcs
         auto mir_func = func_map[ir_func];
         if (ir_func->blocks().empty())
-        auto mir_func = func_map[ir_func];
+            auto mir_func = func_map[ir_func];
         if (ir_func->blocks().empty())
             continue;
 
         /* 4.1: lower function body to generic MIR */
         create_mir_function(ir_func, mir_func, codegen_ctx, lowering_ctx);
-        mir_func->print(std::cerr, codegen_ctx);
+        if (debugLowering)
+            mir_func->print(std::cerr, codegen_ctx);
 
         /* 4.2: instruction selection */
         ISelContext isel_ctx(codegen_ctx);
@@ -180,11 +181,9 @@ MIRFunction* create_mir_function(ir::Function* ir_func,
     auto& target = codegen_ctx.target;
     auto& datalayout = target.get_datalayout();
 
-
     for (auto ir_block : ir_func->blocks()) {
         mir_func->blocks().push_back(std::make_unique<MIRBlock>(
-            ir_block, mir_func,
-            "label" + std::to_string(codegen_ctx.next_id_label())));
+            mir_func, "label" + std::to_string(codegen_ctx.next_id_label())));
         block_map.emplace(ir_block, mir_func->blocks().back().get());
     }
 

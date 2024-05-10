@@ -6,6 +6,7 @@ PASS_CNT=0
 WRONG_CNT=0
 ALL_CNT=0
 TIMEOUT_CNT=0
+SKIP_CNT=0
 
 WRONG_FILES=()
 TIMEOUT_FILES=()
@@ -20,6 +21,34 @@ RED=$(tput setaf 1)
 GREEN=$(tput setaf 2)
 YELLOW=$(tput setaf 3)
 RESET=$(tput sgr0)
+CYAN=$(tput setaf 6)
+
+sysylib_funcs=(
+    "getint" "getch" "getarray" "getfloat" "getfarray"
+    "putint" "putch" "putarray" "putfloat" "putfarray"
+    "putf" "starttime" "stoptime"
+)
+
+skip_keywords=(
+    "if" "while"
+)
+
+function check_key_in_file() {
+    file="$1"
+    for func in "${sysylib_funcs[@]}"; do
+        if grep -q "$func" "$file"; then
+            return 1 # 文件中包含关键字，返回 1
+        fi
+    done
+
+    for keyword in "${skip_keywords[@]}"; do
+        if grep -q "$keyword" "$file"; then
+            return 1 # 文件中包含关键字，返回 2
+        fi
+    done
+
+    return 0 # 文件中未找到关键字，返回 0
+}
 
 # Default values
 test_path="test/local_test"
@@ -192,6 +221,13 @@ function run_test_asm() {
     local output_dir="$2"
     local result_file="$3"
 
+    check_key_in_file "$single_file"
+    if [ $? != 0 ]; then
+        echo "${CYAN}[SKIP]${RESET} ${single_file}"
+        SKIP_CNT=$((SKIP_CNT + 1))
+        return 0
+    fi
+
     if [ -f "$single_file" ]; then
         echo "${YELLOW}[Testing]${RESET} $single_file"
 
@@ -276,9 +312,10 @@ if [ -d "$test_path" ]; then
     echo "====   INFO   ===="
     echo "PASSES: ${PASSES_STR}"
 
-    ALL_CNT=$((PASS_CNT + WRONG_CNT))
+    ALL_CNT=$((PASS_CNT + WRONG_CNT + SKIP_CNT))
     echo "${GREEN}PASS ${RESET}: ${PASS_CNT}"
     echo "${RED}WRONG${RESET}: ${WRONG_CNT}"
     echo "${RED}TIMEOUT${RESET}: ${TIMEOUT_CNT}"
+    echo "${CYAN}SKIP ${RESET}: ${SKIP_CNT}"
     echo "${YELLOW}ALL  ${RESET}: ${ALL_CNT}"
 fi

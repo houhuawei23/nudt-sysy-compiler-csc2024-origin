@@ -92,10 +92,8 @@ void ISelContext::run_isel(MIRFunction* func) {
 
         //! 指令遍历和分析: 对每个基本块的指令进行遍历，执行指令选择和替换。
         for (auto& block : func->blocks()) {
-            ir::BasicBlock* ir_block = block->ir_block();
             if (debugISel) {
-                std::cout << "for all ir_block: ";
-                std::cout << ir_block->name() << std::endl;
+                std::cout << block->name() << std::endl;
             }
 
             // check ssa form, get inst map
@@ -242,6 +240,8 @@ void postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) {
             }
         }
     }
+
+    ctx.target.postLegalizeFunc(func, ctx);
 }
 
 }  // namespace mir

@@ -19,7 +19,7 @@ namespace mir {
  *      RISC-V DataLayout (特定于相关架构) -- 数据信息
  */
 class RISCVDataLayout final : public DataLayout {
-   public:
+public:
     Endian edian() override { return Endian::Little; }
     size_t type_align(ir::Type* type) override {
         return 4;  // TODO: check type size
@@ -35,7 +35,7 @@ class RISCVDataLayout final : public DataLayout {
  *      RISC-V Frame Information (特定于相关架构) -- 帧信息
  */
 class RISCVFrameInfo : public TargetFrameInfo {
-   public:  // lowering stage
+public:  // lowering stage
     void emit_call(ir::CallInst* inst, LoweringContext& lowering_ctx) override;
     // 在函数调用前生成序言代码，用于设置栈帧和保存寄存器状态。
     void emit_prologue(MIRFunction* func,
@@ -43,7 +43,7 @@ class RISCVFrameInfo : public TargetFrameInfo {
     void emit_return(ir::ReturnInst* ir_inst,
                      LoweringContext& lowering_ctx) override;
 
-   public:  // ra stage (register allocation)
+public:  // ra stage (register allocation)
     // 调用者保存寄存器
     bool is_caller_saved(MIROperand& op) override {
         const auto reg = op.reg();
@@ -68,7 +68,7 @@ class RISCVFrameInfo : public TargetFrameInfo {
                reg == RISCV::X3;
     }
 
-   public:  // sa stage (stack allocation)
+public:  // sa stage (stack allocation)
     int stack_pointer_align() override { return 8; }
 
     void emit_postsa_prologue(MIRBlock* entry, int32_t stack_size) override {
@@ -136,7 +136,7 @@ class RISCVFrameInfo : public TargetFrameInfo {
         return 0;
     }
 
-   public:  // alignment
+public:  // alignment
     size_t get_stackpointer_alignment() override { return 8; }
 };
 
@@ -287,10 +287,10 @@ class RISCVTarget : public Target {
     RISCVFrameInfo _frameinfo;
     RISCVRegisterInfo _mRegisterInfo;
 
-   public:
+public:
     RISCVTarget() = default;
 
-   public:  // get function
+public:  // get function
     DataLayout& get_datalayout() override { return _datalayout; }
     TargetFrameInfo& get_target_frame_info() override { return _frameinfo; }
     TargetRegisterInfo& get_register_info() override { return _mRegisterInfo; }
@@ -302,6 +302,7 @@ class RISCVTarget : public Target {
     }
 
     // emit_assembly
+    void postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) override;
     void emit_assembly(std::ostream& out, MIRModule& module) override;
 };
 }  // namespace mir

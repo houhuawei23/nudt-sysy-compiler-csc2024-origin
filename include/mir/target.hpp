@@ -25,6 +25,7 @@ class Target {
         virtual TargetRegisterInfo& get_register_info() = 0;
 
     public:  // assembly
+        virtual void postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx)  {}
         virtual void emit_assembly(std::ostream& out, MIRModule& module) = 0;
 };
 

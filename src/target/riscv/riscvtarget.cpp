@@ -92,6 +92,121 @@ void RISCVFrameInfo::emit_return(ir::ReturnInst* ir_inst,
     lowering_ctx.emit_inst(inst);
 }
 
+void RISCVTarget::postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) {
+    bool isDebug = false;
+
+    auto dumpInst = [&](MIRInst* inst) {
+        auto& instInfo = ctx.instInfo.get_instinfo(inst);
+        instInfo.print(std::cerr << "rvPostLegalizeFunc: ", *inst, false);
+        std::cerr << std::endl;
+    };
+    if (isDebug)
+        func.print(std::cerr, ctx);
+    /* fix pcrel addressing */
+    for (auto blockIter = func.blocks().begin();
+         blockIter != func.blocks().end();) {
+        if (isDebug)
+            std::cerr << "block: " << blockIter->get()->name() << std::endl;
+        auto nextIter = std::next(blockIter);
+
+        /* origin reloc -> (dst -> block)*/
+        std::unordered_map<MIRRelocable*,
+                           std::unordered_map<MIROperand*, MIRBlock*>>
+            auipcMap;
+        while (true) {
+            auto& insts = blockIter->get()->insts();
+            if (insts.empty()) {
+                break;
+            }
+            bool isNewBlock = false;
+            for (auto instIter = insts.begin(); instIter != insts.end();
+                 instIter++) {
+                auto& inst = *instIter;
+                if (isDebug) {
+                    dumpInst(inst);
+                }
+                if (inst->opcode() == RISCV::AUIPC) {
+                    /* AUIPC dst, imm */
+                    if (instIter == insts.begin() &&
+                        blockIter != func.blocks().begin()) {
+                        if (isDebug)
+                            std::cerr << "first in block" << std::endl;
+                        assert(inst->operand(1)->type() ==
+                               OperandType::HighBits);
+                        /** first inst in block, block label lowBits is just
+                         * inst's dst lowBits */
+                        // auipcMap[inst->operand(1)][inst->operand(0)] =
+                        //     getLowBits(MIROperand::as_reloc(blockIter->get()));
+                        // auto t = blockIter->get();
+                        auipcMap[inst->operand(1)->reloc()][inst->operand(0)] =
+                            blockIter->get();
+                    } else {
+                        if (isDebug)
+                            std::cerr << "not first in block" << std::endl;
+                        /** other insts */
+                        auto newBlock = std::make_unique<MIRBlock>(
+                            &func,
+                            "pcrel" + std::to_string(ctx.next_id_label()));
+                        auto& newInsts = newBlock->insts();
+                        newInsts.splice(newInsts.begin(), insts, instIter,
+                                        insts.end());
+                        blockIter =
+                            func.blocks().insert(nextIter, std::move(newBlock));
+                        isNewBlock = true;
+                        break; /* break instIter for insts */
+                    }
+                } else {
+                    /* not AUIPC */
+                    auto& instInfo = ctx.instInfo.get_instinfo(inst);
+
+                    // instInfo.print(std::cerr << "!!", *inst,  false);
+                    for (uint32_t idx = 0; idx < instInfo.operand_num();
+                         idx++) {
+                        auto operand = inst->operand(idx);
+
+                        auto getBase = [&] {
+                            switch (inst->opcode()) {
+                                case RISCV::ADDI: {
+                                    /* ADDI dst, src, imm */
+                                    return inst->operand(1);
+                                }
+                                default: {
+                                    /* must be load or store */
+                                    assert(requireOneFlag(
+                                        instInfo.inst_flag(),
+                                        InstFlagLoad | InstFlagStore));
+                                    /* load dst, imm(src)
+                                     * store src2, imm(src1) */
+                                    return inst->operand(2);
+                                }
+                            }
+                        };
+
+                        if (operand->is_reloc() &&
+                            operand->type() == OperandType::LowBits) {
+                            auto pcrelBlock =
+                                auipcMap.at(operand->reloc()).at(getBase());
+                            auto op =
+                                getLowBits(MIROperand::as_reloc(pcrelBlock));
+                            inst->set_operand(idx, op);
+                            if (isDebug) {
+                                instInfo.print(
+                                    std::cerr << "fix pcrel: ", *inst, false);
+                            }
+                        }
+                    }
+                }
+            }
+            if (not isNewBlock)
+                break;
+        }  // while
+
+        blockIter = nextIter;
+    }  // blockIter
+    if (isDebug)
+        func.print(std::cerr, ctx);
+}  // postLegalizeFunc
+
 void RISCVTarget::emit_assembly(std::ostream& out, MIRModule& module) {
     auto& target = *this;
     CodeGenContext codegen_ctx{
