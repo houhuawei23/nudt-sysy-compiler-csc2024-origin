@@ -93,7 +93,6 @@ static bool matchAndSelectPattern{{isel_item.idx}} (
     {% else %}
     {% endif -%}
     ctx.remove_inst(inst{{isel_item.match_id}});
-    std::cout << "    {{inst}} success!" << std::endl;
     return true;
 } 
 {% endfor %}
@@ -103,13 +102,16 @@ static bool matchAndSelectPattern{{isel_item.idx}} (
 
 
 
-static bool matchAndSelectImpl(MIRInst* inst, ISelContext& ctx) {
+static bool matchAndSelectImpl(MIRInst* inst, ISelContext& ctx, bool debugMatchSelect) {
+    bool success = false;
     switch (inst->opcode()) {
         {% for inst_name, isel_item_list in isel_dict.items() -%}
         case {{inst_name}}:{
             {% for isel_item in isel_item_list -%}
-            if(matchAndSelectPattern{{isel_item.idx}}(inst, ctx)) 
-                return true;
+            if(matchAndSelectPattern{{isel_item.idx}}(inst, ctx)) {
+                success = true;
+                break;
+            }
             {%- endfor %}
             break;
         }
@@ -117,7 +119,13 @@ static bool matchAndSelectImpl(MIRInst* inst, ISelContext& ctx) {
         default:
             break;
     }
-    return false;
+    if (debugMatchSelect) {
+        auto& instInfo = ctx.codegen_ctx().instInfo.get_instinfo(inst);
+        std::cerr << instInfo.name();
+        if (success) std::cerr << " success." << std::endl;
+        else std::cerr << " failed." << std::endl;
+    }
+    return success;
 }
 
 class {{target_name}}ISelInfo final : public TargetISelInfo {

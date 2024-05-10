@@ -27,7 +27,7 @@ enum RISCVRegister : uint32_t {
     F24, F25, F26, F27, F28, F29, F30, F31,
     FPREnd,
 };
-
+// clang-format on
 // return address
 static auto ra = MIROperand::as_isareg(RISCVRegister::X1, OperandType::Int64);
 
@@ -36,18 +36,21 @@ static auto sp = MIROperand::as_isareg(RISCVRegister::X2, OperandType::Int64);
 
 // utils function
 constexpr bool isOperandGR(MIROperand& operand) {
-    if (not operand.is_reg() || not isIntType(operand.type())) return false;
+    if (not operand.is_reg() || not isIntType(operand.type()))
+        return false;
     auto reg = operand.reg();
     return GPRBegin <= reg && reg < GPREnd;
 }
 
-constexpr std::string_view name[] = {
-    "x0", "ra", "sp",  "gp",  "tp", "t0", "t1", "t2",
-    "s0", "s1", "a0",  "a1",  "a2", "a3", "a4", "a5",
-    "a6", "a7", "s2",  "s3",  "s4", "s5", "s6", "s7",
-    "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6",
-};
-static std::string_view getRISCVGPRTextualName(uint32_t idx) noexcept { return name[idx]; }
+static std::string_view getRISCVGPRTextualName(uint32_t idx) noexcept {
+    constexpr std::string_view name[] = {
+        "zero", "ra", "sp",  "gp",  "tp", "t0", "t1", "t2",  //
+        "s0",   "s1", "a0",  "a1",  "a2", "a3", "a4", "a5",  //
+        "a6",   "a7", "s2",  "s3",  "s4", "s5", "s6", "s7",  //
+        "s8",   "s9", "s10", "s11", "t3", "t4", "t5", "t6",  //
+    };
+    return name[idx];
+}
 
 struct OperandDumper {
     MIROperand* operand;
@@ -86,7 +89,8 @@ static std::ostream& operator<<(std::ostream& os, OperandDumper opdp) {
 }
 
 constexpr bool isOperandImm12(MIROperand* operand) {
-    if (operand->is_reloc() && operand->type() == OperandType::LowBits) return true;
+    if (operand->is_reloc() && operand->type() == OperandType::LowBits)
+        return true;
     return operand->is_imm() && isSignedImm<12>(operand->imm());
 }
 
@@ -95,12 +99,19 @@ constexpr bool isOperandNonZeroImm12(MIROperand* operand) {
 }
 
 // dst = src + imm
-static void adjust_reg(MIRInstList& instructions, MIRInstList::iterator it, MIROperand* dst, MIROperand* src, int64_t imm) {
-    if (dst == src && imm == 0) return;
+static void adjust_reg(MIRInstList& instructions,
+                       MIRInstList::iterator it,
+                       MIROperand* dst,
+                       MIROperand* src,
+                       int64_t imm) {
+    if (dst == src && imm == 0)
+        return;
 
     MIROperand* base = src;
-    auto inst = new MIRInst{ ADDI };
-    inst->set_operand(0, dst); inst->set_operand(1, base); inst->set_operand(2, MIROperand::as_imm<int64_t>(imm, OperandType::Int64));
+    auto inst = new MIRInst{ADDI};
+    inst->set_operand(0, dst);
+    inst->set_operand(1, base);
+    inst->set_operand(2, MIROperand::as_imm<int64_t>(imm, OperandType::Int64));
     instructions.insert(it, inst);
 }
 }  // namespace mir::RISCV

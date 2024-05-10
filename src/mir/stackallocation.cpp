@@ -1,5 +1,5 @@
 #include "mir/utils.hpp"
-
+#include "target/riscv/riscv.hpp"
 namespace mir {
 struct StackObjectInterval final {
     uint32_t begin, end;
@@ -57,6 +57,10 @@ static void remove_unused_spill_stack_objects(MIRFunction* mfunc) {
  * ------------------------ <----- Current sp
  */
 void allocateStackObjects(MIRFunction* func, CodeGenContext& ctx) {
+    bool debugSA = false;
+    auto dumpOperand = [&](MIROperand* op) {
+        std::cerr << mir::RISCV::OperandDumper{op} << std::endl;
+    };
     // func is like a callee
     /* 1. callee saved: 被调用者需要保存的寄存器 */
     std::unordered_set<MIROperand*> callee_saved;
@@ -66,16 +70,20 @@ void allocateStackObjects(MIRFunction* func, CodeGenContext& ctx) {
                 return;
             if (op->is_reg() && isISAReg(op->reg()) &&
                 ctx.frameInfo.is_callee_saved(*op)) {
+                if (debugSA)
+                    dumpOperand(op);
+
                 callee_saved.insert(MIROperand::as_isareg(
-                    op->reg(), ctx.registerInfo->getCanonicalizedRegisterType(
-                                   op->type())));
+                    op->reg(),  //
+                    ctx.registerInfo->getCanonicalizedRegisterType(
+                        op->type())));
             }
         });
     }
     const auto preAllocatedBase = ctx.frameInfo.insert_prologue_epilogue(
         func, callee_saved, ctx,
         ctx.registerInfo->get_return_address_register());
-        
+
     remove_unused_spill_stack_objects(func);  // remove dead code
 
     int32_t allocationBase = 0;

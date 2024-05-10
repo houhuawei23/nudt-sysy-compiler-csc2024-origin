@@ -48,7 +48,7 @@ struct InstLegalizeContext final {
     MIRInst*& inst;
     MIRInstList& instructions;
     MIRInstList::iterator iter;
-    CodeGenContext& ctx;
+    CodeGenContext& codeGenCtx;
     std::optional<std::list<std::unique_ptr<MIRBlock>>::iterator> blockIter;
     MIRFunction& func;
 };

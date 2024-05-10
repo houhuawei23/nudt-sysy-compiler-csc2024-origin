@@ -48,7 +48,8 @@ class RISCVFrameInfo : public TargetFrameInfo {
     bool is_caller_saved(MIROperand& op) override {
         const auto reg = op.reg();
         // $ra $t0-$t6 $a0-$a7 $ft0-$ft11 $fa0-$fa7
-        return reg == RISCV::X1 || (RISCV::X5 <= reg && reg <= RISCV::X7) ||
+        return reg == RISCV::X1 ||  //
+               (RISCV::X5 <= reg && reg <= RISCV::X7) ||
                (RISCV::X10 <= reg && reg <= RISCV::X17) ||
                (RISCV::X28 <= reg && reg <= RISCV::X31) ||
                (RISCV::F0 <= reg && reg <= RISCV::F7) ||
@@ -59,10 +60,12 @@ class RISCVFrameInfo : public TargetFrameInfo {
     bool is_callee_saved(MIROperand& op) override {
         const auto reg = op.reg();
         // $sp $s0-$s7 $f20-$f30 $gp
-        return reg == RISCV::X2 || (RISCV::X8 <= reg && reg << RISCV::X9) ||
+        return reg == RISCV::X2 ||  //
+               (RISCV::X8 <= reg && reg <= RISCV::X9) ||
                (RISCV::X18 <= reg && reg <= RISCV::X27) ||
                (RISCV::F8 <= reg && reg <= RISCV::F9) ||
-               (RISCV::F18 <= reg && reg <= RISCV::F27) || reg == RISCV::X3;
+               (RISCV::F18 <= reg && reg <= RISCV::F27) ||  //
+               reg == RISCV::X3;
     }
 
    public:  // sa stage (stack allocation)

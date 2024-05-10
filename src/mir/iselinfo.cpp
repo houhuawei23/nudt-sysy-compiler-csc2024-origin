@@ -53,14 +53,18 @@ MIRInst* ISelContext::lookup_def(MIROperand* op) {
 }
 
 void ISelContext::run_isel(MIRFunction* func) {
+    bool debugISel = false;
+    auto dumpInst = [&](MIRInst* inst) {
+        auto& instInfo = _codegen_ctx.instInfo.get_instinfo(inst);
+        instInfo.print(std::cerr << "match&select: ", *inst, false);
+        std::cerr << std::endl;
+    };
     // TODO: implement
     auto& isel_info = _codegen_ctx.iselInfo;
 
     //! fix point algorithm: 循环执行指令选择和替换，直到不再变化。
     while (true) {
-        std::cout << "[run_isel] fix point while loop start" << std::endl;
-
-        genericPeepholeOpt(*func, _codegen_ctx);
+        // genericPeepholeOpt(*func, _codegen_ctx);
 
         bool modified = false;
         bool has_illegal = false;
@@ -89,8 +93,11 @@ void ISelContext::run_isel(MIRFunction* func) {
         //! 指令遍历和分析: 对每个基本块的指令进行遍历，执行指令选择和替换。
         for (auto& block : func->blocks()) {
             ir::BasicBlock* ir_block = block->ir_block();
-            std::cout << "for all ir_block: ";
-            std::cout << ir_block->name() << std::endl;
+            if (debugISel) {
+                std::cout << "for all ir_block: ";
+                std::cout << ir_block->name() << std::endl;
+            }
+
             // check ssa form, get inst map
             for (auto& inst : block->insts()) {
                 auto& instinfo = _codegen_ctx.instInfo.get_instinfo(inst);
@@ -121,8 +128,12 @@ void ISelContext::run_isel(MIRFunction* func) {
                 }
                 // if inst not in remove list
                 if (not _remove_work_list.count(inst)) {
-                    std::cout << "  [match&select] inst: " << inst->opcode()
-                              << std::endl;
+                    if (debugISel) {
+                        dumpInst(inst);
+                    }
+
+                    // std::cout << "  [match&select] inst: " << inst->opcode()
+                    //           << std::endl;
                     auto opcode = inst->opcode();
                     //! do pattern match and select inst
                     auto res = isel_info->match_select(inst, *this);
@@ -168,14 +179,15 @@ void ISelContext::run_isel(MIRFunction* func) {
         }
 
         if (modified) {
-            std::cout << "run_isel modified, continue!\n" << std::endl;
+            if (debugISel)
+                std::cout << "run_isel modified, continue!\n" << std::endl;
             continue;
         }
         // not modified, check illegal inst
         //! 检查和处理非法指令
         //! 如果存在非法指令，根据情况决定是继续尝试合法化还是报告错误。
-
-        std::cout << "run_isel success!" << std::endl;
+        if (debugISel)
+            std::cout << "run_isel success!" << std::endl;
         return;
     }  // while end
 }
@@ -199,9 +211,6 @@ uint32_t select_copy_opcode(MIROperand* dst, MIROperand* src) {
 }
 
 void postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) {
-    // TODO: implement
-    std::cerr << "postLegalizeFunc not implemented yet!" << std::endl;
-
     /* legalize stack operands */
     for (auto& block : func.blocks()) {
         auto& insts = block->insts();
