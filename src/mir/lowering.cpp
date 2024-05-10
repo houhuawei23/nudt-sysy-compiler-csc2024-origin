@@ -55,6 +55,7 @@ void create_mir_module(ir::Module& ir_module,
     //! 2. for all global variables, create MIRGlobalObject
     for (auto ir_gval : ir_module.gvalues()) {
         auto ir_gvar = dyn_cast<ir::GlobalVariable>(ir_gval);
+        auto name = ir_gvar->name().substr(1);  // remove '@'
         auto type = dyn_cast<ir::PointerType>(ir_gvar->type())->base_type();
         size_t size = type->size();  // data size, not pointer size
 
@@ -76,8 +77,8 @@ void create_mir_module(ir::Module& ir_module,
             } else if (type->is_float()) {
             }
             size_t align = 4;  // TODO: align
-            auto mir_storage = std::make_unique<MIRDataStorage>(
-                std::move(data), false, ir_gvar->name());
+            auto mir_storage =
+                std::make_unique<MIRDataStorage>(std::move(data), false, name);
             auto mir_gobj = std::make_unique<MIRGlobalObject>(
                 align, std::move(mir_storage), &mir_module);
             mir_module.global_objs().push_back(std::move(mir_gobj));
@@ -91,8 +92,7 @@ void create_mir_module(ir::Module& ir_module,
 
         } else {               //! gvar not init: .bss
             size_t align = 4;  // TODO: align
-            auto mir_storage =
-                std::make_unique<MIRZeroStorage>(size, ir_gvar->name());
+            auto mir_storage = std::make_unique<MIRZeroStorage>(size, name);
             auto mir_gobj = std::make_unique<MIRGlobalObject>(
                 align, std::move(mir_storage), &mir_module);
             mir_module.global_objs().push_back(std::move(mir_gobj));
@@ -117,7 +117,7 @@ void create_mir_module(ir::Module& ir_module,
         /* 4.1: lower function body to generic MIR */
         create_mir_function(ir_func, mir_func, codegen_ctx, lowering_ctx);
         mir_func->print(std::cerr, codegen_ctx);
-        
+
         /* 4.2: instruction selection */
         ISelContext isel_ctx(codegen_ctx);
         isel_ctx.run_isel(mir_func);
@@ -222,7 +222,8 @@ MIRFunction* create_mir_function(ir::Function* ir_func,
         auto mir_block = block_map[ir_block];
         lowering_ctx.set_mir_block(mir_block);
         for (auto ir_inst : ir_block->insts()) {
-            if (ir_inst->scid() == ir::Value::vALLOCA) continue;
+            if (ir_inst->scid() == ir::Value::vALLOCA)
+                continue;
             create_mir_inst(ir_inst, lowering_ctx);
         }
     }
@@ -506,7 +507,6 @@ void lower(ir::BranchInst* ir_inst, LoweringContext& ctx) {
         jump_inst->set_operand(
             0, MIROperand::as_reloc(ctx.map2block(ir_inst->iffalse())));
         ctx.emit_inst(jump_inst);
-
 
     } else {  // unconditional branch
         auto dst_block = ir_inst->dest();

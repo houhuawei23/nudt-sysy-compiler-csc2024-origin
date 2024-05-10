@@ -161,7 +161,7 @@ function run_compiler_test() {
     if [ $? != 0 ]; then
         return $EC_MAIN
     fi
-    riscv64-linux-gnu-gcc -march=rv64gc "${gen_s}" -o "${gen_o}"
+    riscv64-linux-gnu-gcc -march=rv64gc -mabi=lp64d -mcmodel=medlow "${gen_s}" -o "${gen_o}"
     qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gen_o}"
     local qemu_res=$?
     echo "QEMU result: $qemu_res" 

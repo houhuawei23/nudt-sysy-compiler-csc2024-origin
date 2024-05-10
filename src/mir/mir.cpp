@@ -26,8 +26,15 @@ void MIRFunction::print(std::ostream& os, CodeGenContext& ctx) {
     }
 }
 
-void MIRZeroStorage::print(std::ostream& os, CodeGenContext& ctx) {}
+void MIRZeroStorage::print(std::ostream& os, CodeGenContext& ctx) {
 
-void MIRDataStorage::print(std::ostream& os, CodeGenContext& ctx) {}
+}
+
+void MIRDataStorage::print(std::ostream& os, CodeGenContext& ctx) {
+    for(auto& val : _data) {
+        // if (std::holds_alternative<<)
+        os << "\t.4byte\t" << val << std::endl;
+    }
+}
 
 }  // namespace mir

@@ -14,7 +14,7 @@ class MIRBlock;     // public MIRRelocable
 class MIRInst;
 class MIRRegister;
 class MIROperand;
-class MIRGlobalObject;
+struct MIRGlobalObject;
 class MIRZeroStorage;
 class MIRDataStorage;
 
@@ -446,14 +446,14 @@ class MIRDataStorage : public MIRRelocable {
  * in cmmc, MIRGlobal contains MIRFunction/MIRDataStorage/MIRZeroStorage
  */
 using MIRRelocable_UPtr = std::unique_ptr<MIRRelocable>;
-class MIRGlobalObject {
-    public:
-        MIRModule* _parent;
-        ir::Value* _ir_global;
+struct MIRGlobalObject {
+    // public:
+        MIRModule* parent;
+        ir::Value* ir_global;
         size_t align;
-        MIRRelocable_UPtr _reloc;  // MIRZeroStorage, MIRDataStorage
+        MIRRelocable_UPtr reloc;  // MIRZeroStorage, MIRDataStorage
 
-    public:
+    // public:
         MIRGlobalObject() = default;
         // MIRGlobalObject(ir::Value* ir_global, MIRModule* parent)
         //     : _parent(parent), _ir_global(ir_global) {
@@ -464,9 +464,9 @@ class MIRGlobalObject {
         MIRGlobalObject(size_t align,
                         std::unique_ptr<MIRRelocable> reloc,
                         MIRModule* parent)
-            : _parent(parent), align(align), _reloc(std::move(reloc)) {}
+            : parent(parent), align(align), reloc(std::move(reloc)) {}
 
-    public:
+    // public:
         void print(std::ostream& os);
 };
 

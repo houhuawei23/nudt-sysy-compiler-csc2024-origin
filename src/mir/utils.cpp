@@ -15,13 +15,18 @@ static const std::unordered_map<DataSection, std::string_view>
         {DataSection::Bss, ".bss"},
 };
 
+inline int32_t ilog2(size_t x) {
+    return __builtin_ctzll(x);
+}
+
 void dump_assembly(std::ostream& os, MIRModule& module, CodeGenContext& ctx) {
     /* 1: data section */
     os << ".data\n";
 
     auto select_data_section = [](MIRRelocable* reloc) {
         if (auto data = dynamic_cast<MIRDataStorage*>(reloc)) {
-            return data->is_readonly() ? DataSection::RoData : DataSection::Data;
+            return data->is_readonly() ? DataSection::RoData
+                                       : DataSection::Data;
         }
         if (auto zero = dynamic_cast<MIRZeroStorage*>(reloc)) {
             return DataSection::Bss;
@@ -29,10 +34,12 @@ void dump_assembly(std::ostream& os, MIRModule& module, CodeGenContext& ctx) {
         assert(false && "Unsupported data section");
     };
 
-    std::unordered_map<DataSection, std::vector<MIRGlobalObject*>> data_sections;
+    std::unordered_map<DataSection, std::vector<MIRGlobalObject*>>
+        data_sections;
 
     for (auto& gobj : module.global_objs()) {
-        data_sections[select_data_section(gobj->_reloc.get())].emplace_back(gobj.get());
+        data_sections[select_data_section(gobj->reloc.get())].emplace_back(
+            gobj.get());
     }
 
     for (auto ds : {DataSection::Data, DataSection::RoData, DataSection::Bss}) {
@@ -41,8 +48,10 @@ void dump_assembly(std::ostream& os, MIRModule& module, CodeGenContext& ctx) {
         }
         os << data_section_names.at(ds) << "\n";
         for (auto gobj : data_sections[ds]) {
-            os << ".globl" << gobj->_reloc->name() << ":\n";
-            // gobj->reloc->print
+            os << ".globl " << gobj->reloc->name() << "\n";
+            os << ".p2align " << ilog2(gobj->align) << std::endl;
+            os << gobj->reloc->name() << ":\n";
+            gobj->reloc->print(os, ctx);
         }
     }
 
@@ -50,7 +59,8 @@ void dump_assembly(std::ostream& os, MIRModule& module, CodeGenContext& ctx) {
     os << ".text\n";
 
     for (auto& func : module.functions()) {
-        if (func->blocks().empty()) continue;
+        if (func->blocks().empty())
+            continue;
         os << ".globl " << func->name() << "\n";
 
         for (auto& bb : func->blocks()) {
@@ -75,13 +85,13 @@ void dump_assembly(std::ostream& os, MIRModule& module, CodeGenContext& ctx) {
                             break;
                     }
                 }
-                os << "\t"
-                   << "# stack usage: \n";
+                os << "\t" << "# stack usage: \n";
                 os << "\t# CalleeArgument=" << calleeArgument << ", ";
                 os << "Local=" << loacl << ", \n";
                 os << "\t# RegSpill=" << reSpill << ", ";
                 os << "CalleeSaved=" << calleeSaved << "\n";
-            } else  os << bb->name() << ":\n";
+            } else
+                os << bb->name() << ":\n";
             bb->print(os, ctx);
         }
     }

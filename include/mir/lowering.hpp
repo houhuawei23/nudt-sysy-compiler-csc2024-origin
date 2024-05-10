@@ -84,7 +84,7 @@ class LoweringContext {
             auto ptr = new_vreg(_ptr_type);
             // must find in gvar_map
             auto inst = new MIRInst(InstLoadGlobalAddress);
-            auto g_reloc = gvar_map.at(gvar)->_reloc.get();  // MIRRelocable*
+            auto g_reloc = gvar_map.at(gvar)->reloc.get();  // MIRRelocable*
             auto operand = MIROperand::as_reloc(g_reloc);
             inst->set_operand(0, ptr);
             inst->set_operand(1, operand);
