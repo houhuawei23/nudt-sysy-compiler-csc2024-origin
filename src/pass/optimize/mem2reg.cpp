@@ -144,6 +144,7 @@ namespace pass
         bool not_globalstore;
         int StoreIndex;
         ir::BasicBlock *storeBB = OnlyStore->parent();
+        ir::LoadInst *LD;
         UsesBlock[alloca].clear();
         UsesBlockvector[alloca].clear();
         not_globalstore = not ir::isa<ir::GlobalVariable>(OnlyStore->ptr());
@@ -281,6 +282,7 @@ namespace pass
                         if (Incommings.find(AI) == Incommings.end()) // 如果这条alloca没有到达定义
                         {
                             Incommings[AI] = ir::Constant::gen_undefine();
+                            //Incommings[AI] = nullptr;
                         }
                         LD->replace_all_use_with(Incommings[AI]);
                         instRemovelist.push_back(inst);

@@ -1,4 +1,7 @@
 #!/bin/bash
+
+# ./test.sh -t test/2021/functional/ -p mem2reg -p dce -p scp -p sccp -p simplifycfg -L1
+
 # dont ignore unset variables
 set -u
 

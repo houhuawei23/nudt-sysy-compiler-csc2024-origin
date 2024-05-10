@@ -1,9 +1,9 @@
-// clang-format off
 #include <iostream>
 
 #include "support/config.hpp"
 
 #include "SysYLexer.h"
+
 #include "visitor/visitor.hpp"
 
 #include "pass/pass.hpp"
@@ -21,20 +21,27 @@
 #include "mir/target.hpp"
 #include "mir/lowering.hpp"
 
-#include "target/riscv.hpp"
-#include "target/riscvtarget.hpp"
+#include "target/riscv/riscv.hpp"
+#include "target/riscv/riscvtarget.hpp"
 
 using namespace std;
 
 /*
- * @brief: main
- *      ./main -f test.c -i -t mem2reg -o gen.ll -O0 -L0
+ * @brief: ./main -f test.c -i -t mem2reg -o gen.ll -O0 -L0
  */
+
 int main(int argc, char* argv[]) {
     sysy::Config config;
     config.parse_cmd_args(argc, argv);
     config.print_info();
 
+    std::cout << "Build time: " << __TIME__ << " " << __DATE__ << std::endl;
+
+    if (config.infile.empty()) {
+        cerr << "Error: input file not specified" << endl;
+        config.print_help();
+        return EXIT_FAILURE;
+    }
     ifstream fin(config.infile);
 
     antlr4::ANTLRInputStream input(fin);
@@ -63,28 +70,25 @@ int main(int argc, char* argv[]) {
                 // fpm.add_pass(new pass::domInfoCheck());
             }
 
-            if (pass_name.compare("dce") == 0) {
+            else if (pass_name.compare("dce") == 0) {
                 fpm.add_pass(new pass::DCE());
-            }
-            if (pass_name.compare("scp") == 0) {
+            } else if (pass_name.compare("scp") == 0) {
                 fpm.add_pass(new pass::SCP());
-            }
-            if (pass_name.compare("sccp")==0){
+            } else if (pass_name.compare("sccp") == 0) {
                 fpm.add_pass(new pass::mySCCP());
-            }
-            if (pass_name.compare("simplifycfg")==0){
+            } else if (pass_name.compare("simplifycfg") == 0) {
                 fpm.add_pass(new pass::simplifyCFG());
-            }
-            if (pass_name.compare("loopanalysis")==0){
+            } else if (pass_name.compare("loopanalysis") == 0) {
                 fpm.add_pass(new pass::preProcDom());
                 fpm.add_pass(new pass::idomGen());
                 fpm.add_pass(new pass::domFrontierGen());
                 // fpm.add_pass(new pass::domInfoCheck());
                 fpm.add_pass(new pass::loopAnalysis());
                 // fpm.add_pass(new pass::loopInfoCheck());
-            }
-            if (pass_name.compare("gcm")==0){
+            } else if (pass_name.compare("gcm") == 0) {
                 fpm.add_pass(new pass::GCM());
+            } else {
+                assert(false && "Invalid pass name");
             }
             // if (pass_name.compare("gvn")==0){
             //     fpm.add_pass(new pass::GVN());
@@ -108,7 +112,15 @@ int main(int argc, char* argv[]) {
     //! 3. Code Generation
     if (config.gen_asm) {
         auto target = mir::RISCVTarget();
+        // auto target = mir::GENERICTarget();
         auto mir_module = mir::create_mir_module(*module_ir, target);
+        if (config.outfile.empty()) {
+            target.emit_assembly(std::cout, *mir_module);
+        } else {
+            ofstream fout;
+            fout.open(config.outfile);
+            target.emit_assembly(fout, *mir_module);
+        }
     }
 
     return EXIT_SUCCESS;

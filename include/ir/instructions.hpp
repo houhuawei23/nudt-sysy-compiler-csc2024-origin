@@ -147,9 +147,9 @@ class ReturnInst : public Instruction {
     }
 
    public:
-    bool has_return_value() const { return not _operands.empty(); }
+
     Value* return_value() const {
-        return has_return_value() ? operand(0) : nullptr;
+        return _operands.empty() ? nullptr : operand(0);
     }
 
    public:
@@ -243,7 +243,8 @@ class CallInst : public Instruction {
 
    public:
     Function* callee() const { return _callee; }
-
+    /* real arguments */
+    auto& rargs() const { return _operands; }
     static bool classof(const Value* v) { return v->scid() == vCALL; }
     void print(std::ostream& os) override;
     Value* getConstantRepl(){return nullptr;}

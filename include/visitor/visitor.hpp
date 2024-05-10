@@ -27,15 +27,15 @@ class SysYIRGenerator : public SysYBaseVisitor {
         SysYIRGenerator(){};
         SysYIRGenerator(ir::Module* module, antlr4::ParserRuleContext* root) : _module(module), _root(root) {}
 
-    public:
-        ir::Module* module() { return _module; }
-        ir::IRBuilder& builder() { return _builder; }
+   public:
+    ir::Module* module() { return _module; }
+    ir::IRBuilder& builder() { return _builder; }
 
-    public:
-        ir::Module* build_ir() {
-            visit(_root);
-            return _module;
-        }
+   public:
+    ir::Module* build_ir() {
+        visit(_root);
+        return _module;
+    }
 
     //! Override all visit methods
     virtual std::any visitCompUnit(SysYParser::CompUnitContext* ctx) override;
