@@ -52,6 +52,7 @@ enum RISCVInst {
     RET,
     LUI,
     AUIPC,
+    LLA,
     MUL,
     MULH,
     MULHSU,

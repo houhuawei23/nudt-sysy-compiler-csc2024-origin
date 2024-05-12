@@ -171,8 +171,8 @@ function run_gcc_test() {
     touch "${gcc_c}"
     cat "${single_file}" >"${gcc_c}"
 
-    riscv64-linux-gnu-gcc -S -march=rv64gc "${gcc_c}" -o "${gcc_s}" -O0
-    riscv64-linux-gnu-gcc -march=rv64gc "${gcc_c}" -o "${gcc_o}" -O0
+    riscv64-linux-gnu-gcc -S -march=rv64gc -mabi=lp64d -mcmodel=medlow -ffp-contract=on "${gcc_c}" -o "${gcc_s}" -O0
+    riscv64-linux-gnu-gcc -march=rv64gc -mabi=lp64d -mcmodel=medlow -ffp-contract=on "${gcc_c}" -o "${gcc_o}" -O0
     qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gcc_o}" >"${gcc_out}"
     local qemu_res=$?
     return $qemu_res

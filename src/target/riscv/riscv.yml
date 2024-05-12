@@ -164,6 +164,16 @@ InstInfo: {
         # auipc rd, imm: x[rd] = pc + sext(imm[31:12] << 12)
         AUIPC: { mnem: "auipc", template: Utype, flag: [PCRel, LoadConstant] },
 
+        # lla rd, symbol: x[rd] = &symbol, Presudo, Load Local Address
+        LLA:
+          {
+            format: ["lla", " ", 0, ", ", 1],
+            operands:
+              {
+                0: { name: rd, type: GPR, flag: Def },
+                1: { name: symbol, type: reloc, flag: Metadata },
+              },
+          },
         # RV32M Multiply Extension
         MUL: { mnem: "mul", template: Rtype },
         MULH: { mnem: "mulh", template: Rtype },
@@ -256,6 +266,15 @@ InstSelInfo: {
     Templates: {},
     # instances
     Instances: [
+        {
+          # LoadGlobalAddress dst[INTREG], reloc[RELOC]
+          pattern: { name: InstLoadGlobalAddress, dst: $dst, addr: $addr },
+          replace: {
+              name: LLA, # lla rd, symbol
+              rd: "getVRegAs(ctx, $dst)",
+              symbol: $addr,
+            },
+        },
         {
           pattern: { name: InstLoadGlobalAddress, dst: $dst, addr: $addr },
           replace:

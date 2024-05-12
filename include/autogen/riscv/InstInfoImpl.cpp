@@ -1321,6 +1321,34 @@ public:
     }
 };
 
+class RISCVInstInfoLLA final : public InstInfo {
+public:
+    RISCVInstInfoLLA() = default;
+
+    uint32_t operand_num() override { return 2; }
+
+    OperandFlag operand_flag(uint32_t idx) override {
+        switch (idx) {
+            case 0:
+                return OperandFlagDef;
+            case 1:
+                return OperandFlagMetadata;
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() override { return InstFlagNone; }
+
+    std::string_view name() override { return "RISCV.LLA"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "lla"
+            << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(1)};
+    }
+};
+
 class RISCVInstInfoMUL final : public InstInfo {
 public:
     RISCVInstInfoMUL() = default;
@@ -2009,6 +2037,7 @@ class RISCVInstInfo final : public TargetInstInfo {
     RISCVInstInfoRET _instinfoRET;
     RISCVInstInfoLUI _instinfoLUI;
     RISCVInstInfoAUIPC _instinfoAUIPC;
+    RISCVInstInfoLLA _instinfoLLA;
     RISCVInstInfoMUL _instinfoMUL;
     RISCVInstInfoMULH _instinfoMULH;
     RISCVInstInfoMULHSU _instinfoMULHSU;
@@ -2119,6 +2148,8 @@ public:
                 return _instinfoLUI;
             case RISCVInst::AUIPC:
                 return _instinfoAUIPC;
+            case RISCVInst::LLA:
+                return _instinfoLLA;
             case RISCVInst::MUL:
                 return _instinfoMUL;
             case RISCVInst::MULH:
