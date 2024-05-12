@@ -141,6 +141,12 @@ InstInfo: {
         # J JType-Utype
         # JAL: { mnem: "jal", template: Utype, flag: [Call] },
         # JALR: { mnem: "jalr", template: Itype, flag: [Call] },
+        # CALL:
+        #   {
+        #     format: ["call", " ", 0],
+        #     operands: { 0: { name: target, type: reloc, flag: Metadata } },
+        #     flag: [Call, Presudo],
+        #   },
         JAL:
           {
             format: ["jal", " ", 0],

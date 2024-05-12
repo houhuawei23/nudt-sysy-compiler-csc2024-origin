@@ -94,7 +94,7 @@ class LoweringContext {
         // constant
         // NOTE: constant cant not be cached in _val_map
         if (not ir::isa<ir::Constant>(ir_val)) {
-            std::cerr << "error: must be constant" << std::endl;
+            std::cerr << "error: " << ir_val->name() << " must be constant" << std::endl;
             assert(false);
         }
         auto const_val = dyn_cast<ir::Constant>(ir_val);

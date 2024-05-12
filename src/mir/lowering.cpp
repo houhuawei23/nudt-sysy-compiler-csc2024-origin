@@ -38,7 +38,7 @@ union FloatUint32 {
 void create_mir_module(ir::Module& ir_module,
                        MIRModule& mir_module,
                        Target& target) {
-    bool debugLowering = true;
+    bool debugLowering = false;
 
     auto& functions = mir_module.functions();
     auto& global_objs = mir_module.global_objs();
@@ -133,8 +133,6 @@ void create_mir_module(ir::Module& ir_module,
     for (auto& ir_func : ir_module.funcs()) {  // for all funcs
         auto mir_func = func_map[ir_func];
         if (ir_func->blocks().empty())
-            auto mir_func = func_map[ir_func];
-        if (ir_func->blocks().empty())
             continue;
         if (debugLowering) {
             dumpStageWithMsg(std::cerr, "Before Lowering", mir_func->name());
@@ -167,6 +165,10 @@ void create_mir_module(ir::Module& ir_module,
         if (codegen_ctx.registerInfo) {
             linearAllocator(*mir_func, codegen_ctx);
             // fastAllocator(*mir_func, codegen_ctx);
+            if (debugLowering) {
+                dumpStageWithMsg(std::cerr, "After RA", mir_func->name());
+                mir_func->print(std::cerr, codegen_ctx);
+            }
         }
 
         /* 4.8 stack allocation */
@@ -174,6 +176,10 @@ void create_mir_module(ir::Module& ir_module,
             /* after sa, all stack objects are allocated with .offset */
             allocateStackObjects(mir_func, codegen_ctx);
             codegen_ctx.flags.postSA = true;
+            if (debugLowering) {
+                dumpStageWithMsg(std::cerr, "After SA", mir_func->name());
+                mir_func->print(std::cerr, codegen_ctx);
+            }
         }
 
         /* 4.9 post-RA scheduling, minimize cycles */
@@ -194,10 +200,7 @@ MIRFunction* create_mir_function(ir::Function* ir_func,
                                  MIRFunction* mir_func,
                                  CodeGenContext& codegen_ctx,
                                  LoweringContext& lowering_ctx) {
-    // TODO: before lowering, ge some analysis pass result
-    /* aligenment */
-    /* range */
-    /* dom */
+    bool debugLowerFunc = false;
     // TODO: before lowering, ge some analysis pass result
     /* aligenment */
     /* range */
@@ -231,8 +234,8 @@ MIRFunction* create_mir_function(ir::Function* ir_func,
 
     //! 3. process alloca, new stack object for each alloca
     lowering_ctx.set_mir_block(block_map.at(ir_func->entry()));  // entry
-    for (auto& ir_inst :
-         ir_func->entry()->insts()) {  // note: all alloca in entry
+    for (auto& ir_inst : ir_func->entry()->insts()) {
+        // note: all alloca in entry
         if (ir_inst->scid() != ir::Value::vALLOCA)
             continue;
 
@@ -264,6 +267,10 @@ MIRFunction* create_mir_function(ir::Function* ir_func,
         for (auto ir_inst : ir_block->insts()) {
             if (ir_inst->scid() == ir::Value::vALLOCA)
                 continue;
+            if (debugLowerFunc) {
+                ir_inst->print(std::cerr);
+                std::cerr << std::endl;
+            }
             create_mir_inst(ir_inst, lowering_ctx);
         }
     }

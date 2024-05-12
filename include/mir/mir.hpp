@@ -360,6 +360,7 @@ public:
     void add_inst(MIRInst* inst) { _insts.push_back(inst); }
 
 public:  // get function
+    MIRFunction* parent() { return _parent; }
     std::list<MIRInst*>& insts() { return _insts; }
     // ir::BasicBlock* ir_block() { return _ir_block; }
 

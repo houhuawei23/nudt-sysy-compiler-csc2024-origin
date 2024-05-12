@@ -72,14 +72,14 @@ public:  // sa stage (stack allocation)
     int stack_pointer_align() override { return 8; }
 
     void emit_postsa_prologue(MIRBlock* entry, int32_t stack_size) override {
-        auto& instructions = entry->insts();
-        RISCV::adjust_reg(instructions, instructions.begin(), RISCV::sp,
-                          RISCV::sp, -stack_size);
+        auto& insts = entry->insts();
+        RISCV::adjust_reg(insts, insts.begin(), RISCV::sp, RISCV::sp,
+                          -stack_size);
     }
     void emit_postsa_epilogue(MIRBlock* exit, int32_t stack_size) override {
-        auto& instructions = exit->insts();
-        RISCV::adjust_reg(instructions, std::prev(instructions.end()),
-                          RISCV::sp, RISCV::sp, stack_size);
+        auto& insts = exit->insts();
+        RISCV::adjust_reg(insts, std::prev(insts.end()), RISCV::sp, RISCV::sp,
+                          stack_size);
     }
 
     int32_t insert_prologue_epilogue(
@@ -103,6 +103,13 @@ public:  // sa stage (stack allocation)
                 saved.emplace_back(op, stack);
             }
         }
+        /* return address register */
+        auto size = getOperandSize(return_addr_reg->type());
+        auto alignment = size;
+        auto stack = func->add_stack_obj(ctx.next_id(), size, alignment, 0,
+                                        StackObjectUsage::CalleeSaved);
+        saved.emplace_back(return_addr_reg, stack);
+
 
         /* insert the prologue and epilogue */
         {

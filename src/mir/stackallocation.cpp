@@ -154,7 +154,7 @@ void allocateStackObjects(MIRFunction* func, CodeGenContext& ctx) {
         auto terminator = block->insts().back();
         auto& instInfo = ctx.instInfo.get_instinfo(terminator);
         if (requireFlag(instInfo.inst_flag(), InstFlagReturn)) {
-            ctx.frameInfo.emit_postsa_epilogue(func->blocks().front().get(),
+            ctx.frameInfo.emit_postsa_epilogue(block.get(),
                                                stack_size);
         }
     }
