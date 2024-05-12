@@ -8,6 +8,7 @@
 #include "mir/linearAllocator.hpp"
 
 #include "target/riscv/riscvtarget.hpp"
+
 namespace mir {
 //! declare
 void create_mir_module(ir::Module& ir_module,
@@ -37,7 +38,7 @@ union FloatUint32 {
 void create_mir_module(ir::Module& ir_module,
                        MIRModule& mir_module,
                        Target& target) {
-    bool debugLowering = false;
+    bool debugLowering = true;
 
     auto& functions = mir_module.functions();
     auto& global_objs = mir_module.global_objs();
@@ -112,6 +113,22 @@ void create_mir_module(ir::Module& ir_module,
     codegen_ctx.iselInfo = &target.get_target_isel_info();
     lowering_ctx._code_gen_ctx = &codegen_ctx;
 
+    auto dumpStageWithMsg = [&](std::ostream& os, std::string_view stage,
+                                std::string_view msg) {
+        enum class Style { RED, BOLD, RESET };
+
+        static std::unordered_map<Style, std::string_view> styleMap = {
+            {Style::RED, "\033[0;31m"},
+            {Style::BOLD, "\033[1m"},
+            {Style::RESET, "\033[0m"}};
+
+        os << "\n";
+        os << styleMap[Style::RED] << styleMap[Style::BOLD];
+        os << "[" << stage << "] ";
+        os << styleMap[Style::RESET];
+        os << msg << std::endl;
+    };
+
     //! 4. lower all functions
     for (auto& ir_func : ir_module.funcs()) {  // for all funcs
         auto mir_func = func_map[ir_func];
@@ -119,16 +136,24 @@ void create_mir_module(ir::Module& ir_module,
             auto mir_func = func_map[ir_func];
         if (ir_func->blocks().empty())
             continue;
-
+        if (debugLowering) {
+            dumpStageWithMsg(std::cerr, "Before Lowering", mir_func->name());
+            ir_func->print(std::cerr);
+        }
         /* 4.1: lower function body to generic MIR */
         create_mir_function(ir_func, mir_func, codegen_ctx, lowering_ctx);
-        if (debugLowering)
+        if (debugLowering) {
+            dumpStageWithMsg(std::cerr, "After Lowering", mir_func->name());
             mir_func->print(std::cerr, codegen_ctx);
+        }
 
         /* 4.2: instruction selection */
         ISelContext isel_ctx(codegen_ctx);
         isel_ctx.run_isel(mir_func);
-
+        if (debugLowering) {
+            dumpStageWithMsg(std::cerr, "After ISEL", mir_func->name());
+            mir_func->print(std::cerr, codegen_ctx);
+        }
         /* 4.3 register coalescing */
 
         /* 4.4 peephole optimization */
@@ -156,6 +181,11 @@ void create_mir_module(ir::Module& ir_module,
         /* 4.10 post legalization */
         postLegalizeFunc(*mir_func, codegen_ctx);
         /* 4.11 verify */
+
+        if (debugLowering) {
+            dumpStageWithMsg(std::cerr, "Finished CodeGen", mir_func->name());
+            mir_func->print(std::cerr, codegen_ctx);
+        }
     }
     /* module verify */
 }

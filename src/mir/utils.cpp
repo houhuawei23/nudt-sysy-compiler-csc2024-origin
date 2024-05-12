@@ -90,9 +90,14 @@ void dump_assembly(std::ostream& os, MIRModule& module, CodeGenContext& ctx) {
                 os << "Local=" << loacl << ", \n";
                 os << "\t# RegSpill=" << reSpill << ", ";
                 os << "CalleeSaved=" << calleeSaved << "\n";
-            } else
+            } else {
                 os << bb->name() << ":\n";
-            bb->print(os, ctx);
+            }
+            for (auto& inst : bb->insts()) {
+                auto& info = ctx.instInfo.get_instinfo(inst);
+                info.print(os << "\t", *inst, false);
+                os << std::endl;
+            }
         }
     }
 }

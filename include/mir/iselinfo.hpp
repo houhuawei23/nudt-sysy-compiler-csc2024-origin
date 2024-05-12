@@ -20,7 +20,7 @@ class ISelContext {
 
     std::unordered_map<MIROperand*, uint32_t> _use_cnt;
 
-   public:
+public:
     ISelContext(CodeGenContext& codegen_ctx) : _codegen_ctx(codegen_ctx) {}
     void run_isel(MIRFunction* func);
     bool has_one_use(MIROperand* op);
@@ -54,7 +54,7 @@ struct InstLegalizeContext final {
 };
 
 class TargetISelInfo {
-   public:
+public:
     virtual ~TargetISelInfo() = default;
     virtual bool is_legal_geninst(uint32_t opcode) const = 0;
 
@@ -101,6 +101,10 @@ static bool isCompareOp(MIROperand* operand, CompareOp cmpOp) {
 //! helper function to create a new MIRInstq
 
 uint32_t select_copy_opcode(MIROperand* dst, MIROperand* src);
+
+inline MIROperand* getNeg(MIROperand* operand) {
+    return MIROperand::as_imm(-operand->imm(), operand->type());
+}
 
 inline MIROperand* getHighBits(MIROperand* operand) {
     assert(isOperandReloc(operand));

@@ -150,12 +150,47 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
             modified = true;
         }
     };
-
+    auto imm2regBeta = [&](MIRInst* oldInst, uint32_t opIdx) {
+        auto op = oldInst->operand(opIdx);
+        if (op->is_imm()) {
+            auto reg = getVRegAs(ctx, op);
+            auto newInst = ctx.new_inst(InstLoadImm);
+            newInst->set_operand(0, reg);
+            newInst->set_operand(1, op);
+            oldInst->set_operand(opIdx, reg);
+            modified = true;
+        }
+    };
     switch (inst->opcode()) {
-        case InstStore: {
-            MIROperand* val = inst->operand(1);
-            imm2reg(val);
-            inst->set_operand(1, val);
+        case InstAdd:
+        case InstAnd:
+        case InstOr:
+        case InstXor: {
+            auto* src1 = inst->operand(1);
+            auto* src2 = inst->operand(2);
+            imm2regBeta(inst, 1);
+            imm2regBeta(inst, 2);
+            break;
+        }
+        case InstSub: { /* InstSub dst, src1, src2 */
+            auto* src1 = inst->operand(1);
+            auto* src2 = inst->operand(2);
+            imm2regBeta(inst, 1);
+
+            if (src2->is_imm()) { /* sub to add*/
+                auto neg = getNeg(src2);
+                if (isOperandImm12(neg)) {
+                    inst->set_opcode(InstAdd);
+                    inst->set_operand(2, neg);
+                    modified = true;
+                    break;
+                }
+            }
+            imm2regBeta(inst, 2);
+            break;
+        }
+        case InstStore: { /* InstStore addr, src, align*/
+            imm2regBeta(inst, 1);
             break;
         }
     }

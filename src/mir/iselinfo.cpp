@@ -130,8 +130,6 @@ void ISelContext::run_isel(MIRFunction* func) {
                         dumpInst(inst);
                     }
 
-                    // std::cout << "  [match&select] inst: " << inst->opcode()
-                    //           << std::endl;
                     auto opcode = inst->opcode();
                     //! do pattern match and select inst
                     auto res = isel_info->match_select(inst, *this);

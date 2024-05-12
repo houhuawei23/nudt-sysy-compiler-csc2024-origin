@@ -35,6 +35,7 @@ public:  // get function
     auto name() const { return _name; }
 
 public:
+    /* Relocable print is not for emitAssmbly! Just for debug. */
     virtual void print(std::ostream& os, CodeGenContext& ctx) = 0;  // as dump
 };
 
