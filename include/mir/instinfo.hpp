@@ -4,7 +4,7 @@
 namespace mir {
 /*
  * @brief: OperandFlag enum
- * @note: 
+ * @note:
  *      Operand Flag (操作数的相关状态)
  *          1. OperandFlagUse --> 被使用
  *          2. OperandFlagDef --> 被定义
@@ -18,7 +18,7 @@ enum OperandFlag : uint32_t {
 
 /*
  * @brief: InstFlag enum
- * @note: 
+ * @note:
  *      Instruction Flag (指令的相关状态 --> 指明属于什么指令)
  */
 enum InstFlag : uint32_t {
@@ -26,9 +26,9 @@ enum InstFlag : uint32_t {
 
     InstFlagLoad = 1 << 0,
     InstFlagStore = 1 << 1,
-    
+
     InstFlagTerminator = 1 << 2,
-    
+
     InstFlagBranch = 1 << 3,
     InstFlagCall = 1 << 4,
     InstFlagNoFallThrough = 1 << 5,
@@ -52,52 +52,55 @@ enum InstFlag : uint32_t {
         InstFlagWithDelaySlot | InstFlagPadding | InstFlagIndirectJump,
 };
 
-
 /*
  * @brief: InstInfo Class (抽象基类)
- * @note: 
+ * @note:
  *      1. Instruction Information (存储各类不同指令的相关信息)
  *      2. 各类具体架构的指令集中的各个指令继承于此抽象基类
  */
 class InstInfo {
-    public:
-        InstInfo() = default;
-        virtual ~InstInfo() = default;
+public:
+    InstInfo() = default;
+    virtual ~InstInfo() = default;
 
-    public:  // get function
-        virtual uint32_t operand_num() = 0;
-        virtual OperandFlag operand_flag(uint32_t idx) = 0;
-        virtual uint32_t inst_flag() = 0;
-        virtual std::string_view name() = 0;
+public:  // get function
+    virtual uint32_t operand_num() = 0;
+    virtual OperandFlag operand_flag(uint32_t idx) = 0;
+    virtual uint32_t inst_flag() = 0;
+    virtual std::string_view name() = 0;
 
-    public:  // print
-        virtual void print(std::ostream& out, MIRInst& inst, bool printComment) = 0;
+public:  // print
+    virtual void print(std::ostream& out, MIRInst& inst, bool printComment) = 0;
 };
 
 /*
  * @brief: TargetInstInfo Class
- * @note: 
+ * @note:
  *      Target Instruction Information (目标机器架构的指令集信息)
  */
 class TargetInstInfo {
-    public:
-        TargetInstInfo() = default;
-        ~TargetInstInfo() = default;
-    
-    public:  // get function
-        virtual InstInfo& get_instinfo(uint32_t opcode);
-        InstInfo& get_instinfo(MIRInst* inst) { return get_instinfo(inst->opcode()); }
+public:
+    TargetInstInfo() = default;
+    ~TargetInstInfo() = default;
 
-    public:  // match function
-        virtual bool matchBranch(MIRInst* inst, MIRBlock*& target, double& prob) ;
-        bool matchConditionalBranch(MIRInst* inst, MIRBlock*& target, double& prob) ;
-        bool matchUnconditionalBranch(MIRInst* inst, MIRBlock*& Target, double& prob) ;
+public:  // get function
+    virtual InstInfo& get_instinfo(uint32_t opcode);
+    InstInfo& get_instinfo(MIRInst* inst) {
+        return get_instinfo(inst->opcode());
+    }
 
+public:  // match function
+    virtual bool matchBranch(MIRInst* inst, MIRBlock*& target, double& prob);
+    bool matchConditionalBranch(MIRInst* inst, MIRBlock*& target, double& prob);
+    bool matchUnconditionalBranch(MIRInst* inst,
+                                  MIRBlock*& Target,
+                                  double& prob);
 };
 
 // utils function
 constexpr bool isOperandVRegORISAReg(MIROperand* operand) {
-    return operand->is_reg() && (isVirtualReg(operand->reg()) || isISAReg(operand->reg()));
+    return operand->is_reg() &&
+           (isVirtualReg(operand->reg()) || isISAReg(operand->reg()));
 }
 constexpr bool isOperandISAReg(MIROperand* operand) {
     return operand->is_reg() && isISAReg(operand->reg());
@@ -107,7 +110,8 @@ constexpr bool isOperandVReg(MIROperand* operand) {
 }
 
 constexpr bool requireFlag(InstFlag flag, InstFlag required) {
-    return (static_cast<uint32_t>(flag) & static_cast<uint32_t>(required)) == static_cast<uint32_t>(required);
+    return (static_cast<uint32_t>(flag) & static_cast<uint32_t>(required)) ==
+           static_cast<uint32_t>(required);
 }
 
 constexpr bool requireFlag(uint32_t flag, InstFlag required) noexcept {
@@ -126,7 +130,8 @@ constexpr bool isOperandReloc(MIROperand* operand) {
     return operand->is_reloc() && operand->type() == OperandType::Special;
 }
 constexpr bool isOperandVRegOrISAReg(MIROperand* operand) {
-    return operand->is_reg() && (isVirtualReg(operand->reg()) || isISAReg(operand->reg()));
+    return operand->is_reg() &&
+           (isVirtualReg(operand->reg()) || isISAReg(operand->reg()));
 }
 
 constexpr bool isOperandStackObject(MIROperand* operand) {
@@ -140,35 +145,10 @@ constexpr bool isSignedImm(intmax_t imm) {
     return -x <= imm && imm < x;
 }
 
-
 void dumpVirtualReg(std::ostream& os, MIROperand* operand);
 
 }  // namespace mir
 
 namespace mir::GENERIC {
-struct OperandDumper {
-    MIROperand* operand;
-};
 
-static std::ostream& operator<<(std::ostream& os, OperandDumper opdp) {
-    auto operand = opdp.operand;
-    if (operand->is_reg()) {
-        if (isVirtualReg(operand->reg())) {
-            dumpVirtualReg(os, operand);
-        } else if (isStackObject(operand->reg())) {
-            os << "so" << (operand->reg() ^ stackObjectBegin);
-        } else {
-            os << "isa " << operand->reg();
-        }
-    } else if (operand->is_imm()) {
-        os << "imm: " << operand->imm();
-    } else if (operand->is_prob()) {
-        os << "prob ";
-    } else if (operand->is_reloc()) {
-        os << operand->reloc()->name();
-    } else {
-        os << "unknown ";
-    }
-    return os;
-}
 }  // namespace mir::GENERIC

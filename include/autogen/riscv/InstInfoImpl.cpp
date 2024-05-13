@@ -37,7 +37,7 @@ public:
         out << "beq"
             << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
             << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(2)} << "# "
+            << mir::RISCV::OperandDumper{inst.operand(2)} << " # "
             << mir::RISCV::OperandDumper{inst.operand(3)};
     }
 };
@@ -73,7 +73,7 @@ public:
         out << "bne"
             << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
             << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(2)} << "# "
+            << mir::RISCV::OperandDumper{inst.operand(2)} << " # "
             << mir::RISCV::OperandDumper{inst.operand(3)};
     }
 };
@@ -109,7 +109,7 @@ public:
         out << "blt"
             << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
             << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(2)} << "# "
+            << mir::RISCV::OperandDumper{inst.operand(2)} << " # "
             << mir::RISCV::OperandDumper{inst.operand(3)};
     }
 };
@@ -145,7 +145,7 @@ public:
         out << "bge"
             << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
             << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(2)} << "# "
+            << mir::RISCV::OperandDumper{inst.operand(2)} << " # "
             << mir::RISCV::OperandDumper{inst.operand(3)};
     }
 };
@@ -181,7 +181,7 @@ public:
         out << "bltu"
             << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
             << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(2)} << "# "
+            << mir::RISCV::OperandDumper{inst.operand(2)} << " # "
             << mir::RISCV::OperandDumper{inst.operand(3)};
     }
 };
@@ -217,7 +217,7 @@ public:
         out << "bgeu"
             << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
             << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
-            << mir::RISCV::OperandDumper{inst.operand(2)} << "# "
+            << mir::RISCV::OperandDumper{inst.operand(2)} << " # "
             << mir::RISCV::OperandDumper{inst.operand(3)};
     }
 };

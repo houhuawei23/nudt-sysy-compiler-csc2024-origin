@@ -2,6 +2,9 @@
 # dont ignore unset variables
 set -u
 
+TIMEOUT=0.5
+
+
 PASS_CNT=0
 WRONG_CNT=0
 ALL_CNT=0
@@ -30,7 +33,8 @@ sysylib_funcs=(
 )
 
 skip_keywords=(
-    "if" "while"
+    # "if" 
+    "while"
 )
 
 function check_key_in_file() {
@@ -204,11 +208,20 @@ function run_compiler_test() {
     cat "${single_file}" >"${gen_c}"
 
     ./main -f "${single_file}" -i -t ${PASSES_STR} -o "${gen_ll}" "${OPT_LEVEL}" "${LOG_LEVEL}"
-    ./main -f "${single_file}" -S -t ${PASSES_STR} -o "${gen_s}" "${OPT_LEVEL}" "${LOG_LEVEL}"
-    if [ $? != 0 ]; then
+    timeout $TIMEOUT ./main -f "${single_file}" -S -t ${PASSES_STR} -o "${gen_s}" "${OPT_LEVEL}" "${LOG_LEVEL}"
+    mainres=$? 
+    if [ $mainres == $EC_TIMEOUT ]; then # time out
+        return $EC_TIMEOUT
+    fi
+    if [ $mainres != 0 ]; then
         return $EC_MAIN
     fi
     riscv64-linux-gnu-gcc -march=rv64gc -mabi=lp64d -mcmodel=medlow "${gen_s}" -o "${gen_o}"
+    
+    timeout $TIMEOUT qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gen_o}" >"${gen_out}"
+    if [ $? == $EC_TIMEOUT ]; then # time out
+        return $EC_TIMEOUT
+    fi
     qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gen_o}" >"${gen_out}"
     local qemu_res=$?
 

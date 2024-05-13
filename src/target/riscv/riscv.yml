@@ -57,7 +57,7 @@ InstInfo: {
         # branch Btype-Itype offset-imm
         Branches:
           {
-            format: ["mnem", " ", 0, ", ", 1, ", ", 2, "# ", 3],
+            format: ["mnem", " ", 0, ", ", 1, ", ", 2, " # ", 3],
             operands:
               {
                 0: { name: rs1, type: GPR, flag: Use },
@@ -758,6 +758,37 @@ InstSelInfo: {
               predicate: "isOperandIReg($src1) && isOperandIReg($src2) && isCompareOp($op, CompareOp::ICmpUnsignedGreaterThan)",
             },
           replace: { name: SLTU, rd: $dst, rs1: $src2, rs2: $src1 },
+        },
+        {
+          pattern:
+            {
+              name: InstICmp,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              op: $op,
+              predicate: "isOperandIReg($src1) && isZero($src2) && isCompareOp($op, CompareOp::ICmpEqual)",
+            },
+          replace: { name: SLTIU, rd: $dst, rs1: $src2, imm: getOne($src1) },
+        },
+        # branch
+        {
+          pattern:
+            {
+              name: InstBranch,
+              cond: $cond,
+              target: $target,
+              prob: $prob,
+              predicate: isOperandIReg($cond),
+            },
+          replace:
+            {
+              name: BNE,
+              rs1: $cond,
+              rs2: getZero($cond),
+              target: $target,
+              prob: $prob,
+            },
         },
       ],
   }

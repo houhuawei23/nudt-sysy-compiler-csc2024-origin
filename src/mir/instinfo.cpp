@@ -2,13 +2,17 @@
 #include "mir/instinfo.hpp"
 
 #include "autogen/generic/InstInfoDecl.hpp"
-#include "autogen/generic/InstInfoImpl.cpp"
+#include "support/StaticReflection.hpp"
 
 namespace mir {
 uint32_t offset = GENERIC::GENERICInstBegin + 1;
-InstInfo& TargetInstInfo::get_instinfo(uint32_t opcode) { return GENERIC::getGENERICInstInfo().get_instinfo(opcode + offset); }
+InstInfo& TargetInstInfo::get_instinfo(uint32_t opcode) {
+    return GENERIC::getGENERICInstInfo().get_instinfo(opcode + offset);
+}
 
-bool TargetInstInfo::matchBranch(MIRInst* inst, MIRBlock*& target, double& prob) {
+bool TargetInstInfo::matchBranch(MIRInst* inst,
+                                 MIRBlock*& target,
+                                 double& prob) {
     auto oldOpcode = inst->opcode();
     inst->set_opcode(oldOpcode + offset);
     bool res = GENERIC::getGENERICInstInfo().matchBranch(inst, target, prob);
@@ -43,37 +47,47 @@ static std::string_view getType(OperandType type) {
 
 void dumpVirtualReg(std::ostream& os, MIROperand* operand) {
     assert(operand != nullptr);
-    os << '[' << getType(operand->type()) << "vreg";
-    os << (operand->reg() ^ virtualRegBegin) << ']';
+    os << getType(operand->type()) << "v";
+    os << (operand->reg() ^ virtualRegBegin);
 }
 }  // namespace mir
 
 namespace mir::GENERIC {
-// struct OperandDumper final {
-//     MIROperand* operand;
-// };
+struct OperandDumper {
+    MIROperand* operand;
+};
 
-// static std::ostream& operator<<(std::ostream& os, OperandDumper& opdp) {
-//     auto operand = opdp.operand;
-//     if (operand->is_reg()) {
-//         if (isVirtualReg(operand->reg())) {
-//             dumpVirtualReg(os, operand);
-//         }
-//         os << "reg: " << operand->reg();
-//     }
-//     if (operand->is_imm()) {
-//         os << "imm: " << operand->imm();
-//     } else if (operand->is_prob()) {
-//         // os << "prob: " << operand->prob();
-//         os << "prob ";
-//     } else if (operand->is_reloc()) {
-//         // operand->reloc()-
-//         os << "reloc ";
-//     } else {
-//         std::cerr << "unknown operand type" << std::endl;
-//     }
+static std::ostream& operator<<(std::ostream& os, OperandDumper opdp) {
+    auto operand = opdp.operand;
+    os << "[";
+    if (operand->is_reg()) {
+        if (isVirtualReg(operand->reg())) {
+            dumpVirtualReg(os, operand);
+        } else if (isStackObject(operand->reg())) {
+            os << "so" << (operand->reg() ^ stackObjectBegin);
+        } else {
+            os << "isa " << operand->reg();
+        }
+    } else if (operand->is_imm()) {
+        os << getType(operand->type()) << operand->imm();
+        if (operand->type() == OperandType::Special) {
+            os << " ("
+               << utils::enumName(static_cast<CompareOp>(operand->imm()))
+               << ")";
+        }
 
-//     return os;
-// }
+    } else if (operand->is_prob()) {
+        os << "prob " << operand->prob();
+    } else if (operand->is_reloc()) {
+        os << "reloc ";
+        os << operand->reloc()->name();
+    } else {
+        os << "unknown";
+    }
+    os << "]";
+    return os;
+}
 
 }  // namespace mir::GENERIC
+
+#include "autogen/generic/InstInfoImpl.cpp"

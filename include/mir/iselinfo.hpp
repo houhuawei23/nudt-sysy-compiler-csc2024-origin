@@ -68,34 +68,20 @@ public:
     virtual void postLegalizeInst(const InstLegalizeContext& ctx) const = 0;
 };
 
-enum CompareOp : uint32_t {
-    ICmpEqual,
-    ICmpNotEqual,
-    ICmpSignedLessThan,
-    ICmpSignedLessEqual,
-    ICmpSignedGreaterThan,
-    ICmpSignedGreaterEqual,
-    ICmpUnsignedLessThan,
-    ICmpUnsignedLessEqual,
-    ICmpUnsignedGreaterThan,
-    ICmpUnsignedGreaterEqual,
-
-    FCmpOrderedEqual,
-    FCmpOrderedNotEqual,
-    FCmpOrderedLessThan,
-    FCmpOrderedLessEqual,
-    FCmpOrderedGreaterThan,
-    FCmpOrderedGreaterEqual,
-    FCmpUnorderedEqual,
-    FCmpUnorderedNotEqual,
-    FCmpUnorderedLessThan,
-    FCmpUnorderedLessEqual,
-    FCmpUnorderedGreaterThan,
-    FCmpUnorderedGreaterEqual
-};
 static bool isCompareOp(MIROperand* operand, CompareOp cmpOp) {
     auto op = static_cast<uint32_t>(operand->imm());
     return op == static_cast<uint32_t>(cmpOp);
+}
+
+static bool isICmpEqualityOp(MIROperand* operand) {
+    const auto op = static_cast<CompareOp>(operand->imm());
+    switch (op) {
+        case CompareOp::ICmpEqual:
+        case CompareOp::ICmpNotEqual:
+            return true;
+        default:
+            return false;
+    }
 }
 
 //! helper function to create a new MIRInstq

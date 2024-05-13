@@ -21,6 +21,33 @@ class MIRDataStorage;
 struct StackObject;
 struct CodeGenContext;
 
+
+enum CompareOp : uint32_t {
+    ICmpEqual,
+    ICmpNotEqual,
+    ICmpSignedLessThan,
+    ICmpSignedLessEqual,
+    ICmpSignedGreaterThan,
+    ICmpSignedGreaterEqual,
+    ICmpUnsignedLessThan,
+    ICmpUnsignedLessEqual,
+    ICmpUnsignedGreaterThan,
+    ICmpUnsignedGreaterEqual,
+
+    FCmpOrderedEqual,
+    FCmpOrderedNotEqual,
+    FCmpOrderedLessThan,
+    FCmpOrderedLessEqual,
+    FCmpOrderedGreaterThan,
+    FCmpOrderedGreaterEqual,
+    FCmpUnorderedEqual,
+    FCmpUnorderedNotEqual,
+    FCmpUnorderedLessThan,
+    FCmpUnorderedLessEqual,
+    FCmpUnorderedGreaterThan,
+    FCmpUnorderedGreaterEqual
+};
+
 /*
  * @brief: Class MIRRelocable (重定位)
  */
@@ -222,7 +249,7 @@ public:  // get function
     auto type() { return _type; }
 
     // 操作数
-    intmax_t imm() { return std::get<intmax_t>(_storage); }
+    const intmax_t imm() { return std::get<intmax_t>(_storage); }
     double prob() { return std::get<double>(_storage); }
     uint32_t reg() const { return std::get<MIRRegister*>(_storage)->reg(); }
     MIRRelocable* reloc() { return std::get<MIRRelocable*>(_storage); }
@@ -244,7 +271,9 @@ public:  // check function
     constexpr bool is_reloc() {
         return std::holds_alternative<MIRRelocable*>(_storage);
     }
-    constexpr bool is_prob() { return false; }
+    constexpr bool is_prob() { 
+        return std::holds_alternative<double>(_storage);
+     }
     constexpr bool is_init() {
         return !std::holds_alternative<std::monostate>(_storage);
     }

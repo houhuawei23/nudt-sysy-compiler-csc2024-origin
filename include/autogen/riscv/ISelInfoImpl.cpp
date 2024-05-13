@@ -1695,8 +1695,78 @@ static bool matchAndSelectPattern35(MIRInst* inst1, ISelContext& ctx) {
     ctx.remove_inst(inst1);
     return true;
 }
+static bool matchAndSelectPattern36(MIRInst* inst1, ISelContext& ctx) {
+    uint32_t rootOpcode = InstICmp;
+    /** Match Inst **/
+    /* match inst InstICmp */
+    MIROperand* op1 = nullptr;
+    MIROperand* op2 = nullptr;
+    MIROperand* op3 = nullptr;
+    MIROperand* op4 = nullptr;
+    if (not matchInstICmp(inst1, op1, op2, op3, op4)) {
+        return false;
+    }
+
+    /* match predicate for operands  */
+    if (not(isOperandIReg(op2) && isZero(op3) &&
+            isCompareOp(op4, CompareOp::ICmpEqual))) {
+        return false;
+    }
+
+    /** Select Inst **/
+    auto op6 = (op1);
+    auto op7 = (op3);
+    auto op8 = (getOne(op2));
+    /* select inst SLTIU */
+    auto inst2 = new MIRInst(SLTIU);
+    inst2->set_operand(0, op6);
+    inst2->set_operand(1, op7);
+    inst2->set_operand(2, op8);
+    ctx.insert_inst(inst2);
+
+    /* Replace Operand */
+    ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst2));
+    ctx.remove_inst(inst1);
+    return true;
+}
 
 /* InstICmp matchAndSelectPatternInstICmpend */
+
+/* InstBranch matchAndSelectPatternInstBranch begin */
+static bool matchAndSelectPattern37(MIRInst* inst1, ISelContext& ctx) {
+    uint32_t rootOpcode = InstBranch;
+    /** Match Inst **/
+    /* match inst InstBranch */
+    MIROperand* op1 = nullptr;
+    MIROperand* op2 = nullptr;
+    MIROperand* op3 = nullptr;
+    if (not matchInstBranch(inst1, op1, op2, op3)) {
+        return false;
+    }
+
+    /* match predicate for operands  */
+    if (not(isOperandIReg(op1))) {
+        return false;
+    }
+
+    /** Select Inst **/
+    auto op5 = (op1);
+    auto op6 = (getZero(op1));
+    auto op7 = (op2);
+    auto op8 = (op3);
+    /* select inst BNE */
+    auto inst2 = new MIRInst(BNE);
+    inst2->set_operand(0, op5);
+    inst2->set_operand(1, op6);
+    inst2->set_operand(2, op7);
+    inst2->set_operand(3, op8);
+    ctx.insert_inst(inst2);
+
+    ctx.remove_inst(inst1);
+    return true;
+}
+
+/* InstBranch matchAndSelectPatternInstBranchend */
 
 static bool matchAndSelectImpl(MIRInst* inst,
                                ISelContext& ctx,
@@ -1901,6 +1971,17 @@ static bool matchAndSelectImpl(MIRInst* inst,
                 break;
             }
             if (matchAndSelectPattern35(inst, ctx)) {
+                success = true;
+                break;
+            }
+            if (matchAndSelectPattern36(inst, ctx)) {
+                success = true;
+                break;
+            }
+            break;
+        }
+        case InstBranch: {
+            if (matchAndSelectPattern37(inst, ctx)) {
                 success = true;
                 break;
             }

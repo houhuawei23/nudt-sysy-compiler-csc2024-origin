@@ -71,7 +71,7 @@ static std::ostream& operator<<(std::ostream& os, OperandDumper opdp) {
     } else if (operand->is_imm()) {
         os << operand->imm();
     } else if (operand->is_prob()) {
-        os << "prob ";
+        os << " prob " << operand->prob();
     } else if (operand->is_reloc()) {
         if (operand->type() == OperandType::HighBits) {
             os << "%pcrel_hi(";
