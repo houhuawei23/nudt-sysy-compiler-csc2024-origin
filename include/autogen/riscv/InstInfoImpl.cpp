@@ -1380,6 +1380,37 @@ public:
     }
 };
 
+class RISCVInstInfoMULW final : public InstInfo {
+public:
+    RISCVInstInfoMULW() = default;
+
+    uint32_t operand_num() override { return 3; }
+
+    OperandFlag operand_flag(uint32_t idx) override {
+        switch (idx) {
+            case 0:
+                return OperandFlagDef;
+            case 1:
+                return OperandFlagUse;
+            case 2:
+                return OperandFlagUse;
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() override { return InstFlagNone; }
+
+    std::string_view name() override { return "RISCV.MULW"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "mulw"
+            << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(2)};
+    }
+};
+
 class RISCVInstInfoMULH final : public InstInfo {
 public:
     RISCVInstInfoMULH() = default;
@@ -1504,6 +1535,37 @@ public:
     }
 };
 
+class RISCVInstInfoDIVW final : public InstInfo {
+public:
+    RISCVInstInfoDIVW() = default;
+
+    uint32_t operand_num() override { return 3; }
+
+    OperandFlag operand_flag(uint32_t idx) override {
+        switch (idx) {
+            case 0:
+                return OperandFlagDef;
+            case 1:
+                return OperandFlagUse;
+            case 2:
+                return OperandFlagUse;
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() override { return InstFlagNone; }
+
+    std::string_view name() override { return "RISCV.DIVW"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "divw"
+            << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(2)};
+    }
+};
+
 class RISCVInstInfoDIVU final : public InstInfo {
 public:
     RISCVInstInfoDIVU() = default;
@@ -1560,6 +1622,37 @@ public:
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "rem"
+            << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(2)};
+    }
+};
+
+class RISCVInstInfoREMW final : public InstInfo {
+public:
+    RISCVInstInfoREMW() = default;
+
+    uint32_t operand_num() override { return 3; }
+
+    OperandFlag operand_flag(uint32_t idx) override {
+        switch (idx) {
+            case 0:
+                return OperandFlagDef;
+            case 1:
+                return OperandFlagUse;
+            case 2:
+                return OperandFlagUse;
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() override { return InstFlagNone; }
+
+    std::string_view name() override { return "RISCV.REMW"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "remw"
             << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
             << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
             << mir::RISCV::OperandDumper{inst.operand(2)};
@@ -2039,12 +2132,15 @@ class RISCVInstInfo final : public TargetInstInfo {
     RISCVInstInfoAUIPC _instinfoAUIPC;
     RISCVInstInfoLLA _instinfoLLA;
     RISCVInstInfoMUL _instinfoMUL;
+    RISCVInstInfoMULW _instinfoMULW;
     RISCVInstInfoMULH _instinfoMULH;
     RISCVInstInfoMULHSU _instinfoMULHSU;
     RISCVInstInfoMULHU _instinfoMULHU;
     RISCVInstInfoDIV _instinfoDIV;
+    RISCVInstInfoDIVW _instinfoDIVW;
     RISCVInstInfoDIVU _instinfoDIVU;
     RISCVInstInfoREM _instinfoREM;
+    RISCVInstInfoREMW _instinfoREMW;
     RISCVInstInfoREMU _instinfoREMU;
     RISCVInstInfoLR _instinfoLR;
     RISCVInstInfoSC _instinfoSC;
@@ -2152,6 +2248,8 @@ public:
                 return _instinfoLLA;
             case RISCVInst::MUL:
                 return _instinfoMUL;
+            case RISCVInst::MULW:
+                return _instinfoMULW;
             case RISCVInst::MULH:
                 return _instinfoMULH;
             case RISCVInst::MULHSU:
@@ -2160,10 +2258,14 @@ public:
                 return _instinfoMULHU;
             case RISCVInst::DIV:
                 return _instinfoDIV;
+            case RISCVInst::DIVW:
+                return _instinfoDIVW;
             case RISCVInst::DIVU:
                 return _instinfoDIVU;
             case RISCVInst::REM:
                 return _instinfoREM;
+            case RISCVInst::REMW:
+                return _instinfoREMW;
             case RISCVInst::REMU:
                 return _instinfoREMU;
             case RISCVInst::LR:

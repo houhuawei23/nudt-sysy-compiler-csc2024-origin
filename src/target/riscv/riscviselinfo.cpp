@@ -189,6 +189,27 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
             imm2regBeta(inst, 2);
             break;
         }
+        case InstNeg: {
+            auto* val = inst->operand(1);
+            /* sub dst, x0, src2 */
+            inst->set_opcode(InstSub);
+            inst->set_operand(1, getZero(val));
+            inst->set_operand(2, val);
+            break;
+        }
+        case InstAbs: {
+            imm2regBeta(inst, 1);
+            break;
+        }
+        case InstMul:
+        case InstSDiv:
+        case InstSRem:
+        case InstUDiv:
+        case InstURem: {
+            imm2regBeta(inst, 1);
+            imm2regBeta(inst, 2);
+            break;
+        }
         case InstStore: { /* InstStore addr, src, align*/
             imm2regBeta(inst, 1);
             break;

@@ -182,12 +182,15 @@ InstInfo: {
           },
         # RV32M Multiply Extension
         MUL: { mnem: "mul", template: Rtype },
+        MULW: { mnem: "mulw", template: Rtype }, # RV64I
         MULH: { mnem: "mulh", template: Rtype },
         MULHSU: { mnem: "mulhsu", template: Rtype },
         MULHU: { mnem: "mulhu", template: Rtype },
         DIV: { mnem: "div", template: Rtype },
+        DIVW: { mnem: "divw", template: Rtype }, # RV64I
         DIVU: { mnem: "divu", template: Rtype },
         REM: { mnem: "rem", template: Rtype },
+        REMW: { mnem: "remw", template: Rtype }, # RV64I
         REMU: { mnem: "remu", template: Rtype },
 
         # RV32A Atomic Instructions
@@ -623,6 +626,17 @@ InstSelInfo: {
             },
           replace: { name: DIV, rd: $dst, rs1: $src1, rs2: $src2 },
         },
+        {
+          pattern:
+            {
+              name: InstSDiv,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandI32($dst) && isOperandIReg($src1) && isOperandIReg($src2),
+            },
+          replace: { name: DIVW, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
         # InstSRem
         {
           pattern:
@@ -634,6 +648,17 @@ InstSelInfo: {
               predicate: isOperandI64($dst) && isOperandIReg($src1) && isOperandIReg($src2),
             },
           replace: { name: REM, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+        {
+          pattern:
+            {
+              name: InstSRem,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandI32($dst) && isOperandIReg($src1) && isOperandIReg($src2),
+            },
+          replace: { name: REMW, rd: $dst, rs1: $src1, rs2: $src2 },
         },
         # InstMin
         {
