@@ -124,8 +124,15 @@ llc -march=riscv64 test.rv64.ll -o test.rv64.s
 riscv64-linux-gnu-gcc -march=rv64gc t.s  
 # qemu
 qemu-riscv64 -L /usr/riscv64-linux-gnu/ a.out 
-
 llc -march=riscv64 -mcpu=generic-rv64 test.rv64.ll -o test.rv64.s
+
+
+# debug assembly code
+./qemu.sh ./test/.local_test/local_test.c
+# new terminal
+./gdb.sh ./gen.o
+
+
 ```
 
 ```bash

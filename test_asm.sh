@@ -4,7 +4,6 @@ set -u
 
 TIMEOUT=0.5
 
-
 PASS_CNT=0
 WRONG_CNT=0
 ALL_CNT=0
@@ -34,7 +33,7 @@ sysylib_funcs=(
 
 skip_keywords=(
     "\["
-    # "if" 
+    # "if"
     # "while"
 )
 
@@ -210,15 +209,18 @@ function run_compiler_test() {
 
     ./main -f "${single_file}" -i -t ${PASSES_STR} -o "${gen_ll}" "${OPT_LEVEL}" "${LOG_LEVEL}"
     timeout $TIMEOUT ./main -f "${single_file}" -S -t ${PASSES_STR} -o "${gen_s}" "${OPT_LEVEL}" "${LOG_LEVEL}"
-    mainres=$? 
+    mainres=$?
     if [ $mainres == $EC_TIMEOUT ]; then # time out
         return $EC_TIMEOUT
     fi
     if [ $mainres != 0 ]; then
         return $EC_MAIN
     fi
-    riscv64-linux-gnu-gcc -march=rv64gc -mabi=lp64d -mcmodel=medlow "${gen_s}" -o "${gen_o}"
-    
+    local gen_elf="${output_dir}/gen.elf"
+    # for test
+    riscv64-linux-gnu-gcc -O0 -march=rv64gc -mabi=lp64d -mcmodel=medlow "${gen_s}" -o "${gen_o}"
+
+    # -c -nostdlib -nostdinc -static
     timeout $TIMEOUT qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gen_o}" >"${gen_out}"
     if [ $? == $EC_TIMEOUT ]; then # time out
         return $EC_TIMEOUT
