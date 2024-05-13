@@ -21,7 +21,6 @@ class MIRDataStorage;
 struct StackObject;
 struct CodeGenContext;
 
-
 enum CompareOp : uint32_t {
     ICmpEqual,
     ICmpNotEqual,
@@ -249,37 +248,49 @@ public:  // get function
     auto type() { return _type; }
 
     // 操作数
-    const intmax_t imm() { return std::get<intmax_t>(_storage); }
-    double prob() { return std::get<double>(_storage); }
-    uint32_t reg() const { return std::get<MIRRegister*>(_storage)->reg(); }
-    MIRRelocable* reloc() { return std::get<MIRRelocable*>(_storage); }
+    const intmax_t imm() {
+        assert(is_imm());
+        return std::get<intmax_t>(_storage);
+    }
+    double prob() {
+        assert(is_prob());
+        return std::get<double>(_storage);
+    }
+    uint32_t reg() const {
+        assert(is_reg());
+        return std::get<MIRRegister*>(_storage)->reg();
+    }
+    MIRRelocable* reloc() {
+        assert(is_reloc());
+        return std::get<MIRRelocable*>(_storage);
+    }
 
 public:  // operator重载
     bool operator==(const MIROperand& rhs) { return _storage == rhs._storage; }
     bool operator!=(const MIROperand& rhs) { return _storage != rhs._storage; }
 
 public:  // check function
-    constexpr bool is_unused() {
+    constexpr bool is_unused() const {
         return std::holds_alternative<std::monostate>(_storage);
     }
-    constexpr bool is_imm() {
+    constexpr bool is_imm() const {
         return std::holds_alternative<intmax_t>(_storage);
     }
-    constexpr bool is_reg() {
+    constexpr bool is_reg() const {
         return std::holds_alternative<MIRRegister*>(_storage);
     }
-    constexpr bool is_reloc() {
+    constexpr bool is_reloc() const {
         return std::holds_alternative<MIRRelocable*>(_storage);
     }
-    constexpr bool is_prob() { 
+    constexpr bool is_prob() const {
         return std::holds_alternative<double>(_storage);
-     }
-    constexpr bool is_init() {
+    }
+    constexpr bool is_init() const {
         return !std::holds_alternative<std::monostate>(_storage);
     }
 
     template <typename T>
-    bool is() {
+    bool is() const {
         return std::holds_alternative<T>(_storage);
     }
 
@@ -290,8 +301,8 @@ public:  // gen function
     }
     static MIROperand* as_isareg(uint32_t reg,
                                  OperandType type) {  // physical register
-        auto reg_obj = new MIRRegister(reg);
-        auto operand = new MIROperand(reg_obj, type);
+        // auto reg_obj = new MIRRegister(reg);
+        auto operand = new MIROperand(new MIRRegister(reg), type);
         return operand;
     }
     static MIROperand* as_vreg(uint32_t reg,
@@ -379,9 +390,7 @@ private:
 
 public:
     MIRBlock() = default;
-    MIRBlock(
-             MIRFunction* parent,
-             const std::string& name = "")
+    MIRBlock(MIRFunction* parent, const std::string& name = "")
         : MIRRelocable(name), _parent(parent) {}
 
 public:
@@ -510,13 +519,11 @@ public:
  */
 using MIRRelocable_UPtr = std::unique_ptr<MIRRelocable>;
 struct MIRGlobalObject {
-    
     MIRModule* parent;
     ir::Value* ir_global;
     size_t align;
     MIRRelocable_UPtr reloc;  // MIRZeroStorage, MIRDataStorage
 
- 
     MIRGlobalObject() = default;
 
     MIRGlobalObject(size_t align,

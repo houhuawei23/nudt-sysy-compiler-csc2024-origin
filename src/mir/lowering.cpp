@@ -538,10 +538,6 @@ void lower(ir::BranchInst* ir_inst, LoweringContext& ctx) {
 
     if (ir_inst->is_cond()) {
         // TODO: conditional branch
-        int a = 5;
-        int b = 10;
-        std::cout << "conditional branch" << std::endl;
-
         // branch
         auto inst = new MIRInst(InstBranch);
         inst->set_operand(0, ctx.map2operand(ir_inst->cond()));

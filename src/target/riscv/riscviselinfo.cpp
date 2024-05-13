@@ -213,7 +213,7 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
         case InstICmp: {
             /* InstICmp dst, src1, src2, op */
             auto op = inst->operand(3);
-            if(isICmpEqualityOp(op)) {
+            if (isICmpEqualityOp(op)) {
                 /**
                  * ICmp dst, src1, src2, EQ/NE
                  * legalize ->
@@ -222,7 +222,7 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
                  * instSelect ->
                  * xor newdst, src1, src2
                  * sltiu dst, newdst, 1
-                */
+                 */
                 auto newDst = getVRegAs(ctx, inst->operand(0));
                 auto newInst = ctx.new_inst(InstXor);
                 newInst->set_operand(0, newDst);
@@ -233,7 +233,11 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
                 inst->set_operand(2, getZero(inst->operand(2)));
                 // ctx.remove_inst(inst);
                 modified = true;
+            } else {
+                imm2regBeta(inst, 1);
+                imm2regBeta(inst, 2);
             }
+            break;
         }
         case InstStore: { /* InstStore addr, src, align*/
             imm2regBeta(inst, 1);

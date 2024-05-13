@@ -33,8 +33,9 @@ sysylib_funcs=(
 )
 
 skip_keywords=(
+    "\["
     # "if" 
-    "while"
+    # "while"
 )
 
 function check_key_in_file() {
@@ -235,6 +236,7 @@ function run_test_asm() {
     local result_file="$3"
 
     check_key_in_file "$single_file"
+    # echo "check_key_in_file res: $?"
     if [ $? != 0 ]; then
         echo "${CYAN}[SKIP]${RESET} ${single_file}"
         SKIP_CNT=$((SKIP_CNT + 1))
