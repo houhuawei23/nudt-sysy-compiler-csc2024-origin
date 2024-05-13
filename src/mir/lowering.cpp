@@ -239,13 +239,11 @@ MIRFunction* create_mir_function(ir::Function* ir_func,
         if (ir_inst->scid() != ir::Value::vALLOCA)
             continue;
 
-        auto pointee_type =
-            dyn_cast<ir::PointerType>(ir_inst->type())->base_type();
+        auto pointee_type = dyn_cast<ir::PointerType>(ir_inst->type())->base_type();
         uint32_t align = 4;  // TODO: align, need bind to ir object
         auto storage = mir_func->add_stack_obj(
             codegen_ctx.next_id(),  // id
-            static_cast<uint32_t>(
-                pointee_type->size()),  //! size, datalayout; if array??
+            static_cast<uint32_t>(pointee_type->size()),
             align,                      // align
             0,                          // offset
             StackObjectUsage::Local);
@@ -265,8 +263,7 @@ MIRFunction* create_mir_function(ir::Function* ir_func,
         auto mir_block = block_map[ir_block];
         lowering_ctx.set_mir_block(mir_block);
         for (auto ir_inst : ir_block->insts()) {
-            if (ir_inst->scid() == ir::Value::vALLOCA)
-                continue;
+            if (ir_inst->scid() == ir::Value::vALLOCA) continue;
             if (debugLowerFunc) {
                 ir_inst->print(std::cerr);
                 std::cerr << std::endl;
@@ -285,11 +282,7 @@ void lower(ir::GetElementPtrInst* ir_inst, LoweringContext& ctx);
 void lower(ir::ICmpInst* ir_inst, LoweringContext& ctx);
 void lower(ir::FCmpInst* ir_inst, LoweringContext& ctx);
 void lower(ir::CallInst* ir_inst, LoweringContext& ctx);
-
-//! return
 void lower(ir::ReturnInst* ir_inst, LoweringContext& ctx);
-
-//! branch
 void lower(ir::BranchInst* ir_inst, LoweringContext& ctx);
 
 MIRInst* create_mir_inst(ir::Instruction* ir_inst, LoweringContext& ctx) {
@@ -334,7 +327,6 @@ MIRInst* create_mir_inst(ir::Instruction* ir_inst, LoweringContext& ctx) {
             lower(dyn_cast<ir::FCmpInst>(ir_inst), ctx);
             break;
         case ir::Value::vALLOCA:
-            std::cerr << "alloca not supported" << std::endl;
             break;
         case ir::Value::vLOAD:
             lower(dyn_cast<ir::LoadInst>(ir_inst), ctx);
@@ -427,8 +419,7 @@ void lower(ir::ICmpInst* ir_inst, LoweringContext& ctx) {
     inst->set_operand(1, ctx.map2operand(ir_inst->operand(0)));
     inst->set_operand(2, ctx.map2operand(ir_inst->operand(1)));
     // TODO: set condition code: eq, ne, sgt, sge, slt, sle
-    inst->set_operand(
-        3, MIROperand::as_imm(static_cast<uint32_t>(op), OperandType::Special));
+    inst->set_operand(3, MIROperand::as_imm(static_cast<uint32_t>(op), OperandType::Special));
     ctx.emit_inst(inst);
     ctx.add_valmap(ir_inst, ret);
 }
@@ -477,11 +468,6 @@ void lower(ir::CallInst* ir_inst, LoweringContext& ctx) {
     // TODO: Need Test
 
     ctx._target.get_target_frame_info().emit_call(ir_inst, ctx);
-}
-
-void lower(ir::GetElementPtrInst* ir_inst, LoweringContext& ctx) {
-    // TODO: implement getelementptr
-    std::cerr << "getelementptr not supported" << std::endl;
 }
 
 //! BinaryInst
@@ -610,4 +596,15 @@ void lower(ir::ReturnInst* ir_inst, LoweringContext& ctx) {
     ctx._target.get_target_frame_info().emit_return(ir_inst, ctx);
 }
 
+/*
+ * @brief: lower GetElementPtrInst
+ * @note: 
+ *      1. Array: <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32 <idx>
+ *      2. Pointer: <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
+ */
+void lower(ir::GetElementPtrInst* ir_inst, LoweringContext& ctx) {
+    std::vector<int> dims = ir_inst->cur_dims();
+    // auto idx = 
+    // auto inst = new MIRInst()
+}
 }  // namespace mir
