@@ -64,16 +64,12 @@ bool MultiClassRegisterSelector::isFree(MIROperand reg) const {
     return selector.isFree(reg.reg());
 }
 
-MIROperand MultiClassRegisterSelector::getFreeRegister(OperandType type) {
+MIROperand* MultiClassRegisterSelector::getFreeRegister(OperandType type) {
     auto classId = _mRegisterInfo.get_alloca_class(type);
     auto& selector = *_mSelectors[classId];
     auto reg = selector.getFreeRegister();
-    if (reg == invalidReg) {
-        std::cerr << "No free register available in class " << classId
-                  << std::endl;
-        return MIROperand{};
-    }
-    return *MIROperand::as_isareg(
-        reg, _mRegisterInfo.getCanonicalizedRegisterType(type));
+    if (reg == invalidReg) return new MIROperand;
+    return MIROperand::as_isareg(reg, _mRegisterInfo.getCanonicalizedRegisterType(type));
+
 }
 }  // namespace mir

@@ -95,12 +95,6 @@ constexpr bool isIntType(OperandType type) {
 constexpr bool isFloatType(OperandType type) {
     return type == OperandType::Float32;
 }
-
-enum MIRRegisterFlag : uint32_t {
-    RegisterFlagNone = 0,
-    RegisterFlagDead = 1 << 1,  // 标志寄存器不再被使用  -->  便于进行寄存器分配
-};
-
 constexpr uint32_t getOperandSize(const OperandType type) {
     switch (type) {
         case OperandType::Int8:
@@ -117,6 +111,11 @@ constexpr uint32_t getOperandSize(const OperandType type) {
             assert(false && "invalid operand type");
     }
 }
+
+enum MIRRegisterFlag : uint32_t {
+    RegisterFlagNone = 0,
+    RegisterFlagDead = 1 << 1,  // 标志寄存器不再被使用  -->  便于进行寄存器分配
+};
 
 /*
  * @brief: MIRRegister Class
@@ -263,6 +262,12 @@ public:  // get function
     MIRRelocable* reloc() {
         assert(is_reloc());
         return std::get<MIRRelocable*>(_storage);
+    }
+
+    // for register
+    MIRRegisterFlag reg_flag() {
+        assert(is_reg() && "the operand is not a register");
+        return std::get<MIRRegister*>(_storage)->flag();
     }
 
 public:  // operator重载

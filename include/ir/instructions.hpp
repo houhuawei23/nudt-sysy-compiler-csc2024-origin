@@ -436,8 +436,7 @@ class GetElementPtrInst : public Instruction {
         add_operand(idx);
     }
 
-    //! 2. 高维 Array <result> = getelementptr <type>, <type>* <ptrval>, i32 0,
-    //! i32 <idx>
+    //! 2. 高维 Array <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32 <idx>
     GetElementPtrInst(Type* base_type,
                       Value* value,
                       BasicBlock* parent,
@@ -454,8 +453,7 @@ class GetElementPtrInst : public Instruction {
         add_operand(idx);
     }
 
-    //! 3. 一维 Array <result> = getelementptr <type>, <type>* <ptrval>, i32 0,
-    //! i32 <idx>
+    //! 3. 一维 Array <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32 <idx>
     GetElementPtrInst(Type* base_type,
                       Value* value,
                       BasicBlock* parent,

@@ -19,14 +19,14 @@ static void linearAllocator(MIRFunction& mfunc, CodeGenContext& ctx) {
                 if (!isOperandVReg(op)) continue;
                 auto virtualReg = op->reg();
                 auto new_op = selector.getFreeRegister(op->type());
-                if (new_op.is_unused()) {
+                if (new_op->is_unused()) {
                     /* no free register available */
                     // TODO: Fix This!
                     continue;
                 }
-                assert(new_op.is_reg());
-                *op = new_op;
-                selector.markAsUsed(new_op);
+                assert(new_op->is_reg());
+                op = new_op;
+                selector.markAsUsed(*new_op);
             }
         }
     }

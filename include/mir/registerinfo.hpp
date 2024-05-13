@@ -80,7 +80,7 @@ class MultiClassRegisterSelector final {
     bool isFree(MIROperand reg) const;
 
    public:  // get function
-    MIROperand getFreeRegister(OperandType type);
+    MIROperand* getFreeRegister(OperandType type);
 };
 
 }  // namespace mir
