@@ -227,8 +227,6 @@ enum MIRGenericInst : uint32_t {
 
 /*
  * @brief: MIROperand Class
- * @note:
- *      MIR Operand (MIR数据结构)
  */
 class MIROperand {
 private:
@@ -264,7 +262,7 @@ public:  // get function
         return std::get<MIRRelocable*>(_storage);
     }
 
-    // for register
+public:  // for register
     MIRRegisterFlag reg_flag() {
         assert(is_reg() && "the operand is not a register");
         return std::get<MIRRegister*>(_storage)->flag();
@@ -304,14 +302,11 @@ public:  // gen function
     static MIROperand* as_imm(T val, OperandType type) {  // immediates
         return new MIROperand(static_cast<intmax_t>(val), type);
     }
-    static MIROperand* as_isareg(uint32_t reg,
-                                 OperandType type) {  // physical register
-        // auto reg_obj = new MIRRegister(reg);
+    static MIROperand* as_isareg(uint32_t reg, OperandType type) {  // physical register
         auto operand = new MIROperand(new MIRRegister(reg), type);
         return operand;
     }
-    static MIROperand* as_vreg(uint32_t reg,
-                               OperandType type) {  // virtual register
+    static MIROperand* as_vreg(uint32_t reg, OperandType type) {  // virtual register
         return new MIROperand(new MIRRegister(reg + virtualRegBegin), type);
     }
     static MIROperand* as_stack_obj(uint32_t reg, OperandType type) {  // stack
@@ -328,9 +323,6 @@ public:
     size_t hash() const {
         return std::hash<std::decay_t<decltype(_storage)>>{}(_storage);
     }
-
-public:
-    // void print(std::ostream& os);
 };
 
 /*
@@ -344,16 +336,14 @@ struct MIROperandHasher final {
 
 /*
  * @brief: MIRInst Class
- * @note:
- *      MIR Instruction
  */
 class MIRInst {
     static const int max_operand_num = 7;
 
 protected:
-    uint32_t _opcode;
-    MIRBlock* _parent;
-    std::array<MIROperand*, max_operand_num> _operands;
+    uint32_t _opcode;                                    // 标明指令的类型
+    MIRBlock* _parent;                                   // 标明指令所在的块
+    std::array<MIROperand*, max_operand_num> _operands;  // 指令操作数
 
 public:
     MIRInst() = default;
@@ -366,7 +356,7 @@ public:  // get function
         return _operands[idx];
     }
 
-public:  // set
+public:  // set function
     MIRInst* set_opcode(uint32_t opcode) {
         _opcode = opcode;
         return this;

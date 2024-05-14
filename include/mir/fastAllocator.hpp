@@ -16,86 +16,82 @@ static void fastAllocator(MIRFunction& mfunc, CodeGenContext& ctx) {
         std::unordered_set<mir::MIRBlock*> _uses;  // use
         std::unordered_set<mir::MIRBlock*> _defs;  // def
     };
-    std::unordered_map<MIROperand*, VirtualRegisterInfo, MIROperandHasher> useDefInfo;
-    std::unordered_map<MIROperand*, MIROperand*, MIROperandHasher> isaRegHint;
-
-    MultiClassRegisterSelector selector { *ctx.registerInfo };
+    std::unordered_map<MIROperand*, VirtualRegisterInfo, MIROperandHasher> vreg_info;
+    std::unordered_map<MIROperand*, MIROperand*, MIROperandHasher> isaReg_hint;
 
     for (auto& block : mfunc.blocks()) {
         for (auto& inst : block->insts()) {
             auto& instInfo = ctx.instInfo.get_instinfo(inst);
-
+            /* ??? */
             if (inst->opcode() == InstCopyFromReg) {
-                isaRegHint[inst->operand(0)] = inst->operand(1);
+                isaReg_hint[inst->operand(0)] = inst->operand(1);
             }
             if (inst->opcode() == InstCopyToReg) {
-                isaRegHint[inst->operand(1)] = inst->operand(0);
+                isaReg_hint[inst->operand(1)] = inst->operand(0);
             }
-
+            /* 统计虚拟寄存器相关定义和使用情况 */
             for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
                 auto op = inst->operand(idx);
                 if (!isOperandVReg(op)) continue;
                 
-                if (instInfo.operand_flag(idx) & OperandFlagUse) {
-                    useDefInfo[op]._uses.insert(block.get());
+                if (instInfo.operand_flag(idx) & OperandFlagUse) {  // used
+                    vreg_info[op]._uses.insert(block.get());
                 } 
-                if (instInfo.operand_flag(idx) & OperandFlagDef) {
-                    useDefInfo[op]._defs.insert(block.get());
+                if (instInfo.operand_flag(idx) & OperandFlagDef) {  // defed
+                    vreg_info[op]._defs.insert(block.get());
                 }
             }
         }
     }
 
     // find all cross-block vregs and allocate stack slot for them
-    std::unordered_map<MIROperand*, MIROperand*, MIROperandHasher> stackMap;        // 全局栈映射
-    std::unordered_map<MIROperand*, MIROperand*, MIROperandHasher> isaRegStackMap;
-
+    std::unordered_map<MIROperand*, MIROperand*, MIROperandHasher> stack_map;        // 栈映射 (全局分析) - 需要spill到虚拟寄存器 -> 栈
+    std::unordered_map<MIROperand*, MIROperand*, MIROperandHasher> isaReg_stack_map;
     {
-        for (auto& [reg, info] : useDefInfo) {
-            /* 1. reg未在块中被定义或被使用 -> invalid */
+        for (auto [vreg, info] : vreg_info) {
+            /* 1. reg未在块中被定义或定义后未被使用 -> invalid */
             if (info._uses.empty() || info._defs.empty()) continue;
-            /* 2. reg定义和使用在同一块中 -> local */
+            /* 2. reg定义和使用在同一块中 */
             if (info._uses.size() == 1 && info._defs.size() == 1 && *(info._uses.begin()) == *(info._defs.begin())) continue;
-            /* 3. reg的定义和使用跨多个块 -> spill到内存 */
-            auto size = getOperandSize(ctx.registerInfo->getCanonicalizedRegisterType(reg->type()));
+            /* 3. reg的定义和使用跨多个块 -> 防止占用寄存器过久, spill到内存 */
+            auto size = getOperandSize(ctx.registerInfo->getCanonicalizedRegisterType(vreg->type()));
             auto storage = mfunc.add_stack_obj(ctx.next_id(), size, size, 0, StackObjectUsage::RegSpill); 
-            stackMap[reg] = storage;
+            stack_map[vreg] = storage;
         }
     }
 
     for (auto& block : mfunc.blocks()) {
-        std::unordered_map<MIROperand*, MIROperand*, MIROperandHasher> localStackMap;       // 局部栈映射
-        std::unordered_map<MIROperand*, std::vector<MIROperand*>, MIROperandHasher> curMap;
-
-        std::unordered_map<MIROperand*, MIROperand*, MIROperandHasher> phyMap;  // physical map: Operand* --> Operand*
-        std::unordered_map<uint32_t, std::queue<MIROperand*>> allocationQueue;  // 分为两类: int and float
-        
-        std::unordered_set<MIROperand*, MIROperandHasher> protectedLockedISAReg;  // retvals/callee arguments
-        std::unordered_set<MIROperand*, MIROperandHasher> underRenamedISAReg;     // callee retvals/arguments
+        std::unordered_map<MIROperand*, MIROperand*, MIROperandHasher> local_stack_map;  // 栈映射 (局部分析)
+        std::unordered_map<MIROperand*, std::vector<MIROperand*>, MIROperandHasher> cur_map;  // 当前块中, 每个虚拟寄存器的映射 -> 栈 or 物理寄存器/
+        std::unordered_map<MIROperand*, MIROperand*, MIROperandHasher> phy_map;
+        std::unordered_map<uint32_t, std::queue<MIROperand*>> allocation_queue;  // 分为两类: int and float
+        std::unordered_set<MIROperand*, MIROperandHasher> protected_lockedISAReg;
+        std::unordered_set<MIROperand*, MIROperandHasher> underRenamed_ISAReg;
 
         MultiClassRegisterSelector selector { *ctx.registerInfo };
 
+        /* 给定操作数, 得到与其相关的栈映射 */
         const auto get_stack_storage = [&](MIROperand* op) {
-            if (auto it = localStackMap.find(op); it != localStackMap.end()) return it->second;    
-            auto ref = localStackMap[op];
-            if (auto it = stackMap.find(op); it != stackMap.end()) return localStackMap[op] = it->second;
+            if (auto it = local_stack_map.find(op); it != local_stack_map.end()) return it->second;
+            if (auto it = stack_map.find(op); it != stack_map.end()) return local_stack_map[op] = it->second;
             auto size = getOperandSize(ctx.registerInfo->getCanonicalizedRegisterType(op->type()));
             auto storage = mfunc.add_stack_obj(ctx.next_id(), size, size, 0, StackObjectUsage::RegSpill);
-            return localStackMap[op] = storage;
+            return local_stack_map[op] = storage;
         };
         const auto get_datamap = [&](MIROperand* op) -> std::vector<MIROperand*>& {
-            auto& map = curMap[op];
+            auto& map = cur_map[op];
             if (map.empty()) map.push_back(get_stack_storage(op));
             return map;
         };
 
         auto& instructions = block->insts();
 
-        std::unordered_set<MIROperand*, MIROperandHasher> dirtyRegs;
+        std::unordered_set<MIROperand*, MIROperandHasher> dirty_regs;
         auto& liveIntervalInfo = liveInterval.block2Info[block.get()];
 
         auto is_allocatableType = [](OperandType type) { return type <= OperandType::Float32; };
-        auto collect_under_renamedISARegs = [&](MIRInstList::iterator it) {
+        /* collect underRenamed ISARegisters */
+        auto collect_underRenamedISARegs = [&](MIRInstList::iterator it) {
             while (it != instructions.end()) {
                 auto inst = *it;
                 auto& instInfo = ctx.instInfo.get_instinfo(inst);
@@ -104,7 +100,7 @@ static void fastAllocator(MIRFunction& mfunc, CodeGenContext& ctx) {
                     auto op = inst->operand(idx);
                     if (isOperandISAReg(op) && !ctx.registerInfo->is_zero_reg(op->reg()) &&
                         is_allocatableType(op->type()) && (instInfo.operand_flag(idx) & OperandFlagUse)) {
-                        underRenamedISAReg.insert(op);
+                        underRenamed_ISAReg.insert(op);
                         hasReg = true;
                     }
                 }
@@ -112,17 +108,16 @@ static void fastAllocator(MIRFunction& mfunc, CodeGenContext& ctx) {
                 else break;
             }
         };
-        collect_under_renamedISARegs(instructions.begin());
+        collect_underRenamedISARegs(instructions.begin());
         
         for (auto it = instructions.begin(); it != instructions.end();) {
             auto next = std::next(it);
             std::unordered_set<MIROperand*, MIROperandHasher> protect;
             std::unordered_set<MIROperand*, MIROperandHasher> release_vreg;
 
-            /* utils function */
             /* spill register to stack */
             const auto evict_reg = [&](MIROperand* operand) {
-                assert(isOperandVReg(operand));
+                // assert(isOperandVReg(operand));
                 auto& map = get_datamap(operand);
                 MIROperand* isaReg = nullptr;
                 bool already_in_stack = false;
@@ -133,8 +128,8 @@ static void fastAllocator(MIRFunction& mfunc, CodeGenContext& ctx) {
                         isaReg = reg;
                     }
                 }
-                if (!isaReg) return;
-                phyMap.erase(isaReg);
+                if (!isaReg) return;  // 当前虚拟寄存器已经被spill到栈中, 无需进行spill操作
+                phy_map.erase(isaReg);
                 auto stack_storage = get_stack_storage(operand);
                 if (!already_in_stack) {  // spill to stack
                     auto inst = new MIRInst(InstStoreRegToStack);
@@ -143,21 +138,23 @@ static void fastAllocator(MIRFunction& mfunc, CodeGenContext& ctx) {
                 }
                 map = { stack_storage };
             };
+            /* ??? */
             const auto is_protected = [&](MIROperand* isaReg) {
                 assert(isOperandISAReg(isaReg));
-                return protect.count(isaReg) || protectedLockedISAReg.count(isaReg) || underRenamedISAReg.count(isaReg);
+                return protect.count(isaReg) || protected_lockedISAReg.count(isaReg) || underRenamed_ISAReg.count(isaReg);
             };
+            /* ??? */
             const auto get_free_reg = [&](MIROperand* op) -> MIROperand* {
                 auto reg_class = ctx.registerInfo->get_alloca_class(op->type());
-                auto& q = allocationQueue[reg_class];
+                auto& q = allocation_queue[reg_class];
                 MIROperand* isaReg;
 
                 const auto get_free_register = [&] {
                     std::vector<MIROperand*> tmp;
                     do {
                         auto reg = selector.getFreeRegister(op->type());
-                        if (reg->is_unused()) {  // in case of invalid register
-                            for (auto operand : tmp) {
+                        if (reg->is_unused()) {  // 寄存器数量不够
+                            for (auto operand : tmp) {  // 释放相关寄存器
                                 selector.markAsDiscarded(*operand);
                             }
                             return new MIROperand;
@@ -174,8 +171,8 @@ static void fastAllocator(MIRFunction& mfunc, CodeGenContext& ctx) {
                     } while (true);
                 };
             
-                if (auto hintIter = isaRegHint.find(op); 
-                    hintIter != isaRegHint.end() && selector.isFree(*(hintIter->second)) && !is_protected(hintIter->second)) {
+                if (auto hintIter = isaReg_hint.find(op); 
+                    hintIter != isaReg_hint.end() && selector.isFree(*(hintIter->second)) && !is_protected(hintIter->second)) {
                     isaReg = hintIter->second;
                 } else if (auto reg = get_free_register(); !reg->is_unused()) {
                     isaReg = reg;
@@ -190,21 +187,23 @@ static void fastAllocator(MIRFunction& mfunc, CodeGenContext& ctx) {
                     q.pop();
                     selector.markAsDiscarded(*isaReg);
                 }
-                if (auto it = phyMap.find(isaReg); it != phyMap.end()) evict_reg(it->second);
+                if (auto it = phy_map.find(isaReg); it != phy_map.end()) evict_reg(it->second);
                 assert(!is_protected(isaReg));
 
                 q.push(isaReg);
-                phyMap[isaReg] = op;
+                phy_map[isaReg] = op;
                 selector.markAsUsed(*isaReg);
                 return isaReg;
             };
-            const auto use = [&](MIROperand* op, MIRInst* instruction, int idx) {
-                if (!isOperandVReg(op)) {
+            const auto use = [&](MIROperand* op) {
+                if (!isOperandVReg(op)) {  // 栈 or 物理寄存器
                     if (isOperandISAReg(op) && !ctx.registerInfo->is_zero_reg(op->reg()) && is_allocatableType(op->type())) {
-                        underRenamedISAReg.erase(op);
+                        underRenamed_ISAReg.erase(op);
                     }
                     return;
                 }
+
+                // 虚拟寄存器
                 if (op->reg_flag() & RegisterFlagDead) release_vreg.insert(op);
 
                 auto& map = get_datamap(op);
@@ -212,10 +211,10 @@ static void fastAllocator(MIRFunction& mfunc, CodeGenContext& ctx) {
                 for (auto& reg : map) {
                     if (!isStackObject(reg->reg())) {
                         // loaded
-                        op = reg; instruction->set_operand(idx, reg);
-                        protect.insert(reg);
+                        *op = *reg; protect.insert(op);
                         return;
                     }
+                    stack_storage = reg;
                 }
 
                 // load from stack
@@ -224,39 +223,36 @@ static void fastAllocator(MIRFunction& mfunc, CodeGenContext& ctx) {
                 auto inst = new MIRInst(InstLoadRegFromStack);
                 inst->set_operand(1, stack_storage); inst->set_operand(0, reg);
                 instructions.insert(it, inst);
-                map.push_back(reg); op = reg;
-                protect.insert(reg);
-                instruction->set_operand(idx, reg);
+                *op = *reg; map.push_back(op);
+                protect.insert(op);
             };
-            const auto def = [&](MIROperand* op, MIRInst* instruction, int idx) {
+            const auto def = [&](MIROperand* op) {
                 if (!isOperandVReg(op)) {
                     if (isOperandISAReg(op) && !ctx.registerInfo->is_zero_reg(op->reg()) && is_allocatableType(op->type())) {
-                        protectedLockedISAReg.erase(op);
-                        if (auto it = phyMap.find(op); it != phyMap.end()) {
+                        protected_lockedISAReg.erase(op);
+                        if (auto it = phy_map.find(op); it != phy_map.end()) {
                             evict_reg(it->second);
                         }
                     }
                     return;
                 }
 
-                if (stackMap.count(op)) dirtyRegs.insert(op);
+                if (stack_map.count(op)) dirty_regs.insert(op);
 
                 auto& map = get_datamap(op);
                 MIROperand* stack_storage;
                 for (auto& reg : map) {
                     if (!isStackObject(reg->reg())) {
-                        instruction->set_operand(idx, reg);
-                        op = reg; map = { reg }; protect.insert(reg);
+                        *op = *reg; map = { op }; protect.insert(op);
                         return;
                     }
                     stack_storage = reg;
                 }
-                auto reg = get_free_reg(op);
-                map = { reg }; protect.insert(reg);
-                instruction->set_operand(idx, reg);
+                auto reg = get_free_reg(op); *op = *reg;
+                map = { op }; protect.insert(op);
             };
             const auto before_branch = [&]() {  // write back all out dirty vregs into stack slots before branch
-                for(auto dirty : dirtyRegs) {
+                for(auto dirty : dirty_regs) {
                     if(liveIntervalInfo.outs.count(dirty->reg())) evict_reg(dirty);
                 }
             };
@@ -276,15 +272,20 @@ static void fastAllocator(MIRFunction& mfunc, CodeGenContext& ctx) {
                 auto flag = instInfo.operand_flag(idx);
                 if (flag & OperandFlagUse) {
                     auto op = inst->operand(idx);
-                    use(op, inst, idx);
-
+                    use(op);
                 }
             }
             if (requireFlag(instInfo.inst_flag(), InstFlagCall)) {
                 std::vector<MIROperand*> saved_regs;  // 调用者保存寄存器
-                std::unordered_set<MIROperand*, MIROperandHasher>* callee_usage = nullptr;
-
-                // if (auto symbol = inst->operand(0))
+                for (auto [p, v] : phy_map) {
+                    if (ctx.frameInfo.is_caller_saved(*p)) {
+                        saved_regs.push_back(v);
+                    }
+                }
+                for (auto v : saved_regs) evict_reg(v);
+                protected_lockedISAReg.clear();
+                collect_underRenamedISARegs(next);
+            
             }
         
             protect.clear();
@@ -292,7 +293,7 @@ static void fastAllocator(MIRFunction& mfunc, CodeGenContext& ctx) {
                 auto& map = get_datamap(operand);
                 for (auto& reg : map) {
                     if (isISAReg(reg->reg())) {
-                        phyMap.erase(reg);
+                        phy_map.erase(reg);
                         selector.markAsDiscarded(*reg);
                     }
                 }
@@ -302,13 +303,15 @@ static void fastAllocator(MIRFunction& mfunc, CodeGenContext& ctx) {
             for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
                 if (instInfo.operand_flag(idx) & OperandFlagDef) {
                     auto op = inst->operand(idx);
-                    def(op, inst, idx);
+                    def(op);
                 }
             }
 
             if (requireFlag(instInfo.inst_flag(), InstFlagBranch)) {
                 before_branch();
             }
+
+            it = next;
         }
     }
 }

@@ -7,8 +7,7 @@
 
 /*
  * @brief: CFG Analysis
- * @note: 
- *      分析MIR控制流图
+ * @note: 分析MIR控制流图
  */
 namespace mir {
 struct MIRBlockEdge final {
@@ -22,13 +21,16 @@ struct MIRBlockCFGInfo final {
 };
 
 class CFGAnalysis final {
-    std::unordered_map<MIRBlock*, MIRBlockCFGInfo> _mInfo;
+    std::unordered_map<MIRBlock*, MIRBlockCFGInfo> _block2CFGInfo;
 
-    public:  // get function
-        std::unordered_map<MIRBlock*, MIRBlockCFGInfo>& mInfo() { return _mInfo; }
-
-        const std::vector<MIRBlockEdge>& predecessors(MIRBlock* block) const { return _mInfo.at(block).predecessors; }
-        const std::vector<MIRBlockEdge>& successors(MIRBlock* block) const { return _mInfo.at(block).successors; }
+public:  // get function
+    std::unordered_map<MIRBlock*, MIRBlockCFGInfo>& block2CFGInfo() { return _block2CFGInfo; }
+    const std::vector<MIRBlockEdge>& predecessors(MIRBlock* block) const {
+        return _block2CFGInfo.at(block).predecessors;
+    }
+    const std::vector<MIRBlockEdge>& successors(MIRBlock* block) const {
+        return _block2CFGInfo.at(block).successors;
+    }
 };
 
 CFGAnalysis calcCFG(MIRFunction& mfunc, CodeGenContext& ctx);

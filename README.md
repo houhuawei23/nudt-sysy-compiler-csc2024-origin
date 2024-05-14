@@ -139,7 +139,12 @@ python ./src/target/gen.py ./src/target/riscv.yml ./include/target
 cd build
 make format_check # check format
 make format       # format all src and include files
+
+# backend
+sudo apt install binutils-riscv64-linux-gnu
+sudo apt install gcc-riscv64-linux-gnu
 ```
+
 ## code到AST的分析
 
 antlr4是一个编译器前端生成工具，可以生成多种目标语言的前端。本项目生成的目标语言是C++。

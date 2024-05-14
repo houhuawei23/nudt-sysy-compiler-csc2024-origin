@@ -52,8 +52,6 @@ void MultiClassRegisterSelector::markAsUsed(MIROperand reg) {
     assert(isISAReg(reg.reg()));
     auto classId = _mRegisterInfo.get_alloca_class(reg.type());
     auto& selector = *_mSelectors[classId];
-    std::cerr << "Marking register " << reg.reg() << " as used in class "
-              << classId << std::endl;
     selector.markAsUsed(reg.reg());
 }
 
