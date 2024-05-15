@@ -51,6 +51,7 @@ exampe `launch.json` file:
 - Install `Native Debug` extension in VSCode.
 - Add example configuration to `launch.json` file.
 - Debug your assembly code using GDB with VSCode.
+- [`Native Debug`](https://github.com/WebFreak001/code-debug?tab=readme-ov-file)
 
 
 example `launch.json` file:

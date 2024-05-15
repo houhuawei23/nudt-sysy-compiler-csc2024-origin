@@ -56,6 +56,29 @@ sudo cp ./antlr/antlr-4.12.0-complete.jar /usr/local/lib/
 export CLASSPATH=".:/usr/local/lib/antlr-4.12.0-complete.jar"
 alias antlr4="java -jar /usr/local/lib/antlr-4.12.0-complete.jar"
 alias grun="java org.antlr.v4.gui.TestRig"
+
+# LLVM
+llvm-15-dev
+
+# ninja
+ninja-build
+
+# google test
+libgtest-dev
+
+## BackEnd
+# qemu
+sudo apt install qemu-system-riscv64
+sudo apt install qemu-system-arm
+
+# cross-compiler
+sudo apt install gcc-riscv64-linux-gnu
+# or gcc-riscv64-unknown-elf, or gcc-11-riscv64-linux-gnu
+gcc-arm-linux-gnueabihf
+# c++
+g++-12-riscv64-linux-gnu 
+g++-12-arm-linux-gnueabihf 
+
 ```
 
 ## cmake

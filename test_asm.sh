@@ -63,7 +63,7 @@ result_file="test/.out/result.txt"
 error_code=0 # 0 for exe success
 
 EC_MAIN=1
-EC_LLVMLINK=2
+EC_RISCV_GCC=2
 EC_LLI=3
 EC_TIMEOUT=124
 
@@ -208,6 +208,10 @@ function run_compiler_test() {
     cat "${single_file}" >"${gen_c}"
 
     ./main -f "${single_file}" -i -t ${PASSES_STR} -o "${gen_ll}" "${OPT_LEVEL}" "${LOG_LEVEL}"
+    if [ $? != 0 ]; then
+        return $EC_MAIN
+    fi
+    
     timeout $TIMEOUT ./main -f "${single_file}" -S -t ${PASSES_STR} -o "${gen_s}" "${OPT_LEVEL}" "${LOG_LEVEL}"
     mainres=$?
     if [ $mainres == $EC_TIMEOUT ]; then # time out
@@ -219,16 +223,18 @@ function run_compiler_test() {
     local gen_elf="${output_dir}/gen.elf"
     # for test
     riscv64-linux-gnu-gcc -O0 -march=rv64gc -mabi=lp64d -mcmodel=medlow "${gen_s}" -o "${gen_o}"
-
+    if [ $? != 0 ]; then
+        return $EC_RISCV_GCC
+    fi
     # -c -nostdlib -nostdinc -static
     timeout $TIMEOUT qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gen_o}" >"${gen_out}"
     if [ $? == $EC_TIMEOUT ]; then # time out
         return $EC_TIMEOUT
     fi
     qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gen_o}" >"${gen_out}"
-    local qemu_res=$?
+    local compiler_res=$?
 
-    return $qemu_res
+    return $compiler_res
 
 }
 
@@ -263,8 +269,8 @@ function run_test_asm() {
 
             if [ ${res} == ${EC_MAIN} ]; then
                 echo "${RED}[MAIN ERROR]${RESET} ${single_file}"
-            elif [ ${res} == ${EC_LLVMLINK} ]; then
-                echo "${RED}[LINK ERROR]${RESET} ${single_file}"
+            elif [ ${res} == ${EC_RISCV_GCC} ]; then
+                echo "${RED}[RISCV-GCC ERROR]${RESET} ${single_file}"
             elif [ ${res} == ${EC_LLI} ]; then
                 echo "${RED}[LLI ERROR]${RESET} ${single_file}"
             elif [ ${res} == ${EC_TIMEOUT} ]; then
