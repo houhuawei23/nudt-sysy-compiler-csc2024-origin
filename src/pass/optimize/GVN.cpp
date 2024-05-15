@@ -12,6 +12,7 @@ namespace pass
 {
     void GVN::dfs(ir::BasicBlock *bb)
     {
+        assert(bb != nullptr && "nullptr in GVN");
         visited.insert(bb);
         for (ir::BasicBlock *succ : bb->next_blocks())
         {
@@ -28,6 +29,7 @@ namespace pass
         RPOblocks.clear();
         visited.clear();
         ir::BasicBlock *root = F->entry();
+        // assert(root != nullptr && "Function without entry block");
         dfs(root);
         reverse(RPOblocks.begin(), RPOblocks.end());
     }
@@ -68,7 +70,7 @@ namespace pass
                 }
             }
         }
-        return inst;
+        return static_cast<ir::Value*>(inst);
     }
 
     ir::Value *GVN::getValueNumber(ir::UnaryInst *inst)
@@ -86,7 +88,7 @@ namespace pass
                 }
             }
         }
-        return inst;
+        return static_cast<ir::Value*>(inst);
     }
 
     ir::Value *GVN::getValueNumber(ir::PhiInst *inst)
@@ -115,17 +117,17 @@ namespace pass
                 }
             }
         }
-        return inst;
+        return static_cast<ir::Value*>(inst);
     }
 
     ir::Value *GVN::getValueNumber(ir::CallInst *inst)
     {
-        return inst;
+        return static_cast<ir::Value*>(inst);
     }
 
     ir::Value *GVN::getValueNumber(ir::AllocaInst *inst)
     {
-        return inst;
+        return static_cast<ir::Value*>(inst);
     }
 
     ir::Value *GVN::getValueNumber(ir::ICmpInst *inst)
@@ -144,7 +146,7 @@ namespace pass
                 }
             }
         }
-        return inst;
+        return static_cast<ir::Value*>(inst);
     }
 
     ir::Value *GVN::getValueNumber(ir::FCmpInst *inst)
@@ -163,7 +165,7 @@ namespace pass
                 }
             }
         }
-        return inst;
+        return static_cast<ir::Value*>(inst);
     }
 
     ir::Value *GVN::checkHashtable(ir::Value *v)
@@ -241,21 +243,36 @@ namespace pass
         {
             if (auto br = dyn_cast<ir::BranchInst>(use->user()))
             {
-                break;
+                return ;
             }
         }
 
         auto value = checkHashtable(inst);
         if (inst != value)
         {
-            inst->replace_all_use_with(value);
-            NeedRemove.insert(inst);
+            if (auto constvalue = dyn_cast<ir::Constant>(value))
+            {    
+                inst->replace_all_use_with(value);
+                NeedRemove.insert(inst);
+            }
+            else if (auto instvalue = dyn_cast<ir::Instruction>(value))
+            {
+                ir::BasicBlock * vbb = instvalue->parent();
+                if (vbb->dominate(bb))
+                {
+                    inst->replace_all_use_with(instvalue);
+                    NeedRemove.insert(inst);
+                }
+            }
+            
         }
         return;
     }
 
     void GVN::run(ir::Function *F)
     {
+        if (F->blocks().empty())
+            return;
         RPO(F);
         visited.clear();
         for (auto bb : RPOblocks)

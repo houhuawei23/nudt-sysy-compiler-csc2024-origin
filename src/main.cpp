@@ -87,18 +87,19 @@ int main(int argc, char* argv[]) {
                 // fpm.add_pass(new pass::loopInfoCheck());
             } else if (pass_name.compare("gcm") == 0) {
                 fpm.add_pass(new pass::GCM());
-            } else {
+            } else if (pass_name.compare("gvn") == 0) {
+                fpm.add_pass(new pass::GVN());
+            }
+            else {
                 assert(false && "Invalid pass name");
             }
-            // if (pass_name.compare("gvn")==0){
-            //     fpm.add_pass(new pass::GVN());
-            // }
-            if (pass_name.compare("gcm")==0){
-                fpm.add_pass(new pass::GCM());
-            }
+
             
         }
         for (auto f : module_ir->funcs()) {
+            if (f->blocks().empty()) {
+                continue;
+            }
             fpm.run(f);
         }
     }

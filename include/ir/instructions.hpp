@@ -602,10 +602,17 @@ namespace ir
             : Instruction(vPHI, type, bb), size(vals.size())
         {
             assert(vals.size() == bbs.size() and "number of vals and bbs in phi must be equal!");
+
+            int a = 5;
+            int c = 10;
+            std::cout << "a: " << a << " c: " << c << std::endl;
             for (int i = 0; i < size; i++)
             {
+                // std::cout << "phi: " <<
                 add_operand(vals[i]);
+                // assert()
                 add_operand(bbs[i]);
+                std::cout << vals[i]->name() << " " << bbs[i]->name() << std::endl;
             }
         }
         Value *getval(size_t k) { return operand(2 * k); }
