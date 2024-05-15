@@ -85,16 +85,11 @@ int main(int argc, char* argv[]) {
                 // fpm.add_pass(new pass::domInfoCheck());
                 fpm.add_pass(new pass::loopAnalysis());
                 // fpm.add_pass(new pass::loopInfoCheck());
-<<<<<<< HEAD
-            }
-
-=======
             } else if (pass_name.compare("gcm") == 0) {
                 fpm.add_pass(new pass::GCM());
             } else {
                 assert(false && "Invalid pass name");
             }
->>>>>>> 5d45e3112b7aa2c1cffbb5eb2fa159c4002cae00
             // if (pass_name.compare("gvn")==0){
             //     fpm.add_pass(new pass::GVN());
             // }
