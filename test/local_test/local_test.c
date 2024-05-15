@@ -1,3 +1,13 @@
+<<<<<<< HEAD
+<<<<<<< HEAD
+int g = 2;
+
+int main() {
+    int a = 2;
+    return g;
+=======
+=======
+>>>>>>> mid_end
 int fib(int n)
 {
     if (n <= 2)
@@ -11734,4 +11744,8 @@ int main()
         i = i + 1;
     }
     return 0;
+<<<<<<< HEAD
+>>>>>>> mid_end
+=======
+>>>>>>> mid_end
 }

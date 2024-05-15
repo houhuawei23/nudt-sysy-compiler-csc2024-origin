@@ -300,6 +300,7 @@ std::any SysYIRGenerator::visitContinueStmt(
  *      lValue: ID (LBRACKET exp RBRACKET)*
  */
 std::any SysYIRGenerator::visitLValue(SysYParser::LValueContext* ctx) {
+    //! lvalue must be a pointer
     std::string name = ctx->ID()->getText();
     ir::Value* ptr = _tables.lookup(name);
     assert(ptr && "use undefined variable");

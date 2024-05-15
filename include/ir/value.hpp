@@ -145,8 +145,8 @@ class Value {
         // vTERMINATOR_BEGIN
         vRETURN,
         vBR,
-        // vTERMINATOR_END
         vCALL,
+        // vTERMINATOR_END
 
         // icmp
         vICMP_BEGIN,
@@ -169,7 +169,6 @@ class Value {
         // Unary Instruction
         vUNARY_BEGIN,
         vFNEG,
-
         // Conversion Insts
         vTRUNC,
         vZEXT,

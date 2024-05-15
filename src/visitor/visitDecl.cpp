@@ -122,7 +122,7 @@ ir::Value* SysYIRGenerator::visitArray_global(SysYParser::VarDefContext* ctx,
     }
 
     //! generate global variable and assign
-    auto global_var = ir::GlobalVariable::gen(btype, Arrayinit, _module, "@" + name, is_const, dims);
+    auto global_var = ir::GlobalVariable::gen(btype, Arrayinit, _module, name, is_const, dims);
     _tables.insert(name, global_var);
     module()->add_gvar(name, global_var);
 
@@ -159,7 +159,7 @@ ir::Value* SysYIRGenerator::visitScalar_global(SysYParser::VarDefContext* ctx, i
     }
 
     //! generate global variable and assign
-    auto global_var = ir::GlobalVariable::gen(btype, {init}, _module, "@" + name, is_const);
+    auto global_var = ir::GlobalVariable::gen(btype, {init}, _module, name, is_const);
     _tables.insert(name, global_var);
     module()->add_gvar(name, global_var);
 

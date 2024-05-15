@@ -151,8 +151,8 @@ class Constant : public User {
         return c;
     }
 
-    static Constant* gen_undefine(){
-        std::string name="UNDEFINE";
+    static Constant* gen_undefine() {
+        std::string name = "UNDEFINE";
         auto iter = cache.find(name);
         if (iter != cache.end()) {
             return iter->second;

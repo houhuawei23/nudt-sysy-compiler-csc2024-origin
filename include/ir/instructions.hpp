@@ -267,13 +267,14 @@ namespace ir
             add_operands(rargs);
         }
 
-    public:
-        Function *callee() const { return _callee; }
-
-        static bool classof(const Value *v) { return v->scid() == vCALL; }
-        void print(std::ostream &os) override;
-        Value *getConstantRepl() { return nullptr; }
-    };
+   public:
+    Function* callee() const { return _callee; }
+    /* real arguments */
+    auto& rargs() const { return _operands; }
+    static bool classof(const Value* v) { return v->scid() == vCALL; }
+    void print(std::ostream& os) override;
+    Value* getConstantRepl(){return nullptr;}
+};
 
     //! Conditional or Unconditional Branch instruction.
     class BranchInst : public Instruction
