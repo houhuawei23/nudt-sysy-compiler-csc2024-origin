@@ -17,7 +17,7 @@ bool TargetInstInfo::matchBranch(MIRInst* inst,
     inst->set_opcode(oldOpcode + offset);
     bool res = GENERIC::getGENERICInstInfo().matchBranch(inst, target, prob);
     inst->set_opcode(oldOpcode);
-    return false;
+    return res;
 }
 
 static std::string_view getType(OperandType type) {

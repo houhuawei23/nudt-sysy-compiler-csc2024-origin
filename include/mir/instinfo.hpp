@@ -31,11 +31,11 @@ enum InstFlag : uint32_t {
 
     InstFlagBranch = 1 << 3,
     InstFlagCall = 1 << 4,
-    InstFlagNoFallThrough = 1 << 5,
+    InstFlagNoFallThrough = 1 << 5,  // unconditional jump - j/jr/return
     InstFlagPush = 1 << 6,
     InstFlagLoadConstant = 1 << 7,
     InstFlagRegDef = 1 << 8,  // def ISA register
-    InstFlagCommutative = 1 << 9,
+    InstFlagCommutative = 1 << 9,   // exchangable - add/sub/...
     InstFlagReturn = 1 << 10,
     InstFlagLegalizePreRA = 1 << 11,
     InstFlagWithDelaySlot = 1 << 12,
@@ -45,7 +45,7 @@ enum InstFlag : uint32_t {
     InstFlagMultiDef = 1 << 16,
     InstFlagInOrder = 1 << 17,
     InstFlagPadding = 1 << 18,
-    InstFlagIndirectJump = 1 << 19,
+    InstFlagIndirectJump = 1 << 19,  // jump register - jr
     InstFlagSideEffect =
         InstFlagLoad | InstFlagStore | InstFlagTerminator | InstFlagBranch |
         InstFlagCall | InstFlagPush | InstFlagRegDef | InstFlagReturn |

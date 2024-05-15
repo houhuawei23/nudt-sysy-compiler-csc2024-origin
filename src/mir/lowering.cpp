@@ -163,8 +163,8 @@ void create_mir_module(ir::Module& ir_module,
         /* 4.7 register allocation */
         codegen_ctx.registerInfo = new RISCVRegisterInfo();
         if (codegen_ctx.registerInfo) {
-            linearAllocator(*mir_func, codegen_ctx);
-            // fastAllocator(*mir_func, codegen_ctx);
+            // linearAllocator(*mir_func, codegen_ctx);
+            fastAllocator(*mir_func, codegen_ctx);
             if (debugLowering) {
                 dumpStageWithMsg(std::cerr, "After RA", mir_func->name());
                 mir_func->print(std::cerr, codegen_ctx);
