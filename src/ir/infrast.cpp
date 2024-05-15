@@ -118,4 +118,22 @@ void BasicBlock::emplace_first_inst(Instruction* inst) {
         _phi_insts.emplace_front(phiInst);
 }
 
+void BasicBlock::replaceinst(Instruction* old_inst, Value* new_){
+    inst_iterator pos = find(_insts.begin(),_insts.end(),old_inst);
+    if ( pos != _insts.end())
+    {
+        if (auto inst = dyn_cast<Instruction>(new_))
+        {
+            emplace_inst(pos,inst);
+            old_inst->replace_all_use_with(inst);
+            delete_inst(old_inst);
+        }
+        else if (auto constant = dyn_cast<Constant>(new_))
+        {
+            old_inst->replace_all_use_with(constant);
+            delete_inst(old_inst);
+        }
+
+    }
+}
 }  // namespace ir

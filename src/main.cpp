@@ -83,12 +83,14 @@ int main(int argc, char* argv[]) {
                 fpm.add_pass(new pass::loopAnalysis());
                 // fpm.add_pass(new pass::loopInfoCheck());
             }
-            if (pass_name.compare("gcm")==0){
-                fpm.add_pass(new pass::GCM());
-            }
+
             // if (pass_name.compare("gvn")==0){
             //     fpm.add_pass(new pass::GVN());
             // }
+            if (pass_name.compare("gcm")==0){
+                fpm.add_pass(new pass::GCM());
+            }
+            
         }
         for (auto f : module_ir->funcs()) {
             fpm.run(f);

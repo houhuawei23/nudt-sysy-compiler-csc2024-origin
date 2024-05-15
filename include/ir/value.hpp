@@ -196,7 +196,10 @@ class Value {
         vSREM,
         vFREM,
         vBINARY_END,
-        vPHI
+        // Phi Instruction
+        vPHI_BEGIN,
+        vPHI,
+        VPHI_END
     };
 
    protected:

@@ -3,7 +3,7 @@
 #include "ir/type.hpp"
 #include "ir/utils_ir.hpp"
 #include "ir/value.hpp"
-
+#include <algorithm>
 namespace ir {
 /**
  * @brief Argument represents an incoming formal argument to a Function.
@@ -110,6 +110,8 @@ class BasicBlock : public Value {
     void delete_inst(Instruction* inst);
 
     void force_delete_inst(Instruction* inst);
+
+    void replaceinst(Instruction* old, Value* new_);
 
     // for CFG
     static void block_link(ir::BasicBlock* pre, ir::BasicBlock* next) {
