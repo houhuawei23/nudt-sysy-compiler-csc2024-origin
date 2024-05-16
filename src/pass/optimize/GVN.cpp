@@ -40,16 +40,16 @@ namespace pass
             return getValueNumber(binary);
         else if (auto unary = dynamic_cast<ir::UnaryInst *>(inst))
             return getValueNumber(unary);
-        else if (auto phi = dynamic_cast<ir::PhiInst *>(inst))
-            return getValueNumber(phi);
-        else if (auto call = dynamic_cast<ir::CallInst *>(inst))
-            return getValueNumber(call);
-        else if (auto alloca = dynamic_cast<ir::AllocaInst *>(inst))
-            return getValueNumber(alloca);
-        else if (auto icmp = dynamic_cast<ir::ICmpInst *>(inst))
-            return getValueNumber(icmp);
-        else if (auto fcmp = dynamic_cast<ir::FCmpInst *>(inst))
-            return getValueNumber(fcmp);
+        // else if (auto phi = dynamic_cast<ir::PhiInst *>(inst))
+        //     return getValueNumber(phi);
+        // else if (auto call = dynamic_cast<ir::CallInst *>(inst))
+        //     return getValueNumber(call);
+        // else if (auto alloca = dynamic_cast<ir::AllocaInst *>(inst))
+        //     return getValueNumber(alloca);
+        // else if (auto icmp = dynamic_cast<ir::ICmpInst *>(inst))
+        //     return getValueNumber(icmp);
+        // else if (auto fcmp = dynamic_cast<ir::FCmpInst *>(inst))
+        //     return getValueNumber(fcmp);
         else
             return nullptr;
     }
@@ -64,7 +64,7 @@ namespace pass
             {
                 auto binlhs = checkHashtable(binary->get_lvalue());
                 auto binrhs = checkHashtable(binary->get_rvalue());
-                if (binary->scid() == inst->scid() && (lhs == binlhs && rhs == binrhs) || (binary->iscommutative() && lhs == binrhs && rhs == binlhs))
+                if (binary->scid() == inst->scid() && ((lhs == binlhs && rhs == binrhs) || (binary->iscommutative() && lhs == binrhs && rhs == binlhs)))
                 {
                     return Value;
                 }
@@ -91,82 +91,82 @@ namespace pass
         return static_cast<ir::Value*>(inst);
     }
 
-    ir::Value *GVN::getValueNumber(ir::PhiInst *inst)
-    {
-        for (auto [Key, Value] : _Hashtable)
-        {
-            if (auto phi = dynamic_cast<ir::PhiInst *>(Key))
-            {
-                if (phi->parent() == inst->parent())
-                {
-                    bool same = (phi->getsize() == inst->getsize());
-                    for (size_t i = 0; i < phi->getsize(); i++)
-                    {
-                        auto v1 = phi->getval(i);
-                        auto v2 = inst->getval(i);
-                        if (v1 != v2)
-                        {
-                            same = false;
-                            break;
-                        }
-                    }
-                    if (same)
-                    {
-                        return Value;
-                    }
-                }
-            }
-        }
-        return static_cast<ir::Value*>(inst);
-    }
+    // ir::Value *GVN::getValueNumber(ir::PhiInst *inst)
+    // {
+    //     for (auto [Key, Value] : _Hashtable)
+    //     {
+    //         if (auto phi = dynamic_cast<ir::PhiInst *>(Key))
+    //         {
+    //             if (phi->parent() == inst->parent())
+    //             {
+    //                 bool same = (phi->getsize() == inst->getsize());
+    //                 for (size_t i = 0; i < phi->getsize(); i++)
+    //                 {
+    //                     auto v1 = phi->getval(i);
+    //                     auto v2 = inst->getval(i);
+    //                     if (v1 != v2)
+    //                     {
+    //                         same = false;
+    //                         break;
+    //                     }
+    //                 }
+    //                 if (same)
+    //                 {
+    //                     return Value;
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     return static_cast<ir::Value*>(inst);
+    // }
 
-    ir::Value *GVN::getValueNumber(ir::CallInst *inst)
-    {
-        return static_cast<ir::Value*>(inst);
-    }
+    // ir::Value *GVN::getValueNumber(ir::CallInst *inst)
+    // {
+    //     return static_cast<ir::Value*>(inst);
+    // }
 
-    ir::Value *GVN::getValueNumber(ir::AllocaInst *inst)
-    {
-        return static_cast<ir::Value*>(inst);
-    }
+    // ir::Value *GVN::getValueNumber(ir::AllocaInst *inst)
+    // {
+    //     return static_cast<ir::Value*>(inst);
+    // }
 
-    ir::Value *GVN::getValueNumber(ir::ICmpInst *inst)
-    {
-        auto lhs = checkHashtable(inst->lhs());
-        auto rhs = checkHashtable(inst->rhs());
-        for (auto [Key, Value] : _Hashtable)
-        {
-            if (auto icmp = dynamic_cast<ir::ICmpInst *>(Key))
-            {
-                auto icmplhs = checkHashtable(icmp->lhs());
-                auto icmprhs = checkHashtable(icmp->rhs());
-                if (icmp->type() == inst->type() && (lhs == icmplhs && rhs == icmprhs) || (icmp->isReverse(inst) && lhs == icmprhs && rhs == icmplhs))
-                {
-                    return Value;
-                }
-            }
-        }
-        return static_cast<ir::Value*>(inst);
-    }
+    // ir::Value *GVN::getValueNumber(ir::ICmpInst *inst)
+    // {
+    //     auto lhs = checkHashtable(inst->lhs());
+    //     auto rhs = checkHashtable(inst->rhs());
+    //     for (auto [Key, Value] : _Hashtable)
+    //     {
+    //         if (auto icmp = dynamic_cast<ir::ICmpInst *>(Key))
+    //         {
+    //             auto icmplhs = checkHashtable(icmp->lhs());
+    //             auto icmprhs = checkHashtable(icmp->rhs());
+    //             if (icmp->type() == inst->type() && (lhs == icmplhs && rhs == icmprhs) || (icmp->isReverse(inst) && lhs == icmprhs && rhs == icmplhs))
+    //             {
+    //                 return Value;
+    //             }
+    //         }
+    //     }
+    //     return static_cast<ir::Value*>(inst);
+    // }
 
-    ir::Value *GVN::getValueNumber(ir::FCmpInst *inst)
-    {
-        auto lhs = checkHashtable(inst->lhs());
-        auto rhs = checkHashtable(inst->rhs());
-        for (auto [Key, Value] : _Hashtable)
-        {
-            if (auto fcmp = dynamic_cast<ir::FCmpInst *>(Key))
-            {
-                auto fcmplhs = checkHashtable(fcmp->lhs());
-                auto fcmprhs = checkHashtable(fcmp->rhs());
-                if (fcmp->type() == inst->type() && (lhs == fcmplhs && rhs == fcmprhs) || (fcmp->isReverse(inst) && lhs == fcmprhs && rhs == fcmplhs))
-                {
-                    return Value;
-                }
-            }
-        }
-        return static_cast<ir::Value*>(inst);
-    }
+    // ir::Value *GVN::getValueNumber(ir::FCmpInst *inst)
+    // {
+    //     auto lhs = checkHashtable(inst->lhs());
+    //     auto rhs = checkHashtable(inst->rhs());
+    //     for (auto [Key, Value] : _Hashtable)
+    //     {
+    //         if (auto fcmp = dynamic_cast<ir::FCmpInst *>(Key))
+    //         {
+    //             auto fcmplhs = checkHashtable(fcmp->lhs());
+    //             auto fcmprhs = checkHashtable(fcmp->rhs());
+    //             if (fcmp->type() == inst->type() && (lhs == fcmplhs && rhs == fcmprhs) || (fcmp->isReverse(inst) && lhs == fcmprhs && rhs == fcmplhs))
+    //             {
+    //                 return Value;
+    //             }
+    //         }
+    //     }
+    //     return static_cast<ir::Value*>(inst);
+    // }
 
     ir::Value *GVN::checkHashtable(ir::Value *v)
     {
@@ -176,27 +176,27 @@ namespace pass
             return vnum->second;
         }
 
-        if (auto constant = dynamic_cast<ir::Constant *>(v))
-        {
-            for (auto [Key, Value] : _Hashtable)
-            {
-                if (auto constkey = dynamic_cast<ir::Constant *>(Key))
-                {
-                    if (constkey->is_i32() && (constkey->i32() == constant->i32()))
-                    {
-                        return Value;
-                    }
-                    else if (constkey->is_float() && (constkey->f32() == constant->f32()))
-                    {
-                        return Value;
-                    }
-                    else if (constkey->is_i1() && (constkey->i1() == constant->i1()))
-                    {
-                        return Value;
-                    }
-                }
-            }
-        }
+        // if (auto constant = dynamic_cast<ir::Constant *>(v))
+        // {
+        //     for (auto [Key, Value] : _Hashtable)
+        //     {
+        //         if (auto constkey = dynamic_cast<ir::Constant *>(Key))
+        //         {
+        //             if (constkey->is_i32() && (constkey->i32() == constant->i32()))
+        //             {
+        //                 return Value;
+        //             }
+        //             else if (constkey->is_float() && (constkey->f32() == constant->f32()))
+        //             {
+        //                 return Value;
+        //             }
+        //             else if (constkey->is_i1() && (constkey->i1() == constant->i1()))
+        //             {
+        //                 return Value;
+        //             }
+        //         }
+        //     }
+        // }
 
         if (auto inst = dynamic_cast<ir::Instruction *>(v))
         {
@@ -213,32 +213,32 @@ namespace pass
     void GVN::visitinst(ir::Instruction *inst)
     {
         ir::BasicBlock *bb = inst->parent();
-        if (auto store = dyn_cast<ir::StoreInst>(inst))
-        {
-            if (!store->value()->type()->is_pointer())
-                _Hashtable[store] = store;
-            return;
-        }
-        else if (auto phi = dyn_cast<ir::PhiInst>((inst)))
-        {
-            bool same = true;
-            auto first = checkHashtable(phi->getval(0));
-            for (size_t i = 0; i < phi->getsize(); i++)
-            {
-                if (checkHashtable(phi->getval(i)) != first)
-                {
-                    same = false;
-                    break;
-                }
-            }
-            if (same)
-            {
-                inst->replace_all_use_with(first);
-                NeedRemove.insert(inst);
-            }
+        // if (auto store = dyn_cast<ir::StoreInst>(inst))
+        // {
+        //     if (!store->value()->type()->is_pointer())
+        //         _Hashtable[store] = store;
+        //     return;
+        // }
+        // else if (auto phi = dyn_cast<ir::PhiInst>((inst)))
+        // {
+        //     bool same = true;
+        //     auto first = checkHashtable(phi->getval(0));
+        //     for (size_t i = 0; i < phi->getsize(); i++)
+        //     {
+        //         if (checkHashtable(phi->getval(i)) != first)
+        //         {
+        //             same = false;
+        //             break;
+        //         }
+        //     }
+        //     if (same)
+        //     {
+        //         inst->replace_all_use_with(first);
+        //         NeedRemove.insert(inst);
+        //     }
                 
-            return;
-        }
+        //     return;
+        // }
         for (auto use : inst->uses())
         {
             if (auto br = dyn_cast<ir::BranchInst>(use->user()))
@@ -250,12 +250,13 @@ namespace pass
         auto value = checkHashtable(inst);
         if (inst != value)
         {
-            if (auto constvalue = dyn_cast<ir::Constant>(value))
-            {    
-                inst->replace_all_use_with(value);
-                NeedRemove.insert(inst);
-            }
-            else if (auto instvalue = dyn_cast<ir::Instruction>(value))
+            // if (auto constvalue = dyn_cast<ir::Constant>(value))
+            // {    
+            //     inst->replace_all_use_with(value);
+            //     NeedRemove.insert(inst);
+            // }
+            // else 
+            if (auto instvalue = dyn_cast<ir::Instruction>(value))
             {
                 ir::BasicBlock * vbb = instvalue->parent();
                 if (vbb->dominate(bb))
@@ -271,10 +272,12 @@ namespace pass
 
     void GVN::run(ir::Function *F)
     {
+       
         if (F->blocks().empty())
             return;
         RPO(F);
         visited.clear();
+        // F->print(std::cout);
         for (auto bb : RPOblocks)
         {
             for (auto inst : bb->insts())
@@ -282,7 +285,7 @@ namespace pass
                 visitinst(inst);
             }
         }
-
+        
         for (auto inst : NeedRemove)
         {
             ir::BasicBlock *BB = inst->parent();

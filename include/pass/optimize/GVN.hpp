@@ -28,11 +28,11 @@ namespace pass
         ir::Value *getValueNumber(ir::Instruction *inst);
         ir::Value *getValueNumber(ir::BinaryInst *binary);
         ir::Value *getValueNumber(ir::UnaryInst *unary);
-        ir::Value *getValueNumber(ir::PhiInst *phi);
-        ir::Value *getValueNumber(ir::CallInst *cal);
-        ir::Value *getValueNumber(ir::AllocaInst *alloca);
-        ir::Value *getValueNumber(ir::ICmpInst *icmp);
-        ir::Value *getValueNumber(ir::FCmpInst *fcmp);
+        // ir::Value *getValueNumber(ir::PhiInst *phi);
+        // ir::Value *getValueNumber(ir::CallInst *cal);
+        // ir::Value *getValueNumber(ir::AllocaInst *alloca);
+        // ir::Value *getValueNumber(ir::ICmpInst *icmp);
+        // ir::Value *getValueNumber(ir::FCmpInst *fcmp);
         void visitinst(ir::Instruction *inst);
     };
 }
