@@ -10,15 +10,15 @@ namespace pass
     class Mem2Reg : public FunctionPass
     {
     private:
-        unsigned int SinglestoreNum = 0;
-        ir::StoreInst *OnlyStore;
-        ir::BasicBlock *OnlyBlock;
-        bool OnlyUsedInOneBlock;
+        // unsigned int SinglestoreNum = 0;
+        // ir::StoreInst *OnlyStore;
+        // ir::BasicBlock *OnlyBlock;
+        // bool OnlyUsedInOneBlock;
         std::vector<ir::AllocaInst *> Allocas;
         std::map<ir::AllocaInst *, std::set<ir::BasicBlock *>> DefsBlock;
         std::map<ir::AllocaInst *, std::set<ir::BasicBlock *>> UsesBlock;
-        std::map<ir::AllocaInst *, std::vector<ir::BasicBlock *>> DefsBlockvector;
-        std::map<ir::AllocaInst *, std::vector<ir::BasicBlock *>> UsesBlockvector;
+        // std::map<ir::AllocaInst *, std::vector<ir::BasicBlock *>> DefsBlockvector;
+        // std::map<ir::AllocaInst *, std::vector<ir::BasicBlock *>> UsesBlockvector;
 
         std::map<ir::BasicBlock *, std::map<ir::PhiInst *, ir::AllocaInst *>> PhiMap;
         std::map<ir::AllocaInst *, ir::Argument *> ValueMap;

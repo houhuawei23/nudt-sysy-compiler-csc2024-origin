@@ -20,9 +20,9 @@ namespace pass
     void Mem2Reg::allocaAnalysis(ir::AllocaInst *alloca)
     {
         // clear
-        OnlyStore = nullptr;
-        OnlyUsedInOneBlock = true;
-        OnlyBlock = nullptr;
+        // OnlyStore = nullptr;
+        // OnlyUsedInOneBlock = true;
+        // OnlyBlock = nullptr;
 
         for (auto use : alloca->uses())
         {
@@ -30,23 +30,23 @@ namespace pass
             if (auto store = dynamic_cast<ir::StoreInst *>(User))
             {
                 DefsBlock[alloca].insert(store->parent());
-                DefsBlockvector[alloca].push_back(store->parent());
-                OnlyStore = store;
+                // DefsBlockvector[alloca].push_back(store->parent());
+                // OnlyStore = store;
             }
 
             else if (auto load = dynamic_cast<ir::StoreInst *>(User))
             {
                 UsesBlock[alloca].insert(load->parent());
-                UsesBlockvector[alloca].push_back(load->parent());
+                // UsesBlockvector[alloca].push_back(load->parent());
             }
 
-            if (OnlyUsedInOneBlock)
-            {
-                if (!OnlyBlock)
-                    OnlyBlock = User->parent();
-                else if (OnlyBlock != User->parent())
-                    OnlyUsedInOneBlock = false;
-            }
+            // if (OnlyUsedInOneBlock)
+            // {
+            //     if (!OnlyBlock)
+            //         OnlyBlock = User->parent();
+            //     else if (OnlyBlock != User->parent())
+            //         OnlyUsedInOneBlock = false;
+            // }
         }
     }
     // 判断变量能否被mem2reg，主要是判断类型是否符合
@@ -77,129 +77,129 @@ namespace pass
         }
         return true;
     }
-    // 计算BB中的一条store指令是第几条指令(序号从0开始)
-    int Mem2Reg::getStoreinstindexinBB(ir::BasicBlock *BB, ir::StoreInst *I)
-    {
-        int index = 0;
-        for (auto &inst : BB->insts())
-        {
-            if (dyn_cast<ir::StoreInst>(inst) == I)
-                return index;
-            index++;
-        }
-        return -1;
-    }
-    // 计算BB中的一条load指令是第几条指令(序号从0开始)
-    int Mem2Reg::getLoadeinstindexinBB(ir::BasicBlock *BB, ir::LoadInst *I)
-    {
-        int index = 0;
-        for (auto &inst : BB->insts())
-        {
-            if (dyn_cast<ir::LoadInst>(inst) == I)
-                return index;
-            index++;
-        }
-        return -1;
-    }
-    // 计算一个BB中变量AI有多少个store
-    int Mem2Reg::getStoreNuminBB(ir::BasicBlock *BB, ir::AllocaInst *AI)
-    {
-        int num = 0;
-        for (auto inst : BB->insts())
-        {
-            if (auto store = dyn_cast<ir::StoreInst>(inst))
-            {
-                if (store->ptr() == AI)
-                    num++;
-            }
-        }
-        return num;
-    }
-    // 找出一个BB中变量AI的最后一个store
-    ir::StoreInst *Mem2Reg::getLastStoreinBB(ir::BasicBlock *BB, ir::AllocaInst *AI)
-    {
-        ir::StoreInst *LastStoreinst;
-        for (auto iter = BB->insts().rbegin(); iter != BB->insts().rend(); iter++)
-        {
-            auto inst = *iter;
-            if (auto store = dyn_cast<ir::StoreInst>(inst))
-            {
-                if (store->ptr() == AI)
-                {
-                    LastStoreinst = store;
-                    break;
-                }
-            }
-        }
-        return LastStoreinst;
-    }
+    // // 计算BB中的一条store指令是第几条指令(序号从0开始)
+    // int Mem2Reg::getStoreinstindexinBB(ir::BasicBlock *BB, ir::StoreInst *I)
+    // {
+    //     int index = 0;
+    //     for (auto &inst : BB->insts())
+    //     {
+    //         if (dyn_cast<ir::StoreInst>(inst) == I)
+    //             return index;
+    //         index++;
+    //     }
+    //     return -1;
+    // }
+    // // 计算BB中的一条load指令是第几条指令(序号从0开始)
+    // int Mem2Reg::getLoadeinstindexinBB(ir::BasicBlock *BB, ir::LoadInst *I)
+    // {
+    //     int index = 0;
+    //     for (auto &inst : BB->insts())
+    //     {
+    //         if (dyn_cast<ir::LoadInst>(inst) == I)
+    //             return index;
+    //         index++;
+    //     }
+    //     return -1;
+    // }
+    // // 计算一个BB中变量AI有多少个store
+    // int Mem2Reg::getStoreNuminBB(ir::BasicBlock *BB, ir::AllocaInst *AI)
+    // {
+    //     int num = 0;
+    //     for (auto inst : BB->insts())
+    //     {
+    //         if (auto store = dyn_cast<ir::StoreInst>(inst))
+    //         {
+    //             if (store->ptr() == AI)
+    //                 num++;
+    //         }
+    //     }
+    //     return num;
+    // }
+    // // 找出一个BB中变量AI的最后一个store
+    // ir::StoreInst *Mem2Reg::getLastStoreinBB(ir::BasicBlock *BB, ir::AllocaInst *AI)
+    // {
+    //     ir::StoreInst *LastStoreinst;
+    //     for (auto iter = BB->insts().rbegin(); iter != BB->insts().rend(); iter++)
+    //     {
+    //         auto inst = *iter;
+    //         if (auto store = dyn_cast<ir::StoreInst>(inst))
+    //         {
+    //             if (store->ptr() == AI)
+    //             {
+    //                 LastStoreinst = store;
+    //                 break;
+    //             }
+    //         }
+    //     }
+    //     return LastStoreinst;
+    // }
     // 处理onlystore的变量，思路是先统计该onlystore的BB中有多少个该变量的store，然后自底向上处理
     // 对于每个store，为了删除其对应的load，首先遍历该变量alloca的使用，如果是store就不管；
     // 是load分两种情况：一是这条store和load在同一块，二是不同块
     // 同一块需要判断store是不是在load之前，之前才能替换load的所有使用然后删除load，不然就跳过
     // 不在同一块需要判断store所在块是否支配load所在块，支配才能替换load的所有使用然后删除load，不然就跳过
     // 如果最后这个变量变成useempty的，说明rewrite成功
-    bool Mem2Reg::rewriteSingleStoreAlloca(ir::AllocaInst *alloca)
-    {
-        bool not_globalstore;
-        int StoreIndex;
-        ir::BasicBlock *storeBB = OnlyStore->parent();
-        ir::LoadInst *LD;
-        UsesBlock[alloca].clear();
-        UsesBlockvector[alloca].clear();
-        not_globalstore = not ir::isa<ir::GlobalVariable>(OnlyStore->ptr());
-        StoreIndex = -1;
-        for (auto institer = alloca->uses().begin(); institer != alloca->uses().end();)
-        {
-            auto inst = (*institer)->user();
-            institer++;
-            if (dyn_cast<ir::StoreInst>(inst))
-            {
-                continue;
-            }
+    // bool Mem2Reg::rewriteSingleStoreAlloca(ir::AllocaInst *alloca)
+    // {
+    //     bool not_globalstore;
+    //     int StoreIndex;
+    //     ir::BasicBlock *storeBB = OnlyStore->parent();
+    //     ir::LoadInst *LD;
+    //     UsesBlock[alloca].clear();
+    //     // UsesBlockvector[alloca].clear();
+    //     not_globalstore = not ir::isa<ir::GlobalVariable>(OnlyStore->ptr());
+    //     StoreIndex = -1;
+    //     for (auto institer = alloca->uses().begin(); institer != alloca->uses().end();)
+    //     {
+    //         auto inst = (*institer)->user();
+    //         institer++;
+    //         if (dyn_cast<ir::StoreInst>(inst))
+    //         {
+    //             continue;
+    //         }
 
-            ir::LoadInst *load = dyn_cast<ir::LoadInst>(inst);
-            if (not_globalstore)
-            {
-                if (load->parent() == storeBB)
-                {
-                    if (StoreIndex == -1)
-                    {
-                        StoreIndex = getStoreinstindexinBB(storeBB, OnlyStore);
-                    }
-                    if (StoreIndex > getLoadeinstindexinBB(storeBB, load))
-                    {
-                        UsesBlock[alloca].insert(storeBB);
-                        UsesBlockvector[alloca].push_back(storeBB);
-                        continue;
-                    }
-                }
-                else if (!storeBB->dominate(load->parent())) // 如果storeBB並未支配load則不能进行替换
-                {
-                    UsesBlock[alloca].insert(load->parent());
-                    UsesBlockvector[alloca].push_back(load->parent());
-                    continue;
-                }
+    //         ir::LoadInst *load = dyn_cast<ir::LoadInst>(inst);
+    //         if (not_globalstore)
+    //         {
+    //             if (load->parent() == storeBB)
+    //             {
+    //                 if (StoreIndex == -1)
+    //                 {
+    //                     StoreIndex = getStoreinstindexinBB(storeBB, OnlyStore);
+    //                 }
+    //                 if (StoreIndex > getLoadeinstindexinBB(storeBB, load))
+    //                 {
+    //                     UsesBlock[alloca].insert(storeBB);
+    //                     // UsesBlockvector[alloca].push_back(storeBB);
+    //                     continue;
+    //                 }
+    //             }
+    //             else if (!storeBB->dominate(load->parent())) // 如果storeBB並未支配load則不能进行替换
+    //             {
+    //                 UsesBlock[alloca].insert(load->parent());
+    //                 // UsesBlockvector[alloca].push_back(load->parent());
+    //                 continue;
+    //             }
                 
-            }
-            ir::Value *ReplVal = OnlyStore->value();
-            load->replace_all_use_with(ReplVal);
-            load->parent()->delete_inst(load);
-        }
+    //         }
+    //         ir::Value *ReplVal = OnlyStore->value();
+    //         load->replace_all_use_with(ReplVal);
+    //         load->parent()->delete_inst(load);
+    //     }
         
 
-        if (!UsesBlock[alloca].empty())
-            return false;
-        storeBB->delete_inst(OnlyStore);
-        alloca->parent()->delete_inst(alloca);
-        return true;
-    }
+    //     if (!UsesBlock[alloca].empty())
+    //         return false;
+    //     storeBB->delete_inst(OnlyStore);
+    //     alloca->parent()->delete_inst(alloca);
+    //     return true;
+    // }
 
-    bool Mem2Reg::pormoteSingleBlockAlloca(ir::AllocaInst *alloca)
-    {
-        // std::vector<std::pair<int,ir::StoreInst*>> StoresByIndex;
-        return false;
-    }
+    // bool Mem2Reg::pormoteSingleBlockAlloca(ir::AllocaInst *alloca)
+    // {
+    //     // std::vector<std::pair<int,ir::StoreInst*>> StoresByIndex;
+    //     return false;
+    // }
     void Mem2Reg::insertphi()
     {
         // 遍历所有alloca，对于每个alloca，在所有定义块中插入phi指令
@@ -282,7 +282,6 @@ namespace pass
                         if (Incommings.find(AI) == Incommings.end()) // 如果这条alloca没有到达定义
                         {
                             Incommings[AI] = ir::Constant::gen_undefine();
-                            //Incommings[AI] = nullptr;
                         }
                         LD->replace_all_use_with(Incommings[AI]);
                         instRemovelist.push_back(inst);
@@ -353,14 +352,14 @@ namespace pass
                 continue;
             }
             allocaAnalysis(ai);                  // 计算这个变量的使用块集合和定义块集合
-            if (DefsBlockvector[ai].size() == 1) // 如果onlystore
-            {
-                if (rewriteSingleStoreAlloca(ai)) // 如果返回true，说明这个变量更新后没有use,直接从allocas删除
-                {
-                    RemoveFromAllocasList(AllocaNum);
-                    continue;
-                }
-            }
+            // if (DefsBlockvector[ai].size() == 1) // 如果onlystore
+            // {
+            //     if (rewriteSingleStoreAlloca(ai)) // 如果返回true，说明这个变量更新后没有use,直接从allocas删除
+            //     {
+            //         RemoveFromAllocasList(AllocaNum);
+            //         continue;
+            //     }
+            // }
             // if(OnlyUsedInOneBlock and pormoteSingleBlockAlloca(ai))
             // {
             //     RemoveFromAllocasList(AllocaNum);
