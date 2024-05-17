@@ -1,0 +1,34 @@
+version: '1.0'
+name: pipeline-20240517
+displayName: pipeline-20240517
+triggers:
+  trigger: auto
+  push:
+    branches:
+      prefix:
+        - ''
+stages:
+  - name: stage-fbb79cad
+    displayName: 未命名
+    strategy: naturally
+    trigger: auto
+    executor: []
+    steps:
+      - step: execute@docker
+        name: execute_by_docker
+        displayName: 基于镜像的脚本执行
+        certificate: ''
+        image: ubuntu:22.04
+        command:
+          - '# 请在此输入您想执行的脚本'
+          - echo 'Hello Gitee!'
+          - cmake -S . -B build
+          - cmake --build build -j
+          - ./test.sh -t ./test/2021/functional/000_main.sy
+        artifacts:
+          - name: BUILD_ARTIFACT
+            path:
+              - ./target
+        notify: []
+        strategy:
+          retry: '0'
