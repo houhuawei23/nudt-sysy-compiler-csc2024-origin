@@ -52,10 +52,15 @@ class BasicBlock : public Value {
    public:
     BasicBlock* idom;
     BasicBlock* sdom;
+    BasicBlock* ipdom;
+    BasicBlock* spdom;
     std::vector<BasicBlock*> domTree;      // sons in dom Tree
     std::vector<BasicBlock*> domFrontier;  // dom frontier
+    std::vector<BasicBlock*> pdomTree;      
+    std::vector<BasicBlock*> pdomFrontier;  
     // std::set<BasicBlock*> dom;//those bb was dominated by self
     int domLevel;
+    int pdomLevel;
     int looplevel;
 
    protected:

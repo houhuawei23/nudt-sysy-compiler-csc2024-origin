@@ -16,6 +16,7 @@
 #include "pass/analysis/loop.hpp"
 #include "pass/optimize/GCM.hpp"
 #include "pass/optimize/GVN.hpp"
+#include "pass/analysis/pdom.hpp"
 
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
@@ -61,15 +62,22 @@ int main(int argc, char* argv[]) {
 
     if (not config.pass_names.empty()) {
         for (auto pass_name : config.pass_names) {
-            if (pass_name.compare("mem2reg") == 0) {
+            if (pass_name.compare("dom") == 0) {
                 // mem2reg
                 fpm.add_pass(new pass::preProcDom());
                 fpm.add_pass(new pass::idomGen());
                 fpm.add_pass(new pass::domFrontierGen());
-                fpm.add_pass(new pass::Mem2Reg());
                 // fpm.add_pass(new pass::domInfoCheck());
             }
-
+            else if (pass_name.compare("mem2reg") == 0){
+                fpm.add_pass(new pass::Mem2Reg());
+            }
+            else if (pass_name.compare("pdom") == 0){
+                fpm.add_pass(new pass::preProcPostDom());
+                fpm.add_pass(new pass::ipostDomGen());
+                fpm.add_pass(new pass::postDomFrontierGen());
+                // fpm.add_pass(new pass::postDomInfoCheck());
+            }
             else if (pass_name.compare("dce") == 0) {
                 fpm.add_pass(new pass::DCE());
             } else if (pass_name.compare("scp") == 0) {
