@@ -22,8 +22,8 @@ stages:
         command:
           - '# 请在此输入您想执行的脚本'
           - echo 'Hello Gitee!'
-          - sudo apt-get update
-          - sudo apt-get install -y build-essential uuid-dev libutfcpp-dev pkg-config make git cmake openjdk-11-jre
+          - apt-get update
+          - apt-get install -y build-essential uuid-dev libutfcpp-dev pkg-config make git cmake openjdk-11-jre
           - cmake -S . -B build
           - cmake --build build -j
           - ./test.sh -t ./test/2021/functional/000_main.sy
