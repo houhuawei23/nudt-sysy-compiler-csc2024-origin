@@ -76,7 +76,7 @@ int main(int argc, char* argv[]) {
                 fpm.add_pass(new pass::preProcPostDom());
                 fpm.add_pass(new pass::ipostDomGen());
                 fpm.add_pass(new pass::postDomFrontierGen());
-                // fpm.add_pass(new pass::postDomInfoCheck());
+                fpm.add_pass(new pass::postDomInfoCheck());
             }
             else if (pass_name.compare("dce") == 0) {
                 fpm.add_pass(new pass::DCE());

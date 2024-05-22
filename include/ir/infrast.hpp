@@ -118,6 +118,8 @@ class BasicBlock : public Value {
 
     void replaceinst(Instruction* old, Value* new_);
 
+    Instruction* terminator(){ return _insts.back();}
+
     // for CFG
     static void block_link(ir::BasicBlock* pre, ir::BasicBlock* next) {
         pre->next_blocks().emplace_back(next);
@@ -183,6 +185,7 @@ class Instruction : public User {
     bool is_fcmp();
     bool is_math();
     bool is_noname() { return is_terminator() or _scid == vSTORE or _scid == vMEMSET; }
+    bool is_aggressive_alive() {return _scid==vSTORE or _scid==vCALL or _scid==vMEMSET or _scid==vRETURN;}
 
     // for isa, cast and dyn_cast
     static bool classof(const Value* v) { return v->scid() >= vINSTRUCTION; }
