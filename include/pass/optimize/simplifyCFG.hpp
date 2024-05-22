@@ -13,7 +13,6 @@ namespace pass{
             std::string name()override;
         private:
             ir::BasicBlock* getSingleDest(ir::BasicBlock* bb);
-            bool noPredBlock(ir::BasicBlock* bb);
             ir::BasicBlock* getMergeBlock(ir::BasicBlock* bb);
             bool MergeBlock(ir::Function* func);
             bool removeNoPreBlock(ir::Function* func);

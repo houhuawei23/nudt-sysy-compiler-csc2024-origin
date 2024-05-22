@@ -97,7 +97,11 @@ class Function : public User {
 
     auto entry() const { return _entry; }
 
+    void setEntry(ir::BasicBlock* bb){_entry=bb;}
+
     auto exit() const { return _exit; }
+
+    void setExit(ir::BasicBlock* bb){_exit=bb;}
 
     BasicBlock* new_block();
 

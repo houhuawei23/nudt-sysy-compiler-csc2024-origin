@@ -340,9 +340,18 @@ class User : public Value {
         _operands.erase(_operands.begin()+index);
         for(int idx=index+1;idx<_operands.size();idx++)
             _operands[idx]->set_index(idx);
+        refresh_operand_index();
     }
 
     virtual void print(std::ostream& os) {}
+
+    void refresh_operand_index(){
+        int cnt=0;
+        for(auto op:_operands){
+            op->set_index(cnt);
+            cnt++;
+        }
+    }
 };
 
 /*

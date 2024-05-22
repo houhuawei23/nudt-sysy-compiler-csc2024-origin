@@ -87,10 +87,6 @@ int main(int argc, char* argv[]) {
             } else if (pass_name.compare("simplifycfg") == 0) {
                 fpm.add_pass(new pass::simplifyCFG());
             } else if (pass_name.compare("loopanalysis") == 0) {
-                fpm.add_pass(new pass::preProcDom());
-                fpm.add_pass(new pass::idomGen());
-                fpm.add_pass(new pass::domFrontierGen());
-                // fpm.add_pass(new pass::domInfoCheck());
                 fpm.add_pass(new pass::loopAnalysis());
                 // fpm.add_pass(new pass::loopInfoCheck());
             } else if (pass_name.compare("gcm") == 0) {

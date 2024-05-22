@@ -49,8 +49,8 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
     if (func->ret_type()->is_void()) {
         if (ctx->exp())
             assert(false && "the returned value is not matching the function");
-        else
-            res = builder().create_return(value);
+        
+            // res = builder().create_return(value);
     } else {
         if (ctx->exp()) {
             if (auto cvalue = dyn_cast<ir::Constant>(value)) {  //! 常值
@@ -76,12 +76,12 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
 
         // store res to ret_value
         auto store = builder().create_store(value, func->ret_value_ptr());
-        auto br = builder().create_br(func->exit());
-        ir::BasicBlock::block_link(builder().block(), func->exit());
-        
-        res = br;
-    }
 
+    }
+    auto br = builder().create_br(func->exit());
+    ir::BasicBlock::block_link(builder().block(), func->exit());
+    
+    res = br;
     // 生成 return 语句后立马创建一个新块，并设置 builder
     auto new_block = func->new_block();
 
