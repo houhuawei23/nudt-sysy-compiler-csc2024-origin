@@ -29,10 +29,10 @@ namespace pass
         {
             return "mem2reg";
         }
-        int getStoreNuminBB(ir::BasicBlock *BB, ir::AllocaInst *AI);
-        ir::StoreInst *getLastStoreinBB(ir::BasicBlock *BB, ir::AllocaInst *AI);
-        bool rewriteSingleStoreAlloca(ir::AllocaInst *alloca);
-        bool pormoteSingleBlockAlloca(ir::AllocaInst *alloca);
+        // int getStoreNuminBB(ir::BasicBlock *BB, ir::AllocaInst *AI);
+        // ir::StoreInst *getLastStoreinBB(ir::BasicBlock *BB, ir::AllocaInst *AI);
+        // bool rewriteSingleStoreAlloca(ir::AllocaInst *alloca);
+        // bool pormoteSingleBlockAlloca(ir::AllocaInst *alloca);
         void promotememToreg(ir::Function *F);
         void RemoveFromAllocasList(unsigned &AllocaIdx);
         void allocaAnalysis(ir::AllocaInst *alloca);
@@ -40,7 +40,7 @@ namespace pass
         bool is_promoted(ir::AllocaInst *alloca);
         void insertphi();
         void rename(ir::Function *F);
-        int getStoreinstindexinBB(ir::BasicBlock *BB, ir::StoreInst *I);
-        int getLoadeinstindexinBB(ir::BasicBlock *BB, ir::LoadInst *I);
+        // int getStoreinstindexinBB(ir::BasicBlock *BB, ir::StoreInst *I);
+        // int getLoadeinstindexinBB(ir::BasicBlock *BB, ir::LoadInst *I);
     };
 } // namespace pass
