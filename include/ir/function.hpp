@@ -59,6 +59,12 @@ class Function : public User {
 
     bool _is_defined = false;
 
+    // for call graph
+    std::set<ir::Function*>_callees;
+    bool _is_called;
+    bool _is_inline;
+    bool _is_lib;
+
    public:
     Function(Type* func_type, const_str_ref name = "", Module* parent = nullptr)
         : User(func_type, vFUNCTION, name), _parent(parent) {
@@ -71,11 +77,25 @@ class Function : public User {
     int getvarcnt() { return var_cnt++; }
     void setvarcnt(int x) { var_cnt = x; }
     void set_next(BasicBlock* next) { _next = next; }
-    
+    std::set<ir::Function*>&callees(){ return _callees; }
+    //get and set for callgraph
+    bool get_is_inline(){ return _is_inline; }
+    void set_is_inline(bool b){ _is_inline=b; }
+    bool get_is_called(){ return _is_called; }
+    void set_is_called(bool b){ _is_called=b; }
+    bool get_is_lib(){ return _is_lib; }
+    void set_is_lib(bool b){ _is_lib=b; }
+
+
     BasicBlock* next() { return _next; }
     Module* parent() const { return _parent; }
     std::list<Loop*>& Loops(){ return _loops; }
     std::map<BasicBlock*,Loop*>& headToLoop(){ return _headToLoop; }
+
+    // func
+    ir::Function* copy_func(){
+        return nullptr;//TODO
+    } 
 
     //* return
     Type* ret_type() const {

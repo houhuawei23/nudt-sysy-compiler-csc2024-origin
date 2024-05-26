@@ -14,7 +14,7 @@ void Inline::callinline(ir::CallInst* call) {
     ir::BasicBlock* retBB = caller->new_block();
     ir::BasicBlock* calleeAllocaBB = callee->entry();
     ir::BasicBlock* callerAllocaBB = caller->entry();
-    ir::Function* copyfunc = callee->copy_func();  // TODO
+    ir::Function* copyfunc = callee->copy_func(); 
     if (nowBB == caller->exit()) {
         caller->setExit(retBB);
     }
@@ -149,11 +149,11 @@ std::vector<ir::CallInst*> Inline::getcall(ir::Module* module,
     return calllist;
 }
 
-std::vector<ir::Function*> getinlineFunc(ir::Module* module) {
+std::vector<ir::Function*> Inline::getinlineFunc(ir::Module* module) {
     std::vector<ir::Function*> functiontoremove;
     for (auto func : module->funcs()) {
         if (func->name() != "main" && !func->blocks().empty() &&
-            !func->couldinline()) {  // TODO 分析哪些函数可以被内联优化展开
+            !func->get_is_inline()) {  // TODO 分析哪些函数可以被内联优化展开
             functiontoremove.push_back(func);
         }
     }

@@ -8,7 +8,7 @@ namespace pass
     {
         public:
             void run(ir::Function* func)override;
-            std::string name(){return "DCE";}
+            std::string name()override{return "DCE";}
         private:
             bool isAlive(ir::Instruction* inst);
             void addAlive(ir::Instruction*inst);

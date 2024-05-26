@@ -9,7 +9,7 @@ namespace pass
     {
         public:
             void run(ir::Function* func)override;
-            std::string name(){return "ADCE";}
+            std::string name()override{return "ADCE";}
         private:
     };
 

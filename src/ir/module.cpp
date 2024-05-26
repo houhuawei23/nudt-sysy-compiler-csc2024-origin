@@ -1,6 +1,7 @@
 #include "ir/module.hpp"
 #include <cassert>
 #include <iostream>
+#include <algorithm>
 // #include "ir/constant.hpp"
 #include "ir/utils_ir.hpp"
 namespace ir {
@@ -29,6 +30,16 @@ Function* Module::add_func(Type* type, const_str_ref name) {
     _funcs.emplace_back(func);
     return func;
 }
+
+void Module::delete_func(ir::Function* func){
+    assert(lookup_func(func->name()) != nullptr && "delete unexisted function!");
+    _func_table.erase(func->name());
+    _funcs.erase(std::find(_funcs.begin(),_funcs.end(),func));
+    for(auto bb:func->blocks()){
+        func->force_delete_block(bb);
+    }
+}
+
 
 // readable ir print
 void Module::print(std::ostream& os) {

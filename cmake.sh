@@ -22,4 +22,4 @@
 
 # cmake config and build
 cmake -S . -B build -G Ninja
-cmake --build build -j16
+cmake --build build -j 2
