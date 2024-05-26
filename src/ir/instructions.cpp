@@ -584,6 +584,11 @@ void PhiInst::delbb(BasicBlock* bb){
     size--;
 }
 
+void PhiInst::replaceBB(BasicBlock* newBB,size_t k)
+{
+    set_operand(2 * k + 1, newBB);
+}
+
 /*
  * @brief: BitcastInst::print
  * @details: 

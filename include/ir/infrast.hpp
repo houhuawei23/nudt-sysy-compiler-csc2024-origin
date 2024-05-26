@@ -96,6 +96,8 @@ class BasicBlock : public Value {
     //* get Data Attributes
     Function* parent() const { return _parent; }
 
+    void set_parent(Function* parent) { _parent = parent; }
+
     inst_list& insts() { return _insts; }
 
    inst_list& phi_insts(){ return _phi_insts; }

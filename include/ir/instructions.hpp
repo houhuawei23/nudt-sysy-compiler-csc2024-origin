@@ -627,6 +627,7 @@ namespace ir
         void delval(Value *val);
         void delbb(BasicBlock *bb);
         void print(std::ostream &os) override;
+        void replaceBB(BasicBlock *newBB,size_t k);
         Value *getConstantRepl() override;
     };
 
