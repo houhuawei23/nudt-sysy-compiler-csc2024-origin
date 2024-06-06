@@ -183,7 +183,7 @@ namespace ir
     {
         friend class IRBuilder;
 
-    protected:
+    public:
         UnaryInst(Value::ValueId kind,
                   Type *type,
                   Value *operand,

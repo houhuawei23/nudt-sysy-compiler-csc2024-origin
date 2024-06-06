@@ -136,4 +136,78 @@ void BasicBlock::replaceinst(Instruction* old_inst, Value* new_){
 
     }
 }
-}  // namespace ir
+
+Instruction* Instruction::copy_inst(std::function<Value *(Value *)> getValue){
+    if (auto allocainst = dyn_cast<AllocaInst>(this)){
+        return new AllocaInst(allocainst->base_type());//TODO 复制数组的alloca
+    }
+    else if (auto storeinst = dyn_cast<StoreInst>(this)){
+        auto value = getValue(storeinst->operand(0));
+        auto addr = getValue(storeinst->operand(1));
+        return new StoreInst(value,addr);
+    }
+    else if (auto loadinst = dyn_cast<LoadInst>(this)){
+        auto ptr = getValue(loadinst->ptr());
+        return new LoadInst(ptr,loadinst->type(),nullptr);
+    }
+    else if (auto returninst = dyn_cast<ReturnInst>(this)){
+        return new ReturnInst(getValue(returninst->return_value()));
+    }
+    else if (auto unaryinst = dyn_cast<UnaryInst>(this)){
+        auto value = getValue(unaryinst->get_value());
+        return new UnaryInst(unaryinst->scid(),unaryinst->type(),value);
+    }
+    else if (auto binaryinst = dyn_cast<BinaryInst>(this)){
+        auto lhs = getValue(binaryinst->get_lvalue());
+        auto rhs = getValue(binaryinst->get_rvalue());
+        return new BinaryInst(binaryinst->scid(),binaryinst->type(),lhs,rhs,nullptr);
+    }
+    else if (auto callinst = dyn_cast<CallInst>(this)){
+        auto callee = callinst->callee();
+        std::vector<Value*> args;
+        for (auto arg : callinst->rargs()){
+            args.push_back(getValue(arg->value()));
+        }
+        return new CallInst(callee,args);
+    }
+    else if (auto branchinst = dyn_cast<BranchInst>(this)){
+        if (branchinst->is_cond()){
+            auto cond = getValue(branchinst->cond());
+            auto true_bb = dyn_cast<BasicBlock>(getValue(branchinst->iftrue()));
+            auto false_bb = dyn_cast<BasicBlock>(getValue(branchinst->iffalse()));
+            return new BranchInst(cond,true_bb,false_bb);
+        }
+        else{
+            auto dest_bb = dyn_cast<BasicBlock>(getValue(branchinst->dest()));
+            return new BranchInst(dest_bb);
+        }
+    }
+    else if (auto icmpinst = dyn_cast<ICmpInst>(this)){
+        auto lhs = getValue(icmpinst->lhs());
+        auto rhs = getValue(icmpinst->rhs());
+        return new ICmpInst(icmpinst->scid(),lhs,rhs,nullptr);
+    }
+    else if (auto fcmpinst = dyn_cast<FCmpInst>(this)){
+        auto lhs = getValue(fcmpinst->lhs());
+        auto rhs = getValue(fcmpinst->rhs());
+        return new FCmpInst(fcmpinst->scid(),lhs,rhs,nullptr);
+    }
+    else if (auto bitcastinst = dyn_cast<BitCastInst>(this)){
+        auto value = getValue(bitcastinst->value());
+        return new BitCastInst(bitcastinst->type(),value,nullptr);
+    }
+    else if (auto memsetinst = dyn_cast<MemsetInst>(this)){
+        auto value = getValue(memsetinst->value());
+        return new MemsetInst(memsetinst->type(),value,nullptr);
+    }
+    else if (auto getelemenptrinst = dyn_cast<GetElementPtrInst>(this)){
+        //TODO
+    }
+    else if (auto phiinst = dyn_cast<PhiInst>(this)){
+        return new PhiInst(nullptr,phiinst->type());
+    }
+    else{
+        return nullptr;
+    }
+}  
+}// namespace ir

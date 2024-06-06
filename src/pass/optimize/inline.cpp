@@ -8,29 +8,29 @@
 #include <algorithm>
 namespace pass {
 void Inline::callinline(ir::CallInst* call) {
-    ir::Function* callee = call->callee();
+    ir::Function* callee = call->callee();//被调用的需要被展开的函数
+    ir::Function* copyfunc = callee->copy_func(); //callee的复制，展开的是这个函数而不是callee
     ir::BasicBlock* nowBB = call->parent();
     ir::Function* caller = nowBB->parent();
     ir::BasicBlock* retBB = caller->new_block();
-    ir::BasicBlock* calleeAllocaBB = callee->entry();
+    ir::BasicBlock* calleeAllocaBB = copyfunc->entry();
     ir::BasicBlock* callerAllocaBB = caller->entry();
-    ir::Function* copyfunc = callee->copy_func(); 
+    
+
     if (nowBB == caller->exit()) {
         caller->setExit(retBB);
     }
 
     // 将call之后的指令移动到retBB中
-    bool findfalg = false;
+    bool findflag = false;
     for (auto inst : nowBB->insts()) {
-        if (findfalg) {
+        if (findflag) {
             inst->set_parent(retBB);
             retBB->emplace_back_inst(inst);
             nowBB->insts().remove(inst);
         } else {
-            if (auto ci = dyn_cast<ir::CallInst>(inst)) {
-                if (call == ci) {
-                    findfalg = true;
-                }
+            if (call == inst) {
+                    findflag = true;
             }
         }
     }
@@ -81,24 +81,21 @@ void Inline::callinline(ir::CallInst* call) {
         bb->delete_inst(ret);
         bb->emplace_back_inst(jmprettobb);
     }
-    // 处理被调用函数的参数
+    // 被调用函数的参数
     for (size_t i = 0; i < copyfunc->args().size(); i++) {
         auto realArg = call->operand(i);
         auto formalArg = copyfunc->arg_i(i);
-        if (!formalArg->type()
-                 ->is_pointer()) {  // 如果传递参数不是数组等指针，直接替换
+        if (!formalArg->type()->is_pointer()) {  // 如果传递参数不是数组等指针，直接替换
             formalArg->replace_all_use_with(realArg);
         } else {  // 如果传递参数是数组等指针，
             std::vector<ir::StoreInst*> storetomove;
             for (auto use : formalArg->uses()) {
-                if (ir::StoreInst* storeinst =
-                        dyn_cast<ir::StoreInst>(use->user())) {
+                if (ir::StoreInst* storeinst = dyn_cast<ir::StoreInst>(use->user())) {
                     storetomove.push_back(storeinst);
                     auto allocainst = storeinst->ptr();
                     std::vector<ir::LoadInst*> loadtoremove;
                     for (auto allocause : allocainst->uses()) {
-                        if (ir::LoadInst* loadinst =
-                                dyn_cast<ir::LoadInst>(allocause->user())) {
+                        if (ir::LoadInst* loadinst = dyn_cast<ir::LoadInst>(allocause->user())) {
                             loadtoremove.push_back(loadinst);
                         }
                     }
@@ -117,7 +114,7 @@ void Inline::callinline(ir::CallInst* call) {
     }
     // 删除caller中调用copyfunc的call指令
     nowBB->delete_inst(call);
-    // 连接nowBB和calle的entry,在nowBB末尾插入无条件跳转指令到copyfunc的entry
+    // 连接nowBB和callee的entry,在nowBB末尾插入无条件跳转指令到copyfunc的entry
     ir::BasicBlock::block_link(nowBB, calleeAllocaBB);
     auto jmpnowtoentry = new ir::BranchInst(calleeAllocaBB, nowBB);
     nowBB->emplace_back_inst(jmpnowtoentry);
@@ -152,8 +149,7 @@ std::vector<ir::CallInst*> Inline::getcall(ir::Module* module,
 std::vector<ir::Function*> Inline::getinlineFunc(ir::Module* module) {
     std::vector<ir::Function*> functiontoremove;
     for (auto func : module->funcs()) {
-        if (func->name() != "main" && !func->blocks().empty() &&
-            !func->get_is_inline()) {  // TODO 分析哪些函数可以被内联优化展开
+        if (func->name() != "main" && !func->blocks().empty() && !func->get_is_inline()) {  // TODO 分析哪些函数可以被内联优化展开
             functiontoremove.push_back(func);
         }
     }

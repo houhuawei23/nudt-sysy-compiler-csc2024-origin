@@ -104,4 +104,82 @@ void Function::rename(){
         }
     }
 }
+
+
+
+// func_copy
+Function* Function::copy_func(){
+    std::unordered_map<Value *,Value *> ValueCopy;
+    //copy global
+    for (auto gvalue : _parent->gvalues()){
+        if (dyn_cast<Constant>(gvalue) && !gvalue->type()->is_pointer()){
+            ValueCopy[gvalue] = gvalue;//??
+        }
+        else{
+            ValueCopy[gvalue] = gvalue;
+        }
+    }
+    //copy func
+    auto copyfunc = new Function(type(),name() + "_copy",_parent);
+    //copy args
+    for (auto arg : _args){
+        Value* copyarg = copyfunc->new_arg(arg->type(),"");
+        ValueCopy[arg] = copyarg;
+    }
+    //copy block
+    for (auto bb : _blocks){
+        BasicBlock* copybb = copyfunc->new_block();
+        if(copyfunc->entry() == nullptr){
+            copyfunc->setEntry(copybb);
+        }
+        else if(copyfunc->exit() == nullptr){
+            copyfunc->setExit(copybb);
+        }
+        ValueCopy[bb] = copybb;
+    }
+
+    //copy bb's pred and succ
+    for (auto BB : _blocks){
+        auto copyBB = dyn_cast<BasicBlock>(ValueCopy[BB]);
+        for (auto pred : BB->pre_blocks()){
+            copyBB->pre_blocks().emplace_back(dyn_cast<BasicBlock>(ValueCopy[pred]));
+        }
+        for (auto succ : BB->next_blocks()){
+            copyBB->next_blocks().emplace_back(dyn_cast<BasicBlock>(ValueCopy[succ]));
+        }
+    }
+
+    auto getValue = [&](Value *val) -> Value * {
+      if (auto c = dyn_cast<Constant>(val))return c;
+      return ValueCopy[val];
+    };
+
+    //copy inst in bb
+    std::vector<PhiInst *> phis;
+    std::set<BasicBlock *> vis;
+    BasicBlock::BasicBlockDfs(_entry,[&](BasicBlock *bb) -> bool {
+        if (vis.count(bb))
+            return true;
+        vis.insert(bb);
+        auto bbCpy = dyn_cast<BasicBlock>(ValueCopy[bb]);
+        for (auto inst : bb->insts()) {
+            auto copyinst = inst->copy_inst(getValue);
+            copyinst->set_parent(bbCpy);
+            ValueCopy[inst] = copyinst;
+            bbCpy->insts().emplace_back(copyinst);
+            if (auto phi = dyn_cast<PhiInst>(inst))
+                phis.emplace_back(phi);
+        }
+        return false;});
+    for (auto phi :phis){
+        auto copyphi = dyn_cast<PhiInst>(ValueCopy[phi]);
+        for (size_t i = 0;i < phi->getsize();i++){
+            auto phivalue = getValue(phi->getval(i));
+            auto phibb = dyn_cast<BasicBlock>(getValue(phi->getbb(i))); 
+            copyphi->addIncoming(phivalue,phibb);
+        }
+    }
+    return copyfunc;
+} 
+
 }  // namespace ir

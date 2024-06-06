@@ -92,10 +92,8 @@ class Function : public User {
     std::list<Loop*>& Loops(){ return _loops; }
     std::map<BasicBlock*,Loop*>& headToLoop(){ return _headToLoop; }
 
-    // func
-    ir::Function* copy_func(){
-        return nullptr;//TODO
-    } 
+    // func_copy
+    ir::Function* copy_func();
 
     //* return
     Type* ret_type() const {

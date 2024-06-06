@@ -79,6 +79,10 @@ class BasicBlock : public Value {
     uint32_t _idx = 0;
 
    public:
+    static void BasicBlockDfs(BasicBlock *bb, std::function<bool(BasicBlock *)> func){
+        if (func(bb)) return;
+        for (auto succ : bb->next_blocks()) BasicBlockDfs(succ, func);
+    }
     BasicBlock(const_str_ref name = "", Function* parent = nullptr)
         : Value(Type::label_type(), vBASIC_BLOCK, name),
           _parent(parent){
@@ -159,6 +163,7 @@ class Instruction : public User {
     BasicBlock* _parent;
 
    public:
+    Instruction* copy_inst(std::function<Value *(Value *)> getValue);
     // Construct a new Instruction object
     Instruction(ValueId itype = vINSTRUCTION,
                 Type* ret_type = Type::void_type(),
