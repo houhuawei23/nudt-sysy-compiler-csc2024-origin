@@ -139,7 +139,13 @@ void BasicBlock::replaceinst(Instruction* old_inst, Value* new_){
 
 Instruction* Instruction::copy_inst(std::function<Value *(Value *)> getValue){
     if (auto allocainst = dyn_cast<AllocaInst>(this)){
-        return new AllocaInst(allocainst->base_type());//TODO 复制数组的alloca
+        if (allocainst->is_scalar())
+            return new AllocaInst(allocainst->base_type());//TODO 复制数组的alloca
+        else{
+            auto basetype = dyn_cast<ArrayType>(allocainst->base_type());
+            std::vector<int> dims = basetype->dims();
+            return new AllocaInst(basetype->base_type(),dims);
+        }
     }
     else if (auto storeinst = dyn_cast<StoreInst>(this)){
         auto value = getValue(storeinst->operand(0));
@@ -201,7 +207,23 @@ Instruction* Instruction::copy_inst(std::function<Value *(Value *)> getValue){
         return new MemsetInst(memsetinst->type(),value,nullptr);
     }
     else if (auto getelemenptrinst = dyn_cast<GetElementPtrInst>(this)){
-        //TODO
+        auto value = getValue(getelemenptrinst->get_value());
+        auto idx = getValue(getelemenptrinst->get_index());
+        if (getelemenptrinst->getid() == 0){
+            auto basetype = getelemenptrinst->base_type();
+            return new GetElementPtrInst(basetype,value,nullptr,idx);
+        }
+        else if (getelemenptrinst->getid() == 1){
+            auto basetype = dyn_cast<ArrayType>(getelemenptrinst->base_type());
+            std::vector<int> dims = basetype->dims();
+            auto curdims = getelemenptrinst->cur_dims();
+            return new GetElementPtrInst(basetype->base_type(),value,nullptr,idx,dims,curdims);
+        }
+        else{
+            auto basetype = getelemenptrinst->base_type();
+            auto curdims = getelemenptrinst->cur_dims();
+            return new GetElementPtrInst(basetype,value,nullptr,idx,curdims);
+        }
     }
     else if (auto phiinst = dyn_cast<PhiInst>(this)){
         return new PhiInst(nullptr,phiinst->type());

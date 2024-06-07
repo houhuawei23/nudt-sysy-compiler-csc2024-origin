@@ -571,6 +571,7 @@ namespace ir
         // get function
         Value *get_value() const { return operand(0); }
         Value *get_index() const { return operand(1); }
+        int getid(){return _id;}
 
         Type *base_type() const
         {
