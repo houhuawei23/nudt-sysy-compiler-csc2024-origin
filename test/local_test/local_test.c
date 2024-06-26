@@ -1,53 +1,49 @@
-int main(){
-	int a = 893;
-	int b = 716;
-	{
-		int a = 837;
-		a = a + 128;
-		b = b + a;
-		{
-			int b = 241;
-			a = a + b - 412;
-			{
-				int a = 771;
-				b = b + a -18;
-				a = b + 66;
-			}
-			b = b + a - 33;
-			a = b - 55;
-            {
-                return (a + b) % 21;
-            }
-            
-		}
-		a = b + a - 97;
-		b = (b - a) % 62;
+int n;
+int select_sort(int A[],int n)
+{
+    int i;
+    int j;
+    int min;
+    i =0;
+    while(i < n-1)
+    {
+        min=i;//
+        j = i + 1;
+        while(j < n)
         {
-             return (a + b) % 17;
+            if(A[min]>A[j])
+            {
+                min=j;
+            }
+            j=j+1;
         }
-        return (a + b) % 13;
-	}
-	a = (b * a) % 83;
-	b = a + b - 771;	
-	return (a + b) % 11;
+        if(min!=i)
+        {
+            int tmp;
+            tmp = A[min];
+            A[min] = A[i];
+            A[i] = tmp;
+        }
+        i = i + 1;
+    }
+    return 0;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+int main(){
+    n = 10;
+    int a[10];
+    a[0]=4;a[1]=3;a[2]=9;a[3]=2;a[4]=0;
+    a[5]=1;a[6]=6;a[7]=5;a[8]=7;a[9]=8;
+    int i;
+    i = 0;
+    i = select_sort(a, n);
+    while (i < n) {
+        int tmp;
+        tmp = a[i];
+        putint(tmp);
+        tmp = 10;
+        putch(tmp);
+        i = i + 1;
+    }
+    return 0;
+}

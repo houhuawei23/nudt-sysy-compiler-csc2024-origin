@@ -86,7 +86,7 @@ void Function::print(std::ostream& os) {
         os << "\n";
     }
 }
-
+  
 void Function::rename(){
     if(not entry())return;
     setvarcnt(0);

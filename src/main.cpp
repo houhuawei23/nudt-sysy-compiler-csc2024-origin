@@ -17,6 +17,8 @@
 #include "pass/optimize/GCM.hpp"
 #include "pass/optimize/GVN.hpp"
 #include "pass/analysis/pdom.hpp"
+#include "pass/optimize/inline.hpp"
+#include "pass/optimize/reg2mem.hpp"
 
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
@@ -93,8 +95,9 @@ int main(int argc, char* argv[]) {
                 fpm.add_pass(new pass::GCM());
             } else if (pass_name.compare("gvn") == 0) {
                 fpm.add_pass(new pass::GVN());
-            }
-            else {
+            } else if (pass_name.compare("reg2mem") == 0){
+                fpm.add_pass(new pass::Reg2Mem());
+            }else {
                 assert(false && "Invalid pass name");
             }
 

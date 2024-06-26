@@ -327,7 +327,19 @@ namespace ir
             assert(!_is_cond && "not an unconditional branch");
             return dyn_cast<BasicBlock>(operand(0));
         }
-
+        void replacedest(ir::BasicBlock *olddest,ir::BasicBlock *newdest){
+            if (_is_cond){
+                if (this->iftrue() == olddest){
+                    set_operand(1,newdest);
+                }
+                else{
+                    set_operand(2,newdest);
+                }
+            }
+            else{
+                set_operand(0,newdest);
+            }
+        }
     public:
         static bool classof(const Value *v) { return v->scid() == vBR; }
         void print(std::ostream &os) override;
@@ -617,6 +629,7 @@ namespace ir
         BasicBlock *getbb(size_t k) { return dyn_cast<BasicBlock>(operand(2 * k + 1)); }
         Value *getvalfromBB(BasicBlock *bb);
         BasicBlock *getbbfromVal(Value *val);
+
         size_t getsize() { return size; }
         void addIncoming(Value *val, BasicBlock *bb)
         {
