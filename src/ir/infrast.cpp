@@ -65,16 +65,6 @@ void BasicBlock::emplace_inst(inst_iterator pos, Instruction* i) {
     }
 }
 
-// void BasicBlock::delete_inst(Instruction* inst){
-//     for(auto op:inst->operands()){
-//         auto val=op->value();
-//         if(val){
-//             val->del_use(op);
-//         }
-//     }
-//     delete inst;
-// }
-
 void Instruction::setvarname() {
     auto cur_func = _parent->parent();
     _name = "%" + std::to_string(cur_func->getvarcnt());
@@ -89,7 +79,7 @@ void BasicBlock::delete_inst(Instruction* inst) {
     assert(inst->uses().size() == 0);
     for (auto op_use : inst->operands()) {
         auto op = op_use->value();
-        op->del_use(op_use);
+        op->uses().remove(op_use);
     }
     _insts.remove(inst);
     if(auto phiInst=dyn_cast<PhiInst>(inst))
@@ -102,7 +92,7 @@ void BasicBlock::force_delete_inst(Instruction* inst) {
     // assert(inst->uses().size()==0);
     for (auto op_use : inst->operands()) {
         auto op = op_use->value();
-        op->del_use(op_use);
+        op->uses().remove(op_use);
     }
     _insts.remove(inst);
     if(auto phiInst=dyn_cast<PhiInst>(inst))

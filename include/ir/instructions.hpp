@@ -184,7 +184,7 @@ namespace ir
         friend class IRBuilder;
 
     public:
-        UnaryInst(Value::ValueId kind,
+        UnaryInst(ValueId kind,
                   Type *type,
                   Value *operand,
                   BasicBlock *parent = nullptr,

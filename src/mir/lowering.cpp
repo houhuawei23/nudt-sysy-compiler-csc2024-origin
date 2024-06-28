@@ -193,7 +193,7 @@ MIRFunction* create_mir_function(ir::Function* ir_func,
     lowering_ctx.set_mir_block(block_map.at(ir_func->entry()));  // entry
     for (auto& ir_inst :
          ir_func->entry()->insts()) {  // note: all alloca in entry
-        if (ir_inst->scid() != ir::Value::vALLOCA)
+        if (ir_inst->scid() != ir::ValueId::vALLOCA)
             continue;
 
         auto pointee_type =
@@ -222,7 +222,7 @@ MIRFunction* create_mir_function(ir::Function* ir_func,
         auto mir_block = block_map[ir_block];
         lowering_ctx.set_mir_block(mir_block);
         for (auto ir_inst : ir_block->insts()) {
-            if (ir_inst->scid() == ir::Value::vALLOCA) continue;
+            if (ir_inst->scid() == ir::ValueId::vALLOCA) continue;
             create_mir_inst(ir_inst, lowering_ctx);
         }
     }
@@ -246,64 +246,64 @@ void lower(ir::BranchInst* ir_inst, LoweringContext& ctx);
 
 MIRInst* create_mir_inst(ir::Instruction* ir_inst, LoweringContext& ctx) {
     switch (ir_inst->scid()) {
-        case ir::Value::vFNEG:
-        case ir::Value::vTRUNC:
-        case ir::Value::vZEXT:
-        case ir::Value::vSEXT:
-        case ir::Value::vFPTRUNC:
-        case ir::Value::vFPTOSI:
-        case ir::Value::vSITOFP:
+        case ir::ValueId::vFNEG:
+        case ir::ValueId::vTRUNC:
+        case ir::ValueId::vZEXT:
+        case ir::ValueId::vSEXT:
+        case ir::ValueId::vFPTRUNC:
+        case ir::ValueId::vFPTOSI:
+        case ir::ValueId::vSITOFP:
             lower(dyn_cast<ir::UnaryInst>(ir_inst), ctx);
             break;
-        case ir::Value::vADD:
-        case ir::Value::vFADD:
-        case ir::Value::vSUB:
-        case ir::Value::vFSUB:
-        case ir::Value::vMUL:
-        case ir::Value::vFMUL:
-        case ir::Value::vUDIV:
-        case ir::Value::vSDIV:
-        case ir::Value::vFDIV:
-        case ir::Value::vUREM:
-        case ir::Value::vSREM:
-        case ir::Value::vFREM:
+        case ir::ValueId::vADD:
+        case ir::ValueId::vFADD:
+        case ir::ValueId::vSUB:
+        case ir::ValueId::vFSUB:
+        case ir::ValueId::vMUL:
+        case ir::ValueId::vFMUL:
+        case ir::ValueId::vUDIV:
+        case ir::ValueId::vSDIV:
+        case ir::ValueId::vFDIV:
+        case ir::ValueId::vUREM:
+        case ir::ValueId::vSREM:
+        case ir::ValueId::vFREM:
             lower(dyn_cast<ir::BinaryInst>(ir_inst), ctx);
             break;
-        case ir::Value::vIEQ:
-        case ir::Value::vINE:
-        case ir::Value::vISGT:
-        case ir::Value::vISGE:
-        case ir::Value::vISLT:
-        case ir::Value::vISLE:
+        case ir::ValueId::vIEQ:
+        case ir::ValueId::vINE:
+        case ir::ValueId::vISGT:
+        case ir::ValueId::vISGE:
+        case ir::ValueId::vISLT:
+        case ir::ValueId::vISLE:
             lower(dyn_cast<ir::ICmpInst>(ir_inst), ctx);
             break;
-        case ir::Value::vFOEQ:
-        case ir::Value::vFONE:
-        case ir::Value::vFOGT:
-        case ir::Value::vFOGE:
-        case ir::Value::vFOLT:
-        case ir::Value::vFOLE:
+        case ir::ValueId::vFOEQ:
+        case ir::ValueId::vFONE:
+        case ir::ValueId::vFOGT:
+        case ir::ValueId::vFOGE:
+        case ir::ValueId::vFOLT:
+        case ir::ValueId::vFOLE:
             lower(dyn_cast<ir::FCmpInst>(ir_inst), ctx);
             break;
-        case ir::Value::vALLOCA:
+        case ir::ValueId::vALLOCA:
             std::cerr << "alloca not supported" << std::endl;
             break;
-        case ir::Value::vLOAD:
+        case ir::ValueId::vLOAD:
             lower(dyn_cast<ir::LoadInst>(ir_inst), ctx);
             break;
-        case ir::Value::vSTORE:
+        case ir::ValueId::vSTORE:
             lower(dyn_cast<ir::StoreInst>(ir_inst), ctx);
             break;
-        case ir::Value::vGETELEMENTPTR:
+        case ir::ValueId::vGETELEMENTPTR:
             lower(dyn_cast<ir::GetElementPtrInst>(ir_inst), ctx);
             break;
-        case ir::Value::vRETURN:
+        case ir::ValueId::vRETURN:
             lower(dyn_cast<ir::ReturnInst>(ir_inst), ctx);
             break;
-        case ir::Value::vBR:
+        case ir::ValueId::vBR:
             lower(dyn_cast<ir::BranchInst>(ir_inst), ctx);
             break;
-        case ir::Value::vCALL:
+        case ir::ValueId::vCALL:
             lower(dyn_cast<ir::CallInst>(ir_inst), ctx);
             break;
         default:
@@ -316,20 +316,20 @@ void lower(ir::UnaryInst* ir_inst, LoweringContext& ctx) {
     // TODO: Need Test
     auto gc_instid = [scid = ir_inst->scid()] {
         switch (scid) {
-            case ir::Value::vFNEG:
+            case ir::ValueId::vFNEG:
                 return InstFNeg;
-            case ir::Value::vTRUNC:
+            case ir::ValueId::vTRUNC:
                 return InstTrunc;
-            case ir::Value::vZEXT:
+            case ir::ValueId::vZEXT:
                 return InstZExt;
-            case ir::Value::vSEXT:
+            case ir::ValueId::vSEXT:
                 return InstSExt;
-            case ir::Value::vFPTRUNC:
+            case ir::ValueId::vFPTRUNC:
                 assert(false && "not supported unary inst");
                 // return InstFPTrunc;
-            case ir::Value::vFPTOSI:
+            case ir::ValueId::vFPTOSI:
                 return InstF2S;
-            case ir::Value::vSITOFP:
+            case ir::ValueId::vSITOFP:
                 return InstS2F;
             default:
                 assert(false && "not supported unary inst");
@@ -356,17 +356,17 @@ void lower(ir::ICmpInst* ir_inst, LoweringContext& ctx) {
     // TODO: Need Test
     auto op = [scid = ir_inst->scid()] {
         switch (scid) {
-            case ir::Value::vIEQ:
+            case ir::ValueId::vIEQ:
                 return CompareOp::ICmpEqual;
-            case ir::Value::vINE:
+            case ir::ValueId::vINE:
                 return CompareOp::ICmpNotEqual;
-            case ir::Value::vISGT:
+            case ir::ValueId::vISGT:
                 return CompareOp::ICmpSignedGreaterThan;
-            case ir::Value::vISGE:
+            case ir::ValueId::vISGE:
                 return CompareOp::ICmpSignedGreaterEqual;
-            case ir::Value::vISLT:
+            case ir::ValueId::vISLT:
                 return CompareOp::ICmpSignedLessThan;
-            case ir::Value::vISLE:
+            case ir::ValueId::vISLE:
                 return CompareOp::ICmpSignedLessEqual;
             default:
                 assert(false && "not supported icmp inst");
@@ -396,17 +396,17 @@ void lower(ir::FCmpInst* ir_inst, LoweringContext& ctx) {
     // TODO: Need Test
     auto op = [scid = ir_inst->scid()] {
         switch (scid) {
-            case ir::Value::vFOEQ:
+            case ir::ValueId::vFOEQ:
                 return CompareOp::FCmpOrderedEqual;
-            case ir::Value::vFONE:
+            case ir::ValueId::vFONE:
                 return CompareOp::FCmpOrderedNotEqual;
-            case ir::Value::vFOGT:
+            case ir::ValueId::vFOGT:
                 return CompareOp::FCmpOrderedGreaterThan;
-            case ir::Value::vFOGE:
+            case ir::ValueId::vFOGE:
                 return CompareOp::FCmpOrderedGreaterEqual;
-            case ir::Value::vFOLT:
+            case ir::ValueId::vFOLT:
                 return CompareOp::FCmpOrderedLessThan;
-            case ir::Value::vFOLE:
+            case ir::ValueId::vFOLE:
                 return CompareOp::FCmpOrderedLessEqual;
             default:
                 assert(false && "not supported fcmp inst");
@@ -441,27 +441,27 @@ void lower(ir::BinaryInst* ir_inst, LoweringContext& ctx) {
     // MIRGenericInst gc_instid;
     auto gc_instid = [scid = ir_inst->scid()] {
         switch (scid) {
-            case ir::Value::vADD:
+            case ir::ValueId::vADD:
                 return InstAdd;
-            case ir::Value::vFADD:
+            case ir::ValueId::vFADD:
                 return InstFAdd;
-            case ir::Value::vSUB:
+            case ir::ValueId::vSUB:
                 return InstSub;
-            case ir::Value::vFSUB:
+            case ir::ValueId::vFSUB:
                 return InstFSub;
-            case ir::Value::vMUL:
+            case ir::ValueId::vMUL:
                 return InstMul;
-            case ir::Value::vFMUL:
+            case ir::ValueId::vFMUL:
                 return InstFMul;
-            case ir::Value::vUDIV:
+            case ir::ValueId::vUDIV:
                 return InstUDiv;
-            case ir::Value::vSDIV:
+            case ir::ValueId::vSDIV:
                 return InstSDiv;
-            case ir::Value::vFDIV:
+            case ir::ValueId::vFDIV:
                 return InstFDiv;
-            case ir::Value::vUREM:
+            case ir::ValueId::vUREM:
                 return InstURem;
-            case ir::Value::vSREM:
+            case ir::ValueId::vSREM:
                 return InstSRem;
             default:
                 assert(false && "not supported binary inst");

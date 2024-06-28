@@ -145,10 +145,10 @@ std::any SysYIRGenerator::visitUnaryExp(SysYParser::UnaryExpContext* ctx) {
         } else if (ir::isa<ir::LoadInst>(exp) || ir::isa<ir::BinaryInst>(exp)) {
             switch (exp->type()->btype()) {
                 case ir::INT32:
-                    res = builder().create_binary_beta(ir::Value::SUB, ir::Constant::gen_i32(0), exp);
+                    res = builder().create_binary_beta(ir::BinaryOp::SUB, ir::Constant::gen_i32(0), exp);
                     break;
                 case ir::FLOAT:
-                    res = builder().create_unary_beta(ir::Value::vFNEG, exp);
+                    res = builder().create_unary_beta(ir::ValueId::vFNEG, exp);
                     break;
                 default:
                     assert(false && "Unsupport btype");
@@ -240,11 +240,11 @@ std::any SysYIRGenerator::visitMultiplicativeExp(
         op2 = builder().type_promote(op2, hi_type);
 
         if (ctx->MUL()) {
-            res = builder().create_binary_beta(ir::Value::MUL, op1, op2);
+            res = builder().create_binary_beta(ir::BinaryOp::MUL, op1, op2);
         } else if (ctx->DIV()) {
-            res = builder().create_binary_beta(ir::Value::DIV, op1, op2);
+            res = builder().create_binary_beta(ir::BinaryOp::DIV, op1, op2);
         } else if (ctx->MODULO()) {
-            res = builder().create_binary_beta(ir::Value::REM, op1, op2);
+            res = builder().create_binary_beta(ir::BinaryOp::REM, op1, op2);
         } else {
             assert(false && "not support");
         }
@@ -311,9 +311,9 @@ std::any SysYIRGenerator::visitAdditiveExp(
         rhs = builder().type_promote(rhs, hi_type);
 
         if (ctx->ADD()) {
-            res = builder().create_binary_beta(ir::Value::ADD, lhs, rhs);
+            res = builder().create_binary_beta(ir::BinaryOp::ADD, lhs, rhs);
         } else if (ctx->SUB()) {
-            res = builder().create_binary_beta(ir::Value::SUB, lhs, rhs);
+            res = builder().create_binary_beta(ir::BinaryOp::SUB, lhs, rhs);
         } else {
             assert(false && "not support");
         }
@@ -336,13 +336,13 @@ std::any SysYIRGenerator::visitRelationExp(SysYParser::RelationExpContext* ctx) 
     rhsptr = builder().type_promote(rhsptr, hi_type);
 
     if (ctx->GT()) {
-        res = builder().create_cmp(ir::Value::GT, lhsptr, rhsptr);
+        res = builder().create_cmp(ir::CmpOp::GT, lhsptr, rhsptr);
     } else if (ctx->GE()) {
-        res = builder().create_cmp(ir::Value::GE, lhsptr, rhsptr);
+        res = builder().create_cmp(ir::CmpOp::GE, lhsptr, rhsptr);
     } else if (ctx->LT()) {
-        res = builder().create_cmp(ir::Value::LT, lhsptr, rhsptr);
+        res = builder().create_cmp(ir::CmpOp::LT, lhsptr, rhsptr);
     } else if (ctx->LE()) {
-        res = builder().create_cmp(ir::Value::LE, lhsptr, rhsptr);
+        res = builder().create_cmp(ir::CmpOp::LE, lhsptr, rhsptr);
     } else {
         std::cerr << "Unknown relation operator!" << std::endl;
     }
@@ -371,9 +371,9 @@ std::any SysYIRGenerator::visitEqualExp(SysYParser::EqualExpContext* ctx) {
 
     // same type
     if (ctx->EQ()) {
-        res = builder().create_cmp(ir::Value::EQ, lhsptr, rhsptr);
+        res = builder().create_cmp(ir::CmpOp::EQ, lhsptr, rhsptr);
     } else if (ctx->NE()) {
-        res = builder().create_cmp(ir::Value::NE, lhsptr, rhsptr);
+        res = builder().create_cmp(ir::CmpOp::NE, lhsptr, rhsptr);
     } else {
         std::cerr << "not valid equal exp" << std::endl;
     }

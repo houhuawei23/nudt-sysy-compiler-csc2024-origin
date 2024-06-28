@@ -303,9 +303,9 @@ ir::Value* SysYIRGenerator::visitScalar_local(SysYParser::VarDefContext* ctx,
                 }
             } else {  //! 2. 右值为变量
                 if (btype->is_i32() && init->is_float()) {
-                    init = _builder.create_unary_beta(ir::Value::vFPTOSI, init, ir::Type::i32_type());
+                    init = _builder.create_unary_beta(ir::vFPTOSI, init, ir::Type::i32_type());
                 } else if (btype->is_float() && init->is_i32()) {
-                    init = builder().create_unary_beta(ir::Value::vSITOFP, init, ir::Type::float_type());
+                    init = builder().create_unary_beta(ir::ValueId::vSITOFP, init, ir::Type::float_type());
                 }
             }
             _builder.create_store(init, alloca_ptr);
@@ -338,9 +338,9 @@ void SysYIRGenerator::visitInitValue_Array(SysYParser::InitValueContext* ctx,
             }
         } else {  //! 2. 变量
             if (_current_type->is_i32() && value->is_float()) {
-                value = _builder.create_unary_beta(ir::Value::vFPTOSI, value, ir::Type::i32_type());
+                value = _builder.create_unary_beta(ir::ValueId::vFPTOSI, value, ir::Type::i32_type());
             } else if (_current_type->is_float() && value->is_i32()) {
-                value = _builder.create_unary_beta(ir::Value::vSITOFP, value, ir::Type::float_type());
+                value = _builder.create_unary_beta(ir::ValueId::vSITOFP, value, ir::Type::float_type());
             }
         }
 

@@ -44,10 +44,10 @@ class IRBuilder {
         Value* res = nullptr;
         if (not val->is_i1()) {
             if (val->is_i32()) {
-                res = create_icmp(Value::vINE, val, ir::Constant::gen_i32(0));
+                res = create_icmp(ValueId::vINE, val, ir::Constant::gen_i32(0));
             } else if (val->is_float()) {
                 res =
-                    create_fcmp(Value::vFONE, val, ir::Constant::gen_f32(0.0));
+                    create_fcmp(ValueId::vFONE, val, ir::Constant::gen_f32(0.0));
             }
         } else {
             res = val;
@@ -64,22 +64,22 @@ class IRBuilder {
             // need to promote
             if (val->type()->is_i1()) {
                 if (target_tpye->is_i32()) {
-                    res = create_unary_beta(Value::vZEXT, res, Type::i32_type());
+                    res = create_unary_beta(ValueId::vZEXT, res, Type::i32_type());
 
                 } else if (target_tpye->is_float()) {
-                    res = create_unary_beta(Value::vZEXT, res, Type::i32_type());
-                    res = create_unary_beta(Value::vSITOFP, res, Type::float_type());
+                    res = create_unary_beta(ValueId::vZEXT, res, Type::i32_type());
+                    res = create_unary_beta(ValueId::vSITOFP, res, Type::float_type());
                 }
             } else if (val->type()->is_i32()) {
                 if (target_tpye->is_float()) {
-                    res = create_unary_beta(Value::vSITOFP, res, Type::float_type());
+                    res = create_unary_beta(ValueId::vSITOFP, res, Type::float_type());
                 }
             }
         }
         return res;
     }
 
-    auto create_cmp(Value::CmpOp op, Value* lhs, Value* rhs) {
+    auto create_cmp(CmpOp op, Value* lhs, Value* rhs) {
         if (lhs->type() != rhs->type()) {
             assert(false && "create_eq_beta: type mismatch!");
         }
@@ -87,18 +87,18 @@ class IRBuilder {
         switch (lhs->type()->btype()) {
             case INT32: {
                 switch (op) {
-                    case Value::EQ:
-                        return create_icmp(Value::vIEQ, lhs, rhs);
-                    case Value::NE:
-                        return create_icmp(Value::vINE, lhs, rhs);
-                    case Value::GT:
-                        return create_icmp(Value::vISGT, lhs, rhs);
-                    case Value::GE:
-                        return create_icmp(Value::vISGE, lhs, rhs);
-                    case Value::LT:
-                        return create_icmp(Value::vISLT, lhs, rhs);
-                    case Value::LE:
-                        return create_icmp(Value::vISLE, lhs, rhs);
+                    case CmpOp::EQ:
+                        return create_icmp(ValueId::vIEQ, lhs, rhs);
+                    case CmpOp::NE:
+                        return create_icmp(ValueId::vINE, lhs, rhs);
+                    case CmpOp::GT:
+                        return create_icmp(ValueId::vISGT, lhs, rhs);
+                    case CmpOp::GE:
+                        return create_icmp(ValueId::vISGE, lhs, rhs);
+                    case CmpOp::LT:
+                        return create_icmp(ValueId::vISLT, lhs, rhs);
+                    case CmpOp::LE:
+                        return create_icmp(ValueId::vISLE, lhs, rhs);
                     default:
                         assert(false && "create_cmp: invalid op!");
                 }
@@ -106,18 +106,18 @@ class IRBuilder {
             case FLOAT:
             case DOUBLE: {
                 switch (op) {
-                    case Value::EQ:
-                        return create_fcmp(Value::vFOEQ, lhs, rhs);
-                    case Value::NE:
-                        return create_fcmp(Value::vFONE, lhs, rhs);
-                    case Value::GT:
-                        return create_fcmp(Value::vFOGT, lhs, rhs);
-                    case Value::GE:
-                        return create_fcmp(Value::vFOGE, lhs, rhs);
-                    case Value::LT:
-                        return create_fcmp(Value::vFOLT, lhs, rhs);
-                    case Value::LE:
-                        return create_fcmp(Value::vFOLE, lhs, rhs);
+                    case CmpOp::EQ:
+                        return create_fcmp(ValueId::vFOEQ, lhs, rhs);
+                    case CmpOp::NE:
+                        return create_fcmp(ValueId::vFONE, lhs, rhs);
+                    case CmpOp::GT:
+                        return create_fcmp(ValueId::vFOGT, lhs, rhs);
+                    case CmpOp::GE:
+                        return create_fcmp(ValueId::vFOGE, lhs, rhs);
+                    case CmpOp::LT:
+                        return create_fcmp(ValueId::vFOLT, lhs, rhs);
+                    case CmpOp::LE:
+                        return create_fcmp(ValueId::vFOLE, lhs, rhs);
                     default:
                         assert(false && "create_cmp: invalid op!");
                 }
@@ -127,30 +127,30 @@ class IRBuilder {
         }
     }
 
-    auto create_binary_beta(Value::BinaryOp op, Value* lhs, Value* rhs) {
+    auto create_binary_beta(BinaryOp op, Value* lhs, Value* rhs) {
         Type* ltype = lhs->type(), *rtype = rhs->type();
         if (ltype != rtype) {
             assert(false && "create_eq_beta: type mismatch!");
         }
         Value* res = nullptr;
-        Value::ValueId vid;
+        ValueId vid;
         switch (ltype->btype()) {
             case INT32: {
                 switch (op) {
-                    case Value::ADD:
-                        vid = Value::vADD;
+                    case BinaryOp::ADD:
+                        vid = ValueId::vADD;
                         break;
-                    case Value::SUB:
-                        vid = Value::vSUB;
+                    case BinaryOp::SUB:
+                        vid = ValueId::vSUB;
                         break;
-                    case Value::MUL:
-                        vid = Value::vMUL;
+                    case BinaryOp::MUL:
+                        vid = ValueId::vMUL;
                         break;
-                    case Value::DIV:
-                        vid = Value::vSDIV;
+                    case BinaryOp::DIV:
+                        vid = ValueId::vSDIV;
                         break;
-                    case Value::REM:
-                        vid = Value::vSREM;
+                    case BinaryOp::REM:
+                        vid = ValueId::vSREM;
                         break;
                     default:
                         assert(false && "create_binary_beta: invalid op!");
@@ -159,17 +159,17 @@ class IRBuilder {
             } break;
             case FLOAT: {
                 switch (op) {
-                    case Value::ADD:
-                        vid = Value::vFADD;
+                    case BinaryOp::ADD:
+                        vid = ValueId::vFADD;
                         break;
-                    case Value::SUB:
-                        vid = Value::vFSUB;
+                    case BinaryOp::SUB:
+                        vid = ValueId::vFSUB;
                         break;
-                    case Value::MUL:
-                        vid = Value::vFMUL;
+                    case BinaryOp::MUL:
+                        vid = ValueId::vFMUL;
                         break;
-                    case Value::DIV:
-                        vid = Value::vFDIV;
+                    case BinaryOp::DIV:
+                        vid = ValueId::vFDIV;
                         break;
                     default:
                         assert(false && "create_binary_beta: invalid op!");
@@ -183,33 +183,33 @@ class IRBuilder {
         return res;
     }
 
-    Value* create_unary_beta(Value::ValueId vid, Value* val, Type* ty = nullptr) {
+    Value* create_unary_beta(ValueId vid, Value* val, Type* ty = nullptr) {
         //! check vid
         Value* res = nullptr;
 
-        if (vid == Value::vFNEG) {
+        if (vid == ValueId::vFNEG) {
             assert(val->type()->is_float() && "fneg must have float operand");
-            res = create_unary(Value::vFNEG, Type::float_type(), val);
+            res = create_unary(ValueId::vFNEG, Type::float_type(), val);
             return dyn_cast_Value(res);
         }
         //! else
         assert(ty != nullptr && "must have target type");
 
         switch (vid) {
-            case Value::vSITOFP:
+            case ValueId::vSITOFP:
                 assert(val->type()->is_int() && "sitofp must have int operand");
                 assert(ty->is_float() && "sitofp must have float type");
                 break;
-            case Value::vFPTOSI:
+            case ValueId::vFPTOSI:
                 assert(val->type()->is_float() && "fptosi must have float operand");
                 assert(ty->is_int() && "fptosi must have int type");
                 break;
-            case Value::vTRUNC:
-            case Value::vZEXT:
-            case Value::vSEXT:
+            case ValueId::vTRUNC:
+            case ValueId::vZEXT:
+            case ValueId::vSEXT:
                 assert(val->type()->is_int() && ty->is_int());
                 break;
-            case Value::vFPTRUNC:
+            case ValueId::vFPTRUNC:
                 assert(val->type()->is_float() && ty->is_float());
                 break;
         }
@@ -331,7 +331,7 @@ class IRBuilder {
         return inst;
     }
 
-    UnaryInst* create_unary(Value::ValueId kind,
+    UnaryInst* create_unary(ValueId kind,
                             Type* type,
                             Value* value,
                             const_str_ref name = "") {
@@ -340,7 +340,7 @@ class IRBuilder {
         return inst;
     }
 
-    BinaryInst* create_binary(Value::ValueId kind,
+    BinaryInst* create_binary(ValueId kind,
                               Type* type,
                               Value* op1,
                               Value* op2,
@@ -372,7 +372,7 @@ class IRBuilder {
     }
     //! ICMP inst family
     // (itype, lhs, rhs, parent, name)
-    Instruction* create_icmp(Value::ValueId itype,
+    Instruction* create_icmp(ValueId itype,
                              Value* op1,
                              Value* op2,
                              const_str_ref name = "") {
@@ -382,7 +382,7 @@ class IRBuilder {
     }
 
     //! FCMP inst family
-    Instruction* create_fcmp(Value::ValueId itype,
+    Instruction* create_fcmp(ValueId itype,
                              Value* op1,
                              Value* op2,
                              const_str_ref name = "") {

@@ -63,9 +63,9 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
                 }
             } else {  //! 变量
                 if (func->ret_type()->is_i32() && value->is_float()) {
-                    value =_builder.create_unary_beta(ir::Value::vFPTOSI, value, ir::Type::i32_type());
+                    value =_builder.create_unary_beta(ir::ValueId::vFPTOSI, value, ir::Type::i32_type());
                 } else if (func->ret_type()->is_float() && value->is_i32()) {
-                    value = builder().create_unary_beta(ir::Value::vSITOFP, value, ir::Type::float_type());
+                    value = builder().create_unary_beta(ir::ValueId::vSITOFP, value, ir::Type::float_type());
                 } else if (func->ret_type() != value->type()) {
                     assert(false && "invalid type");
                 }
@@ -122,10 +122,10 @@ std::any SysYIRGenerator::visitAssignStmt(SysYParser::AssignStmtContext* ctx) {
         if (lvar_pointee_type == exp->type()) {
             exp = exp;
         } else if (lvar_pointee_type->is_i32() && exp->is_float32()) {
-            exp = _builder.create_unary_beta(ir::Value::vFPTOSI, exp, ir::Type::i32_type());
+            exp = _builder.create_unary_beta(ir::ValueId::vFPTOSI, exp, ir::Type::i32_type());
 
         } else if (lvar_pointee_type->is_float32() && exp->is_i32()) {
-            exp = builder().create_unary_beta(ir::Value::vSITOFP, exp, ir::Type::float_type());
+            exp = builder().create_unary_beta(ir::ValueId::vSITOFP, exp, ir::Type::float_type());
         }
     }
     res = _builder.create_store(exp, lvalue_ptr);
