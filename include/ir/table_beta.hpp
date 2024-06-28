@@ -8,7 +8,7 @@ namespace ir {
 //! SymbolTableBeta
 
 /**
- * @brief 
+ * @brief
  * XXScope new_scope(_tables)
  * .lookup(name)
  * .insert(name, value)
@@ -22,7 +22,6 @@ class SymbolTableBeta {
     };
 
    public:
-    
     /*
      * @brief 符号表作用域 (Module, Function, Block)
      */

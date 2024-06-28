@@ -21,7 +21,7 @@ void Use::set_user(User* user) {
     _user = user;
 }
 void Use::set_value(Value* value) {
-_value = value;
+    _value = value;
 }
 
 //! Value
@@ -41,7 +41,7 @@ use_ptr_vector& User::operands() {
 
 /* return as value */
 Value* User::operand(size_t index) const {
-    assert(index<_operands.size());
+    assert(index < _operands.size());
     return _operands[index]->value();
 }
 
@@ -57,7 +57,7 @@ void User::add_operand(Value* value) {
 }
 
 void User::set_operand(size_t index, Value* value) {
-    assert(index<_operands.size());
+    assert(index < _operands.size());
     _operands[index]->set_value(value);
     value->uses().emplace_back(_operands[index]);
 }

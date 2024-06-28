@@ -49,8 +49,8 @@ class Constant : public User {
           _is_zero(f64 == 0.0) {}
 
     Constant() : User(Type::void_type(), vCONSTANT, "VOID") {}
-    Constant(const_str_ref name) : User(Type::undefine_type(), vCONSTANT, "undef") {}
-     
+    Constant(const_str_ref name)
+        : User(Type::undefine_type(), vCONSTANT, "undef") {}
 
    public:
     //* add constant to cache
@@ -164,19 +164,18 @@ class Constant : public User {
     }
 
    public:
-    std::string comment() const override { 
+    std::string comment() const override {
         int a = 5;
-        return name(); 
+        return name();
     }
     // get
     bool i1() const {
-        if(not is_i1()){
+        if (not is_i1()) {
             std::cerr << "Implicit type conversion!" << std::endl;
             return (bool)_i1;
         }
         assert(is_i1() && "not i1!");
         return _i1;
-
     }
     int32_t i32() const {
         if (not is_i32()) {
@@ -213,10 +212,13 @@ class Constant : public User {
     static bool classof(const Value* v) { return v->scid() == vCONSTANT; }
     void print(std::ostream& os) override;
 
-    bool isequal(Constant* c){
-        if(c->scid()!=scid())return false;
-        if(c->i32())return c->i32()==i32();
-        if(c->f32())return c->f32()==f32();
+    bool isequal(Constant* c) {
+        if (c->scid() != scid())
+            return false;
+        if (c->i32())
+            return c->i32() == i32();
+        if (c->f32())
+            return c->f32() == f32();
         return false;
     }
 };

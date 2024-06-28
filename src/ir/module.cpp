@@ -8,7 +8,8 @@ namespace ir {
 
 void Module::add_gvar(const_str_ref name, Value* gv) {
     auto iter = _gvalue_table.find(name);  // find the name in _globals
-    assert(iter == _gvalue_table.end() && "Redeclare! global variable already exists");
+    assert(iter == _gvalue_table.end() &&
+           "Redeclare! global variable already exists");
     _gvalue_table.emplace(name, gv);
     _gvalues.emplace_back(gv);
 }
@@ -31,15 +32,15 @@ Function* Module::add_func(Type* type, const_str_ref name) {
     return func;
 }
 
-void Module::delete_func(ir::Function* func){
-    assert(lookup_func(func->name()) != nullptr && "delete unexisted function!");
+void Module::delete_func(ir::Function* func) {
+    assert(lookup_func(func->name()) != nullptr &&
+           "delete unexisted function!");
     _func_table.erase(func->name());
-    _funcs.erase(std::find(_funcs.begin(),_funcs.end(),func));
-    for(auto bb:func->blocks()){
+    _funcs.erase(std::find(_funcs.begin(), _funcs.end(), func));
+    for (auto bb : func->blocks()) {
         func->force_delete_block(bb);
     }
 }
-
 
 // readable ir print
 void Module::print(std::ostream& os) {
@@ -59,7 +60,9 @@ void Module::print(std::ostream& os) {
     }
 
     // llvm inline function
-    os << "declare void @llvm.memset.p0i8.i64(i8* nocapture writeonly, i8, i64, i1 immarg)" << std::endl;
+    os << "declare void @llvm.memset.p0i8.i64(i8* nocapture writeonly, i8, "
+          "i64, i1 immarg)"
+       << std::endl;
 
     //! print all functions
     for (auto func : _funcs) {
@@ -67,8 +70,8 @@ void Module::print(std::ostream& os) {
     }
 }
 
-void Module::rename(){
-    for(auto func : _funcs){
+void Module::rename() {
+    for (auto func : _funcs) {
         func->rename();
     }
 }

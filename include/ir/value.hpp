@@ -127,8 +127,8 @@ enum ValueId {
     vBASIC_BLOCK,
     vGLOBAL_VAR,
 
-    vBITCAST, 
-    vMEMSET, 
+    vBITCAST,
+    vMEMSET,
 
     // instructions class id
     vINSTRUCTION,
@@ -220,7 +220,7 @@ class Value {
 
     /*! manage use-def relation !*/
     use_ptr_list& uses() { return _uses; }
-    
+
     /* replace this value with another value, for all user use this value */
     void replace_all_use_with(Value* _value);
 
@@ -242,15 +242,15 @@ class Value {
         }
     }
 
-    public:  // check
-        bool is_i1() const { return _type->is_i1(); }
-        bool is_i32() const { return _type->is_i32(); }
-        bool is_float32() const { return _type->is_float32(); }
-        bool is_double() const { return _type->is_double(); }
-        bool is_float() const { return _type->is_float(); }
-        bool is_undef() const {return _type->is_undef(); }
-        bool is_pointer() const { return _type->is_pointer(); }
-        bool is_void()const {return _type->is_void(); }
+   public:  // check
+    bool is_i1() const { return _type->is_i1(); }
+    bool is_i32() const { return _type->is_i32(); }
+    bool is_float32() const { return _type->is_float32(); }
+    bool is_double() const { return _type->is_double(); }
+    bool is_float() const { return _type->is_float(); }
+    bool is_undef() const { return _type->is_undef(); }
+    bool is_pointer() const { return _type->is_pointer(); }
+    bool is_void() const { return _type->is_void(); }
 
    public:
     ValueId scid() const { return _scid; }
@@ -293,7 +293,7 @@ class User : public Value {
             add_operand(value);
         }
     }
-    /* del use relation of all operand values, 
+    /* del use relation of all operand values,
     ** may do this before delete this user */
     void unuse_allvalue() {
         for (auto& operand : _operands) {
@@ -302,18 +302,17 @@ class User : public Value {
     }
 
     /* delete an operand of a value */
-    void delete_operands(int index){
+    void delete_operands(int index) {
         _operands[index]->value()->uses().remove(_operands[index]);
-        _operands.erase(_operands.begin()+index);
-        for(int idx=index+1;idx<_operands.size();idx++)
+        _operands.erase(_operands.begin() + index);
+        for (int idx = index + 1; idx < _operands.size(); idx++)
             _operands[idx]->set_index(idx);
         refresh_operand_index();
     }
 
-
-    void refresh_operand_index(){
-        int cnt=0;
-        for(auto op:_operands){
+    void refresh_operand_index() {
+        int cnt = 0;
+        for (auto op : _operands) {
             op->set_index(cnt);
             cnt++;
         }
@@ -323,7 +322,7 @@ class User : public Value {
 
 /*
 user use value
-只需要 调用 user.add_operand(value), 
+只需要 调用 user.add_operand(value),
 会把 use 加入 user._operands 和 value._uses
 user.add_operand(value){
     use = new Use(...);

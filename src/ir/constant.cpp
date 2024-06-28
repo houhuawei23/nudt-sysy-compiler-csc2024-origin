@@ -11,11 +11,10 @@ void Constant::print(std::ostream& os) {
     if (type()->is_i32()) {
         os << i32();
     } else if (type()->is_float()) {
-        os << name(); // 0x...
-    } else if (type()->is_undef()){
+        os << name();  // 0x...
+    } else if (type()->is_undef()) {
         os << "undef";
-    } 
-    else {
+    } else {
         assert(false);
     }
 }

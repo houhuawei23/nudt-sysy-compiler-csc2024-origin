@@ -32,7 +32,7 @@ Type* Type::label_type() {
     static Type labelType(LABEL);
     return &labelType;
 }
-Type* Type::undefine_type(){
+Type* Type::undefine_type() {
     static Type undefineType(UNDEFINE);
     return &undefineType;
 }
@@ -72,7 +72,7 @@ bool Type::is_double() {
     return _btype == DOUBLE;
 }
 
-bool Type::is_undef(){
+bool Type::is_undef() {
     return _btype == UNDEFINE;
 }
 
@@ -90,7 +90,7 @@ bool Type::is_array() {
 }
 
 //! print
-void Type::print(std::ostream& os){
+void Type::print(std::ostream& os) {
     auto basetype = btype();
     switch (basetype) {
         case INT1:
@@ -125,7 +125,8 @@ void Type::print(std::ostream& os){
                     os << "[" << value << " x ";
                 }
                 atype->base_type()->print(os);
-                for (int i = 0; i < dims; i++) os << "]";
+                for (int i = 0; i < dims; i++)
+                    os << "]";
             } else {
                 assert(false);
             }
@@ -135,7 +136,6 @@ void Type::print(std::ostream& os){
     }
 }
 
-
 PointerType* PointerType::gen(Type* base_type) {
     PointerType* ptype = new PointerType(base_type);
     return ptype;
@@ -144,7 +144,8 @@ ArrayType* ArrayType::gen(Type* baseType, std::vector<int> dims, int capacity) {
     ArrayType* ptype = new ArrayType(baseType, dims, capacity);
     return ptype;
 }
-FunctionType* FunctionType::gen(Type* ret_type, const type_ptr_vector& arg_types) {
+FunctionType* FunctionType::gen(Type* ret_type,
+                                const type_ptr_vector& arg_types) {
     FunctionType* ftype = new FunctionType(ret_type, arg_types);
     return ftype;
 }

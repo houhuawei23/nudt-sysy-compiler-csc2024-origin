@@ -46,8 +46,8 @@ class IRBuilder {
             if (val->is_i32()) {
                 res = create_icmp(ValueId::vINE, val, ir::Constant::gen_i32(0));
             } else if (val->is_float()) {
-                res =
-                    create_fcmp(ValueId::vFONE, val, ir::Constant::gen_f32(0.0));
+                res = create_fcmp(ValueId::vFONE, val,
+                                  ir::Constant::gen_f32(0.0));
             }
         } else {
             res = val;
@@ -64,15 +64,19 @@ class IRBuilder {
             // need to promote
             if (val->type()->is_i1()) {
                 if (target_tpye->is_i32()) {
-                    res = create_unary_beta(ValueId::vZEXT, res, Type::i32_type());
+                    res = create_unary_beta(ValueId::vZEXT, res,
+                                            Type::i32_type());
 
                 } else if (target_tpye->is_float()) {
-                    res = create_unary_beta(ValueId::vZEXT, res, Type::i32_type());
-                    res = create_unary_beta(ValueId::vSITOFP, res, Type::float_type());
+                    res = create_unary_beta(ValueId::vZEXT, res,
+                                            Type::i32_type());
+                    res = create_unary_beta(ValueId::vSITOFP, res,
+                                            Type::float_type());
                 }
             } else if (val->type()->is_i32()) {
                 if (target_tpye->is_float()) {
-                    res = create_unary_beta(ValueId::vSITOFP, res, Type::float_type());
+                    res = create_unary_beta(ValueId::vSITOFP, res,
+                                            Type::float_type());
                 }
             }
         }
@@ -128,7 +132,7 @@ class IRBuilder {
     }
 
     auto create_binary_beta(BinaryOp op, Value* lhs, Value* rhs) {
-        Type* ltype = lhs->type(), *rtype = rhs->type();
+        Type *ltype = lhs->type(), *rtype = rhs->type();
         if (ltype != rtype) {
             assert(false && "create_eq_beta: type mismatch!");
         }
@@ -201,7 +205,8 @@ class IRBuilder {
                 assert(ty->is_float() && "sitofp must have float type");
                 break;
             case ValueId::vFPTOSI:
-                assert(val->type()->is_float() && "fptosi must have float operand");
+                assert(val->type()->is_float() &&
+                       "fptosi must have float operand");
                 assert(ty->is_int() && "fptosi must have int type");
                 break;
             case ValueId::vTRUNC:
@@ -219,7 +224,7 @@ class IRBuilder {
     //! get
     std::string get_bbname() { return "bb" + std::to_string(_bb_cnt++); }
     uint32_t get_bbidx() { return _bb_cnt++; }
-    
+
     BasicBlock* block() const { return _block; }
     inst_iterator position() const { return _pos; }
 
@@ -282,11 +287,13 @@ class IRBuilder {
     }
 
     //! Create Alloca Instruction
-    AllocaInst* create_alloca(Type* base_type, bool is_const=false, 
-                              std::vector<int> dims={}, 
-                              const_str_ref comment="", int capacity=1) {
+    AllocaInst* create_alloca(Type* base_type,
+                              bool is_const = false,
+                              std::vector<int> dims = {},
+                              const_str_ref comment = "",
+                              int capacity = 1) {
         AllocaInst* inst = nullptr;
-        auto entryBlock=block()->parent()->entry();
+        auto entryBlock = block()->parent()->entry();
         if (dims.size() == 0) {
             inst = new AllocaInst(base_type, entryBlock, "", is_const);
             // if (!base_type->is_pointer()) {
@@ -294,16 +301,18 @@ class IRBuilder {
             //     StoreInst* store_inst = nullptr;
             //     switch(inst->base_type()->btype()) {
             //         case ir::INT32:
-            //             store_inst = new StoreInst(ir::Constant::gen_i32(0), inst, next);
-            //             break;
+            //             store_inst = new StoreInst(ir::Constant::gen_i32(0),
+            //             inst, next); break;
             //         case ir::FLOAT:
-            //             store_inst = new StoreInst(ir::Constant::gen_f32(0.0), inst, next);
+            //             store_inst = new
+            //             StoreInst(ir::Constant::gen_f32(0.0), inst, next);
             //             break;
             //     }
             //     next->emplace_first_inst(store_inst);
             // }
-        }
-        else inst = new AllocaInst(base_type, dims, entryBlock, "", is_const, capacity);
+        } else
+            inst = new AllocaInst(base_type, dims, entryBlock, "", is_const,
+                                  capacity);
         /* hhw, add alloca to function entry block*/
         block()->parent()->entry()->emplace_back_inst(inst);
         inst->set_comment(comment);
@@ -392,12 +401,20 @@ class IRBuilder {
     }
 
     //! Create GetElementPtr Instruction
-    GetElementPtrInst* create_getelementptr(Type* base_type, Value* value, Value* idx, 
-                                            std::vector<int> dims={}, std::vector<int> cur_dims={}) {
+    GetElementPtrInst* create_getelementptr(Type* base_type,
+                                            Value* value,
+                                            Value* idx,
+                                            std::vector<int> dims = {},
+                                            std::vector<int> cur_dims = {}) {
         GetElementPtrInst* inst = nullptr;
-        if (dims.size() == 0 && cur_dims.size() == 0) inst = new GetElementPtrInst(base_type, value, _block, idx);
-        else if (dims.size() == 0 && cur_dims.size() != 0) inst = new GetElementPtrInst(base_type, value, _block, idx, cur_dims);
-        else inst = new GetElementPtrInst(base_type, value, _block, idx, dims, cur_dims);
+        if (dims.size() == 0 && cur_dims.size() == 0)
+            inst = new GetElementPtrInst(base_type, value, _block, idx);
+        else if (dims.size() == 0 && cur_dims.size() != 0)
+            inst =
+                new GetElementPtrInst(base_type, value, _block, idx, cur_dims);
+        else
+            inst = new GetElementPtrInst(base_type, value, _block, idx, dims,
+                                         cur_dims);
         block()->emplace_back_inst(inst);
         return inst;
     }
@@ -416,7 +433,9 @@ class IRBuilder {
         return inst;
     }
 
-    PhiInst* create_phi(Type *type, const std::vector<Value *> &vals, const std::vector<BasicBlock *> &bbs){
+    PhiInst* create_phi(Type* type,
+                        const std::vector<Value*>& vals,
+                        const std::vector<BasicBlock*>& bbs) {
         auto inst = new PhiInst(_block, type, vals, bbs);
         block()->emplace_back_inst(inst);
         return inst;
