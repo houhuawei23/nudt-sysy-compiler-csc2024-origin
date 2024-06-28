@@ -4,23 +4,26 @@
 namespace sysy {
 /*
  * @brief: Visit Number Expression
- * @details: 
+ * @details:
  *      number: ILITERAL | FLITERAL; (即: int or float)
  */
 std::any SysYIRGenerator::visitNumberExp(SysYParser::NumberExpContext* ctx) {
     ir::Value* res = nullptr;
-    if (auto iLiteral = ctx->number()->ILITERAL()) {  //! int
-        std::string s = iLiteral->getText();
+    if (auto iLiteral = ctx->number()->ILITERAL()) {
         //! 基数 (8, 10, 16)
+        const auto text = iLiteral->getText();
         int base = 10;
-        if (s.length() > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) base = 16;
-        else if (s[0] == '0') base = 8;
-
-        res = ir::Constant::gen_i32(std::stol(s, 0, base));
-    } else if (auto fctx = ctx->number()->FLITERAL()) {  //! float
-        std::string s = fctx->getText();
-        float f = std::stof(s);
-        res = ir::Constant::gen_f32(f);
+        if (text.find("0x") == 0 || text.find("0X") == 0) {
+            base = 16;
+        } else if (text.find("0b") == 0 || text.find("0B") == 0) {
+            base = 2;
+        } else if (text.find("0") == 0) {
+            base = 8;
+        }
+        res = ir::Constant::gen_i32(std::stol(text, 0, base));
+    } else if (auto fLiteral = ctx->number()->FLITERAL()) {
+        const auto text = fLiteral->getText();
+        res = ir::Constant::gen_f32(std::stof(text));
     }
     return dyn_cast_Value(res);
 }
@@ -31,29 +34,33 @@ std::any SysYIRGenerator::visitNumberExp(SysYParser::NumberExpContext* ctx) {
  *      var: ID (LBRACKET exp RBRACKET)*;
  */
 std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
-    std::string varname = ctx->var()->ID()->getText();
+    const auto varname = ctx->var()->ID()->getText();
     auto ptr = _tables.lookup(varname);
     assert(ptr && "use undefined variable");
 
     bool isArray = false;
-    if (auto ptype = dyn_cast<ir::PointerType>(ptr->type())) {
-        isArray = ptype->base_type()->is_array() || ptype->base_type()->is_pointer();
+    if (auto ptype = ptr->type()->dynCast<ir::PointerType>()) {
+        isArray =
+            ptype->base_type()->is_array() || ptype->base_type()->is_pointer();
     }
-    if (!isArray) {  //! 1. scalar
-        if (ir::isa<ir::GlobalVariable>(ptr)) {  // 全局
-            auto gptr = dyn_cast<ir::GlobalVariable>(ptr);
-            if (gptr->is_const()) {  // 常量
+    if (!isArray) {
+        //! 1. scalar
+        if (auto gptr = ptr->dynCast<ir::GlobalVariable>()) {  // 全局
+            if (gptr->is_const()) {                            // 常量
                 ptr = gptr->scalar_value();
             } else {  // 变量
                 ptr = _builder.create_load(ptr);
+                // ptr = builder().makeInst<ir::LoadInst>(ptr);
             }
         } else {  // 局部 (变量 - load, 常量 - ignore)
             if (!ir::isa<ir::Constant>(ptr)) {
                 ptr = _builder.create_load(ptr);
+                // ptr = builder().makeInst<ir::LoadInst>(ptr);
             }
         }
     } else {  //! 2. array
-        ir::Type* type = dyn_cast<ir::PointerType>(ptr->type())->base_type();
+        auto type = ptr->type()->as<ir::PointerType>()->base_type();
+        // ir::Type* type = dyn_cast<ir::PointerType>(ptr->type())->base_type();
         if (type->is_array()) {  // 数组 (eg. int a[2][3]) -> 常规使用
             auto atype = dyn_cast<ir::ArrayType>(type);
             auto base_type = atype->base_type();
@@ -61,59 +68,142 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
 
             int delta = dims.size() - ctx->var()->exp().size();
             for (auto expr : ctx->var()->exp()) {
-                ir::Value* idx = any_cast_Value(visit(expr));
+                auto idx = any_cast_Value(visit(expr));
                 dims.erase(dims.begin());
-                ptr = _builder.create_getelementptr(base_type, ptr, idx, dims, cur_dims);
+                ptr = _builder.create_getelementptr(base_type, ptr, idx, dims,
+                                                    cur_dims);
                 cur_dims.erase(cur_dims.begin());
             }
             if (ctx->var()->exp().empty()) {
                 dims.erase(dims.begin());
-                ptr = _builder.create_getelementptr(base_type, ptr, ir::Constant::gen_i32(0), dims, cur_dims);
+                ptr = _builder.create_getelementptr(
+                    base_type, ptr, ir::Constant::gen_i32(0), dims, cur_dims);
             } else if (delta > 0) {
                 dims.erase(dims.begin());
-                ptr = _builder.create_getelementptr(base_type, ptr, ir::Constant::gen_i32(0), dims, cur_dims);
+                ptr = _builder.create_getelementptr(
+                    base_type, ptr, ir::Constant::gen_i32(0), dims, cur_dims);
             }
 
-            if (delta == 0) ptr = _builder.create_load(ptr);
-        } else if (type->is_pointer()) {  // 一级及指针 (eg. int a[] OR int a[][5]) -> 函数参数
+            if (delta == 0)
+                ptr = _builder.create_load(ptr);
+            // ptr = builder().makeInst<ir::LoadInst>(ptr);
+        } else if (type->is_pointer()) {  // 一级及指针 (eg. int a[] OR int
+                                          // a[][5]) -> 函数参数
             ptr = _builder.create_load(ptr);
+            // ptr = builder().makeInst<ir::LoadInst>(ptr);
             type = dyn_cast<ir::PointerType>(type)->base_type();
-            if (type->is_array()) {  // 二级及以上指针 (eg. int a[][5]) Pointer<Array>
+            if (type->is_array()) {  // 二级及以上指针 (eg. int a[][5])
+                                     // Pointer<Array>
                 if (ctx->var()->exp().size()) {
                     auto expr_vec = ctx->var()->exp();
 
-                    ir::Value* idx = any_cast_Value(visit(expr_vec[0]));
+                    auto idx = any_cast_Value(visit(expr_vec[0]));
                     ptr = _builder.create_getelementptr(type, ptr, idx);
                     auto base_type = dyn_cast<ir::ArrayType>(type)->base_type();
-                    std::vector<int> dims = dyn_cast<ir::ArrayType>(type)->dims(), cur_dims(dims);
+                    std::vector<int> dims =
+                                         dyn_cast<ir::ArrayType>(type)->dims(),
+                                     cur_dims(dims);
                     int delta = dims.size() + 1 - expr_vec.size();
                     for (int i = 1; i < expr_vec.size(); i++) {
                         idx = any_cast_Value(visit(expr_vec[i]));
                         dims.erase(dims.begin());
-                        ptr = _builder.create_getelementptr(base_type, ptr, idx, dims, cur_dims);
+                        ptr = _builder.create_getelementptr(base_type, ptr, idx,
+                                                            dims, cur_dims);
                         cur_dims.erase(cur_dims.begin());
                     }
                     if (delta > 0) {  // 参数传递
                         dims.erase(dims.begin());
-                        ptr = _builder.create_getelementptr(base_type, ptr, ir::Constant::gen_i32(0), dims, cur_dims);
+                        ptr = _builder.create_getelementptr(
+                            base_type, ptr, ir::Constant::gen_i32(0), dims,
+                            cur_dims);
                         cur_dims.erase(cur_dims.begin());
                     } else if (delta == 0) {
                         ptr = _builder.create_load(ptr);
+                        // ptr = builder().makeInst<ir::LoadInst>(ptr);
                     } else {
                         assert(false && "the array dimensions error");
                     }
                 }
             } else {  // 一级指针
                 for (auto expr : ctx->var()->exp()) {
-                    ir::Value* idx = any_cast_Value(visit(expr));
+                    auto idx = any_cast_Value(visit(expr));
                     ptr = _builder.create_getelementptr(type, ptr, idx);
                 }
-                if (ctx->var()->exp().size()) ptr = _builder.create_load(ptr);
+                if (ctx->var()->exp().size())
+                    ptr = _builder.create_load(ptr);
+                // ptr = builder().makeInst<ir::LoadInst>(ptr);
             }
         } else {
             assert(false && "type error");
         }
     }
+    return dyn_cast_Value(ptr);
+}
+
+/*
+ * @brief: visit lvalue
+ * @details:
+ *      lValue: ID (LBRACKET exp RBRACKET)*
+ */
+std::any SysYIRGenerator::visitLValue(SysYParser::LValueContext* ctx) {
+    //! lvalue must be a pointer
+    std::string name = ctx->ID()->getText();
+    auto ptr = _tables.lookup(name);
+    assert(ptr && "use undefined variable");
+
+    bool isArray = false;
+    if (auto ptype = dyn_cast<ir::PointerType>(ptr->type())) {
+        isArray =
+            ptype->base_type()->is_array() || ptype->base_type()->is_pointer();
+    }
+    if (!isArray) {  //! 1. scalar
+        return dyn_cast_Value(ptr);
+    } else {  //! 2. array
+        ir::Type* type = dyn_cast<ir::PointerType>(ptr->type())->base_type();
+        if (type->is_array()) {  // 数组 (eg. int a[2][3]) -> 常规使用
+            auto atype = dyn_cast<ir::ArrayType>(type);
+            auto base_type = atype->base_type();
+            std::vector<int> dims = atype->dims(), cur_dims(dims);
+            for (auto expr : ctx->exp()) {
+                auto idx = any_cast_Value(visit(expr));
+                dims.erase(dims.begin());
+                ptr = _builder.create_getelementptr(base_type, ptr, idx, dims,
+                                                    cur_dims);
+                cur_dims.erase(cur_dims.begin());
+            }
+        } else if (type->is_pointer()) {  // 指针 (eg. int a[] OR int a[][5]) ->
+                                          // 函数参数
+            ptr = _builder.create_load(ptr);
+            // ptr = builder().makeInst<ir::LoadInst>(ptr, builder().block());
+            type = dyn_cast<ir::PointerType>(type)->base_type();
+
+            if (type->is_array()) {
+                auto expr_vec = ctx->exp();
+
+                auto idx = any_cast_Value(visit(expr_vec[0]));
+                ptr = _builder.create_getelementptr(type, ptr, idx);
+                auto base_type = dyn_cast<ir::ArrayType>(type)->base_type();
+                std::vector<int> dims = dyn_cast<ir::ArrayType>(type)->dims(),
+                                 cur_dims(dims);
+
+                for (int i = 1; i < expr_vec.size(); i++) {
+                    idx = any_cast_Value(visit(expr_vec[i]));
+                    dims.erase(dims.begin());
+                    ptr = _builder.create_getelementptr(base_type, ptr, idx,
+                                                        dims, cur_dims);
+                    cur_dims.erase(cur_dims.begin());
+                }
+            } else {
+                for (auto expr : ctx->exp()) {
+                    auto idx = any_cast_Value(visit(expr));
+                    ptr = _builder.create_getelementptr(type, ptr, idx);
+                }
+            }
+        } else {
+            assert(false && "type error");
+        }
+    }
+
     return dyn_cast_Value(ptr);
 }
 
@@ -125,8 +215,15 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
 std::any SysYIRGenerator::visitUnaryExp(SysYParser::UnaryExpContext* ctx) {
     ir::Value* res = nullptr;
     auto exp = any_cast_Value(visit(ctx->exp()));
-
-    if (ctx->SUB()) {
+    if (ctx->ADD()) {
+        res = exp;
+    } else if (ctx->NOT()) {
+        auto true_target = builder().false_target();
+        auto false_target = builder().true_target();
+        builder().pop_tf();
+        builder().push_tf(true_target, false_target);
+        res = exp;
+    } else if (ctx->SUB()) {
         if (auto cexp = dyn_cast<ir::Constant>(exp)) {
             //! constant
             switch (cexp->type()->btype()) {
@@ -145,7 +242,8 @@ std::any SysYIRGenerator::visitUnaryExp(SysYParser::UnaryExpContext* ctx) {
         } else if (ir::isa<ir::LoadInst>(exp) || ir::isa<ir::BinaryInst>(exp)) {
             switch (exp->type()->btype()) {
                 case ir::INT32:
-                    res = builder().create_binary_beta(ir::BinaryOp::SUB, ir::Constant::gen_i32(0), exp);
+                    res = builder().create_binary_beta(
+                        ir::BinaryOp::SUB, ir::Constant::gen_i32(0), exp);
                     break;
                 case ir::FLOAT:
                     res = builder().create_unary_beta(ir::ValueId::vFNEG, exp);
@@ -156,14 +254,6 @@ std::any SysYIRGenerator::visitUnaryExp(SysYParser::UnaryExpContext* ctx) {
         } else {
             assert(false && "invalid value type");
         }
-    } else if (ctx->NOT()) {
-        auto true_target = builder().false_target();
-        auto false_target = builder().true_target();
-        builder().pop_tf();
-        builder().push_tf(true_target, false_target);
-        res = exp;
-    } else if (ctx->ADD()) {
-        res = exp;
     } else {
         assert(false && "invalid expression");
     }
@@ -191,13 +281,15 @@ std::any SysYIRGenerator::visitParenExp(SysYParser::ParenExpContext* ctx) {
  */
 std::any SysYIRGenerator::visitMultiplicativeExp(
     SysYParser::MultiplicativeExpContext* ctx) {
-    ir::Value* op1 = any_cast_Value(visit(ctx->exp(0)));
-    ir::Value* op2 = any_cast_Value(visit(ctx->exp(1)));
+    auto op1 = any_cast_Value(visit(ctx->exp(0)));
+    auto op2 = any_cast_Value(visit(ctx->exp(1)));
     ir::Value* res;
-    if (ir::isa<ir::Constant>(op1) && ir::isa<ir::Constant>(op2)) {  //! both constant (常数折叠)
-        ir::Constant* cop1 = dyn_cast<ir::Constant>(op1);
-        ir::Constant* cop2 = dyn_cast<ir::Constant>(op2);
-        auto higher_Btype = std::max(cop1->type()->btype(), cop2->type()->btype());
+    if (ir::isa<ir::Constant>(op1) && ir::isa<ir::Constant>(op2)) {
+        //! both constant (常数折叠)
+        auto cop1 = dyn_cast<ir::Constant>(op1);
+        auto cop2 = dyn_cast<ir::Constant>(op2);
+        auto higher_Btype =
+            std::max(cop1->type()->btype(), cop2->type()->btype());
 
         int32_t ans_i32;
         float ans_f32;
@@ -259,14 +351,14 @@ std::any SysYIRGenerator::visitMultiplicativeExp(
  */
 std::any SysYIRGenerator::visitAdditiveExp(
     SysYParser::AdditiveExpContext* ctx) {
-    ir::Value* lhs = any_cast_Value(visit(ctx->exp()[0]));
-    ir::Value* rhs = any_cast_Value(visit(ctx->exp()[1]));
+    auto lhs = any_cast_Value(visit(ctx->exp()[0]));
+    auto rhs = any_cast_Value(visit(ctx->exp()[1]));
     ir::Value* res;
 
     if (ir::isa<ir::Constant>(lhs) && ir::isa<ir::Constant>(rhs)) {
         //! constant
-        ir::Constant* clhs = dyn_cast<ir::Constant>(lhs);
-        ir::Constant* crhs = dyn_cast<ir::Constant>(rhs);
+        auto clhs = dyn_cast<ir::Constant>(lhs);
+        auto crhs = dyn_cast<ir::Constant>(rhs);
         // bool is_ADD = ctx->ADD();
 
         auto higher_BType =
@@ -322,7 +414,8 @@ std::any SysYIRGenerator::visitAdditiveExp(
     return dyn_cast_Value(res);
 }
 //! exp (LT | GT | LE | GE) exp
-std::any SysYIRGenerator::visitRelationExp(SysYParser::RelationExpContext* ctx) {
+std::any SysYIRGenerator::visitRelationExp(
+    SysYParser::RelationExpContext* ctx) {
     auto lhsptr = any_cast_Value(visit(ctx->exp()[0]));
     auto rhsptr = any_cast_Value(visit(ctx->exp()[1]));
 
@@ -413,7 +506,9 @@ std::any SysYIRGenerator::visitAndExp(SysYParser::AndExpContext* ctx) {
 
     lhs_value = builder().cast_to_i1(lhs_value);
 
-    builder().create_br(lhs_value, lhs_t_target, lhs_f_target);
+    // builder().create_br(lhs_value, lhs_t_target, lhs_f_target);
+    builder().makeInst<ir::BranchInst>(lhs_value, lhs_t_target, lhs_f_target,
+                                       builder().block());
 
     //! 2 [for CFG] link cur_block and target
     // visit may change the cur_block, so need to reload the cur block
@@ -450,7 +545,9 @@ std::any SysYIRGenerator::visitOrExp(SysYParser::OrExpContext* ctx) {
     builder().pop_tf();  // match with push_tf
 
     lhs_value = builder().cast_to_i1(lhs_value);
-    builder().create_br(lhs_value, lhs_t_target, lhs_f_target);
+    // builder().create_br(lhs_value, lhs_t_target, lhs_f_target);
+    builder().makeInst<ir::BranchInst>(lhs_value, lhs_t_target, lhs_f_target,
+                                       builder().block());
 
     //! 2 [for CFG] link cur_block and target
     // visit may change the cur_block, so need to reload the cur block

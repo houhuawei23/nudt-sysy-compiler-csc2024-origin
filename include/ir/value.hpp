@@ -195,7 +195,8 @@ enum ValueId {
     // Phi Instruction
     vPHI_BEGIN,
     vPHI,
-    VPHI_END
+    VPHI_END,
+    vInvalid,
 };
 class Value {
    protected:
@@ -255,6 +256,25 @@ class Value {
    public:
     ValueId scid() const { return _scid; }
     virtual void print(std::ostream& os) = 0;
+
+    template <typename T>
+    T* as() {
+        static_assert(std::is_base_of_v<Value, T>);
+        auto ptr = dynamic_cast<T*>(this);
+        assert(ptr);
+        return ptr;
+    }
+    template <typename T>
+    bool isa() const {
+        static_assert(std::is_base_of_v<Value, T>);
+        return dynamic_cast<const T*>(this);
+    }
+
+    template <typename T>
+    T* dynCast() {
+        static_assert(std::is_base_of_v<Value, T>);
+        return dynamic_cast<T*>(this);
+    }
 };
 
 /**

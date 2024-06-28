@@ -81,6 +81,20 @@ class Type {
 
    public:
     void print(std::ostream& os);
+
+    template <typename T>
+    T* as() {
+        static_assert(std::is_base_of_v<Type, T>);
+        auto ptr = dynamic_cast<T*>(this);
+        assert(ptr);
+        return ptr;
+    }
+    template <typename T>
+    T* dynCast() {
+        static_assert(std::is_base_of_v<Type, T>);
+        return dynamic_cast<T*>(this);
+    }
+
 };
 
 class PointerType : public Type {

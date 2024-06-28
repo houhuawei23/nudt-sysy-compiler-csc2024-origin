@@ -220,9 +220,9 @@ ir::Value* SysYIRGenerator::visitArray_local(SysYParser::VarDefContext* ctx,
     //! get initial value (将数组元素的初始化值存储在Arrayinit中)
     if (ctx->ASSIGN()) {
         for (int i = 0; i < capacity; i++) Arrayinit.push_back(nullptr);
-
-        auto tmp = _builder.create_bitcast(alloca_ptr->type(), alloca_ptr);
-        _builder.create_memset(tmp->type(), tmp);
+        auto tmp = builder().makeInst<ir::BitCastInst>(alloca_ptr->type(), alloca_ptr, builder().block());
+        // _builder.create_memset(tmp->type(), tmp);
+        builder().makeInst<ir::MemsetInst>(tmp->type(), tmp, builder().block());
 
         _d = 0; _n = 0;
         _path.clear(); _path = std::vector<int>(dims.size(), 0);
@@ -244,7 +244,8 @@ ir::Value* SysYIRGenerator::visitArray_local(SysYParser::VarDefContext* ctx,
     for (int i = 0; i < Arrayinit.size(); i++) {
         if (Arrayinit[i] != nullptr) {
             element_ptr = _builder.create_getelementptr(btype, element_ptr, ir::Constant::gen_i32(cnt));
-            _builder.create_store(Arrayinit[i], element_ptr);
+            // _builder.create_store(Arrayinit[i], element_ptr);
+            builder().makeInst<ir::StoreInst>(Arrayinit[i], element_ptr, builder().block());
             cnt = 0;
         }
         cnt++;
@@ -308,7 +309,8 @@ ir::Value* SysYIRGenerator::visitScalar_local(SysYParser::VarDefContext* ctx,
                     init = builder().create_unary_beta(ir::ValueId::vSITOFP, init, ir::Type::float_type());
                 }
             }
-            _builder.create_store(init, alloca_ptr);
+            // _builder.create_store(init, alloca_ptr);
+            builder().makeInst<ir::StoreInst>(init, alloca_ptr, builder().block());
         }
         
         return dyn_cast_Value(alloca_ptr);
