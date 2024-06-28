@@ -85,7 +85,7 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
     if (ctx->blockStmt()) {
         // create and enter function scope
         // it will be automatically destroyed when return from this visitFfunc
-        ir::SymbolTableBeta::FunctionScope scope(_tables);
+        ir::SymbolTable::FunctionScope scope(_tables);
 
         ir::BasicBlock* entry = func->new_entry();
         ir::BasicBlock* exit = func->new_exit();

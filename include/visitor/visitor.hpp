@@ -15,7 +15,7 @@ class SysYIRGenerator : public SysYBaseVisitor {
     private:
         ir::Module* _module = nullptr;
         ir::IRBuilder _builder;
-        ir::SymbolTableBeta _tables;
+        ir::SymbolTable _tables;
         antlr4::ParserRuleContext* _root;
 
         int _d = 0, _n = 0;

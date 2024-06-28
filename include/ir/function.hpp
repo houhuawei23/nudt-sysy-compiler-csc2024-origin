@@ -10,15 +10,7 @@ namespace ir {
 
 // for BasicBlock sort
 inline bool compareBB(const BasicBlock* b1, const BasicBlock* b2) {
-    // return a1->priority < a2->priority;
     return b1->idx() < b2->idx();
-
-    // if (a1->name().size() > 1 && a2->name().size() > 1)
-    //     return std::stoi(a1->name().substr(2)) <
-    //            std::stoi(a2->name().substr(2));
-    // else {
-    //     assert(false && "compareBB error");
-    // }
 }
 
 class Loop {

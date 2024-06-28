@@ -14,7 +14,6 @@ class Argument : public Value {
    protected:
     Function* _parent;
     int _index;
-    std::vector<int> _dims;  // 维数信息
 
    public:
     Argument(Type* type,
@@ -26,12 +25,6 @@ class Argument : public Value {
     Function* parent() const { return _parent; }
 
     int index() const { return _index; }
-
-    std::vector<int>& dims() { return _dims; }  // get ref?
-
-    int dim_num() const { return _dims.size(); }
-    int dim(int i) const { return _dims[i]; }
-
     // for isa<>
     static bool classof(const Value* v) { return v->scid() == vARGUMENT; }
 

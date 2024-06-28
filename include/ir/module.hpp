@@ -31,8 +31,8 @@ class Module {
     ~Module() = default;
 
     //! get
-    std::vector<ir::Function*>& funcs() { return _funcs; }
-    std::vector<ir::Value*>& gvalues() { return _gvalues; }
+    auto& funcs() const { return _funcs; }
+    auto& gvalues() const { return _gvalues; }
 
     Function* lookup_func(const_str_ref name);
 

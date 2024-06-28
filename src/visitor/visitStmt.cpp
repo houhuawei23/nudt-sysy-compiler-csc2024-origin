@@ -19,7 +19,7 @@ namespace sysy {
  *          | emptyStmt;
  */
 std::any SysYIRGenerator::visitBlockStmt(SysYParser::BlockStmtContext* ctx) {
-    ir::SymbolTableBeta::BlockScope scope(_tables);
+    ir::SymbolTable::BlockScope scope(_tables);
     for (auto item : ctx->blockItem()) {
         visit(item);
         if (auto teststmt = item->stmt()) {
