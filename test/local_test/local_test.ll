@@ -1,4 +1,4 @@
-@n = global i32 0
+@ascii_0 = constant i32 48
 
 declare void @llvm.memset.p0i8.i64(i8* nocapture writeonly, i8, i64, i1 immarg)
 declare i32 @getint()
@@ -31,180 +31,216 @@ declare void @_sysy_starttime()
 
 declare void @_sysy_stoptime()
 
-define i32 @select_sort(i32* %0, i32 %1) {
+define i32 @my_getint() {
 bb0: ; entry
     ; nexts: bb1
+    %0 = alloca i32
+    %1 = alloca i32
     %2 = alloca i32
-    %3 = alloca i32
-    %4 = alloca i32* ; A*
     br label %bb1
 
 bb1:
     ; pres: bb0
     ; nexts: bb2
-    store i32* %0, i32** %4
-    store i32 0, i32* %2
     br label %bb2 ; br while1_judge
 
 bb2: ; while1_judge
-    ; pres: bb1, bb12
-    ; nexts: bb3, bb13
-    %5 = load i32, i32* %2
-    %6 = load i32, i32* %3
-    %7 = sub i32 %1, 1
-    %8 = icmp slt i32 %5, %7
-    br i1 %8, label %bb3, label %bb13 ; br while1_loop, while1_next
+    ; pres: bb1, bb5
+    ; nexts: bb3, bb0
+    %3 = load i32, i32* %2
+    %4 = icmp ne i32 1, 0 ; 1 ne 0
+    br i1 %4, label %bb3, label %bb0
 
 bb3: ; while1_loop
     ; pres: bb2
-    ; nexts: bb4
-    %9 = add i32 %5, 1
-    store i32 %9, i32* %2
-    br label %bb4 ; br while2_judge
+    ; nexts: bb5, bb4
+    %5 = call i32 @getch()
+    %6 = sub i32 %5, 48
+    %7 = icmp slt i32 %6, 0
+    br i1 %7, label %bb5, label %bb4 ; br if1_then, rhs_block
 
-bb4: ; while2_judge
-    ; pres: bb3, bb8
-    ; nexts: bb5, bb9
-    %10 = load i32, i32* %2
-    %11 = load i32, i32* %2
-    %12 = icmp slt i32 %10, %1
-    br i1 %12, label %bb5, label %bb9 ; br while2_loop, while2_next
+bb4: ; rhs_block
+    ; pres: bb3
+    ; nexts: bb5, bb7
+    %8 = icmp sgt i32 %6, 9
+    br i1 %8, label %bb5, label %bb7 ; br if1_then, if1_else
 
-bb5: ; while2_loop
-    ; pres: bb4
-    ; nexts: bb6, bb7
-    %13 = load i32*, i32** %4 ; load A
-    %14 = getelementptr i32, i32* %13, i32 %11
-    %15 = load i32, i32* %14
-    %16 = load i32*, i32** %4 ; load A
-    %17 = getelementptr i32, i32* %16, i32 %10
-    %18 = load i32, i32* %17
-    %19 = icmp sgt i32 %15, %18
-    br i1 %19, label %bb6, label %bb7 ; br if1_then, if1_else
-
-bb6: ; if1_then
-    ; pres: bb5
-    ; nexts: bb8
-    br label %bb8 ; br if1_merge
-
-bb7: ; if1_else
-    ; pres: bb5
-    ; nexts: bb8
-    br label %bb8 ; br if1_merge
-
-bb8: ; if1_merge
-    ; pres: bb6, bb7
-    ; nexts: bb4
-    %20 = load i32, i32* %2
-    %21 = add i32 %10, 1
-    store i32 %21, i32* %2
-    br label %bb4 ; br while2_judge
-
-bb9: ; while2_next
-    ; pres: bb4
-    ; nexts: bb10, bb11
-    %22 = icmp ne i32 %11, %5
-    br i1 %22, label %bb10, label %bb11 ; br if2_then, if2_else
-
-bb10: ; if2_then
-    ; pres: bb9
-    ; nexts: bb12
-    %23 = load i32*, i32** %4 ; load A
-    %24 = getelementptr i32, i32* %23, i32 %11
-    %25 = load i32, i32* %24
-    %26 = load i32*, i32** %4 ; load A
-    %27 = getelementptr i32, i32* %26, i32 %11
-    %28 = load i32*, i32** %4 ; load A
-    %29 = getelementptr i32, i32* %28, i32 %5
-    %30 = load i32, i32* %29
-    store i32 %30, i32* %27
-    %31 = load i32*, i32** %4 ; load A
-    %32 = getelementptr i32, i32* %31, i32 %5
-    store i32 %25, i32* %32
-    store i32 %25, i32* %3
-    br label %bb12 ; br if2_merge
-
-bb11: ; if2_else
-    ; pres: bb9
-    ; nexts: bb12
-    br label %bb12 ; br if2_merge
-
-bb12: ; if2_merge
-    ; pres: bb10, bb11
+bb5: ; if1_then
+    ; pres: bb3, bb4
     ; nexts: bb2
-    %33 = load i32, i32* %3
-    %34 = add i32 %5, 1
-    store i32 %34, i32* %2
+    store i32 %6, i32* %2
     br label %bb2 ; br while1_judge
 
-bb13: ; while1_next
-    ; pres: bb2
-    ; nexts: bb15
-    br label %bb15 ; br exit
+bb7: ; if1_else
+    ; pres: bb4
+    ; nexts: bb10
+    store i32 %6, i32* %1
+    br label %bb10 ; br while1_next
 
-bb15: ; exit
+bb10: ; while1_next
+    ; pres: bb7, bb0
+    ; nexts: bb11
+    %9 = load i32, i32* %1
+    store i32 %9, i32* %0
+    br label %bb11 ; br while2_judge
+
+bb11: ; while2_judge
+    ; pres: bb10, bb17
+    ; nexts: bb12, bb18
+    %10 = load i32, i32* %0
+    %11 = icmp ne i32 1, 0 ; 1 ne 0
+    br i1 %11, label %bb12, label %bb18 ; br while2_loop, while2_next
+
+bb12: ; while2_loop
+    ; pres: bb11
+    ; nexts: bb13, bb15
+    %12 = call i32 @getch()
+    %13 = sub i32 %12, 48
+    %14 = icmp sge i32 %13, 0
+    br i1 %14, label %bb13, label %bb15 ; br rhs_block, if2_else
+
+bb13: ; rhs_block
+    ; pres: bb12
+    ; nexts: bb14, bb15
+    %15 = icmp sle i32 %13, 9
+    br i1 %15, label %bb14, label %bb15 ; br if2_then, if2_else
+
+bb14: ; if2_then
     ; pres: bb13
-    ret i32 0
+    ; nexts: bb17
+    %16 = mul i32 %10, 10
+    %17 = add i32 %16, %13
+    br label %bb17 ; br if2_merge
+
+bb15: ; if2_else
+    ; pres: bb12, bb13
+    ; nexts: bb18
+    br label %bb18 ; br while2_next
+
+bb17: ; if2_merge
+    ; pres: bb14
+    ; nexts: bb11
+    store i32 %17, i32* %0
+    br label %bb11 ; br while2_judge
+
+bb18: ; while2_next
+    ; pres: bb11, bb15
+    ; nexts: bb20
+    br label %bb20 ; br exit
+
+bb20: ; exit
+    ; pres: bb18
+    ret i32 %10
+
+bb0:
+    ; pres: bb2
+    ; nexts: bb10
+    store i32 %3, i32* %1
+    br label %bb10 ; br while1_next
+
+}
+define void @my_putint(i32 %0) {
+bb0: ; entry
+    ; nexts: bb1
+    %1 = alloca i32
+    %2 = alloca i32
+    %3 = alloca i32
+    %4 = alloca [16 x i32] ; b*
+    br label %bb1
+
+bb1:
+    ; pres: bb0
+    ; nexts: bb2
+    %5 = getelementptr [16 x i32], [16 x i32]* %4, i32 0, i32 0
+    store i32 0, i32* %3
+    store i32 %0, i32* %2
+    br label %bb2 ; br while3_judge
+
+bb2: ; while3_judge
+    ; pres: bb1, bb3
+    ; nexts: bb3, bb4
+    %6 = load i32, i32* %2
+    %7 = load i32, i32* %3
+    %8 = icmp sgt i32 %6, 0
+    br i1 %8, label %bb3, label %bb4 ; br while3_loop, while3_next
+
+bb3: ; while3_loop
+    ; pres: bb2
+    ; nexts: bb2
+    %9 = getelementptr [16 x i32], [16 x i32]* %4, i32 0, i32 %7
+    %10 = srem i32 %6, 10
+    %11 = add i32 %10, 48
+    store i32 %11, i32* %9
+    %12 = sdiv i32 %6, 10
+    %13 = add i32 %7, 1
+    store i32 %13, i32* %3
+    store i32 %12, i32* %2
+    br label %bb2 ; br while3_judge
+
+bb4: ; while3_next
+    ; pres: bb2
+    ; nexts: bb5
+    store i32 %7, i32* %1
+    br label %bb5 ; br while4_judge
+
+bb5: ; while4_judge
+    ; pres: bb4, bb6
+    ; nexts: bb6, bb7
+    %14 = load i32, i32* %1
+    %15 = icmp sgt i32 %14, 0
+    br i1 %15, label %bb6, label %bb7 ; br while4_loop, while4_next
+
+bb6: ; while4_loop
+    ; pres: bb5
+    ; nexts: bb5
+    %16 = sub i32 %14, 1
+    %17 = getelementptr [16 x i32], [16 x i32]* %4, i32 0, i32 %16
+    %18 = load i32, i32* %17
+    call void @putch(i32 %18)
+    store i32 %16, i32* %1
+    br label %bb5 ; br while4_judge
+
+bb7: ; while4_next
+    ; pres: bb5
+    ; nexts: bb8
+    br label %bb8 ; br exit
+
+bb8: ; exit
+    ; pres: bb7
+    ret void
 
 }
 define i32 @main() {
 bb0: ; entry
     ; nexts: bb1
     %0 = alloca i32
-    %1 = alloca [10 x i32] ; a*
     br label %bb1
 
 bb1:
     ; pres: bb0
     ; nexts: bb2
-    store i32 10, i32* @n
-    %2 = getelementptr [10 x i32], [10 x i32]* %1, i32 0, i32 0
-    %3 = getelementptr [10 x i32], [10 x i32]* %1, i32 0, i32 0
-    store i32 4, i32* %3
-    %4 = getelementptr [10 x i32], [10 x i32]* %1, i32 0, i32 1
-    store i32 3, i32* %4
-    %5 = getelementptr [10 x i32], [10 x i32]* %1, i32 0, i32 2
-    store i32 9, i32* %5
-    %6 = getelementptr [10 x i32], [10 x i32]* %1, i32 0, i32 3
-    store i32 2, i32* %6
-    %7 = getelementptr [10 x i32], [10 x i32]* %1, i32 0, i32 4
-    store i32 0, i32* %7
-    %8 = getelementptr [10 x i32], [10 x i32]* %1, i32 0, i32 5
-    store i32 1, i32* %8
-    %9 = getelementptr [10 x i32], [10 x i32]* %1, i32 0, i32 6
-    store i32 6, i32* %9
-    %10 = getelementptr [10 x i32], [10 x i32]* %1, i32 0, i32 7
-    store i32 5, i32* %10
-    %11 = getelementptr [10 x i32], [10 x i32]* %1, i32 0, i32 8
-    store i32 7, i32* %11
-    %12 = getelementptr [10 x i32], [10 x i32]* %1, i32 0, i32 9
-    store i32 8, i32* %12
-    %13 = getelementptr [10 x i32], [10 x i32]* %1, i32 0, i32 0
-    %14 = load i32, i32* @n
-    %15 = call i32 @select_sort(i32* %13, i32 %14)
-    store i32 %15, i32* %0
-    br label %bb2 ; br while3_judge
+    %1 = call i32 @my_getint()
+    store i32 %1, i32* %0
+    br label %bb2 ; br while5_judge
 
-bb2: ; while3_judge
+bb2: ; while5_judge
     ; pres: bb1, bb3
     ; nexts: bb3, bb4
-    %16 = load i32, i32* %0
-    %17 = load i32, i32* @n
-    %18 = icmp slt i32 %16, %17
-    br i1 %18, label %bb3, label %bb4 ; br while3_loop, while3_next
+    %2 = load i32, i32* %0
+    %3 = icmp sgt i32 %2, 0
+    br i1 %3, label %bb3, label %bb4 ; br while5_loop, while5_next
 
-bb3: ; while3_loop
+bb3: ; while5_loop
     ; pres: bb2
     ; nexts: bb2
-    %19 = getelementptr [10 x i32], [10 x i32]* %1, i32 0, i32 %16
-    %20 = load i32, i32* %19
-    call void @putint(i32 %20)
+    %4 = call i32 @my_getint()
+    call void @my_putint(i32 %4)
     call void @putch(i32 10)
-    %21 = add i32 %16, 1
-    store i32 %21, i32* %0
-    br label %bb2 ; br while3_judge
+    %5 = sub i32 %2, 1
+    store i32 %5, i32* %0
+    br label %bb2 ; br while5_judge
 
-bb4: ; while3_next
+bb4: ; while5_next
     ; pres: bb2
     ; nexts: bb6
     br label %bb6 ; br exit

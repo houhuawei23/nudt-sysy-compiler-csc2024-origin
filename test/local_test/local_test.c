@@ -1,49 +1,52 @@
-int n;
-int select_sort(int A[],int n)
+const int ascii_0 = 48;
+
+int my_getint()
 {
-    int i;
-    int j;
-    int min;
-    i =0;
-    while(i < n-1)
-    {
-        min=i;//
-        j = i + 1;
-        while(j < n)
-        {
-            if(A[min]>A[j])
-            {
-                min=j;
-            }
-            j=j+1;
+    int sum = 0, c;
+
+    while (1) {
+        c = getch() - ascii_0;
+        if (c < 0 || c > 9) {
+            continue;
+        } else {
+            break;
         }
-        if(min!=i)
-        {
-            int tmp;
-            tmp = A[min];
-            A[min] = A[i];
-            A[i] = tmp;
-        }
-        i = i + 1;
     }
-    return 0;
+    sum = c;
+
+    while (1) {
+        c = getch() - ascii_0;
+        if (c >= 0 && c <= 9) {
+            sum = sum * 10 + c;
+        } else {
+            break;
+        }
+    }
+
+    return sum;
 }
 
-int main(){
-    n = 10;
-    int a[10];
-    a[0]=4;a[1]=3;a[2]=9;a[3]=2;a[4]=0;
-    a[5]=1;a[6]=6;a[7]=5;a[8]=7;a[9]=8;
-    int i;
-    i = 0;
-    i = select_sort(a, n);
-    while (i < n) {
-        int tmp;
-        tmp = a[i];
-        putint(tmp);
-        tmp = 10;
-        putch(tmp);
+void my_putint(int a)
+{
+    int b[16], i = 0;
+    while (a > 0) {
+        b[i] = a % 10 + ascii_0;
+        a = a / 10;
         i = i + 1;
+    }
+    while (i > 0) {
+        i = i - 1;
+        putch(b[i]);
+    }
+}
+
+int main()
+{
+    int n = my_getint();
+    while (n > 0) {
+        int m = my_getint();
+        my_putint(m); putch(10);
+        n = n - 1;
     }
     return 0;
 }
