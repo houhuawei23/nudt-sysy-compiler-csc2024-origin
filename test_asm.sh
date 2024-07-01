@@ -1,6 +1,7 @@
 #!/bin/bash
 # Use the Script: ./test.sh -t test/2021/functional/001_var_defn.sy -p mem2reg -p dce
 set -u
+# set -x
 
 TIMEOUT=0.5
 
@@ -26,9 +27,9 @@ RESET=$(tput sgr0)
 CYAN=$(tput setaf 6)
 
 sysylib_funcs=(
-    "getint" "getch" "getarray" "getfloat" "getfarray"
-    "putint" "putch" "putarray" "putfloat" "putfarray"
-    "putf" "starttime" "stoptime"
+    # "getint" "getch" "getarray" "getfloat" "getfarray"
+    # "putint" "putch" "putarray" "putfloat" "putfarray"
+    # "putf" "starttime" "stoptime"
 )
 skip_keywords=(
     # "\["
@@ -65,7 +66,7 @@ EC_RISCV_GCC=2
 EC_LLI=3
 EC_TIMEOUT=124
 
-TIMEOUT=10
+TIMEOUT=1
 
 usage() {
     echo "Usage: $0 [-t <test_path>] [-o <output_dir>] [-r <result_file>] [-r <result_file>][-h]"
@@ -147,6 +148,9 @@ echo "result_file    ${result_file} " >>${result_file}
 
 echo "" >>${result_file}
 
+sy_h="./test/link/sy.h"
+sy_c="./test/link/link.c"
+
 function run_gcc_test() {
     local single_file="$1"
     local output_dir="$2"
@@ -160,15 +164,17 @@ function run_gcc_test() {
 
     gcc_out="${output_dir}/gcc_out"
 
-    if [ -f "${gcc_c}" ]; then
-        rm "${gcc_c}"
-    fi
-    touch "${gcc_c}"
-    cat "${single_file}" >"${gcc_c}"
+    cat "${sy_c}" >"${gcc_c}"
+    cat "${single_file}" >>"${gcc_c}"
 
     riscv64-linux-gnu-gcc -S -march=rv64gc -mabi=lp64d -mcmodel=medlow -ffp-contract=on "${gcc_c}" -o "${gcc_s}" -O0
     riscv64-linux-gnu-gcc -march=rv64gc -mabi=lp64d -mcmodel=medlow -ffp-contract=on "${gcc_c}" -o "${gcc_o}" -O0
-    qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gcc_o}" >"${gcc_out}"
+    if [ -f $in_file ]; then
+        timeout $TIMEOUT qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gcc_o}" <"${in_file}" >"${gcc_out}"
+    else
+        timeout $TIMEOUT qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gcc_o}" >"${gcc_out}"
+    fi
+    # qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gcc_o}" >"${gcc_out}"
     local qemu_res=$?
     return $qemu_res
 }
@@ -214,7 +220,7 @@ function run_compiler_test() {
 
     local gen_elf="${output_dir}/gen.elf"
     # for test
-    riscv64-linux-gnu-gcc -O0 -march=rv64gc -mabi=lp64d -mcmodel=medlow "${gen_s}" -o "${gen_o}"
+    riscv64-linux-gnu-gcc -O0 -march=rv64gc -mabi=lp64d -mcmodel=medlow "${gen_s}" ${sy_c} -o "${gen_o}"
     if [ $? != 0 ]; then
         return $EC_RISCV_GCC
     fi
@@ -223,7 +229,12 @@ function run_compiler_test() {
     if [ $? == $EC_TIMEOUT ]; then # time out
         return $EC_TIMEOUT
     fi
-    qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gen_o}" >"${gen_out}"
+    if [ -f $in_file ]; then
+        timeout $TIMEOUT qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gen_o}" <"${in_file}" >"${gen_out}"
+    else
+        timeout $TIMEOUT qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gen_o}" >"${gen_out}"
+    fi  
+    # qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gen_o}" >"${gen_out}"
     local compiler_res=$?
 
     return $compiler_res
