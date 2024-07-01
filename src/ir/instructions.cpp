@@ -7,8 +7,7 @@ namespace ir {
 
 /*
  * @brief AllocaInst::print
- * @details:
- *      alloca <ty>
+ * @details: alloca <ty>
  */
 void AllocaInst::print(std::ostream& os) {
     os << name() << " = alloca " << *(base_type());

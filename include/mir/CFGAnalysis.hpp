@@ -14,12 +14,10 @@ struct MIRBlockEdge final {
     MIRBlock* block;
     double prob;
 };
-
 struct MIRBlockCFGInfo final {
     std::vector<MIRBlockEdge> predecessors;
     std::vector<MIRBlockEdge> successors;
 };
-
 class CFGAnalysis final {
     std::unordered_map<MIRBlock*, MIRBlockCFGInfo> _block2CFGInfo;
 
@@ -32,6 +30,13 @@ public:  // get function
         return _block2CFGInfo.at(block).successors;
     }
 };
-
 CFGAnalysis calcCFG(MIRFunction& mfunc, CodeGenContext& ctx);
+
+struct BlockTripCountResult final {
+    std::unordered_map<MIRBlock*, double> _freq;
+public:
+    auto& storage() { return _freq; }
+    double query(MIRBlock* block) const;
+};
+BlockTripCountResult calcFreq(MIRFunction& mfunc, CFGAnalysis& cfg);
 }

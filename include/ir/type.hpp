@@ -35,54 +35,43 @@ typedef enum : size_t {
 } BType;
 
 class Type {
-    protected:
-        BType _btype;
-        size_t _size;
-
-    public:
-        Type(BType btype, size_t size=4) : _btype(btype), _size(size) {}
-        virtual ~Type() = default;
-
-    public:  // static method for construct Type instance
-        static Type* void_type();
-
-        static Type* i1_type();
-        static Type* i32_type();
-
-        static Type* float_type();
-        static Type* double_type();
-
-        static Type* label_type();
-        static Type* undefine_type();
-        static Type* pointer_type(Type* baseType);
-        static Type* array_type(Type* baseType, std::vector<int> dims, int capacity=1);
-        static Type* func_type(Type* ret_type, const type_ptr_vector& param_types);
-
-    public:  // check
-        bool is(Type* type);
-        bool isnot(Type* type);
-        bool is_void();
-
-        bool is_i1();
-        bool is_i32();
-        bool is_int() { return is_i1() || is_i32(); }
-
-        bool is_float32();
-        bool is_double();
-        bool is_float() { return is_float32() || is_double(); }
-        bool is_undef();
-
-        bool is_label();
-        bool is_pointer();
-        bool is_array();
-        bool is_function();
-
-    public:  // get
-        BType btype() const { return _btype; }
-        size_t size() const { return _size; }
-
-    public:
-        void print(std::ostream& os);
+protected:
+    BType _btype;
+    size_t _size;
+public:
+    Type(BType btype, size_t size=4) : _btype(btype), _size(size) {}
+    virtual ~Type() = default;
+public:  // static method for construct Type instance
+    static Type* void_type();
+    static Type* i1_type();
+    static Type* i32_type();
+    static Type* float_type();
+    static Type* double_type();
+    static Type* label_type();
+    static Type* undefine_type();
+    static Type* pointer_type(Type* baseType);
+    static Type* array_type(Type* baseType, std::vector<int> dims, int capacity=1);
+    static Type* func_type(Type* ret_type, const type_ptr_vector& param_types);
+public:  // check function
+    bool is(Type* type);
+    bool isnot(Type* type);
+    bool is_void();
+    bool is_i1();
+    bool is_i32();
+    bool is_int() { return is_i1() || is_i32(); }
+    bool is_float32();
+    bool is_double();
+    bool is_float() { return is_float32() || is_double(); }
+    bool is_undef();
+    bool is_label();
+    bool is_pointer();
+    bool is_array();
+    bool is_function();
+public:  // get function
+    BType btype() const { return _btype; }
+    size_t size() const { return _size; }
+public:
+    void print(std::ostream& os);
 };
 
 class PointerType : public Type {

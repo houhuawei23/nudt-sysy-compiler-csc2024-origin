@@ -66,42 +66,30 @@ void allocateStackObjects(MIRFunction* func, CodeGenContext& ctx) {
     std::unordered_set<MIROperand*> callee_saved;
     for (auto& block : func->blocks()) {
         forEachDefOperand(*block, ctx, [&](MIROperand* op) {
-            if (op->is_unused())
-                return;
+            if (op->is_unused()) return;
             if (op->is_reg() && isISAReg(op->reg()) &&
                 ctx.frameInfo.is_callee_saved(*op)) {
-                if (debugSA)
-                    dumpOperand(op);
-
-                callee_saved.insert(MIROperand::as_isareg(
-                    op->reg(),  //
-                    ctx.registerInfo->getCanonicalizedRegisterType(
-                        op->type())));
+                if (debugSA) dumpOperand(op);
+                callee_saved.insert(MIROperand::as_isareg(op->reg(), ctx.registerInfo->getCanonicalizedRegisterType(op->type())));
             }
         });
     }
-    const auto preAllocatedBase = ctx.frameInfo.insert_prologue_epilogue(
-        func, callee_saved, ctx,
-        ctx.registerInfo->get_return_address_register());
+    const auto preAllocatedBase = ctx.frameInfo.insert_prologue_epilogue(func, callee_saved, ctx, ctx.registerInfo->get_return_address_register());
 
     remove_unused_spill_stack_objects(func);  // remove dead code
 
     int32_t allocationBase = 0;
-    auto sp_alignment =
-        static_cast<int32_t>(ctx.frameInfo.get_stackpointer_alignment());
+    auto sp_alignment = static_cast<int32_t>(ctx.frameInfo.get_stackpointer_alignment());
     auto align_to = [&](int32_t alignment) {
         assert(alignment <= sp_alignment);
-        allocationBase =
-            (allocationBase + alignment - 1) / alignment * alignment;
+        allocationBase = (allocationBase + alignment - 1) / alignment * alignment;
     };
 
     /* 2. callee arguments */
     for (auto& [ref, stack] : func->stack_objs()) {
         assert(isStackObject(ref->reg()));
         if (stack.usage == StackObjectUsage::CalleeArgument) {
-            allocationBase =
-                std::max(allocationBase,
-                         stack.offset + static_cast<int32_t>(stack.size));
+            allocationBase = std::max(allocationBase, stack.offset + static_cast<int32_t>(stack.size));
         }
     }
     align_to(sp_alignment);
@@ -114,9 +102,7 @@ void allocateStackObjects(MIRFunction* func, CodeGenContext& ctx) {
         }
     }
     std::sort(local_callee_saved.begin(), local_callee_saved.end(),
-              [&](const MIROperand* lhs, const MIROperand* rhs) {
-                  return lhs->reg() > rhs->reg();
-              });
+              [&](const MIROperand* lhs, const MIROperand* rhs) { return lhs->reg() > rhs->reg(); });
 
     auto allocate_for = [&](StackObject& stack) {
         align_to(static_cast<int32_t>(stack.alignment));
@@ -127,16 +113,13 @@ void allocateStackObjects(MIRFunction* func, CodeGenContext& ctx) {
         allocate_for(func->stack_objs().at(op));
     }
     for (auto& [op, stack] : func->stack_objs()) {
-        if (stack.usage == StackObjectUsage::Local ||
-            stack.usage == StackObjectUsage::RegSpill) {
+        if (stack.usage == StackObjectUsage::Local || stack.usage == StackObjectUsage::RegSpill) {
             allocate_for(stack);
         }
     }
 
     align_to(sp_alignment);
-    auto gap =
-        (preAllocatedBase + sp_alignment - 1) / sp_alignment * sp_alignment -
-        preAllocatedBase;
+    auto gap =(preAllocatedBase + sp_alignment - 1) / sp_alignment * sp_alignment - preAllocatedBase;
     auto stack_size = allocationBase + gap;
     assert((stack_size + preAllocatedBase) % sp_alignment == 0);
     for (auto& [op, stack] : func->stack_objs()) {
@@ -147,15 +130,13 @@ void allocateStackObjects(MIRFunction* func, CodeGenContext& ctx) {
     }
 
     /* 4. emit prologue and epilogue */
-    ctx.frameInfo.emit_postsa_prologue(func->blocks().front().get(),
-                                       stack_size);
+    ctx.frameInfo.emit_postsa_prologue(func->blocks().front().get(), stack_size);
 
     for (auto& block : func->blocks()) {
         auto terminator = block->insts().back();
         auto& instInfo = ctx.instInfo.get_instinfo(terminator);
         if (requireFlag(instInfo.inst_flag(), InstFlagReturn)) {
-            ctx.frameInfo.emit_postsa_epilogue(block.get(),
-                                               stack_size);
+            ctx.frameInfo.emit_postsa_epilogue(block.get(), stack_size);
         }
     }
 }

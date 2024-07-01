@@ -15,6 +15,7 @@ class TargetRegisterInfo {
 
     /** 获得合法化后的寄存器类型 */
     virtual OperandType getCanonicalizedRegisterType(OperandType type) = 0;
+    virtual OperandType getCanonicalizedRegisterTypeForClass(uint32_t classId) = 0;
 
     virtual MIROperand* get_return_address_register() = 0;
     virtual MIROperand* get_stack_pointer_register() = 0;

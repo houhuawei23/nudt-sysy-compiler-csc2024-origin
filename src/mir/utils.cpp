@@ -122,4 +122,19 @@ void forEachDefOperand(MIRFunction& func,
         forEachDefOperand(*block, ctx, functor);
     }
 }
-}  // namespace mir
+
+/* some utils function */
+static void DumpForDebug(const CodeLocation& location) {
+     std::cerr << "in func \"" << location.func << " (" << location.file << ":" << location.line << std::endl;
+}
+void ReportNotImplemented(const CodeLocation& location) {
+    std::cerr << "Not implemented" << std::endl;
+    DumpForDebug(location);
+    __builtin_trap();
+}
+void ReportUnreachable(const CodeLocation& location) {
+    std::cerr << "Unreachable code" << std::endl;
+    DumpForDebug(location);
+    __builtin_trap();
+}
+}

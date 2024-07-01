@@ -175,8 +175,7 @@ void ISelContext::run_isel(MIRFunction* func) {
         }
 
         if (modified) {
-            if (debugISel)
-                std::cout << "run_isel modified, continue!\n" << std::endl;
+            if (debugISel) std::cout << "run_isel modified, continue!\n" << std::endl;
             continue;
         }
         // not modified, check illegal inst

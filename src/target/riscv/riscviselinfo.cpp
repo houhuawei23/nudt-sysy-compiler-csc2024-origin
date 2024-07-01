@@ -229,7 +229,7 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
                 newInst->set_operand(1, inst->operand(1));
                 newInst->set_operand(2, inst->operand(2));
 
-                inst->set_operand(1, newDst);
+                inst->set_operand(1, newDst); /* icmp */
                 inst->set_operand(2, getZero(inst->operand(2)));
                 // ctx.remove_inst(inst);
                 modified = true;

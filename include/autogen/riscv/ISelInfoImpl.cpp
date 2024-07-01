@@ -847,6 +847,7 @@ static bool matchAndSelectPattern11(MIRInst* inst5, ISelContext& ctx) {
     }
 
     /* match predicate for operands  */
+    // std::cerr << "!!: " <<isOperandI64(op21) <<std::endl;
     if (not(isOperandI64(op21) && isOperandIReg(op22) && isOperandIReg(op23))) {
         return false;
     }
@@ -1715,8 +1716,8 @@ static bool matchAndSelectPattern36(MIRInst* inst1, ISelContext& ctx) {
 
     /** Select Inst **/
     auto op6 = (op1);
-    auto op7 = (op3);
-    auto op8 = (getOne(op2));
+    auto op7 = (op2);
+    auto op8 = (getOne(op3));
     /* select inst SLTIU */
     auto inst2 = new MIRInst(SLTIU);
     inst2->set_operand(0, op6);

@@ -769,7 +769,7 @@ InstSelInfo: {
               op: $op,
               predicate: "isOperandIReg($src1) && isZero($src2) && isCompareOp($op, CompareOp::ICmpEqual)",
             },
-          replace: { name: SLTIU, rd: $dst, rs1: $src2, imm: getOne($src1) },
+          replace: { name: SLTIU, rd: $dst, rs1: $src1, imm: getOne($src2) },
         },
         # branch
         {

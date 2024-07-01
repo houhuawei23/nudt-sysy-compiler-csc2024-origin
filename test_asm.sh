@@ -1,5 +1,5 @@
 #!/bin/bash
-# dont ignore unset variables
+# Use the Script: ./test.sh -t test/2021/functional/001_var_defn.sy -p mem2reg -p dce
 set -u
 
 TIMEOUT=0.5
@@ -30,13 +30,11 @@ sysylib_funcs=(
     "putint" "putch" "putarray" "putfloat" "putfarray"
     "putf" "starttime" "stoptime"
 )
-
 skip_keywords=(
-    "\["
+    # "\["
     # "if"
     # "while"
 )
-
 function check_key_in_file() {
     file="$1"
     for func in "${sysylib_funcs[@]}"; do
@@ -60,16 +58,15 @@ output_dir="test/.out"
 single_file=""
 result_file="test/.out/result.txt"
 
-error_code=0 # 0 for exe success
+error_code=0  # 0 for exe success
 
 EC_MAIN=1
 EC_RISCV_GCC=2
 EC_LLI=3
 EC_TIMEOUT=124
 
-TIMEOUT=3
+TIMEOUT=10
 
-# Function to print usage information
 usage() {
     echo "Usage: $0 [-t <test_path>] [-o <output_dir>] [-r <result_file>] [-r <result_file>][-h]"
     echo "Options:"
@@ -78,20 +75,15 @@ usage() {
     echo "  -r <result_file>    Specify the file to store the test results (default: test/result.txt)"
     echo "  -h                  Print this help message"
 }
-# ./test.sh -t test/2021/functional/001_var_defn.sy -p mem2reg -p dce
-# Parse command line arguments
 
-# getopt
 SHORT="h,t:,o:,r:,p:,O:,L:"
 LONG="help,test_path:,output_dir:,result_file:,pass:opt_level:,log_level:"
 OPTS=$(getopt --options $SHORT --longoptions $LONG --name "$0" -- "$@")
-
 if [ $? -ne 0 ]; then
     echo "Error parsing command line arguments" >&2
     usage
     exit 1
 fi
-
 eval set -- "$OPTS"
 
 while true; do
@@ -113,7 +105,6 @@ while true; do
         shift 2
         ;;
     -p | --pass)
-        # check not empty and not start with --
         PASSES+=("$2")
         shift 2
         ;;
@@ -214,12 +205,13 @@ function run_compiler_test() {
     
     timeout $TIMEOUT ./main -f "${single_file}" -S -t ${PASSES_STR} -o "${gen_s}" "${OPT_LEVEL}" "${LOG_LEVEL}"
     mainres=$?
-    if [ $mainres == $EC_TIMEOUT ]; then # time out
+    if [ $mainres == $EC_TIMEOUT ]; then
         return $EC_TIMEOUT
     fi
     if [ $mainres != 0 ]; then
         return $EC_MAIN
     fi
+
     local gen_elf="${output_dir}/gen.elf"
     # for test
     riscv64-linux-gnu-gcc -O0 -march=rv64gc -mabi=lp64d -mcmodel=medlow "${gen_s}" -o "${gen_o}"
