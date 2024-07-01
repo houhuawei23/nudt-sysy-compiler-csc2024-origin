@@ -86,7 +86,7 @@ void Function::print(std::ostream& os) {
         os << "\n";
     }
 }
-  
+/*! rename before print, not print, rename mix */
 void Function::rename(){
     if(not entry())return;
     setvarcnt(0);
@@ -94,8 +94,10 @@ void Function::rename(){
         std::string argname="%"+std::to_string(getvarcnt());
         arg->set_name(argname);
     }
-    
+    size_t blockIdx = 0;
     for(auto bb : _blocks){
+        bb->set_idx(blockIdx);
+        blockIdx++;
         for(auto inst : bb->insts()){
             if(inst->is_noname())continue;
             auto callpt=dyn_cast<CallInst>(inst);

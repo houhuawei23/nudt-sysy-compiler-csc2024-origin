@@ -2,8 +2,8 @@
 
 # ./test.sh -t test/2021/functional/ -p mem2reg -p dce -p scp -p sccp -p simplifycfg -L1
 
-# dont ignore unset variables
-set -u
+set -u # dont ignore unset variables
+# set -x # print all executed commands
 
 PASS_CNT=0
 WRONG_CNT=0
@@ -110,8 +110,10 @@ done
 # Handle remaining arguments (non-option arguments)
 # Use $@ or $1, $2, etc. depending on the specific needs
 
-PASSES_STR=$(IFS=" "; echo "${PASSES[*]}")
-
+PASSES_STR=$(
+    IFS=" "
+    echo "${PASSES[*]}"
+)
 
 # Ensure output directory exists
 if [ ! -d "$output_dir" ]; then
@@ -271,6 +273,7 @@ function run_test() {
 # if test_path is a file
 if [ -f "$test_path" ]; then
     run_test "$test_path" "$output_dir" "$result_file"
+    # run_gen_test $test_path $output_dir $result_file
     echo "${GREEN}OPT PASSES${RESET}: ${PASSES_STR}"
 fi
 
