@@ -101,7 +101,8 @@ class Function : public User {
     }
 
     //* Block
-    block_ptr_list& blocks() { return _blocks; }
+    auto& blocks() const { return _blocks; }
+    auto& blocks() { return _blocks; }
 
     block_ptr_list& exit_blocks() { return _exit_blocks; }
 
@@ -157,7 +158,7 @@ class Function : public User {
 
    public:
     static bool classof(const Value* v) { return v->scid() == vFUNCTION; }
-    void print(std::ostream& os) override;
+    void print(std::ostream& os) const override;
 
     void rename();
 };

@@ -74,7 +74,7 @@ class AllocaInst : public Instruction {
 
    public:
     static bool classof(const Value* v) { return v->scid() == vALLOCA; }
-    void print(std::ostream& os) override;
+    void print(std::ostream& os) const override;
     Value* getConstantRepl() { return nullptr; }
 };
 
@@ -94,7 +94,7 @@ class StoreInst : public Instruction {
 
    public:
     static bool classof(const Value* v) { return v->scid() == vSTORE; }
-    void print(std::ostream& os) override;
+    void print(std::ostream& os) const override;
 
    public:
     Value* getConstantRepl() { return nullptr; }
@@ -128,7 +128,7 @@ class LoadInst : public Instruction {
 
    public:
     static bool classof(const Value* v) { return v->scid() == vLOAD; }
-    void print(std::ostream& os) override;
+    void print(std::ostream& os) const override;
     Value* getConstantRepl() { return nullptr; }
 };
 
@@ -159,7 +159,7 @@ class ReturnInst : public Instruction {
 
    public:
     static bool classof(const Value* v) { return v->scid() == vRETURN; }
-    void print(std::ostream& os) override;
+    void print(std::ostream& os) const override;
     Value* getConstantRepl() { return nullptr; }
 };
 
@@ -193,7 +193,7 @@ class UnaryInst : public Instruction {
     Value* get_value() const { return operand(0); }
 
    public:
-    void print(std::ostream& os) override;
+    void print(std::ostream& os) const override;
     Value* getConstantRepl() override;
 };
 
@@ -233,7 +233,7 @@ class BinaryInst : public Instruction {
     Value* get_rvalue() const { return operand(1); }
 
    public:
-    void print(std::ostream& os) override;
+    void print(std::ostream& os) const override;
     Value* getConstantRepl() override;
 };
 
@@ -256,7 +256,7 @@ class CallInst : public Instruction {
     /* real arguments */
     auto& rargs() const { return _operands; }
     static bool classof(const Value* v) { return v->scid() == vCALL; }
-    void print(std::ostream& os) override;
+    void print(std::ostream& os) const override;
     Value* getConstantRepl() { return nullptr; }
 };
 
@@ -318,7 +318,7 @@ class BranchInst : public Instruction {
 
    public:
     static bool classof(const Value* v) { return v->scid() == vBR; }
-    void print(std::ostream& os) override;
+    void print(std::ostream& os) const override;
     Value* getConstantRepl() { return nullptr; }
 };
 
@@ -365,7 +365,7 @@ class ICmpInst : public Instruction {
     static bool classof(const Value* v) {
         return v->scid() >= vICMP_BEGIN && v->scid() <= vICMP_END;
     }
-    void print(std::ostream& os) override;
+    void print(std::ostream& os) const override;
     Value* getConstantRepl() override;
 };
 
@@ -413,7 +413,7 @@ class FCmpInst : public Instruction {
     static bool classof(const Value* v) {
         return v->scid() >= vFCMP_BEGIN && v->scid() <= vFCMP_END;
     }
-    void print(std::ostream& os) override;
+    void print(std::ostream& os) const override;
     Value* getConstantRepl() override;
 };
 
@@ -439,7 +439,7 @@ class BitCastInst : public Instruction {
 
    public:
     static bool classof(const Value* v) { return v->scid() == vBITCAST; }
-    void print(std::ostream& os) override;
+    void print(std::ostream& os) const override;
 };
 
 /*
@@ -462,7 +462,7 @@ class MemsetInst : public Instruction {
 
    public:
     static bool classof(const Value* v) { return v->scid() == vMEMSET; }
-    void print(std::ostream& os) override;
+    void print(std::ostream& os) const override;
 
    public:
     Value* getConstantRepl() { return nullptr; }
@@ -550,7 +550,7 @@ class GetElementPtrInst : public Instruction {
 
    public:
     static bool classof(const Value* v) { return v->scid() == vGETELEMENTPTR; }
-    void print(std::ostream& os) override;
+    void print(std::ostream& os) const override;
     Value* getConstantRepl() { return nullptr; }
 };
 
@@ -574,8 +574,8 @@ class PhiInst : public Instruction {
             add_operand(bbs[i]);
         }
     }
-    Value* getval(size_t k) { return operand(2 * k); }
-    BasicBlock* getbb(size_t k) {
+    Value* getval(size_t k) const { return operand(2 * k); }
+    BasicBlock* getbb(size_t k) const {
         return dyn_cast<BasicBlock>(operand(2 * k + 1));
     }
     Value* getvalfromBB(BasicBlock* bb);
@@ -590,7 +590,7 @@ class PhiInst : public Instruction {
     }
     void delval(Value* val);
     void delbb(BasicBlock* bb);
-    void print(std::ostream& os) override;
+    void print(std::ostream& os) const override;
     void replaceBB(BasicBlock* newBB, size_t k);
     Value* getConstantRepl() override;
 };

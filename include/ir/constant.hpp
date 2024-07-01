@@ -210,7 +210,7 @@ class Constant : public User {
 
    public:
     static bool classof(const Value* v) { return v->scid() == vCONSTANT; }
-    void print(std::ostream& os) override;
+    void print(std::ostream& os) const override;
 
     bool isequal(Constant* c) {
         if (c->scid() != scid())

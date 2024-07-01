@@ -10,7 +10,7 @@ namespace ir {
  * @details:
  *      alloca <ty>
  */
-void AllocaInst::print(std::ostream& os) {
+void AllocaInst::print(std::ostream& os) const {
     os << name() << " = alloca " << *(base_type());
     if (not _comment.empty()) {
         os << " ; " << _comment << "*";
@@ -24,7 +24,7 @@ void AllocaInst::print(std::ostream& os) {
  * @note:
  *      ptr: ArrayType or PointerType
  */
-void StoreInst::print(std::ostream& os) {
+void StoreInst::print(std::ostream& os) const {
     os << "store ";
     os << *(value()->type()) << " ";
     if (ir::isa<ir::Constant>(value())) {
@@ -43,7 +43,7 @@ void StoreInst::print(std::ostream& os) {
     os << ptr()->name();
 }
 
-void LoadInst::print(std::ostream& os) {
+void LoadInst::print(std::ostream& os) const {
     os << name() << " = load ";
     auto ptype = ptr()->type();
     if (ptype->is_pointer()) {
@@ -61,7 +61,7 @@ void LoadInst::print(std::ostream& os) {
     }
 }
 
-void ReturnInst::print(std::ostream& os) {
+void ReturnInst::print(std::ostream& os) const {
     os << "ret ";
     auto ret = return_value();
     if (ret) {
@@ -79,7 +79,7 @@ void ReturnInst::print(std::ostream& os) {
  * @brief Binary Instruction Output
  *      <result> = add <ty> <op1>, <op2>
  */
-void BinaryInst::print(std::ostream& os) {
+void BinaryInst::print(std::ostream& os) const {
     os << name() << " = ";
     auto opstr = [scid = scid()] {
         switch (scid) {
@@ -243,7 +243,7 @@ Value* BinaryInst::getConstantRepl() {
  *
  *      <result> = fneg [fast-math flags]* <ty> <op1>
  */
-void UnaryInst::print(std::ostream& os) {
+void UnaryInst::print(std::ostream& os) const {
     os << name() << " = ";
     if (scid() == vFNEG) {
         os << "fneg " << *type() << " " << get_value()->name();
@@ -302,7 +302,7 @@ Value* UnaryInst::getConstantRepl() {
     return nullptr;
 }
 
-void ICmpInst::print(std::ostream& os) {
+void ICmpInst::print(std::ostream& os) const {
     // <result> = icmp <cond> <ty> <op1>, <op2>   ; yields i1 or <N x i1>:result
     // %res = icmp eq i32, 1, 2
     os << name() << " = ";
@@ -371,7 +371,7 @@ Value* ICmpInst::getConstantRepl() {
     }
 }
 
-void FCmpInst::print(std::ostream& os) {
+void FCmpInst::print(std::ostream& os) const {
     // <result> = icmp <cond> <ty> <op1>, <op2>   ; yields i1 or <N x i1>:result
     // %res = icmp eq i32, 1, 2
     os << name() << " = ";
@@ -444,7 +444,7 @@ Value* FCmpInst::getConstantRepl() {
  *      br i1 <cond>, label <iftrue>, label <iffalse>
  *      br label <dest>
  */
-void BranchInst::print(std::ostream& os) {
+void BranchInst::print(std::ostream& os) const {
     os << "br ";
     if (is_cond()) {
         os << "i1 ";
@@ -473,7 +473,7 @@ void BranchInst::print(std::ostream& os) {
  *      数组: <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32
  * <idx> 指针: <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
  */
-void GetElementPtrInst::print(std::ostream& os) {
+void GetElementPtrInst::print(std::ostream& os) const {
     if (is_arrayInst()) {
         os << name() << " = getelementptr ";
 
@@ -511,7 +511,7 @@ void GetElementPtrInst::print(std::ostream& os) {
     }
 }
 
-void CallInst::print(std::ostream& os) {
+void CallInst::print(std::ostream& os) const {
     if (callee()->ret_type()->is_void()) {
         os << "call ";
     } else {
@@ -541,7 +541,7 @@ void CallInst::print(std::ostream& os) {
     os << ")";
 }
 
-void PhiInst::print(std::ostream& os) {
+void PhiInst::print(std::ostream& os) const {
     // 在打印的时候对其vals和bbs进行更新
     os << name() << " = ";
     os << "phi " << *(type()) << " ";
@@ -615,7 +615,7 @@ void PhiInst::replaceBB(BasicBlock* newBB, size_t k) {
  * @details:
  *      <result> = bitcast <ty> <value> to i8*
  */
-void BitCastInst::print(std::ostream& os) {
+void BitCastInst::print(std::ostream& os) const {
     os << name() << " = bitcast ";
     os << *type() << " " << value()->name();
     os << " to i8*";
@@ -626,7 +626,7 @@ void BitCastInst::print(std::ostream& os) {
  * @details:
  *      call void @llvm.memset.p0i8.i64(i8* <dest>, i8 0, i64 <len>, i1 false)
  */
-void MemsetInst::print(std::ostream& os) {
+void MemsetInst::print(std::ostream& os) const {
     assert(dyn_cast<PointerType>(type()) && "type error");
     os << "call void @llvm.memset.p0i8.i64(i8* ";
     os << value()->name() << ", i8 0, i64 "

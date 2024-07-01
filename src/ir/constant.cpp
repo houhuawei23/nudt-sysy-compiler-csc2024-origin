@@ -7,7 +7,7 @@ namespace ir {
 //* Instantiation for static data attribute
 std::map<std::string, Constant*> Constant::cache;
 
-void Constant::print(std::ostream& os) {
+void Constant::print(std::ostream& os) const {
     if (type()->is_i32()) {
         os << i32();
     } else if (type()->is_float()) {

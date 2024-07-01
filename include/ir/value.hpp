@@ -255,7 +255,7 @@ class Value {
 
    public:
     ValueId scid() const { return _scid; }
-    virtual void print(std::ostream& os) = 0;
+    virtual void print(std::ostream& os) const = 0;
 
     template <typename T>
     T* as() {
@@ -302,6 +302,7 @@ class User : public Value {
     Value* operand(size_t index) const;  // return value, not use relation
     int operands_cnt() const { return _operands.size(); }
 
+    const auto& operands() const { return _operands; }
    public:
     // manage function
     void add_operand(Value* value);
@@ -337,7 +338,7 @@ class User : public Value {
             cnt++;
         }
     }
-    virtual void print(std::ostream& os) {}
+    virtual void print(std::ostream& os) const = 0;
 };
 
 /*

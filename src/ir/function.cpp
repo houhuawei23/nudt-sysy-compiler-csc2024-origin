@@ -43,9 +43,8 @@ void Function::force_delete_block(BasicBlock* bb) {
     _blocks.remove(bb);
 }
 
-void Function::print(std::ostream& os) {
+void Function::print(std::ostream& os) const {
     auto return_type = ret_type();
-    rename();
     if (blocks().size()) {
         os << "define " << *return_type << " @" << name() << "(";
         if (_args.size() > 0) {
@@ -91,7 +90,7 @@ void Function::print(std::ostream& os) {
 }
 
 void Function::rename() {
-    if (not entry())
+    if(_blocks.empty()) 
         return;
     setvarcnt(0);
     for (auto arg : _args) {

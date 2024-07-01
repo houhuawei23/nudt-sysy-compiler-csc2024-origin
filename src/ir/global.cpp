@@ -8,7 +8,7 @@ namespace ir {
  *      scalar: @a = global i32 0
  *      array:  @a = global [4 x [4 x i32]] zeroinitializer
  */
-void GlobalVariable::print(std::ostream& os) {
+void GlobalVariable::print(std::ostream& os) const {
     os << name();
     if (is_const())
         os << " = constant ";

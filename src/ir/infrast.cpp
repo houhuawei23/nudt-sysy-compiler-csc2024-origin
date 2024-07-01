@@ -5,11 +5,11 @@
 
 namespace ir {
 
-void Argument::print(std::ostream& os) {
+void Argument::print(std::ostream& os) const{
     os << *type() << " " << name();
 }
 
-void BasicBlock::print(std::ostream& os) {
+void BasicBlock::print(std::ostream& os) const{
     // print all instructions
 
     os << name() << ":";

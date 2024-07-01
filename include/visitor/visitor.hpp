@@ -34,6 +34,7 @@ class SysYIRGenerator : public SysYBaseVisitor {
    public:
     ir::Module* build_ir() {
         visit(_root);
+        _module->rename();
         return _module;
     }
 

@@ -45,7 +45,7 @@ void Module::delete_func(ir::Function* func) {
 // readable ir print
 void Module::print(std::ostream& os) {
     //! print all global values
-    rename();
+    // rename();
     for (auto gv : gvalues()) {
         if (ir::isa<ir::Constant>(gv)) {
             auto res = dyn_cast<ir::Constant>(gv);
