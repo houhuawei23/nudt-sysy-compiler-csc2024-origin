@@ -1,5 +1,4 @@
 #include "ir/ir.hpp"
-
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
 
@@ -27,14 +26,13 @@ void MIRFunction::print(std::ostream& os, CodeGenContext& ctx) {
     }
 }
 
-void MIRZeroStorage::print(std::ostream& os, CodeGenContext& ctx) {
-
-}
-
+/* Information of MIRRelocable */
+void MIRZeroStorage::print(std::ostream& os, CodeGenContext& ctx) {}
 void MIRDataStorage::print(std::ostream& os, CodeGenContext& ctx) {
-    for(auto& val : _data) {
-        // if (std::holds_alternative<<)
-        os << "\t.4byte\t" << val << std::endl;
+    for (auto& val : _data) {
+        os << "\t.4byte\t";
+        if (is_float()) os << (float)val << std::endl;
+        else os << val << std::endl;
     }
 }
 

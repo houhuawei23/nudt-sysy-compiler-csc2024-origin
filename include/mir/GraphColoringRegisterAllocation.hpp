@@ -31,16 +31,13 @@ class InterferenceGraph final {
     std::unordered_map<RegNum, uint32_t> _degree;
     using Queue = std::priority_queue<RegNum, std::vector<RegNum>, RegNumComparator>;
     Queue _queue;
-
 public:  /* get function */
     auto& adj(RegNum u) {
         assert(isVirtualReg(u));
         return _adj[u];
     }
-
     [[nodiscard]] bool empty() const { return _degree.empty(); }
     [[nodiscard]] size_t size() const { return _degree.size(); }
-
 public:  /* util function */
     void add_edge(RegNum lhs, RegNum rhs) {
         assert(lhs != rhs);
@@ -115,7 +112,6 @@ public:  /* util function */
         }
         return vregs;
     }
-
 public:  /* just for debug */
     void dump(std::ostream& out) {
         for (auto& [vreg, degree] : _degree) {
@@ -144,7 +140,7 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
     const auto canonicalizedType = ctx.registerInfo->getCanonicalizedRegisterTypeForClass(allocationClass);
     const auto& list = ctx.registerInfo->get_allocation_list(allocationClass);
     const std::unordered_set<uint32_t> allocableISARegs{ list.cbegin(), list.cend() };  // 可用来分配的物理寄存器
-    constexpr auto DebugRA = false;
+    constexpr auto DebugRA = true;
     if (DebugRA) {
         std::cerr << "allocate for class " << allocationClass << std::endl;
     }

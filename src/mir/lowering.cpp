@@ -2,12 +2,10 @@
 #include "mir/lowering.hpp"
 #include "mir/target.hpp"
 #include "mir/iselinfo.hpp"
-
 #include "mir/utils.hpp"
 #include "mir/GraphColoringRegisterAllocation.hpp"
 #include "mir/fastAllocator.hpp"
 #include "mir/linearAllocator.hpp"
-
 #include "target/riscv/riscvtarget.hpp"
 
 namespace mir {
@@ -47,43 +45,38 @@ void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& tar
     //! 2. for all global variables, create MIRGlobalObject
     for (auto ir_gval : ir_module.gvalues()) {
         auto ir_gvar = dyn_cast<ir::GlobalVariable>(ir_gval);
-        auto name = ir_gvar->name().substr(1);  // remove '@'
+        auto name = ir_gvar->name().substr(1);  /* remove '@' */
+        /* 基础类型 (int OR float) */
         auto type = dyn_cast<ir::PointerType>(ir_gvar->type())->base_type();
-        size_t size = type->size();  // data size, not pointer size
+        if (type->is_array()) type = dyn_cast<ir::ArrayType>(type)->base_type();
+        const size_t size = type->size();
+        const bool read_only = ir_gvar->is_const();
+        const bool is_float = type->is_float();
+        const size_t align = 4;
 
-        if (ir_gvar->is_init()) {  /* .data: 已初始化的、可修改的全局数据 */
-            MIRDataStorage::Storage data;
-            auto val = dyn_cast<ir::Constant>(ir_gvar->scalar_value());
-            if (type->is_int()) {
-                if (type->is_i32()) {
-                    data.push_back(static_cast<uint32_t>(val->i32()));
-                } else if (type->is_array()) {
-                    // TODO: handle array init
-                }
-            } else if (type->is_float()) {
+        if (ir_gvar->is_init()) {  /* .data: 已初始化的、可修改的全局数据 (Array and Scalar) */
+            /* 全局变量初始化一定为常值表达式 */
+            MIRDataStorage::Storage data; const auto idx = ir_gvar->init_cnt();
+            for (int i = 0; i < idx; i++) {
+                auto val = dyn_cast<ir::Constant>(ir_gvar->init(i));
                 /* NOTE: float to uint32_t, type cast, doesn't change the memory */
-                fu32.f = val->f32(); data.push_back(fu32.u);
+                if (type->is_int()) {
+                    fu32.u = val->i32();
+                } else if (type->is_float()) {
+                    fu32.f = val->f32();
+                } else {
+                    assert(false && "Not Supported Type.");
+                }
+                data.push_back(fu32.u);
             }
-            size_t align = 4;  // TODO: align
-            auto mir_storage =
-                std::make_unique<MIRDataStorage>(std::move(data), false, name);
-            auto mir_gobj = std::make_unique<MIRGlobalObject>(
-                align, std::move(mir_storage), &mir_module);
+            auto mir_storage = std::make_unique<MIRDataStorage>(std::move(data), read_only, name, is_float);
+            auto mir_gobj = std::make_unique<MIRGlobalObject>(align, std::move(mir_storage), &mir_module);
             mir_module.global_objs().push_back(std::move(mir_gobj));
-
-            // mir_module.global_objs().push_back(
-            //     std::make_unique<MIRGlobalObject>(
-            //         align,
-            //         std::make_unique<MIRDataStorage>(std::move(data), false,
-            //                                          ir_gvar->name()),
-            //         &mir_module));
-        } else {  /* .bss: 未初始化的全局数据 */
-            size_t align = 4;  // TODO: align
-            auto mir_storage = std::make_unique<MIRZeroStorage>(size, name);
+        } else {  /* .bss: 未初始化的全局数据 (Just Scalar) */
+            auto mir_storage = std::make_unique<MIRZeroStorage>(size, name, is_float);
             auto mir_gobj = std::make_unique<MIRGlobalObject>(align, std::move(mir_storage), &mir_module);
             mir_module.global_objs().push_back(std::move(mir_gobj));
         }
-        gvar_map.emplace(ir_gvar, mir_module.global_objs().back().get());
         gvar_map.emplace(ir_gvar, mir_module.global_objs().back().get());
     }
 

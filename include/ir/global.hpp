@@ -5,6 +5,14 @@
 #include "support/utils.hpp"
 namespace ir {
 /* GlobalVariable */
+/*
+ * @brief: GlobalVariable Class
+ * @note: 
+ *      1. Array (全局矢量)
+ *      2. Scalar (全局标量)
+ * @var: 
+ *      1. _parent: 当前
+ */
 class GlobalVariable : public User {
 protected:
     Module* _parent = nullptr;
@@ -17,7 +25,6 @@ public:
                    Module* parent=nullptr, const_str_ref name="", bool is_const=false)
         : User(ir::Type::pointer_type(ir::Type::array_type(base_type, dims)), vGLOBAL_VAR, name),
           _parent(parent), _init(init), _is_const(is_const), _is_array(true) {}
-
     //! 2. Scalar
     GlobalVariable(Type* base_type, std::vector<Value*> init, Module* parent=nullptr,
                    const_str_ref name="", bool is_const=false)

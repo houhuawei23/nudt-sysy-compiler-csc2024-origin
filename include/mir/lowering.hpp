@@ -106,6 +106,5 @@ public:  // utils function
         return OperandType::Special;
     }
 };
-
 std::unique_ptr<MIRModule> create_mir_module(ir::Module& ir_module, Target& target);
 }  // namespace mir

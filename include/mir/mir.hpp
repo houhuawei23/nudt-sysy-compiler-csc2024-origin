@@ -364,8 +364,12 @@ public:  // utils function
 /* MIRZeroStorage */
 class MIRZeroStorage : public MIRRelocable {
     size_t _size;  // bytes
+    bool _is_float;
 public:
-    MIRZeroStorage(size_t size, const std::string& name="") : MIRRelocable(name), _size(size) {}
+    MIRZeroStorage(size_t size, const std::string& name="", bool is_float=false) 
+        : MIRRelocable(name), _size(size), _is_float(is_float) {}
+public:
+    bool is_float() const { return _is_float; }
 public:
     void print(std::ostream& os, CodeGenContext& ctx) override;
 };
@@ -376,12 +380,14 @@ public:
     using Storage = std::vector<uint32_t>;
 private:
     Storage _data;
+    bool _is_float;
     bool _readonly;
 public:
-    MIRDataStorage(const Storage data, bool readonly, const std::string& name="")
-        : MIRRelocable(name), _data(data), _readonly(readonly) {}
+    MIRDataStorage(const Storage data, bool readonly, const std::string& name="", bool is_float=false)
+        : MIRRelocable(name), _data(data), _readonly(readonly), _is_float(is_float) {}
 public:  // check function
     bool is_readonly() const { return _readonly; }
+    bool is_float() const { return _is_float; }
 public:  // set function
     uint32_t append_word(uint32_t word) {
         auto idx = static_cast<uint32_t>(_data.size());
@@ -396,14 +402,11 @@ public:
 using MIRRelocable_UPtr = std::unique_ptr<MIRRelocable>;
 struct MIRGlobalObject {
     MIRModule* parent;
-    ir::Value* ir_global;
     size_t align;
-    MIRRelocable_UPtr reloc;  // MIRZeroStorage, MIRDataStorage
+    MIRRelocable_UPtr reloc;  /* MIRZeroStorage OR MIRDataStorage */
 
     MIRGlobalObject() = default;
-    MIRGlobalObject(size_t align,
-                    std::unique_ptr<MIRRelocable> reloc,
-                    MIRModule* parent)
+    MIRGlobalObject(size_t align, std::unique_ptr<MIRRelocable> reloc, MIRModule* parent)
         : parent(parent), align(align), reloc(std::move(reloc)) {}
     void print(std::ostream& os);
 };

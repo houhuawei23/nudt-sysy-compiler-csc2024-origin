@@ -1,14 +1,11 @@
 #include "mir/utils.hpp"
-
 #include "target/riscv/riscvtarget.hpp"
 #include "autogen/riscv/InstInfoDecl.hpp"
 #include "autogen/riscv/ISelInfoDecl.hpp"
 
 namespace mir {
 constexpr int32_t passingByRegBase = 0x100000;
-
-void RISCVFrameInfo::emit_call(ir::CallInst* inst,
-                               LoweringContext& lowering_ctx) {
+void RISCVFrameInfo::emit_call(ir::CallInst* inst, LoweringContext& lowering_ctx) {
     bool isDebug = false;
 
     auto irCalleeFunc = inst->callee(); /* Function* */
@@ -233,7 +230,7 @@ void RISCVFrameInfo::emit_return(ir::ReturnInst* ir_inst,
 }
 
 void RISCVTarget::postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) {
-    bool isDebug = false;
+    constexpr bool isDebug = false;
 
     auto dumpInst = [&](MIRInst* inst) {
         auto& instInfo = ctx.instInfo.get_instinfo(inst);
@@ -343,8 +340,7 @@ void RISCVTarget::postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) {
 
         blockIter = nextIter;
     }  // blockIter
-    if (isDebug)
-        func.print(std::cerr, ctx);
+    if (isDebug) func.print(std::cerr, ctx);
 }  // postLegalizeFunc
 
 void RISCVTarget::emit_assembly(std::ostream& out, MIRModule& module) {
