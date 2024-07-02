@@ -1,39 +1,28 @@
 #pragma once
-
 #include <stdlib.h>
 #include <iostream>
-
 #include <vector>
 
 namespace ir {
-// mir
 class DataLayout;
-
 class Type;
 class PointerType;
 class FunctionType;
-
 using type_ptr_vector = std::vector<Type*>;
-
-// using const_vector_type = const std::vector<Type*>;
-// ir base type
 typedef enum : size_t {
     VOID,
     INT1,
     INT32,
-    FLOAT,   // represent f32 in C
-    DOUBLE,  // represent f64
-    
-
-    LABEL,  // BasicBlock
+    FLOAT,
+    DOUBLE,
+    LABEL,
     POINTER,
     FUNCTION,
-
     ARRAY, 
-
     UNDEFINE
 } BType;
 
+/* Type */
 class Type {
 protected:
     BType _btype;
@@ -73,49 +62,41 @@ public:  // get function
 public:
     void print(std::ostream& os);
 };
-
+/* PointerType */
 class PointerType : public Type {
-    protected:
-        Type* _base_type;
-        PointerType(Type* baseType) : Type(POINTER, 4), _base_type(baseType) {}
-
-    public:
-        static PointerType* gen(Type* baseType);
-
-        Type* base_type() const { return _base_type; }
+protected:
+    Type* _base_type;
+    PointerType(Type* baseType) : Type(POINTER, 8), _base_type(baseType) {}
+public:
+    static PointerType* gen(Type* baseType);
+    Type* base_type() const { return _base_type; }
 };
-
+/* ArrayType */
 class ArrayType : public Type {
-    protected:
-        std::vector<int> _dims;  // dimensions
-        Type* _base_type;        // int or float
-        ArrayType(Type* baseType, std::vector<int> dims, int capacity=1) 
-            : Type(ARRAY, capacity * 4), _base_type(baseType), _dims(dims) {}
-
-    public:
-        static ArrayType* gen(Type* baseType, std::vector<int> dims, int capacity=1);
-
-    public:
-        int dims_cnt() const { return _dims.size(); }
-        int dim(int index) const { return _dims[index]; }
-        std::vector<int> dims() const { return _dims; }
-        Type* base_type() const { return _base_type; }
+protected:
+    std::vector<int> _dims;  // dimensions
+    Type* _base_type;        // int or float
+    ArrayType(Type* baseType, std::vector<int> dims, int capacity=1) 
+        : Type(ARRAY, capacity * 4), _base_type(baseType), _dims(dims) {}
+public:  // generate function
+    static ArrayType* gen(Type* baseType, std::vector<int> dims, int capacity=1);
+public:  // get function
+    int dims_cnt() const { return _dims.size(); }
+    int dim(int index) const { return _dims[index]; }
+    std::vector<int> dims() const { return _dims; }
+    Type* base_type() const { return _base_type; }
 };
-
+/* FunctionType */
 class FunctionType : public Type {
-    protected:
-        Type* _ret_type;
-        std::vector<Type*> _arg_types;
-
+protected:
+    Type* _ret_type;
+    std::vector<Type*> _arg_types;
     FunctionType(Type* ret_type, const type_ptr_vector& arg_types={})
         : Type(FUNCTION, 8), _ret_type(ret_type), _arg_types(arg_types) {}
-
-    public:  // Gen
-        static FunctionType* gen(Type* ret_type, const type_ptr_vector& arg_types);
-
-    //! get the return type of the function
+public:  // generate function
+    static FunctionType* gen(Type* ret_type, const type_ptr_vector& arg_types);
+public:  // get function
     Type* ret_type() const { return _ret_type; }
-
     type_ptr_vector& arg_types() { return _arg_types; }
 };
-}  // namespace ir
+}

@@ -58,19 +58,14 @@ static RISCVInst getLoadOpcode(MIROperand* dst) {
 static RISCVInst getStoreOpcode(MIROperand* src) {
     switch (src->type()) {
         case OperandType::Bool:
-        case OperandType::Int8:
-            return SB;
-        case OperandType::Int16:
-            return SH;
-        case OperandType::Int32:
-            return SW;
-        case OperandType::Int64:
-            return SD;
-        // case OperandType::Float32:
-        //     return FSW;
-        default:
-            assert(false && "Unsupported operand type for store instruction");
-            // reportUnreachable(CMMC_LOCATION());
+        case OperandType::Int8: return SB;
+        case OperandType::Int16: return SH;
+        case OperandType::Int32: return SW;
+        case OperandType::Int64: return SD;
+        case OperandType::Float32: return FSW;
+        case OperandType::PointerInt32:
+        case OperandType::PointerFloat32: return SD;
+        default: assert(false && "Unsupported operand type for store instruction");
     }
 }
 

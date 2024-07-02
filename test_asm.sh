@@ -31,22 +31,11 @@ sysylib_funcs=(
     # "putint" "putch" "putarray" "putfloat" "putfarray"
     # "putf" "starttime" "stoptime"
 )
-skip_keywords=(
-    # "\["
-    # "if"
-    # "while"
-)
 function check_key_in_file() {
     file="$1"
     for func in "${sysylib_funcs[@]}"; do
         if grep -q "$func" "$file"; then
             return 1 # 文件中包含关键字，返回 1
-        fi
-    done
-
-    for keyword in "${skip_keywords[@]}"; do
-        if grep -q "$keyword" "$file"; then
-            return 1 # 文件中包含关键字，返回 2
         fi
     done
 

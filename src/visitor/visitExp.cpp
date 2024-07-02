@@ -4,8 +4,7 @@
 namespace sysy {
 /*
  * @brief: Visit Number Expression
- * @details: 
- *      number: ILITERAL | FLITERAL; (即: int or float)
+ * @details: number: ILITERAL | FLITERAL; (即: int or float)
  */
 std::any SysYIRGenerator::visitNumberExp(SysYParser::NumberExpContext* ctx) {
     ir::Value* res = nullptr;
@@ -27,8 +26,7 @@ std::any SysYIRGenerator::visitNumberExp(SysYParser::NumberExpContext* ctx) {
 
 /*
  * @brief: Visit Var Expression
- * @details:
- *      var: ID (LBRACKET exp RBRACKET)*;
+ * @details: var: ID (LBRACKET exp RBRACKET)*;
  */
 std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
     std::string varname = ctx->var()->ID()->getText();
@@ -119,8 +117,7 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
 
 /*
  * @brief Visit Unary Expression
- * @details:
- *      + - ! exp
+ * @details: + - ! exp
  */
 std::any SysYIRGenerator::visitUnaryExp(SysYParser::UnaryExpContext* ctx) {
     ir::Value* res = nullptr;
@@ -175,9 +172,9 @@ std::any SysYIRGenerator::visitParenExp(SysYParser::ParenExpContext* ctx) {
 }
 
 /*
- * @brief Visit Multiplicative Expression
+ * @brief:  Visit Multiplicative Expression
  *      exp (MUL | DIV | MODULO) exp
- * @details
+ * @details: 
  *      1. mul: 整型乘法
  *      2. fmul: 浮点型乘法
  *
@@ -205,23 +202,16 @@ std::any SysYIRGenerator::visitMultiplicativeExp(
 
         switch (higher_Btype) {
             case ir::INT32:
-                if (ctx->MUL())
-                    ans_i32 = cop1->i32() * cop2->i32();
-                else if (ctx->DIV())
-                    ans_i32 = cop1->i32() / cop2->i32();
-                else if (ctx->MODULO())
-                    ans_i32 = cop1->i32() % cop2->i32();
-                else
-                    assert(false && "Unknown Binary Operator");
+                if (ctx->MUL()) ans_i32 = cop1->i32() * cop2->i32();
+                else if (ctx->DIV()) ans_i32 = cop1->i32() / cop2->i32();
+                else if (ctx->MODULO()) ans_i32 = cop1->i32() % cop2->i32();
+                else assert(false && "Unknown Binary Operator");
                 res = ir::Constant::gen_i32(ans_i32);
                 break;
             case ir::FLOAT:
-                if (ctx->MUL())
-                    ans_f32 = cop1->f32() * cop2->f32();
-                else if (ctx->DIV())
-                    ans_f32 = cop1->f32() / cop2->f32();
-                else
-                    assert(false && "Unknown Binary Operator");
+                if (ctx->MUL()) ans_f32 = cop1->f32() * cop2->f32();
+                else if (ctx->DIV()) ans_f32 = cop1->f32() / cop2->f32();
+                else assert(false && "Unknown Binary Operator");
                 res = ir::Constant::gen_f32(ans_f32);
                 break;
             case ir::DOUBLE:
@@ -253,9 +243,8 @@ std::any SysYIRGenerator::visitMultiplicativeExp(
 }
 
 /*
- * @brief Visit Additive Expression
- * @details:
- *      exp (ADD | SUB) exp
+ * @brief: Visit Additive Expression
+ * @details: exp (ADD | SUB) exp
  */
 std::any SysYIRGenerator::visitAdditiveExp(
     SysYParser::AdditiveExpContext* ctx) {
@@ -269,8 +258,7 @@ std::any SysYIRGenerator::visitAdditiveExp(
         ir::Constant* crhs = dyn_cast<ir::Constant>(rhs);
         // bool is_ADD = ctx->ADD();
 
-        auto higher_BType =
-            std::max(clhs->type()->btype(), crhs->type()->btype());
+        auto higher_BType = std::max(clhs->type()->btype(), crhs->type()->btype());
 
         int32_t ans_i32;
         float ans_f32;
@@ -278,29 +266,20 @@ std::any SysYIRGenerator::visitAdditiveExp(
 
         switch (higher_BType) {
             case ir::INT32: {
-                if (ctx->ADD())
-                    ans_i32 = clhs->i32() + crhs->i32();
-                else
-                    ans_i32 = clhs->i32() - crhs->i32();
+                if (ctx->ADD()) ans_i32 = clhs->i32() + crhs->i32();
+                else ans_i32 = clhs->i32() - crhs->i32();
                 res = ir::Constant::gen_i32(ans_i32);
             } break;
-
             case ir::FLOAT: {
-                if (ctx->ADD())
-                    ans_f32 = clhs->f32() + crhs->f32();
-                else
-                    ans_f32 = clhs->f32() - crhs->f32();
+                if (ctx->ADD()) ans_f32 = clhs->f32() + crhs->f32();
+                else ans_f32 = clhs->f32() - crhs->f32();
                 res = ir::Constant::gen_f32(ans_f32);
             } break;
-
             case ir::DOUBLE: {
                 assert(false && "not support double");
             } break;
-
-            default:
-                assert(false && "not support");
+            default: assert(false && "not support");
         }
-
     } else {
         //! not all constant
         auto hi_type = lhs->type();
@@ -318,7 +297,6 @@ std::any SysYIRGenerator::visitAdditiveExp(
             assert(false && "not support");
         }
     }
-
     return dyn_cast_Value(res);
 }
 //! exp (LT | GT | LE | GE) exp
@@ -327,7 +305,6 @@ std::any SysYIRGenerator::visitRelationExp(SysYParser::RelationExpContext* ctx) 
     auto rhsptr = any_cast_Value(visit(ctx->exp()[1]));
 
     ir::Value* res;
-
     auto hi_type = lhsptr->type();
     if (lhsptr->type()->btype() < rhsptr->type()->btype()) {
         hi_type = rhsptr->type();
@@ -368,7 +345,6 @@ std::any SysYIRGenerator::visitEqualExp(SysYParser::EqualExpContext* ctx) {
 
     lhsptr = builder().type_promote(lhsptr, hi_type);  // base i32
     rhsptr = builder().type_promote(rhsptr, hi_type);
-
     // same type
     if (ctx->EQ()) {
         res = builder().create_cmp(ir::Value::EQ, lhsptr, rhsptr);
@@ -403,8 +379,7 @@ std::any SysYIRGenerator::visitAndExp(SysYParser::AndExpContext* ctx) {
     auto rhs_block = cur_func->new_block();
     rhs_block->append_comment("rhs_block");
     //! 1 visit lhs exp to get its value
-    builder().push_tf(rhs_block,
-                      builder().false_target());          //! diff with OrExp
+    builder().push_tf(rhs_block, builder().false_target());  //! diff with OrExp
     auto lhs_value = any_cast_Value(visit(ctx->exp(0)));  // recursively visit
     //! may chage by visit, need to re get
     auto lhs_t_target = builder().true_target();

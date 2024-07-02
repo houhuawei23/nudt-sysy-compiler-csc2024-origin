@@ -1,6 +1,5 @@
 #include "mir/mir.hpp"
 #include "mir/instinfo.hpp"
-
 #include "autogen/generic/InstInfoDecl.hpp"
 #include "support/StaticReflection.hpp"
 
@@ -22,29 +21,20 @@ bool TargetInstInfo::matchBranch(MIRInst* inst,
 
 static std::string_view getType(OperandType type) {
     switch (type) {
-        case OperandType::Bool:
-            return "i1 ";
-        case OperandType::Int8:
-            return "i8 ";
-        case OperandType::Int16:
-            return "i16 ";
-        case OperandType::Int32:
-            return "i32 ";
-        case OperandType::Int64:
-            return "i64 ";
-        case OperandType::Float32:
-            return "f32 ";
-        case OperandType::Special:
-            return "special ";
-        case OperandType::HighBits:
-            return "hi ";
-        case OperandType::LowBits:
-            return "lo ";
-        default:
-            assert(false && "Invalid operand type");
+        case OperandType::Bool: return "i1 ";
+        case OperandType::Int8: return "i8 ";
+        case OperandType::Int16: return "i16 ";
+        case OperandType::Int32: return "i32 ";
+        case OperandType::Int64: return "i64 ";
+        case OperandType::Float32: return "f32 ";
+        case OperandType::Special: return "special ";
+        case OperandType::HighBits: return "hi ";
+        case OperandType::LowBits: return "lo ";
+        case OperandType::PointerInt32:
+        case OperandType::PointerFloat32: return "addr ";
+        default: assert(false && "Invalid operand type");
     }
 };
-
 void dumpVirtualReg(std::ostream& os, MIROperand* operand) {
     assert(operand != nullptr);
     os << getType(operand->type()) << "v";

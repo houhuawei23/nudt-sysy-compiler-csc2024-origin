@@ -102,6 +102,14 @@ public:  // utils function
                 case ir::FLOAT: return OperandType::Float32;
                 default: assert(false && "unsupported float type");
             }
+        } else if (type->is_pointer()) {
+            auto base_type = dyn_cast<ir::PointerType>(type)->base_type();
+            if (base_type->is_array()) base_type = dyn_cast<ir::ArrayType>(base_type)->base_type();
+            switch (base_type->btype()) {
+                case ir::INT32: return OperandType::PointerInt32;
+                case ir::FLOAT: return OperandType::PointerFloat32;
+                default: assert(false && "unsupported pointer type");
+            }
         }
         return OperandType::Special;
     }

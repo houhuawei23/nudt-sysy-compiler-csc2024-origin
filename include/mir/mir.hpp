@@ -72,6 +72,8 @@ enum class OperandType : uint32_t {
     Int32,
     Int64,
     Float32,
+    PointerInt32,
+    PointerFloat32, 
     Special,
     HighBits,
     LowBits,
@@ -79,12 +81,15 @@ enum class OperandType : uint32_t {
 constexpr bool isIntType(OperandType type) { return type <= OperandType::Int64; }
 constexpr bool isFloatType(OperandType type) { return type == OperandType::Float32; }
 constexpr uint32_t getOperandSize(const OperandType type) {
+    /* NOTE: RISC-V 64位树莓派 */
     switch (type) {
         case OperandType::Int8: return 1;
         case OperandType::Int16: return 2;
         case OperandType::Int32: return 4;
         case OperandType::Int64: return 8;
         case OperandType::Float32: return 4;
+        case OperandType::PointerInt32:
+        case OperandType::PointerFloat32: return 8;
         default: assert(false && "invalid operand type");
     }
 }

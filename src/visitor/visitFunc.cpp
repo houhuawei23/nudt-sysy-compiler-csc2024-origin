@@ -30,15 +30,11 @@ std::any SysYIRGenerator::visitFuncType(SysYParser::FuncTypeContext* ctx) {
 ir::Function* SysYIRGenerator::create_func(SysYParser::FuncDefContext* ctx) {
     std::string func_name = ctx->ID()->getText();
     std::vector<ir::Type*> param_types;
-
     if (ctx->funcFParams()) {
         auto params = ctx->funcFParams()->funcFParam();
-
         for (auto param : params) {
-            bool isArray = not param->LBRACKET().empty();
-
+            const bool isArray = not param->LBRACKET().empty();
             ir::Type* base_type = any_cast_Type(visit(param->btype()));
-            
             if (!isArray) {
                 param_types.push_back(base_type);
             } else {
@@ -62,7 +58,6 @@ ir::Function* SysYIRGenerator::create_func(SysYParser::FuncDefContext* ctx) {
     ir::Type* ret_type = any_cast_Type(visit(ctx->funcType()));
     ir::Type* func_type = ir::Type::func_type(ret_type, param_types);
     ir::Function* func = module()->add_func(func_type, func_name);
-
     return func;
 }
 
