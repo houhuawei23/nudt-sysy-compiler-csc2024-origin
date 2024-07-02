@@ -1,10 +1,9 @@
-// //test addc
-// const int a = 10;
-// int main(){
-//     return a + 5;
-// }
+int fun(int a[]) {
+  return 0;
+}
 
-float a = 2.3;
-int main() {
-  return a;
+int main(){
+  int a[2];
+  a[1] = 23;
+  return fun(a);
 }
