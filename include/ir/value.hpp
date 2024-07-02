@@ -102,7 +102,7 @@ class Use {
  */
 
 class Value {
-   public:
+public:
     enum CmpOp {
         EQ,  // ==
         NE,  // !=
@@ -118,7 +118,6 @@ class Value {
         DIV, /* / */
         REM  /* %*/
     };
-
     enum UnaryOp {
         NEG,
     };
@@ -198,30 +197,25 @@ class Value {
 
         vPHI
     };
-
-   protected:
+protected:
     Type* _type;    // type of the value
     ValueId _scid;  // subclass id of Value
     std::string _name;
     use_ptr_list _uses; /* uses list, this value is used by users throw use */
 
     std::string _comment;
-
-   public:
-    Value(Type* type, ValueId scid = vValue, const_str_ref name = "")
+public:
+    Value(Type* type, ValueId scid=vValue, const_str_ref name="")
         : _type(type), _scid(scid), _name(name), _uses() {}
     virtual ~Value() = default;
     // Value is all base, return true
     static bool classof(const Value* v) { return true; }
-
-    // get
+public:  // get function
     Type* type() const { return _type; }
     virtual std::string name() const { return _name; }
-    void set_name(const_str_ref name) { _name = name; }
-
-    /*! manage use-def relation !*/
     use_ptr_list& uses() { return _uses; }
-
+public:  // set function
+    void set_name(const_str_ref name) { _name = name; }
     /* one user use this value, add the use relation */
     void add_use(Use* use);
     Use* add_use_by_user(User* user) {
@@ -245,17 +239,14 @@ class Value {
 
     /* replace this value with another value, for all user use this value */
     void replace_all_use_with(Value* _value);
-
-    // manage
+public:  // comment
     virtual std::string comment() const { return _comment; }
-
     void set_comment(const_str_ref comment) {
         if (!_comment.empty()) {
             std::cerr << "re-set basicblock comment!" << std::endl;
         }
         _comment = comment;
     }
-
     void append_comment(const_str_ref comment) {
         if (_comment.empty()) {
             _comment = comment;
@@ -263,18 +254,15 @@ class Value {
             _comment = _comment + ", " + comment;
         }
     }
-
-    public:  // check
-        bool is_i1() const { return _type->is_i1(); }
-        bool is_i32() const { return _type->is_i32(); }
-        bool is_float32() const { return _type->is_float32(); }
-        bool is_double() const { return _type->is_double(); }
-        bool is_float() const { return _type->is_float(); }
-        bool is_undef() const {return _type->is_undef(); }
-        bool is_pointer() const { return _type->is_pointer(); }
-        bool is_void()const {return _type->is_void(); }
-
-   public:
+public:  // check function
+    bool is_i1() const { return _type->is_i1(); }
+    bool is_i32() const { return _type->is_i32(); }
+    bool is_float32() const { return _type->is_float32(); }
+    bool is_double() const { return _type->is_double(); }
+    bool is_float() const { return _type->is_float(); }
+    bool is_undef() const {return _type->is_undef(); }
+    bool is_pointer() const { return _type->is_pointer(); }
+    bool is_void()const {return _type->is_void(); }
     ValueId scid() const { return _scid; }
     virtual void print(std::ostream& os) {};
 };

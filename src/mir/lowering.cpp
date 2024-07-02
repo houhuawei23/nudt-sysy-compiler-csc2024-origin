@@ -181,43 +181,43 @@ void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& tar
 
 MIRFunction* create_mir_function(ir::Function* ir_func, MIRFunction* mir_func,
                                  CodeGenContext& codegen_ctx, LoweringContext& lowering_ctx) {
+    /* Some Debug Information */
     constexpr bool debugLowerFunc = false;
+    constexpr bool DebugCreateMirFunction = false;
     // TODO: before lowering, get some analysis pass result
-    /* aligenment */
-    /* range */
-    /* dom */
 
     //! 1. map from ir to mir
     auto& block_map = lowering_ctx._block_map;
     std::unordered_map<ir::Value*, MIROperand*> storage_map;
     auto& target = codegen_ctx.target;
     auto& datalayout = target.get_datalayout();
-
     for (auto ir_block : ir_func->blocks()) {
         mir_func->blocks().push_back(std::make_unique<MIRBlock>(mir_func, "label" + std::to_string(codegen_ctx.next_id_label())));
         block_map.emplace(ir_block, mir_func->blocks().back().get());
     }
+    if (DebugCreateMirFunction) std::cerr << "stage 1: map from it to mir" << std::endl;
 
     //! 2. emitPrologue for function
     {
-        for (auto ir_arg : ir_func->args()) {  // assign vreg to arg
+        /* assign vreg to arg */
+        for (auto ir_arg : ir_func->args()) {
             auto vreg = lowering_ctx.new_vreg(ir_arg->type());
             lowering_ctx.add_valmap(ir_arg, vreg);
             mir_func->args().push_back(vreg);
         }
-        lowering_ctx.set_mir_block(block_map.at(ir_func->entry()));  // entry
-        // TODO: implement riscv frameinfo.emit_prologue()
+        lowering_ctx.set_mir_block(block_map.at(ir_func->entry()));
         codegen_ctx.frameInfo.emit_prologue(mir_func, lowering_ctx);
     }
+    if (DebugCreateMirFunction) std::cerr << "stage 2: emitPrologue for function" << std::endl;
 
-    //! 3. Process Alloca Instruction, New Stack Object for Each Alloca Instruction
+    //! 3. process alloca instruction, new stack object for each alloca instruction
     {
-        lowering_ctx.set_mir_block(block_map.at(ir_func->entry()));  // NOTE: all alloca in entry
+        /* NOTE: all alloca in entry */
+        lowering_ctx.set_mir_block(block_map.at(ir_func->entry()));
         for (auto& ir_inst : ir_func->entry()->insts()) {
             if (ir_inst->scid() != ir::Value::vALLOCA) continue;
-
             auto pointee_type = dyn_cast<ir::PointerType>(ir_inst->type())->base_type();
-            uint32_t align = 4;  // TODO: align, need bind to ir object
+            const uint32_t align = 4;
             /* 3.1 allocate stack storage */
             auto storage = mir_func->add_stack_obj(codegen_ctx.next_id(),
                                                    static_cast<uint32_t>(pointee_type->size()),
@@ -233,8 +233,9 @@ MIRFunction* create_mir_function(ir::Function* ir_func, MIRFunction* mir_func,
             lowering_ctx.add_valmap(ir_inst, addr);
         }
     }
+    if (DebugCreateMirFunction) std::cerr << "stage 3: process alloca instruction, new stack object for each alloca instruction" << std::endl;
 
-    //! 4. Lowering All Blocks
+    //! 4. lowering all blocks
     {
         for (auto ir_block : ir_func->blocks()) {
             auto mir_block = block_map[ir_block];
@@ -263,6 +264,7 @@ MIRFunction* create_mir_function(ir::Function* ir_func, MIRFunction* mir_func,
             }
         }
     }
+    if (DebugCreateMirFunction) std::cerr << "stage 4: lowering all blocks" << std::endl;
     return mir_func;
 }
 void lower(ir::UnaryInst* ir_inst, LoweringContext& ctx);
@@ -371,13 +373,15 @@ void lower(ir::UnaryInst* ir_inst, LoweringContext& ctx) {
     ctx.add_valmap(ir_inst, ret);
 }
 
-/**
- * IR:
- * `<result> = icmp <cond> <ty> <op1>, <op2>`
- * yields i1 or <N x i1>:result
- *
- * MIRGeneric:
- * `ICmp dst, src1, src2, op`
+/*
+ * @brief: Lowering ICmpInst (int OR float)
+ * @note: 
+ *      1. int
+ *          IR: <result> = icmp <cond> <ty> <op1>, <op2>
+ *          MIRGeneric: ICmp dst, src1, src2, op
+ *      2. float
+ *          IR: <result> = fcmp [fast-math flags]* <cond> <ty> <op1>, <op2>
+ *          MIRGeneric: FCmp dst, src1, src2, op
  */
 void lower(ir::ICmpInst* ir_inst, LoweringContext& ctx) {
     // TODO: Need Test
@@ -410,14 +414,6 @@ void lower(ir::ICmpInst* ir_inst, LoweringContext& ctx) {
     ctx.emit_inst(inst);
     ctx.add_valmap(ir_inst, ret);
 }
-/**
- * IR:
- * `<result> = fcmp [fast-math flags]* <cond> <ty> <op1>, <op2>`
- * yields i1 or <N x i1>:result
- *
- * MIRGeneric:
- * `FCmp dst, src1, src2, op`
- */
 void lower(ir::FCmpInst* ir_inst, LoweringContext& ctx) {
     // TODO: Need Test
     auto op = [scid = ir_inst->scid()] {
@@ -556,7 +552,7 @@ void lower(ir::ReturnInst* ir_inst, LoweringContext& ctx) {
 void lower_GetElementPtr(ir::inst_iterator begin, ir::inst_iterator end, LoweringContext& ctx) {
     const auto dims = dyn_cast<ir::GetElementPtrInst>(*begin)->cur_dims();
     const auto dims_cnt = dyn_cast<ir::GetElementPtrInst>(*begin)->cur_dims_cnt();
-    const int id = dyn_cast<ir::GetElementPtrInst>(*begin)->get_id();
+    const int begin_id = dyn_cast<ir::GetElementPtrInst>(*begin)->get_id();
     const auto base = ctx.map2operand(dyn_cast<ir::GetElementPtrInst>(*begin)->get_value());  // 基地址
 
     /* 统计GetElementPtr指令数量 */
@@ -565,63 +561,65 @@ void lower_GetElementPtr(ir::inst_iterator begin, ir::inst_iterator end, Lowerin
     while (iter != end) {
         idx.push_back(dyn_cast<ir::GetElementPtrInst>(*iter)->get_index());
         instEnd = *iter;
+        (*iter)->print(std::cerr);
         iter++;
     }
 
     /* 计算偏移量 */
-    if (id == 0) {  // 指针
+    int dimension = 0;
+    if (begin_id == 0) {  // 指针
 
-    } else {  // 数组
-        MIROperand* mir_offset = nullptr; auto ir_offset = idx[0];
-        bool is_constant = dyn_cast<ir::Constant>(ir_offset) ? true : false;
-        if (!is_constant) mir_offset = ctx.map2operand(ir_offset);
-        for (int dimension = 1; dimension < dims_cnt; dimension++) {
-            /* 乘法 */
-            const auto alpha = dims[dimension];  // int
-            if (is_constant) {  // 常量
-                const auto ir_offset_constant = dyn_cast<ir::Constant>(ir_offset);
-                ir_offset = ir::Constant::gen_i32<int>(ir_offset_constant->i32() * alpha);
-            } else {  // 变量
-                auto newPtr = ctx.new_vreg(OperandType::Int32);
-                auto newInst = new MIRInst(InstMul);
-                newInst->set_operand(0, newPtr); newInst->set_operand(1, mir_offset); newInst->set_operand(2, MIROperand::as_imm<int>(alpha, OperandType::Int32));
-                ctx.emit_inst(newInst);
-                mir_offset = newPtr;
-            }
-
-            /* 加法 */
-            auto ir_current_idx = idx[dimension];  // ir::Value*
-            if (is_constant && dyn_cast<ir::Constant>(ir_current_idx)) {
-                const auto ir_current_idx_constant = dyn_cast<ir::Constant>(ir_current_idx);
-                const auto ir_offset_constant = dyn_cast<ir::Constant>(ir_offset);
-                ir_offset = ir::Constant::gen_i32<int>(ir_current_idx_constant->i32() + ir_offset_constant->i32());
-            } else {
-                if (is_constant) mir_offset = ctx.map2operand(ir_offset);
-                is_constant = false;
-                auto newPtr = ctx.new_vreg(OperandType::Int32);
-                auto newInst = new MIRInst(InstAdd);
-                newInst->set_operand(0, newPtr); newInst->set_operand(1, mir_offset); newInst->set_operand(2, ctx.map2operand(ir_current_idx));
-                ctx.emit_inst(newInst);
-                mir_offset = newPtr;
-            }
-        }
-
-        if (mir_offset) {
+        dimension++;
+    }
+    MIROperand* mir_offset = nullptr; auto ir_offset = idx[dimension++];
+    bool is_constant = dyn_cast<ir::Constant>(ir_offset) ? true : false;
+    if (!is_constant) mir_offset = ctx.map2operand(ir_offset);
+    for (; dimension < dims_cnt; dimension++) {
+        /* 乘法 */
+        const auto alpha = dims[dimension];  // int
+        if (is_constant) {  // 常量
+            const auto ir_offset_constant = dyn_cast<ir::Constant>(ir_offset);
+            ir_offset = ir::Constant::gen_i32<int>(ir_offset_constant->i32() * alpha);
+        } else {  // 变量
             auto newPtr = ctx.new_vreg(OperandType::Int32);
             auto newInst = new MIRInst(InstMul);
-            newInst->set_operand(0, newPtr); newInst->set_operand(1, mir_offset); newInst->set_operand(2, MIROperand::as_imm<int>(4, OperandType::Int32));
+            newInst->set_operand(0, newPtr); newInst->set_operand(1, mir_offset); newInst->set_operand(2, MIROperand::as_imm<int>(alpha, OperandType::Int32));
             ctx.emit_inst(newInst);
             mir_offset = newPtr;
-        } else {
-            auto ir_offset_constant = dyn_cast<ir::Constant>(ir_offset);
-            mir_offset = ctx.map2operand(ir::Constant::gen_i32<int>(ir_offset_constant->i32() * 4));
         }
-        auto newPtr = ctx.new_vreg(OperandType::Int64);
-        auto newInst = new MIRInst(InstAdd);
-        newInst->set_operand(0, newPtr); newInst->set_operand(1, ptr); newInst->set_operand(2, mir_offset);
-        ctx.emit_inst(newInst);
-        ptr = newPtr;
+
+        /* 加法 */
+        auto ir_current_idx = idx[dimension];  // ir::Value*
+        if (is_constant && dyn_cast<ir::Constant>(ir_current_idx)) {
+            const auto ir_current_idx_constant = dyn_cast<ir::Constant>(ir_current_idx);
+            const auto ir_offset_constant = dyn_cast<ir::Constant>(ir_offset);
+            ir_offset = ir::Constant::gen_i32<int>(ir_current_idx_constant->i32() + ir_offset_constant->i32());
+        } else {
+            if (is_constant) mir_offset = ctx.map2operand(ir_offset);
+            is_constant = false;
+            auto newPtr = ctx.new_vreg(OperandType::Int32);
+            auto newInst = new MIRInst(InstAdd);
+            newInst->set_operand(0, newPtr); newInst->set_operand(1, mir_offset); newInst->set_operand(2, ctx.map2operand(ir_current_idx));
+            ctx.emit_inst(newInst);
+            mir_offset = newPtr;
+        }
     }
+
+    if (mir_offset) {
+        auto newPtr = ctx.new_vreg(OperandType::Int32);
+        auto newInst = new MIRInst(InstMul);
+        newInst->set_operand(0, newPtr); newInst->set_operand(1, mir_offset); newInst->set_operand(2, MIROperand::as_imm<int>(4, OperandType::Int32));
+        ctx.emit_inst(newInst);
+        mir_offset = newPtr;
+    } else {
+        auto ir_offset_constant = dyn_cast<ir::Constant>(ir_offset);
+        mir_offset = ctx.map2operand(ir::Constant::gen_i32<int>(ir_offset_constant->i32() * 4));
+    }
+    auto newPtr = ctx.new_vreg(OperandType::Int64);
+    auto newInst = new MIRInst(InstAdd);
+    newInst->set_operand(0, newPtr); newInst->set_operand(1, ptr); newInst->set_operand(2, mir_offset);
+    ctx.emit_inst(newInst);
+    ptr = newPtr;
     ctx.add_valmap(instEnd, ptr);
 }
-}  // namespace mir
+}
