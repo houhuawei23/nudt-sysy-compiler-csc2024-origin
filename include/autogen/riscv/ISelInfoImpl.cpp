@@ -847,7 +847,6 @@ static bool matchAndSelectPattern11(MIRInst* inst5, ISelContext& ctx) {
     }
 
     /* match predicate for operands  */
-    // std::cerr << "!!: " <<isOperandI64(op21) <<std::endl;
     if (not(isOperandI64(op21) && isOperandIReg(op22) && isOperandIReg(op23))) {
         return false;
     }
@@ -1730,11 +1729,56 @@ static bool matchAndSelectPattern36(MIRInst* inst1, ISelContext& ctx) {
     ctx.remove_inst(inst1);
     return true;
 }
+static bool matchAndSelectPattern37(MIRInst* inst1, ISelContext& ctx) {
+    uint32_t rootOpcode = InstICmp;
+    /** Match Inst **/
+    /* match inst InstICmp */
+    MIROperand* op1 = nullptr;
+    MIROperand* op2 = nullptr;
+    MIROperand* op3 = nullptr;
+    MIROperand* op4 = nullptr;
+    if (not matchInstICmp(inst1, op1, op2, op3, op4)) {
+        return false;
+    }
+
+    /* match predicate for operands  */
+    if (not(isOperandIReg(op2) && isOperandIReg(op3) &&
+            isCompareOp(op4, CompareOp::ICmpSignedLessEqual))) {
+        return false;
+    }
+
+    /** Select Inst **/
+    auto op6 = (op1);
+    auto op8 = (getVRegAs(ctx, op1));
+    auto op9 = (op3);
+    auto op10 = (op2);
+    /* select inst SLT */
+    auto inst2 = new MIRInst(SLT);
+    inst2->set_operand(0, op8);
+    inst2->set_operand(1, op9);
+    inst2->set_operand(2, op10);
+    ctx.insert_inst(inst2);
+
+    auto op7 = ctx.get_inst_def(inst2);
+
+    auto op11 = (getOne(op3));
+    /* select inst XORI */
+    auto inst3 = new MIRInst(XORI);
+    inst3->set_operand(0, op6);
+    inst3->set_operand(1, op7);
+    inst3->set_operand(2, op11);
+    ctx.insert_inst(inst3);
+
+    /* Replace Operand */
+    ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst3));
+    ctx.remove_inst(inst1);
+    return true;
+}
 
 /* InstICmp matchAndSelectPatternInstICmpend */
 
 /* InstBranch matchAndSelectPatternInstBranch begin */
-static bool matchAndSelectPattern37(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern38(MIRInst* inst1, ISelContext& ctx) {
     uint32_t rootOpcode = InstBranch;
     /** Match Inst **/
     /* match inst InstBranch */
@@ -1979,10 +2023,14 @@ static bool matchAndSelectImpl(MIRInst* inst,
                 success = true;
                 break;
             }
+            if (matchAndSelectPattern37(inst, ctx)) {
+                success = true;
+                break;
+            }
             break;
         }
         case InstBranch: {
-            if (matchAndSelectPattern37(inst, ctx)) {
+            if (matchAndSelectPattern38(inst, ctx)) {
                 success = true;
                 break;
             }

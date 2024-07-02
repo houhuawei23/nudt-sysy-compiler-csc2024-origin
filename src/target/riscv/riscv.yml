@@ -771,6 +771,31 @@ InstSelInfo: {
             },
           replace: { name: SLTIU, rd: $dst, rs1: $src1, imm: getOne($src2) },
         },
+        {
+          # x<=y -> !(y<x)
+          pattern:
+            {
+              name: InstICmp,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              op: $op,
+              predicate: "isOperandIReg($src1) && isOperandIReg($src2) && isCompareOp($op, CompareOp::ICmpSignedLessEqual)",
+            },
+          replace:
+            {
+              name: XORI,
+              rd: $dst,
+              rs1:
+                {
+                  name: SLT,
+                  rd: "getVRegAs(ctx, $dst)",
+                  rs1: $src2,
+                  rs2: $src1,
+                },
+              imm: getOne($src2),
+            },
+        },
         # branch
         {
           pattern:
