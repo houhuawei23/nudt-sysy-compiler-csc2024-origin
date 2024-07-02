@@ -214,57 +214,48 @@ class BinaryInst : public Instruction {
     void print(std::ostream& os) override;
     Value* getConstantRepl() override;
 };
-
+/* CallInst */
 class CallInst : public Instruction {
     Function* _callee = nullptr;
-    // const_value_ptr_vector _rargs;
-
-   public:
-    CallInst(Function* callee,
-             const_value_ptr_vector rargs = {},
-             BasicBlock* parent = nullptr,
-             const_str_ref name = "")
-        : Instruction(vCALL, callee->ret_type(), parent, name),
-          _callee(callee) {
+public:
+    CallInst(Function* callee, const_value_ptr_vector rargs={},
+                BasicBlock* parent=nullptr, const_str_ref name="")
+        : Instruction(vCALL, callee->ret_type(), parent, name), _callee(callee) {
         add_operands(rargs);
     }
-
-   public:
+public:  // get function
     Function* callee() const { return _callee; }
-    /* real arguments */
     auto& rargs() const { return _operands; }
+public:  // check function
     static bool classof(const Value* v) { return v->scid() == vCALL; }
     void print(std::ostream& os) override;
-    Value* getConstantRepl(){return nullptr;}
+    Value* getConstantRepl() { return nullptr; }
 };
 
-//! Conditional or Unconditional Branch instruction.
+/*
+ * @brief: Conditional or Unconditional Branch Instruction
+ * @note:
+ *      1. br i1 <cond>, label <iftrue>, label <iffalse>
+ *      2. br label <dest>
+ */
 class BranchInst : public Instruction {
-    // br i1 <cond>, label <iftrue>, label <iffalse>
-    // br label <dest>
     bool _is_cond = false;
-
-   public:
-    //* Condition Branch
-    BranchInst(Value* cond,
-               BasicBlock* iftrue,
-               BasicBlock* iffalse,
-               BasicBlock* parent = nullptr,
-               const_str_ref name = "")
+public:
+    //! Condition Branch
+    BranchInst(Value* cond, BasicBlock* iftrue, BasicBlock* iffalse,
+               BasicBlock* parent=nullptr, const_str_ref name="")
         : Instruction(vBR, Type::void_type(), parent, name), _is_cond(true) {
         add_operand(cond);
         add_operand(iftrue);
         add_operand(iffalse);
     }
-    //* UnCondition Branch
-    BranchInst(BasicBlock* dest,
-               BasicBlock* parent = nullptr,
-               const_str_ref name = "")
+    //! UnCondition Branch
+    BranchInst(BasicBlock* dest, BasicBlock* parent=nullptr,
+               const_str_ref name="")
         : Instruction(vBR, Type::void_type(), parent, name), _is_cond(false) {
         add_operand(dest);
     }
-
-    // get
+public:  // get function
     bool is_cond() const { return _is_cond; }
     Value* cond() const {
         assert(_is_cond && "not a conditional branch");
@@ -282,116 +273,85 @@ class BranchInst : public Instruction {
         assert(!_is_cond && "not an unconditional branch");
         return dyn_cast<BasicBlock>(operand(0));
     }
-
-   public:
+public:  // check function
     static bool classof(const Value* v) { return v->scid() == vBR; }
     void print(std::ostream& os) override;
-    Value* getConstantRepl(){return nullptr;}
+    Value* getConstantRepl() { return nullptr; }
 };
 
-//! ICmpInst
-//! <result> = icmp <cond> <ty> <op1>, <op2>
-// icmp ne i32 1, 2
+/*
+ * @brief: ICmpInst
+ * @note: <result> = icmp <cond> <ty> <op1>, <op2>
+ */
 class ICmpInst : public Instruction {
-   public:
-    ICmpInst(ValueId itype,
-             Value* lhs,
-             Value* rhs,
-             BasicBlock* parent,
-             const_str_ref name = "")
-        : Instruction(itype, Type::i1_type(), parent, name) {  // cmp return i1
+public:
+    ICmpInst(ValueId itype, Value* lhs, Value* rhs,
+             BasicBlock* parent, const_str_ref name="")
+        : Instruction(itype, Type::i1_type(), parent, name) {
         add_operand(lhs);
         add_operand(rhs);
     }
-
-   public:
+public:  // get function
     Value* lhs() const { return operand(0); }
     Value* rhs() const { return operand(1); }
-
-   public:
-    static bool classof(const Value* v) {
-        return v->scid() >= vICMP_BEGIN && v->scid() <= vICMP_END;
-    }
+public:  // check function
+    static bool classof(const Value* v) { return v->scid() >= vICMP_BEGIN && v->scid() <= vICMP_END; }
     void print(std::ostream& os) override;
     Value* getConstantRepl() override;
 };
 
-//! FCmpInst
+/* FCmpInst */
 class FCmpInst : public Instruction {
-   public:
-    FCmpInst(ValueId itype,
-             Value* lhs,
-             Value* rhs,
-             BasicBlock* parent,
-             const_str_ref name = "")
-        : Instruction(itype,
-                      Type::i1_type(),  // also return i1
-                      parent,
-                      name) {
+public:
+    FCmpInst(ValueId itype, Value* lhs, Value* rhs,
+             BasicBlock* parent, const_str_ref name="")
+        : Instruction(itype, Type::i1_type(), parent, name) {
         add_operand(lhs);
         add_operand(rhs);
     }
-
-   public:
+public:  // get function
     Value* lhs() const { return operand(0); }
     Value* rhs() const { return operand(1); }
-
-   public:
-    static bool classof(const Value* v) {
-        return v->scid() >= vFCMP_BEGIN && v->scid() <= vFCMP_END;
-    }
+public:  // check function
+    static bool classof(const Value* v) { return v->scid() >= vFCMP_BEGIN && v->scid() <= vFCMP_END; }
     void print(std::ostream& os) override;
     Value* getConstantRepl() override;
 };
 
 /*
- * @brief bitcast Instruction
- * @details:
- *      <result> = bitcast <ty> <value> to i8*
+ * @brief Bitcast Instruction
+ * @note: <result> = bitcast <ty> <value> to i8*
  */
 class BitCastInst : public Instruction {
-    friend class IRBuilder;
-
-    public: 
-        BitCastInst(Type* type, Value* value, BasicBlock* parent)
-            : Instruction(vBITCAST, type, parent) {
-            add_operand(value);
-        }
-    
-    public:
-        Value* value() const { return operand(0); }
-
-    public:
-            Value* getConstantRepl() { return nullptr; }
-    
-    public:
-        static bool classof(const Value* v) { return v->scid() == vBITCAST; }
-        void print(std::ostream& os) override;
+friend class IRBuilder;
+public: 
+    BitCastInst(Type* type, Value* value, BasicBlock* parent)
+        : Instruction(vBITCAST, type, parent) { add_operand(value); }
+public:  // get function
+    Value* value() const { return operand(0); }
+    Value* getConstantRepl() { return nullptr; }
+public:  // check function
+    static bool classof(const Value* v) { return v->scid() == vBITCAST; }
+    void print(std::ostream& os) override;
 };
 
 /*
- * @brief: memset
- * @details: 
- *      call void @llvm.memset.inline.p0.p0.i64(i8* <dest>, i8 0, i64 <len>, i1 <isvolatile>)
+ * @brief: Memset Instruction
+ * @note: call void @llvm.memset.inline.p0.p0.i64(i8* <dest>, i8 0, i64 <len>, i1 <isvolatile>)
  */
 class MemsetInst : public Instruction {
     friend class IRBuilder;
-
-    public:
-        MemsetInst(Type* type, Value* value, BasicBlock* parent)
-            : Instruction(vMEMSET, type, parent) {
-            add_operand(value);
-        }
-    
-    public:
-        Value* value() const { return operand(0); }
-    
-    public:
-        static bool classof(const Value* v) { return v->scid() == vMEMSET; }
-        void print(std::ostream& os) override;
-
-    public:
-            Value* getConstantRepl() { return nullptr; }
+public:
+    MemsetInst(Type* type, Value* value, BasicBlock* parent)
+        : Instruction(vMEMSET, type, parent) {
+        add_operand(value);
+    }    
+public:
+    Value* value() const { return operand(0); }
+public:  // check function
+    static bool classof(const Value* v) { return v->scid() == vMEMSET; }
+    void print(std::ostream& os) override;
+    Value* getConstantRepl() { return nullptr; }
 };
 
 /*
@@ -451,30 +411,28 @@ public:  // check function
 };
 
 class PhiInst : public Instruction {
-   protected:
+protected:
     size_t size;
-
-   public:
-    PhiInst(BasicBlock* bb,
-            Type* type,
-            const std::vector<Value*>& vals = {},
+public:
+    PhiInst(BasicBlock* bb, Type* type,
+            const std::vector<Value*>& vals={},
             const std::vector<BasicBlock*>& bbs = {})
         : Instruction(vPHI, type, bb), size(vals.size()) {
         assert(vals.size()==bbs.size() and "number of vals and bbs in phi must be equal!");
-        for(int i=0;i<size;i++){
+        for(int i = 0; i < size; i++) {
             add_operand(vals[i]);
             add_operand(bbs[i]);
         }
     }
-    Value* getval(size_t k) { return operand(2*k); }
-    BasicBlock* getbb(size_t k) { return dyn_cast<BasicBlock>(operand(2*k+1)); }
+public:  // get function
+    Value* getval(size_t k) { return operand(2 * k); }
+    BasicBlock* getbb(size_t k) { return dyn_cast<BasicBlock>(operand(2 * k + 1)); }
     Value* getvalfromBB(BasicBlock* bb);
     BasicBlock* getbbfromVal(Value* val);
     size_t getsize(){ return size;}
     void addIncoming(Value* val, BasicBlock* bb) {
         add_operand(val);
         add_operand(bb);
-        // 更新操作数的数量
         size++;
     }
     void delval(Value* val);
@@ -482,5 +440,4 @@ class PhiInst : public Instruction {
     void print(std::ostream& os) override;
     Value* getConstantRepl() override;
 };
-
-}  // namespace ir
+}

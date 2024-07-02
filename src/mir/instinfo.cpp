@@ -30,8 +30,6 @@ static std::string_view getType(OperandType type) {
         case OperandType::Special: return "special ";
         case OperandType::HighBits: return "hi ";
         case OperandType::LowBits: return "lo ";
-        case OperandType::PointerInt32:
-        case OperandType::PointerFloat32: return "addr ";
         default: assert(false && "Invalid operand type");
     }
 };

@@ -1,11 +1,7 @@
 #include <iostream>
-
 #include "support/config.hpp"
-
 #include "SysYLexer.h"
-
 #include "visitor/visitor.hpp"
-
 #include "pass/pass.hpp"
 #include "pass/analysis/dom.hpp"
 #include "pass/optimize/mem2reg.hpp"
@@ -16,20 +12,13 @@
 #include "pass/analysis/loop.hpp"
 #include "pass/optimize/GCM.hpp"
 #include "pass/optimize/GVN.hpp"
-
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
 #include "mir/lowering.hpp"
-
 #include "target/riscv/riscv.hpp"
 #include "target/riscv/riscvtarget.hpp"
-
 using namespace std;
-
-/*
- * @brief: ./main -f test.c -i -t mem2reg -o gen.ll -O0 -L0
- */
-
+/* ./main -f test.c -i -t mem2reg -o gen.ll -O0 -L0 */
 int main(int argc, char* argv[]) {
     sysy::Config config;
     config.parse_cmd_args(argc, argv);

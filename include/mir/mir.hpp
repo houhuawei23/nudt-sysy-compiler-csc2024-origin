@@ -72,8 +72,6 @@ enum class OperandType : uint32_t {
     Int32,
     Int64,
     Float32,
-    PointerInt32,
-    PointerFloat32, 
     Special,
     HighBits,
     LowBits,
@@ -88,8 +86,6 @@ constexpr uint32_t getOperandSize(const OperandType type) {
         case OperandType::Int32: return 4;
         case OperandType::Int64: return 8;
         case OperandType::Float32: return 4;
-        case OperandType::PointerInt32:
-        case OperandType::PointerFloat32: return 8;
         default: assert(false && "invalid operand type");
     }
 }

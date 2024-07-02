@@ -38,8 +38,7 @@ public:  // sa stage (stack allocation)
     /* 插入序言和尾声代码: 寄存器保护与恢复 */
     virtual int32_t insert_prologue_epilogue(MIRFunction* func,
                                              std::unordered_set<MIROperand*>& callee_saved_regs,
-                                             CodeGenContext& ctx,
-                                             MIROperand* return_addr_reg) = 0;
+                                             CodeGenContext& ctx, MIROperand* return_addr_reg) = 0;
 public:  // alignment
     virtual size_t get_stackpointer_alignment() = 0;
 };

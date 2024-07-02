@@ -26,22 +26,6 @@ YELLOW=$(tput setaf 3)
 RESET=$(tput sgr0)
 CYAN=$(tput setaf 6)
 
-sysylib_funcs=(
-    # "getint" "getch" "getarray" "getfloat" "getfarray"
-    # "putint" "putch" "putarray" "putfloat" "putfarray"
-    # "putf" "starttime" "stoptime"
-)
-function check_key_in_file() {
-    file="$1"
-    for func in "${sysylib_funcs[@]}"; do
-        if grep -q "$func" "$file"; then
-            return 1 # 文件中包含关键字，返回 1
-        fi
-    done
-
-    return 0 # 文件中未找到关键字，返回 0
-}
-
 # Default values
 test_path="test/local_test"
 output_dir="test/.out"
@@ -131,14 +115,15 @@ if [ ! -d "$output_dir" ]; then
     mkdir -p "$output_dir"
 fi
 
-echo "test_path      ${test_path} " >>${result_file}
-echo "output_dir     ${output_dir} " >>${result_file}
+echo "test_path      ${test_path} "   >>${result_file}
+echo "output_dir     ${output_dir} "  >>${result_file}
 echo "result_file    ${result_file} " >>${result_file}
 
 echo "" >>${result_file}
 
 sy_h="./test/link/sy.h"
 sy_c="./test/link/link.c"
+memset_s="./test/link/memset.s"
 
 function run_gcc_test() {
     local single_file="$1"
@@ -156,14 +141,13 @@ function run_gcc_test() {
     cat "${sy_c}" >"${gcc_c}"
     cat "${single_file}" >>"${gcc_c}"
 
-    riscv64-linux-gnu-gcc -S -march=rv64gc -mabi=lp64d -mcmodel=medlow -ffp-contract=on "${gcc_c}" -o "${gcc_s}" -O0
-    riscv64-linux-gnu-gcc -march=rv64gc -mabi=lp64d -mcmodel=medlow -ffp-contract=on "${gcc_c}" -o "${gcc_o}" -O0
+    riscv64-linux-gnu-g++-12 -S -march=rv64gc -mabi=lp64d -mcmodel=medlow -ffp-contract=on "${gcc_c}" -o "${gcc_s}" -O0
+    riscv64-linux-gnu-g++-12 -march=rv64gc -mabi=lp64d -mcmodel=medlow -ffp-contract=on "${gcc_c}" -o "${gcc_o}" -O0
     if [ -f $in_file ]; then
         timeout $TIMEOUT qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gcc_o}" <"${in_file}" >"${gcc_out}"
     else
         timeout $TIMEOUT qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gcc_o}" >"${gcc_out}"
     fi
-    # qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gcc_o}" >"${gcc_out}"
     local qemu_res=$?
     return $qemu_res
 }
@@ -209,7 +193,7 @@ function run_compiler_test() {
 
     local gen_elf="${output_dir}/gen.elf"
     # for test
-    riscv64-linux-gnu-gcc -O0 -march=rv64gc -mabi=lp64d -mcmodel=medlow "${gen_s}" ${sy_c} -o "${gen_o}"
+    riscv64-linux-gnu-gcc -O0 -march=rv64gc -mabi=lp64d -mcmodel=medlow "${gen_s}" ${sy_c} ${memset_s} -o "${gen_o}"
     if [ $? != 0 ]; then
         return $EC_RISCV_GCC
     fi
@@ -235,8 +219,6 @@ function run_test_asm() {
     local output_dir="$2"
     local result_file="$3"
 
-    check_key_in_file "$single_file"
-    # echo "check_key_in_file res: $?"
     if [ $? != 0 ]; then
         echo "${CYAN}[SKIP]${RESET} ${single_file}"
         SKIP_CNT=$((SKIP_CNT + 1))

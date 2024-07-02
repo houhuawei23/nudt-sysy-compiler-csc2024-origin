@@ -22,8 +22,13 @@ public:
 
     /* Code Generate Context */
     CodeGenContext* _code_gen_ctx = nullptr;
+    MIRFunction* memsetFunc;
 public:
-    LoweringContext(MIRModule& mir_module, Target& target) : _mir_module(mir_module), _target(target) {}
+    LoweringContext(MIRModule& mir_module, Target& target) : _mir_module(mir_module), _target(target) {
+        // memsetFunc = new MIRFunction("memset", &_mir_module);
+        _mir_module.functions().push_back(std::make_unique<MIRFunction>("_memset", &mir_module));
+        memsetFunc = _mir_module.functions().back().get();
+    }
 public:  // set function
     void set_code_gen_ctx(CodeGenContext* code_gen_ctx) { _code_gen_ctx = code_gen_ctx; }
     void set_mir_func(MIRFunction* mir_func) { _mir_func = mir_func; }
@@ -64,8 +69,7 @@ public:  // ir_val -> mir_operand
             auto inst = new MIRInst(InstLoadGlobalAddress);
             auto g_reloc = gvar_map.at(gvar)->reloc.get();  // MIRRelocable*
             auto operand = MIROperand::as_reloc(g_reloc);
-            inst->set_operand(0, ptr);
-            inst->set_operand(1, operand);
+            inst->set_operand(0, ptr); inst->set_operand(1, operand);
             emit_inst(inst);
             return ptr;
         }
@@ -103,13 +107,7 @@ public:  // utils function
                 default: assert(false && "unsupported float type");
             }
         } else if (type->is_pointer()) {
-            auto base_type = dyn_cast<ir::PointerType>(type)->base_type();
-            if (base_type->is_array()) base_type = dyn_cast<ir::ArrayType>(base_type)->base_type();
-            switch (base_type->btype()) {
-                case ir::INT32: return OperandType::PointerInt32;
-                case ir::FLOAT: return OperandType::PointerFloat32;
-                default: assert(false && "unsupported pointer type");
-            }
+            return OperandType::Int64;
         }
         return OperandType::Special;
     }
