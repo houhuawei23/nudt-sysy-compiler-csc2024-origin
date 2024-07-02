@@ -7,6 +7,8 @@
 #include "mir/fastAllocator.hpp"
 #include "mir/linearAllocator.hpp"
 #include "target/riscv/riscvtarget.hpp"
+#include <iostream>
+#include <fstream>
 
 namespace mir {
 void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& target);
@@ -27,7 +29,7 @@ union FloatUint32 {
 } fu32;
 
 void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& target) {
-    constexpr bool debugLowering = false;
+    constexpr bool debugLowering = true;
 
     auto& functions = mir_module.functions();
     auto& global_objs = mir_module.global_objs();
@@ -109,16 +111,18 @@ void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& tar
         auto mir_func = func_map[ir_func];
         if (ir_func->blocks().empty()) continue;
         if (debugLowering) {
-            dumpStageWithMsg(std::cerr, "Before Lowering", mir_func->name());
-            ir_func->print(std::cerr);
+            std::ofstream fout("./.debug/1_BeforeLowering.ll");
+            // dumpStageWithMsg(fout, "Before Lowering", mir_func->name());
+            ir_func->print(fout);
         }
 
         /* 4.1: lower function body to generic MIR */
         {
             create_mir_function(ir_func, mir_func, codegen_ctx, lowering_ctx);
             if (debugLowering) {
-                dumpStageWithMsg(std::cerr, "After Lowering", mir_func->name());
-                mir_func->print(std::cerr, codegen_ctx);
+                std::ofstream fout("./.debug/2_AfterLowering.ll");
+                // dumpStageWithMsg(fout, "After Lowering", mir_func->name());
+                mir_func->print(fout, codegen_ctx);
             }
         }
 
@@ -127,8 +131,9 @@ void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& tar
             ISelContext isel_ctx(codegen_ctx);
             isel_ctx.run_isel(mir_func);
             if (debugLowering) {
-                dumpStageWithMsg(std::cerr, "After ISEL", mir_func->name());
-                mir_func->print(std::cerr, codegen_ctx);
+                std::ofstream fout("./.debug/3_AfterISEL.ll");
+                // dumpStageWithMsg(fout, "After ISEL", mir_func->name());
+                mir_func->print(fout, codegen_ctx);
             }
         }
         /* 4.3 register coalescing */
@@ -147,8 +152,9 @@ void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& tar
                 GraphColoringAllocate(*mir_func, codegen_ctx, infoIPRA);
 
                 if (debugLowering) {
-                    dumpStageWithMsg(std::cerr, "After RA", mir_func->name());
-                    mir_func->print(std::cerr, codegen_ctx);
+                    std::ofstream fout("./.debug/4_AfterRA.ll");
+                    // dumpStageWithMsg(fout, "After RA", mir_func->name());
+                    mir_func->print(fout, codegen_ctx);
                 }
             }
         }
@@ -159,8 +165,9 @@ void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& tar
             allocateStackObjects(mir_func, codegen_ctx);
             codegen_ctx.flags.postSA = true;
             if (debugLowering) {
-                dumpStageWithMsg(std::cerr, "After SA", mir_func->name());
-                mir_func->print(std::cerr, codegen_ctx);
+                std::ofstream fout("./.debug/5_AfterSA.ll");
+                // dumpStageWithMsg(fout, "After SA", mir_func->name());
+                mir_func->print(fout, codegen_ctx);
             }
         }
 
@@ -171,8 +178,9 @@ void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& tar
         /* 4.11 verify */
 
         if (debugLowering) {
-            dumpStageWithMsg(std::cerr, "Finished CodeGen", mir_func->name());
-            mir_func->print(std::cerr, codegen_ctx);
+            std::ofstream fout("./.debug/6_FinisedCodeGen.ll");
+            // dumpStageWithMsg(fout, "Finished CodeGen", mir_func->name());
+            mir_func->print(fout, codegen_ctx);
         }
     }
     /* module verify */
