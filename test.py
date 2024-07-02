@@ -36,8 +36,8 @@ def run_compiler(
     command = [
         compiler_path,
         "-S",
-        "-t",
-        target,
+        # "-t",
+        # target,
         f"-O{opt_level}",
         f"-L{log_level}",
         "-o",
@@ -51,7 +51,7 @@ def run_compiler(
 
     process = subprocess.run(command, capture_output=True, text=True)
     return process
-out = run_compiler(".vscode/test.c", "riscv", output=".vscode/test.s", opt_level=0, log_level=1, emit_ir=True)    
+out = run_compiler(test_path, "riscv", output=".vscode/test.s", opt_level=0, log_level=1, emit_ir=True)    
 
 
 print(out.stderr)
