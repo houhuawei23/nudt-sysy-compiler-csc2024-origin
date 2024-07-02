@@ -6,7 +6,8 @@
 #include "mir/CFGAnalysis.hpp"
 
 namespace mir {
-static void assignInstNum(MIRFunction& mfunc, LiveVariablesInfo& info) {  // 为每一条指令编号
+/* 为每一条指令编号 */
+static void assignInstNum(MIRFunction& mfunc, LiveVariablesInfo& info) {
     auto& num = info.inst2Num;
     InstNum current = 0;
     for (auto& block : mfunc.blocks()) {
@@ -18,7 +19,6 @@ static void assignInstNum(MIRFunction& mfunc, LiveVariablesInfo& info) {  // 为
 }
 
 void LiveInterval::addSegment(const LiveSegment& segment) { segments.push_back(segment); }
-
 InstNum LiveInterval::nextUse(InstNum begin) const {
     auto it = std::upper_bound(segments.cbegin(), segments.cend(), LiveSegment{0, begin + 1}, 
                                [](const LiveSegment& lhs, const LiveSegment& rhs) { return lhs.end < rhs.end; });
@@ -26,7 +26,6 @@ InstNum LiveInterval::nextUse(InstNum begin) const {
     assert(it->begin > begin);
     return it->begin;
 }
-
 bool LiveInterval::verify() const {
     InstNum val = 0;
     for (auto segment : segments) {
@@ -36,23 +35,21 @@ bool LiveInterval::verify() const {
     }
     return true;
 }
-
-void LiveInterval::optimize() {  // optimize
+void LiveInterval::optimize() {
     assert(verify());
     auto cur = segments.begin();
     for (auto it = segments.begin(); it != segments.end(); it++) {
         if (it == cur) continue;
         if (cur->end < it->begin) {
-            ++cur;
-            *cur = *it;
+            ++cur; *cur = *it;
         } else {
             cur->end = std::max(cur->end, it->end);
         }
     }
     segments.erase(std::next(cur), segments.end());
 }
-
-bool LiveInterval::intersectWith(const LiveInterval& rhs) const {  // 判断两个变量的活跃区间是否相交
+bool LiveInterval::intersectWith(const LiveInterval& rhs) const {
+    /* 判断两个变量的活跃区间是否相交 */
     auto it = rhs.segments.begin();
     for (auto& [begin, end] : segments) {
         while (true) {
@@ -62,7 +59,7 @@ bool LiveInterval::intersectWith(const LiveInterval& rhs) const {  // 判断两�
         }
         if (it->begin < end) return true;
     }
-    return true;
+    return false;
 }
 
 void LiveInterval::dump(std::ostream& out) const {  // 方便调试

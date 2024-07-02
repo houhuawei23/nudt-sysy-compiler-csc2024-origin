@@ -76,7 +76,8 @@ void allocateStackObjects(MIRFunction* func, CodeGenContext& ctx) {
     }
     const auto preAllocatedBase = ctx.frameInfo.insert_prologue_epilogue(func, callee_saved, ctx, ctx.registerInfo->get_return_address_register());
 
-    remove_unused_spill_stack_objects(func);  // remove dead code
+    /* 优化: remove dead code */
+    remove_unused_spill_stack_objects(func);
 
     int32_t allocationBase = 0;
     auto sp_alignment = static_cast<int32_t>(ctx.frameInfo.get_stackpointer_alignment());
@@ -84,7 +85,7 @@ void allocateStackObjects(MIRFunction* func, CodeGenContext& ctx) {
         assert(alignment <= sp_alignment);
         allocationBase = (allocationBase + alignment - 1) / alignment * alignment;
     };
-
+    
     /* 2. callee arguments */
     for (auto& [ref, stack] : func->stack_objs()) {
         assert(isStackObject(ref->reg()));

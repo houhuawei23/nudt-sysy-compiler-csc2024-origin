@@ -1,7 +1,6 @@
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
 #include "mir/iselinfo.hpp"
-
 #include "target/riscv/riscv.hpp"
 #include "autogen/riscv/InstInfoDecl.hpp"
 #include "autogen/riscv/ISelInfoDecl.hpp"
@@ -14,14 +13,10 @@ static MIROperand* getVRegAs(ISelContext& ctx, MIROperand* ref) {
 
 constexpr RISCVInst getIntegerBinaryRegOpcode(uint32_t opcode) {
     switch (opcode) {
-        case InstAnd:
-            return AND;
-        case InstOr:
-            return OR;
-        case InstXor:
-            return XOR;
-        default:
-            assert(false && "Unsupported binary register instruction");
+        case InstAnd: return AND;
+        case InstOr: return OR;
+        case InstXor: return XOR;
+        default: assert(false && "Unsupported binary register instruction");
     }
 }
 constexpr RISCVInst getIntegerBinaryImmOpcode(uint32_t opcode) {
@@ -40,19 +35,12 @@ constexpr RISCVInst getIntegerBinaryImmOpcode(uint32_t opcode) {
 static RISCVInst getLoadOpcode(MIROperand* dst) {
     switch (dst->type()) {
         case OperandType::Bool:
-        case OperandType::Int8:
-            return LB;
-        case OperandType::Int16:
-            return LH;
-        case OperandType::Int32:
-            return LW;
-        case OperandType::Int64:
-            return LD;
-        // case OperandType::Float32:
-        //     return FLW;
-        default:
-            assert(false && "Unsupported operand type for load instruction");
-            // reportUnreachable(CMMC_LOCATION());
+        case OperandType::Int8: return LB;
+        case OperandType::Int16: return LH;
+        case OperandType::Int32: return LW;
+        case OperandType::Int64: return LD;
+        case OperandType::Float32: return FLW;
+        default: assert(false && "Unsupported operand type for load instruction");
     }
 }
 static RISCVInst getStoreOpcode(MIROperand* src) {
@@ -63,16 +51,12 @@ static RISCVInst getStoreOpcode(MIROperand* src) {
         case OperandType::Int32: return SW;
         case OperandType::Int64: return SD;
         case OperandType::Float32: return FSW;
-        case OperandType::PointerInt32:
-        case OperandType::PointerFloat32: return SD;
         default: assert(false && "Unsupported operand type for store instruction");
     }
 }
 
-static bool selectAddrOffset(MIROperand* addr,
-                             ISelContext& ctx,
-                             MIROperand*& base,
-                             MIROperand*& offset) {
+static bool selectAddrOffset(MIROperand* addr, ISelContext& ctx,
+                             MIROperand*& base, MIROperand*& offset) {
     bool debug = false;
     auto dumpInst = [&](MIRInst* inst) {
         auto& instInfo = ctx.codegen_ctx().instInfo.get_instinfo(inst);
@@ -83,8 +67,7 @@ static bool selectAddrOffset(MIROperand* addr,
 
     const auto addrInst = ctx.lookup_def(addr);
     if (addrInst) {
-        if (debug)
-            dumpInst(addrInst);
+        if (debug) dumpInst(addrInst);
         if (addrInst->opcode() == InstLoadStackObjectAddr) {
             base = addrInst->operand(1);
             offset = MIROperand::as_imm(0, OperandType::Int64);
@@ -319,16 +302,14 @@ void RISCVISelInfo::legalizeInstWithStackOperand(InstLegalizeContext& ctx,
              * sw rs2[0 Use], offset[1 Metadata](rs1[2 Use])
              * M[x[rs1] + sext(offset)] = x[rs2][31: 0]
              */
-            if (debugLISO)
-                std::cout << "sw rs2, offset(rs1)" << std::endl;
+            if (debugLISO) std::cout << "sw rs2, offset(rs1)" << std::endl;
             inst->set_opcode(isOperandGR(*inst->operand(1)) ? SD : FSW);
             auto oldSrc = inst->operand(1);
             inst->set_operand(0, oldSrc); /* src2 := src */
             inst->set_operand(1, offset); /* offset */
             inst->set_operand(2, base);   /* base */
             inst->set_operand(
-                3,
-                getAlign(isOperandGR(*inst->operand(0)) ? 8 : 4)); /* align */
+                3, getAlign(isOperandGR(*inst->operand(0)) ? 8 : 4)); /* align */
 
             break;
         }
@@ -337,8 +318,7 @@ void RISCVISelInfo::legalizeInstWithStackOperand(InstLegalizeContext& ctx,
              * LoadRegFromStack dst[0 Def], obj[1 Metadata]
              * lw rd, offset(rs1)
              */
-            if (debugLISO)
-                std::cout << "lw rd, offset(rs1)" << std::endl;
+            if (debugLISO) std::cout << "lw rd, offset(rs1)" << std::endl;
 
             inst->set_opcode(isOperandGR(*inst->operand(0)) ? LD : FLW);
 
@@ -353,9 +333,7 @@ void RISCVISelInfo::legalizeInstWithStackOperand(InstLegalizeContext& ctx,
         case SH:
         case SB:
         case FSW: {
-            if (debugLISO)
-                std::cout << "sw rs2, offset(rs1)" << std::endl;
-
+            if (debugLISO) std::cout << "sw rs2, offset(rs1)" << std::endl;
             inst->set_operand(1, offset);
             inst->set_operand(2, base);
             break;

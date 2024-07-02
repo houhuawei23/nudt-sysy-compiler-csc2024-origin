@@ -31,11 +31,8 @@ class RISCVFrameInfo : public TargetFrameInfo {
 public:  // lowering stage
     void emit_call(ir::CallInst* inst, LoweringContext& lowering_ctx) override;
     // 在函数调用前生成序言代码，用于设置栈帧和保存寄存器状态。
-    void emit_prologue(MIRFunction* func,
-                       LoweringContext& lowering_ctx) override;
-    void emit_return(ir::ReturnInst* ir_inst,
-                     LoweringContext& lowering_ctx) override;
-
+    void emit_prologue(MIRFunction* func, LoweringContext& lowering_ctx) override;
+    void emit_return(ir::ReturnInst* ir_inst, LoweringContext& lowering_ctx) override;
 public:  // ra stage (register allocation stage)
     // 调用者保存寄存器
     bool is_caller_saved(MIROperand& op) override {
@@ -60,7 +57,6 @@ public:  // ra stage (register allocation stage)
                (RISCV::F18 <= reg && reg <= RISCV::F27) ||
                reg == RISCV::X3;
     }
-
 public:  // sa stage (stack allocation stage)
     int stack_pointer_align() override { return 8; }
     void emit_postsa_prologue(MIRBlock* entry, int32_t stack_size) override {
@@ -71,7 +67,6 @@ public:  // sa stage (stack allocation stage)
         auto& insts = exit->insts();
         RISCV::adjust_reg(insts, std::prev(insts.end()), RISCV::sp, RISCV::sp, stack_size);
     }
-
     int32_t insert_prologue_epilogue(MIRFunction* func, std::unordered_set<MIROperand*>& callee_saved_regs,
                                      CodeGenContext& ctx, MIROperand* return_addr_reg) override {
         std::vector<std::pair<MIROperand*, MIROperand*>> saved;
@@ -143,12 +138,9 @@ public:  // get function
             case OperandType::Int8:
             case OperandType::Int16:
             case OperandType::Int32:
-            case OperandType::Int64:
-                return 0;
-            case OperandType::Float32:
-                return 1;
-            default:
-                assert(false && "invalid alloca class");
+            case OperandType::Int64: return 0;
+            case OperandType::Float32: return 1;
+            default: assert(false && "invalid alloca class");
         }
     }
 

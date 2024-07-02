@@ -1,7 +1,6 @@
 #pragma once
 #include <vector>
 #include <unordered_map>
-
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
 
@@ -20,7 +19,6 @@ struct MIRBlockCFGInfo final {
 };
 class CFGAnalysis final {
     std::unordered_map<MIRBlock*, MIRBlockCFGInfo> _block2CFGInfo;
-
 public:  // get function
     std::unordered_map<MIRBlock*, MIRBlockCFGInfo>& block2CFGInfo() { return _block2CFGInfo; }
     const std::vector<MIRBlockEdge>& predecessors(MIRBlock* block) const {
