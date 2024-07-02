@@ -7,10 +7,8 @@ namespace ir {
 /* Constant Class */
 class Constant : public User {
     static std::map<std::string, Constant*> cache;
-
 private:
     bool _is_zero = false;
-
 protected:
     union {
         bool _i1;
@@ -19,7 +17,6 @@ protected:
         float _f32;
         double _f64;
     };
-
 public:
     Constant(bool i1, const_str_ref name)
         : User(Type::i1_type(), vCONSTANT, name), _i1(i1) {}
@@ -37,7 +34,6 @@ public:
           _f64(f64), _is_zero(f64 == 0.0) {}
     Constant() : User(Type::void_type(), vCONSTANT, "VOID") {}
     Constant(const_str_ref name) : User(Type::undefine_type(), vCONSTANT, "undef") {}
-
 public:
     template <typename T> static Constant* cache_add(T val, const std::string& name) {
         auto iter = cache.find(name);
@@ -47,7 +43,6 @@ public:
         auto res = cache.emplace(name, c);
         return c;
     }
-
 public:  // generate function
     template <typename T> static Constant* gen_i1(T v) {
         assert(std::is_integral_v<T> || std::is_floating_point_v<T> && "not int or float!");
@@ -109,7 +104,6 @@ public:  // generate function
         auto res = cache.emplace(name, c);
         return c;
     }
-
 public:  // get function
     std::string comment() const override { 
         int a = 5;
@@ -145,7 +139,6 @@ public:  // get function
         if (is_float32()) return _f32;
         else if (is_double()) return _f64;
     }
-
 public:  // check function
     bool is_zero() const { return _is_zero; }
     static bool classof(const Value* v) { return v->scid() == vCONSTANT; }

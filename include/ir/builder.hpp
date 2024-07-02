@@ -1,20 +1,10 @@
-/*
- * @file builder.hpp
- *
- */
 #pragma once
-
 #include <any>
 #include "ir/infrast.hpp"
 #include "ir/instructions.hpp"
 namespace ir {
-
-/*
- * @brief: IR Builder for Module.
- *
- */
 class IRBuilder {
-   private:
+private:
     BasicBlock* _block = nullptr;  // current basic block for insert instruction
     inst_iterator _pos;            // insert pos for cur block
     block_ptr_stack _headers, _exits;
@@ -24,20 +14,13 @@ class IRBuilder {
     // the top the deeper nest
     block_ptr_stack _true_targets, _false_targets;
     int _bb_cnt;
-
-   public:
+public:
     IRBuilder() {
-        _if_cnt = 0;
-        _while_cnt = 0;
-        _rhs_cnt = 0;
-        _func_cnt = 0;
-        _var_cnt = 0;
-        _bb_cnt = 0;
+        _if_cnt = 0; _while_cnt = 0; _rhs_cnt = 0;
+        _func_cnt = 0; _var_cnt = 0; _bb_cnt = 0;
     }
-
-    void reset() {
-        _var_cnt = 0;
-        _bb_cnt = 0;
+public:  // utils function
+    void reset() { _var_cnt = 0; _bb_cnt = 0;
     }
 
     Value* cast_to_i1(Value* val) {
@@ -56,16 +39,14 @@ class IRBuilder {
     }
     // using pair?
     // defalut promote to i32
-    Value* type_promote(Value* val,
-                        Type* target_tpye,
-                        Type* base_type = Type::i32_type()) {
+    Value* type_promote(Value* val, Type* target_tpye,
+                        Type* base_type=Type::i32_type()) {
         Value* res = val;
         if (val->type()->btype() < target_tpye->btype()) {
             // need to promote
             if (val->type()->is_i1()) {
                 if (target_tpye->is_i32()) {
                     res = create_unary_beta(Value::vZEXT, res, Type::i32_type());
-
                 } else if (target_tpye->is_float()) {
                     res = create_unary_beta(Value::vZEXT, res, Type::i32_type());
                     res = create_unary_beta(Value::vSITOFP, res, Type::float_type());
@@ -87,43 +68,28 @@ class IRBuilder {
         switch (lhs->type()->btype()) {
             case INT32: {
                 switch (op) {
-                    case Value::EQ:
-                        return create_icmp(Value::vIEQ, lhs, rhs);
-                    case Value::NE:
-                        return create_icmp(Value::vINE, lhs, rhs);
-                    case Value::GT:
-                        return create_icmp(Value::vISGT, lhs, rhs);
-                    case Value::GE:
-                        return create_icmp(Value::vISGE, lhs, rhs);
-                    case Value::LT:
-                        return create_icmp(Value::vISLT, lhs, rhs);
-                    case Value::LE:
-                        return create_icmp(Value::vISLE, lhs, rhs);
-                    default:
-                        assert(false && "create_cmp: invalid op!");
+                    case Value::EQ: return create_icmp(Value::vIEQ, lhs, rhs);
+                    case Value::NE: return create_icmp(Value::vINE, lhs, rhs);
+                    case Value::GT: return create_icmp(Value::vISGT, lhs, rhs);
+                    case Value::GE: return create_icmp(Value::vISGE, lhs, rhs);
+                    case Value::LT: return create_icmp(Value::vISLT, lhs, rhs);
+                    case Value::LE: return create_icmp(Value::vISLE, lhs, rhs);
+                    default: assert(false && "create_cmp: invalid op!");
                 }
             } break;
             case FLOAT:
             case DOUBLE: {
                 switch (op) {
-                    case Value::EQ:
-                        return create_fcmp(Value::vFOEQ, lhs, rhs);
-                    case Value::NE:
-                        return create_fcmp(Value::vFONE, lhs, rhs);
-                    case Value::GT:
-                        return create_fcmp(Value::vFOGT, lhs, rhs);
-                    case Value::GE:
-                        return create_fcmp(Value::vFOGE, lhs, rhs);
-                    case Value::LT:
-                        return create_fcmp(Value::vFOLT, lhs, rhs);
-                    case Value::LE:
-                        return create_fcmp(Value::vFOLE, lhs, rhs);
-                    default:
-                        assert(false && "create_cmp: invalid op!");
+                    case Value::EQ: return create_fcmp(Value::vFOEQ, lhs, rhs);
+                    case Value::NE: return create_fcmp(Value::vFONE, lhs, rhs);
+                    case Value::GT: return create_fcmp(Value::vFOGT, lhs, rhs);
+                    case Value::GE: return create_fcmp(Value::vFOGE, lhs, rhs);
+                    case Value::LT: return create_fcmp(Value::vFOLT, lhs, rhs);
+                    case Value::LE: return create_fcmp(Value::vFOLE, lhs, rhs);
+                    default: assert(false && "create_cmp: invalid op!");
                 }
             } break;
-            default:
-                assert(false && "create_eq_beta: type mismatch!");
+            default: assert(false && "create_eq_beta: type mismatch!");
         }
     }
 
@@ -137,42 +103,31 @@ class IRBuilder {
         switch (ltype->btype()) {
             case INT32: {
                 switch (op) {
-                    case Value::ADD:
-                        vid = Value::vADD;
+                    case Value::ADD: vid = Value::vADD;
                         break;
-                    case Value::SUB:
-                        vid = Value::vSUB;
+                    case Value::SUB: vid = Value::vSUB;
                         break;
-                    case Value::MUL:
-                        vid = Value::vMUL;
+                    case Value::MUL: vid = Value::vMUL;
                         break;
-                    case Value::DIV:
-                        vid = Value::vSDIV;
+                    case Value::DIV: vid = Value::vSDIV;
                         break;
-                    case Value::REM:
-                        vid = Value::vSREM;
+                    case Value::REM: vid = Value::vSREM;
                         break;
-                    default:
-                        assert(false && "create_binary_beta: invalid op!");
+                    default: assert(false && "create_binary_beta: invalid op!");
                 }
                 res = create_binary(vid, Type::i32_type(), lhs, rhs);
             } break;
             case FLOAT: {
                 switch (op) {
-                    case Value::ADD:
-                        vid = Value::vFADD;
+                    case Value::ADD: vid = Value::vFADD;
                         break;
-                    case Value::SUB:
-                        vid = Value::vFSUB;
+                    case Value::SUB: vid = Value::vFSUB;
                         break;
-                    case Value::MUL:
-                        vid = Value::vFMUL;
+                    case Value::MUL: vid = Value::vFMUL;
                         break;
-                    case Value::DIV:
-                        vid = Value::vFDIV;
+                    case Value::DIV: vid = Value::vFDIV;
                         break;
-                    default:
-                        assert(false && "create_binary_beta: invalid op!");
+                    default: assert(false && "create_binary_beta: invalid op!");
                 }
                 res = create_binary(vid, Type::float_type(), lhs, rhs);
             } break;

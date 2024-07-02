@@ -559,26 +559,66 @@ void lower_GetElementPtr(ir::inst_iterator begin, ir::inst_iterator end, Lowerin
     const int id = dyn_cast<ir::GetElementPtrInst>(*begin)->get_id();
     const auto base = ctx.map2operand(dyn_cast<ir::GetElementPtrInst>(*begin)->get_value());  // 基地址
 
+    /* 统计GetElementPtr指令数量 */
     auto iter = begin; ir::Value* instEnd = nullptr; MIROperand* ptr = base;
-    std::vector<MIROperand*> idx;
+    std::vector<ir::Value*> idx;
     while (iter != end) {
-        idx.push_back(ctx.map2operand(dyn_cast<ir::GetElementPtrInst>(*iter)->get_index()));
+        idx.push_back(dyn_cast<ir::GetElementPtrInst>(*iter)->get_index());
         instEnd = *iter;
         iter++;
     }
 
+    /* 计算偏移量 */
     if (id == 0) {  // 指针
 
-    } else if (id == 1) {  // 高维数组
-        for (int dimension = dims_cnt - 1; dimension > 0; dimension--) {
+    } else {  // 数组
+        MIROperand* mir_offset = nullptr; auto ir_offset = idx[0];
+        bool is_constant = dyn_cast<ir::Constant>(ir_offset) ? true : false;
+        if (!is_constant) mir_offset = ctx.map2operand(ir_offset);
+        for (int dimension = 1; dimension < dims_cnt; dimension++) {
+            /* 乘法 */
+            const auto alpha = dims[dimension];  // int
+            if (is_constant) {  // 常量
+                const auto ir_offset_constant = dyn_cast<ir::Constant>(ir_offset);
+                ir_offset = ir::Constant::gen_i32<int>(ir_offset_constant->i32() * alpha);
+            } else {  // 变量
+                auto newPtr = ctx.new_vreg(OperandType::Int32);
+                auto newInst = new MIRInst(InstMul);
+                newInst->set_operand(0, newPtr); newInst->set_operand(1, mir_offset); newInst->set_operand(2, MIROperand::as_imm<int>(alpha, OperandType::Int32));
+                ctx.emit_inst(newInst);
+                mir_offset = newPtr;
+            }
 
+            /* 加法 */
+            auto ir_current_idx = idx[dimension];  // ir::Value*
+            if (is_constant && dyn_cast<ir::Constant>(ir_current_idx)) {
+                const auto ir_current_idx_constant = dyn_cast<ir::Constant>(ir_current_idx);
+                const auto ir_offset_constant = dyn_cast<ir::Constant>(ir_offset);
+                ir_offset = ir::Constant::gen_i32<int>(ir_current_idx_constant->i32() + ir_offset_constant->i32());
+            } else {
+                if (is_constant) mir_offset = ctx.map2operand(ir_offset);
+                is_constant = false;
+                auto newPtr = ctx.new_vreg(OperandType::Int32);
+                auto newInst = new MIRInst(InstAdd);
+                newInst->set_operand(0, newPtr); newInst->set_operand(1, mir_offset); newInst->set_operand(2, ctx.map2operand(ir_current_idx));
+                ctx.emit_inst(newInst);
+                mir_offset = newPtr;
+            }
         }
-    } else {  // 一维数组
-        /* 计算偏移量: 基地址 + 偏移量 (base + offset) */
-        const auto offset = idx[0];
+
+        if (mir_offset) {
+            auto newPtr = ctx.new_vreg(OperandType::Int32);
+            auto newInst = new MIRInst(InstMul);
+            newInst->set_operand(0, newPtr); newInst->set_operand(1, mir_offset); newInst->set_operand(2, MIROperand::as_imm<int>(4, OperandType::Int32));
+            ctx.emit_inst(newInst);
+            mir_offset = newPtr;
+        } else {
+            auto ir_offset_constant = dyn_cast<ir::Constant>(ir_offset);
+            mir_offset = ctx.map2operand(ir::Constant::gen_i32<int>(ir_offset_constant->i32() * 4));
+        }
         auto newPtr = ctx.new_vreg(OperandType::Int64);
         auto newInst = new MIRInst(InstAdd);
-        newInst->set_operand(0, newPtr); newInst->set_operand(1, ptr); newInst->set_operand(2, offset);
+        newInst->set_operand(0, newPtr); newInst->set_operand(1, ptr); newInst->set_operand(2, mir_offset);
         ctx.emit_inst(newInst);
         ptr = newPtr;
     }
