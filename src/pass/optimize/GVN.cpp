@@ -40,6 +40,8 @@ namespace pass
             return getValueNumber(binary);
         else if (auto unary = dynamic_cast<ir::UnaryInst *>(inst))
             return getValueNumber(unary);
+        else if (auto getelementptr = dynamic_cast<ir::GetElementPtrInst *>(inst))
+            return getValueNumber(getelementptr);
         // else if (auto phi = dynamic_cast<ir::PhiInst *>(inst))
         //     return getValueNumber(phi);
         // else if (auto call = dynamic_cast<ir::CallInst *>(inst))
@@ -91,6 +93,25 @@ namespace pass
         return static_cast<ir::Value*>(inst);
     }
 
+    ir::Value *GVN::getValueNumber(ir::GetElementPtrInst *inst)
+    {
+        auto arval = checkHashtable(inst->get_value());
+        auto aridx = checkHashtable(inst->get_index());
+        for (auto [Key, Value] : _Hashtable)
+        {
+            if (auto getelementptr = dynamic_cast<ir::GetElementPtrInst *>(Key))
+            {
+                auto getval = checkHashtable(getelementptr->get_value());
+                auto getidx = checkHashtable(getelementptr->get_index());
+
+                if (arval == getval && aridx == getidx)
+                {
+                    return Value;
+                }
+            }
+        }
+        return static_cast<ir::Value*>(inst);
+    }
     // ir::Value *GVN::getValueNumber(ir::PhiInst *inst)
     // {
     //     for (auto [Key, Value] : _Hashtable)

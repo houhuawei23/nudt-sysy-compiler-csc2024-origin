@@ -42,7 +42,7 @@ namespace pass
         else // 其他指令固定在自己的BB上
             return true;
     }
-    // 提前调度:思想是如果要把一个指令尽量往前提，那么应该在提之前将该指令参数来自的指令前提
+    // 提前调度:思想是如果把一个指令尽量往前提，那么应该在提之前将该指令参数来自的指令前提
     void GCM::scheduleEarly(ir::Instruction *instruction)
     {
         if (insts_visited.find(instruction) == insts_visited.end()) // 如果已经访问过，则不进行提前调度

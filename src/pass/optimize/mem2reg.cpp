@@ -190,7 +190,7 @@ bool Mem2Reg::is_promoted(ir::AllocaInst* alloca) {
 //     return false;
 // }
 void Mem2Reg::insertphi() {
-    // 遍历所有alloca，对于每个alloca，在所有定义块中插入phi指令
+    // 遍历所有alloca，对于每个alloca，在所有定义块的支配边界中插入phi指令
     std::set<ir::BasicBlock*> Phiset;
     std::vector<ir::BasicBlock*> W;
     ir::PhiInst* phi;
