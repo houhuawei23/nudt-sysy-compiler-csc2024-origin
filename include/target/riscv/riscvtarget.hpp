@@ -200,7 +200,15 @@ public:  // get function
                 assert(false && "valid operand type");
         }
     }
-
+    OperandType getCanonicalizedRegisterType(uint32_t reg) {
+        if(reg >= RISCV::GPRBegin and reg <= RISCV::GPREnd) {
+            return OperandType::Int64;
+        } else if(reg >= RISCV::FPRBegin and reg <= RISCV::FPREnd) {
+            return OperandType::Float32;
+        } else {
+            assert(false && "valid operand type");
+        }
+    }
     MIROperand* get_return_address_register() { return RISCV::ra; }
     MIROperand* get_stack_pointer_register() { return RISCV::sp; }
 

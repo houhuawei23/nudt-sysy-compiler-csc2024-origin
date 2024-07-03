@@ -63,18 +63,24 @@ void allocateStackObjects(MIRFunction* func, CodeGenContext& ctx) {
     };
     // func is like a callee
     /* 1. callee saved: 被调用者需要保存的寄存器 */
-    std::unordered_set<MIROperand*> callee_saved;
-    for (auto& block : func->blocks()) {
+
+    std::unordered_set<uint32_t> calleeSavedRegs;
+    for(auto& block : func->blocks()) {
         forEachDefOperand(*block, ctx, [&](MIROperand* op) {
             if (op->is_unused()) return;
             if (op->is_reg() && isISAReg(op->reg()) &&
                 ctx.frameInfo.is_callee_saved(*op)) {
                 if (debugSA) dumpOperand(op);
-                callee_saved.insert(MIROperand::as_isareg(op->reg(), ctx.registerInfo->getCanonicalizedRegisterType(op->type())));
+                calleeSavedRegs.insert(op->reg());
             }
         });
     }
-    const auto preAllocatedBase = ctx.frameInfo.insert_prologue_epilogue(func, callee_saved, ctx, ctx.registerInfo->get_return_address_register());
+    std::unordered_set<MIROperand*> calleeSaved;
+    for(auto reg : calleeSavedRegs) {
+        calleeSaved.emplace(MIROperand::as_isareg(reg, ctx.registerInfo->getCanonicalizedRegisterType(reg)));
+    }
+    
+    const auto preAllocatedBase = ctx.frameInfo.insert_prologue_epilogue(func, calleeSaved, ctx, ctx.registerInfo->get_return_address_register());
 
     /* 优化: remove dead code */
     remove_unused_spill_stack_objects(func);

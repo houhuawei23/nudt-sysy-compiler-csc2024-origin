@@ -11,13 +11,14 @@
 set -u
 set -e
 
-infile=$1
-asmfile="./gen.s"
+# infile=$1
+asmfile="./test/.out/gen.s"
 outfile="./gen.o"
+memset_s="./test/link/memset.s"
 
-./main -f $infile -S -o $asmfile
+# ./main -f $infile -S -o $asmfile
 
 riscv64-linux-gnu-gcc -ggdb -static -march=rv64gc -mabi=lp64d -mcmodel=medlow \
- -o "${outfile}" "${asmfile}" 
+ -o "${outfile}" "${asmfile}" "${memset_s}" ./test/link/link.c
 
 sudo qemu-riscv64 -g 1235 $outfile
