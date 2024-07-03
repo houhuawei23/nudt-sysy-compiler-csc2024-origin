@@ -19,34 +19,39 @@ using FunctionPass = Pass<ir::Function>;
 using BasicBlockPass = Pass<ir::BasicBlock>;
 
 
-//! PassManager Template
-template <typename PassUnit>
-class PassManager : public Pass<PassUnit> {
-   protected:
-    std::vector<Pass<PassUnit>*> _passes;
-
-   public:
-    PassManager() = default;
-    virtual ~PassManager() = default;
-
-    virtual std::string name() override { return "PassManager"; }
-
-    virtual void run(PassUnit* pass_unit) override {
-        for (auto& pass : _passes) {
-            pass->run(pass_unit);
+class PassManager{
+    ir::Module* _irModule;
+    public:
+        PassManager(ir::Module* pm){
+            _irModule=pm;
         }
-    }
-
-    void add_pass(Pass<PassUnit>* pass) { _passes.emplace_back(pass); }
-
-    std::vector<Pass<PassUnit>*>& passes() { return _passes; }
+        void run(ModulePass* mp){
+            mp->run(_irModule);
+        }
+        void run(FunctionPass* fp){
+            for(auto func:_irModule->funcs()){
+                fp->run(func);
+            }
+        }
+         void run(BasicBlockPass* bp){
+            for(auto func:_irModule->funcs()){
+                for(auto bb:func->blocks()){
+                    bp->run(bb);
+                }
+            }
+        }
 };
 
-// Instantiate
-using ModulePassManager = PassManager<ir::Module>;
-using FunctionPassManager = PassManager<ir::Function>;
-using BasicBlockPassManager = PassManager<ir::BasicBlock>;
-
+template <typename PassUnit>
+class AnalysisResult{
+    private:
+        PassUnit* _passunit;
+        bool _isValid;
+    public:
+        void setValid(){_isValid=true;}
+        void setInValid(){_isValid=false;}
+        
+};
 
 
 }  // namespace pass
