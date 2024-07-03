@@ -10,30 +10,23 @@ namespace ir {
 
 // for BasicBlock sort
 inline bool compareBB(const BasicBlock* b1, const BasicBlock* b2) {
-    // return a1->priority < a2->priority;
     return b1->idx() < b2->idx();
-
-    // if (a1->name().size() > 1 && a2->name().size() > 1)
-    //     return std::stoi(a1->name().substr(2)) <
-    //            std::stoi(a2->name().substr(2));
-    // else {
-    //     assert(false && "compareBB error");
-    // }
 }
 
-class Loop{
-    protected:
-        std::set<BasicBlock*> _blocks;
-        BasicBlock* _header;
-        Function* _parent;
-    public:
-        Loop(BasicBlock* header, Function* parent){
-            _header=header;
-            _parent=parent;
-        }
-        BasicBlock* header(){return _header;}
-        Function* parent(){return _parent;}
-        std::set<BasicBlock*>& blocks(){return _blocks;}
+class Loop {
+   protected:
+    std::set<BasicBlock*> _blocks;
+    BasicBlock* _header;
+    Function* _parent;
+
+   public:
+    Loop(BasicBlock* header, Function* parent) {
+        _header = header;
+        _parent = parent;
+    }
+    BasicBlock* header() { return _header; }
+    Function* parent() { return _parent; }
+    std::set<BasicBlock*>& blocks() { return _blocks; }
 };
 
 class Function : public User {
@@ -46,7 +39,7 @@ class Function : public User {
     block_ptr_list _exit_blocks;  // exit blocks
     arg_ptr_vector _args;         // formal args
     std::list<Loop*> _loops;
-    std::map<ir::BasicBlock*,ir::Loop*>_headToLoop;
+    std::map<ir::BasicBlock*, ir::Loop*> _headToLoop;
 
     //* function has concrete local var for return value,
     //* addressed by _ret_value_ptr
@@ -60,7 +53,7 @@ class Function : public User {
     bool _is_defined = false;
 
     // for call graph
-    std::set<ir::Function*>_callees;
+    std::set<ir::Function*> _callees;
     bool _is_called;
     bool _is_inline;
     bool _is_lib;
@@ -77,20 +70,19 @@ class Function : public User {
     int getvarcnt() { return var_cnt++; }
     void setvarcnt(int x) { var_cnt = x; }
     void set_next(BasicBlock* next) { _next = next; }
-    std::set<ir::Function*>&callees(){ return _callees; }
-    //get and set for callgraph
-    bool get_is_inline(){ return _is_inline; }
-    void set_is_inline(bool b){ _is_inline=b; }
-    bool get_is_called(){ return _is_called; }
-    void set_is_called(bool b){ _is_called=b; }
-    bool get_is_lib(){ return _is_lib; }
-    void set_is_lib(bool b){ _is_lib=b; }
-
+    std::set<ir::Function*>& callees() { return _callees; }
+    // get and set for callgraph
+    bool get_is_inline() { return _is_inline; }
+    void set_is_inline(bool b) { _is_inline = b; }
+    bool get_is_called() { return _is_called; }
+    void set_is_called(bool b) { _is_called = b; }
+    bool get_is_lib() { return _is_lib; }
+    void set_is_lib(bool b) { _is_lib = b; }
 
     BasicBlock* next() { return _next; }
     Module* parent() const { return _parent; }
-    std::list<Loop*>& Loops(){ return _loops; }
-    std::map<BasicBlock*,Loop*>& headToLoop(){ return _headToLoop; }
+    std::list<Loop*>& Loops() { return _loops; }
+    std::map<BasicBlock*, Loop*>& headToLoop() { return _headToLoop; }
 
     // func_copy
     ir::Function* copy_func();
@@ -109,17 +101,18 @@ class Function : public User {
     }
 
     //* Block
-    block_ptr_list& blocks() { return _blocks; }
+    auto& blocks() const { return _blocks; }
+    auto& blocks() { return _blocks; }
 
     block_ptr_list& exit_blocks() { return _exit_blocks; }
 
     auto entry() const { return _entry; }
 
-    void setEntry(ir::BasicBlock* bb){_entry=bb;}
+    void setEntry(ir::BasicBlock* bb) { _entry = bb; }
 
     auto exit() const { return _exit; }
 
-    void setExit(ir::BasicBlock* bb){_exit=bb;}
+    void setExit(ir::BasicBlock* bb) { _exit = bb; }
 
     BasicBlock* new_block();
 
@@ -165,7 +158,7 @@ class Function : public User {
 
    public:
     static bool classof(const Value* v) { return v->scid() == vFUNCTION; }
-    void print(std::ostream& os) override;
+    void print(std::ostream& os) const override;
 
     void rename();
 };

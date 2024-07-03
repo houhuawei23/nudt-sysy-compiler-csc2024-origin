@@ -5,45 +5,43 @@
 #include "ir/value.hpp"
 
 namespace ir {
-//! SymbolTableBeta
 
 /**
- * @brief 
+ * @brief
  * XXScope new_scope(_tables)
  * .lookup(name)
  * .insert(name, value)
  */
-class SymbolTableBeta {
-   private:
-    enum Kind {
-        _Module,
-        _Function,
-        _Block,
+
+class SymbolTable {
+    enum ScopeKind {
+        Module,
+        Function,
+        Block,
     };
 
    public:
-    
     /*
      * @brief 符号表作用域 (Module, Function, Block)
      */
     struct ModuleScope {
-        SymbolTableBeta& tables_ref;
-        ModuleScope(SymbolTableBeta& tables) : tables_ref(tables) {
-            tables.enter(_Module);
+        SymbolTable& tables_ref;
+        ModuleScope(SymbolTable& tables) : tables_ref(tables) {
+            tables.enter(Module);
         }
         ~ModuleScope() { tables_ref.exit(); }
     };
     struct FunctionScope {
-        SymbolTableBeta& tables_ref;
-        FunctionScope(SymbolTableBeta& tables) : tables_ref(tables) {
-            tables.enter(_Function);
+        SymbolTable& tables_ref;
+        FunctionScope(SymbolTable& tables) : tables_ref(tables) {
+            tables.enter(Function);
         }
         ~FunctionScope() { tables_ref.exit(); }
     };
     struct BlockScope {
-        SymbolTableBeta& tables_ref;
-        BlockScope(SymbolTableBeta& tables) : tables_ref(tables) {
-            tables.enter(_Block);
+        SymbolTable& tables_ref;
+        BlockScope(SymbolTable& tables) : tables_ref(tables) {
+            tables.enter(Block);
         }
         ~BlockScope() { tables_ref.exit(); }
     };
@@ -53,17 +51,18 @@ class SymbolTableBeta {
      * @brief 按照作用域范围建立符号表 (作用域小的符号表 -> 作用域大的符号表,
      * forward_list组织, 每个作用域使用map建立符号表)
      */
-    std::forward_list<std::pair<Kind, std::unordered_map<std::string, Value*>>>
+    std::forward_list<
+        std::pair<ScopeKind, std::unordered_map<std::string, Value*>>>
         symbols;
 
    public:
-    SymbolTableBeta() = default;
+    SymbolTable() = default;
 
    private:
     /*
      * @brief 创造 or 销毁 某一作用域的符号表
      */
-    void enter(Kind kind) {
+    void enter(ScopeKind kind) {
         symbols.emplace_front();
         symbols.front().first = kind;
     }
@@ -73,9 +72,9 @@ class SymbolTableBeta {
     /*
      * @brief 判断属于哪部分的作用域
      */
-    bool isModuleScope() const { return symbols.front().first == _Module; }
-    bool isFunctionScope() const { return symbols.front().first == _Function; }
-    bool isBlockScope() const { return symbols.front().first == _Block; }
+    bool isModuleScope() const { return symbols.front().first == Module; }
+    bool isFunctionScope() const { return symbols.front().first == Function; }
+    bool isBlockScope() const { return symbols.front().first == Block; }
 
     /*
      * @brief 查表 (从当前作用域开始查, 直至查到全局作用域范围)

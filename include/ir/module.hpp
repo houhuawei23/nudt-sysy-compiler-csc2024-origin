@@ -31,14 +31,14 @@ class Module {
     ~Module() = default;
 
     //! get
-    std::vector<ir::Function*>& funcs() { return _funcs; }
-    std::vector<ir::Value*>& gvalues() { return _gvalues; }
+    auto& funcs() const { return _funcs; }
+    auto& gvalues() const { return _gvalues; }
 
     Function* lookup_func(const_str_ref name);
 
     Function* add_func(Type* type, const_str_ref name);
 
-    Function* main_func(){return lookup_func("main");}
+    Function* main_func() { return lookup_func("main"); }
 
     void add_gvar(const_str_ref name, Value* gv);
 

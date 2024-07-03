@@ -100,107 +100,105 @@ class Use {
  * - 派生类继承 Value，添加自己所需的 数据成员 和 方法。
  * - Value 的派生类可以重载 print() 方法，以打印出可读的 IR。
  */
+enum CmpOp {
+    EQ,  // ==
+    NE,  // !=
+    GT,  // >
+    GE,  // >=
+    LT,  // <
+    LE,  // <=
+};
+enum BinaryOp {
+    ADD, /* + */
+    SUB, /* - */
+    MUL, /* * */
+    DIV, /* / */
+    REM  /* %*/
+};
+enum UnaryOp {
+    NEG,
+};
 
+enum ValueId {
+    vValue,
+    vFUNCTION,
+    vCONSTANT,
+    vARGUMENT,
+    vBASIC_BLOCK,
+    vGLOBAL_VAR,
+
+    vBITCAST,
+    vMEMSET,
+
+    // instructions class id
+    vINSTRUCTION,
+    // vMEM_BEGIN,
+    vALLOCA,
+    vLOAD,
+    vSTORE,
+    vGETELEMENTPTR,  // GetElementPtr Instruction
+    // vMEM_END,
+
+    // vTERMINATOR_BEGIN
+    vRETURN,
+    vBR,
+    vCALL,
+    // vTERMINATOR_END
+
+    // icmp
+    vICMP_BEGIN,
+    vIEQ,
+    vINE,
+    vISGT,
+    vISGE,
+    vISLT,
+    vISLE,
+    vICMP_END,
+    // fcmp
+    vFCMP_BEGIN,
+    vFOEQ,
+    vFONE,
+    vFOGT,
+    vFOGE,
+    vFOLT,
+    vFOLE,
+    vFCMP_END,
+    // Unary Instruction
+    vUNARY_BEGIN,
+    vFNEG,
+    // Conversion Insts
+    vTRUNC,
+    vZEXT,
+    vSEXT,
+    vFPTRUNC,
+    vFPTOSI,
+    vSITOFP,
+    vUNARY_END,
+    // Binary Instruction
+    vBINARY_BEGIN,
+    vADD,
+    vFADD,
+    vSUB,
+    vFSUB,
+
+    vMUL,
+    vFMUL,
+
+    vUDIV,
+    vSDIV,
+    vFDIV,
+
+    vUREM,
+    vSREM,
+    vFREM,
+    vBINARY_END,
+    // Phi Instruction
+    vPHI_BEGIN,
+    vPHI,
+    VPHI_END,
+    vInvalid,
+};
 class Value {
-   public:
-    enum CmpOp {
-        EQ,  // ==
-        NE,  // !=
-        GT,  // >
-        GE,  // >=
-        LT,  // <
-        LE,  // <=
-    };
-    enum BinaryOp {
-        ADD, /* + */
-        SUB, /* - */
-        MUL, /* * */
-        DIV, /* / */
-        REM  /* %*/
-    };
-
-    enum UnaryOp {
-        NEG,
-    };
-    enum ValueId {
-        vValue,
-        vFUNCTION,
-        vCONSTANT,
-        vARGUMENT,
-        vBASIC_BLOCK,
-        vGLOBAL_VAR,
-
-        vBITCAST, 
-        vMEMSET, 
-
-        // instructions class id
-        vINSTRUCTION,
-        // vMEM_BEGIN,
-        vALLOCA,
-        vLOAD,
-        vSTORE,
-        vGETELEMENTPTR,  // GetElementPtr Instruction
-        // vMEM_END,
-
-        // vTERMINATOR_BEGIN
-        vRETURN,
-        vBR,
-        vCALL,
-        // vTERMINATOR_END
-
-        // icmp
-        vICMP_BEGIN,
-        vIEQ,
-        vINE,
-        vISGT,
-        vISGE,
-        vISLT,
-        vISLE,
-        vICMP_END,
-        // fcmp
-        vFCMP_BEGIN,
-        vFOEQ,
-        vFONE,
-        vFOGT,
-        vFOGE,
-        vFOLT,
-        vFOLE,
-        vFCMP_END,
-        // Unary Instruction
-        vUNARY_BEGIN,
-        vFNEG,
-        // Conversion Insts
-        vTRUNC,
-        vZEXT,
-        vSEXT,
-        vFPTRUNC,
-        vFPTOSI,
-        vSITOFP,
-        vUNARY_END,
-        // Binary Instruction
-        vBINARY_BEGIN,
-        vADD,
-        vFADD,
-        vSUB,
-        vFSUB,
-
-        vMUL,
-        vFMUL,
-
-        vUDIV,
-        vSDIV,
-        vFDIV,
-
-        vUREM,
-        vSREM,
-        vFREM,
-        vBINARY_END,
-        // Phi Instruction
-        vPHI_BEGIN,
-        vPHI,
-        VPHI_END
-    };
-
    protected:
     Type* _type;    // type of the value
     ValueId _scid;  // subclass id of Value
@@ -224,27 +222,6 @@ class Value {
     /*! manage use-def relation !*/
     use_ptr_list& uses() { return _uses; }
 
-    /* one user use this value, add the use relation */
-    void add_use(Use* use);
-    Use* add_use_by_user(User* user) {
-        assert(user != nullptr);
-        auto use = new Use(_uses.size(), user, this);
-        // list
-        _uses.emplace_back(use);
-    }
-
-    /* one user want to unuse this value, remove the use relation */
-    void del_use(Use* use);
-    void del_use_by_user(User* user) {
-        for (auto it = _uses.begin(); it != _uses.end(); it++) {
-            if ((*it)->user() == user) {
-                _uses.erase(it);
-                return;
-            }
-        }
-        assert(false && "cant find the user use this value");
-    }
-
     /* replace this value with another value, for all user use this value */
     void replace_all_use_with(Value* _value);
 
@@ -266,19 +243,38 @@ class Value {
         }
     }
 
-    public:  // check
-        bool is_i1() const { return _type->is_i1(); }
-        bool is_i32() const { return _type->is_i32(); }
-        bool is_float32() const { return _type->is_float32(); }
-        bool is_double() const { return _type->is_double(); }
-        bool is_float() const { return _type->is_float(); }
-        bool is_undef() const {return _type->is_undef(); }
-        bool is_pointer() const { return _type->is_pointer(); }
-        bool is_void()const {return _type->is_void(); }
+   public:  // check
+    bool is_i1() const { return _type->is_i1(); }
+    bool is_i32() const { return _type->is_i32(); }
+    bool is_float32() const { return _type->is_float32(); }
+    bool is_double() const { return _type->is_double(); }
+    bool is_float() const { return _type->is_float(); }
+    bool is_undef() const { return _type->is_undef(); }
+    bool is_pointer() const { return _type->is_pointer(); }
+    bool is_void() const { return _type->is_void(); }
 
    public:
     ValueId scid() const { return _scid; }
-    virtual void print(std::ostream& os) {};
+    virtual void print(std::ostream& os) const = 0;
+
+    template <typename T>
+    T* as() {
+        static_assert(std::is_base_of_v<Value, T>);
+        auto ptr = dynamic_cast<T*>(this);
+        assert(ptr);
+        return ptr;
+    }
+    template <typename T>
+    bool isa() const {
+        static_assert(std::is_base_of_v<Value, T>);
+        return dynamic_cast<const T*>(this);
+    }
+
+    template <typename T>
+    T* dynCast() {
+        static_assert(std::is_base_of_v<Value, T>);
+        return dynamic_cast<T*>(this);
+    }
 };
 
 /**
@@ -306,6 +302,7 @@ class User : public Value {
     Value* operand(size_t index) const;  // return value, not use relation
     int operands_cnt() const { return _operands.size(); }
 
+    const auto& operands() const { return _operands; }
    public:
     // manage function
     void add_operand(Value* value);
@@ -317,46 +314,36 @@ class User : public Value {
             add_operand(value);
         }
     }
-    /* del use relation of all operand values, may do this before delete this
-     * user*/
+    /* del use relation of all operand values,
+    ** may do this before delete this user */
     void unuse_allvalue() {
         for (auto& operand : _operands) {
-            operand->value()->del_use(operand);
+            operand->value()->uses().remove(operand);
         }
     }
 
-    /* this user use one value, want to replace the value with another value */
-    void replace_operand_with(size_t index, Value* value) {
-        assert(index < _operands.size());
-        assert(value != nullptr);
-        _operands[index]->value()->del_use(_operands[index]);
-        auto use = new Use(index, this, value);
-        _operands[index] = value->add_use_by_user(this);
-    }
-
     /* delete an operand of a value */
-    void delete_operands(int index){
-        _operands[index]->value()->del_use(_operands[index]);
-        _operands.erase(_operands.begin()+index);
-        for(int idx=index+1;idx<_operands.size();idx++)
+    void delete_operands(int index) {
+        _operands[index]->value()->uses().remove(_operands[index]);
+        _operands.erase(_operands.begin() + index);
+        for (int idx = index + 1; idx < _operands.size(); idx++)
             _operands[idx]->set_index(idx);
         refresh_operand_index();
     }
 
-    virtual void print(std::ostream& os) {}
-
-    void refresh_operand_index(){
-        int cnt=0;
-        for(auto op:_operands){
+    void refresh_operand_index() {
+        int cnt = 0;
+        for (auto op : _operands) {
             op->set_index(cnt);
             cnt++;
         }
     }
+    virtual void print(std::ostream& os) const = 0;
 };
 
 /*
 user use value
-只需要 调用 user.add_operand(value), 
+只需要 调用 user.add_operand(value),
 会把 use 加入 user._operands 和 value._uses
 user.add_operand(value){
     use = new Use(...);

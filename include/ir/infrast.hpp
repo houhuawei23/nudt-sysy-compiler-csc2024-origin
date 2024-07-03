@@ -14,7 +14,6 @@ class Argument : public Value {
    protected:
     Function* _parent;
     int _index;
-    std::vector<int> _dims;  // 维数信息
 
    public:
     Argument(Type* type,
@@ -26,17 +25,11 @@ class Argument : public Value {
     Function* parent() const { return _parent; }
 
     int index() const { return _index; }
-
-    std::vector<int>& dims() { return _dims; }  // get ref?
-
-    int dim_num() const { return _dims.size(); }
-    int dim(int i) const { return _dims[i]; }
-
     // for isa<>
     static bool classof(const Value* v) { return v->scid() == vARGUMENT; }
 
     // ir print
-    void print(std::ostream& os) override;
+    void print(std::ostream& os) const override;
 };
 
 /**
@@ -56,8 +49,8 @@ class BasicBlock : public Value {
     BasicBlock* spdom;
     std::vector<BasicBlock*> domTree;      // sons in dom Tree
     std::vector<BasicBlock*> domFrontier;  // dom frontier
-    std::vector<BasicBlock*> pdomTree;      
-    std::vector<BasicBlock*> pdomFrontier;  
+    std::vector<BasicBlock*> pdomTree;
+    std::vector<BasicBlock*> pdomFrontier;
     // std::set<BasicBlock*> dom;//those bb was dominated by self
     int domLevel;
     int pdomLevel;
@@ -79,10 +72,7 @@ class BasicBlock : public Value {
     uint32_t _idx = 0;
 
    public:
-    static void BasicBlockDfs(BasicBlock *bb, std::function<bool(BasicBlock *)> func){
-        if (func(bb)) return;
-        for (auto succ : bb->next_blocks()) BasicBlockDfs(succ, func);
-    }
+
     BasicBlock(const_str_ref name = "", Function* parent = nullptr)
         : Value(Type::label_type(), vBASIC_BLOCK, name),
           _parent(parent){
@@ -104,10 +94,12 @@ class BasicBlock : public Value {
 
     inst_list& insts() { return _insts; }
 
-   inst_list& phi_insts(){ return _phi_insts; }
+    inst_list& phi_insts() { return _phi_insts; }
 
-    block_ptr_list& next_blocks() { return _next_blocks; }
-    block_ptr_list& pre_blocks() { return _pre_blocks; }
+    auto& next_blocks() const { return _next_blocks; }
+    auto& pre_blocks() const { return _pre_blocks; }
+    auto& next_blocks() { return _next_blocks; }
+    auto& pre_blocks() { return _pre_blocks; }
 
     void set_depth(int d) { _depth = d; }  // ?
 
@@ -124,8 +116,14 @@ class BasicBlock : public Value {
 
     void replaceinst(Instruction* old, Value* new_);
 
-    Instruction* terminator(){ return _insts.back();}
-
+    Instruction* terminator() { return _insts.back(); }
+    static void BasicBlockDfs(BasicBlock* bb,
+                              std::function<bool(BasicBlock*)> func) {
+        if (func(bb))
+            return;
+        for (auto succ : bb->next_blocks())
+            BasicBlockDfs(succ, func);
+    }
     // for CFG
     static void block_link(ir::BasicBlock* pre, ir::BasicBlock* next) {
         pre->next_blocks().emplace_back(next);
@@ -150,7 +148,7 @@ class BasicBlock : public Value {
     // for isa<>
     static bool classof(const Value* v) { return v->scid() == vBASIC_BLOCK; }
     // ir print
-    void print(std::ostream& os) override;
+    void print(std::ostream& os) const override;
 };
 
 /**
@@ -163,7 +161,7 @@ class Instruction : public User {
     BasicBlock* _parent;
 
    public:
-    Instruction* copy_inst(std::function<Value *(Value *)> getValue);
+    Instruction* copy_inst(std::function<Value*(Value*)> getValue);
     // Construct a new Instruction object
     Instruction(ValueId itype = vINSTRUCTION,
                 Type* ret_type = Type::void_type(),
@@ -191,17 +189,22 @@ class Instruction : public User {
     bool is_icmp();
     bool is_fcmp();
     bool is_math();
-    bool is_noname() { return is_terminator() or _scid == vSTORE or _scid == vMEMSET; }
-    bool is_aggressive_alive() {return _scid==vSTORE or _scid==vCALL or _scid==vMEMSET or _scid==vRETURN;}
+    bool is_noname() {
+        return is_terminator() or _scid == vSTORE or _scid == vMEMSET;
+    }
+    bool is_aggressive_alive() {
+        return _scid == vSTORE or _scid == vCALL or _scid == vMEMSET or
+               _scid == vRETURN;
+    }
 
     // for isa, cast and dyn_cast
     static bool classof(const Value* v) { return v->scid() >= vINSTRUCTION; }
 
     void setvarname();  // change varname to pass lli
 
-    void virtual print(std::ostream& os) = 0;
+    void virtual print(std::ostream& os) const = 0;
 
-    virtual Value* getConstantRepl()=0;
+    virtual Value* getConstantRepl() = 0;
 };
 
 }  // namespace ir

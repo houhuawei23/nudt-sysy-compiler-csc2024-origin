@@ -3,7 +3,7 @@
 namespace sysy {
 /*
  * @brief: visit call
- * @details: 
+ * @details:
  *      call: ID LPAREN funcRParams? RPAREN;
  *      funcRParams: exp (COMMA exp)*;
  *      var: ID (LBRACKET exp RBRACKET)*;
@@ -33,21 +33,21 @@ std::any SysYIRGenerator::visitCall(SysYParser::CallContext* ctx) {
     assert(func->arg_types().size() == rargs.size() && "size not match!");
 
     int length = rargs.size();
-    for (int i = 0;i < length;i++) {
-        if (func->arg_types()[i]->is_i32() && rargs[i]->is_float()){
-            auto ftosi = _builder.create_unary_beta(ir::Value::vFPTOSI, rargs[i], ir::Type::i32_type());
+    for (int i = 0; i < length; i++) {
+        if (func->arg_types()[i]->is_i32() && rargs[i]->is_float()) {
+            auto ftosi = _builder.create_unary_beta(
+                ir::ValueId::vFPTOSI, rargs[i], ir::Type::i32_type());
             final_rargs.push_back(ftosi);
-        }
-        else if (func->arg_types()[i]->is_float() && rargs[i]->is_i32()){
-            auto sitof = builder().create_unary_beta(ir::Value::vSITOFP, rargs[i], ir::Type::float_type());
+        } else if (func->arg_types()[i]->is_float() && rargs[i]->is_i32()) {
+            auto sitof = builder().create_unary_beta(
+                ir::ValueId::vSITOFP, rargs[i], ir::Type::float_type());
             final_rargs.push_back(sitof);
-        }
-        else{
+        } else {
             final_rargs.push_back(rargs[i]);
         }
     }
-
-    ir::Value* inst = builder().create_call(func, final_rargs);
+    auto inst =
+        builder().makeInst<ir::CallInst>(func, final_rargs, builder().block());
     return dyn_cast_Value(inst);
 }
 }  // namespace sysy

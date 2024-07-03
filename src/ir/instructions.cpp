@@ -10,7 +10,7 @@ namespace ir {
  * @details:
  *      alloca <ty>
  */
-void AllocaInst::print(std::ostream& os) {
+void AllocaInst::print(std::ostream& os) const {
     os << name() << " = alloca " << *(base_type());
     if (not _comment.empty()) {
         os << " ; " << _comment << "*";
@@ -24,7 +24,7 @@ void AllocaInst::print(std::ostream& os) {
  * @note:
  *      ptr: ArrayType or PointerType
  */
-void StoreInst::print(std::ostream& os) {
+void StoreInst::print(std::ostream& os) const {
     os << "store ";
     os << *(value()->type()) << " ";
     if (ir::isa<ir::Constant>(value())) {
@@ -43,7 +43,7 @@ void StoreInst::print(std::ostream& os) {
     os << ptr()->name();
 }
 
-void LoadInst::print(std::ostream& os) {
+void LoadInst::print(std::ostream& os) const {
     os << name() << " = load ";
     auto ptype = ptr()->type();
     if (ptype->is_pointer()) {
@@ -57,12 +57,11 @@ void LoadInst::print(std::ostream& os) {
 
     // comment
     if (not _comment.empty()) {
-        os << " ; "
-           << "load " << _comment;
+        os << " ; " << "load " << _comment;
     }
 }
 
-void ReturnInst::print(std::ostream& os) {
+void ReturnInst::print(std::ostream& os) const {
     os << "ret ";
     auto ret = return_value();
     if (ret) {
@@ -80,7 +79,7 @@ void ReturnInst::print(std::ostream& os) {
  * @brief Binary Instruction Output
  *      <result> = add <ty> <op1>, <op2>
  */
-void BinaryInst::print(std::ostream& os) {
+void BinaryInst::print(std::ostream& os) const {
     os << name() << " = ";
     auto opstr = [scid = scid()] {
         switch (scid) {
@@ -131,85 +130,111 @@ void BinaryInst::print(std::ostream& os) {
     }
 }
 
-
 Value* BinaryInst::getConstantRepl() {
-    auto lval=get_lvalue();
-    auto rval=get_rvalue();
-    auto clval=dyn_cast<ir::Constant>(lval);
-    auto crval=dyn_cast<ir::Constant>(rval);
-    if(lval->is_i32() and rval->is_i32()){
-        switch (scid())
-        {
-        case vADD:
-            if(clval and crval)return Constant::gen_i32(clval->i32()+crval->i32());
-            if(clval and clval->i32()==0)return rval;
-            if(crval and crval->i32()==0)return lval;
-            break;
-        case vSUB:
-            if(clval and crval)return Constant::gen_i32(clval->i32()-crval->i32());
-            if(crval and crval->i32()==0)return lval;
-            if(lval==rval)return Constant::gen_i32(0);
-            break;
-        case vMUL:
-            if(clval and crval)return Constant::gen_i32(clval->i32()*crval->i32());
-            if(clval and clval->i32()==1)return rval;
-            if(crval and crval->i32()==1)return lval;
-            if(clval and clval->i32()==0)return Constant::gen_i32(0);
-            if(crval and crval->i32()==0)return Constant::gen_i32(0);
-            break;
-        case vSDIV:
-            if(clval and crval)return Constant::gen_i32(clval->i32()/crval->i32());
-            if(crval and crval->i32()==1)return lval;
-            if(clval and clval->i32()==0)return Constant::gen_i32(0);
-            if(lval==rval)return Constant::gen_i32(1);
-            break;
-        case vSREM:
-            if(clval and crval)return Constant::gen_i32(clval->i32()%crval->i32());
-            if(clval and clval->i32()==0)return Constant::gen_i32(0);
-            break;
-        default:
-            assert(false and "Error in BinaryInst::getConstantRepl!");
-            break;
+    auto lval = get_lvalue();
+    auto rval = get_rvalue();
+    auto clval = dyn_cast<ir::Constant>(lval);
+    auto crval = dyn_cast<ir::Constant>(rval);
+    if (lval->is_i32() and rval->is_i32()) {
+        switch (scid()) {
+            case vADD:
+                if (clval and crval)
+                    return Constant::gen_i32(clval->i32() + crval->i32());
+                if (clval and clval->i32() == 0)
+                    return rval;
+                if (crval and crval->i32() == 0)
+                    return lval;
+                break;
+            case vSUB:
+                if (clval and crval)
+                    return Constant::gen_i32(clval->i32() - crval->i32());
+                if (crval and crval->i32() == 0)
+                    return lval;
+                if (lval == rval)
+                    return Constant::gen_i32(0);
+                break;
+            case vMUL:
+                if (clval and crval)
+                    return Constant::gen_i32(clval->i32() * crval->i32());
+                if (clval and clval->i32() == 1)
+                    return rval;
+                if (crval and crval->i32() == 1)
+                    return lval;
+                if (clval and clval->i32() == 0)
+                    return Constant::gen_i32(0);
+                if (crval and crval->i32() == 0)
+                    return Constant::gen_i32(0);
+                break;
+            case vSDIV:
+                if (clval and crval)
+                    return Constant::gen_i32(clval->i32() / crval->i32());
+                if (crval and crval->i32() == 1)
+                    return lval;
+                if (clval and clval->i32() == 0)
+                    return Constant::gen_i32(0);
+                if (lval == rval)
+                    return Constant::gen_i32(1);
+                break;
+            case vSREM:
+                if (clval and crval)
+                    return Constant::gen_i32(clval->i32() % crval->i32());
+                if (clval and clval->i32() == 0)
+                    return Constant::gen_i32(0);
+                break;
+            default:
+                assert(false and "Error in BinaryInst::getConstantRepl!");
+                break;
         }
         return nullptr;
-    }
-    else if(lval->is_float32() and rval->is_float32()){
-        switch (scid())
-        {
-        case vFADD:
-            if(clval and crval)return Constant::gen_f32(clval->f32()+crval->f32());
-            if(clval and clval->f32()==0) return rval;
-            if(crval and crval->f32()==0) return lval;
-            break;
-        case vFSUB:
-            if(clval and crval)return Constant::gen_f32(clval->f32()-crval->f32());
-            if(crval and crval->f32()==0)return lval;
-            if(lval==rval)return Constant::gen_f32(0);
-            break;
-        case vFMUL:
-            if(clval and crval)return Constant::gen_f32(clval->f32()*crval->f32());
-            if(clval and clval->f32()==1)return rval;
-            if(crval and crval->f32()==1)return lval;
-            if(clval and clval->f32()==0)return Constant::gen_f32(0);
-            if(crval and crval->f32()==0)return Constant::gen_f32(0);
-            break;
-        case vFDIV:
-            if(clval and crval)return Constant::gen_f32(clval->f32()/crval->f32());
-            if(crval and crval->f32()==1)return lval;
-            if(clval and clval->f32()==0)return Constant::gen_f32(0);
-            if(lval==rval)return Constant::gen_f32(1);
-            break;
-        
-        default:
-            assert(false and "Error in BinaryInst::getConstantRepl!");
-            break;
+    } else if (lval->is_float32() and rval->is_float32()) {
+        switch (scid()) {
+            case vFADD:
+                if (clval and crval)
+                    return Constant::gen_f32(clval->f32() + crval->f32());
+                if (clval and clval->f32() == 0)
+                    return rval;
+                if (crval and crval->f32() == 0)
+                    return lval;
+                break;
+            case vFSUB:
+                if (clval and crval)
+                    return Constant::gen_f32(clval->f32() - crval->f32());
+                if (crval and crval->f32() == 0)
+                    return lval;
+                if (lval == rval)
+                    return Constant::gen_f32(0);
+                break;
+            case vFMUL:
+                if (clval and crval)
+                    return Constant::gen_f32(clval->f32() * crval->f32());
+                if (clval and clval->f32() == 1)
+                    return rval;
+                if (crval and crval->f32() == 1)
+                    return lval;
+                if (clval and clval->f32() == 0)
+                    return Constant::gen_f32(0);
+                if (crval and crval->f32() == 0)
+                    return Constant::gen_f32(0);
+                break;
+            case vFDIV:
+                if (clval and crval)
+                    return Constant::gen_f32(clval->f32() / crval->f32());
+                if (crval and crval->f32() == 1)
+                    return lval;
+                if (clval and clval->f32() == 0)
+                    return Constant::gen_f32(0);
+                if (lval == rval)
+                    return Constant::gen_f32(1);
+                break;
+
+            default:
+                assert(false and "Error in BinaryInst::getConstantRepl!");
+                break;
         }
         return nullptr;
     }
     return nullptr;
 }
-
-
 
 /*
  * @brief Unary Instruction Output
@@ -218,7 +243,7 @@ Value* BinaryInst::getConstantRepl() {
  *
  *      <result> = fneg [fast-math flags]* <ty> <op1>
  */
-void UnaryInst::print(std::ostream& os) {
+void UnaryInst::print(std::ostream& os) const {
     os << name() << " = ";
     if (scid() == vFNEG) {
         os << "fneg " << *type() << " " << get_value()->name();
@@ -252,16 +277,13 @@ void UnaryInst::print(std::ostream& os) {
     }
     /* comment */
     if (not get_value()->comment().empty()) {
-        os << " ; "
-           << "uop " << get_value()->comment();
+        os << " ; " << "uop " << get_value()->comment();
     }
 }
 
-
-
 Value* UnaryInst::getConstantRepl() {
-    auto cval=dyn_cast<ir::Constant>(get_value());
-    if(cval){
+    auto cval = dyn_cast<ir::Constant>(get_value());
+    if (cval) {
         switch (scid()) {
             case vSITOFP:
                 return Constant::gen_f32(float(cval->i32()));
@@ -280,8 +302,7 @@ Value* UnaryInst::getConstantRepl() {
     return nullptr;
 }
 
-
-void ICmpInst::print(std::ostream& os) {
+void ICmpInst::print(std::ostream& os) const {
     // <result> = icmp <cond> <ty> <op1>, <op2>   ; yields i1 or <N x i1>:result
     // %res = icmp eq i32, 1, 2
     os << name() << " = ";
@@ -328,9 +349,10 @@ void ICmpInst::print(std::ostream& os) {
 Value* ICmpInst::getConstantRepl() {
     auto clhs = dyn_cast<Constant>(lhs());
     auto crhs = dyn_cast<Constant>(rhs());
-    if(not clhs or not crhs)return nullptr;
-    auto lhsval=clhs->i32();
-    auto rhsval=crhs->i32();
+    if (not clhs or not crhs)
+        return nullptr;
+    auto lhsval = clhs->i32();
+    auto rhsval = crhs->i32();
     switch (scid()) {
         case vIEQ:
             return Constant::gen_i1(lhsval == rhsval);
@@ -349,7 +371,7 @@ Value* ICmpInst::getConstantRepl() {
     }
 }
 
-void FCmpInst::print(std::ostream& os) {
+void FCmpInst::print(std::ostream& os) const {
     // <result> = icmp <cond> <ty> <op1>, <op2>   ; yields i1 or <N x i1>:result
     // %res = icmp eq i32, 1, 2
     os << name() << " = ";
@@ -391,13 +413,13 @@ void FCmpInst::print(std::ostream& os) {
     }
 }
 
-
 Value* FCmpInst::getConstantRepl() {
     auto clhs = dyn_cast<Constant>(lhs());
     auto crhs = dyn_cast<Constant>(rhs());
-    if(not clhs or not crhs)return nullptr;
-    auto lhsval=clhs->f32();
-    auto rhsval=crhs->f32();
+    if (not clhs or not crhs)
+        return nullptr;
+    auto lhsval = clhs->f32();
+    auto rhsval = crhs->f32();
     switch (scid()) {
         case vFOEQ:
             return Constant::gen_i1(lhsval == rhsval);
@@ -416,14 +438,13 @@ Value* FCmpInst::getConstantRepl() {
     }
 }
 
-
 /*
  * @brief: BranchInst::print
  * @details:
  *      br i1 <cond>, label <iftrue>, label <iffalse>
  *      br label <dest>
  */
-void BranchInst::print(std::ostream& os) {
+void BranchInst::print(std::ostream& os) const {
     os << "br ";
     if (is_cond()) {
         os << "i1 ";
@@ -433,16 +454,15 @@ void BranchInst::print(std::ostream& os) {
         /* comment */
         if (not iftrue()->comment().empty() &&
             not iffalse()->comment().empty()) {
-            os << " ; "
-               << "br " << iftrue()->comment() << ", " << iffalse()->comment();
+            os << " ; " << "br " << iftrue()->comment() << ", "
+               << iffalse()->comment();
         }
 
     } else {
         os << "label %" << dest()->name();
         /* comment */
         if (not dest()->comment().empty()) {
-            os << " ; "
-               << "br " << dest()->comment();
+            os << " ; " << "br " << dest()->comment();
         }
     }
 }
@@ -450,10 +470,10 @@ void BranchInst::print(std::ostream& os) {
 /*
  * @brief: GetElementPtrInst::print
  * @details:
- *      数组: <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32 <idx>
- *      指针: <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
+ *      数组: <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32
+ * <idx> 指针: <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
  */
-void GetElementPtrInst::print(std::ostream& os) {
+void GetElementPtrInst::print(std::ostream& os) const {
     if (is_arrayInst()) {
         os << name() << " = getelementptr ";
 
@@ -491,7 +511,7 @@ void GetElementPtrInst::print(std::ostream& os) {
     }
 }
 
-void CallInst::print(std::ostream& os) {
+void CallInst::print(std::ostream& os) const {
     if (callee()->ret_type()->is_void()) {
         os << "call ";
     } else {
@@ -521,7 +541,7 @@ void CallInst::print(std::ostream& os) {
     os << ")";
 }
 
-void PhiInst::print(std::ostream& os) {
+void PhiInst::print(std::ostream& os) const {
     // 在打印的时候对其vals和bbs进行更新
     os << name() << " = ";
     os << "phi " << *(type()) << " ";
@@ -533,68 +553,69 @@ void PhiInst::print(std::ostream& os) {
     }
 }
 
-BasicBlock* PhiInst::getbbfromVal(Value* val){
-    for(int i=0;i<size;i++){
-        if(getval(i)==val)
+BasicBlock* PhiInst::getbbfromVal(Value* val) {
+    for (int i = 0; i < size; i++) {
+        if (getval(i) == val)
             return getbb(i);
     }
     return nullptr;
 }
 
-Value* PhiInst::getvalfromBB(BasicBlock* bb){
-    for(int i=0;i<size;i++){
-        if(getbb(i)==bb)
+Value* PhiInst::getvalfromBB(BasicBlock* bb) {
+    for (int i = 0; i < size; i++) {
+        if (getbb(i) == bb)
             return getval(i);
     }
     return nullptr;
 }
 
-
 Value* PhiInst::getConstantRepl() {
-    if(size==0)return nullptr;
-    auto curval=getval(0);
-    if(size==1)return getval(0);
-    for(int i=1;i<size;i++){
-        if(getval(i)!=curval)return nullptr;
+    if (size == 0)
+        return nullptr;
+    auto curval = getval(0);
+    if (size == 1)
+        return getval(0);
+    for (int i = 1; i < size; i++) {
+        if (getval(i) != curval)
+            return nullptr;
     }
     return curval;
 }
 
-void PhiInst::delval(Value* val){
+void PhiInst::delval(Value* val) {
     int i;
-    for(i=0;i<size;i++){
-        if(getval(i)==val)
+    for (i = 0; i < size; i++) {
+        if (getval(i) == val)
             break;
     }
-    assert(i!=size);
-    delete_operands(2*i);
-    delete_operands(2*i);
+    assert(i != size);
+    delete_operands(2 * i);
+    delete_operands(2 * i);
     size--;
 }
 
-void PhiInst::delbb(BasicBlock* bb){
+void PhiInst::delbb(BasicBlock* bb) {
     int i;
-    for(i=0;i<size;i++){
-        if(getbb(i)==bb)
+    for (i = 0; i < size; i++) {
+        if (getbb(i) == bb)
             break;
     }
-    assert(i!=size);
-    delete_operands(2*i);
-    delete_operands(2*i);
+    assert(i != size);
+    delete_operands(2 * i);
+    delete_operands(2 * i);
     size--;
 }
 
-void PhiInst::replaceBB(BasicBlock* newBB,size_t k)
-{
+void PhiInst::replaceBB(BasicBlock* newBB, size_t k) {
     set_operand(2 * k + 1, newBB);
 }
 
 /*
  * @brief: BitcastInst::print
- * @details: 
+ * @details:
  *      <result> = bitcast <ty> <value> to i8*
  */
-void BitCastInst::print(std::ostream& os) {
+void BitCastInst::print(std::ostream& os) const {
     os << name() << " = bitcast ";
     os << *type() << " " << value()->name();
     os << " to i8*";
@@ -605,11 +626,11 @@ void BitCastInst::print(std::ostream& os) {
  * @details:
  *      call void @llvm.memset.p0i8.i64(i8* <dest>, i8 0, i64 <len>, i1 false)
  */
-void MemsetInst::print(std::ostream& os) {
+void MemsetInst::print(std::ostream& os) const {
     assert(dyn_cast<PointerType>(type()) && "type error");
     os << "call void @llvm.memset.p0i8.i64(i8* ";
-    os << value()->name() << ", i8 0, i64 " << dyn_cast<PointerType>(type())->base_type()->size() << ", i1 false)";
+    os << value()->name() << ", i8 0, i64 "
+       << dyn_cast<PointerType>(type())->base_type()->size() << ", i1 false)";
 }
 
 }  // namespace ir
-

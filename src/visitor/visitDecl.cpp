@@ -220,9 +220,9 @@ ir::Value* SysYIRGenerator::visitArray_local(SysYParser::VarDefContext* ctx,
     //! get initial value (将数组元素的初始化值存储在Arrayinit中)
     if (ctx->ASSIGN()) {
         for (int i = 0; i < capacity; i++) Arrayinit.push_back(nullptr);
-
-        auto tmp = _builder.create_bitcast(alloca_ptr->type(), alloca_ptr);
-        _builder.create_memset(tmp->type(), tmp);
+        auto tmp = builder().makeInst<ir::BitCastInst>(alloca_ptr->type(), alloca_ptr, builder().block());
+        // _builder.create_memset(tmp->type(), tmp);
+        builder().makeInst<ir::MemsetInst>(tmp->type(), tmp, builder().block());
 
         _d = 0; _n = 0;
         _path.clear(); _path = std::vector<int>(dims.size(), 0);
@@ -244,7 +244,8 @@ ir::Value* SysYIRGenerator::visitArray_local(SysYParser::VarDefContext* ctx,
     for (int i = 0; i < Arrayinit.size(); i++) {
         if (Arrayinit[i] != nullptr) {
             element_ptr = _builder.create_getelementptr(btype, element_ptr, ir::Constant::gen_i32(cnt));
-            _builder.create_store(Arrayinit[i], element_ptr);
+            // _builder.create_store(Arrayinit[i], element_ptr);
+            builder().makeInst<ir::StoreInst>(Arrayinit[i], element_ptr, builder().block());
             cnt = 0;
         }
         cnt++;
@@ -303,12 +304,13 @@ ir::Value* SysYIRGenerator::visitScalar_local(SysYParser::VarDefContext* ctx,
                 }
             } else {  //! 2. 右值为变量
                 if (btype->is_i32() && init->is_float()) {
-                    init = _builder.create_unary_beta(ir::Value::vFPTOSI, init, ir::Type::i32_type());
+                    init = _builder.create_unary_beta(ir::vFPTOSI, init, ir::Type::i32_type());
                 } else if (btype->is_float() && init->is_i32()) {
-                    init = builder().create_unary_beta(ir::Value::vSITOFP, init, ir::Type::float_type());
+                    init = builder().create_unary_beta(ir::ValueId::vSITOFP, init, ir::Type::float_type());
                 }
             }
-            _builder.create_store(init, alloca_ptr);
+            // _builder.create_store(init, alloca_ptr);
+            builder().makeInst<ir::StoreInst>(init, alloca_ptr, builder().block());
         }
         
         return dyn_cast_Value(alloca_ptr);
@@ -338,9 +340,9 @@ void SysYIRGenerator::visitInitValue_Array(SysYParser::InitValueContext* ctx,
             }
         } else {  //! 2. 变量
             if (_current_type->is_i32() && value->is_float()) {
-                value = _builder.create_unary_beta(ir::Value::vFPTOSI, value, ir::Type::i32_type());
+                value = _builder.create_unary_beta(ir::ValueId::vFPTOSI, value, ir::Type::i32_type());
             } else if (_current_type->is_float() && value->is_i32()) {
-                value = _builder.create_unary_beta(ir::Value::vSITOFP, value, ir::Type::float_type());
+                value = _builder.create_unary_beta(ir::ValueId::vSITOFP, value, ir::Type::float_type());
             }
         }
 

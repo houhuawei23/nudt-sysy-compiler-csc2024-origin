@@ -90,6 +90,6 @@ class GlobalVariable : public User {
    public:
     static bool classof(const Value* v) { return v->scid() == vGLOBAL_VAR; }
     std::string name() const override { return "@" + _name; }
-    void print(std::ostream& os) override;
+    void print(std::ostream& os) const override;
 };
 }  // namespace ir
