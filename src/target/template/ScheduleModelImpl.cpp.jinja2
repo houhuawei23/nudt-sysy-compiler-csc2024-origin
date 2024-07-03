@@ -22,8 +22,8 @@ public:
                 return mScheduleClass_{{className}};
             {% endfor %}
             default:
-                assert(false && "Invalid opcode");  
                 std::cerr << "getInstScheClass() failed: op: " << opcode << std::endl;
+                assert(false && "Invalid opcode");  
         }
     }
     MicroArchInfo& getMicroArchInfo() override;

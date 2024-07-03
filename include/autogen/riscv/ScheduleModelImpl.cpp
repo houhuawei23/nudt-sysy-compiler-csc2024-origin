@@ -97,9 +97,9 @@ public:
                 return mScheduleClass_DivRem;
 
             default:
-                assert(false && "Invalid opcode");
                 std::cerr << "getInstScheClass() failed: op: " << opcode
                           << std::endl;
+                assert(false && "Invalid opcode");
         }
     }
     MicroArchInfo& getMicroArchInfo() override;

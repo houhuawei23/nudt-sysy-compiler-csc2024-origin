@@ -282,7 +282,14 @@ void preRASchedule(MIRFunction& func, const CodeGenContext& ctx) {
         preRAScheduleBlock(*block, ctx);
     }
 }
-// bool isI
+
+void postRASchedule(MIRFunction& func, const CodeGenContext& ctx) {
+    return;
+    for (auto& block : func.blocks()) {
+        preRAScheduleBlock(*block, ctx);
+    }
+}
+
 uint32_t ScheduleState::queryRegisterLatency(const MIRInst& inst,
                                              uint32_t idx) {
     /* 查询寄存器延迟 */
