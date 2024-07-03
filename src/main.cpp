@@ -103,7 +103,7 @@ int main(int argc, char* argv[]) {
             
         }
     }
-
+    module_ir->rename();
     if (config.gen_ir) {  // ir print
         if (config.outfile.empty()) {
             module_ir->print(std::cout);

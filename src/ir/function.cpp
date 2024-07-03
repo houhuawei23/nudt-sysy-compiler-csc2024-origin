@@ -97,7 +97,7 @@ void Function::rename() {
         std::string argname = "%" + std::to_string(getvarcnt());
         arg->set_name(argname);
     }
-size_t blockIdx = 0;
+    size_t blockIdx = 0;
     for (auto bb : _blocks) {
         bb->set_idx(blockIdx);
         blockIdx++;
