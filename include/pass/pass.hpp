@@ -42,16 +42,5 @@ class PassManager{
         }
 };
 
-template <typename PassUnit>
-class AnalysisResult{
-    private:
-        PassUnit* _passunit;
-        bool _isValid;
-    public:
-        void setValid(){_isValid=true;}
-        void setInValid(){_isValid=false;}
-        
-};
-
 
 }  // namespace pass
