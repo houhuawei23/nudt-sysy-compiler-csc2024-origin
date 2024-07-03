@@ -34,8 +34,8 @@ enum InstFlag : uint32_t {
     InstFlagNoFallThrough = 1 << 5,  // unconditional jump - j/jr/return
     InstFlagPush = 1 << 6,
     InstFlagLoadConstant = 1 << 7,
-    InstFlagRegDef = 1 << 8,         // def ISA register
-    InstFlagCommutative = 1 << 9,    // exchangable - add/sub/...
+    InstFlagRegDef = 1 << 8,       // def ISA register
+    InstFlagCommutative = 1 << 9,  // exchangable - add/sub/...
     InstFlagReturn = 1 << 10,
     InstFlagLegalizePreRA = 1 << 11,
     InstFlagWithDelaySlot = 1 << 12,
@@ -64,10 +64,10 @@ public:
     virtual ~InstInfo() = default;
 
 public:  // get function
-    virtual uint32_t operand_num() = 0;
-    virtual OperandFlag operand_flag(uint32_t idx) = 0;
-    virtual uint32_t inst_flag() = 0;
-    virtual std::string_view name() = 0;
+    virtual uint32_t operand_num() const = 0;
+    virtual OperandFlag operand_flag(uint32_t idx) const = 0;
+    virtual uint32_t inst_flag() const = 0;
+    virtual std::string_view name() const = 0;
 
 public:  // print
     virtual void print(std::ostream& out, MIRInst& inst, bool printComment) = 0;
@@ -149,6 +149,4 @@ void dumpVirtualReg(std::ostream& os, MIROperand* operand);
 
 }  // namespace mir
 
-namespace mir::GENERIC {
-
-}  // namespace mir::GENERIC
+namespace mir::GENERIC {}  // namespace mir::GENERIC

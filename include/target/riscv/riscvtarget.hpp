@@ -8,6 +8,7 @@
 #include "target/riscv/riscv.hpp"
 #include "autogen/riscv/InstInfoDecl.hpp"
 #include "autogen/riscv/ISelInfoDecl.hpp"
+#include "autogen/riscv/ScheduleModelDecl.hpp"
 // clang-format on
 
 namespace mir {
@@ -239,6 +240,9 @@ public:  // get function
     TargetInstInfo& get_target_inst_info() override { return RISCV::getRISCVInstInfo(); }
     TargetISelInfo& get_target_isel_info() override { return RISCV::getRISCVISelInfo(); }
 
+    TargetScheduleModel& get_schedule_model() override {
+        return RISCV::getRISCVScheduleModel();
+    }
 public:  // emit_assembly
     void postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) override;
     void emit_assembly(std::ostream& out, MIRModule& module) override;

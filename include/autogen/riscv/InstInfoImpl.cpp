@@ -10,9 +10,9 @@ class RISCVInstInfoBEQ final : public InstInfo {
 public:
     RISCVInstInfoBEQ() = default;
 
-    uint32_t operand_num() override { return 4; }
+    uint32_t operand_num() const override { return 4; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagUse;
@@ -27,11 +27,11 @@ public:
         }
     }
 
-    uint32_t inst_flag() override {
+    uint32_t inst_flag() const override {
         return InstFlagNone | InstFlagBranch | InstFlagTerminator;
     }
 
-    std::string_view name() override { return "RISCV.BEQ"; }
+    std::string_view name() const override { return "RISCV.BEQ"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "beq"
@@ -46,9 +46,9 @@ class RISCVInstInfoBNE final : public InstInfo {
 public:
     RISCVInstInfoBNE() = default;
 
-    uint32_t operand_num() override { return 4; }
+    uint32_t operand_num() const override { return 4; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagUse;
@@ -63,14 +63,86 @@ public:
         }
     }
 
-    uint32_t inst_flag() override {
+    uint32_t inst_flag() const override {
         return InstFlagNone | InstFlagBranch | InstFlagTerminator;
     }
 
-    std::string_view name() override { return "RISCV.BNE"; }
+    std::string_view name() const override { return "RISCV.BNE"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "bne"
+            << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(2)} << " # "
+            << mir::RISCV::OperandDumper{inst.operand(3)};
+    }
+};
+
+class RISCVInstInfoBLE final : public InstInfo {
+public:
+    RISCVInstInfoBLE() = default;
+
+    uint32_t operand_num() const override { return 4; }
+
+    OperandFlag operand_flag(uint32_t idx) const override {
+        switch (idx) {
+            case 0:
+                return OperandFlagUse;
+            case 1:
+                return OperandFlagUse;
+            case 2:
+                return OperandFlagMetadata;
+            case 3:
+                return OperandFlagMetadata;
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() const override {
+        return InstFlagNone | InstFlagBranch | InstFlagTerminator;
+    }
+
+    std::string_view name() const override { return "RISCV.BLE"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "ble"
+            << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(2)} << " # "
+            << mir::RISCV::OperandDumper{inst.operand(3)};
+    }
+};
+
+class RISCVInstInfoBGT final : public InstInfo {
+public:
+    RISCVInstInfoBGT() = default;
+
+    uint32_t operand_num() const override { return 4; }
+
+    OperandFlag operand_flag(uint32_t idx) const override {
+        switch (idx) {
+            case 0:
+                return OperandFlagUse;
+            case 1:
+                return OperandFlagUse;
+            case 2:
+                return OperandFlagMetadata;
+            case 3:
+                return OperandFlagMetadata;
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() const override {
+        return InstFlagNone | InstFlagBranch | InstFlagTerminator;
+    }
+
+    std::string_view name() const override { return "RISCV.BGT"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "bgt"
             << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
             << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
             << mir::RISCV::OperandDumper{inst.operand(2)} << " # "
@@ -82,9 +154,9 @@ class RISCVInstInfoBLT final : public InstInfo {
 public:
     RISCVInstInfoBLT() = default;
 
-    uint32_t operand_num() override { return 4; }
+    uint32_t operand_num() const override { return 4; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagUse;
@@ -99,11 +171,11 @@ public:
         }
     }
 
-    uint32_t inst_flag() override {
+    uint32_t inst_flag() const override {
         return InstFlagNone | InstFlagBranch | InstFlagTerminator;
     }
 
-    std::string_view name() override { return "RISCV.BLT"; }
+    std::string_view name() const override { return "RISCV.BLT"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "blt"
@@ -118,9 +190,9 @@ class RISCVInstInfoBGE final : public InstInfo {
 public:
     RISCVInstInfoBGE() = default;
 
-    uint32_t operand_num() override { return 4; }
+    uint32_t operand_num() const override { return 4; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagUse;
@@ -135,14 +207,86 @@ public:
         }
     }
 
-    uint32_t inst_flag() override {
+    uint32_t inst_flag() const override {
         return InstFlagNone | InstFlagBranch | InstFlagTerminator;
     }
 
-    std::string_view name() override { return "RISCV.BGE"; }
+    std::string_view name() const override { return "RISCV.BGE"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "bge"
+            << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(2)} << " # "
+            << mir::RISCV::OperandDumper{inst.operand(3)};
+    }
+};
+
+class RISCVInstInfoBLEU final : public InstInfo {
+public:
+    RISCVInstInfoBLEU() = default;
+
+    uint32_t operand_num() const override { return 4; }
+
+    OperandFlag operand_flag(uint32_t idx) const override {
+        switch (idx) {
+            case 0:
+                return OperandFlagUse;
+            case 1:
+                return OperandFlagUse;
+            case 2:
+                return OperandFlagMetadata;
+            case 3:
+                return OperandFlagMetadata;
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() const override {
+        return InstFlagNone | InstFlagBranch | InstFlagTerminator;
+    }
+
+    std::string_view name() const override { return "RISCV.BLEU"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "bleu"
+            << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
+            << mir::RISCV::OperandDumper{inst.operand(2)} << " # "
+            << mir::RISCV::OperandDumper{inst.operand(3)};
+    }
+};
+
+class RISCVInstInfoBGTU final : public InstInfo {
+public:
+    RISCVInstInfoBGTU() = default;
+
+    uint32_t operand_num() const override { return 4; }
+
+    OperandFlag operand_flag(uint32_t idx) const override {
+        switch (idx) {
+            case 0:
+                return OperandFlagUse;
+            case 1:
+                return OperandFlagUse;
+            case 2:
+                return OperandFlagMetadata;
+            case 3:
+                return OperandFlagMetadata;
+            default:
+                assert(false && "Invalid operand index");
+        }
+    }
+
+    uint32_t inst_flag() const override {
+        return InstFlagNone | InstFlagBranch | InstFlagTerminator;
+    }
+
+    std::string_view name() const override { return "RISCV.BGTU"; }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) override {
+        out << "bgtu"
             << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
             << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
             << mir::RISCV::OperandDumper{inst.operand(2)} << " # "
@@ -154,9 +298,9 @@ class RISCVInstInfoBLTU final : public InstInfo {
 public:
     RISCVInstInfoBLTU() = default;
 
-    uint32_t operand_num() override { return 4; }
+    uint32_t operand_num() const override { return 4; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagUse;
@@ -171,11 +315,11 @@ public:
         }
     }
 
-    uint32_t inst_flag() override {
+    uint32_t inst_flag() const override {
         return InstFlagNone | InstFlagBranch | InstFlagTerminator;
     }
 
-    std::string_view name() override { return "RISCV.BLTU"; }
+    std::string_view name() const override { return "RISCV.BLTU"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "bltu"
@@ -190,9 +334,9 @@ class RISCVInstInfoBGEU final : public InstInfo {
 public:
     RISCVInstInfoBGEU() = default;
 
-    uint32_t operand_num() override { return 4; }
+    uint32_t operand_num() const override { return 4; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagUse;
@@ -207,11 +351,11 @@ public:
         }
     }
 
-    uint32_t inst_flag() override {
+    uint32_t inst_flag() const override {
         return InstFlagNone | InstFlagBranch | InstFlagTerminator;
     }
 
-    std::string_view name() override { return "RISCV.BGEU"; }
+    std::string_view name() const override { return "RISCV.BGEU"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "bgeu"
@@ -226,9 +370,9 @@ class RISCVInstInfoADD final : public InstInfo {
 public:
     RISCVInstInfoADD() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -241,9 +385,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.ADD"; }
+    std::string_view name() const override { return "RISCV.ADD"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "add"
@@ -257,9 +401,9 @@ class RISCVInstInfoADDW final : public InstInfo {
 public:
     RISCVInstInfoADDW() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -272,9 +416,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.ADDW"; }
+    std::string_view name() const override { return "RISCV.ADDW"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "addw"
@@ -288,9 +432,9 @@ class RISCVInstInfoSUB final : public InstInfo {
 public:
     RISCVInstInfoSUB() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -303,9 +447,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.SUB"; }
+    std::string_view name() const override { return "RISCV.SUB"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "sub"
@@ -319,9 +463,9 @@ class RISCVInstInfoSUBW final : public InstInfo {
 public:
     RISCVInstInfoSUBW() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -334,9 +478,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.SUBW"; }
+    std::string_view name() const override { return "RISCV.SUBW"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "subw"
@@ -350,9 +494,9 @@ class RISCVInstInfoXOR final : public InstInfo {
 public:
     RISCVInstInfoXOR() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -365,9 +509,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.XOR"; }
+    std::string_view name() const override { return "RISCV.XOR"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "xor"
@@ -381,9 +525,9 @@ class RISCVInstInfoOR final : public InstInfo {
 public:
     RISCVInstInfoOR() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -396,9 +540,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.OR"; }
+    std::string_view name() const override { return "RISCV.OR"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "or"
@@ -412,9 +556,9 @@ class RISCVInstInfoAND final : public InstInfo {
 public:
     RISCVInstInfoAND() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -427,9 +571,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.AND"; }
+    std::string_view name() const override { return "RISCV.AND"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "and"
@@ -443,9 +587,9 @@ class RISCVInstInfoSLL final : public InstInfo {
 public:
     RISCVInstInfoSLL() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -458,9 +602,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.SLL"; }
+    std::string_view name() const override { return "RISCV.SLL"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "sll"
@@ -474,9 +618,9 @@ class RISCVInstInfoSRL final : public InstInfo {
 public:
     RISCVInstInfoSRL() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -489,9 +633,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.SRL"; }
+    std::string_view name() const override { return "RISCV.SRL"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "srl"
@@ -505,9 +649,9 @@ class RISCVInstInfoSRA final : public InstInfo {
 public:
     RISCVInstInfoSRA() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -520,9 +664,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.SRA"; }
+    std::string_view name() const override { return "RISCV.SRA"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "sra"
@@ -536,9 +680,9 @@ class RISCVInstInfoSLT final : public InstInfo {
 public:
     RISCVInstInfoSLT() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -551,9 +695,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.SLT"; }
+    std::string_view name() const override { return "RISCV.SLT"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "slt"
@@ -567,9 +711,9 @@ class RISCVInstInfoSLTU final : public InstInfo {
 public:
     RISCVInstInfoSLTU() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -582,9 +726,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.SLTU"; }
+    std::string_view name() const override { return "RISCV.SLTU"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "sltu"
@@ -598,9 +742,9 @@ class RISCVInstInfoADDI final : public InstInfo {
 public:
     RISCVInstInfoADDI() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -613,9 +757,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.ADDI"; }
+    std::string_view name() const override { return "RISCV.ADDI"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "addi"
@@ -629,9 +773,9 @@ class RISCVInstInfoXORI final : public InstInfo {
 public:
     RISCVInstInfoXORI() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -644,9 +788,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.XORI"; }
+    std::string_view name() const override { return "RISCV.XORI"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "xori"
@@ -660,9 +804,9 @@ class RISCVInstInfoORI final : public InstInfo {
 public:
     RISCVInstInfoORI() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -675,9 +819,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.ORI"; }
+    std::string_view name() const override { return "RISCV.ORI"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "ori"
@@ -691,9 +835,9 @@ class RISCVInstInfoANDI final : public InstInfo {
 public:
     RISCVInstInfoANDI() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -706,9 +850,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.ANDI"; }
+    std::string_view name() const override { return "RISCV.ANDI"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "andi"
@@ -722,9 +866,9 @@ class RISCVInstInfoSLTI final : public InstInfo {
 public:
     RISCVInstInfoSLTI() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -737,9 +881,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.SLTI"; }
+    std::string_view name() const override { return "RISCV.SLTI"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "slti"
@@ -753,9 +897,9 @@ class RISCVInstInfoSLTIU final : public InstInfo {
 public:
     RISCVInstInfoSLTIU() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -768,9 +912,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.SLTIU"; }
+    std::string_view name() const override { return "RISCV.SLTIU"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "sltiu"
@@ -784,9 +928,9 @@ class RISCVInstInfoSLLI final : public InstInfo {
 public:
     RISCVInstInfoSLLI() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -799,9 +943,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.SLLI"; }
+    std::string_view name() const override { return "RISCV.SLLI"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "slli"
@@ -815,9 +959,9 @@ class RISCVInstInfoSRLI final : public InstInfo {
 public:
     RISCVInstInfoSRLI() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -830,9 +974,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.SRLI"; }
+    std::string_view name() const override { return "RISCV.SRLI"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "srli"
@@ -846,9 +990,9 @@ class RISCVInstInfoSRAI final : public InstInfo {
 public:
     RISCVInstInfoSRAI() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -861,9 +1005,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.SRAI"; }
+    std::string_view name() const override { return "RISCV.SRAI"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "srai"
@@ -877,9 +1021,9 @@ class RISCVInstInfoLB final : public InstInfo {
 public:
     RISCVInstInfoLB() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -892,9 +1036,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone | InstFlagLoad; }
+    uint32_t inst_flag() const override { return InstFlagNone | InstFlagLoad; }
 
-    std::string_view name() override { return "RISCV.LB"; }
+    std::string_view name() const override { return "RISCV.LB"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "lb"
@@ -908,9 +1052,9 @@ class RISCVInstInfoLH final : public InstInfo {
 public:
     RISCVInstInfoLH() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -923,9 +1067,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone | InstFlagLoad; }
+    uint32_t inst_flag() const override { return InstFlagNone | InstFlagLoad; }
 
-    std::string_view name() override { return "RISCV.LH"; }
+    std::string_view name() const override { return "RISCV.LH"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "lh"
@@ -939,9 +1083,9 @@ class RISCVInstInfoLW final : public InstInfo {
 public:
     RISCVInstInfoLW() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -954,9 +1098,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone | InstFlagLoad; }
+    uint32_t inst_flag() const override { return InstFlagNone | InstFlagLoad; }
 
-    std::string_view name() override { return "RISCV.LW"; }
+    std::string_view name() const override { return "RISCV.LW"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "lw"
@@ -970,9 +1114,9 @@ class RISCVInstInfoLBU final : public InstInfo {
 public:
     RISCVInstInfoLBU() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -985,9 +1129,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone | InstFlagLoad; }
+    uint32_t inst_flag() const override { return InstFlagNone | InstFlagLoad; }
 
-    std::string_view name() override { return "RISCV.LBU"; }
+    std::string_view name() const override { return "RISCV.LBU"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "lbu"
@@ -1001,9 +1145,9 @@ class RISCVInstInfoLHU final : public InstInfo {
 public:
     RISCVInstInfoLHU() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1016,9 +1160,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone | InstFlagLoad; }
+    uint32_t inst_flag() const override { return InstFlagNone | InstFlagLoad; }
 
-    std::string_view name() override { return "RISCV.LHU"; }
+    std::string_view name() const override { return "RISCV.LHU"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "lhu"
@@ -1032,9 +1176,9 @@ class RISCVInstInfoLD final : public InstInfo {
 public:
     RISCVInstInfoLD() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1047,9 +1191,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone | InstFlagLoad; }
+    uint32_t inst_flag() const override { return InstFlagNone | InstFlagLoad; }
 
-    std::string_view name() override { return "RISCV.LD"; }
+    std::string_view name() const override { return "RISCV.LD"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "ld"
@@ -1063,9 +1207,9 @@ class RISCVInstInfoSB final : public InstInfo {
 public:
     RISCVInstInfoSB() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagUse;
@@ -1078,9 +1222,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone | InstFlagStore; }
+    uint32_t inst_flag() const override { return InstFlagNone | InstFlagStore; }
 
-    std::string_view name() override { return "RISCV.SB"; }
+    std::string_view name() const override { return "RISCV.SB"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "sb"
@@ -1094,9 +1238,9 @@ class RISCVInstInfoSH final : public InstInfo {
 public:
     RISCVInstInfoSH() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagUse;
@@ -1109,9 +1253,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone | InstFlagStore; }
+    uint32_t inst_flag() const override { return InstFlagNone | InstFlagStore; }
 
-    std::string_view name() override { return "RISCV.SH"; }
+    std::string_view name() const override { return "RISCV.SH"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "sh"
@@ -1125,9 +1269,9 @@ class RISCVInstInfoSW final : public InstInfo {
 public:
     RISCVInstInfoSW() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagUse;
@@ -1140,9 +1284,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone | InstFlagStore; }
+    uint32_t inst_flag() const override { return InstFlagNone | InstFlagStore; }
 
-    std::string_view name() override { return "RISCV.SW"; }
+    std::string_view name() const override { return "RISCV.SW"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "sw"
@@ -1156,9 +1300,9 @@ class RISCVInstInfoSD final : public InstInfo {
 public:
     RISCVInstInfoSD() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagUse;
@@ -1171,9 +1315,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone | InstFlagStore; }
+    uint32_t inst_flag() const override { return InstFlagNone | InstFlagStore; }
 
-    std::string_view name() override { return "RISCV.SD"; }
+    std::string_view name() const override { return "RISCV.SD"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "sd"
@@ -1187,9 +1331,9 @@ class RISCVInstInfoJAL final : public InstInfo {
 public:
     RISCVInstInfoJAL() = default;
 
-    uint32_t operand_num() override { return 1; }
+    uint32_t operand_num() const override { return 1; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagMetadata;
@@ -1198,9 +1342,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone | InstFlagCall; }
+    uint32_t inst_flag() const override { return InstFlagNone | InstFlagCall; }
 
-    std::string_view name() override { return "RISCV.JAL"; }
+    std::string_view name() const override { return "RISCV.JAL"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "jal"
@@ -1212,9 +1356,9 @@ class RISCVInstInfoJ final : public InstInfo {
 public:
     RISCVInstInfoJ() = default;
 
-    uint32_t operand_num() override { return 1; }
+    uint32_t operand_num() const override { return 1; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagMetadata;
@@ -1223,12 +1367,12 @@ public:
         }
     }
 
-    uint32_t inst_flag() override {
+    uint32_t inst_flag() const override {
         return InstFlagNone | InstFlagBranch | InstFlagTerminator |
                InstFlagNoFallThrough;
     }
 
-    std::string_view name() override { return "RISCV.J"; }
+    std::string_view name() const override { return "RISCV.J"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "j"
@@ -1240,21 +1384,21 @@ class RISCVInstInfoRET final : public InstInfo {
 public:
     RISCVInstInfoRET() = default;
 
-    uint32_t operand_num() override { return 0; }
+    uint32_t operand_num() const override { return 0; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             default:
                 assert(false && "Invalid operand index");
         }
     }
 
-    uint32_t inst_flag() override {
+    uint32_t inst_flag() const override {
         return InstFlagNone | InstFlagReturn | InstFlagTerminator |
                InstFlagNoFallThrough;
     }
 
-    std::string_view name() override { return "RISCV.RET"; }
+    std::string_view name() const override { return "RISCV.RET"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "ret";
@@ -1265,9 +1409,9 @@ class RISCVInstInfoLUI final : public InstInfo {
 public:
     RISCVInstInfoLUI() = default;
 
-    uint32_t operand_num() override { return 2; }
+    uint32_t operand_num() const override { return 2; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1278,11 +1422,11 @@ public:
         }
     }
 
-    uint32_t inst_flag() override {
+    uint32_t inst_flag() const override {
         return InstFlagNone | InstFlagLoadConstant;
     }
 
-    std::string_view name() override { return "RISCV.LUI"; }
+    std::string_view name() const override { return "RISCV.LUI"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "lui"
@@ -1295,9 +1439,9 @@ class RISCVInstInfoAUIPC final : public InstInfo {
 public:
     RISCVInstInfoAUIPC() = default;
 
-    uint32_t operand_num() override { return 2; }
+    uint32_t operand_num() const override { return 2; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1308,11 +1452,11 @@ public:
         }
     }
 
-    uint32_t inst_flag() override {
+    uint32_t inst_flag() const override {
         return InstFlagNone | InstFlagPCRel | InstFlagLoadConstant;
     }
 
-    std::string_view name() override { return "RISCV.AUIPC"; }
+    std::string_view name() const override { return "RISCV.AUIPC"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "auipc"
@@ -1325,9 +1469,9 @@ class RISCVInstInfoLLA final : public InstInfo {
 public:
     RISCVInstInfoLLA() = default;
 
-    uint32_t operand_num() override { return 2; }
+    uint32_t operand_num() const override { return 2; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1338,9 +1482,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.LLA"; }
+    std::string_view name() const override { return "RISCV.LLA"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "lla"
@@ -1353,9 +1497,9 @@ class RISCVInstInfoMUL final : public InstInfo {
 public:
     RISCVInstInfoMUL() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1368,9 +1512,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.MUL"; }
+    std::string_view name() const override { return "RISCV.MUL"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "mul"
@@ -1384,9 +1528,9 @@ class RISCVInstInfoMULW final : public InstInfo {
 public:
     RISCVInstInfoMULW() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1399,9 +1543,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.MULW"; }
+    std::string_view name() const override { return "RISCV.MULW"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "mulw"
@@ -1415,9 +1559,9 @@ class RISCVInstInfoMULH final : public InstInfo {
 public:
     RISCVInstInfoMULH() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1430,9 +1574,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.MULH"; }
+    std::string_view name() const override { return "RISCV.MULH"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "mulh"
@@ -1446,9 +1590,9 @@ class RISCVInstInfoMULHSU final : public InstInfo {
 public:
     RISCVInstInfoMULHSU() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1461,9 +1605,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.MULHSU"; }
+    std::string_view name() const override { return "RISCV.MULHSU"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "mulhsu"
@@ -1477,9 +1621,9 @@ class RISCVInstInfoMULHU final : public InstInfo {
 public:
     RISCVInstInfoMULHU() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1492,9 +1636,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.MULHU"; }
+    std::string_view name() const override { return "RISCV.MULHU"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "mulhu"
@@ -1508,9 +1652,9 @@ class RISCVInstInfoDIV final : public InstInfo {
 public:
     RISCVInstInfoDIV() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1523,9 +1667,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.DIV"; }
+    std::string_view name() const override { return "RISCV.DIV"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "div"
@@ -1539,9 +1683,9 @@ class RISCVInstInfoDIVW final : public InstInfo {
 public:
     RISCVInstInfoDIVW() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1554,9 +1698,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.DIVW"; }
+    std::string_view name() const override { return "RISCV.DIVW"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "divw"
@@ -1570,9 +1714,9 @@ class RISCVInstInfoDIVU final : public InstInfo {
 public:
     RISCVInstInfoDIVU() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1585,9 +1729,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.DIVU"; }
+    std::string_view name() const override { return "RISCV.DIVU"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "divu"
@@ -1601,9 +1745,9 @@ class RISCVInstInfoREM final : public InstInfo {
 public:
     RISCVInstInfoREM() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1616,9 +1760,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.REM"; }
+    std::string_view name() const override { return "RISCV.REM"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "rem"
@@ -1632,9 +1776,9 @@ class RISCVInstInfoREMW final : public InstInfo {
 public:
     RISCVInstInfoREMW() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1647,9 +1791,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.REMW"; }
+    std::string_view name() const override { return "RISCV.REMW"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "remw"
@@ -1663,9 +1807,9 @@ class RISCVInstInfoREMU final : public InstInfo {
 public:
     RISCVInstInfoREMU() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1678,9 +1822,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.REMU"; }
+    std::string_view name() const override { return "RISCV.REMU"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "remu"
@@ -1694,9 +1838,9 @@ class RISCVInstInfoLR final : public InstInfo {
 public:
     RISCVInstInfoLR() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1709,9 +1853,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.LR"; }
+    std::string_view name() const override { return "RISCV.LR"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "lr.w"
@@ -1725,9 +1869,9 @@ class RISCVInstInfoSC final : public InstInfo {
 public:
     RISCVInstInfoSC() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1740,9 +1884,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.SC"; }
+    std::string_view name() const override { return "RISCV.SC"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "sc.w"
@@ -1756,9 +1900,9 @@ class RISCVInstInfoAMOSWAP final : public InstInfo {
 public:
     RISCVInstInfoAMOSWAP() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1771,9 +1915,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.AMOSWAP"; }
+    std::string_view name() const override { return "RISCV.AMOSWAP"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "amoswap.w"
@@ -1787,9 +1931,9 @@ class RISCVInstInfoAMOADD final : public InstInfo {
 public:
     RISCVInstInfoAMOADD() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1802,9 +1946,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.AMOADD"; }
+    std::string_view name() const override { return "RISCV.AMOADD"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "amoadd.w"
@@ -1818,9 +1962,9 @@ class RISCVInstInfoAMOAND final : public InstInfo {
 public:
     RISCVInstInfoAMOAND() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1833,9 +1977,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.AMOAND"; }
+    std::string_view name() const override { return "RISCV.AMOAND"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "amoand.w"
@@ -1849,9 +1993,9 @@ class RISCVInstInfoAMOOR final : public InstInfo {
 public:
     RISCVInstInfoAMOOR() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1864,9 +2008,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.AMOOR"; }
+    std::string_view name() const override { return "RISCV.AMOOR"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "amoor.w"
@@ -1880,9 +2024,9 @@ class RISCVInstInfoAMOXOR final : public InstInfo {
 public:
     RISCVInstInfoAMOXOR() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1895,9 +2039,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "RISCV.AMOXOR"; }
+    std::string_view name() const override { return "RISCV.AMOXOR"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "amoxor.w"
@@ -1911,9 +2055,9 @@ class RISCVInstInfoFLW final : public InstInfo {
 public:
     RISCVInstInfoFLW() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1926,9 +2070,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone | InstFlagLoad; }
+    uint32_t inst_flag() const override { return InstFlagNone | InstFlagLoad; }
 
-    std::string_view name() override { return "RISCV.FLW"; }
+    std::string_view name() const override { return "RISCV.FLW"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "flw"
@@ -1942,9 +2086,9 @@ class RISCVInstInfoFSW final : public InstInfo {
 public:
     RISCVInstInfoFSW() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagUse;
@@ -1957,9 +2101,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone | InstFlagStore; }
+    uint32_t inst_flag() const override { return InstFlagNone | InstFlagStore; }
 
-    std::string_view name() override { return "RISCV.FSW"; }
+    std::string_view name() const override { return "RISCV.FSW"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "fsw"
@@ -1973,9 +2117,9 @@ class RISCVInstInfoLoadImm12 final : public InstInfo {
 public:
     RISCVInstInfoLoadImm12() = default;
 
-    uint32_t operand_num() override { return 2; }
+    uint32_t operand_num() const override { return 2; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1986,11 +2130,11 @@ public:
         }
     }
 
-    uint32_t inst_flag() override {
+    uint32_t inst_flag() const override {
         return InstFlagNone | InstFlagLoadConstant;
     }
 
-    std::string_view name() override { return "RISCV.LoadImm12"; }
+    std::string_view name() const override { return "RISCV.LoadImm12"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "li"
@@ -2003,9 +2147,9 @@ class RISCVInstInfoLoadImm32 final : public InstInfo {
 public:
     RISCVInstInfoLoadImm32() = default;
 
-    uint32_t operand_num() override { return 2; }
+    uint32_t operand_num() const override { return 2; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -2016,11 +2160,11 @@ public:
         }
     }
 
-    uint32_t inst_flag() override {
+    uint32_t inst_flag() const override {
         return InstFlagNone | InstFlagLoadConstant;
     }
 
-    std::string_view name() override { return "RISCV.LoadImm32"; }
+    std::string_view name() const override { return "RISCV.LoadImm32"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "li"
@@ -2033,9 +2177,9 @@ class RISCVInstInfoLoadImm64 final : public InstInfo {
 public:
     RISCVInstInfoLoadImm64() = default;
 
-    uint32_t operand_num() override { return 2; }
+    uint32_t operand_num() const override { return 2; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -2046,11 +2190,11 @@ public:
         }
     }
 
-    uint32_t inst_flag() override {
+    uint32_t inst_flag() const override {
         return InstFlagNone | InstFlagLoadConstant;
     }
 
-    std::string_view name() override { return "RISCV.LoadImm64"; }
+    std::string_view name() const override { return "RISCV.LoadImm64"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "li"
@@ -2063,9 +2207,9 @@ class RISCVInstInfoMV final : public InstInfo {
 public:
     RISCVInstInfoMV() = default;
 
-    uint32_t operand_num() override { return 2; }
+    uint32_t operand_num() const override { return 2; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -2076,9 +2220,11 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone | InstFlagRegCopy; }
+    uint32_t inst_flag() const override {
+        return InstFlagNone | InstFlagRegCopy;
+    }
 
-    std::string_view name() override { return "RISCV.MV"; }
+    std::string_view name() const override { return "RISCV.MV"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "mv"
@@ -2090,8 +2236,12 @@ public:
 class RISCVInstInfo final : public TargetInstInfo {
     RISCVInstInfoBEQ _instinfoBEQ;
     RISCVInstInfoBNE _instinfoBNE;
+    RISCVInstInfoBLE _instinfoBLE;
+    RISCVInstInfoBGT _instinfoBGT;
     RISCVInstInfoBLT _instinfoBLT;
     RISCVInstInfoBGE _instinfoBGE;
+    RISCVInstInfoBLEU _instinfoBLEU;
+    RISCVInstInfoBGTU _instinfoBGTU;
     RISCVInstInfoBLTU _instinfoBLTU;
     RISCVInstInfoBGEU _instinfoBGEU;
     RISCVInstInfoADD _instinfoADD;
@@ -2164,10 +2314,18 @@ public:
                 return _instinfoBEQ;
             case RISCVInst::BNE:
                 return _instinfoBNE;
+            case RISCVInst::BLE:
+                return _instinfoBLE;
+            case RISCVInst::BGT:
+                return _instinfoBGT;
             case RISCVInst::BLT:
                 return _instinfoBLT;
             case RISCVInst::BGE:
                 return _instinfoBGE;
+            case RISCVInst::BLEU:
+                return _instinfoBLEU;
+            case RISCVInst::BGTU:
+                return _instinfoBGTU;
             case RISCVInst::BLTU:
                 return _instinfoBLTU;
             case RISCVInst::BGEU:
@@ -2313,11 +2471,27 @@ public:
                     target = dynamic_cast<MIRBlock*>(inst->operand(2)->reloc());
                     prob = inst->operand(3)->prob();
                     break;
+                case BLE:
+                    target = dynamic_cast<MIRBlock*>(inst->operand(2)->reloc());
+                    prob = inst->operand(3)->prob();
+                    break;
+                case BGT:
+                    target = dynamic_cast<MIRBlock*>(inst->operand(2)->reloc());
+                    prob = inst->operand(3)->prob();
+                    break;
                 case BLT:
                     target = dynamic_cast<MIRBlock*>(inst->operand(2)->reloc());
                     prob = inst->operand(3)->prob();
                     break;
                 case BGE:
+                    target = dynamic_cast<MIRBlock*>(inst->operand(2)->reloc());
+                    prob = inst->operand(3)->prob();
+                    break;
+                case BLEU:
+                    target = dynamic_cast<MIRBlock*>(inst->operand(2)->reloc());
+                    prob = inst->operand(3)->prob();
+                    break;
+                case BGTU:
                     target = dynamic_cast<MIRBlock*>(inst->operand(2)->reloc());
                     prob = inst->operand(3)->prob();
                     break;

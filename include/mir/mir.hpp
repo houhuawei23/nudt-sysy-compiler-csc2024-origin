@@ -182,7 +182,7 @@ enum MIRGenericInst : uint32_t {
     InstLoadImm,
     InstLoadStackObjectAddr,
     InstCopyFromReg,
-    InstCopyToReg,
+    InstCopyToReg, // 45
     InstLoadImmToReg,
     InstLoadRegFromStack,
     InstStoreRegToStack,
@@ -264,8 +264,8 @@ public:
     MIRInst() = default;
     MIRInst(uint32_t opcode) : _opcode(opcode) {}
 public:  // get function
-    uint32_t opcode() { return _opcode; }
-    MIROperand* operand(int idx) {
+    uint32_t opcode() const { return _opcode; }
+    MIROperand* operand(int idx) const {
         assert(_operands[idx] != nullptr);
         return _operands[idx];
     }

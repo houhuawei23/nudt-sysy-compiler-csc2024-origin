@@ -29,7 +29,7 @@ union FloatUint32 {
 } fu32;
 
 void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& target) {
-    constexpr bool debugLowering = true;
+    constexpr bool debugLowering = false;
 
     auto& functions = mir_module.functions();
     auto& global_objs = mir_module.global_objs();
@@ -88,6 +88,7 @@ void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& tar
                                target.get_target_inst_info(),
                                target.get_target_frame_info(), MIRFlags{}};
     codegen_ctx.iselInfo = &target.get_target_isel_info();
+    codegen_ctx.scheduleModel = &target.get_schedule_model();
     lowering_ctx._code_gen_ctx = &codegen_ctx;
     IPRAUsageCache infoIPRA;
 
@@ -105,36 +106,39 @@ void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& tar
         os << styleMap[Style::RESET];
         os << msg << std::endl;
     };
+    size_t stageIdx = 0;
+
+    auto dumpStageResult = [&stageIdx](std::string stage, 
+                                      MIRFunction* mir_func, CodeGenContext& codegen_ctx) {
+        if (not debugLowering) return;
+        auto fileName = mir_func->name() +  std::to_string(stageIdx) + "_" + stage + ".ll";
+        std::ofstream fout("./.debug/" + fileName);
+        mir_func->print(fout, codegen_ctx);
+        stageIdx++;
+    };
 
     //! 4. lower all functions
     for (auto& ir_func : ir_module.funcs()) {
         auto mir_func = func_map[ir_func];
         if (ir_func->blocks().empty()) continue;
         if (debugLowering) {
-            std::ofstream fout("./.debug/1_BeforeLowering.ll");
-            // dumpStageWithMsg(fout, "Before Lowering", mir_func->name());
+            auto fileName = mir_func->name() + "_"  +  std::to_string(stageIdx) +  "BeforeLowering.ll";
+            std::ofstream fout("./.debug/" + fileName);
             ir_func->print(fout);
+            stageIdx++;
         }
 
         /* 4.1: lower function body to generic MIR */
         {
             create_mir_function(ir_func, mir_func, codegen_ctx, lowering_ctx);
-            if (debugLowering) {
-                std::ofstream fout("./.debug/2_AfterLowering.ll");
-                // dumpStageWithMsg(fout, "After Lowering", mir_func->name());
-                mir_func->print(fout, codegen_ctx);
-            }
+            dumpStageResult("AfterLowering", mir_func, codegen_ctx);
         }
 
         /* 4.2: instruction selection */
         {
             ISelContext isel_ctx(codegen_ctx);
-            isel_ctx.run_isel(mir_func);
-            if (debugLowering) {
-                std::ofstream fout("./.debug/3_AfterISEL.ll");
-                // dumpStageWithMsg(fout, "After ISEL", mir_func->name());
-                mir_func->print(fout, codegen_ctx);
-            }
+            isel_ctx.run_isel(mir_func);    
+            dumpStageResult("AfterIsel", mir_func, codegen_ctx);
         }
         /* 4.3 register coalescing */
 
@@ -143,19 +147,17 @@ void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& tar
         /* 4.5 pre-RA legalization */
 
         /* 4.6 pre-RA scheduling, minimize register usage */
-        // preRASchedule(*mir_func, codegen_ctx);
+        {
+            preRASchedule(*mir_func, codegen_ctx);
+            dumpStageResult("AfterPreRASchedule", mir_func, codegen_ctx);
+        }
 
         /* 4.7 register allocation */
         {
             codegen_ctx.registerInfo = new RISCVRegisterInfo();
             if (codegen_ctx.registerInfo) {
                 GraphColoringAllocate(*mir_func, codegen_ctx, infoIPRA);
-
-                if (debugLowering) {
-                    std::ofstream fout("./.debug/4_AfterRA.ll");
-                    // dumpStageWithMsg(fout, "After RA", mir_func->name());
-                    mir_func->print(fout, codegen_ctx);
-                }
+                dumpStageResult("AfterGraphColoring", mir_func, codegen_ctx);
             }
         }
 
@@ -164,11 +166,7 @@ void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& tar
             /* after sa, all stack objects are allocated with .offset */
             allocateStackObjects(mir_func, codegen_ctx);
             codegen_ctx.flags.postSA = true;
-            if (debugLowering) {
-                std::ofstream fout("./.debug/5_AfterSA.ll");
-                // dumpStageWithMsg(fout, "After SA", mir_func->name());
-                mir_func->print(fout, codegen_ctx);
-            }
+            dumpStageResult("AfterStackAlloc", mir_func, codegen_ctx);
         }
 
         /* 4.9 post-RA scheduling, minimize cycles */
@@ -177,11 +175,7 @@ void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& tar
         postLegalizeFunc(*mir_func, codegen_ctx);
         /* 4.11 verify */
 
-        if (debugLowering) {
-            std::ofstream fout("./.debug/6_FinisedCodeGen.ll");
-            // dumpStageWithMsg(fout, "Finished CodeGen", mir_func->name());
-            mir_func->print(fout, codegen_ctx);
-        }
+        dumpStageResult("AfterCodeGen", mir_func, codegen_ctx);
     }
     /* module verify */
 }

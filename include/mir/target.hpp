@@ -19,7 +19,7 @@ class Target {
     
     public:  // get function
         virtual DataLayout& get_datalayout() = 0;
-        // virtual  TargetScheduleModel& get_schedule_model()  = 0;
+        virtual  TargetScheduleModel& get_schedule_model()  = 0;
         virtual TargetInstInfo& get_target_inst_info() = 0;
         virtual TargetISelInfo& get_target_isel_info() = 0;
         virtual TargetFrameInfo& get_target_frame_info() = 0;

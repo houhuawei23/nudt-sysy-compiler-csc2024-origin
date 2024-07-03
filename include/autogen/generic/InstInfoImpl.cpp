@@ -10,9 +10,9 @@ class GENERICInstInfoJump final : public InstInfo {
 public:
     GENERICInstInfoJump() = default;
 
-    uint32_t operand_num() override { return 1; }
+    uint32_t operand_num() const override { return 1; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagMetadata;
@@ -21,12 +21,12 @@ public:
         }
     }
 
-    uint32_t inst_flag() override {
+    uint32_t inst_flag() const override {
         return InstFlagNone | InstFlagTerminator | InstFlagBranch |
                InstFlagNoFallThrough;
     }
 
-    std::string_view name() override { return "GENERIC.Jump"; }
+    std::string_view name() const override { return "GENERIC.Jump"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Jump"
@@ -38,9 +38,9 @@ class GENERICInstInfoBranch final : public InstInfo {
 public:
     GENERICInstInfoBranch() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagUse;
@@ -53,11 +53,11 @@ public:
         }
     }
 
-    uint32_t inst_flag() override {
+    uint32_t inst_flag() const override {
         return InstFlagNone | InstFlagTerminator | InstFlagBranch;
     }
 
-    std::string_view name() override { return "GENERIC.Branch"; }
+    std::string_view name() const override { return "GENERIC.Branch"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Branch"
@@ -71,20 +71,20 @@ class GENERICInstInfoUnreachable final : public InstInfo {
 public:
     GENERICInstInfoUnreachable() = default;
 
-    uint32_t operand_num() override { return 0; }
+    uint32_t operand_num() const override { return 0; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             default:
                 assert(false && "Invalid operand index");
         }
     }
 
-    uint32_t inst_flag() override {
+    uint32_t inst_flag() const override {
         return InstFlagNone | InstFlagTerminator | InstFlagNoFallThrough;
     }
 
-    std::string_view name() override { return "GENERIC.Unreachable"; }
+    std::string_view name() const override { return "GENERIC.Unreachable"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Unreachable";
@@ -95,9 +95,9 @@ class GENERICInstInfoLoad final : public InstInfo {
 public:
     GENERICInstInfoLoad() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -110,9 +110,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone | InstFlagLoad; }
+    uint32_t inst_flag() const override { return InstFlagNone | InstFlagLoad; }
 
-    std::string_view name() override { return "GENERIC.Load"; }
+    std::string_view name() const override { return "GENERIC.Load"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Load"
@@ -126,9 +126,9 @@ class GENERICInstInfoStore final : public InstInfo {
 public:
     GENERICInstInfoStore() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagUse;
@@ -141,9 +141,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone | InstFlagStore; }
+    uint32_t inst_flag() const override { return InstFlagNone | InstFlagStore; }
 
-    std::string_view name() override { return "GENERIC.Store"; }
+    std::string_view name() const override { return "GENERIC.Store"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Store"
@@ -157,9 +157,9 @@ class GENERICInstInfoAdd final : public InstInfo {
 public:
     GENERICInstInfoAdd() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -172,9 +172,11 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone | InstFlagCommutative; }
+    uint32_t inst_flag() const override {
+        return InstFlagNone | InstFlagCommutative;
+    }
 
-    std::string_view name() override { return "GENERIC.Add"; }
+    std::string_view name() const override { return "GENERIC.Add"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Add"
@@ -188,9 +190,9 @@ class GENERICInstInfoSub final : public InstInfo {
 public:
     GENERICInstInfoSub() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -203,9 +205,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "GENERIC.Sub"; }
+    std::string_view name() const override { return "GENERIC.Sub"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Sub"
@@ -219,9 +221,9 @@ class GENERICInstInfoMul final : public InstInfo {
 public:
     GENERICInstInfoMul() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -234,9 +236,11 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone | InstFlagCommutative; }
+    uint32_t inst_flag() const override {
+        return InstFlagNone | InstFlagCommutative;
+    }
 
-    std::string_view name() override { return "GENERIC.Mul"; }
+    std::string_view name() const override { return "GENERIC.Mul"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Mul"
@@ -250,9 +254,9 @@ class GENERICInstInfoUDiv final : public InstInfo {
 public:
     GENERICInstInfoUDiv() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -265,9 +269,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "GENERIC.UDiv"; }
+    std::string_view name() const override { return "GENERIC.UDiv"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "UDiv"
@@ -281,9 +285,9 @@ class GENERICInstInfoURem final : public InstInfo {
 public:
     GENERICInstInfoURem() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -296,9 +300,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "GENERIC.URem"; }
+    std::string_view name() const override { return "GENERIC.URem"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "URem"
@@ -312,9 +316,9 @@ class GENERICInstInfoAnd final : public InstInfo {
 public:
     GENERICInstInfoAnd() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -327,9 +331,11 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone | InstFlagCommutative; }
+    uint32_t inst_flag() const override {
+        return InstFlagNone | InstFlagCommutative;
+    }
 
-    std::string_view name() override { return "GENERIC.And"; }
+    std::string_view name() const override { return "GENERIC.And"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "And"
@@ -343,9 +349,9 @@ class GENERICInstInfoOr final : public InstInfo {
 public:
     GENERICInstInfoOr() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -358,9 +364,11 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone | InstFlagCommutative; }
+    uint32_t inst_flag() const override {
+        return InstFlagNone | InstFlagCommutative;
+    }
 
-    std::string_view name() override { return "GENERIC.Or"; }
+    std::string_view name() const override { return "GENERIC.Or"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Or"
@@ -374,9 +382,9 @@ class GENERICInstInfoXor final : public InstInfo {
 public:
     GENERICInstInfoXor() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -389,9 +397,11 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone | InstFlagCommutative; }
+    uint32_t inst_flag() const override {
+        return InstFlagNone | InstFlagCommutative;
+    }
 
-    std::string_view name() override { return "GENERIC.Xor"; }
+    std::string_view name() const override { return "GENERIC.Xor"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Xor"
@@ -405,9 +415,9 @@ class GENERICInstInfoShl final : public InstInfo {
 public:
     GENERICInstInfoShl() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -420,9 +430,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "GENERIC.Shl"; }
+    std::string_view name() const override { return "GENERIC.Shl"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Shl"
@@ -436,9 +446,9 @@ class GENERICInstInfoLShr final : public InstInfo {
 public:
     GENERICInstInfoLShr() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -451,9 +461,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "GENERIC.LShr"; }
+    std::string_view name() const override { return "GENERIC.LShr"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "LShr"
@@ -467,9 +477,9 @@ class GENERICInstInfoAShr final : public InstInfo {
 public:
     GENERICInstInfoAShr() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -482,9 +492,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "GENERIC.AShr"; }
+    std::string_view name() const override { return "GENERIC.AShr"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "AShr"
@@ -498,9 +508,9 @@ class GENERICInstInfoSDiv final : public InstInfo {
 public:
     GENERICInstInfoSDiv() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -513,9 +523,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "GENERIC.SDiv"; }
+    std::string_view name() const override { return "GENERIC.SDiv"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "SDiv"
@@ -529,9 +539,9 @@ class GENERICInstInfoSRem final : public InstInfo {
 public:
     GENERICInstInfoSRem() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -544,9 +554,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "GENERIC.SRem"; }
+    std::string_view name() const override { return "GENERIC.SRem"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "SRem"
@@ -560,9 +570,9 @@ class GENERICInstInfoSMin final : public InstInfo {
 public:
     GENERICInstInfoSMin() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -575,9 +585,11 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone | InstFlagCommutative; }
+    uint32_t inst_flag() const override {
+        return InstFlagNone | InstFlagCommutative;
+    }
 
-    std::string_view name() override { return "GENERIC.SMin"; }
+    std::string_view name() const override { return "GENERIC.SMin"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "SMin"
@@ -591,9 +603,9 @@ class GENERICInstInfoSMax final : public InstInfo {
 public:
     GENERICInstInfoSMax() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -606,9 +618,11 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone | InstFlagCommutative; }
+    uint32_t inst_flag() const override {
+        return InstFlagNone | InstFlagCommutative;
+    }
 
-    std::string_view name() override { return "GENERIC.SMax"; }
+    std::string_view name() const override { return "GENERIC.SMax"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "SMax"
@@ -622,9 +636,9 @@ class GENERICInstInfoNeg final : public InstInfo {
 public:
     GENERICInstInfoNeg() = default;
 
-    uint32_t operand_num() override { return 2; }
+    uint32_t operand_num() const override { return 2; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -635,9 +649,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "GENERIC.Neg"; }
+    std::string_view name() const override { return "GENERIC.Neg"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Neg"
@@ -650,9 +664,9 @@ class GENERICInstInfoAbs final : public InstInfo {
 public:
     GENERICInstInfoAbs() = default;
 
-    uint32_t operand_num() override { return 2; }
+    uint32_t operand_num() const override { return 2; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -663,9 +677,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "GENERIC.Abs"; }
+    std::string_view name() const override { return "GENERIC.Abs"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Abs"
@@ -678,9 +692,9 @@ class GENERICInstInfoFAdd final : public InstInfo {
 public:
     GENERICInstInfoFAdd() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -693,9 +707,11 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone | InstFlagCommutative; }
+    uint32_t inst_flag() const override {
+        return InstFlagNone | InstFlagCommutative;
+    }
 
-    std::string_view name() override { return "GENERIC.FAdd"; }
+    std::string_view name() const override { return "GENERIC.FAdd"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "FAdd"
@@ -709,9 +725,9 @@ class GENERICInstInfoFSub final : public InstInfo {
 public:
     GENERICInstInfoFSub() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -724,9 +740,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "GENERIC.FSub"; }
+    std::string_view name() const override { return "GENERIC.FSub"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "FSub"
@@ -740,9 +756,9 @@ class GENERICInstInfoFMul final : public InstInfo {
 public:
     GENERICInstInfoFMul() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -755,9 +771,11 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone | InstFlagCommutative; }
+    uint32_t inst_flag() const override {
+        return InstFlagNone | InstFlagCommutative;
+    }
 
-    std::string_view name() override { return "GENERIC.FMul"; }
+    std::string_view name() const override { return "GENERIC.FMul"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "FMul"
@@ -771,9 +789,9 @@ class GENERICInstInfoFDiv final : public InstInfo {
 public:
     GENERICInstInfoFDiv() = default;
 
-    uint32_t operand_num() override { return 3; }
+    uint32_t operand_num() const override { return 3; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -786,9 +804,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "GENERIC.FDiv"; }
+    std::string_view name() const override { return "GENERIC.FDiv"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "FDiv"
@@ -802,9 +820,9 @@ class GENERICInstInfoFNeg final : public InstInfo {
 public:
     GENERICInstInfoFNeg() = default;
 
-    uint32_t operand_num() override { return 2; }
+    uint32_t operand_num() const override { return 2; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -815,9 +833,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "GENERIC.FNeg"; }
+    std::string_view name() const override { return "GENERIC.FNeg"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "FNeg"
@@ -830,9 +848,9 @@ class GENERICInstInfoFAbs final : public InstInfo {
 public:
     GENERICInstInfoFAbs() = default;
 
-    uint32_t operand_num() override { return 2; }
+    uint32_t operand_num() const override { return 2; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -843,9 +861,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "GENERIC.FAbs"; }
+    std::string_view name() const override { return "GENERIC.FAbs"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "FAbs"
@@ -858,9 +876,9 @@ class GENERICInstInfoFFma final : public InstInfo {
 public:
     GENERICInstInfoFFma() = default;
 
-    uint32_t operand_num() override { return 4; }
+    uint32_t operand_num() const override { return 4; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -875,9 +893,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "GENERIC.FFma"; }
+    std::string_view name() const override { return "GENERIC.FFma"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "FFma"
@@ -892,9 +910,9 @@ class GENERICInstInfoICmp final : public InstInfo {
 public:
     GENERICInstInfoICmp() = default;
 
-    uint32_t operand_num() override { return 4; }
+    uint32_t operand_num() const override { return 4; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -909,9 +927,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "GENERIC.ICmp"; }
+    std::string_view name() const override { return "GENERIC.ICmp"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "ICmp"
@@ -926,9 +944,9 @@ class GENERICInstInfoFCmp final : public InstInfo {
 public:
     GENERICInstInfoFCmp() = default;
 
-    uint32_t operand_num() override { return 4; }
+    uint32_t operand_num() const override { return 4; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -943,9 +961,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "GENERIC.FCmp"; }
+    std::string_view name() const override { return "GENERIC.FCmp"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "FCmp"
@@ -960,9 +978,9 @@ class GENERICInstInfoSExt final : public InstInfo {
 public:
     GENERICInstInfoSExt() = default;
 
-    uint32_t operand_num() override { return 2; }
+    uint32_t operand_num() const override { return 2; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -973,9 +991,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "GENERIC.SExt"; }
+    std::string_view name() const override { return "GENERIC.SExt"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "SExt"
@@ -988,9 +1006,9 @@ class GENERICInstInfoZExt final : public InstInfo {
 public:
     GENERICInstInfoZExt() = default;
 
-    uint32_t operand_num() override { return 2; }
+    uint32_t operand_num() const override { return 2; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1001,9 +1019,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "GENERIC.ZExt"; }
+    std::string_view name() const override { return "GENERIC.ZExt"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "ZExt"
@@ -1016,9 +1034,9 @@ class GENERICInstInfoTrunc final : public InstInfo {
 public:
     GENERICInstInfoTrunc() = default;
 
-    uint32_t operand_num() override { return 2; }
+    uint32_t operand_num() const override { return 2; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1029,9 +1047,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "GENERIC.Trunc"; }
+    std::string_view name() const override { return "GENERIC.Trunc"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Trunc"
@@ -1044,9 +1062,9 @@ class GENERICInstInfoF2U final : public InstInfo {
 public:
     GENERICInstInfoF2U() = default;
 
-    uint32_t operand_num() override { return 2; }
+    uint32_t operand_num() const override { return 2; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1057,9 +1075,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "GENERIC.F2U"; }
+    std::string_view name() const override { return "GENERIC.F2U"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "F2U"
@@ -1072,9 +1090,9 @@ class GENERICInstInfoF2S final : public InstInfo {
 public:
     GENERICInstInfoF2S() = default;
 
-    uint32_t operand_num() override { return 2; }
+    uint32_t operand_num() const override { return 2; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1085,9 +1103,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "GENERIC.F2S"; }
+    std::string_view name() const override { return "GENERIC.F2S"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "F2S"
@@ -1100,9 +1118,9 @@ class GENERICInstInfoU2F final : public InstInfo {
 public:
     GENERICInstInfoU2F() = default;
 
-    uint32_t operand_num() override { return 2; }
+    uint32_t operand_num() const override { return 2; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1113,9 +1131,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "GENERIC.U2F"; }
+    std::string_view name() const override { return "GENERIC.U2F"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "U2F"
@@ -1128,9 +1146,9 @@ class GENERICInstInfoS2F final : public InstInfo {
 public:
     GENERICInstInfoS2F() = default;
 
-    uint32_t operand_num() override { return 2; }
+    uint32_t operand_num() const override { return 2; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1141,9 +1159,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "GENERIC.S2F"; }
+    std::string_view name() const override { return "GENERIC.S2F"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "S2F"
@@ -1156,9 +1174,9 @@ class GENERICInstInfoFCast final : public InstInfo {
 public:
     GENERICInstInfoFCast() = default;
 
-    uint32_t operand_num() override { return 1; }
+    uint32_t operand_num() const override { return 1; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1167,9 +1185,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "GENERIC.FCast"; }
+    std::string_view name() const override { return "GENERIC.FCast"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "FCast"
@@ -1182,9 +1200,9 @@ class GENERICInstInfoCopy final : public InstInfo {
 public:
     GENERICInstInfoCopy() = default;
 
-    uint32_t operand_num() override { return 2; }
+    uint32_t operand_num() const override { return 2; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1195,9 +1213,11 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone | InstFlagRegCopy; }
+    uint32_t inst_flag() const override {
+        return InstFlagNone | InstFlagRegCopy;
+    }
 
-    std::string_view name() override { return "GENERIC.Copy"; }
+    std::string_view name() const override { return "GENERIC.Copy"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Copy"
@@ -1210,9 +1230,9 @@ class GENERICInstInfoSelect final : public InstInfo {
 public:
     GENERICInstInfoSelect() = default;
 
-    uint32_t operand_num() override { return 4; }
+    uint32_t operand_num() const override { return 4; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1227,9 +1247,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "GENERIC.Select"; }
+    std::string_view name() const override { return "GENERIC.Select"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Select"
@@ -1244,9 +1264,9 @@ class GENERICInstInfoLoadGlobalAddress final : public InstInfo {
 public:
     GENERICInstInfoLoadGlobalAddress() = default;
 
-    uint32_t operand_num() override { return 2; }
+    uint32_t operand_num() const override { return 2; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1257,11 +1277,13 @@ public:
         }
     }
 
-    uint32_t inst_flag() override {
+    uint32_t inst_flag() const override {
         return InstFlagNone | InstFlagLoadConstant;
     }
 
-    std::string_view name() override { return "GENERIC.LoadGlobalAddress"; }
+    std::string_view name() const override {
+        return "GENERIC.LoadGlobalAddress";
+    }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "LoadGlobalAddress"
@@ -1274,9 +1296,9 @@ class GENERICInstInfoLoadImm final : public InstInfo {
 public:
     GENERICInstInfoLoadImm() = default;
 
-    uint32_t operand_num() override { return 2; }
+    uint32_t operand_num() const override { return 2; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1287,9 +1309,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "GENERIC.LoadImm"; }
+    std::string_view name() const override { return "GENERIC.LoadImm"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "LoadImm"
@@ -1302,9 +1324,9 @@ class GENERICInstInfoLoadStackObjectAddr final : public InstInfo {
 public:
     GENERICInstInfoLoadStackObjectAddr() = default;
 
-    uint32_t operand_num() override { return 2; }
+    uint32_t operand_num() const override { return 2; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1315,11 +1337,13 @@ public:
         }
     }
 
-    uint32_t inst_flag() override {
+    uint32_t inst_flag() const override {
         return InstFlagNone | InstFlagLoadConstant;
     }
 
-    std::string_view name() override { return "GENERIC.LoadStackObjectAddr"; }
+    std::string_view name() const override {
+        return "GENERIC.LoadStackObjectAddr";
+    }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "LoadStackObjectAddr"
@@ -1332,9 +1356,9 @@ class GENERICInstInfoCopyFromReg final : public InstInfo {
 public:
     GENERICInstInfoCopyFromReg() = default;
 
-    uint32_t operand_num() override { return 2; }
+    uint32_t operand_num() const override { return 2; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1345,9 +1369,11 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone | InstFlagRegCopy; }
+    uint32_t inst_flag() const override {
+        return InstFlagNone | InstFlagRegCopy;
+    }
 
-    std::string_view name() override { return "GENERIC.CopyFromReg"; }
+    std::string_view name() const override { return "GENERIC.CopyFromReg"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "CopyFromReg"
@@ -1360,9 +1386,9 @@ class GENERICInstInfoCopyToReg final : public InstInfo {
 public:
     GENERICInstInfoCopyToReg() = default;
 
-    uint32_t operand_num() override { return 2; }
+    uint32_t operand_num() const override { return 2; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1373,11 +1399,11 @@ public:
         }
     }
 
-    uint32_t inst_flag() override {
+    uint32_t inst_flag() const override {
         return InstFlagNone | InstFlagRegCopy | InstFlagRegDef;
     }
 
-    std::string_view name() override { return "GENERIC.CopyToReg"; }
+    std::string_view name() const override { return "GENERIC.CopyToReg"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "CopyToReg"
@@ -1390,9 +1416,9 @@ class GENERICInstInfoLoadImmToReg final : public InstInfo {
 public:
     GENERICInstInfoLoadImmToReg() = default;
 
-    uint32_t operand_num() override { return 2; }
+    uint32_t operand_num() const override { return 2; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1403,9 +1429,11 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone | InstFlagRegDef; }
+    uint32_t inst_flag() const override {
+        return InstFlagNone | InstFlagRegDef;
+    }
 
-    std::string_view name() override { return "GENERIC.LoadImmToReg"; }
+    std::string_view name() const override { return "GENERIC.LoadImmToReg"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "LoadImmToReg"
@@ -1418,9 +1446,9 @@ class GENERICInstInfoLoadRegFromStack final : public InstInfo {
 public:
     GENERICInstInfoLoadRegFromStack() = default;
 
-    uint32_t operand_num() override { return 2; }
+    uint32_t operand_num() const override { return 2; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagDef;
@@ -1431,9 +1459,11 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone | InstFlagLoad; }
+    uint32_t inst_flag() const override { return InstFlagNone | InstFlagLoad; }
 
-    std::string_view name() override { return "GENERIC.LoadRegFromStack"; }
+    std::string_view name() const override {
+        return "GENERIC.LoadRegFromStack";
+    }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "LoadRegFromStack"
@@ -1446,9 +1476,9 @@ class GENERICInstInfoStoreRegToStack final : public InstInfo {
 public:
     GENERICInstInfoStoreRegToStack() = default;
 
-    uint32_t operand_num() override { return 2; }
+    uint32_t operand_num() const override { return 2; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             case 0:
                 return OperandFlagMetadata;
@@ -1459,9 +1489,9 @@ public:
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone | InstFlagStore; }
+    uint32_t inst_flag() const override { return InstFlagNone | InstFlagStore; }
 
-    std::string_view name() override { return "GENERIC.StoreRegToStack"; }
+    std::string_view name() const override { return "GENERIC.StoreRegToStack"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "StoreRegToStack"
@@ -1474,18 +1504,18 @@ class GENERICInstInfoReturn final : public InstInfo {
 public:
     GENERICInstInfoReturn() = default;
 
-    uint32_t operand_num() override { return 0; }
+    uint32_t operand_num() const override { return 0; }
 
-    OperandFlag operand_flag(uint32_t idx) override {
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             default:
                 assert(false && "Invalid operand index");
         }
     }
 
-    uint32_t inst_flag() override { return InstFlagNone; }
+    uint32_t inst_flag() const override { return InstFlagNone; }
 
-    std::string_view name() override { return "GENERIC.Return"; }
+    std::string_view name() const override { return "GENERIC.Return"; }
 
     void print(std::ostream& out, MIRInst& inst, bool comment) override {
         out << "Return";

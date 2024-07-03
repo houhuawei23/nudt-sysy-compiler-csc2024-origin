@@ -12,8 +12,12 @@ enum RISCVInst {
 
     BEQ,
     BNE,
+    BLE,
+    BGT,
     BLT,
     BGE,
+    BLEU,
+    BGTU,
     BLTU,
     BGEU,
     ADD,

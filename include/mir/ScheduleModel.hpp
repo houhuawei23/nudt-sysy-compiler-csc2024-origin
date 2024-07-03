@@ -3,13 +3,13 @@
 #include <stdint.h>
 #include <unordered_map>
 namespace mir {
-
+class ScheduleState;
 class ScheduleClass {
    public:
     virtual ~ScheduleClass() = default;
-    virtual bool schedule(class ScheduleState& state,
-                          MIRInst& inst,
-                          class InstInfo& instInfo) = 0;
+    virtual bool schedule(ScheduleState& state,
+                          const MIRInst& inst,
+                          const InstInfo& instInfo) const = 0;
 };
 struct MicroArchInfo {
     bool enablePostRAScheduling;
@@ -40,14 +40,16 @@ class TargetScheduleModel {
 
 class ScheduleState {
     uint32_t mCycleCount;
-
+    
+    // 流水线下一次可用时间: pipelineId -> cycle
     std::unordered_map<uint32_t, uint32_t> mNextPipelineAvailable;
-
+    // 寄存器可用时间: renamedRegIdx -> cycle
     std::unordered_map<uint32_t, uint32_t> mRegisterAvailableTime;
 
-    // idx -> register
+    // inst.idx -> renamedRegIdx, 寄存器重命名映射
     const std::unordered_map<const MIRInst*, std::unordered_map<uint32_t, uint32_t>>&
         mRegRenameMap;
+    // 已发射指令的标记掩码
     uint32_t mIssuedFlag;
 
    public:
@@ -56,13 +58,13 @@ class ScheduleState {
             regRenameMap)
         : mCycleCount(0), mRegRenameMap(regRenameMap), mIssuedFlag(0) {}
     // query
-    uint32_t queryRegisterLatency(MIRInst& inst, uint32_t idx);
+    uint32_t queryRegisterLatency(const MIRInst& inst, uint32_t idx);
     bool isPipelineReady(uint32_t pipelineId);
     bool isAvailable(uint32_t mask);
     // issue
     void setIssued(uint32_t mask);
     void resetPipeline(uint32_t pipelineId, uint32_t duration);
-    void makeRegisterReady(MIRInst& inst, uint32_t idx, uint32_t latency);
+    void makeRegisterReady(const MIRInst& inst, uint32_t idx, uint32_t latency);
 
     uint32_t nextCycle() {
         mCycleCount++;

@@ -97,6 +97,21 @@ int main(int argc, char* argv[]) {
             module_ir->print(fout);
         }
     }
+    auto preName = [](const std::string& filePath) {
+        size_t lastSlashPos = filePath.find_last_of("/\\");
+        if (lastSlashPos == std::string::npos) {
+            lastSlashPos = -1;  // 如果没有找到 '/', 则从字符串开头开始
+        }
+
+        // 找到最后一个 '.' 的位置
+        size_t lastDotPos = filePath.find_last_of('.');
+        if (lastDotPos == std::string::npos || lastDotPos < lastSlashPos) {
+            lastDotPos = filePath.size();  // 如果没有找到 '.', 则到字符串末尾
+        }
+
+        // 提取 '/' 和 '.' 之间的子字符串
+        return filePath.substr(lastSlashPos + 1, lastDotPos - lastSlashPos - 1);
+    };
 
     //! 3. Code Generation
     if (config.gen_asm) {
@@ -108,6 +123,10 @@ int main(int argc, char* argv[]) {
         } else {
             ofstream fout;
             fout.open(config.outfile);
+            target.emit_assembly(fout, *mir_module);
+        }
+        {
+            ofstream fout("./.debug/" + preName(config.infile) + ".s");
             target.emit_assembly(fout, *mir_module);
         }
     }
