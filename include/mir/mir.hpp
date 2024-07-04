@@ -109,6 +109,7 @@ public:  // operator
 public:  // get function
     uint32_t reg() { return _reg; }
     MIRRegisterFlag flag() { return _flag; }
+    MIRRegisterFlag* flag_ptr() { return &_flag; }
 public:  // set function
     void set_flag(MIRRegisterFlag flag) { _flag = flag; }
 public:
