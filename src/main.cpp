@@ -96,13 +96,17 @@ int main(int argc, char* argv[]) {
                 pm.run(new pass::GVN());
             } else if (pass_name.compare("reg2mem") == 0){
                 pm.run(new pass::Reg2Mem());
-            } else {
+            } else if (pass_name.compare("inline") == 0){
+                pm.run(new pass::Inline());
+            }
+            else {
                 assert(false && "Invalid pass name");
             }
 
             
         }
     }
+    // module_ir->print(std::cout);
     module_ir->rename();
     if (config.gen_ir) {  // ir print
         if (config.outfile.empty()) {

@@ -92,9 +92,9 @@ class BasicBlock : public Value {
 
     void set_parent(Function* parent) { _parent = parent; }
 
-    inst_list& insts() { return _insts; }
+    auto& insts() { return _insts; }
 
-    inst_list& phi_insts() { return _phi_insts; }
+    auto& phi_insts() { return _phi_insts; }
 
     auto& next_blocks() const { return _next_blocks; }
     auto& pre_blocks() const { return _pre_blocks; }
@@ -144,7 +144,7 @@ class BasicBlock : public Value {
         }
         return false;
     }
-
+    bool isTerminal() const;
     // for isa<>
     static bool classof(const Value* v) { return v->scid() == vBASIC_BLOCK; }
     // ir print

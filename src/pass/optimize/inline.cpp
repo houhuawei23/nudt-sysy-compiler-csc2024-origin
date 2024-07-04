@@ -15,27 +15,25 @@ void Inline::callinline(ir::CallInst* call) {
     ir::BasicBlock* retBB = caller->new_block();
     ir::BasicBlock* calleeAllocaBB = copyfunc->entry();
     ir::BasicBlock* callerAllocaBB = caller->entry();
-    
-
     if (nowBB == caller->exit()) {
         caller->setExit(retBB);
     }
-
     // 将call之后的指令移动到retBB中
-    bool findflag = false;
-    for (auto inst : nowBB->insts()) {
-        if (findflag) {
+    auto it = std::find(nowBB->insts().begin(), nowBB->insts().end(), call);
+    if (it != nowBB->insts().end()){
+        ++it;
+        while (it != nowBB->insts().end()) {
+            ir::Instruction* inst = *it;
             inst->set_parent(retBB);
             retBB->emplace_back_inst(inst);
-            nowBB->insts().remove(inst);
-        } else {
-            if (call == inst) {
-                    findflag = true;
-            }
+            it = nowBB->insts().erase(it);
         }
     }
+
     // 将nowBB的后继变为retBB的后继
-    for (ir::BasicBlock* succBB : nowBB->next_blocks()) {
+    auto succList = nowBB->next_blocks();
+    for (auto it = succList.begin(); it != succList.end();){
+        ir::BasicBlock* succBB = *it;
         ir::BasicBlock::delete_block_link(nowBB, succBB);
         ir::BasicBlock::block_link(retBB, succBB);
         for (auto phi : succBB->phi_insts()) {  // 修改phi指令中的nowBB为retBB
@@ -47,13 +45,17 @@ void Inline::callinline(ir::CallInst* call) {
                 }
             }
         }
+        it = succList.erase(it);
     }
-    std::vector<std::pair<ir::ReturnInst*, ir::BasicBlock*>> retmap;
+
     // 被调用函数的返回块无条件跳转到retBB
-    for (ir::BasicBlock* bb : copyfunc->blocks()) {
+    std::vector<std::pair<ir::ReturnInst*, ir::BasicBlock*>> retmap;
+    auto blocklist = copyfunc->blocks();
+    for (auto it = blocklist.begin(); it != blocklist.end();){
+        ir::BasicBlock* bb = *it;
         bb->set_parent(caller);
         caller->blocks().emplace_back(bb);
-        copyfunc->blocks().remove(bb);
+        it = copyfunc->blocks().erase(it);
         if (bb->next_blocks().empty()) {
             auto lastinst = bb->insts().back();
             if (auto ret = dyn_cast<ir::ReturnInst>(lastinst)) {
@@ -87,7 +89,7 @@ void Inline::callinline(ir::CallInst* call) {
         auto formalArg = copyfunc->arg_i(i);
         if (!formalArg->type()->is_pointer()) {  // 如果传递参数不是数组等指针，直接替换
             formalArg->replace_all_use_with(realArg);
-        } else {  // 如果传递参数是数组等指针，
+        } else {  // 如果传递参数是数组等指针
             std::vector<ir::StoreInst*> storetomove;
             for (auto use : formalArg->uses()) {
                 if (ir::StoreInst* storeinst = dyn_cast<ir::StoreInst>(use->user())) {
@@ -119,11 +121,16 @@ void Inline::callinline(ir::CallInst* call) {
     auto jmpnowtoentry = new ir::BranchInst(calleeAllocaBB, nowBB);
     nowBB->emplace_back_inst(jmpnowtoentry);
     // 将callee的alloca提到caller
-    for (auto inst : calleeAllocaBB->insts()) {
+    auto& calleeAllocaBBinst = calleeAllocaBB->insts();
+    for (auto it = calleeAllocaBBinst.begin();it != calleeAllocaBBinst.end();) {
+        ir::Instruction* inst = *it;
         if (auto allocainst = dyn_cast<ir::AllocaInst>(inst)) {
             allocainst->set_parent(callerAllocaBB);
             callerAllocaBB->emplace_first_inst(allocainst);
-            calleeAllocaBB->insts().remove(allocainst);
+            it = calleeAllocaBBinst.erase(it);
+        }
+        else{
+            ++it;
         }
     }
 }
@@ -163,7 +170,8 @@ void Inline::run(ir::Module* module) {
         for (auto call : callList) {
             callinline(call);
         }
-        module->delete_func(func);  // TODO
+        module->delete_func(func);
+
         functiontoremove.pop_back();
         if (functiontoremove.empty()) {
             functiontoremove = getinlineFunc(module);

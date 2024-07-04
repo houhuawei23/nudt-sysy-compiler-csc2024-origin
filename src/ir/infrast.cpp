@@ -8,6 +8,10 @@ namespace ir {
 void Argument::print(std::ostream& os) const{
     os << *type() << " " << name();
 }
+bool BasicBlock::isTerminal() const { 
+    if(_insts.empty()) return false;
+    return _insts.back()->is_terminator(); 
+}
 
 void BasicBlock::print(std::ostream& os) const{
     // print all instructions
@@ -47,16 +51,19 @@ void BasicBlock::print(std::ostream& os) const{
 }
 
 void BasicBlock::emplace_back_inst(Instruction* i) {
-    if (not _is_terminal)
-        _insts.emplace_back(i);
-    _is_terminal = i->is_terminator();
+    if(isTerminal()) {
+        std::cerr << "[ERROR] insert a non-terminal inst to a terminal bb" << std::endl;
+        return;
+    }
+    _insts.emplace_back(i);
+    // _is_terminal = i->is_terminator();
     if (auto phiInst = dyn_cast<PhiInst>(i))
         assert(false and "a phi can not be inserted at the back of a bb");
 }
 void BasicBlock::emplace_inst(inst_iterator pos, Instruction* i) {
     // Warning: didn't check _is_terminal
     _insts.emplace(pos, i);
-    _is_terminal = i->is_terminator();
+    // _is_terminal = i->is_terminator();
     if (auto phiInst = dyn_cast<PhiInst>(i)) {
         // assume that Phi insts are all at the front of a bb
         int index = std::distance(_insts.begin(), pos);
@@ -102,7 +109,6 @@ void BasicBlock::emplace_first_inst(Instruction* inst) {
     // Warning: didn't check _is_terminal
     auto pos = _insts.begin();
     _insts.emplace(pos, inst);
-    _is_terminal = inst->is_terminator();
     if (auto phiInst = dyn_cast<PhiInst>(inst))
         _phi_insts.emplace_front(phiInst);
 }

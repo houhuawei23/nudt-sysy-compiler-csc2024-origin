@@ -37,9 +37,9 @@ void Module::delete_func(ir::Function* func) {
            "delete unexisted function!");
     _func_table.erase(func->name());
     _funcs.erase(std::find(_funcs.begin(), _funcs.end(), func));
-    for (auto bb : func->blocks()) {
-        func->force_delete_block(bb);
-    }
+    // for (auto bb : func->blocks()) {
+    //     func->force_delete_block(bb);
+    // }
 }
 
 // readable ir print
