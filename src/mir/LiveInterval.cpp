@@ -95,9 +95,8 @@ LiveVariablesInfo calcLiveIntervals(MIRFunction& mfunc, CodeGenContext& ctx) {
         for (auto& inst : block.get()->insts()) {
             auto& instInfo = ctx.instInfo.get_instinfo(inst);
             for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
-                auto flag = instInfo.operand_flag(idx);
+                const auto flag = instInfo.operand_flag(idx);
                 auto operand = inst->operand(idx);
-
                 // 非虚拟寄存器 --> continue
                 if (!isOperandVReg(operand)) continue;
 
@@ -105,7 +104,7 @@ LiveVariablesInfo calcLiveIntervals(MIRFunction& mfunc, CodeGenContext& ctx) {
                 if (flag & OperandFlagDef) {  // 变量定义 --> defs insert the id
                     blockInfo.defs.insert(id);
                 } else if (flag & OperandFlagUse) {  // 变量使用 --> defs in other blocks, uses insert the id
-                    if (not blockInfo.defs.count(id)) blockInfo.uses.insert(id);
+                    if (!blockInfo.defs.count(id)) blockInfo.uses.insert(id);
                 } else {  // 立即数
                     continue;
                 }
@@ -131,7 +130,7 @@ LiveVariablesInfo calcLiveIntervals(MIRFunction& mfunc, CodeGenContext& ctx) {
             
             auto ins = blockInfo.uses;  // other block pass the ins to the next block
             for (auto out : blockInfo.outs) {  // 计算当前块的输入集合
-                if (not blockInfo.defs.count(out)) ins.insert(out);
+                if (!blockInfo.defs.count(out)) ins.insert(out);
             }
             if (ins != blockInfo.ins) {
                 std::swap(blockInfo.ins, ins);
@@ -139,7 +138,7 @@ LiveVariablesInfo calcLiveIntervals(MIRFunction& mfunc, CodeGenContext& ctx) {
             }
         }
 
-        if (not modified) break;
+        if (!modified) break;
     }
 
     // stage 3: calculate live intervals
@@ -147,25 +146,25 @@ LiveVariablesInfo calcLiveIntervals(MIRFunction& mfunc, CodeGenContext& ctx) {
     for (auto& block : mfunc.blocks()) {
         auto& blockInfo = info.block2Info[block.get()];
         std::unordered_map<RegNum, LiveSegment> curSegment;  // 当前块内的活跃寄存器集合
-        std::unordered_map<RegNum, std::pair<MIRInst*, std::vector<MIRRegisterFlag>>> lastUse;  // 当前块内寄存器最后一次被使用的指令
-
+        std::unordered_map<RegNum, std::pair<MIRInst*, std::vector<MIRRegisterFlag*>>> lastUse;  // 当前块内寄存器最后一次被使用的指令
         InstNum firstInstNum = 0, lastInstNum = 0;  // 存储当前块中第一条指令和最后一条指令的编号
 
         for (auto inst : block.get()->insts()) {
             auto& instInfo = ctx.instInfo.get_instinfo(inst);
-            auto instNum = info.inst2Num[inst];
+            const auto instNum = info.inst2Num[inst];
 
             // update firstInstNum and lastInstNum
             if (inst == block.get()->insts().front()) firstInstNum = instNum;
             lastInstNum = instNum;
 
+            /* OperandFlagUse */
             for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
-                auto flag = instInfo.operand_flag(idx);
+                const auto flag = instInfo.operand_flag(idx);
                 auto operand = inst->operand(idx);
-                if (not isOperandVReg(operand)) continue;
-                auto id = regNum(*operand);
+                if (!isOperandVReg(operand)) continue;
+                const auto id = regNum(*operand);
 
-                if (flag & OperandFlagUse) {  // used
+                if (flag & OperandFlagUse) {  // update the curSegment and lastUse
                     if (auto it = curSegment.find(id); it != curSegment.end()) {
                         it->second.end = instNum + 1;  // [begin, end)
                     } else {
@@ -174,40 +173,40 @@ LiveVariablesInfo calcLiveIntervals(MIRFunction& mfunc, CodeGenContext& ctx) {
 
                     if (auto it = lastUse.find(id); it != lastUse.end()) {
                         if (it->second.first == inst) {
-                            it->second.second.push_back(std::get<MIRRegister*>(operand->storage())->flag());
+                            it->second.second.push_back(std::get<MIRRegister*>(operand->storage())->flag_ptr());
                         } else {
-                            it->second = {inst, {std::get<MIRRegister*>(operand->storage())->flag()}};
+                            it->second = {inst, {std::get<MIRRegister*>(operand->storage())->flag_ptr()}};
                         }
                     } else {
-                        lastUse[id] = {inst, {std::get<MIRRegister*>(operand->storage())->flag()}};
+                        lastUse[id] = {inst, {std::get<MIRRegister*>(operand->storage())->flag_ptr()}};
                     }
                 }
             }
-
+            /* OperandFlagDef */
             for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
-                auto flag = instInfo.operand_flag(idx);
+                const auto flag = instInfo.operand_flag(idx);
                 auto operand = inst->operand(idx);
-                if (not isOperandVReg(operand)) continue;
-                auto id = regNum(*operand);
+                if (!isOperandVReg(operand)) continue;
+                const auto id = regNum(*operand);
 
                 if (flag & OperandFlagDef) {  // defined
-                    if (curSegment.count(id)) {  // the register is defined and used
+                    if (curSegment.count(id)) {  // the register is defined and used in thr block
                         auto& segment = curSegment[id];
 
-                        if (segment.end == instNum + 1) {  // defined and used in one instruction
+                        if (segment.end == instNum + 1) {  // the register is defined and used in one instruction --> dead
                             segment.end = instNum + 2;
-                        } else {  // defined and used in two or more instruction
+                        } else {  // the register is not defined and used in one instruction
                             info.reg2Interval[id].addSegment(segment);
                             segment = {instNum + 1, instNum + 2};
 
                             if (auto it = lastUse.find(id); it != lastUse.end()) {
-                                for (auto& flagRegflag : it->second.second) {
-                                    flagRegflag = RegisterFlagDead;  // 寄存器的最后一次使用
+                                for (auto flagRegflag : it->second.second) {
+                                    *flagRegflag = RegisterFlagDead;  // 寄存器的最后一次使用
                                 }
                                 lastUse.erase(it);
                             }
                         }
-                    } else {  // the register is only defined, not used
+                    } else {  // the register is only defined int the block, is used in other block
                         curSegment[id] = {instNum + 1, instNum + 2};
                     }
                 }
@@ -223,13 +222,13 @@ LiveVariablesInfo calcLiveIntervals(MIRFunction& mfunc, CodeGenContext& ctx) {
         
         for (auto& [id, flags] : lastUse) {
             if (blockInfo.outs.count(id)) continue;
-            for (auto& flagReg : flags.second) {
-                flagReg = RegisterFlagDead;  // 无需输入到下一个块 -> 寄存器的最后一次使用
+            for (auto flagReg : flags.second) {
+                *flagReg = RegisterFlagDead;  // 无需输入到下一个块 -> 寄存器的最后一次使用
             }
         }
 
         for (auto id : blockInfo.outs) {
-            if (blockInfo.ins.count(id) && not curSegment.count(id)) {
+            if (blockInfo.ins.count(id) && !curSegment.count(id)) {
                 info.reg2Interval[id].addSegment({firstInstNum, lastInstNum + 2});
             }
         }

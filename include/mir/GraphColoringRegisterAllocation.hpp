@@ -22,7 +22,7 @@ struct RegNumComparator final {
  * @note: 
  *      成员变量: 
  *          1. std::unordered_map<RegNum, std::unordered_set<RegNum>> _adj -- 干涉图 (存储每个节点的邻近节点)
- *          2. std::unordered_map<RegNum, uint32_t> _degree -- 存储每个节点的度数
+ *          2. std::unordered_map<RegNum, uint32_t> _degree -- 存储虚拟寄存器节点的度数
  *          3. Queue _queue -- 优先队列
  */
 class InterferenceGraph final {
@@ -35,21 +35,24 @@ public:  /* get function */
         assert(isVirtualReg(u));
         return _adj[u];
     }
+public:  // About Degree
+    void create(RegNum u) { if (!_degree.count(u)) _degree[u] = 0U; }
     [[nodiscard]] bool empty() const { return _degree.empty(); }
     [[nodiscard]] size_t size() const { return _degree.size(); }
 public:  /* util function */
-    void add_edge(RegNum lhs, RegNum rhs) {
+    void add_edge(RegNum lhs, RegNum rhs) {  /* 功能: 加边 */
         assert(lhs != rhs);
         assert((isVirtualReg(lhs) || isISAReg(lhs)) && (isVirtualReg(rhs) || isISAReg(rhs)));
         if (_adj[lhs].count(rhs)) return;
         _adj[lhs].insert(rhs); _adj[rhs].insert(lhs);
 
-        // note: 干涉图的节点可以为虚拟寄存器 OR 物理寄存器 --> 我们考虑对虚拟寄存器进行寄存器分配
+        /*
+         NOTE: 干涉图的节点可以为虚拟寄存器 OR 物理寄存器
+         但是我们仅仅只考虑对虚拟寄存器进行相关物理寄存器的指派和分配
+         故: 我们仅仅只计算虚拟寄存器节点的度数, 不考虑计算物理寄存器节点的度数
+         */
         if (isVirtualReg(lhs)) ++_degree[lhs];
         if (isVirtualReg(rhs)) ++_degree[rhs];
-    }
-    void touch(RegNum u) {
-        if (!_degree.count(u)) _degree[u] = 0U;
     }
     void prepare_for_assign(const std::unordered_map<RegNum, double>& weights, uint32_t k) {
         _queue = Queue{ RegNumComparator{ &weights } };
@@ -106,9 +109,7 @@ public:  /* util function */
     auto collect_nodes() const {
         std::vector<RegNum> vregs;
         vregs.reserve(_degree.size());
-        for (auto [reg, degree] : _degree) {
-            vregs.push_back(reg);
-        }
+        for (auto [reg, degree] : _degree) vregs.push_back(reg);
         return vregs;
     }
 public:  /* just for debug */
@@ -139,7 +140,7 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
     const auto canonicalizedType = ctx.registerInfo->getCanonicalizedRegisterTypeForClass(allocationClass);
     const auto& list = ctx.registerInfo->get_allocation_list(allocationClass);
     const std::unordered_set<uint32_t> allocableISARegs{ list.cbegin(), list.cend() };  // 可用来分配的物理寄存器
-    constexpr auto DebugRA = false;
+    constexpr auto DebugRA = true;
     if (DebugRA) {
         std::cerr << "allocate for class " << allocationClass << std::endl;
     }
@@ -158,7 +159,12 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
         }
     }
 
-    /* Process of Constant */
+    /*
+     Process of Constant
+     constants: uint32_t -> MIRInst*
+        - nullptr: 该虚拟寄存器已被多条指令使用            (删除)
+        - inst: 该虚拟寄存器仅仅被InstFlagLoadConstant使用 (存储)
+     */
     std::unordered_map<uint32_t, MIRInst*> constants;
     for (auto& block : mfunc.blocks()) {
         for (auto inst : block->insts()) {
@@ -291,7 +297,7 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
                         if (isOperandISAReg(op) && !ctx.registerInfo->is_zero_reg(op->reg())) {
                             underRenamedISAReg.erase(op->reg());
                         } else if (isOperandVReg(op)) {
-                            graph.touch(op->reg());
+                            graph.create(op->reg());
                             if (op->reg_flag() & RegisterFlagDead) liveVRegs.erase(op->reg());
                         }
                     }
@@ -329,7 +335,7 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
                             for (auto vreg : liveVRegs) graph.add_edge(vreg, op->reg());
                         } else if (isOperandVReg(op)) {
                             liveVRegs.insert(op->reg());
-                            graph.touch(op->reg());
+                            graph.create(op->reg());
                             for (auto isaReg : underRenamedISAReg) graph.add_edge(op->reg(), isaReg);
                             for (auto isaReg : lockedISAReg) graph.add_edge(op->reg(), isaReg);
                         }
@@ -469,7 +475,7 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
                             assert(isISAReg(reg));
                             constexpr double calleeSavedCost = 5.0;
 
-                            double maxFreq = 1.0;
+                            double maxFreq = -1.0;
                             constexpr InstNum infDist = 10;
                             InstNum minDist = infDist;
 

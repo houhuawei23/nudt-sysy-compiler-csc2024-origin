@@ -144,7 +144,6 @@ public:  // get function
             default: assert(false && "invalid alloca class");
         }
     }
-
     std::vector<uint32_t>& get_allocation_list(uint32_t classId) {
         if (classId == 0) {  // General Purpose Registers
             static std::vector<uint32_t> list{
@@ -186,19 +185,15 @@ public:  // get function
     OperandType getCanonicalizedRegisterTypeForClass(uint32_t classId) {
         return classId == 0 ? OperandType::Int32 : OperandType::Float32;
     }
-
     OperandType getCanonicalizedRegisterType(OperandType type) {
         switch (type) {
             case OperandType::Bool:
             case OperandType::Int8:
             case OperandType::Int16:
             case OperandType::Int32:
-            case OperandType::Int64:
-                return OperandType::Int64;
-            case OperandType::Float32:
-                return OperandType::Float32;
-            default:
-                assert(false && "valid operand type");
+            case OperandType::Int64: return OperandType::Int64;
+            case OperandType::Float32: return OperandType::Float32;
+            default: assert(false && "valid operand type");
         }
     }
     OperandType getCanonicalizedRegisterType(uint32_t reg) {
@@ -212,7 +207,6 @@ public:  // get function
     }
     MIROperand* get_return_address_register() { return RISCV::ra; }
     MIROperand* get_stack_pointer_register() { return RISCV::sp; }
-
 public:  // check function
     bool is_legal_isa_reg_operand(MIROperand& op) {
         std::cerr << "Not Impl is_legal_isa_reg_operand" << std::endl;
