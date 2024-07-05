@@ -49,7 +49,7 @@ namespace pass
             return;
         insts_visited.insert(instruction);
 
-        ir::BasicBlock *destBB = instruction->parent()->parent()->entry(); // 初始化放置块为entry块,整棵树的root
+        ir::BasicBlock *destBB = instruction->block()->parent()->entry(); // 初始化放置块为entry块,整棵树的root
         ir::BasicBlock *opBB;
 
         for (auto op : instruction->operands()) // 遍历使用这条指令的所有指令
@@ -58,7 +58,7 @@ namespace pass
             {
                 auto opInst = dyn_cast<ir::Instruction>(op->value());
                 scheduleEarly(opInst);
-                opBB = opInst->parent();
+                opBB = opInst->block();
                 if (opBB->domLevel > destBB->domLevel)
                 {
                     destBB = opBB;
@@ -67,7 +67,7 @@ namespace pass
         }
         if (!ispinned(instruction))
         {
-            instruction->parent()->delete_inst(instruction); // 将指令从bb中移除
+            instruction->block()->delete_inst(instruction); // 将指令从bb中移除
             destBB->emplace_back_inst(instruction);          // 将指令移入destBB
             Earlymap[instruction] = destBB;
         }
@@ -92,11 +92,11 @@ namespace pass
                     size_t phisize = phiInst->getsize();
                     for (size_t i = 0; i < phisize; i++)
                     {
-                        if (ir::Instruction *v = dyn_cast<ir::Instruction>(phiInst->getval(i)))
+                        if (ir::Instruction *v = dyn_cast<ir::Instruction>(phiInst->getValue(i)))
                         {
                             if (v == instruction)
                             {
-                                destBB = LCA(destBB, dyn_cast<ir::BasicBlock>(phiInst->getbb(i)));
+                                destBB = LCA(destBB, dyn_cast<ir::BasicBlock>(phiInst->getBlock(i)));
                                 break;
                             }
                         }
@@ -104,7 +104,7 @@ namespace pass
                 }
                 else
                 {
-                    destBB = LCA(destBB, useInst->parent());
+                    destBB = LCA(destBB, useInst->block());
                 }
             }
         }
@@ -127,7 +127,7 @@ namespace pass
                 }
                 curBB = curBB->idom;
             }
-            instruction->parent()->delete_inst(instruction); // 将指令从bb中移除
+            instruction->block()->delete_inst(instruction); // 将指令从bb中移除
             bestBB->emplace_back_inst(instruction);          // 将指令移入bestBB
         }
     }

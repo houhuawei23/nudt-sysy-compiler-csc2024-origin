@@ -24,7 +24,7 @@ namespace pass{
     }
 
     bool DCE::isAlive(ir::Instruction* inst){//只有store,terminator和call inst是活的
-        return inst->is_noname() or dyn_cast<ir::CallInst>(inst);
+        return inst->isNoName() or dyn_cast<ir::CallInst>(inst);
     }
 
     void DCE::addAlive(ir::Instruction*inst){//递归的将活代码和他的依赖加入到alive列表当中

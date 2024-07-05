@@ -76,10 +76,10 @@ namespace pass{
                     auto bbUser=puse->user();
                     auto phiInstUser=dyn_cast<ir::PhiInst>(bbUser);
                     if(phiInstUser){
-                        phiInstUser->delbb(bb);
+                        phiInstUser->delBlock(bb);
                     }
                 }
-                func->force_delete_block(bb);
+                func->forceDelBlock(bb);
             }
         }
         return ischanged;
@@ -109,7 +109,7 @@ namespace pass{
                 bb->delete_inst(bb->insts().back());
                 //将下一个bb的所有语句复制
                 for(auto inst:mergeBlock->insts()){
-                    inst->set_parent(bb);
+                    inst->setBlock(bb);
                     bb->emplace_inst(bb->insts().end(),inst);
                 }
                 //将下一个bb的所有后继与当前进行连接
@@ -120,7 +120,7 @@ namespace pass{
                     ir::BasicBlock::block_link(bb,mergeBBNext);
                 }
                 //将所有的对mergeBB的使用进行替换
-                mergeBlock->replace_all_use_with(bb);
+                mergeBlock->replaceAllUseWith(bb);
                 //将merge块删掉
                 //因为这些语句没有消失,不能使用一般的delete接口直接删除use
                 mergeBlock->insts().clear();
@@ -139,7 +139,7 @@ namespace pass{
                 instIter++;
                 auto phiInst=dyn_cast<ir::PhiInst>(inst);
                 if(phiInst->getsize()==1){
-                    phiInst->replace_all_use_with(phiInst->getval(0));
+                    phiInst->replaceAllUseWith(phiInst->getValue(0));
                     bb->delete_inst(phiInst);
                     ischanged=true;
                 }
@@ -191,7 +191,7 @@ namespace pass{
     //                     //当前Br的operand
     //                     //bb的uses
     //                     auto bbUserBrParent=bbUserBr->parent();
-    //                     bbUserBr->set_operand(bbuse->index(),bbDest);
+    //                     bbUserBr->setOperand(bbuse->index(),bbDest);
     //                     ir::BasicBlock::block_link(bbUserBrParent,bbDest);
     //                 }
     //                 else if(bbUserPhi){//phi,应当是在bbDest中
@@ -201,14 +201,14 @@ namespace pass{
     //                     for(auto bbPre:bb->pre_blocks()){
     //                         bbUserPhi->addIncoming(bbUserPhi->getvalfromBB(bb),bbPre);
     //                     }
-    //                     bbUserPhi->delbb(bb);
+    //                     bbUserPhi->delBlock(bb);
     //                 }
     //                 else{
     //                     assert(false);
     //                 }
     //             }
     //             bb->uses().clear();
-    //             func->delete_block(bb);
+    //             func->delBlock(bb);
     //             //最后还要记得把当前bb这个块删除
     //         }
     //         else{
@@ -265,7 +265,7 @@ namespace pass{
                     //将对应phi中的有关destBB的到达定值删除
                     for(auto inst:destBB->phi_insts()){
                         auto phiInst=dyn_cast<ir::PhiInst>(inst);
-                        phiInst->delbb(curBB);
+                        phiInst->delBlock(curBB);
                     }
                     ir::BasicBlock::delete_block_link(curBB,destBB);
                     //删除curBB和dest之间的链接
@@ -279,8 +279,8 @@ namespace pass{
                     }
                     //上面的测试本身是没有必要的,这是为了提前在测试的时候发现错误!
                     //要达到这个效果直接replace_all_use_with就可以了
-                    curBB->replace_all_use_with(destBB);
-                    func->delete_block(curBB);
+                    curBB->replaceAllUseWith(destBB);
+                    func->delBlock(curBB);
                 }
                 else{//有共同的前驱,而且可以合并的话
                     auto destBBPreBlocks=destBB->pre_blocks();
@@ -335,10 +335,10 @@ namespace pass{
                     //将phi中的关于curBB的定值删除
                     for(auto inst:destBB->phi_insts()){
                         auto phiinst=dyn_cast<ir::PhiInst>(inst);
-                        phiinst->delval(curBB);
+                        phiinst->delValue(curBB);
                     }
-                    curBB->replace_all_use_with(destBB);
-                    func->delete_block(curBB);
+                    curBB->replaceAllUseWith(destBB);
+                    func->delBlock(curBB);
                 }
             }
         }

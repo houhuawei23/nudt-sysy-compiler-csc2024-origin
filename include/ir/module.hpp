@@ -19,34 +19,30 @@ namespace ir {
  *
  */
 class Module {
-   private:
-    std::vector<ir::Function*> _funcs;
-    str_fun_map _func_table;
+ private:
+  std::vector<Function*> mFunctions;
+  std::unordered_map<std::string, Function*> mFuncTable;
 
-    std::vector<ir::Value*> _gvalues;
-    str_value_map _gvalue_table;
+  std::vector<GlobalVariable*> mGlobalVariables;
+  std::unordered_map<std::string, GlobalVariable*> mGlobalVariableTable;
 
-   public:
-    Module() = default;
-    ~Module() = default;
+ public:
+  Module() = default;
 
-    //! get
-    auto& funcs() const { return _funcs; }
-    auto& gvalues() const { return _gvalues; }
+  //! get
+  auto& funcs() const { return mFunctions; }
+  auto& globalVars() const { return mGlobalVariables; }
 
-    Function* lookup_func(const_str_ref name);
+  Function* mainFunction() const { return findFunction("main"); }
 
-    Function* add_func(Type* type, const_str_ref name);
+  Function* findFunction(const_str_ref name) const;
+  Function* addFunction(Type* type, const_str_ref name);
+  void delFunction(ir::Function* func);
 
-    Function* main_func() { return lookup_func("main"); }
+  void addGlobalVar(const_str_ref name, GlobalVariable* gv);
 
-    void add_gvar(const_str_ref name, Value* gv);
-
-    void delete_func(ir::Function* func);
-
-    // readable ir print
-    void print(std::ostream& os);
-
-    void rename();
+  void rename();
+  // readable ir print
+  void print(std::ostream& os);
 };
 }  // namespace ir

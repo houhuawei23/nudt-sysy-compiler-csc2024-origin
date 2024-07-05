@@ -9,8 +9,8 @@ namespace pass {
 class Reg2Mem : public FunctionPass {
    private:
     std::vector<ir::PhiInst*> allphi;
-    std::vector<int> parent;
-    std::vector<int> rank;
+    std::vector<size_t> parent;
+    std::vector<size_t> rank;
     std::map<ir::PhiInst*, ir::AllocaInst*> phiweb;
     std::vector<ir::AllocaInst*> allocasToinsert;
     std::map<ir::PhiInst*, ir::LoadInst*> philoadmap;
@@ -59,7 +59,7 @@ class Reg2Mem : public FunctionPass {
         }
         for (ir::PhiInst* phiinst : allphi) {
             for (size_t i = 0; i < phiinst->getsize(); i++) {
-                ir::Value* val = phiinst->getval(i);
+                ir::Value* val = phiinst->getValue(i);
                 if (ir::PhiInst* phival = dyn_cast<ir::PhiInst>(val)) {
                     int id0 = getindex(phiinst);
                     int id1 = getindex(phival);

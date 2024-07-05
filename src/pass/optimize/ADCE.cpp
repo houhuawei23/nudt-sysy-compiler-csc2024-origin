@@ -12,7 +12,7 @@ namespace pass{
             liveBB[bb]=false;
             for(auto inst:bb->insts()){
                 liveInst[inst]=false;
-                if(inst->is_aggressive_alive()){
+                if(inst->isAggressiveAlive()){
                     workList.push(inst);
                 }
             }
@@ -20,7 +20,7 @@ namespace pass{
         //工作表算法
         while(not workList.empty()){
             auto curInst=workList.front();
-            auto curBB=curInst->parent();
+            auto curBB=curInst->block();
             workList.pop();
             if(liveInst[curInst])continue;
             //设置当前的inst为活, 以及其块
@@ -30,7 +30,7 @@ namespace pass{
             //如果是phi,就要将其所有前驱BB的terminal置为活
             if(curInstPhi){
                 for(int idx=0;idx<curInstPhi->getsize();idx++){
-                    auto phibb=curInstPhi->getbb(idx);
+                    auto phibb=curInstPhi->getBlock(idx);
                     auto phibbTerminator=phibb->terminator();
                     if(phibbTerminator and not liveInst[phibbTerminator]){
                         workList.push(phibbTerminator);

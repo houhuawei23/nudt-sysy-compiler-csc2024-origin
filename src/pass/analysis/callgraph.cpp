@@ -28,7 +28,7 @@ namespace pass{
         }
         assert(funcStack.empty());
         assert(funcSet.empty());
-        dfsFuncCallGraph(ctx->main_func());
+        dfsFuncCallGraph(ctx->mainFunction());
 
 
     }

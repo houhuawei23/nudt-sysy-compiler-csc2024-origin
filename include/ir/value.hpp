@@ -38,7 +38,7 @@ using const_value_ptr_vector = const std::vector<Value*>;
 using str_value_map = std::map<std::string, Value*>;
 
 //* Use
-// Value _uses
+// Value mUses
 using use_ptr_list = std::list<Use*>;
 using use_ptr_vector = std::vector<Use*>;
 
@@ -66,220 +66,208 @@ using str_fun_map = std::map<std::string, Function*>;
 
 /**
  * @brief 表征操作数本身的信息, 连接 value 和 user
- * index in the _operands, _user, _value
+ * index in the mOperands, mUser, mValue
  *
  */
 class Use {
-    // friend class Value;
-    // friend class
-   protected:
-    size_t _index;
-    User* _user;
-    Value* _value;
+ protected:
+  size_t mIndex;
+  User* mUser;
+  Value* mValue;
 
-   public:
-    Use() = default;
-    Use(size_t index, User* user, Value* value)
-        : _index(index), _user(user), _value(value){};
+ public:
+  Use(size_t index, User* user, Value* value)
+      : mIndex(index), mUser(user), mValue(value){};
 
-    // get
-    size_t index() const;
-    User* user() const;
-    Value* value() const;
-    // set
-    void set_index(size_t index);
-    void set_value(Value* value);
-    void set_user(User* user);
+  // get
+  size_t index() const;
+  User* user() const;
+  Value* value() const;
+  // set
+  void set_index(size_t index);
+  void set_value(Value* value);
+  void set_user(User* user);
 };
 
 /**
  * @brief Base Class for all classes having 'value' to be used.?
  * @attention
  * - Value 是除了 Type， Module 之外几乎所有数据结构的基类。
- * - Value 表示一个“值”，它有名字 _name，有类型 _type，可以被使用 _uses。
+ * - Value 表示一个“值”，它有名字 _name，有类型 _type，可以被使用 mUses。
  * - 派生类继承 Value，添加自己所需的 数据成员 和 方法。
  * - Value 的派生类可以重载 print() 方法，以打印出可读的 IR。
  */
 enum CmpOp {
-    EQ,  // ==
-    NE,  // !=
-    GT,  // >
-    GE,  // >=
-    LT,  // <
-    LE,  // <=
+  EQ,  // ==
+  NE,  // !=
+  GT,  // >
+  GE,  // >=
+  LT,  // <
+  LE,  // <=
 };
 enum BinaryOp {
-    ADD, /* + */
-    SUB, /* - */
-    MUL, /* * */
-    DIV, /* / */
-    REM  /* %*/
+  ADD, /* + */
+  SUB, /* - */
+  MUL, /* * */
+  DIV, /* / */
+  REM  /* %*/
 };
 enum UnaryOp {
-    NEG,
+  NEG,
 };
 
 enum ValueId {
-    vValue,
-    vFUNCTION,
-    vCONSTANT,
-    vARGUMENT,
-    vBASIC_BLOCK,
-    vGLOBAL_VAR,
+  vValue,
+  vFUNCTION,
+  vCONSTANT,
+  vARGUMENT,
+  vBASIC_BLOCK,
+  vGLOBAL_VAR,
 
-    vBITCAST,
-    vMEMSET,
+  vBITCAST,
+  vMEMSET,
 
-    // instructions class id
-    vINSTRUCTION,
-    // vMEM_BEGIN,
-    vALLOCA,
-    vLOAD,
-    vSTORE,
-    vGETELEMENTPTR,  // GetElementPtr Instruction
-    // vMEM_END,
+  // instructions class id
+  vINSTRUCTION,
+  // vMEM_BEGIN,
+  vALLOCA,
+  vLOAD,
+  vSTORE,
+  vGETELEMENTPTR,  // GetElementPtr Instruction
+  // vMEM_END,
 
-    // vTERMINATOR_BEGIN
-    vRETURN,
-    vBR,
-    vCALL,
-    // vTERMINATOR_END
+  // vTERMINATOR_BEGIN
+  vRETURN,
+  vBR,
+  vCALL,
+  // vTERMINATOR_END
 
-    // icmp
-    vICMP_BEGIN,
-    vIEQ,
-    vINE,
-    vISGT,
-    vISGE,
-    vISLT,
-    vISLE,
-    vICMP_END,
-    // fcmp
-    vFCMP_BEGIN,
-    vFOEQ,
-    vFONE,
-    vFOGT,
-    vFOGE,
-    vFOLT,
-    vFOLE,
-    vFCMP_END,
-    // Unary Instruction
-    vUNARY_BEGIN,
-    vFNEG,
-    // Conversion Insts
-    vTRUNC,
-    vZEXT,
-    vSEXT,
-    vFPTRUNC,
-    vFPTOSI,
-    vSITOFP,
-    vUNARY_END,
-    // Binary Instruction
-    vBINARY_BEGIN,
-    vADD,
-    vFADD,
-    vSUB,
-    vFSUB,
+  // icmp
+  vICMP_BEGIN,
+  vIEQ,
+  vINE,
+  vISGT,
+  vISGE,
+  vISLT,
+  vISLE,
+  vICMP_END,
+  // fcmp
+  vFCMP_BEGIN,
+  vFOEQ,
+  vFONE,
+  vFOGT,
+  vFOGE,
+  vFOLT,
+  vFOLE,
+  vFCMP_END,
+  // Unary Instruction
+  vUNARY_BEGIN,
+  vFNEG,
+  // Conversion Insts
+  vTRUNC,
+  vZEXT,
+  vSEXT,
+  vFPTRUNC,
+  vFPTOSI,
+  vSITOFP,
+  vUNARY_END,
+  // Binary Instruction
+  vBINARY_BEGIN,
+  vADD,
+  vFADD,
+  vSUB,
+  vFSUB,
 
-    vMUL,
-    vFMUL,
+  vMUL,
+  vFMUL,
 
-    vUDIV,
-    vSDIV,
-    vFDIV,
+  vUDIV,
+  vSDIV,
+  vFDIV,
 
-    vUREM,
-    vSREM,
-    vFREM,
-    vBINARY_END,
-    // Phi Instruction
-    vPHI_BEGIN,
-    vPHI,
-    VPHI_END,
-    vInvalid,
+  vUREM,
+  vSREM,
+  vFREM,
+  vBINARY_END,
+  // Phi Instruction
+  vPHI_BEGIN,
+  vPHI,
+  VPHI_END,
+  vInvalid,
 };
 class Value {
-   protected:
-    Type* _type;    // type of the value
-    ValueId _scid;  // subclass id of Value
-    std::string _name;
-    use_ptr_list _uses; /* uses list, this value is used by users throw use */
+ protected:
+  Type* mType;       // type of the value
+  ValueId mValueId;  // subclass id of Value
+  std::string mName;
+  /* uses list, this value is used by users throw use */
+  use_ptr_list mUses;
 
-    std::string _comment;
+  std::string mComment;
 
-   public:
-    Value(Type* type, ValueId scid = vValue, const_str_ref name = "")
-        : _type(type), _scid(scid), _name(name), _uses() {}
-    virtual ~Value() = default;
-    // Value is all base, return true
-    static bool classof(const Value* v) { return true; }
+ public:
+  Value(Type* type, ValueId scid = vValue, const_str_ref name = "")
+      : mType(type), mValueId(scid), mName(name), mUses() {}
+  virtual ~Value() = default;
+  // Value is all base, return true
+  static bool classof(const Value* v) { return true; }
 
-    // get
-    Type* type() const { return _type; }
-    virtual std::string name() const { return _name; }
-    void set_name(const_str_ref name) { _name = name; }
+  // get
+  Type* type() const { return mType; }
+  virtual std::string name() const { return mName; }
+  void set_name(const_str_ref name) { mName = name; }
 
-    /*! manage use-def relation !*/
-    use_ptr_list& uses() { return _uses; }
+  /*! manage use-def relation !*/
+  auto& uses() { return mUses; }
 
-    /* replace this value with another value, for all user use this value */
-    void replace_all_use_with(Value* _value);
+  /* replace this value with another value,
+     for all user use this value */
+  void replaceAllUseWith(Value* mValue);
 
-    // manage
-    virtual std::string comment() const { return _comment; }
+  // manage
+  virtual std::string comment() const { return mComment; }
 
-    void set_comment(const_str_ref comment) {
-        if (!_comment.empty()) {
-            std::cerr << "re-set basicblock comment!" << std::endl;
-        }
-        _comment = comment;
-    }
+  void setComment(const_str_ref comment);
 
-    void append_comment(const_str_ref comment) {
-        if (_comment.empty()) {
-            _comment = comment;
-        } else {
-            _comment = _comment + ", " + comment;
-        }
-    }
+  void addComment(const_str_ref comment);
 
-   public:  // check
-    bool is_i1() const { return _type->is_i1(); }
-    bool is_i32() const { return _type->is_i32(); }
-    bool is_float32() const { return _type->is_float32(); }
-    bool is_double() const { return _type->is_double(); }
-    bool is_float() const { return _type->is_float(); }
-    bool is_undef() const { return _type->is_undef(); }
-    bool is_pointer() const { return _type->is_pointer(); }
-    bool is_void() const { return _type->is_void(); }
+ public:  // check
+  bool isBool() const { return mType->isBool(); }
+  bool isInt32() const { return mType->isInt32(); }
+  bool isFloat32() const { return mType->isFloat32(); }
+  bool isDouble() const { return mType->isDouble(); }
+  bool isFloatPoint() const { return mType->isFloatPoint(); }
+  bool isUnder() const { return mType->isUnder(); }
+  bool isPointer() const { return mType->isPointer(); }
+  bool isVoid() const { return mType->isVoid(); }
 
-   public:
-    ValueId scid() const { return _scid; }
-    virtual void print(std::ostream& os) const = 0;
+ public:
+  ValueId valueId() const { return mValueId; }
+  virtual void print(std::ostream& os) const = 0;
 
-    template <typename T>
-    T* as() {
-        static_assert(std::is_base_of_v<Value, T>);
-        auto ptr = dynamic_cast<T*>(this);
-        assert(ptr);
-        return ptr;
-    }
-    template <typename T>
-    bool isa() const {
-        static_assert(std::is_base_of_v<Value, T>);
-        return dynamic_cast<const T*>(this);
-    }
+  template <typename T>
+  T* as() {
+    static_assert(std::is_base_of_v<Value, T>);
+    auto ptr = dynamic_cast<T*>(this);
+    assert(ptr);
+    return ptr;
+  }
+  template <typename T>
+  bool isa() const {
+    static_assert(std::is_base_of_v<Value, T>);
+    return dynamic_cast<const T*>(this);
+  }
 
-    template <typename T>
-    T* dynCast() {
-        static_assert(std::is_base_of_v<Value, T>);
-        return dynamic_cast<T*>(this);
-    }
+  template <typename T>
+  T* dynCast() {
+    static_assert(std::is_base_of_v<Value, T>);
+    return dynamic_cast<T*>(this);
+  }
 };
 
 /**
  * @brief 使用“值”，既要使用值，又有返回值，所以继承自 Value
- * @attention _operands
+ * @attention mOperands
  * 派生类： Instruction
  *
  * User is the abstract base type of `Value` types which use other `Value` as
@@ -288,67 +276,40 @@ class Value {
  *
  */
 class User : public Value {
-    // _type, _name, _uses
-   protected:
-    use_ptr_vector _operands;  // 操作数
+  // mType, mName, mUses
+ protected:
+  use_ptr_vector mOperands;  // 操作数
 
-   public:
-    User(Type* type, ValueId scid, const_str_ref name = "")
-        : Value(type, scid, name) {}
+ public:
+  User(Type* type, ValueId scid, const_str_ref name = "")
+      : Value(type, scid, name) {}
 
-   public:
-    // get function
-    use_ptr_vector& operands();          //! return uses vector
-    Value* operand(size_t index) const;  // return value, not use relation
-    int operands_cnt() const { return _operands.size(); }
+ public:
+  // get function
 
-    const auto& operands() const { return _operands; }
-   public:
-    // manage function
-    void add_operand(Value* value);
-    void set_operand(size_t index, Value* value);
+  auto& operands() { return mOperands; }  //! return uses vector
+  const auto& operands() const { return mOperands; }
+  Value* operand(size_t index) const;  // return value, not use relation
 
-    template <typename Container>
-    void add_operands(const Container& operands) {
-        for (auto value : operands) {
-            add_operand(value);
-        }
+  // manage function
+  void addOperand(Value* value);
+  void setOperand(size_t index, Value* value);
+
+  template <typename Container>
+  void addOperands(const Container& operands) {
+    for (auto value : operands) {
+      addOperand(value);
     }
-    /* del use relation of all operand values,
-    ** may do this before delete this user */
-    void unuse_allvalue() {
-        for (auto& operand : _operands) {
-            operand->value()->uses().remove(operand);
-        }
-    }
+  }
+  /* del use relation of all operand values,
+  ** may do this before delete this user */
+  void unuse_allvalue();
 
-    /* delete an operand of a value */
-    void delete_operands(int index) {
-        _operands[index]->value()->uses().remove(_operands[index]);
-        _operands.erase(_operands.begin() + index);
-        for (int idx = index + 1; idx < _operands.size(); idx++)
-            _operands[idx]->set_index(idx);
-        refresh_operand_index();
-    }
+  /* delete an operand of a value */
+  void delete_operands(int index);
 
-    void refresh_operand_index() {
-        int cnt = 0;
-        for (auto op : _operands) {
-            op->set_index(cnt);
-            cnt++;
-        }
-    }
-    virtual void print(std::ostream& os) const = 0;
+  void refresh_operand_index();
+  virtual void print(std::ostream& os) const = 0;
 };
 
-/*
-user use value
-只需要 调用 user.add_operand(value),
-会把 use 加入 user._operands 和 value._uses
-user.add_operand(value){
-    use = new Use(...);
-    user._operands.emplace_back(use);
-    value.add_use(user)
-}
-*/
 }  // namespace ir

@@ -24,28 +24,28 @@ void Mem2Reg::allocaAnalysis(ir::AllocaInst* alloca) {
     for (auto use : alloca->uses()) {
         ir::Instruction* User = dyn_cast<ir::Instruction>(use->user());
         if (auto store = dynamic_cast<ir::StoreInst*>(User)) {
-            DefsBlock[alloca].insert(store->parent());
-            // DefsBlockvector[alloca].push_back(store->parent());
+            DefsBlock[alloca].insert(store->block());
+            // DefsBlockvector[alloca].push_back(store->block());
             // OnlyStore = store;
         }
 
         else if (auto load = dynamic_cast<ir::StoreInst*>(User)) {
-            UsesBlock[alloca].insert(load->parent());
-            // UsesBlockvector[alloca].push_back(load->parent());
+            UsesBlock[alloca].insert(load->block());
+            // UsesBlockvector[alloca].push_back(load->block());
         }
 
         // if (OnlyUsedInOneBlock)
         // {
         //     if (!OnlyBlock)
-        //         OnlyBlock = User->parent();
-        //     else if (OnlyBlock != User->parent())
+        //         OnlyBlock = User->block();
+        //     else if (OnlyBlock != User->block())
         //         OnlyUsedInOneBlock = false;
         // }
     }
 }
 // 判断变量能否被mem2reg，主要是判断类型是否符合
 bool Mem2Reg::is_promoted(ir::AllocaInst* alloca) {
-    auto allocapt = dyn_cast<ir::PointerType>(alloca->type())->base_type();
+    auto allocapt = dyn_cast<ir::PointerType>(alloca->type())->baseType();
     for (const auto& use : alloca->uses()) {
         if (auto load = dynamic_cast<ir::LoadInst*>(use->user())) {
             if (load->type() != allocapt) {
@@ -131,7 +131,7 @@ bool Mem2Reg::is_promoted(ir::AllocaInst* alloca) {
 // {
 //     bool not_globalstore;
 //     int StoreIndex;
-//     ir::BasicBlock *storeBB = OnlyStore->parent();
+//     ir::BasicBlock *storeBB = OnlyStore->block();
 //     ir::LoadInst *LD;
 //     UsesBlock[alloca].clear();
 //     // UsesBlockvector[alloca].clear();
@@ -150,7 +150,7 @@ bool Mem2Reg::is_promoted(ir::AllocaInst* alloca) {
 //         ir::LoadInst *load = dyn_cast<ir::LoadInst>(inst);
 //         if (not_globalstore)
 //         {
-//             if (load->parent() == storeBB)
+//             if (load->block() == storeBB)
 //             {
 //                 if (StoreIndex == -1)
 //                 {
@@ -163,24 +163,24 @@ bool Mem2Reg::is_promoted(ir::AllocaInst* alloca) {
 //                     continue;
 //                 }
 //             }
-//             else if (!storeBB->dominate(load->parent())) //
+//             else if (!storeBB->dominate(load->block())) //
 //             如果storeBB並未支配load則不能进行替换
 //             {
-//                 UsesBlock[alloca].insert(load->parent());
-//                 // UsesBlockvector[alloca].push_back(load->parent());
+//                 UsesBlock[alloca].insert(load->block());
+//                 // UsesBlockvector[alloca].push_back(load->block());
 //                 continue;
 //             }
 
 //         }
 //         ir::Value *ReplVal = OnlyStore->value();
-//         load->replace_all_use_with(ReplVal);
-//         load->parent()->delete_inst(load);
+//         load->replaceAllUseWith(ReplVal);
+//         load->block()->delete_inst(load);
 //     }
 
 //     if (!UsesBlock[alloca].empty())
 //         return false;
 //     storeBB->delete_inst(OnlyStore);
-//     alloca->parent()->delete_inst(alloca);
+//     alloca->block()->delete_inst(alloca);
 //     return true;
 // }
 
@@ -208,7 +208,7 @@ void Mem2Reg::insertphi() {
             for (ir::BasicBlock* Y : x->domFrontier) {
                 if (Phiset.find(Y) == Phiset.end()) {
                     auto allocabaseType =
-                        dyn_cast<ir::PointerType>(alloca->type())->base_type();
+                        dyn_cast<ir::PointerType>(alloca->type())->baseType();
                     phi = new ir::PhiInst(Y, allocabaseType);
                     Y->emplace_first_inst(phi);
                     Phiset.insert(Y);
@@ -264,7 +264,7 @@ void Mem2Reg::rename(ir::Function* F) {
                     {
                         Incommings[AI] = ir::Constant::gen_undefine();
                     }
-                    LD->replace_all_use_with(Incommings[AI]);
+                    LD->replaceAllUseWith(Incommings[AI]);
                     instRemovelist.push_back(inst);
                 }
             }
@@ -303,13 +303,13 @@ void Mem2Reg::rename(ir::Function* F) {
     }
     while (!instRemovelist.empty()) {
         Inst = instRemovelist.back();
-        Inst->parent()->delete_inst(Inst);
+        Inst->block()->delete_inst(Inst);
         instRemovelist.pop_back();
     }
     for (auto& item : PhiMap)
         for (auto& pa : item.second) {
             if (pa.first->uses().empty())
-                pa.first->parent()->delete_inst(pa.first);
+                pa.first->block()->delete_inst(pa.first);
         }
 }
 void Mem2Reg::promotememToreg(ir::Function* F) {
@@ -318,7 +318,7 @@ void Mem2Reg::promotememToreg(ir::Function* F) {
         ir::AllocaInst* ai = Allocas[AllocaNum];
         if (ai->uses().empty())  // 没有use的变量
         {
-            ai->parent()->delete_inst(ai);
+            ai->block()->delete_inst(ai);
             RemoveFromAllocasList(AllocaNum);
             continue;
         }
@@ -359,11 +359,11 @@ bool Mem2Reg::promotemem2reg(ir::Function* F) {
                 // 这里不是ai->type()->is_xx(),
                 // 而应该是其指针原来的类型->is_xx()
                 auto aitype = ai->type();
-                if (aitype and aitype->is_pointer()) {
+                if (aitype and aitype->isPointer()) {
                     auto pttype = dyn_cast<ir::PointerType>(aitype);
-                    auto aibasetype = pttype->base_type();
-                    if (aibasetype->is_float32() or aibasetype->is_i32() or
-                        aibasetype->is_i1()) {
+                    auto aibasetype = pttype->baseType();
+                    if (aibasetype->isFloat32() or aibasetype->isInt32() or
+                        aibasetype->isBool()) {
                         if (is_promoted(ai))
                             Allocas.push_back(ai);
                     }

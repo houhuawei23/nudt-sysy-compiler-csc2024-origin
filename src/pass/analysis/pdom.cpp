@@ -31,7 +31,7 @@ namespace pass
             auto bb=*bbiter;
             if(bb->next_blocks().empty() and bb!=func->exit()){
                 bbiter++;
-                func->force_delete_block(bb);
+                func->forceDelBlock(bb);
             }
             else{
                 bbiter++;

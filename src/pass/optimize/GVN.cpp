@@ -58,15 +58,15 @@ namespace pass
 
     ir::Value *GVN::getValueNumber(ir::BinaryInst *inst)
     {
-        auto lhs = checkHashtable(inst->get_lvalue());
-        auto rhs = checkHashtable(inst->get_rvalue());
+        auto lhs = checkHashtable(inst->lValue());
+        auto rhs = checkHashtable(inst->rValue());
         for (auto [Key, Value] : _Hashtable)
         {
             if (auto binary = dynamic_cast<ir::BinaryInst *>(Key))
             {
-                auto binlhs = checkHashtable(binary->get_lvalue());
-                auto binrhs = checkHashtable(binary->get_rvalue());
-                if (binary->scid() == inst->scid() && ((lhs == binlhs && rhs == binrhs) || (binary->iscommutative() && lhs == binrhs && rhs == binlhs)))
+                auto binlhs = checkHashtable(binary->lValue());
+                auto binrhs = checkHashtable(binary->rValue());
+                if (binary->valueId() == inst->valueId() && ((lhs == binlhs && rhs == binrhs) || (binary->isCommutative() && lhs == binrhs && rhs == binlhs)))
                 {
                     return Value;
                 }
@@ -77,14 +77,14 @@ namespace pass
 
     ir::Value *GVN::getValueNumber(ir::UnaryInst *inst)
     {
-        auto val = checkHashtable(inst->get_value());
+        auto val = checkHashtable(inst->value());
         for (auto [Key, Value] : _Hashtable)
         {
             if (auto unary = dynamic_cast<ir::UnaryInst *>(Key))
             {
-                auto unval = checkHashtable(unary->get_value());
+                auto unval = checkHashtable(unary->value());
 
-                if (unary->scid() == inst->scid() && unval == val) //????
+                if (unary->valueId() == inst->valueId() && unval == val) //????
                 {
                     return Value;
                 }
@@ -95,14 +95,14 @@ namespace pass
 
     ir::Value *GVN::getValueNumber(ir::GetElementPtrInst *inst)
     {
-        auto arval = checkHashtable(inst->get_value());
-        auto aridx = checkHashtable(inst->get_index());
+        auto arval = checkHashtable(inst->value());
+        auto aridx = checkHashtable(inst->index());
         for (auto [Key, Value] : _Hashtable)
         {
             if (auto getelementptr = dynamic_cast<ir::GetElementPtrInst *>(Key))
             {
-                auto getval = checkHashtable(getelementptr->get_value());
-                auto getidx = checkHashtable(getelementptr->get_index());
+                auto getval = checkHashtable(getelementptr->value());
+                auto getidx = checkHashtable(getelementptr->index());
 
                 if (arval == getval && aridx == getidx)
                 {
@@ -123,8 +123,8 @@ namespace pass
     //                 bool same = (phi->getsize() == inst->getsize());
     //                 for (size_t i = 0; i < phi->getsize(); i++)
     //                 {
-    //                     auto v1 = phi->getval(i);
-    //                     auto v2 = inst->getval(i);
+    //                     auto v1 = phi->getValue(i);
+    //                     auto v2 = inst->getValue(i);
     //                     if (v1 != v2)
     //                     {
     //                         same = false;
@@ -203,15 +203,15 @@ namespace pass
         //     {
         //         if (auto constkey = dynamic_cast<ir::Constant *>(Key))
         //         {
-        //             if (constkey->is_i32() && (constkey->i32() == constant->i32()))
+        //             if (constkey->isInt32() && (constkey->i32() == constant->i32()))
         //             {
         //                 return Value;
         //             }
-        //             else if (constkey->is_float() && (constkey->f32() == constant->f32()))
+        //             else if (constkey->isFloatPoint() && (constkey->f32() == constant->f32()))
         //             {
         //                 return Value;
         //             }
-        //             else if (constkey->is_i1() && (constkey->i1() == constant->i1()))
+        //             else if (constkey->isBool() && (constkey->i1() == constant->i1()))
         //             {
         //                 return Value;
         //             }
@@ -233,20 +233,20 @@ namespace pass
     
     void GVN::visitinst(ir::Instruction *inst)
     {
-        ir::BasicBlock *bb = inst->parent();
+        ir::BasicBlock *bb = inst->block();
         // if (auto store = dyn_cast<ir::StoreInst>(inst))
         // {
-        //     if (!store->value()->type()->is_pointer())
+        //     if (!store->value()->type()->isPointer())
         //         _Hashtable[store] = store;
         //     return;
         // }
         // else if (auto phi = dyn_cast<ir::PhiInst>((inst)))
         // {
         //     bool same = true;
-        //     auto first = checkHashtable(phi->getval(0));
+        //     auto first = checkHashtable(phi->getValue(0));
         //     for (size_t i = 0; i < phi->getsize(); i++)
         //     {
-        //         if (checkHashtable(phi->getval(i)) != first)
+        //         if (checkHashtable(phi->getValue(i)) != first)
         //         {
         //             same = false;
         //             break;
@@ -254,7 +254,7 @@ namespace pass
         //     }
         //     if (same)
         //     {
-        //         inst->replace_all_use_with(first);
+        //         inst->replaceAllUseWith(first);
         //         NeedRemove.insert(inst);
         //     }
                 
@@ -273,16 +273,16 @@ namespace pass
         {
             // if (auto constvalue = dyn_cast<ir::Constant>(value))
             // {    
-            //     inst->replace_all_use_with(value);
+            //     inst->replaceAllUseWith(value);
             //     NeedRemove.insert(inst);
             // }
             // else 
             if (auto instvalue = dyn_cast<ir::Instruction>(value))
             {
-                ir::BasicBlock * vbb = instvalue->parent();
+                ir::BasicBlock * vbb = instvalue->block();
                 if (vbb->dominate(bb))
                 {
-                    inst->replace_all_use_with(instvalue);
+                    inst->replaceAllUseWith(instvalue);
                     NeedRemove.insert(inst);
                 }
             }
@@ -309,7 +309,7 @@ namespace pass
         
         for (auto inst : NeedRemove)
         {
-            ir::BasicBlock *BB = inst->parent();
+            ir::BasicBlock *BB = inst->block();
             BB->delete_inst(inst);
         }
     }

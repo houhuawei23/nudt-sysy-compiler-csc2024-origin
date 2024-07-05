@@ -8,7 +8,7 @@ namespace ir {
 
 /**
  * @brief
- * XXScope new_scope(_tables)
+ * XXScope new_scope(mTables)
  * .lookup(name)
  * .insert(name, value)
  */

@@ -98,7 +98,7 @@ class LoweringContext {
             assert(false);
         }
         auto const_val = dyn_cast<ir::Constant>(ir_val);
-        if (ir_val->type()->is_int()) {
+        if (ir_val->type()->isInt()) {
             auto imm = MIROperand::as_imm(const_val->i32(), OperandType::Int32);
             return imm;
         }
@@ -118,7 +118,7 @@ class LoweringContext {
 
    public:  // utils function
     static OperandType get_optype(ir::Type* type) {
-        if (type->is_int()) {
+        if (type->isInt()) {
             switch (type->btype()) {
                 case ir::INT1:
                     return OperandType::Bool;
@@ -127,7 +127,7 @@ class LoweringContext {
                 default:
                     assert(false && "unsupported int type");
             }
-        } else if (type->is_float()) {
+        } else if (type->isFloatPoint()) {
             switch (type->btype()) {
                 case ir::FLOAT:
                     return OperandType::Float32;

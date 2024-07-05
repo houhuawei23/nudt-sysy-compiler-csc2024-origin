@@ -53,27 +53,27 @@ void create_mir_module(ir::Module& ir_module,
     }
 
     //! 2. for all global variables, create MIRGlobalObject
-    for (auto ir_gval : ir_module.gvalues()) {
+    for (auto ir_gval : ir_module.globalVars()) {
         auto ir_gvar = dyn_cast<ir::GlobalVariable>(ir_gval);
-        auto type = dyn_cast<ir::PointerType>(ir_gvar->type())->base_type();
+        auto type = dyn_cast<ir::PointerType>(ir_gvar->type())->baseType();
         size_t size = type->size();  // data size, not pointer size
 
         // TODO: now only support scalar, need to support array
-        if (ir_gvar->is_init()) {  //! gvar init: .data
+        if (ir_gvar->isInit()) {  //! gvar init: .data
             MIRDataStorage::Storage data;
-            auto val = dyn_cast<ir::Constant>(ir_gvar->scalar_value());
-            if (type->is_int()) {
-                if (type->is_i32()) {
+            auto val = dyn_cast<ir::Constant>(ir_gvar->scalarValue());
+            if (type->isInt()) {
+                if (type->isInt32()) {
                     data.push_back(static_cast<uint32_t>(val->i32()));
                     // how to handle i1?
-                } else if (type->is_float32()) {
+                } else if (type->isFloat32()) {
                     /* float to uint32_t, type cast, doesnt change the memory */
                     fu32.f = val->f32();
                     data.push_back(fu32.u);
-                } else if (type->is_array()) {
+                } else if (type->isArray()) {
                     // TODO: handle array init
                 }
-            } else if (type->is_float()) {
+            } else if (type->isFloatPoint()) {
             }
             size_t align = 4;  // TODO: align
             auto mir_storage = std::make_unique<MIRDataStorage>(
@@ -193,11 +193,11 @@ MIRFunction* create_mir_function(ir::Function* ir_func,
     lowering_ctx.set_mir_block(block_map.at(ir_func->entry()));  // entry
     for (auto& ir_inst :
          ir_func->entry()->insts()) {  // note: all alloca in entry
-        if (ir_inst->scid() != ir::ValueId::vALLOCA)
+        if (ir_inst->valueId() != ir::ValueId::vALLOCA)
             continue;
 
         auto pointee_type =
-            dyn_cast<ir::PointerType>(ir_inst->type())->base_type();
+            dyn_cast<ir::PointerType>(ir_inst->type())->baseType();
         uint32_t align = 4;  // TODO: align, need bind to ir object
         auto storage = mir_func->add_stack_obj(
             codegen_ctx.next_id(),  // id
@@ -222,7 +222,7 @@ MIRFunction* create_mir_function(ir::Function* ir_func,
         auto mir_block = block_map[ir_block];
         lowering_ctx.set_mir_block(mir_block);
         for (auto ir_inst : ir_block->insts()) {
-            if (ir_inst->scid() == ir::ValueId::vALLOCA) continue;
+            if (ir_inst->valueId() == ir::ValueId::vALLOCA) continue;
             create_mir_inst(ir_inst, lowering_ctx);
         }
     }
@@ -245,7 +245,7 @@ void lower(ir::ReturnInst* ir_inst, LoweringContext& ctx);
 void lower(ir::BranchInst* ir_inst, LoweringContext& ctx);
 
 MIRInst* create_mir_inst(ir::Instruction* ir_inst, LoweringContext& ctx) {
-    switch (ir_inst->scid()) {
+    switch (ir_inst->valueId()) {
         case ir::ValueId::vFNEG:
         case ir::ValueId::vTRUNC:
         case ir::ValueId::vZEXT:
@@ -314,7 +314,7 @@ MIRInst* create_mir_inst(ir::Instruction* ir_inst, LoweringContext& ctx) {
 }
 void lower(ir::UnaryInst* ir_inst, LoweringContext& ctx) {
     // TODO: Need Test
-    auto gc_instid = [scid = ir_inst->scid()] {
+    auto gc_instid = [scid = ir_inst->valueId()] {
         switch (scid) {
             case ir::ValueId::vFNEG:
                 return InstFNeg;
@@ -354,7 +354,7 @@ void lower(ir::UnaryInst* ir_inst, LoweringContext& ctx) {
  */
 void lower(ir::ICmpInst* ir_inst, LoweringContext& ctx) {
     // TODO: Need Test
-    auto op = [scid = ir_inst->scid()] {
+    auto op = [scid = ir_inst->valueId()] {
         switch (scid) {
             case ir::ValueId::vIEQ:
                 return CompareOp::ICmpEqual;
@@ -394,7 +394,7 @@ void lower(ir::ICmpInst* ir_inst, LoweringContext& ctx) {
  */
 void lower(ir::FCmpInst* ir_inst, LoweringContext& ctx) {
     // TODO: Need Test
-    auto op = [scid = ir_inst->scid()] {
+    auto op = [scid = ir_inst->valueId()] {
         switch (scid) {
             case ir::ValueId::vFOEQ:
                 return CompareOp::FCmpOrderedEqual;
@@ -439,7 +439,7 @@ void lower(ir::GetElementPtrInst* ir_inst, LoweringContext& ctx) {
 //! BinaryInst
 void lower(ir::BinaryInst* ir_inst, LoweringContext& ctx) {
     // MIRGenericInst gc_instid;
-    auto gc_instid = [scid = ir_inst->scid()] {
+    auto gc_instid = [scid = ir_inst->valueId()] {
         switch (scid) {
             case ir::ValueId::vADD:
                 return InstAdd;
@@ -486,7 +486,7 @@ void emit_branch(ir::BasicBlock* srcblock,
  *
  */
 void lower(ir::BranchInst* ir_inst, LoweringContext& ctx) {
-    auto src_block = ir_inst->parent();
+    auto src_block = ir_inst->block();
 
     if (ir_inst->is_cond()) {
         // TODO: conditional branch

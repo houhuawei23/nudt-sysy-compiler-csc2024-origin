@@ -18,7 +18,7 @@ void RISCVFrameInfo::emit_call(ir::CallInst* inst,
     /** 计算参数的偏移量，确定哪些参数通过寄存器传递，哪些通过栈传递。 */
     for (auto use : inst->rargs()) {
         auto arg = use->value();
-        if (not arg->type()->is_float()) {
+        if (not arg->type()->isFloatPoint()) {
             if (gprCount < 8) {
                 offsets.push_back(passingByRegBase + gprCount++);
                 continue;
@@ -75,13 +75,13 @@ void RISCVFrameInfo::emit_return(ir::ReturnInst* ir_inst,
     // TODO: implement emit return
     if (not ir_inst->operands().empty()) {  // has return value
         // TODO
-        auto retval = ir_inst->return_value();
-        if (retval->type()->is_float()) {
+        auto retval = ir_inst->returnValue();
+        if (retval->type()->isFloatPoint()) {
             /* return by $fa0 */
             lowering_ctx.emit_copy(
                 MIROperand::as_isareg(RISCV::F10, OperandType::Float32),
                 lowering_ctx.map2operand(retval));
-        } else if (retval->type()->is_int()) {
+        } else if (retval->type()->isInt()) {
             /* return by $a0 */
             lowering_ctx.emit_copy(
                 MIROperand::as_isareg(RISCV::X10, OperandType::Int64),

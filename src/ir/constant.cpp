@@ -8,11 +8,11 @@ namespace ir {
 std::map<std::string, Constant*> Constant::cache;
 
 void Constant::print(std::ostream& os) const {
-    if (type()->is_i32()) {
+    if (type()->isInt32()) {
         os << i32();
-    } else if (type()->is_float()) {
+    } else if (type()->isFloatPoint()) {
         os << name();  // 0x...
-    } else if (type()->is_undef()) {
+    } else if (type()->isUnder()) {
         os << "undef";
     } else {
         assert(false);
