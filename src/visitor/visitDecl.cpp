@@ -260,7 +260,7 @@ ir::Value* SysYIRGenerator::visitArray_local(SysYParser::VarDefContext* ctx,
   ir::Value* element_ptr = dyn_cast<ir::Value>(alloca_ptr);
   for (int cur = 1; cur <= dimensions; cur++) {
     dims.erase(dims.begin());
-    element_ptr = mBuilder.MakeGetElementPtr(
+    element_ptr = mBuilder.makeGetElementPtr(
         btype, element_ptr, ir::Constant::gen_i32(0), dims, cur_dims);
     cur_dims.erase(cur_dims.begin());
   }
@@ -268,7 +268,7 @@ ir::Value* SysYIRGenerator::visitArray_local(SysYParser::VarDefContext* ctx,
   int cnt = 0;
   for (int i = 0; i < Arrayinit.size(); i++) {
     if (Arrayinit[i] != nullptr) {
-      element_ptr = mBuilder.MakeGetElementPtr(btype, element_ptr,
+      element_ptr = mBuilder.makeGetElementPtr(btype, element_ptr,
                                                ir::Constant::gen_i32(cnt));
       // mBuilder.create_store(Arrayinit[i], element_ptr);
       mBuilder.makeInst<ir::StoreInst>(Arrayinit[i], element_ptr);

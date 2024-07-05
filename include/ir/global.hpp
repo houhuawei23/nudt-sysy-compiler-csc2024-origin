@@ -73,7 +73,7 @@ class GlobalVariable : public User {
       return static_cast<size_t>(0);
   }
   auto init_cnt() const { return mInitValues.size(); }
-  auto init(int index) const { return mInitValues[index]; }
+  auto init(size_t index) const { return mInitValues[index]; }
   Type* baseType() const {
     assert(dyn_cast<PointerType>(type()) && "type error");
     return dyn_cast<PointerType>(type())->baseType();
@@ -82,9 +82,9 @@ class GlobalVariable : public User {
 
  public:
   void print_ArrayInit(std::ostream& os,
-                       const int dimension,
-                       const int begin,
-                       int* idx) const;
+                       const size_t dimension,
+                       const size_t begin,
+                       size_t* idx) const;
 
  public:
   static bool classof(const Value* v) { return v->valueId() == vGLOBAL_VAR; }

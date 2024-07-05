@@ -91,7 +91,7 @@ class Function : public User {
   auto& args() const { return mArguments; }
   auto& argTypes() const { return mType->as<FunctionType>()->argTypes(); }
 
-  auto arg_i(int idx) {
+  auto arg_i(size_t idx) {
     assert(idx < argCnt && "idx out of args vector");
     return mArguments[idx];
   }

@@ -517,28 +517,28 @@ void GetElementPtrInst::print(std::ostream& os) const {
   if (is_arrayInst()) {
     os << name() << " = getelementptr ";
 
-    int dimensions = cur_dims_cnt();
-    for (int i = 0; i < dimensions; i++) {
-      int value = cur_dims()[i];
+    size_t dimensions = cur_dims_cnt();
+    for (size_t i = 0; i < dimensions; i++) {
+      size_t value = cur_dims()[i];
       os << "[" << value << " x ";
     }
     if (_id == 1)
       os << *(dyn_cast<ir::ArrayType>(baseType())->baseType());
     else
       os << *(baseType());
-    for (int i = 0; i < dimensions; i++)
+    for (size_t i = 0; i < dimensions; i++)
       os << "]";
     os << ", ";
 
-    for (int i = 0; i < dimensions; i++) {
-      int value = cur_dims()[i];
+    for (size_t i = 0; i < dimensions; i++) {
+      size_t value = cur_dims()[i];
       os << "[" << value << " x ";
     }
     if (_id == 1)
       os << *(dyn_cast<ir::ArrayType>(baseType())->baseType());
     else
       os << *(baseType());
-    for (int i = 0; i < dimensions; i++)
+    for (size_t i = 0; i < dimensions; i++)
       os << "]";
     os << "* ";
 
@@ -586,7 +586,7 @@ void PhiInst::print(std::ostream& os) const {
   os << name() << " = ";
   os << "phi " << *(type()) << " ";
   // for all vals, bbs
-  for (int i = 0; i < mSize; i++) {
+  for (size_t i = 0; i < mSize; i++) {
     os << "[ " << getValue(i)->name() << ", %" << getBlock(i)->name() << " ]";
     if (i != mSize - 1)
       os << ",";
@@ -594,7 +594,7 @@ void PhiInst::print(std::ostream& os) const {
 }
 
 BasicBlock* PhiInst::getbbfromVal(Value* val) {
-  for (int i = 0; i < mSize; i++) {
+  for (size_t i = 0; i < mSize; i++) {
     if (getValue(i) == val)
       return getBlock(i);
   }
@@ -602,7 +602,7 @@ BasicBlock* PhiInst::getbbfromVal(Value* val) {
 }
 
 Value* PhiInst::getvalfromBB(BasicBlock* bb) {
-  for (int i = 0; i < mSize; i++) {
+  for (size_t i = 0; i < mSize; i++) {
     if (getBlock(i) == bb)
       return getValue(i);
   }
@@ -615,7 +615,7 @@ Value* PhiInst::getConstantRepl() {
   auto curval = getValue(0);
   if (mSize == 1)
     return getValue(0);
-  for (int i = 1; i < mSize; i++) {
+  for (size_t i = 1; i < mSize; i++) {
     if (getValue(i) != curval)
       return nullptr;
   }
@@ -623,7 +623,7 @@ Value* PhiInst::getConstantRepl() {
 }
 
 void PhiInst::delValue(Value* val) {
-  int i;
+  size_t i;
   for (i = 0; i < mSize; i++) {
     if (getValue(i) == val)
       break;
@@ -635,7 +635,7 @@ void PhiInst::delValue(Value* val) {
 }
 
 void PhiInst::delBlock(BasicBlock* bb) {
-  int i;
+  size_t i;
   for (i = 0; i < mSize; i++) {
     if (getBlock(i) == bb)
       break;

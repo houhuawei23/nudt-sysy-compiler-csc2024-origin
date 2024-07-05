@@ -41,7 +41,7 @@ std::any SysYIRGenerator::visitBlockStmt(SysYParser::BlockStmtContext* ctx) {
 std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
   auto value = ctx->exp() ? any_cast_Value(visit(ctx->exp())) : nullptr;
 
-  auto func = mBuilder.curBlock()->parent();
+  auto func = mBuilder.curBlock()->function();
 
   assert(ir::isa<ir::Function>(func) && "ret stmt block parent err!");
 
@@ -133,7 +133,7 @@ std::any SysYIRGenerator::visitAssignStmt(SysYParser::AssignStmtContext* ctx) {
 std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
   mBuilder.if_inc();
   const auto cur_block = mBuilder.curBlock();
-  const auto cur_func = cur_block->parent();
+  const auto cur_func = cur_block->function();
 
   const auto then_block = cur_func->newBlock();
   const auto else_block = cur_func->newBlock();
@@ -199,7 +199,7 @@ next_block
 */
 std::any SysYIRGenerator::visitWhileStmt(SysYParser::WhileStmtContext* ctx) {
   mBuilder.while_inc();
-  const auto cur_func = mBuilder.curBlock()->parent();
+  const auto cur_func = mBuilder.curBlock()->function();
   // create new blocks
   const auto next_block = cur_func->newBlock();
   const auto loop_block = cur_func->newBlock();
@@ -262,7 +262,7 @@ std::any SysYIRGenerator::visitBreakStmt(SysYParser::BreakStmtContext* ctx) {
   ir::BasicBlock::block_link(mBuilder.curBlock(), breakDest);
 
   // create a basic block
-  const auto next_block = mBuilder.curBlock()->parent()->newBlock();
+  const auto next_block = mBuilder.curBlock()->function()->newBlock();
 
   mBuilder.set_pos(next_block);
   return std::any();
@@ -276,7 +276,7 @@ std::any SysYIRGenerator::visitContinueStmt(
   const auto res = mBuilder.makeInst<ir::BranchInst>(continueDest);
   ir::BasicBlock::block_link(mBuilder.curBlock(), continueDest);
 
-  const auto next_block = mBuilder.curBlock()->parent()->newBlock();
+  const auto next_block = mBuilder.curBlock()->function()->newBlock();
 
   mBuilder.set_pos(next_block);
   return std::any();

@@ -51,9 +51,9 @@ class BasicBlock : public Value {
   std::vector<BasicBlock*> pdomTree;
   std::vector<BasicBlock*> pdomFrontier;
   // std::set<BasicBlock*> dom;//those bb was dominated by self
-  int domLevel;
-  int pdomLevel;
-  int looplevel;
+  size_t domLevel;
+  size_t pdomLevel;
+  size_t looplevel;
 
  protected:
   Function* mFunction;
@@ -81,7 +81,7 @@ class BasicBlock : public Value {
   auto empty() const { return mInsts.empty(); }
 
   //* get Data Attributes
-  auto parent() const { return mFunction; }
+  auto function() const { return mFunction; }
 
   void set_parent(Function* parent) { mFunction = parent; }
 
@@ -94,7 +94,7 @@ class BasicBlock : public Value {
   auto& next_blocks() { return mNextBlocks; }
   auto& pre_blocks() { return mPreBlocks; }
 
-  void set_depth(int d) { mDepth = d; }  // ?
+  void set_depth(size_t d) { mDepth = d; }  // ?
   void emplace_inst(inst_iterator pos, Instruction* i);
 
   void emplace_first_inst(Instruction* i);

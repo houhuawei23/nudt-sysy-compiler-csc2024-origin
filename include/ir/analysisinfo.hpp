@@ -64,7 +64,7 @@ namespace ir{
         private:
             std::vector<Loop*>_loops;
             std::unordered_map<BasicBlock*,Loop*>_head2loop;
-            std::unordered_map<BasicBlock*,int>looplevel;
+            std::unordered_map<BasicBlock*,size_t>looplevel;
         public:
             loopInfo(Function*fp):FunctionACtx(fp){}
             std::vector<Loop*>&loops(){return _loops;}

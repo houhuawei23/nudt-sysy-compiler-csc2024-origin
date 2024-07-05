@@ -52,7 +52,7 @@ class Type {
   static Type* TypePointer(Type* baseType);
   static Type* TypeArray(Type* baseType,
                          std::vector<size_t> dims,
-                         int capacity = 1);
+                         size_t capacity = 1);
   static Type* TypeFunction(Type* ret_type, const type_ptr_vector& param_types);
 
  public:  // check
@@ -109,18 +109,18 @@ class PointerType : public Type {
 class ArrayType : public Type {
  protected:
   std::vector<size_t> mDims;  // dimensions
-  Type* mBaseType;            // int or float
-  ArrayType(Type* baseType, std::vector<size_t> dims, int capacity = 1)
+  Type* mBaseType;            // size_t or float
+  ArrayType(Type* baseType, std::vector<size_t> dims, size_t capacity = 1)
       : Type(ARRAY, capacity * 4), mBaseType(baseType), mDims(dims) {}
 
  public:
   static ArrayType* gen(Type* baseType,
                         std::vector<size_t> dims,
-                        int capacity = 1);
+                        size_t capacity = 1);
 
  public:
   auto dims_cnt() const { return mDims.size(); }
-  auto dim(int index) const { return mDims[index]; }
+  auto dim(size_t index) const { return mDims[index]; }
   auto& dims() const { return mDims; }
   auto baseType() const { return mBaseType; }
 };

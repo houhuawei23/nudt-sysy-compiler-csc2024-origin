@@ -60,7 +60,7 @@ void BasicBlock::emplace_inst(inst_iterator pos, Instruction* i) {
   i->setBlock(this);
   if (auto phiInst = dyn_cast<PhiInst>(i)) {
     // assume that Phi insts are all at the front of a bb
-    int index = std::distance(mInsts.begin(), pos);
+    size_t index = std::distance(mInsts.begin(), pos);
     mPhiInsts.emplace(std::next(mPhiInsts.begin(), index), phiInst);
   }
 }
@@ -88,7 +88,7 @@ void BasicBlock::emplace_back_inst(Instruction* i) {
     assert(false and "a phi can not be inserted at the back of a bb");
 }
 void Instruction::setvarname() {
-  auto cur_func = mBlock->parent();
+  auto cur_func = mBlock->function();
   mName = "%" + std::to_string(cur_func->varInc());
 }
 
@@ -159,10 +159,12 @@ bool Instruction::isAggressiveAlive() {
          mValueId == vRETURN;
 }
 
+// TODO: need modify, use builder to create inst
 Instruction* Instruction::copy_inst(std::function<Value*(Value*)> getValue) {
   if (auto allocainst = dyn_cast<AllocaInst>(this)) {
     if (allocainst->isScalar())
-      return new AllocaInst(allocainst->baseType());  // TODO 复制数组的alloca
+      return new AllocaInst(allocainst->baseType());
+    // TODO 复制数组的alloca
     else {
       auto basetype = dyn_cast<ArrayType>(allocainst->baseType());
       std::vector<size_t> dims = basetype->dims();
@@ -221,17 +223,17 @@ Instruction* Instruction::copy_inst(std::function<Value*(Value*)> getValue) {
     auto idx = getValue(getelemenptrinst->index());
     if (getelemenptrinst->getid() == 0) {
       auto basetype = getelemenptrinst->baseType();
-      return new GetElementPtrInst(basetype, value, nullptr, idx);
+      return new GetElementPtrInst(basetype, value, idx);
     } else if (getelemenptrinst->getid() == 1) {
       auto basetype = dyn_cast<ArrayType>(getelemenptrinst->baseType());
       std::vector<size_t> dims = basetype->dims();
       auto curdims = getelemenptrinst->cur_dims();
-      return new GetElementPtrInst(basetype->baseType(), value, nullptr, idx,
-                                   dims, curdims);
+      return new GetElementPtrInst(basetype->baseType(), value, idx, dims,
+                                   curdims);
     } else {
       auto basetype = getelemenptrinst->baseType();
       auto curdims = getelemenptrinst->cur_dims();
-      return new GetElementPtrInst(basetype, value, nullptr, idx, curdims);
+      return new GetElementPtrInst(basetype, value, idx, curdims);
     }
   } else if (auto phiinst = dyn_cast<PhiInst>(this)) {
     return new PhiInst(nullptr, phiinst->type());

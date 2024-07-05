@@ -49,7 +49,7 @@ namespace pass
             return;
         insts_visited.insert(instruction);
 
-        ir::BasicBlock *destBB = instruction->block()->parent()->entry(); // 初始化放置块为entry块,整棵树的root
+        ir::BasicBlock *destBB = instruction->block()->function()->entry(); // 初始化放置块为entry块,整棵树的root
         ir::BasicBlock *opBB;
 
         for (auto op : instruction->operands()) // 遍历使用这条指令的所有指令

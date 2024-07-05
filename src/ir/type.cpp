@@ -15,7 +15,7 @@ Type* Type::TypeBool() {
     return &i1Type;
 }
 
-// return static Type instance of int
+// return static Type instance of size_t
 Type* Type::TypeInt32() {
     static Type intType(INT32);
     return &intType;
@@ -39,7 +39,7 @@ Type* Type::TypeUndefine() {
 Type* Type::TypePointer(Type* baseType) {
     return PointerType::gen(baseType);
 }
-Type* Type::TypeArray(Type* baseType, std::vector<size_t> dims, int capacity) {
+Type* Type::TypeArray(Type* baseType, std::vector<size_t> dims, size_t capacity) {
     return ArrayType::gen(baseType, dims, capacity);
 }
 Type* Type::TypeFunction(Type* ret_type, const type_ptr_vector& arg_types) {
@@ -119,13 +119,13 @@ void Type::print(std::ostream& os) {
             break;
         case ARRAY:
             if (auto atype = static_cast<ArrayType*>(this)) {
-                int dims = atype->dims_cnt();
-                for (int i = 0; i < dims; i++) {
-                    int value = atype->dim(i);
+                size_t dims = atype->dims_cnt();
+                for (size_t i = 0; i < dims; i++) {
+                    size_t value = atype->dim(i);
                     os << "[" << value << " x ";
                 }
                 atype->baseType()->print(os);
-                for (int i = 0; i < dims; i++)
+                for (size_t i = 0; i < dims; i++)
                     os << "]";
             } else {
                 assert(false);
@@ -140,7 +140,7 @@ PointerType* PointerType::gen(Type* base_type) {
     PointerType* ptype = new PointerType(base_type);
     return ptype;
 }
-ArrayType* ArrayType::gen(Type* baseType, std::vector<size_t> dims, int capacity) {
+ArrayType* ArrayType::gen(Type* baseType, std::vector<size_t> dims, size_t capacity) {
     ArrayType* ptype = new ArrayType(baseType, dims, capacity);
     return ptype;
 }

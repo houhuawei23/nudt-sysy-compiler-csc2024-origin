@@ -46,7 +46,7 @@ class AllocaInst : public Instruction {
              BasicBlock* parent = nullptr,
              const_str_ref name = "",
              bool is_const = false,
-             int capacity = 1)
+             size_t capacity = 1)
       : Instruction(vALLOCA,
                     ir::Type::TypePointer(
                         ir::Type::TypeArray(base_type, dims, capacity)),
@@ -99,24 +99,12 @@ class StoreInst : public Instruction {
  */
 class LoadInst : public Instruction {
  public:
-  LoadInst(Value* ptr, Type* type, BasicBlock* parent)
+  LoadInst(Value* ptr, Type* type, BasicBlock* parent = nullptr)
       : Instruction(vLOAD, type, parent) {
     addOperand(ptr);
   }
 
-  static LoadInst* gen(Value* ptr, BasicBlock* parent) {
-    Type* type = nullptr;
-    if (ptr->type()->isPointer())
-      type = dyn_cast<PointerType>(ptr->type())->baseType();
-    else
-      type = dyn_cast<ArrayType>(ptr->type())->baseType();
-    auto inst = new LoadInst(ptr, type, parent);
-    return inst;
-  }
-
-  Value* ptr() const { return operand(0); }
-
- public:
+  auto ptr() const { return operand(0); }
   static bool classof(const Value* v) { return v->valueId() == vLOAD; }
   void print(std::ostream& os) const override;
 };
@@ -399,8 +387,8 @@ class GetElementPtrInst : public Instruction {
   //! 1. Pointer <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
   GetElementPtrInst(Type* base_type,
                     Value* value,
-                    BasicBlock* parent,
-                    Value* idx)
+                    Value* idx,
+                    BasicBlock* parent = nullptr)
       : Instruction(vGETELEMENTPTR, ir::Type::TypePointer(base_type), parent) {
     _id = 0;
     addOperand(value);
@@ -411,10 +399,10 @@ class GetElementPtrInst : public Instruction {
   //! i32 <idx>
   GetElementPtrInst(Type* base_type,
                     Value* value,
-                    BasicBlock* parent,
                     Value* idx,
                     std::vector<size_t> dims,
-                    std::vector<size_t> cur_dims)
+                    std::vector<size_t> cur_dims,
+                    BasicBlock* parent = nullptr)
       : Instruction(vGETELEMENTPTR,
                     ir::Type::TypePointer(ir::Type::TypeArray(base_type, dims)),
                     parent),
@@ -428,9 +416,9 @@ class GetElementPtrInst : public Instruction {
   //! i32 <idx>
   GetElementPtrInst(Type* base_type,
                     Value* value,
-                    BasicBlock* parent,
                     Value* idx,
-                    std::vector<size_t> cur_dims)
+                    std::vector<size_t> cur_dims,
+                    BasicBlock* parent = nullptr)
       : Instruction(vGETELEMENTPTR, ir::Type::TypePointer(base_type), parent),
         _cur_dims(cur_dims) {
     _id = 2;
@@ -471,7 +459,7 @@ class PhiInst : public Instruction {
       : Instruction(vPHI, type, bb), mSize(vals.size()) {
     assert(vals.size() == bbs.size() and
            "number of vals and bbs in phi must be equal!");
-    for (int i = 0; i < mSize; i++) {
+    for (size_t i = 0; i < mSize; i++) {
       addOperand(vals[i]);
       addOperand(bbs[i]);
     }

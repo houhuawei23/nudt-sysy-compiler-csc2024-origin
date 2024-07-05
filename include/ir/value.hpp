@@ -306,7 +306,7 @@ class User : public Value {
   void unuse_allvalue();
 
   /* delete an operand of a value */
-  void delete_operands(int index);
+  void delete_operands(size_t index);
 
   void refresh_operand_index();
   virtual void print(std::ostream& os) const = 0;

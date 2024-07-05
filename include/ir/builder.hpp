@@ -18,12 +18,12 @@ class IRBuilder {
   BasicBlock* mBlock = nullptr;  // current basic block for insert instruction
   inst_iterator mInsertPos;      // insert pos for cur block
   block_ptr_stack _headers, _exits;
-  int ifNum, whileNum, rhsNum, funcNum, varNum;
+  size_t ifNum, whileNum, rhsNum, funcNum, varNum;
 
   // true/false br targets stack for if-else Short-circuit evaluation
   // the top the deeper nest
   block_ptr_stack _true_targets, _false_targets;
-  int blockNum;
+  size_t blockNum;
 
  public:
   IRBuilder() {
@@ -91,10 +91,10 @@ class IRBuilder {
   void rhs_inc() { rhsNum++; }
   void func_inc() { funcNum++; }
 
-  int if_cnt() const { return ifNum; }
-  int while_cnt() const { return whileNum; }
-  int rhs_cnt() const { return rhsNum; }
-  int func_cnt() const { return funcNum; }
+  auto if_cnt() const { return ifNum; }
+  auto while_cnt() const { return whileNum; }
+  auto rhs_cnt() const { return rhsNum; }
+  auto func_cnt() const { return funcNum; }
 
   void push_true_target(BasicBlock* block) { _true_targets.push(block); }
   void push_false_target(BasicBlock* block) { _false_targets.push(block); }
@@ -113,7 +113,6 @@ class IRBuilder {
   }
 
   Value* castToBool(Value* val);
-  // using pair?
   // defalut promote to i32
   Value* promoteType(Value* val,
                      Type* target_tpye,
@@ -127,12 +126,12 @@ class IRBuilder {
 
   Value* makeAlloca(Type* base_type,
                     bool is_const = false,
-                    std::vector<size_t> dims = {},
+                    const std::vector<size_t>& dims = {},
                     const_str_ref comment = "",
-                    int capacity = 1);
+                    size_t capacity = 1);
   Value* makeLoad(Value* ptr);
 
-  Value* MakeGetElementPtr(Type* base_type,
+  Value* makeGetElementPtr(Type* base_type,
                            Value* value,
                            Value* idx,
                            std::vector<size_t> dims = {},

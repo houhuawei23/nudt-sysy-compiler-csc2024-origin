@@ -70,15 +70,15 @@ void User::unuse_allvalue() {
     operand->value()->uses().remove(operand);
   }
 }
-void User::delete_operands(int index) {
+void User::delete_operands(size_t index) {
   mOperands[index]->value()->uses().remove(mOperands[index]);
   mOperands.erase(mOperands.begin() + index);
-  for (int idx = index + 1; idx < mOperands.size(); idx++)
+  for (size_t idx = index + 1; idx < mOperands.size(); idx++)
     mOperands[idx]->set_index(idx);
   refresh_operand_index();
 }
 void User::refresh_operand_index() {
-  int cnt = 0;
+  size_t cnt = 0;
   for (auto op : mOperands) {
     op->set_index(cnt);
     cnt++;

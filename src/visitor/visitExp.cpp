@@ -67,16 +67,16 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
       for (auto expr : ctx->var()->exp()) {
         auto idx = any_cast_Value(visit(expr));
         dims.erase(dims.begin());
-        ptr = mBuilder.MakeGetElementPtr(base_type, ptr, idx, dims, cur_dims);
+        ptr = mBuilder.makeGetElementPtr(base_type, ptr, idx, dims, cur_dims);
         cur_dims.erase(cur_dims.begin());
       }
       if (ctx->var()->exp().empty()) {
         dims.erase(dims.begin());
-        ptr = mBuilder.MakeGetElementPtr(
+        ptr = mBuilder.makeGetElementPtr(
             base_type, ptr, ir::Constant::gen_i32(0), dims, cur_dims);
       } else if (delta > 0) {
         dims.erase(dims.begin());
-        ptr = mBuilder.MakeGetElementPtr(
+        ptr = mBuilder.makeGetElementPtr(
             base_type, ptr, ir::Constant::gen_i32(0), dims, cur_dims);
       }
 
@@ -94,7 +94,7 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
           auto expr_vec = ctx->var()->exp();
 
           auto idx = any_cast_Value(visit(expr_vec[0]));
-          ptr = mBuilder.MakeGetElementPtr(type, ptr, idx);
+          ptr = mBuilder.makeGetElementPtr(type, ptr, idx);
           auto base_type = dyn_cast<ir::ArrayType>(type)->baseType();
           auto dims = dyn_cast<ir::ArrayType>(type)->dims(), cur_dims(dims);
           int delta = dims.size() + 1 - expr_vec.size();
@@ -102,12 +102,12 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
             idx = any_cast_Value(visit(expr_vec[i]));
             dims.erase(dims.begin());
             ptr =
-                mBuilder.MakeGetElementPtr(base_type, ptr, idx, dims, cur_dims);
+                mBuilder.makeGetElementPtr(base_type, ptr, idx, dims, cur_dims);
             cur_dims.erase(cur_dims.begin());
           }
           if (delta > 0) {  // 参数传递
             dims.erase(dims.begin());
-            ptr = mBuilder.MakeGetElementPtr(
+            ptr = mBuilder.makeGetElementPtr(
                 base_type, ptr, ir::Constant::gen_i32(0), dims, cur_dims);
             cur_dims.erase(cur_dims.begin());
           } else if (delta == 0) {
@@ -120,7 +120,7 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
       } else {  // 一级指针
         for (auto expr : ctx->var()->exp()) {
           auto idx = any_cast_Value(visit(expr));
-          ptr = mBuilder.MakeGetElementPtr(type, ptr, idx);
+          ptr = mBuilder.makeGetElementPtr(type, ptr, idx);
         }
         if (ctx->var()->exp().size())
           ptr = mBuilder.makeLoad(ptr);
@@ -160,7 +160,7 @@ std::any SysYIRGenerator::visitLValue(SysYParser::LValueContext* ctx) {
       for (auto expr : ctx->exp()) {
         auto idx = any_cast_Value(visit(expr));
         dims.erase(dims.begin());
-        ptr = mBuilder.MakeGetElementPtr(base_type, ptr, idx, dims, cur_dims);
+        ptr = mBuilder.makeGetElementPtr(base_type, ptr, idx, dims, cur_dims);
         cur_dims.erase(cur_dims.begin());
       }
     } else if (type->isPointer()) {  // 指针 (eg. int a[] OR int a[][5]) ->
@@ -172,20 +172,20 @@ std::any SysYIRGenerator::visitLValue(SysYParser::LValueContext* ctx) {
         auto expr_vec = ctx->exp();
 
         auto idx = any_cast_Value(visit(expr_vec[0]));
-        ptr = mBuilder.MakeGetElementPtr(type, ptr, idx);
+        ptr = mBuilder.makeGetElementPtr(type, ptr, idx);
         auto base_type = dyn_cast<ir::ArrayType>(type)->baseType();
         auto dims = dyn_cast<ir::ArrayType>(type)->dims(), cur_dims(dims);
 
         for (int i = 1; i < expr_vec.size(); i++) {
           idx = any_cast_Value(visit(expr_vec[i]));
           dims.erase(dims.begin());
-          ptr = mBuilder.MakeGetElementPtr(base_type, ptr, idx, dims, cur_dims);
+          ptr = mBuilder.makeGetElementPtr(base_type, ptr, idx, dims, cur_dims);
           cur_dims.erase(cur_dims.begin());
         }
       } else {
         for (auto expr : ctx->exp()) {
           auto idx = any_cast_Value(visit(expr));
-          ptr = mBuilder.MakeGetElementPtr(type, ptr, idx);
+          ptr = mBuilder.makeGetElementPtr(type, ptr, idx);
         }
       }
     } else {
@@ -480,7 +480,7 @@ std::any SysYIRGenerator::visitEqualExp(SysYParser::EqualExpContext* ctx) {
  * // rhs's false target = exp false target
  */
 std::any SysYIRGenerator::visitAndExp(SysYParser::AndExpContext* ctx) {
-  const auto cur_func = mBuilder.curBlock()->parent();
+  const auto cur_func = mBuilder.curBlock()->function();
 
   auto rhs_block = cur_func->newBlock();
   rhs_block->addComment("rhs_block");
@@ -521,7 +521,7 @@ std::any SysYIRGenerator::visitAndExp(SysYParser::AndExpContext* ctx) {
 // rhs true target = exp true target
 // rhs false target = exp false target
 std::any SysYIRGenerator::visitOrExp(SysYParser::OrExpContext* ctx) {
-  auto cur_func = mBuilder.curBlock()->parent();
+  auto cur_func = mBuilder.curBlock()->function();
 
   auto rhs_block = cur_func->newBlock();
   rhs_block->addComment("rhs_block");

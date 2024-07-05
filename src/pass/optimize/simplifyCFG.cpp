@@ -151,7 +151,7 @@ namespace pass{
 
     ir::BasicBlock* simplifyCFG::getSingleDest(ir::BasicBlock* bb){//condition 4
         if(bb->insts().size()!=1)return nullptr;
-        if(bb==bb->parent()->entry())return nullptr;
+        if(bb==bb->function()->entry())return nullptr;
         auto brInst=dyn_cast<ir::BranchInst>(*(bb->insts().begin()));
         if(brInst and not brInst->is_cond())return brInst->dest();
         return nullptr;

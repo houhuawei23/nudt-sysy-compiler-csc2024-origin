@@ -165,7 +165,6 @@ class Constant : public User {
 
  public:
   std::string comment() const override {
-    int a = 5;
     return name();
   }
   // get
