@@ -9,19 +9,20 @@
 namespace ir {
 
 class Loop {
- protected:
-  std::set<BasicBlock*> _blocks;
-  BasicBlock* _header;
-  Function* _parent;
+protected:
+    std::set<BasicBlock*> _blocks;
+    BasicBlock* _header;
+    Function* _parent;
+    std::set<BasicBlock*> _exits;
 
- public:
-  Loop(BasicBlock* header, Function* parent) {
-    _header = header;
-    _parent = parent;
-  }
-  BasicBlock* header() { return _header; }
-  Function* parent() { return _parent; }
-  std::set<BasicBlock*>& blocks() { return _blocks; }
+public:
+    Loop(BasicBlock* header, Function* parent) {
+        _header = header;
+        _parent = parent;
+    }
+    BasicBlock* header() { return _header; }
+    Function* parent() { return _parent; }
+    std::set<BasicBlock*>& blocks() { return _blocks; }
 };
 
 class Function : public User {
@@ -32,8 +33,8 @@ class Function : public User {
 
   block_ptr_list mBlocks;     // blocks of the function
   arg_ptr_vector mArguments;  // formal args
-  std::list<Loop*> mLoops;
-  std::map<ir::BasicBlock*, ir::Loop*> _headToLoop;
+  // std::list<Loop*> mLoops;
+  // std::map<ir::BasicBlock*, ir::Loop*> _headToLoop;
 
   //* function has concrete local var for return value,
   //* addressed by mRetValueAddr
@@ -43,11 +44,11 @@ class Function : public User {
   size_t mVarCnt = 0;              // for local variables count
   size_t argCnt = 0;               // formal arguments count
 
-  // for call graph
-  std::set<ir::Function*> mCallees;
-  bool _is_called;
-  bool _is_inline;
-  bool _is_lib;
+  // // for call graph
+  // std::set<ir::Function*> mCallees;
+  // bool _is_called;
+  // bool _is_inline;
+  // bool _is_lib;
 
  public:
   Function(Type* TypeFunction,
@@ -106,18 +107,18 @@ class Function : public User {
   auto varInc() { return mVarCnt++; }
   void setVarCnt(size_t x) { mVarCnt = x; }
 
-  auto& Loops() { return mLoops; }
-  auto& headToLoop() { return _headToLoop; }
+  // auto& Loops() { return mLoops; }
+  // auto& headToLoop() { return _headToLoop; }
 
-  auto& callees() const { return mCallees; }
-  auto& callees() { return mCallees; }
-  // get and set for callgraph
-  bool get_is_inline() { return _is_inline; }
-  void set_is_inline(bool b) { _is_inline = b; }
-  bool get_is_called() { return _is_called; }
-  void set_is_called(bool b) { _is_called = b; }
-  bool get_is_lib() { return _is_lib; }
-  void set_is_lib(bool b) { _is_lib = b; }
+  // auto& callees() const { return mCallees; }
+  // auto& callees() { return mCallees; }
+  // // get and set for callgraph
+  // bool get_is_inline() { return _is_inline; }
+  // void set_is_inline(bool b) { _is_inline = b; }
+  // bool get_is_called() { return _is_called; }
+  // void set_is_called(bool b) { _is_called = b; }
+  // bool get_is_lib() { return _is_lib; }
+  // void set_is_lib(bool b) { _is_lib = b; }
 
  public:
   static bool classof(const Value* v) { return v->valueId() == vFUNCTION; }

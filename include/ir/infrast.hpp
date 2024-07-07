@@ -40,19 +40,19 @@ class Argument : public Value {
 class BasicBlock : public Value {
   // mType: TypeLabel()
 
-  // dom info for anlaysis
- public:
-  BasicBlock* idom;
-  BasicBlock* sdom;
-  BasicBlock* ipdom;
-  BasicBlock* spdom;
-  std::vector<BasicBlock*> domTree;      // sons in dom Tree
-  std::vector<BasicBlock*> domFrontier;  // dom frontier
-  std::vector<BasicBlock*> pdomTree;
-  std::vector<BasicBlock*> pdomFrontier;
-  // std::set<BasicBlock*> dom;//those bb was dominated by self
-  size_t domLevel;
-  size_t pdomLevel;
+//   // dom info for anlaysis
+//  public:
+//   BasicBlock* idom;
+//   BasicBlock* sdom;
+//   BasicBlock* ipdom;
+//   BasicBlock* spdom;
+//   std::vector<BasicBlock*> domTree;      // sons in dom Tree
+//   std::vector<BasicBlock*> domFrontier;  // dom frontier
+//   std::vector<BasicBlock*> pdomTree;
+//   std::vector<BasicBlock*> pdomFrontier;
+//   // std::set<BasicBlock*> dom;//those bb was dominated by self
+//   size_t domLevel;
+//   size_t pdomLevel;
   size_t looplevel;
 
  protected:
@@ -125,15 +125,15 @@ class BasicBlock : public Value {
     next->pre_blocks().remove(pre);
   }
 
-  bool dominate(BasicBlock* bb) {
-    if (this == bb)
-      return true;
-    for (auto bbnext : domTree) {
-      if (bbnext->dominate(bb))
-        return true;
-    }
-    return false;
-  }
+  // bool dominate(BasicBlock* bb) {
+  //   if (this == bb)
+  //     return true;
+  //   for (auto bbnext : domTree) {
+  //     if (bbnext->dominate(bb))
+  //       return true;
+  //   }
+  //   return false;
+  // }
   bool isTerminal() const;
 
   static bool classof(const Value* v) { return v->valueId() == vBASIC_BLOCK; }

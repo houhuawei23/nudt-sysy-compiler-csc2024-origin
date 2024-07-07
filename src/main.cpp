@@ -60,44 +60,43 @@ int main(int argc, char* argv[]) {
     auto module_ir = gen.build_ir();
 
     //! 2. Optimization Passes
-    pass::PassManager pm=pass::PassManager(module_ir);
+    pass::topAnalysisInfoManager* tAIM=new pass::topAnalysisInfoManager(module_ir);
+    tAIM->initialize();
+    pass::PassManager* pm=new pass::PassManager(module_ir,tAIM);
+    
 
     if (not config.pass_names.empty()) {
         for (auto pass_name : config.pass_names) {
             if (pass_name.compare("dom") == 0) {
-                pm.run(new pass::preProcDom());
-                pm.run(new pass::idomGen());
-                pm.run(new pass::domFrontierGen());
-                // pm.run(new pass::domInfoCheck());
+                pm->run(new pass::domInfoPass());
+                // pm->run(new pass::domInfoCheck());
             }
             else if (pass_name.compare("mem2reg") == 0){
-                pm.run(new pass::Mem2Reg());
+                pm->run(new pass::Mem2Reg());
             }
             else if (pass_name.compare("pdom") == 0){
-                pm.run(new pass::preProcPostDom());
-                pm.run(new pass::ipostDomGen());
-                pm.run(new pass::postDomFrontierGen());
-                pm.run(new pass::postDomInfoCheck());
+                pm->run(new pass::postDomInfoPass());
+                // pm->run(new pass::postDomInfoCheck());
             }
             else if (pass_name.compare("dce") == 0) {
-                pm.run(new pass::DCE());
+                pm->run(new pass::DCE());
             } else if (pass_name.compare("scp") == 0) {
-                pm.run(new pass::SCP());
+                pm->run(new pass::SCP());
             } else if (pass_name.compare("sccp") == 0) {
-                pm.run(new pass::mySCCP());
+                pm->run(new pass::mySCCP());
             } else if (pass_name.compare("simplifycfg") == 0) {
-                pm.run(new pass::simplifyCFG());
+                pm->run(new pass::simplifyCFG());
             } else if (pass_name.compare("loopanalysis") == 0) {
-                pm.run(new pass::loopAnalysis());
-                // pm.run(new pass::loopInfoCheck());
+                pm->run(new pass::loopAnalysis());
+                // pm->run(new pass::loopInfoCheck());
             } else if (pass_name.compare("gcm") == 0) {
-                pm.run(new pass::GCM());
+                pm->run(new pass::GCM());
             } else if (pass_name.compare("gvn") == 0) {
-                pm.run(new pass::GVN());
+                pm->run(new pass::GVN());
             } else if (pass_name.compare("reg2mem") == 0){
-                pm.run(new pass::Reg2Mem());
+                pm->run(new pass::Reg2Mem());
             } else if (pass_name.compare("inline") == 0){
-                pm.run(new pass::Inline());
+                pm->run(new pass::Inline());
             }
             else {
                 assert(false && "Invalid pass name");

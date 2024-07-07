@@ -1,3 +1,4 @@
+#pragma once
 #include <set>
 #include <cassert>
 #include <map>
@@ -15,8 +16,7 @@ class Reg2Mem : public FunctionPass {
     std::vector<ir::AllocaInst*> allocasToinsert;
     std::map<ir::PhiInst*, ir::LoadInst*> philoadmap;
    public:
-    void run(ir::Function* func) override;
-    std::string name() override { return "reg2mem"; }
+    void run(ir::Function* func, topAnalysisInfoManager* tp) override;
     void clear(){
         allphi.clear();
         parent.clear();

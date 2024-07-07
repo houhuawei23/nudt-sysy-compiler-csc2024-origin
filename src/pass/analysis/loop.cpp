@@ -1,14 +1,19 @@
 #include "pass/analysis/loop.hpp"
+#include <unordered_map>
+
+static std::unordered_map<ir::BasicBlock*,int>stLoopLevel;
 
 namespace pass{
-    std::string loopAnalysis::name(){return "loopAnalysis";}
-    void loopAnalysis::run(ir::Function* func){
+    void loopAnalysis::run(ir::Function* func,topAnalysisInfoManager* tp){
         if(!func->entry())return;
-        for(auto bb:func->blocks())bb->looplevel=0;
+        domctx=tp->getDomTree(func);
+        domctx->refresh();
+        lpctx=tp->getLoopInfo(func);
+        for(auto bb:func->blocks())lpctx->set_looplevel(bb,0);
         for(auto bb:func->blocks()){
             if(bb->pre_blocks().empty())continue;
             for(auto bbPre:bb->pre_blocks()){
-                if(bb->dominate(bbPre)){
+                if(domctx->dominate(bb,bbPre)){//bb->dominate(bbPre)
                     addLoopBlocks(func,bb,bbPre);
                 }
             }
@@ -16,16 +21,21 @@ namespace pass{
     }
     void loopAnalysis::addLoopBlocks(ir::Function*func,ir::BasicBlock* header,ir::BasicBlock* tail){
         ir::Loop* curLoop;
-        auto &headerToLoop=func->headToLoop();
-        auto findLoop=headerToLoop.find(header);
-        if(findLoop==headerToLoop.end()){
+        //auto &headerToLoop=func->headToLoop();
+        //auto findLoop=headerToLoop.find(header);
+        auto findLoop=lpctx->head2loop(header);
+        if(findLoop==nullptr){
             curLoop=new ir::Loop(header,func);
-            func->Loops().push_back(curLoop);
-            headerToLoop[header]=curLoop;
-            header->looplevel++;
+            // func->Loops().push_back(curLoop);
+            lpctx->loops().push_back(curLoop);
+            // headerToLoop[header]=curLoop;
+            lpctx->set_head2loop(header,curLoop);
+            // header->looplevel++;
+            lpctx->set_looplevel(header,lpctx->looplevel(header)+1);
         }
         else{
-            curLoop=headerToLoop[header];
+            // curLoop=headerToLoop[header];
+            curLoop=lpctx->head2loop(header);
         }
         ir::block_ptr_stack bbStack;
         bbStack.push(tail);
@@ -33,7 +43,8 @@ namespace pass{
             auto curBB=bbStack.top();
             bbStack.pop();
             curLoop->blocks().insert(curBB);
-            curBB->looplevel++;
+            // curBB->looplevel++;
+            lpctx->set_looplevel(curBB,(lpctx->looplevel(curBB))+1);
             for(auto curBBPre:curBB->pre_blocks()){
                 if(curBBPre==header)continue;
                 if(curLoop->blocks().find(curBBPre)==curLoop->blocks().end()){
@@ -42,13 +53,13 @@ namespace pass{
             }
         }
     }
-    std::string loopInfoCheck::name(){return "loopInfoCheck";}
-    void loopInfoCheck::run(ir::Function* func){
+    void loopInfoCheck::run(ir::Function* func,topAnalysisInfoManager* tp){
         using namespace std;
         if(!func->entry())return;
+        lpctx=tp->getLoopInfo(func);
         cout<<"In Function \""<<func->name()<<"\": "<<endl;
         int cnt=0;
-        for(auto loop:func->Loops()){
+        for(auto loop:lpctx->loops()){//func->Loops()
             cout<<"Loop "<<cnt<<":"<<endl;
             cout<<"Header: "<<loop->header()->name()<<endl;
             cout<<"Loop Blocks: "<<endl;
@@ -60,7 +71,7 @@ namespace pass{
         }
         cout<<"Loop Level:"<<endl;
         for(auto bb:func->blocks()){
-            cout<<bb->name()<<" : "<<bb->looplevel<<endl;
+            cout<<bb->name()<<" : "<<lpctx->looplevel(bb)<<endl;
         }
     }
 }

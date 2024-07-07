@@ -16,14 +16,23 @@ namespace pass
             return rhs;
         if (!rhs)
             return lhs;
-        while (lhs->domLevel > rhs->domLevel)
-            lhs = lhs->idom;
-        while (rhs->domLevel > lhs->domLevel)
-            rhs = rhs->idom;
+        // while (lhs->domLevel > rhs->domLevel)
+        //     lhs = lhs->idom;
+        // while (rhs->domLevel > lhs->domLevel)
+        //     rhs = rhs->idom;
+        // while (lhs != rhs)
+        // {
+        //     lhs = lhs->idom;
+        //     rhs = rhs->idom;
+        // }
+        while (domctx->domlevel(lhs) > domctx->domlevel(rhs))
+            lhs=domctx->idom(lhs);
+        while (domctx->domlevel(rhs) < domctx->domlevel(lhs))
+            rhs=domctx->idom(rhs);
         while (lhs != rhs)
         {
-            lhs = lhs->idom;
-            rhs = rhs->idom;
+            lhs = domctx->idom(lhs);
+            rhs = domctx->idom(rhs);
         }
         return lhs;
     }
@@ -59,7 +68,11 @@ namespace pass
                 auto opInst = dyn_cast<ir::Instruction>(op->value());
                 scheduleEarly(opInst);
                 opBB = opInst->block();
-                if (opBB->domLevel > destBB->domLevel)
+                // if (opBB->domLevel > destBB->domLevel)
+                // {
+                //     destBB = opBB;
+                // }
+                if (domctx->domlevel(opBB) > domctx->domlevel(destBB))
                 {
                     destBB = opBB;
                 }
@@ -119,21 +132,34 @@ namespace pass
             ir::BasicBlock *LateBB = destBB;
             ir::BasicBlock *bestBB = LateBB;
             ir::BasicBlock *curBB = LateBB;
-            while (curBB->domLevel >= EarlyBB->domLevel)
+            // while (curBB->domLevel >= EarlyBB->domLevel)
+            // {
+            //     if (curBB->looplevel < bestBB->looplevel)
+            //     {
+            //         bestBB = curBB;
+            //     }
+            //     curBB = curBB->idom;
+            // }
+            while (domctx->domlevel(curBB) >= domctx->domlevel(EarlyBB))
             {
-                if (curBB->looplevel < bestBB->looplevel)
+                if (lpctx->looplevel(curBB) < lpctx->looplevel(bestBB))
                 {
                     bestBB = curBB;
                 }
-                curBB = curBB->idom;
+                curBB=domctx->idom(curBB);
             }
             instruction->block()->delete_inst(instruction); // 将指令从bb中移除
             bestBB->emplace_back_inst(instruction);          // 将指令移入bestBB
         }
     }
 
-    void GCM::run(ir::Function *F)
+    void GCM::run(ir::Function *F,topAnalysisInfoManager* tp)
     {
+        if(not F->entry())return ;
+        domctx=tp->getDomTree(F);
+        domctx->refresh();
+        lpctx=tp->getLoopInfo(F);
+        lpctx->refresh();
         std::vector<ir::Instruction *> pinned;
         for (ir::BasicBlock *bb : F->blocks())
         {

@@ -1,3 +1,4 @@
+#pragma once
 #include "ir/ir.hpp"
 #include "pass/pass.hpp"
 #include <set>
@@ -8,9 +9,9 @@ namespace pass
     class ADCE : public FunctionPass
     {
         public:
-            void run(ir::Function* func)override;
-            std::string name()override{return "ADCE";}
+            void run(ir::Function* func, topAnalysisInfoManager* tp)override;
         private:
+            pdomTree* pdctx;
     };
 
 } // namespace pass

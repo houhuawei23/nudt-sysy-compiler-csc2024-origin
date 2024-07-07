@@ -205,7 +205,7 @@ void Mem2Reg::insertphi() {
         while (!W.empty()) {
             x = W.back();
             W.pop_back();
-            for (ir::BasicBlock* Y : x->domFrontier) {
+            for (ir::BasicBlock* Y : domctx->domfrontier(x)) {//x->domFrontier
                 if (Phiset.find(Y) == Phiset.end()) {
                     auto allocabaseType =
                         dyn_cast<ir::PointerType>(alloca->type())->baseType();
@@ -379,9 +379,12 @@ bool Mem2Reg::promotemem2reg(ir::Function* F) {
     return changed;
 }
 
-void Mem2Reg::run(ir::Function* F) {
+void Mem2Reg::run(ir::Function* F, topAnalysisInfoManager* tp) {
     if (not F->entry())
         return;
+    domctx=tp->getDomTree(F);
+    domctx->refresh();
+
     promotemem2reg(F);
 }
 }  // namespace pass

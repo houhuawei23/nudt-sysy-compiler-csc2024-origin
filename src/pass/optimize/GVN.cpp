@@ -280,7 +280,7 @@ namespace pass
             if (auto instvalue = dyn_cast<ir::Instruction>(value))
             {
                 ir::BasicBlock * vbb = instvalue->block();
-                if (vbb->dominate(bb))
+                if (domctx->dominate(vbb,bb))//vbb->dominate(bb)
                 {
                     inst->replaceAllUseWith(instvalue);
                     NeedRemove.insert(inst);
@@ -291,9 +291,11 @@ namespace pass
         return;
     }
 
-    void GVN::run(ir::Function *F)
+    void GVN::run(ir::Function *F, topAnalysisInfoManager* tp)
     {
-       
+        if(not F->entry())return ;
+        domctx=tp->getDomTree(F);
+        domctx->refresh();
         if (F->blocks().empty())
             return;
         RPO(F);

@@ -156,19 +156,25 @@ std::vector<ir::CallInst*> Inline::getcall(ir::Module* module,
 std::vector<ir::Function*> Inline::getinlineFunc(ir::Module* module) {
     std::vector<ir::Function*> functiontoremove;
     for (auto func : module->funcs()) {
-        if (func->name() != "main" && !func->blocks().empty() && !func->get_is_inline()) {  // TODO 分析哪些函数可以被内联优化展开
+        if (func->name() != "main" && !func->blocks().empty() && !cgctx->isInline(func)) {  //&& !func->get_is_inline() TODO 分析哪些函数可以被内联优化展开
             functiontoremove.push_back(func);
         }
     }
     return functiontoremove;
 }
-void Inline::run(ir::Module* module) {
+void Inline::run(ir::Module* module, topAnalysisInfoManager* tp) {
+    cgctx=tp->getCallGraph();
+    cgctx->refresh();
+
     std::vector<ir::Function*> functiontoremove = getinlineFunc(module);
+    bool isFuncInline=false;
     while (!functiontoremove.empty()) {  // 找到所有调用了可以被内联优化展开的函数的call指令
         auto func = functiontoremove.back();
         std::vector<ir::CallInst*> callList = getcall(module, func);
         for (auto call : callList) {
             callinline(call);
+            isFuncInline=true;
+            tp->CFGChange(call->block()->function());
         }
         module->delFunction(func);
 
@@ -176,6 +182,9 @@ void Inline::run(ir::Module* module) {
         if (functiontoremove.empty()) {
             functiontoremove = getinlineFunc(module);
         }
+    }
+    if(isFuncInline){
+        tp->CallChange();
     }
 }
 

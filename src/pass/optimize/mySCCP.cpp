@@ -8,8 +8,6 @@ std::unordered_map<ir::BasicBlock*,int>livePreNum;
 
 
 namespace pass{
-    std::string mySCCP::name(){return "mySCCP";}
-
     bool mySCCP::getExecutableFlag(ir::BasicBlock* a, ir::BasicBlock* b){//一开始每一条边都是可执行
         if(executableFlag.find(a)!=executableFlag.end()){
             if(executableFlag[a].find(b)!=executableFlag[a].end()){
@@ -29,7 +27,7 @@ namespace pass{
         }
     }
 
-    void mySCCP::run(ir::Function* func){
+    void mySCCP::run(ir::Function* func, topAnalysisInfoManager* tp){
         if(!func->entry())return;
         livePreNum.clear();
         worklist.clear();
@@ -75,7 +73,7 @@ namespace pass{
             if(getDeadFlag(bb))
                 func->forceDelBlock(bb);
         }
-
+        tp->CFGChange(func);
         // func->print(std::cout);
     }
 
@@ -159,6 +157,5 @@ namespace pass{
                 deleteDeadBlock(bbnext);
             }
         }
-
     }
 }

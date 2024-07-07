@@ -24,8 +24,9 @@ static int dfc;
 namespace pass
 {
     //pre process for dom calc
-    void preProcDom::run(ir::Function* func){
+    void preProcDom::run(ir::Function* func, topAnalysisInfoManager* tp){
         if(!func->entry())return;
+        domctx=tp->getDomTree(func);
         auto blocklist=func->blocks();
         for(auto bbiter=blocklist.begin();bbiter!=blocklist.end();){
             auto bb=*bbiter;
@@ -38,9 +39,8 @@ namespace pass
             }
         }
     }
-    std::string preProcDom::name(){
-        return "preProcDom";
-    } 
+
+    
     //LT algorithm to get idom and sdom
     void idomGen::compress(ir::BasicBlock* bb){
         auto ancestorBB=ancestor[bb];
@@ -96,8 +96,11 @@ namespace pass
         }
     }
 
-    void idomGen::run(ir::Function* func){
+    void idomGen::run(ir::Function* func,topAnalysisInfoManager* tp){
         if(!func->entry())return;
+        domctx=tp->getDomTree(func);
+        domctx->clearAll();
+        domctx->initialize();
         parent.clear();
         semi.clear();
         vertex.clear();
@@ -115,10 +118,8 @@ namespace pass
             child[bb]=nullptr;
             label[bb]=bb;
             size[bb]=1;
-            bb->idom=nullptr;
-            bb->sdom=nullptr;
-            bb->domTree.clear();
-            bb->domFrontier.clear();
+            domctx->set_idom(bb,nullptr);
+            domctx->set_sdom(bb,nullptr);
         }
         semi[nullptr]=0;
         label[nullptr]=nullptr;
@@ -155,26 +156,24 @@ namespace pass
 
         //extra step, store informations into BasicBlocks
         for(auto bb:func->blocks()){
-            bb->idom=idom[bb];
-            bb->sdom=vertex[semi[bb]];
+            domctx->set_idom(bb,idom[bb]);
+            domctx->set_sdom(bb,vertex[semi[bb]]);
         }
 
     }
-
-    std::string idomGen::name(){return "idomGen";}
     
     void domFrontierGen::getDomTree(ir::Function* func){
         for(auto bb : func->blocks())
-            bb->domTree.clear();
+            domctx->domson(bb).clear();
         for(auto bb : func->blocks()){
-            if(bb->idom)
-                bb->idom->domTree.push_back(bb);
+            if(domctx->idom(bb))
+                domctx->domson(domctx->idom(bb)).push_back(bb);
         }
     }
 
     void domFrontierGen::getDomInfo(ir::BasicBlock* bb, int level){
-        bb->domLevel=level;
-        for(auto bbnext:bb->domTree){
+        domctx->set_domlevel(bb,level);
+        for(auto bbnext:domctx->domson(bb)){
             getDomInfo(bbnext,level+1);
         }
 
@@ -182,14 +181,14 @@ namespace pass
 
     void domFrontierGen::getDomFrontier(ir::Function* func){
         for(auto bb : func->blocks())
-            bb->domFrontier.clear();
+            domctx->domfrontier(bb).clear();
         for(auto bb : func->blocks()){
             if(bb->pre_blocks().size()>1){
                 for(auto bbnext : bb->pre_blocks()){
                     auto runner=bbnext;
-                    while(runner!=bb->idom){
-                        runner->domFrontier.push_back(bb);
-                        runner=runner->idom;
+                    while(runner!=domctx->idom(bb)){
+                        domctx->domfrontier(runner).push_back(bb);
+                        runner=domctx->idom(runner);
                     }
                 }
             }
@@ -197,20 +196,19 @@ namespace pass
     }
 
     //generate dom tree
-    void domFrontierGen::run(ir::Function* func){
+    void domFrontierGen::run(ir::Function* func, topAnalysisInfoManager* tp){
         if(!func->entry())return;
+        domctx=tp->getDomTree(func);
         getDomTree(func);
         getDomInfo(func->entry(),0);
         getDomFrontier(func);
         
     }
 
-
-    std::string domFrontierGen::name(){return "domFrontierGen";}
-
     //debug info print pass
-    void domInfoCheck::run(ir::Function* func){
+    void domInfoCheck::run(ir::Function* func,topAnalysisInfoManager *tp){
         if(!func->entry())return;
+        domctx=tp->getDomTree(func);
         using namespace std;
         cout<<"In Function \""<<func->name()<<"\""<<endl;
         for(auto bb:func->blocks()){
@@ -231,8 +229,8 @@ namespace pass
         cout<<endl;
         for(auto bb:func->blocks()){
             cout<<bb->name()<<" idom: ";
-            if(bb->idom)
-                cout<<"\t"<<bb->idom->name();
+            if(domctx->idom(bb))
+                cout<<"\t"<<domctx->idom(bb)->name();
             else
                 cout<<"null";
             cout<<endl;
@@ -240,8 +238,8 @@ namespace pass
         cout<<endl;
         for(auto bb:func->blocks()){
             cout<<bb->name()<<" sdom: ";
-            if(bb->sdom)
-                cout<<"\t"<<bb->sdom->name();
+            if(domctx->sdom(bb))
+                cout<<"\t"<<domctx->sdom(bb)->name();
             else
                 cout<<"null";
             cout<<endl;
@@ -249,7 +247,7 @@ namespace pass
         cout<<endl;
         for(auto bb:func->blocks()){
             cout<<bb->name()<<" domTreeSons: ";
-            for(auto bbson:bb->domTree){
+            for(auto bbson:domctx->domson(bb)){
                 cout<<bbson->name()<<'\t';
             }
             cout<<endl;
@@ -257,14 +255,21 @@ namespace pass
         cout<<endl;
         for(auto bb:func->blocks()){
             cout<<bb->name()<<" domFrontier: ";
-            for(auto bbf:bb->domFrontier){
+            for(auto bbf:domctx->domfrontier(bb)){
                 cout<<bbf->name()<<'\t';
             }
             cout<<endl;
         }
     }
-    std::string domInfoCheck::name(){
-        return "domInfoCheck";
+
+
+    void domInfoPass::run(ir::Function* func,topAnalysisInfoManager* tp){
+        preProcDom ppd=preProcDom();
+        idomGen idg=idomGen();
+        domFrontierGen dfg=domFrontierGen();
+        ppd.run(func,tp);
+        idg.run(func,tp);
+        dfg.run(func,tp);
     }
 
 } // namespace pass

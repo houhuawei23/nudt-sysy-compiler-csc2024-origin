@@ -6,7 +6,10 @@ static std::map<ir::Instruction*,bool>liveInst;
 
 namespace pass{
     
-    void ADCE::run(ir::Function* func){
+    void ADCE::run(ir::Function* func, topAnalysisInfoManager* tp){
+        if(not func->entry())return ;
+        pdctx=tp->getPDomTree(func);
+        pdctx->refresh();
         //初始化所有的inst和BB的live信息
         for(auto bb:func->blocks()){
             liveBB[bb]=false;
@@ -38,7 +41,7 @@ namespace pass{
                     }
                 }
             }
-            for(auto cdgpredBB:curBB->pdomFrontier){
+            for(auto cdgpredBB:pdctx->pdomfrontier(curBB)){//curBB->pdomFrontier
                 auto cdgpredBBTerminator=cdgpredBB->terminator();
                 if(cdgpredBBTerminator and not liveInst[cdgpredBBTerminator]){
                     workList.push(cdgpredBBTerminator);

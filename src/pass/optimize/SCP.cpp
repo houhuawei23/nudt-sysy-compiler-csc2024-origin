@@ -5,7 +5,7 @@
 static std::set<ir::Instruction*>worklist;
 
 namespace pass{
-    void SCP::run(ir::Function* func){
+    void SCP::run(ir::Function* func, topAnalysisInfoManager* tp){
         if(!func->entry())return;
         // func->print(std::cout);
         for(auto bb:func->blocks()){
@@ -37,5 +37,4 @@ namespace pass{
         inst->block()->delete_inst(inst);
     }
 
-    std::string SCP::name(){return "SCP";}
 }

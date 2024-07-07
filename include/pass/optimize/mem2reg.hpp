@@ -1,3 +1,4 @@
+#pragma once
 #include <set>
 #include <cassert>
 #include <map>
@@ -10,6 +11,7 @@ namespace pass
     class Mem2Reg : public FunctionPass
     {
     private:
+        domTree *domctx;
         // unsigned int SinglestoreNum = 0;
         // ir::StoreInst *OnlyStore;
         // ir::BasicBlock *OnlyBlock;
@@ -24,11 +26,7 @@ namespace pass
         std::map<ir::AllocaInst *, ir::Argument *> ValueMap;
 
     public:
-        void run(ir::Function *func) override;
-        std::string name() override
-        {
-            return "mem2reg";
-        }
+        void run(ir::Function *func, topAnalysisInfoManager* tp) override;
         // int getStoreNuminBB(ir::BasicBlock *BB, ir::AllocaInst *AI);
         // ir::StoreInst *getLastStoreinBB(ir::BasicBlock *BB, ir::AllocaInst *AI);
         // bool rewriteSingleStoreAlloca(ir::AllocaInst *alloca);

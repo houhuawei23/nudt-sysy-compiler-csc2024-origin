@@ -1,3 +1,4 @@
+#pragma once
 #include <set>
 #include <cassert>
 #include <map>
@@ -17,11 +18,7 @@ namespace pass
         std::unordered_map<ir::Value *, ir::Value *> _Hashtable;
 
     public:
-        void run(ir::Function *func) override;
-        std::string name() override
-        {
-            return "GVN";
-        }
+        void run(ir::Function *func, topAnalysisInfoManager* tp) override;
         void RPO(ir::Function *F); // 逆后序遍历
         void dfs(ir::BasicBlock *bb);
         ir::Value *checkHashtable(ir::Value *v);
@@ -35,5 +32,6 @@ namespace pass
         // ir::Value *getValueNumber(ir::ICmpInst *icmp);
         // ir::Value *getValueNumber(ir::FCmpInst *fcmp);
         void visitinst(ir::Instruction *inst);
+        domTree* domctx;
     };
 }

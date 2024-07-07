@@ -24,7 +24,7 @@ static int dfc;
 namespace pass
 {
     //pre process for dom calc
-    void preProcPostDom::run(ir::Function* func){
+    void preProcPostDom::run(ir::Function* func,topAnalysisInfoManager* tp){
         if(!func->entry())return;
         auto blocklist=func->blocks();
         for(auto bbiter=blocklist.begin();bbiter!=blocklist.end();){
@@ -38,9 +38,6 @@ namespace pass
             }
         }
     }
-    std::string preProcPostDom::name(){
-        return "preProcPostDom";
-    } 
     //LT algorithm to get idom and sdom
     void ipostDomGen::compress(ir::BasicBlock* bb){
         auto ancestorBB=ancestor[bb];
@@ -96,8 +93,13 @@ namespace pass
         }
     }
 
-    void ipostDomGen::run(ir::Function* func){
+    void ipostDomGen::run(ir::Function* func, topAnalysisInfoManager* tp){
         if(!func->entry())return;
+        pdctx=tp->getPDomTree(func);
+        pdctx->clearAll();
+        pdctx->initialize();
+
+
         parent.clear();
         semi.clear();
         vertex.clear();
@@ -115,10 +117,12 @@ namespace pass
             child[bb]=nullptr;
             label[bb]=bb;
             size[bb]=1;
-            bb->ipdom=nullptr;
-            bb->spdom=nullptr;
-            bb->pdomTree.clear();
-            bb->pdomFrontier.clear();
+            // bb->ipdom=nullptr;
+            // bb->spdom=nullptr;
+            // bb->pdomTree.clear();
+            // bb->pdomFrontier.clear();
+            pdctx->set_ipdom(bb,nullptr);
+            pdctx->set_spdom(bb,nullptr);
         }
         semi[nullptr]=0;
         label[nullptr]=nullptr;
@@ -155,41 +159,50 @@ namespace pass
 
         //extra step, store informations into BasicBlocks
         for(auto bb:func->blocks()){
-            bb->ipdom=idom[bb];
-            bb->spdom=vertex[semi[bb]];
+            // bb->ipdom=idom[bb];
+            // bb->spdom=vertex[semi[bb]];
+            pdctx->set_ipdom(bb,idom[bb]);
+            pdctx->set_spdom(bb,vertex[semi[bb]]);
         }
 
     }
 
-    std::string ipostDomGen::name(){return "ipostDomGen";}
     
     void postDomFrontierGen::getDomTree(ir::Function* func){
-        for(auto bb : func->blocks())
-            bb->pdomTree.clear();
+        // for(auto bb : func->blocks())
+        //     bb->pdomTree.clear();
         for(auto bb : func->blocks()){
-            if(bb->ipdom)
-                bb->ipdom->pdomTree.push_back(bb);
+            // if(bb->ipdom)
+            //     bb->ipdom->pdomTree.push_back(bb);
+            if(pdctx->ipdom(bb)){
+                pdctx->pdomson(pdctx->ipdom(bb)).push_back(bb);
+            }
         }
     }
 
     void postDomFrontierGen::getDomInfo(ir::BasicBlock* bb, int level){
-        bb->pdomLevel=level;
-        for(auto bbnext:bb->pdomTree){
+        // bb->pdomLevel=level;
+        pdctx->set_pdomlevel(bb,level);
+        for(auto bbnext:pdctx->pdomson(bb)){//bb->pdomTree
             getDomInfo(bbnext,level+1);
         }
 
     }
 
     void postDomFrontierGen::getDomFrontier(ir::Function* func){
-        for(auto bb : func->blocks())
-            bb->pdomFrontier.clear();
+        // for(auto bb : func->blocks())
+        //     bb->pdomFrontier.clear();
         for(auto bb : func->blocks()){
             if(bb->next_blocks().size()>1){
                 for(auto bbnext : bb->next_blocks()){
                     auto runner=bbnext;
-                    while(runner!=bb->ipdom){
-                        runner->pdomFrontier.push_back(bb);
-                        runner=runner->ipdom;
+                    // while(runner!=bb->ipdom){
+                    //     runner->pdomFrontier.push_back(bb);
+                    //     runner=runner->ipdom;
+                    // }
+                    while(runner!=pdctx->ipdom(bb)){
+                        pdctx->pdomfrontier(runner).push_back(bb);
+                        runner=pdctx->ipdom(runner);
                     }
                 }
             }
@@ -197,8 +210,9 @@ namespace pass
     }
 
     //generate dom tree
-    void postDomFrontierGen::run(ir::Function* func){
+    void postDomFrontierGen::run(ir::Function* func, topAnalysisInfoManager* tp){
         if(!func->entry())return;
+        pdctx=tp->getPDomTree(func);
         getDomTree(func);
         getDomInfo(func->entry(),0);
         getDomFrontier(func);
@@ -206,11 +220,11 @@ namespace pass
     }
 
 
-    std::string postDomFrontierGen::name(){return "postDomFrontierGen";}
 
     //debug info print pass
-    void postDomInfoCheck::run(ir::Function* func){
+    void postDomInfoCheck::run(ir::Function* func,topAnalysisInfoManager* tp){
         if(!func->entry())return;
+        pdctx=tp->getPDomTree(func);
         using namespace std;
         cout<<"In Function \""<<func->name()<<"\""<<endl;
         for(auto bb:func->blocks()){
@@ -231,8 +245,8 @@ namespace pass
         cout<<endl;
         for(auto bb:func->blocks()){
             cout<<bb->name()<<" ipdom: ";
-            if(bb->ipdom)
-                cout<<"\t"<<bb->ipdom->name();
+            if(pdctx->ipdom(bb))
+                cout<<"\t"<<pdctx->ipdom(bb)->name();
             else
                 cout<<"null";
             cout<<endl;
@@ -240,8 +254,8 @@ namespace pass
         cout<<endl;
         for(auto bb:func->blocks()){
             cout<<bb->name()<<" spdom: ";
-            if(bb->spdom)
-                cout<<"\t"<<bb->spdom->name();
+            if(pdctx->spdom(bb))
+                cout<<"\t"<<pdctx->spdom(bb)->name();
             else
                 cout<<"null";
             cout<<endl;
@@ -249,7 +263,7 @@ namespace pass
         cout<<endl;
         for(auto bb:func->blocks()){
             cout<<bb->name()<<" pdomTreeSons: ";
-            for(auto bbson:bb->pdomTree){
+            for(auto bbson:pdctx->pdomson(bb)){
                 cout<<bbson->name()<<'\t';
             }
             cout<<endl;
@@ -257,14 +271,21 @@ namespace pass
         cout<<endl;
         for(auto bb:func->blocks()){
             cout<<bb->name()<<" pdomFrontier: ";
-            for(auto bbf:bb->pdomFrontier){
+            for(auto bbf:pdctx->pdomson(bb)){
                 cout<<bbf->name()<<'\t';
             }
             cout<<endl;
         }
     }
-    std::string postDomInfoCheck::name(){
-        return "postDomInfoCheck";
+
+    void postDomInfoPass::run(ir::Function* func, topAnalysisInfoManager* tp){
+        preProcPostDom ppd=preProcPostDom();
+        ipostDomGen idg=ipostDomGen();
+        postDomFrontierGen dfg=postDomFrontierGen();
+        ppd.run(func,tp);
+        idg.run(func,tp);
+        dfg.run(func,tp);
     }
+
 
 } // namespace pass

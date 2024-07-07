@@ -11,9 +11,8 @@ Performs dead code elimination and basic block merging. Specifically
 
 
 namespace pass{
-    std::string simplifyCFG::name(){return "simplifyCFG";}
 
-    void simplifyCFG::run(ir::Function* func){
+    void simplifyCFG::run(ir::Function* func, topAnalysisInfoManager* tp){
         if(!func->entry())return;
         // func->print(std::cout);
         bool isWhile=true;
@@ -25,7 +24,7 @@ namespace pass{
             isWhile|=removeSingleBrBlock(func);
         }
 
-        
+        tp->CFGChange(func);
     }
     //condition 1
     //移除所有没有从前驱和从末尾不可达的块

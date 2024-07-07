@@ -1,15 +1,21 @@
 #include "pass/analysis/callgraph.hpp"
 
 namespace pass{
-    void callGraphBuild::run(ir::Module* ctx){
+    void callGraphBuild::run(ir::Module* ctx,topAnalysisInfoManager* tp){
+        cgctx=tp->getCallGraph();
+        cgctx->initialize();
         for(auto func:ctx->funcs()){//initialize call info for functions
             if(not func->entry())
-                func->set_is_lib(true);
+                // func->set_is_lib(true);
+                cgctx->set_isLib(func,true);
             else
-                func->set_is_lib(false);
-            func->set_is_called(false);
-            func->set_is_inline(true);
-            func->callees().clear();
+                // func->set_is_lib(false);
+                cgctx->set_isLib(func,false);
+            // func->set_is_called(false);
+            // func->set_is_inline(true);
+            // func->callees().clear();
+            cgctx->set_isCalled(func,false);
+            cgctx->set_isInline(func,true);
             vis[func]=false;
         }
 
@@ -19,9 +25,11 @@ namespace pass{
                     auto instCall=dyn_cast<ir::CallInst>(inst);
                     if(instCall){
                         auto calleePtr=instCall->callee();
-                        if(calleePtr->get_is_lib())continue;// lib function don't need call info
-                        func->callees().insert(calleePtr);
-                        func->set_is_called(true);
+                        //if(calleePtr->get_is_lib())continue;// lib function don't need call info
+                        if(cgctx->isLib(calleePtr))continue;
+                        // func->callees().insert(calleePtr);
+                        // func->set_is_called(true);
+                        cgctx->callees(func).insert(calleePtr);
                     }
                 }
             }
@@ -35,11 +43,13 @@ namespace pass{
     void callGraphBuild::dfsFuncCallGraph(ir::Function*func){
         funcStack.push_back(func);
         funcSet.insert(func);
-        for(auto calleeFunc:func->callees()){
+        for(auto calleeFunc:cgctx->callees(func)){
             if(funcSet.count(calleeFunc)){//find a back edge
-                calleeFunc->set_is_inline(false);
+                // calleeFunc->set_is_inline(false);
+                cgctx->set_isInline(calleeFunc,false);
                 for(auto funcIter=funcStack.rbegin();*funcIter!=calleeFunc;funcIter++){
-                    (*funcIter)->set_is_inline(false);
+                    // (*funcIter)->set_is_inline(false);
+                    cgctx->set_isInline(*funcIter,false);
                 }
             }
             else{// normal edge, and we continue recursive
@@ -50,5 +60,4 @@ namespace pass{
         funcStack.pop_back();
         funcSet.erase(func);
     }
-    std::string callGraphBuild::name(){return "callGraphBuild";}
 }
