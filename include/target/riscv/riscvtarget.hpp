@@ -14,7 +14,7 @@
 namespace mir {
 /*
  * @brief: RISCVDataLayout Class
- * @note: RISC-V数据信息
+ * @note: RISC-V数据信息 (64位)
  */
 class RISCVDataLayout final : public DataLayout {
 public:
@@ -125,6 +125,7 @@ public:  // sa stage (stack allocation stage)
 public:  // alignment
     size_t get_stackpointer_alignment() override { return 8; }
 };
+
 /*
  * @brief: RISCVRegisterInfo Class
  * @note: RISC-V寄存器相关信息
@@ -223,20 +224,15 @@ class RISCVTarget : public Target {
     RISCVDataLayout _datalayout;
     RISCVFrameInfo _frameinfo;
     RISCVRegisterInfo _mRegisterInfo;
-
 public:
     RISCVTarget() = default;
-
 public:  // get function
     DataLayout& get_datalayout() override { return _datalayout; }
     TargetFrameInfo& get_target_frame_info() override { return _frameinfo; }
     TargetRegisterInfo& get_register_info() override { return _mRegisterInfo; }
     TargetInstInfo& get_target_inst_info() override { return RISCV::getRISCVInstInfo(); }
     TargetISelInfo& get_target_isel_info() override { return RISCV::getRISCVISelInfo(); }
-
-    TargetScheduleModel& get_schedule_model() override {
-        return RISCV::getRISCVScheduleModel();
-    }
+    TargetScheduleModel& get_schedule_model() override { return RISCV::getRISCVScheduleModel(); }
 public:  // emit_assembly
     void postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) override;
     void emit_assembly(std::ostream& out, MIRModule& module) override;
