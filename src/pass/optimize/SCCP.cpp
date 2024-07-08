@@ -1,8 +1,7 @@
 #include "pass/optimize/SCCP.hpp"
 
 namespace pass{
-    std::string SCCP::name(){return "SCCP";}
-    void SCCP::run(ir::Function* func){
+    void SCCP::run(ir::Function* func, topAnalysisInfoManager* tp){
 
     }
     SCCP::valueEdge SCCP::getEdge(){

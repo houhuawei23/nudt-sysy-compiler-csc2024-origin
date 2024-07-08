@@ -29,7 +29,7 @@ union FloatUint32 {
 } fu32;
 
 void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& target) {
-    constexpr bool debugLowering = false;
+    constexpr bool debugLowering = true;
 
     auto& functions = mir_module.functions();
     auto& global_objs = mir_module.global_objs();
@@ -44,26 +44,26 @@ void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& tar
     }
 
     //! 2. for all global variables, create MIRGlobalObject
-    for (auto ir_gval : ir_module.gvalues()) {
+    for (auto ir_gval : ir_module.globalVars()) {
         auto ir_gvar = dyn_cast<ir::GlobalVariable>(ir_gval);
         auto name = ir_gvar->name().substr(1);  /* remove '@' */
         /* 基础类型 (int OR float) */
-        auto type = dyn_cast<ir::PointerType>(ir_gvar->type())->base_type();
-        if (type->is_array()) type = dyn_cast<ir::ArrayType>(type)->base_type();
+        auto type = dyn_cast<ir::PointerType>(ir_gvar->type())->baseType();
+        if (type->isArray()) type = dyn_cast<ir::ArrayType>(type)->baseType();
         const size_t size = type->size();
-        const bool read_only = ir_gvar->is_const();
-        const bool is_float = type->is_float();
+        const bool read_only = ir_gvar->isConst();
+        const bool is_float = type->isFloat32();
         const size_t align = 4;
 
-        if (ir_gvar->is_init()) {  /* .data: 已初始化的、可修改的全局数据 (Array and Scalar) */
+        if (ir_gvar->isInit()) {  /* .data: 已初始化的、可修改的全局数据 (Array and Scalar) */
             /* 全局变量初始化一定为常值表达式 */
             MIRDataStorage::Storage data; const auto idx = ir_gvar->init_cnt();
             for (int i = 0; i < idx; i++) {
                 auto val = dyn_cast<ir::Constant>(ir_gvar->init(i));
                 /* NOTE: float to uint32_t, type cast, doesn't change the memory */
-                if (type->is_int()) {
+                if (type->isInt()) {
                     fu32.u = val->i32();
-                } else if (type->is_float()) {
+                } else if (type->isFloat32()) {
                     fu32.f = val->f32();
                 } else {
                     assert(false && "Not Supported Type.");
@@ -147,10 +147,10 @@ void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& tar
         /* 4.5 pre-RA legalization */
 
         /* 4.6 pre-RA scheduling, minimize register usage */
-        {
-            preRASchedule(*mir_func, codegen_ctx);
-            dumpStageResult("AfterPreRASchedule", mir_func, codegen_ctx);
-        }
+        // {
+        //     preRASchedule(*mir_func, codegen_ctx);
+        //     dumpStageResult("AfterPreRASchedule", mir_func, codegen_ctx);
+        // }
 
         /* 4.7 register allocation */
         {
@@ -215,28 +215,32 @@ MIRFunction* create_mir_function(ir::Function* ir_func, MIRFunction* mir_func,
     }
     if (DebugCreateMirFunction) std::cerr << "stage 2: emitPrologue for function" << std::endl;
 
-    //! 3. process alloca instruction, new stack object for each alloca instruction
-    {
-        /* NOTE: all alloca in entry */
-        lowering_ctx.set_mir_block(block_map.at(ir_func->entry()));
-        for (auto& ir_inst : ir_func->entry()->insts()) {
-            if (ir_inst->scid() != ir::Value::vALLOCA) continue;
-            auto pointee_type = dyn_cast<ir::PointerType>(ir_inst->type())->base_type();
-            const uint32_t align = 4;
-            /* 3.1 allocate stack storage */
-            auto storage = mir_func->add_stack_obj(codegen_ctx.next_id(),
-                                                   static_cast<uint32_t>(pointee_type->size()),
-                                                   align, 0, StackObjectUsage::Local);
-            storage_map.emplace(ir_inst, storage);
-            /* 3.2 emit load stack object address instruction */
-            auto addr = lowering_ctx.new_vreg(lowering_ctx.get_ptr_type());
-            auto ldsa_inst = new MIRInst{InstLoadStackObjectAddr};
-            ldsa_inst->set_operand(0, addr);
-            ldsa_inst->set_operand(1, storage);
-            lowering_ctx.emit_inst(ldsa_inst);
-            /* 3.3 map */
-            lowering_ctx.add_valmap(ir_inst, addr);
-        }
+    //! 3. process alloca, new stack object for each alloca
+    lowering_ctx.set_mir_block(block_map.at(ir_func->entry()));  // entry
+    for (auto& ir_inst :
+         ir_func->entry()->insts()) {  // note: all alloca in entry
+        if (ir_inst->valueId() != ir::ValueId::vALLOCA)
+            continue;
+
+        auto pointee_type =
+            dyn_cast<ir::PointerType>(ir_inst->type())->baseType();
+        uint32_t align = 4;  // TODO: align, need bind to ir object
+        auto storage = mir_func->add_stack_obj(
+            codegen_ctx.next_id(),  // id
+            static_cast<uint32_t>(
+                pointee_type->size()),  //! size, datalayout; if array??
+            align,                      // align
+            0,                          // offset
+            StackObjectUsage::Local);
+        storage_map.emplace(ir_inst, storage);
+        // emit load stack object addr inst
+        auto addr = lowering_ctx.new_vreg(lowering_ctx.get_ptr_type());
+        auto ldsa_inst = new MIRInst{InstLoadStackObjectAddr};
+        ldsa_inst->set_operand(0, addr);
+        ldsa_inst->set_operand(1, storage);
+        lowering_ctx.emit_inst(ldsa_inst);
+        // map
+        lowering_ctx.add_valmap(ir_inst, addr);
     }
     if (DebugCreateMirFunction) std::cerr << "stage 3: process alloca instruction, new stack object for each alloca instruction" << std::endl;
 
@@ -248,12 +252,12 @@ MIRFunction* create_mir_function(ir::Function* ir_func, MIRFunction* mir_func,
             auto& instructions = ir_block->insts();
             for (auto iter = instructions.begin(); iter != instructions.end();) {
                 auto ir_inst = *iter;
-                if (ir_inst->scid() == ir::Value::vALLOCA) iter++;
-                else if (ir_inst->scid() == ir::Value::vGETELEMENTPTR) {
+                if (ir_inst->valueId() == ir::ValueId::vALLOCA) iter++;
+                else if (ir_inst->valueId() == ir::ValueId::vGETELEMENTPTR) {
                     auto end = iter; end++;
-                    while (end != instructions.end() && (*end)->scid() == ir::Value::vGETELEMENTPTR) {
+                    while (end != instructions.end() && (*end)->valueId() == ir::ValueId::vGETELEMENTPTR) {
                         auto preInst = std::prev(end);
-                        if (dyn_cast<ir::GetElementPtrInst>(*end)->get_value() == (*preInst)) end++;
+                        if (dyn_cast<ir::GetElementPtrInst>(*end)->value() == (*preInst)) end++;
                         else break;
                     }
                     lower_GetElementPtr(iter, end, lowering_ctx);
@@ -286,61 +290,84 @@ void lower(ir::BitCastInst* ir_inst, LoweringContext& ctx);
 void lower(ir::MemsetInst* ir_inst, LoweringContext& ctx);
 
 MIRInst* create_mir_inst(ir::Instruction* ir_inst, LoweringContext& ctx) {
-    switch (ir_inst->scid()) {
-        case ir::Value::vFNEG:
-        case ir::Value::vTRUNC:
-        case ir::Value::vZEXT:
-        case ir::Value::vSEXT:
-        case ir::Value::vFPTRUNC:
-        case ir::Value::vFPTOSI:
-        case ir::Value::vSITOFP: lower(dyn_cast<ir::UnaryInst>(ir_inst), ctx); break;
-        case ir::Value::vADD:
-        case ir::Value::vFADD:
-        case ir::Value::vSUB:
-        case ir::Value::vFSUB:
-        case ir::Value::vMUL:
-        case ir::Value::vFMUL:
-        case ir::Value::vUDIV:
-        case ir::Value::vSDIV:
-        case ir::Value::vFDIV:
-        case ir::Value::vUREM:
-        case ir::Value::vSREM:
-        case ir::Value::vFREM: lower(dyn_cast<ir::BinaryInst>(ir_inst), ctx); break;
-        case ir::Value::vIEQ:
-        case ir::Value::vINE:
-        case ir::Value::vISGT:
-        case ir::Value::vISGE:
-        case ir::Value::vISLT:
-        case ir::Value::vISLE: lower(dyn_cast<ir::ICmpInst>(ir_inst), ctx); break;
-        case ir::Value::vFOEQ:
-        case ir::Value::vFONE:
-        case ir::Value::vFOGT:
-        case ir::Value::vFOGE:
-        case ir::Value::vFOLT:
-        case ir::Value::vFOLE: lower(dyn_cast<ir::FCmpInst>(ir_inst), ctx); break;
-        case ir::Value::vALLOCA: break;
-        case ir::Value::vLOAD: lower(dyn_cast<ir::LoadInst>(ir_inst), ctx); break;
-        case ir::Value::vSTORE: lower(dyn_cast<ir::StoreInst>(ir_inst), ctx); break;
-        case ir::Value::vRETURN: lower(dyn_cast<ir::ReturnInst>(ir_inst), ctx); break;
-        case ir::Value::vBR: lower(dyn_cast<ir::BranchInst>(ir_inst), ctx); break;
-        case ir::Value::vCALL: lower(dyn_cast<ir::CallInst>(ir_inst), ctx); break;
-        case ir::Value::vBITCAST: lower(dyn_cast<ir::BitCastInst>(ir_inst), ctx); break;
-        case ir::Value::vMEMSET: lower(dyn_cast<ir::MemsetInst>(ir_inst), ctx); break;
-        case ir::Value::vGETELEMENTPTR:
-        default: assert(false && "not supported inst");
+    switch (ir_inst->valueId()) {
+        case ir::ValueId::vFNEG:
+        case ir::ValueId::vTRUNC:
+        case ir::ValueId::vZEXT:
+        case ir::ValueId::vSEXT:
+        case ir::ValueId::vFPTRUNC:
+        case ir::ValueId::vFPTOSI:
+        case ir::ValueId::vSITOFP:
+            lower(dyn_cast<ir::UnaryInst>(ir_inst), ctx);
+            break;
+        case ir::ValueId::vADD:
+        case ir::ValueId::vFADD:
+        case ir::ValueId::vSUB:
+        case ir::ValueId::vFSUB:
+        case ir::ValueId::vMUL:
+        case ir::ValueId::vFMUL:
+        case ir::ValueId::vUDIV:
+        case ir::ValueId::vSDIV:
+        case ir::ValueId::vFDIV:
+        case ir::ValueId::vUREM:
+        case ir::ValueId::vSREM:
+        case ir::ValueId::vFREM:
+            lower(dyn_cast<ir::BinaryInst>(ir_inst), ctx);
+            break;
+        case ir::ValueId::vIEQ:
+        case ir::ValueId::vINE:
+        case ir::ValueId::vISGT:
+        case ir::ValueId::vISGE:
+        case ir::ValueId::vISLT:
+        case ir::ValueId::vISLE:
+            lower(dyn_cast<ir::ICmpInst>(ir_inst), ctx);
+            break;
+        case ir::ValueId::vFOEQ:
+        case ir::ValueId::vFONE:
+        case ir::ValueId::vFOGT:
+        case ir::ValueId::vFOGE:
+        case ir::ValueId::vFOLT:
+        case ir::ValueId::vFOLE:
+            lower(dyn_cast<ir::FCmpInst>(ir_inst), ctx);
+            break;
+        case ir::ValueId::vALLOCA:
+            std::cerr << "alloca not supported" << std::endl;
+            break;
+        case ir::ValueId::vLOAD:
+            lower(dyn_cast<ir::LoadInst>(ir_inst), ctx);
+            break;
+        case ir::ValueId::vSTORE:
+            lower(dyn_cast<ir::StoreInst>(ir_inst), ctx);
+            break;
+        case ir::ValueId::vGETELEMENTPTR:
+            // lower(dyn_cast<ir::GetElementPtrInst>(ir_inst), ctx);
+            assert(false && "not supported inst");
+            break;
+        case ir::ValueId::vRETURN:
+            lower(dyn_cast<ir::ReturnInst>(ir_inst), ctx);
+            break;
+        case ir::ValueId::vBR:
+            lower(dyn_cast<ir::BranchInst>(ir_inst), ctx);
+            break;
+        case ir::ValueId::vCALL:
+            lower(dyn_cast<ir::CallInst>(ir_inst), ctx);
+            break;
+        default:
+            assert(false && "not supported inst");
+            break;
     }
     return nullptr;
 }
 void lower(ir::UnaryInst* ir_inst, LoweringContext& ctx) {
-    auto gc_instid = [scid = ir_inst->scid()] {
+    auto gc_instid = [scid = ir_inst->valueId()] {
         switch (scid) {
-            case ir::Value::vFNEG: return InstFNeg;
-            case ir::Value::vTRUNC: return InstTrunc;
-            case ir::Value::vZEXT: return InstZExt;
-            case ir::Value::vSEXT: return InstSExt;
-            case ir::Value::vFPTRUNC: assert(false && "not supported unary inst");
-            case ir::Value::vFPTOSI: return InstF2S;
-            case ir::Value::vSITOFP: return InstS2F;
+            case ir::ValueId::vFNEG: return InstFNeg;
+            case ir::ValueId::vTRUNC: return InstTrunc;
+            case ir::ValueId::vZEXT: return InstZExt;
+            case ir::ValueId::vSEXT: return InstSExt;
+            case ir::ValueId::vFPTRUNC: assert(false && "not supported unary inst");
+            case ir::ValueId::vFPTOSI: return InstF2S;
+            case ir::ValueId::vSITOFP: return InstS2F;
             default: assert(false && "not supported unary inst");
         }
     }();
@@ -364,14 +391,14 @@ void lower(ir::UnaryInst* ir_inst, LoweringContext& ctx) {
  */
 void lower(ir::ICmpInst* ir_inst, LoweringContext& ctx) {
     // TODO: Need Test
-    auto op = [scid = ir_inst->scid()] {
+    auto op = [scid = ir_inst->valueId()] {
         switch (scid) {
-            case ir::Value::vIEQ: return CompareOp::ICmpEqual;
-            case ir::Value::vINE: return CompareOp::ICmpNotEqual;
-            case ir::Value::vISGT: return CompareOp::ICmpSignedGreaterThan;
-            case ir::Value::vISGE: return CompareOp::ICmpSignedGreaterEqual;
-            case ir::Value::vISLT: return CompareOp::ICmpSignedLessThan;
-            case ir::Value::vISLE: return CompareOp::ICmpSignedLessEqual;
+            case ir::ValueId::vIEQ: return CompareOp::ICmpEqual;
+            case ir::ValueId::vINE: return CompareOp::ICmpNotEqual;
+            case ir::ValueId::vISGT: return CompareOp::ICmpSignedGreaterThan;
+            case ir::ValueId::vISGE: return CompareOp::ICmpSignedGreaterEqual;
+            case ir::ValueId::vISLT: return CompareOp::ICmpSignedLessThan;
+            case ir::ValueId::vISLE: return CompareOp::ICmpSignedLessEqual;
             default: assert(false && "not supported icmp inst");
         }
     }();
@@ -386,14 +413,14 @@ void lower(ir::ICmpInst* ir_inst, LoweringContext& ctx) {
     ctx.add_valmap(ir_inst, ret);
 }
 void lower(ir::FCmpInst* ir_inst, LoweringContext& ctx) {
-    auto op = [scid = ir_inst->scid()] {
+    auto op = [scid = ir_inst->valueId()] {
         switch (scid) {
-            case ir::Value::vFOEQ: return CompareOp::FCmpOrderedEqual;
-            case ir::Value::vFONE: return CompareOp::FCmpOrderedNotEqual;
-            case ir::Value::vFOGT: return CompareOp::FCmpOrderedGreaterThan;
-            case ir::Value::vFOGE: return CompareOp::FCmpOrderedGreaterEqual;
-            case ir::Value::vFOLT: return CompareOp::FCmpOrderedLessThan;
-            case ir::Value::vFOLE: return CompareOp::FCmpOrderedLessEqual;
+            case ir::ValueId::vFOEQ: return CompareOp::FCmpOrderedEqual;
+            case ir::ValueId::vFONE: return CompareOp::FCmpOrderedNotEqual;
+            case ir::ValueId::vFOGT: return CompareOp::FCmpOrderedGreaterThan;
+            case ir::ValueId::vFOGE: return CompareOp::FCmpOrderedGreaterEqual;
+            case ir::ValueId::vFOLT: return CompareOp::FCmpOrderedLessThan;
+            case ir::ValueId::vFOLE: return CompareOp::FCmpOrderedLessEqual;
             default: assert(false && "not supported fcmp inst");
         }
     }();
@@ -414,19 +441,19 @@ void lower(ir::CallInst* ir_inst, LoweringContext& ctx) {
 }
 /* BinaryInst */
 void lower(ir::BinaryInst* ir_inst, LoweringContext& ctx) {
-    auto gc_instid = [scid = ir_inst->scid()] {
+    auto gc_instid = [scid = ir_inst->valueId()] {
         switch (scid) {
-            case ir::Value::vADD: return InstAdd;
-            case ir::Value::vFADD: return InstFAdd;
-            case ir::Value::vSUB: return InstSub;
-            case ir::Value::vFSUB: return InstFSub;
-            case ir::Value::vMUL: return InstMul;
-            case ir::Value::vFMUL: return InstFMul;
-            case ir::Value::vUDIV: return InstUDiv;
-            case ir::Value::vSDIV: return InstSDiv;
-            case ir::Value::vFDIV: return InstFDiv;
-            case ir::Value::vUREM: return InstURem;
-            case ir::Value::vSREM: return InstSRem;
+            case ir::ValueId::vADD: return InstAdd;
+            case ir::ValueId::vFADD: return InstFAdd;
+            case ir::ValueId::vSUB: return InstSub;
+            case ir::ValueId::vFSUB: return InstFSub;
+            case ir::ValueId::vMUL: return InstMul;
+            case ir::ValueId::vFMUL: return InstFMul;
+            case ir::ValueId::vUDIV: return InstUDiv;
+            case ir::ValueId::vSDIV: return InstSDiv;
+            case ir::ValueId::vFDIV: return InstFDiv;
+            case ir::ValueId::vUREM: return InstURem;
+            case ir::ValueId::vSREM: return InstSRem;
             default: assert(false && "not supported binary inst");
         }
     }();
@@ -443,8 +470,9 @@ void lower(ir::BinaryInst* ir_inst, LoweringContext& ctx) {
 /* BranchInst */
 void emit_branch(ir::BasicBlock* srcblock, ir::BasicBlock* dstblock, LoweringContext& lctx);
 void lower(ir::BranchInst* ir_inst, LoweringContext& ctx) {
-    auto src_block = ir_inst->parent();
-    if (ir_inst->is_cond()) {  // conditional branch
+    auto src_block = ir_inst->block();
+
+    if (ir_inst->is_cond()) {
         // TODO: conditional branch
         auto inst = new MIRInst(InstBranch);
         inst->set_operand(0, ctx.map2operand(ir_inst->cond()));
@@ -502,7 +530,7 @@ void lower(ir::BitCastInst* ir_inst, LoweringContext& ctx) {
 void lower(ir::MemsetInst* ir_inst, LoweringContext& ctx) {
     const auto ir_memset_inst = dyn_cast<ir::MemsetInst>(ir_inst);
     const auto ir_pointer = ir_memset_inst->value();
-    const auto size = dyn_cast<ir::PointerType>(ir_pointer->type())->base_type()->size();
+    const auto size = dyn_cast<ir::PointerType>(ir_pointer->type())->baseType()->size();
 
     /* 通过寄存器传递参数 */
     // 1. 指针
@@ -537,15 +565,15 @@ void lower(ir::MemsetInst* ir_inst, LoweringContext& ctx) {
 void lower_GetElementPtr(ir::inst_iterator begin, ir::inst_iterator end, LoweringContext& ctx) {
     const auto dims = dyn_cast<ir::GetElementPtrInst>(*begin)->cur_dims();
     // const auto dims_cnt = dyn_cast<ir::GetElementPtrInst>(*begin)->cur_dims_cnt();
-    auto dims_cnt = 0;
-    const int begin_id = dyn_cast<ir::GetElementPtrInst>(*begin)->get_id();
-    const auto base = ctx.map2operand(dyn_cast<ir::GetElementPtrInst>(*begin)->get_value());  // 基地址
+    size_t dims_cnt = 0;
+    const int begin_id = dyn_cast<ir::GetElementPtrInst>(*begin)->getid();
+    const auto base = ctx.map2operand(dyn_cast<ir::GetElementPtrInst>(*begin)->value());  // 基地址
 
     /* 统计GetElementPtr指令数量 */
     auto iter = begin; ir::Value* instEnd = nullptr; MIROperand* ptr = base;
     std::vector<ir::Value*> idx;
     while (iter != end) {
-        idx.push_back(dyn_cast<ir::GetElementPtrInst>(*iter)->get_index());
+        idx.push_back(dyn_cast<ir::GetElementPtrInst>(*iter)->index());
         instEnd = *iter;
         iter++; dims_cnt++;
     }

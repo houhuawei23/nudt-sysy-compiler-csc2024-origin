@@ -128,8 +128,9 @@ clang -print-targets
 --target=<value>        
 # Generate code for the given target
 #opt
-clang -Xclang -disable-O0-optnone -emit-llvm -S test.c -o llvm.ll
-opt -mem2reg -S llvm.ll -o llvmmem2reg.ll
+clang -Xclang -disable-O0-optnone -emit-llvm -S test.c -o test.ll
+opt -mem2reg -S test.ll -o testmem2reg.ll
+opt -reg2mem -S testmem2reg.ll -o testreg2mem.ll
 # lli: interprete llvm ir file
 clang -S -emit-llvm test.c -o test.ll
 lli test.ll

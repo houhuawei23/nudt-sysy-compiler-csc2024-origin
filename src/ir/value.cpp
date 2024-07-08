@@ -3,70 +3,91 @@
 namespace ir {
 //! Use
 size_t Use::index() const {
-    return _index;
+  return mIndex;
 }
 
 User* Use::user() const {
-    return _user;
+  return mUser;
 }
 
 Value* Use::value() const {
-    return _value;
+  return mValue;
 }
 
 void Use::set_index(size_t index) {
-    _index = index;
+  mIndex = index;
 }
 void Use::set_user(User* user) {
-    _user = user;
+  mUser = user;
 }
 void Use::set_value(Value* value) {
-    _value = value;
+  mValue = value;
 }
 
 //! Value
 
-void Value::add_use(Use* use) {
-    _uses.emplace_back(use);
-}
-void Value::del_use(Use* use) {
-    _uses.remove(use);
-}
-
-void Value::replace_all_use_with(Value* _value) {
-    for (auto puse : _uses) {
-        puse->user()->set_operand(puse->index(), _value);
-    }
-    _uses.clear();
+void Value::replaceAllUseWith(Value* mValue) {
+  for (auto puse : mUses) {
+    puse->user()->setOperand(puse->index(), mValue);
+  }
+  mUses.clear();
 }
 
+void Value::setComment(const_str_ref comment) {
+  if (!mComment.empty()) {
+    std::cerr << "re-set basicblock comment!" << std::endl;
+  }
+  mComment = comment;
+}
+void Value::addComment(const_str_ref comment) {
+  if (mComment.empty()) {
+    mComment = comment;
+  } else {
+    mComment = mComment + ", " + comment;
+  }
+}
 //! User: public Value
-// TODO: unpack use to value!
-use_ptr_vector& User::operands() {
-    return _operands;
-}
 
 /* return as value */
 Value* User::operand(size_t index) const {
-    assert(index<_operands.size());
-    return _operands[index]->value();
+  assert(index < mOperands.size());
+  return mOperands[index]->value();
 }
 
-void User::add_operand(Value* value) {
-    assert(value != nullptr && "value cannot be nullptr");
+void User::addOperand(Value* value) {
+  assert(value != nullptr && "value cannot be nullptr");
 
-    auto new_use = new Use(_operands.size(), this, value);
+  auto new_use = new Use(mOperands.size(), this, value);
 
-    /* add use to user._operands*/
-    _operands.emplace_back(new_use);
-    /* add use to value._uses */
-    value->add_use(new_use);
+  /* add use to user.mOperands*/
+  mOperands.emplace_back(new_use);
+  /* add use to value.mUses */
+  value->uses().emplace_back(new_use);
 }
 
-void User::set_operand(size_t index, Value* value) {
-    assert(index<_operands.size());
-    _operands[index]->set_value(value);
-    value->add_use(_operands[index]);
+void User::unuse_allvalue() {
+  for (auto& operand : mOperands) {
+    operand->value()->uses().remove(operand);
+  }
+}
+void User::delete_operands(size_t index) {
+  mOperands[index]->value()->uses().remove(mOperands[index]);
+  mOperands.erase(mOperands.begin() + index);
+  for (size_t idx = index + 1; idx < mOperands.size(); idx++)
+    mOperands[idx]->set_index(idx);
+  refresh_operand_index();
+}
+void User::refresh_operand_index() {
+  size_t cnt = 0;
+  for (auto op : mOperands) {
+    op->set_index(cnt);
+    cnt++;
+  }
+}
+void User::setOperand(size_t index, Value* value) {
+  assert(index < mOperands.size());
+  mOperands[index]->set_value(value);
+  value->uses().emplace_back(mOperands[index]);
 }
 
 }  // namespace ir

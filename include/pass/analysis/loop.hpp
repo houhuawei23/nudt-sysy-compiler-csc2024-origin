@@ -4,14 +4,17 @@
 namespace pass{
     class loopAnalysis:public FunctionPass{
         public:
-            std::string name()override;
-            void run(ir::Function* func)override;
+            void run(ir::Function* func,topAnalysisInfoManager *tp)override;
         private:
             void addLoopBlocks(ir::Function*func,ir::BasicBlock* header,ir::BasicBlock* tail);
+            loopInfo* lpctx;
+            domTree* domctx;
     };
 
     class loopInfoCheck:public FunctionPass{
-        std::string name()override;
-        void run(ir::Function* func)override;
+        public:   
+            void run(ir::Function* func,topAnalysisInfoManager* tp)override;
+        private:
+            loopInfo* lpctx;
     };
 }

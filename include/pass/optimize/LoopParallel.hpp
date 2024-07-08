@@ -9,7 +9,7 @@
 namespace pass {
 class LoopParallel : public FunctionPass {
 public:
-    void run(ir::Function* func) override;
+    void run(ir::Function* func, topAnalysisInfoManager* tp) override;
     std::string name() { return "LoopParallel"; }
 
 private:

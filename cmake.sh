@@ -4,12 +4,12 @@
 # -u: treat unset variables as error
 # -x: print commands before executing them
 # -E: catch errors in functions and subshells
-set -Eeux
+# set -Eeux
 
-# gen target files from template
+# # gen target files from template
 targets=("generic" "riscv") #  "riscv"
 
-# gen.py generic_data.yml isa_data.yml output_dir
+# # gen.py generic_data.yml isa_data.yml output_dir
 for target in ${targets[@]}; do
 python3 "./src/target/template/gen.py" "./src/target/generic/generic.yml" \
 "./src/target/${target}/${target}.yml" "./include/autogen/${target}/"
@@ -22,4 +22,4 @@ done
 
 # cmake config and build
 cmake -S . -B build -G Ninja
-cmake --build build -j16
+cmake --build build -j 2

@@ -81,11 +81,8 @@ public:  // ir_val -> mir_operand
         }
 
         auto const_val = dyn_cast<ir::Constant>(ir_val);
-        if (ir_val->type()->is_int()) {
-            auto imm = MIROperand::as_imm<int>(const_val->i32(), OperandType::Int32);
-            return imm;
-        } else if (ir_val->type()->is_float()) {
-            auto imm = MIROperand::as_imm<float>(const_val->f32(), OperandType::Float32);
+        if (ir_val->type()->isInt()) {
+            auto imm = MIROperand::as_imm(const_val->i32(), OperandType::Int32);
             return imm;
         }
 
@@ -95,18 +92,18 @@ public:  // ir_val -> mir_operand
     MIRBlock* map2block(ir::BasicBlock* ir_block) { return _block_map.at(ir_block); }
 public:  // utils function
     static OperandType get_optype(ir::Type* type) {
-        if (type->is_int()) {
+        if (type->isInt()) {
             switch (type->btype()) {
                 case ir::INT1: return OperandType::Bool;
                 case ir::INT32: return OperandType::Int32;
                 default: assert(false && "unsupported int type");
             }
-        } else if (type->is_float()) {
+        } else if (type->isFloatPoint()) {
             switch (type->btype()) {
                 case ir::FLOAT: return OperandType::Float32;
                 default: assert(false && "unsupported float type");
             }
-        } else if (type->is_pointer()) {
+        } else if (type->isPointer()) {
             return OperandType::Int64;
         }
         return OperandType::Special;

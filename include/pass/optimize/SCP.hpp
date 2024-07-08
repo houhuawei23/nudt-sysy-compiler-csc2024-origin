@@ -1,3 +1,4 @@
+#pragma once
 #include <set>
 #include <cassert>
 #include <map>
@@ -8,8 +9,8 @@
 namespace pass{
     class SCP:public FunctionPass{
         public:
-            void run(ir::Function* func)override;
-            std::string name()override;
+            void run(ir::Function* func, topAnalysisInfoManager* tp)override;
+            
         private:
             void addConstFlod(ir::Instruction* inst);
     };

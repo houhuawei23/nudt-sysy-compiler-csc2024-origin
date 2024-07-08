@@ -8,9 +8,10 @@
 #include <algorithm>
 
 namespace pass {
-void LoopParallel::runImpl(ir::Function* func) {
 
-    
+void LoopParallel::run(ir::Function* func,topAnalysisInfoManager* tp) {
+  runImpl(func);
 }
+void LoopParallel::runImpl(ir::Function* func) {}
 
 }  // namespace pass

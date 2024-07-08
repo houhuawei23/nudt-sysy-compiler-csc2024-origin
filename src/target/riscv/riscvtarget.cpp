@@ -18,8 +18,7 @@ void RISCVFrameInfo::emit_call(ir::CallInst* inst, LoweringContext& lowering_ctx
     int32_t gprCount = 0, fprCount = 0;
     for (auto use : inst->rargs()) {
         auto arg = use->value();
-        /* 2.1 通过寄存器传递函数参数 */
-        if (not arg->type()->is_float()) {
+        if (not arg->type()->isFloatPoint()) {
             if (gprCount < 8) {
                 if (isDebug) std::cerr << "gprCount: " << gprCount << std::endl;
                 offsets.push_back(passingByRegBase + gprCount++);
@@ -108,13 +107,13 @@ void RISCVFrameInfo::emit_call(ir::CallInst* inst, LoweringContext& lowering_ctx
     auto callInst = new MIRInst(RISCV::JAL);
     callInst->set_operand(0, MIROperand::as_reloc(mirCalleeFunc));
     lowering_ctx.emit_inst(callInst);
-    const auto irRetType = inst->callee()->ret_type();
+    const auto irRetType = inst->callee()->retType();
 
     /* 函数返回值的处理 */
-    if (irRetType->is_void()) return;
+    if (irRetType->isVoid()) return;
     auto retReg = lowering_ctx.new_vreg(irRetType);
     MIROperand* val = nullptr;
-    if (irRetType->is_float()) {  /* return by $fa0 */
+    if (irRetType->isFloatPoint()) {  /* return by $fa0 */
         val = MIROperand::as_isareg(RISCV::F10, OperandType::Float32);
     } else {  /* return by $a0 */
         val = MIROperand::as_isareg(RISCV::X10, OperandType::Int64);
@@ -200,13 +199,13 @@ void RISCVFrameInfo::emit_return(ir::ReturnInst* ir_inst,
     // TODO: implement emit return
     if (not ir_inst->operands().empty()) {  // has return value
         // TODO
-        auto retval = ir_inst->return_value();
-        if (retval->type()->is_float()) {
+        auto retval = ir_inst->returnValue();
+        if (retval->type()->isFloatPoint()) {
             /* return by $fa0 */
             lowering_ctx.emit_copy(
                 MIROperand::as_isareg(RISCV::F10, OperandType::Float32),
                 lowering_ctx.map2operand(retval));
-        } else if (retval->type()->is_int()) {
+        } else if (retval->type()->isInt()) {
             /* return by $a0 */
             lowering_ctx.emit_copy(
                 MIROperand::as_isareg(RISCV::X10, OperandType::Int64),

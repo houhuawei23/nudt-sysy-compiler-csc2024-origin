@@ -11,9 +11,8 @@ Performs dead code elimination and basic block merging. Specifically
 
 
 namespace pass{
-    std::string simplifyCFG::name(){return "simplifyCFG";}
 
-    void simplifyCFG::run(ir::Function* func){
+    void simplifyCFG::run(ir::Function* func, topAnalysisInfoManager* tp){
         if(!func->entry())return;
         // func->print(std::cout);
         bool isWhile=true;
@@ -21,23 +20,70 @@ namespace pass{
             isWhile=false;
             isWhile|=removeNoPreBlock(func);
             isWhile|=MergeBlock(func);
-            isWhile|=removeSingleBrBlock(func);
             isWhile|=removeSingleIncomingPhi(func);
+            isWhile|=removeSingleBrBlock(func);
         }
 
-        
+        tp->CFGChange(func);
     }
-
-    ir::BasicBlock* simplifyCFG::getSingleDest(ir::BasicBlock* bb){//condition 4
-        if(bb->insts().size()!=1)return nullptr;
-        auto brInst=dyn_cast<ir::BranchInst>(*(bb->insts().begin()));
-        if(brInst and not brInst->is_cond())return brInst->dest();
-        return nullptr;
+    //condition 1
+    //移除所有没有从前驱和从末尾不可达的块
+    bool simplifyCFG::removeNoPreBlock(ir::Function* func){
+        bool ischanged=false;
+        std::stack<ir::BasicBlock*>bbStack;
+        std::map<ir::BasicBlock*,bool>vis1;
+        std::map<ir::BasicBlock*,bool>vis2;
+        for(auto bb:func->blocks()){//初始化vis和Stack
+            vis1[bb]=vis2[bb]=false;
+        }
+        assert(func->entry());
+        bbStack.push(func->entry());//从entry开始搜索
+        while(not bbStack.empty()){//DFS算法
+            auto curBB=bbStack.top();
+            bbStack.pop();
+            if(vis1[curBB])continue;
+            vis1[curBB]=true;
+            for(auto curBBnext:curBB->next_blocks()){
+                bbStack.push(curBBnext);
+            }
+        }
+        assert(bbStack.empty());
+        assert(func->exit());
+        bbStack.push(func->exit());//从exit开始搜索
+        while(not bbStack.empty()){
+            auto curBB=bbStack.top();//DFS
+            bbStack.pop();
+            if(vis2[curBB])continue;
+            vis2[curBB]=true;
+            for(auto curBBPre:curBB->pre_blocks()){
+                bbStack.push(curBBPre);
+            }
+        }
+        // std::cout<<"In Fucntion\""<<func->name()<<"\""<<std::endl;
+        // for(auto bb:func->blocks()){
+        //     using namespace std;
+        //     std::cout<<"bb "<<bb->name()<<": "<<vis1[bb]<<' '<<vis2[bb]<<endl;
+        // }
+        for(auto bbIter=func->blocks().begin();bbIter!=func->blocks().end();){
+            auto bb=*bbIter;
+            bbIter++;
+            if(not (vis1[bb] and vis2[bb])){
+                ischanged=true;
+                for(auto puseIter=bb->uses().begin();puseIter!=bb->uses().end();){
+                    auto puse=*puseIter;
+                    puseIter++;
+                    auto bbUser=puse->user();
+                    auto phiInstUser=dyn_cast<ir::PhiInst>(bbUser);
+                    if(phiInstUser){
+                        phiInstUser->delBlock(bb);
+                    }
+                }
+                func->forceDelBlock(bb);
+            }
+        }
+        return ischanged;
     }
-
-    bool simplifyCFG::noPredBlock(ir::BasicBlock* bb){//condition 1
-        return bb->pre_blocks().size()==0 and bb->parent()->entry()!=bb;
-    }
+    //condition 2 合并只有前驱和只有后继的块
 
     ir::BasicBlock* simplifyCFG::getMergeBlock(ir::BasicBlock* bb){// condition 2
         if(bb->next_blocks().size()==1)
@@ -54,6 +100,7 @@ namespace pass{
             // func->print(std::cout);
             auto mergeBlock=getMergeBlock(bb);
             while(mergeBlock){
+                if(mergeBlock==func->exit())func->setExit(bb);
                 if(not ischanged)ischanged=true;
                 //去掉两个块的联系
                 ir::BasicBlock::delete_block_link(bb,mergeBlock);
@@ -61,6 +108,7 @@ namespace pass{
                 bb->delete_inst(bb->insts().back());
                 //将下一个bb的所有语句复制
                 for(auto inst:mergeBlock->insts()){
+                    inst->setBlock(bb);
                     bb->emplace_inst(bb->insts().end(),inst);
                 }
                 //将下一个bb的所有后继与当前进行连接
@@ -71,7 +119,7 @@ namespace pass{
                     ir::BasicBlock::block_link(bb,mergeBBNext);
                 }
                 //将所有的对mergeBB的使用进行替换
-                mergeBlock->replace_all_use_with(bb);
+                mergeBlock->replaceAllUseWith(bb);
                 //将merge块删掉
                 //因为这些语句没有消失,不能使用一般的delete接口直接删除use
                 mergeBlock->insts().clear();
@@ -81,46 +129,94 @@ namespace pass{
         }
         return ischanged;
     }
-
-    bool simplifyCFG::removeNoPreBlock(ir::Function* func){
-        //原来只是对于没有前驱的块进行删除, 现在是要对于不可达块作删除
+    //condition 3 removing phiNodes with only one incoming
+    bool simplifyCFG::removeSingleIncomingPhi(ir::Function* func){
         bool ischanged=false;
-        std::queue<ir::BasicBlock*>worklist;
-        std::unordered_map<ir::BasicBlock*,bool>reachable;
         for(auto bb:func->blocks()){
-            reachable[bb]=false;
-        }
-        worklist.push(func->entry());
-        while(not worklist.empty()){
-            auto curBB=worklist.front();
-            worklist.pop();
-            if(not reachable[curBB]){
-                reachable[curBB]=true;
-                for(auto nextCurBB:curBB->next_blocks()){
-                    if(not reachable[nextCurBB])worklist.push(nextCurBB);
+            for(auto instIter=bb->phi_insts().begin();instIter!=bb->phi_insts().end();){
+                auto inst=*instIter;
+                instIter++;
+                auto phiInst=dyn_cast<ir::PhiInst>(inst);
+                if(phiInst->getsize()==1){
+                    phiInst->replaceAllUseWith(phiInst->getValue(0));
+                    bb->delete_inst(phiInst);
+                    ischanged=true;
                 }
-            }
-        }
-        for(auto bbIter=func->blocks().begin();bbIter!=func->blocks().end();){
-            auto bb=*bbIter;
-            bbIter++;
-            if(not reachable[bb]){
-                ischanged=true;
-                for(auto puseIter=bb->uses().begin();puseIter!=bb->uses().end();){
-                    auto puse=*puseIter;
-                    puseIter++;
-                    auto bbUser=puse->user();
-                    auto phiInstUser=dyn_cast<ir::PhiInst>(bbUser);
-                    if(phiInstUser){
-                        phiInstUser->delbb(bb);
-                    }
-                }
-                func->force_delete_block(bb);
             }
         }
         return ischanged;
     }
+    //condition 4 处理只含有一个br uncond 的块
 
+    ir::BasicBlock* simplifyCFG::getSingleDest(ir::BasicBlock* bb){//condition 4
+        if(bb->insts().size()!=1)return nullptr;
+        if(bb==bb->function()->entry())return nullptr;
+        auto brInst=dyn_cast<ir::BranchInst>(*(bb->insts().begin()));
+        if(brInst and not brInst->is_cond())return brInst->dest();
+        return nullptr;
+    }
+
+    // //another version
+    // bool simplifyCFG::removeSingleBrBlock(ir::Function* func){
+    //     bool ischanged=false;
+    //     for(auto bbIter=func->blocks().begin();bbIter!=func->blocks().end();){
+    //         auto bb=*bbIter;//对于每一个块进行处理, 使用这样的方式进行遍历以防止迭代器失效
+    //         bbIter++;
+    //         auto bbDest=getSingleDest(bb);
+    //         if(bbDest==nullptr)continue;//如果当前这个块不满足条件, 就直接continue
+    //         assert(bb!=bbDest);
+    //         bool havesamePre=false;
+    //         std::vector<ir::BasicBlock*>samePre;
+    //         for(auto bbPre:bb->pre_blocks()){//找有没有共同的前驱
+    //             for(auto bbDestPre:bbDest->pre_blocks()){
+    //                 if(bbPre==bbDestPre){
+    //                     samePre.push_back(bbPre);
+    //                     havesamePre=true;
+    //                 }
+    //             }
+    //         }
+    //         if(not havesamePre){//没有共同的前驱
+    //             ischanged=true;
+    //         //要做的就是将所有链接到当前bb上的全部都连接到对应的bbDest上
+    //             //修改两种对于bb的使用, br和phi
+    //             for(auto bbuseIter=bb->uses().begin();bbuseIter!=bb->uses().end();){
+    //                 auto bbuse=*bbuseIter;
+    //                 bbuseIter++;
+    //                 auto bbUser=bbuse->user();
+    //                 auto bbUserBr=dyn_cast<ir::BranchInst>(bbUser);
+    //                 auto bbUserPhi=dyn_cast<ir::PhiInst>(bbUser);
+    //                 if(bbUserBr){//跳转
+    //                     //要修改的:当前Br语句的parent BB的后继
+    //                     //当前Br的operand
+    //                     //bb的uses
+    //                     auto bbUserBrParent=bbUserBr->parent();
+    //                     bbUserBr->setOperand(bbuse->index(),bbDest);
+    //                     ir::BasicBlock::block_link(bbUserBrParent,bbDest);
+    //                 }
+    //                 else if(bbUserPhi){//phi,应当是在bbDest中
+    //                     assert(bbUserPhi->parent()==bbDest);
+    //                     //将从bb来的所有的phi全部都加上所有bbPre的Incoming, 在循环之后把来自bb的Incoming删除.
+    //                     //这里因为还要使用bb的Pre,所以之前的link不能删除
+    //                     for(auto bbPre:bb->pre_blocks()){
+    //                         bbUserPhi->addIncoming(bbUserPhi->getvalfromBB(bb),bbPre);
+    //                     }
+    //                     bbUserPhi->delBlock(bb);
+    //                 }
+    //                 else{
+    //                     assert(false);
+    //                 }
+    //             }
+    //             bb->uses().clear();
+    //             func->delBlock(bb);
+    //             //最后还要记得把当前bb这个块删除
+    //         }
+    //         else{
+
+    //         }
+    //     }
+    //     return ischanged;
+    // }
+    
     bool simplifyCFG::removeSingleBrBlock(ir::Function* func){
         bool ischanged=false;
         static std::vector<ir::BasicBlock*>singleBrBlocks;
@@ -168,7 +264,7 @@ namespace pass{
                     //将对应phi中的有关destBB的到达定值删除
                     for(auto inst:destBB->phi_insts()){
                         auto phiInst=dyn_cast<ir::PhiInst>(inst);
-                        phiInst->delbb(curBB);
+                        phiInst->delBlock(curBB);
                     }
                     ir::BasicBlock::delete_block_link(curBB,destBB);
                     //删除curBB和dest之间的链接
@@ -182,8 +278,8 @@ namespace pass{
                     }
                     //上面的测试本身是没有必要的,这是为了提前在测试的时候发现错误!
                     //要达到这个效果直接replace_all_use_with就可以了
-                    curBB->replace_all_use_with(destBB);
-                    func->delete_block(curBB);
+                    curBB->replaceAllUseWith(destBB);
+                    func->delBlock(curBB);
                 }
                 else{//有共同的前驱,而且可以合并的话
                     auto destBBPreBlocks=destBB->pre_blocks();
@@ -238,31 +334,17 @@ namespace pass{
                     //将phi中的关于curBB的定值删除
                     for(auto inst:destBB->phi_insts()){
                         auto phiinst=dyn_cast<ir::PhiInst>(inst);
-                        phiinst->delval(curBB);
+                        phiinst->delValue(curBB);
                     }
-                    curBB->replace_all_use_with(destBB);
-                    func->delete_block(curBB);
+                    curBB->replaceAllUseWith(destBB);
+                    func->delBlock(curBB);
                 }
             }
         }
         return ischanged;
     }
 
-    bool simplifyCFG::removeSingleIncomingPhi(ir::Function* func){
-        bool ischanged=false;
-        for(auto bb:func->blocks()){
-            for(auto instIter=bb->phi_insts().begin();instIter!=bb->phi_insts().end();){
-                auto inst=*instIter;
-                instIter++;
-                auto phiInst=dyn_cast<ir::PhiInst>(inst);
-                if(phiInst->getsize()==1){
-                    phiInst->replace_all_use_with(phiInst->getval(0));
-                    bb->delete_inst(phiInst);
-                    ischanged=true;
-                }
-            }
-        }
-        return ischanged;
-    }
+
+
     
 }

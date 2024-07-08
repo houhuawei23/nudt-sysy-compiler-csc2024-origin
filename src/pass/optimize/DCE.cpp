@@ -4,7 +4,8 @@ static std::set<ir::Instruction*>alive;
 
 namespace pass{
     
-    void DCE::run(ir::Function* func){
+    void DCE::run(ir::Function* func, topAnalysisInfoManager* tp){
+        bool isCallChange=false;
         if(!func->entry())return;
         for(auto bb:func->blocks()){//扫描所有的指令,只要是isAlive的就加到alive列表中
             for(auto inst:bb->insts()){
@@ -16,15 +17,20 @@ namespace pass{
             for(auto instIter=bb->insts().begin();instIter!=bb->insts().end();){
                 auto curIter=*instIter;
                 instIter++;
-                if(alive.count(curIter)==0)
+                if(alive.count(curIter)==0){
                     bb->force_delete_inst(curIter);
+                    if(dyn_cast<ir::CallInst>(curIter))
+                        isCallChange=true;
+                }
             }
         }
         // func->print(std::cout);
+        if(isCallChange)
+            tp->CallChange();
     }
 
     bool DCE::isAlive(ir::Instruction* inst){//只有store,terminator和call inst是活的
-        return inst->is_noname() or dyn_cast<ir::CallInst>(inst);
+        return inst->isNoName() or dyn_cast<ir::CallInst>(inst);
     }
 
     void DCE::addAlive(ir::Instruction*inst){//递归的将活代码和他的依赖加入到alive列表当中

@@ -16,14 +16,23 @@ namespace pass
             return rhs;
         if (!rhs)
             return lhs;
-        while (lhs->domLevel > rhs->domLevel)
-            lhs = lhs->idom;
-        while (rhs->domLevel > lhs->domLevel)
-            rhs = rhs->idom;
+        // while (lhs->domLevel > rhs->domLevel)
+        //     lhs = lhs->idom;
+        // while (rhs->domLevel > lhs->domLevel)
+        //     rhs = rhs->idom;
+        // while (lhs != rhs)
+        // {
+        //     lhs = lhs->idom;
+        //     rhs = rhs->idom;
+        // }
+        while (domctx->domlevel(lhs) > domctx->domlevel(rhs))
+            lhs=domctx->idom(lhs);
+        while (domctx->domlevel(rhs) < domctx->domlevel(lhs))
+            rhs=domctx->idom(rhs);
         while (lhs != rhs)
         {
-            lhs = lhs->idom;
-            rhs = rhs->idom;
+            lhs = domctx->idom(lhs);
+            rhs = domctx->idom(rhs);
         }
         return lhs;
     }
@@ -42,14 +51,14 @@ namespace pass
         else // 其他指令固定在自己的BB上
             return true;
     }
-    // 提前调度:思想是如果要把一个指令尽量往前提，那么应该在提之前将该指令参数来自的指令前提
+    // 提前调度:思想是如果把一个指令尽量往前提，那么应该在提之前将该指令参数来自的指令前提
     void GCM::scheduleEarly(ir::Instruction *instruction)
     {
         if (insts_visited.find(instruction) == insts_visited.end()) // 如果已经访问过，则不进行提前调度
             return;
         insts_visited.insert(instruction);
 
-        ir::BasicBlock *destBB = instruction->parent()->parent()->entry(); // 初始化放置块为entry块,整棵树的root
+        ir::BasicBlock *destBB = instruction->block()->function()->entry(); // 初始化放置块为entry块,整棵树的root
         ir::BasicBlock *opBB;
 
         for (auto op : instruction->operands()) // 遍历使用这条指令的所有指令
@@ -58,8 +67,12 @@ namespace pass
             {
                 auto opInst = dyn_cast<ir::Instruction>(op->value());
                 scheduleEarly(opInst);
-                opBB = opInst->parent();
-                if (opBB->domLevel > destBB->domLevel)
+                opBB = opInst->block();
+                // if (opBB->domLevel > destBB->domLevel)
+                // {
+                //     destBB = opBB;
+                // }
+                if (domctx->domlevel(opBB) > domctx->domlevel(destBB))
                 {
                     destBB = opBB;
                 }
@@ -67,7 +80,7 @@ namespace pass
         }
         if (!ispinned(instruction))
         {
-            instruction->parent()->delete_inst(instruction); // 将指令从bb中移除
+            instruction->block()->delete_inst(instruction); // 将指令从bb中移除
             destBB->emplace_back_inst(instruction);          // 将指令移入destBB
             Earlymap[instruction] = destBB;
         }
@@ -92,11 +105,11 @@ namespace pass
                     size_t phisize = phiInst->getsize();
                     for (size_t i = 0; i < phisize; i++)
                     {
-                        if (ir::Instruction *v = dyn_cast<ir::Instruction>(phiInst->getval(i)))
+                        if (ir::Instruction *v = dyn_cast<ir::Instruction>(phiInst->getValue(i)))
                         {
                             if (v == instruction)
                             {
-                                destBB = LCA(destBB, dyn_cast<ir::BasicBlock>(phiInst->getbb(i)));
+                                destBB = LCA(destBB, dyn_cast<ir::BasicBlock>(phiInst->getBlock(i)));
                                 break;
                             }
                         }
@@ -104,7 +117,7 @@ namespace pass
                 }
                 else
                 {
-                    destBB = LCA(destBB, useInst->parent());
+                    destBB = LCA(destBB, useInst->block());
                 }
             }
         }
@@ -119,21 +132,34 @@ namespace pass
             ir::BasicBlock *LateBB = destBB;
             ir::BasicBlock *bestBB = LateBB;
             ir::BasicBlock *curBB = LateBB;
-            while (curBB->domLevel >= EarlyBB->domLevel)
+            // while (curBB->domLevel >= EarlyBB->domLevel)
+            // {
+            //     if (curBB->looplevel < bestBB->looplevel)
+            //     {
+            //         bestBB = curBB;
+            //     }
+            //     curBB = curBB->idom;
+            // }
+            while (domctx->domlevel(curBB) >= domctx->domlevel(EarlyBB))
             {
-                if (curBB->looplevel < bestBB->looplevel)
+                if (lpctx->looplevel(curBB) < lpctx->looplevel(bestBB))
                 {
                     bestBB = curBB;
                 }
-                curBB = curBB->idom;
+                curBB=domctx->idom(curBB);
             }
-            instruction->parent()->delete_inst(instruction); // 将指令从bb中移除
+            instruction->block()->delete_inst(instruction); // 将指令从bb中移除
             bestBB->emplace_back_inst(instruction);          // 将指令移入bestBB
         }
     }
 
-    void GCM::run(ir::Function *F)
+    void GCM::run(ir::Function *F,topAnalysisInfoManager* tp)
     {
+        if(not F->entry())return ;
+        domctx=tp->getDomTree(F);
+        domctx->refresh();
+        lpctx=tp->getLoopInfo(F);
+        lpctx->refresh();
         std::vector<ir::Instruction *> pinned;
         for (ir::BasicBlock *bb : F->blocks())
         {

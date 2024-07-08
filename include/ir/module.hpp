@@ -6,23 +6,30 @@
 
 namespace ir {
 class Module {
-private:
-    std::vector<ir::Function*> _funcs;
-    str_fun_map _func_table;
+ private:
+  std::vector<Function*> mFunctions;
+  std::unordered_map<std::string, Function*> mFuncTable;
 
-    std::vector<ir::Value*> _gvalues;
-    str_value_map _gvalue_table;
-public:
-    Module() = default;
-    ~Module() = default;
-public:  // get function
-    std::vector<ir::Function*>& funcs() { return _funcs; }
-    std::vector<ir::Value*>& gvalues() { return _gvalues; }
-public:  // utils function
-    Function* lookup_func(const_str_ref name);
-    Function* add_func(Type* type, const_str_ref name);
-    void add_gvar(const_str_ref name, Value* gv);
-    void print(std::ostream& os);
-    void rename();
+  std::vector<GlobalVariable*> mGlobalVariables;
+  std::unordered_map<std::string, GlobalVariable*> mGlobalVariableTable;
+
+ public:
+  Module() = default;
+
+  //! get
+  auto& funcs() const { return mFunctions; }
+  auto& globalVars() const { return mGlobalVariables; }
+
+  Function* mainFunction() const { return findFunction("main"); }
+
+  Function* findFunction(const_str_ref name) const;
+  Function* addFunction(Type* type, const_str_ref name);
+  void delFunction(ir::Function* func);
+
+  void addGlobalVar(const_str_ref name, GlobalVariable* gv);
+
+  void rename();
+  // readable ir print
+  void print(std::ostream& os);
 };
 }

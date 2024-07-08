@@ -1,3 +1,4 @@
+#pragma once
 #include <set>
 #include <cassert>
 #include <map>
@@ -9,8 +10,8 @@
 namespace pass{
     class SCCP:public FunctionPass{
         public:
-            void run(ir::Function* func)override;
-            std::string name()override;
+            void run(ir::Function* func, topAnalysisInfoManager* tp)override;
+            
         private:
             using FlowEdge=std::pair<ir::BasicBlock*,ir::BasicBlock*>;
             using SSAEdge=std::pair<ir::Instruction*,ir::Instruction*>;

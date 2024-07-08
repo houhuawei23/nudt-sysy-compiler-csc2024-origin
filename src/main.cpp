@@ -12,6 +12,10 @@
 #include "pass/analysis/loop.hpp"
 #include "pass/optimize/GCM.hpp"
 #include "pass/optimize/GVN.hpp"
+#include "pass/analysis/pdom.hpp"
+#include "pass/optimize/inline.hpp"
+#include "pass/optimize/reg2mem.hpp"
+
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
 #include "mir/lowering.hpp"
@@ -46,48 +50,53 @@ int main(int argc, char* argv[]) {
     auto module_ir = gen.build_ir();
 
     //! 2. Optimization Passes
-    pass::FunctionPassManager fpm;
+    pass::topAnalysisInfoManager* tAIM=new pass::topAnalysisInfoManager(module_ir);
+    tAIM->initialize();
+    pass::PassManager* pm=new pass::PassManager(module_ir,tAIM);
+    
 
     if (not config.pass_names.empty()) {
         for (auto pass_name : config.pass_names) {
-            if (pass_name.compare("mem2reg") == 0) {
-                // mem2reg
-                fpm.add_pass(new pass::preProcDom());
-                fpm.add_pass(new pass::idomGen());
-                fpm.add_pass(new pass::domFrontierGen());
-                fpm.add_pass(new pass::Mem2Reg());
-                // fpm.add_pass(new pass::domInfoCheck());
+            if (pass_name.compare("dom") == 0) {
+                pm->run(new pass::domInfoPass());
+                // pm->run(new pass::domInfoCheck());
             }
-
+            else if (pass_name.compare("mem2reg") == 0){
+                pm->run(new pass::Mem2Reg());
+            }
+            else if (pass_name.compare("pdom") == 0){
+                pm->run(new pass::postDomInfoPass());
+                // pm->run(new pass::postDomInfoCheck());
+            }
             else if (pass_name.compare("dce") == 0) {
-                fpm.add_pass(new pass::DCE());
+                pm->run(new pass::DCE());
             } else if (pass_name.compare("scp") == 0) {
-                fpm.add_pass(new pass::SCP());
+                pm->run(new pass::SCP());
             } else if (pass_name.compare("sccp") == 0) {
-                fpm.add_pass(new pass::mySCCP());
+                pm->run(new pass::mySCCP());
             } else if (pass_name.compare("simplifycfg") == 0) {
-                fpm.add_pass(new pass::simplifyCFG());
+                pm->run(new pass::simplifyCFG());
             } else if (pass_name.compare("loopanalysis") == 0) {
-                fpm.add_pass(new pass::preProcDom());
-                fpm.add_pass(new pass::idomGen());
-                fpm.add_pass(new pass::domFrontierGen());
-                // fpm.add_pass(new pass::domInfoCheck());
-                fpm.add_pass(new pass::loopAnalysis());
-                // fpm.add_pass(new pass::loopInfoCheck());
+                pm->run(new pass::loopAnalysis());
+                // pm->run(new pass::loopInfoCheck());
             } else if (pass_name.compare("gcm") == 0) {
-                fpm.add_pass(new pass::GCM());
-            } else {
+                pm->run(new pass::GCM());
+            } else if (pass_name.compare("gvn") == 0) {
+                pm->run(new pass::GVN());
+            } else if (pass_name.compare("reg2mem") == 0){
+                pm->run(new pass::Reg2Mem());
+            } else if (pass_name.compare("inline") == 0){
+                pm->run(new pass::Inline());
+            }
+            else {
                 assert(false && "Invalid pass name");
             }
-            // if (pass_name.compare("gvn")==0){
-            //     fpm.add_pass(new pass::GVN());
-            // }
-        }
-        for (auto f : module_ir->funcs()) {
-            fpm.run(f);
+
+            
         }
     }
-
+    // module_ir->print(std::cout);
+    module_ir->rename();
     if (config.gen_ir) {  // ir print
         if (config.outfile.empty()) {
             module_ir->print(std::cout);

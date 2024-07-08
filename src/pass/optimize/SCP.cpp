@@ -5,7 +5,7 @@
 static std::set<ir::Instruction*>worklist;
 
 namespace pass{
-    void SCP::run(ir::Function* func){
+    void SCP::run(ir::Function* func, topAnalysisInfoManager* tp){
         if(!func->entry())return;
         // func->print(std::cout);
         for(auto bb:func->blocks()){
@@ -26,7 +26,7 @@ namespace pass{
         auto replval=inst->getConstantRepl();
         for(auto puse:inst->uses()){
             auto puser=puse->user();
-            puser->set_operand(puse->index(),replval);
+            puser->setOperand(puse->index(),replval);
             auto puserInst=dyn_cast<ir::Instruction>(puser);
             assert(puserInst);
             if(puserInst->getConstantRepl()){
@@ -34,8 +34,7 @@ namespace pass{
             }
         }
         inst->uses().clear();
-        inst->parent()->delete_inst(inst);
+        inst->block()->delete_inst(inst);
     }
 
-    std::string SCP::name(){return "SCP";}
 }

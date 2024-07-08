@@ -8,8 +8,6 @@ std::unordered_map<ir::BasicBlock*,int>livePreNum;
 
 
 namespace pass{
-    std::string mySCCP::name(){return "mySCCP";}
-
     bool mySCCP::getExecutableFlag(ir::BasicBlock* a, ir::BasicBlock* b){//一开始每一条边都是可执行
         if(executableFlag.find(a)!=executableFlag.end()){
             if(executableFlag[a].find(b)!=executableFlag[a].end()){
@@ -29,7 +27,7 @@ namespace pass{
         }
     }
 
-    void mySCCP::run(ir::Function* func){
+    void mySCCP::run(ir::Function* func, topAnalysisInfoManager* tp){
         if(!func->entry())return;
         livePreNum.clear();
         worklist.clear();
@@ -57,7 +55,7 @@ namespace pass{
         while(not worklist.empty()){
             auto curinst=worklist.front();
             worklist.pop_front();
-            if(getDeadFlag(curinst->parent()))//当前这个语句在死块,直接continue
+            if(getDeadFlag(curinst->block()))//当前这个语句在死块,直接continue
                 continue;
             if(curinst->getConstantRepl()){
                 // func->print(std::cout);
@@ -73,20 +71,20 @@ namespace pass{
             bbIter++;
             // bb->parent()->print(std::cout);
             if(getDeadFlag(bb))
-                func->force_delete_block(bb);
+                func->forceDelBlock(bb);
         }
-
+        tp->CFGChange(func);
         // func->print(std::cout);
     }
 
     void mySCCP::addConstFlod(ir::Instruction*inst){
-        // inst->parent()->parent()->print(std::cout);
-        if(getDeadFlag(inst->parent()))return;
+        // inst->block()->parent()->print(std::cout);
+        if(getDeadFlag(inst->block()))return;
         auto replValue=inst->getConstantRepl();
         for(auto puse:inst->uses()){
             auto useInst=dyn_cast<ir::Instruction>(puse->user());
             assert(useInst);
-            useInst->set_operand(puse->index(),replValue);//进行常数替换
+            useInst->setOperand(puse->index(),replValue);//进行常数替换
             if(useInst->getConstantRepl())//被替换的能不能再传播
                 worklist.push_back(useInst);
             else{//分支
@@ -96,17 +94,17 @@ namespace pass{
             }
         }
         inst->uses().clear();
-        inst->parent()->delete_inst(inst);
+        inst->block()->delete_inst(inst);
     }
 
     void mySCCP::branchInstFlod(ir::BranchInst* brInst){
         assert(brInst->is_cond());
         assert(dyn_cast<ir::Constant>(brInst->cond()));
-        if(getDeadFlag(brInst->parent()))return;
+        if(getDeadFlag(brInst->block()))return;
         auto constCond=dyn_cast<ir::Constant>(brInst->cond())->i1();//常数的cond
         auto bbdel=constCond?brInst->iffalse():brInst->iftrue();//要被删除的块
         auto bbjmp=constCond?brInst->iftrue():brInst->iffalse();//要保留的块
-        auto bbcur=brInst->parent();//当前的块
+        auto bbcur=brInst->block();//当前的块
         assert(getExecutableFlag(bbcur,bbjmp));
         bbcur->delete_inst(brInst);
         bbcur->emplace_inst(bbcur->insts().end(),new ir::BranchInst(bbjmp,bbcur));
@@ -121,7 +119,7 @@ namespace pass{
             for(auto inst:bbdel->insts()){
                 auto phiInst=dyn_cast<ir::PhiInst>(inst);
                 if(not phiInst)break;//要保证phi在块的开头
-                phiInst->delbb(bbcur);
+                phiInst->delBlock(bbcur);
                 if(phiInst->getConstantRepl()){
                     worklist.push_back(inst);
                 }
@@ -140,12 +138,12 @@ namespace pass{
             auto puser=puse->user();
             // auto brInst=dyn_cast<ir::BranchInst>(puser);
             // if(brInst){
-            //     assert(getDeadFlag(brInst->parent()));
+            //     assert(getDeadFlag(brInst->block()));
             // }
             auto phiInst=dyn_cast<ir::PhiInst>(puser);
             if(phiInst){
                 //将phi中对应bb的参数删除,加入到worklist中!
-                phiInst->delbb(bb);
+                phiInst->delBlock(bb);
                 if(phiInst->getConstantRepl())
                     worklist.push_back(dyn_cast<ir::Instruction>(phiInst));
             }
@@ -159,6 +157,5 @@ namespace pass{
                 deleteDeadBlock(bbnext);
             }
         }
-
     }
 }

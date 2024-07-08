@@ -14,53 +14,87 @@ namespace ir {
  *      1. _parent: 当前
  */
 class GlobalVariable : public User {
-protected:
-    Module* _parent = nullptr;
-    bool _is_array = false;
-    bool _is_const = false;
-    std::vector<Value*> _init;
-public:
-    //! 1. Array
-    GlobalVariable(Type* base_type, std::vector<Value*> init, std::vector<int> dims,
-                   Module* parent=nullptr, const_str_ref name="", bool is_const=false)
-        : User(ir::Type::pointer_type(ir::Type::array_type(base_type, dims)), vGLOBAL_VAR, name),
-          _parent(parent), _init(init), _is_const(is_const), _is_array(true) {}
-    //! 2. Scalar
-    GlobalVariable(Type* base_type, std::vector<Value*> init, Module* parent=nullptr,
-                   const_str_ref name="", bool is_const=false)
-        : User(ir::Type::pointer_type(base_type), vGLOBAL_VAR, name),
-          _parent(parent), _init(init), _is_const(is_const), _is_array(false) {}
-public:  // generate function
-    static GlobalVariable* gen(Type* base_type, std::vector<Value*> init, Module* parent=nullptr,
-                               const_str_ref name="", bool is_const=false, std::vector<int> dims={}) {
-        GlobalVariable* var = nullptr;
-        if (dims.size() == 0) var = new GlobalVariable(base_type, init, parent, name, is_const);
-        else var = new GlobalVariable(base_type, init, dims, parent, name, is_const);
-        return var;
-    }
-public:  // check function
-    bool is_array() const { return _is_array; }
-    bool is_const() const { return _is_const; }
-    bool is_init() const { return _init.size() > 0; }
-public:  // get function
-    Module* parent() const { return _parent; }
-    int dims_cnt() const {
-        if (is_array()) return dyn_cast<ArrayType>(base_type())->dims_cnt();
-        else return 0;
-    }
-    int init_cnt() const { return _init.size(); }
-    Value* init(int index) const { return _init[index]; }
-    Type* base_type() const {
-        assert(dyn_cast<PointerType>(type()) && "type error");
-        return dyn_cast<PointerType>(type())->base_type();
-    }
-    Value* scalar_value() const { return _init[0]; }
-public:
-    void print_ArrayInit(std::ostream& os, const int dimension,
-                         const int begin, int* idx) const;
-public:
-    static bool classof(const Value* v) { return v->scid() == vGLOBAL_VAR; }
-    std::string name() const override { return "@" + _name; }
-    void print(std::ostream& os) override;
+ protected:
+  Module* mModule = nullptr;
+  bool mIsArray = false;
+  bool mIsConst = false;
+  std::vector<Value*> mInitValues;
+
+ public:
+  //! 1. Array
+  GlobalVariable(Type* base_type,
+                 const std::vector<Value*>& init,
+                 const std::vector<size_t>& dims,
+                 Module* parent = nullptr,
+                 const_str_ref name = "",
+                 bool is_const = false)
+      : User(Type::TypePointer(Type::TypeArray(base_type, dims)),
+             vGLOBAL_VAR,
+             name),
+        mModule(parent),
+        mInitValues(init),
+        mIsConst(is_const) {
+    mIsArray = true;
+  }
+
+  //! 2. Scalar
+  GlobalVariable(Type* base_type,
+                 const std::vector<Value*> init,
+                 Module* parent = nullptr,
+                 const_str_ref name = "",
+                 bool is_const = false)
+      : User(ir::Type::TypePointer(base_type), vGLOBAL_VAR, name),
+        mModule(parent),
+        mInitValues(init),
+        mIsConst(is_const) {
+    mIsArray = false;
+  }
+
+ public:  // generate function
+  static GlobalVariable* gen(Type* base_type,
+                             const std::vector<Value*>& init,
+                             Module* parent = nullptr,
+                             const_str_ref name = "",
+                             bool is_const = false,
+                             const std::vector<size_t> dims = {}) {
+    GlobalVariable* var = nullptr;
+    if (dims.size() == 0)
+      var = new GlobalVariable(base_type, init, parent, name, is_const);
+    else
+      var = new GlobalVariable(base_type, init, dims, parent, name, is_const);
+    return var;
+  }
+
+ public:  // check function
+  bool isArray() const { return mIsArray; }
+  bool isConst() const { return mIsConst; }
+  bool isInit() const { return mInitValues.size() > 0; }
+
+ public:  // get function
+  auto parent() const { return mModule; }
+  auto dims_cnt() const {
+    if (isArray())
+      return dyn_cast<ArrayType>(baseType())->dims_cnt();
+    else
+      return static_cast<size_t>(0);
+  }
+  auto init_cnt() const { return mInitValues.size(); }
+  auto init(size_t index) const { return mInitValues[index]; }
+  Type* baseType() const {
+    assert(dyn_cast<PointerType>(type()) && "type error");
+    return dyn_cast<PointerType>(type())->baseType();
+  }
+  auto scalarValue() const { return mInitValues[0]; }
+
+ public:
+  void print_ArrayInit(std::ostream& os,
+                       const size_t dimension,
+                       const size_t begin,
+                       size_t* idx) const;
+
+ public:
+  static bool classof(const Value* v) { return v->valueId() == vGLOBAL_VAR; }
+  std::string name() const override { return "@" + mName; }
+  void print(std::ostream& os) const override;
 };
 }  // namespace ir

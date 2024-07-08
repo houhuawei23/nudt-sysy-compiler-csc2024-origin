@@ -53,7 +53,7 @@ MIRInst* ISelContext::lookup_def(MIROperand* op) {
 }
 
 void ISelContext::run_isel(MIRFunction* func) {
-    bool debugISel = false;
+    bool debugISel = true;
     auto dumpInst = [&](MIRInst* inst) {
         auto& instInfo = _codegen_ctx.instInfo.get_instinfo(inst);
         instInfo.print(std::cerr << "match&select: ", *inst, false);
@@ -173,7 +173,9 @@ void ISelContext::run_isel(MIRFunction* func) {
                 }
             }
         }
-
+        if(debugISel) {
+            func->print(std::cout << "after isel:\n", _codegen_ctx);
+        }
         if (modified) {
             if (debugISel) std::cout << "run_isel modified, continue!\n" << std::endl;
             continue;
