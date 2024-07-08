@@ -169,11 +169,11 @@ void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& tar
             dumpStageResult("AfterStackAlloc", mir_func, codegen_ctx);
         }
 
-        {
-            /* post-RA scheduling, minimize cycles */
-            postRASchedule(*mir_func, codegen_ctx);
-            dumpStageResult("AfterPostRASchedule", mir_func, codegen_ctx);
-        }
+        // {
+        //     /* post-RA scheduling, minimize cycles */
+        //     postRASchedule(*mir_func, codegen_ctx);
+        //     dumpStageResult("AfterPostRASchedule", mir_func, codegen_ctx);
+        // }
         /* 4.10 post legalization */
         postLegalizeFunc(*mir_func, codegen_ctx);
         
