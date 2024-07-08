@@ -294,6 +294,10 @@ namespace pass
     void GVN::run(ir::Function *F, topAnalysisInfoManager* tp)
     {
         if(not F->entry())return ;
+        RPOblocks.clear();
+        visited.clear();
+        NeedRemove.clear();
+        _Hashtable.clear();
         domctx=tp->getDomTree(F);
         domctx->refresh();
         if (F->blocks().empty())

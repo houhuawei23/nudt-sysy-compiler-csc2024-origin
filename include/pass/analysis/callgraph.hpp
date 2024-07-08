@@ -18,4 +18,11 @@ namespace pass{
             callGraph* cgctx;
 
     };
+
+    class callGraphCheck : public ModulePass{
+        public:
+            void run(ir::Module* ctx, topAnalysisInfoManager* tp)override;
+        private:
+            callGraph* cgctx;
+    };
 }

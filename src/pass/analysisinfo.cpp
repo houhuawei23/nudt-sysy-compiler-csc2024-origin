@@ -54,6 +54,8 @@ void callGraph::refresh(){
         PassManager pm=PassManager(_pu,_tp);
         callGraphBuild cgb=callGraphBuild();
         pm.run(&cgb);
+        // callGraphCheck cgc=callGraphCheck();
+        // pm.run(&cgc);
         setOn();
     }
 }

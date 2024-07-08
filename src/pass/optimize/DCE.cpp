@@ -5,8 +5,10 @@ static std::set<ir::Instruction*>alive;
 namespace pass{
     
     void DCE::run(ir::Function* func, topAnalysisInfoManager* tp){
-        bool isCallChange=false;
+        alive.clear();
         if(!func->entry())return;
+        // func->rename();
+        // func->print(std::cout);
         for(auto bb:func->blocks()){//扫描所有的指令,只要是isAlive的就加到alive列表中
             for(auto inst:bb->insts()){
                 if(isAlive(inst))addAlive(inst);
@@ -19,14 +21,10 @@ namespace pass{
                 instIter++;
                 if(alive.count(curIter)==0){
                     bb->force_delete_inst(curIter);
-                    if(dyn_cast<ir::CallInst>(curIter))
-                        isCallChange=true;
                 }
             }
         }
         // func->print(std::cout);
-        if(isCallChange)
-            tp->CallChange();
     }
 
     bool DCE::isAlive(ir::Instruction* inst){//只有store,terminator和call inst是活的
@@ -37,9 +35,13 @@ namespace pass{
         alive.insert(inst);
         for(auto op:inst->operands()){
             auto opInst=dyn_cast<ir::Instruction>(op->value());
-            if(opInst and !alive.count(opInst))
+            if(opInst==nullptr)continue;
+            // std::cout<<alive.count(opInst)<<std::endl;
+            if(alive.count(opInst)==0){   
                 addAlive(opInst);
+            }
         }
+        inst->block();
     }
 
 }
