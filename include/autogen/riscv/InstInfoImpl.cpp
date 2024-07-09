@@ -14,16 +14,11 @@ class RISCVInstInfoBEQ final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagUse;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagMetadata;
-      case 3:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagUse;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagMetadata;
+      case 3: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -50,16 +45,11 @@ class RISCVInstInfoBNE final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagUse;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagMetadata;
-      case 3:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagUse;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagMetadata;
+      case 3: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -86,16 +76,11 @@ class RISCVInstInfoBLE final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagUse;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagMetadata;
-      case 3:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagUse;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagMetadata;
+      case 3: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -122,16 +107,11 @@ class RISCVInstInfoBGT final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagUse;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagMetadata;
-      case 3:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagUse;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagMetadata;
+      case 3: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -158,16 +138,11 @@ class RISCVInstInfoBLT final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagUse;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagMetadata;
-      case 3:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagUse;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagMetadata;
+      case 3: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -194,16 +169,11 @@ class RISCVInstInfoBGE final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagUse;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagMetadata;
-      case 3:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagUse;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagMetadata;
+      case 3: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -230,16 +200,11 @@ class RISCVInstInfoBLEU final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagUse;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagMetadata;
-      case 3:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagUse;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagMetadata;
+      case 3: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -266,16 +231,11 @@ class RISCVInstInfoBGTU final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagUse;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagMetadata;
-      case 3:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagUse;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagMetadata;
+      case 3: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -302,16 +262,11 @@ class RISCVInstInfoBLTU final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagUse;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagMetadata;
-      case 3:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagUse;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagMetadata;
+      case 3: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -338,16 +293,11 @@ class RISCVInstInfoBGEU final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagUse;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagMetadata;
-      case 3:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagUse;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagMetadata;
+      case 3: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -374,14 +324,10 @@ class RISCVInstInfoADD final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -405,14 +351,10 @@ class RISCVInstInfoADDW final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -436,14 +378,10 @@ class RISCVInstInfoSUB final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -467,14 +405,10 @@ class RISCVInstInfoSUBW final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -498,14 +432,10 @@ class RISCVInstInfoXOR final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -529,14 +459,10 @@ class RISCVInstInfoOR final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -560,14 +486,10 @@ class RISCVInstInfoAND final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -591,14 +513,10 @@ class RISCVInstInfoSLL final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -622,14 +540,10 @@ class RISCVInstInfoSRL final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -653,14 +567,10 @@ class RISCVInstInfoSRA final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -684,14 +594,10 @@ class RISCVInstInfoSLT final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -715,14 +621,10 @@ class RISCVInstInfoSLTU final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -746,14 +648,10 @@ class RISCVInstInfoADDI final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -777,14 +675,10 @@ class RISCVInstInfoXORI final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -808,14 +702,10 @@ class RISCVInstInfoORI final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -839,14 +729,10 @@ class RISCVInstInfoANDI final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -870,14 +756,10 @@ class RISCVInstInfoSLTI final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -901,14 +783,10 @@ class RISCVInstInfoSLTIU final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -932,14 +810,10 @@ class RISCVInstInfoSLLI final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -963,14 +837,10 @@ class RISCVInstInfoSRLI final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -994,14 +864,10 @@ class RISCVInstInfoSRAI final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1025,14 +891,10 @@ class RISCVInstInfoLB final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagMetadata;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagMetadata;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1056,14 +918,10 @@ class RISCVInstInfoLH final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagMetadata;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagMetadata;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1087,14 +945,10 @@ class RISCVInstInfoLW final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagMetadata;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagMetadata;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1118,14 +972,10 @@ class RISCVInstInfoLBU final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagMetadata;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagMetadata;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1149,14 +999,10 @@ class RISCVInstInfoLHU final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagMetadata;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagMetadata;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1180,14 +1026,10 @@ class RISCVInstInfoLD final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagMetadata;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagMetadata;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1211,14 +1053,10 @@ class RISCVInstInfoSB final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagUse;
-      case 1:
-        return OperandFlagMetadata;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagUse;
+      case 1: return OperandFlagMetadata;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1242,14 +1080,10 @@ class RISCVInstInfoSH final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagUse;
-      case 1:
-        return OperandFlagMetadata;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagUse;
+      case 1: return OperandFlagMetadata;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1273,14 +1107,10 @@ class RISCVInstInfoSW final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagUse;
-      case 1:
-        return OperandFlagMetadata;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagUse;
+      case 1: return OperandFlagMetadata;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1304,14 +1134,10 @@ class RISCVInstInfoSD final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagUse;
-      case 1:
-        return OperandFlagMetadata;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagUse;
+      case 1: return OperandFlagMetadata;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1335,10 +1161,8 @@ class RISCVInstInfoJAL final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1360,10 +1184,8 @@ class RISCVInstInfoJ final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1388,8 +1210,7 @@ class RISCVInstInfoRET final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      default:
-        assert(false && "Invalid operand index");
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1413,12 +1234,9 @@ class RISCVInstInfoLUI final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1443,12 +1261,9 @@ class RISCVInstInfoAUIPC final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1473,12 +1288,9 @@ class RISCVInstInfoLLA final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1501,14 +1313,10 @@ class RISCVInstInfoMUL final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1532,14 +1340,10 @@ class RISCVInstInfoMULW final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1563,14 +1367,10 @@ class RISCVInstInfoMULH final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1594,14 +1394,10 @@ class RISCVInstInfoMULHSU final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1625,14 +1421,10 @@ class RISCVInstInfoMULHU final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1656,14 +1448,10 @@ class RISCVInstInfoDIV final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1687,14 +1475,10 @@ class RISCVInstInfoDIVW final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1718,14 +1502,10 @@ class RISCVInstInfoDIVU final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1749,14 +1529,10 @@ class RISCVInstInfoREM final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1780,14 +1556,10 @@ class RISCVInstInfoREMW final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1811,14 +1583,10 @@ class RISCVInstInfoREMU final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1842,14 +1610,10 @@ class RISCVInstInfoLR final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1873,14 +1637,10 @@ class RISCVInstInfoSC final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1904,14 +1664,10 @@ class RISCVInstInfoAMOSWAP final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1935,14 +1691,10 @@ class RISCVInstInfoAMOADD final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1966,14 +1718,10 @@ class RISCVInstInfoAMOAND final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1997,14 +1745,10 @@ class RISCVInstInfoAMOOR final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -2028,14 +1772,10 @@ class RISCVInstInfoAMOXOR final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -2059,14 +1799,10 @@ class RISCVInstInfoFLW final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagMetadata;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagMetadata;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -2090,14 +1826,10 @@ class RISCVInstInfoFSW final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagUse;
-      case 1:
-        return OperandFlagMetadata;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagUse;
+      case 1: return OperandFlagMetadata;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -2121,12 +1853,9 @@ class RISCVInstInfoLoadImm12 final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -2151,12 +1880,9 @@ class RISCVInstInfoLoadImm32 final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -2181,12 +1907,9 @@ class RISCVInstInfoLoadImm64 final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -2211,12 +1934,9 @@ class RISCVInstInfoMV final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -2308,150 +2028,78 @@ class RISCVInstInfo final : public TargetInstInfo {
   RISCVInstInfo() = default;
   InstInfo& get_instinfo(uint32_t opcode) {
     switch (opcode) {
-      case RISCVInst::BEQ:
-        return _instinfoBEQ;
-      case RISCVInst::BNE:
-        return _instinfoBNE;
-      case RISCVInst::BLE:
-        return _instinfoBLE;
-      case RISCVInst::BGT:
-        return _instinfoBGT;
-      case RISCVInst::BLT:
-        return _instinfoBLT;
-      case RISCVInst::BGE:
-        return _instinfoBGE;
-      case RISCVInst::BLEU:
-        return _instinfoBLEU;
-      case RISCVInst::BGTU:
-        return _instinfoBGTU;
-      case RISCVInst::BLTU:
-        return _instinfoBLTU;
-      case RISCVInst::BGEU:
-        return _instinfoBGEU;
-      case RISCVInst::ADD:
-        return _instinfoADD;
-      case RISCVInst::ADDW:
-        return _instinfoADDW;
-      case RISCVInst::SUB:
-        return _instinfoSUB;
-      case RISCVInst::SUBW:
-        return _instinfoSUBW;
-      case RISCVInst::XOR:
-        return _instinfoXOR;
-      case RISCVInst::OR:
-        return _instinfoOR;
-      case RISCVInst::AND:
-        return _instinfoAND;
-      case RISCVInst::SLL:
-        return _instinfoSLL;
-      case RISCVInst::SRL:
-        return _instinfoSRL;
-      case RISCVInst::SRA:
-        return _instinfoSRA;
-      case RISCVInst::SLT:
-        return _instinfoSLT;
-      case RISCVInst::SLTU:
-        return _instinfoSLTU;
-      case RISCVInst::ADDI:
-        return _instinfoADDI;
-      case RISCVInst::XORI:
-        return _instinfoXORI;
-      case RISCVInst::ORI:
-        return _instinfoORI;
-      case RISCVInst::ANDI:
-        return _instinfoANDI;
-      case RISCVInst::SLTI:
-        return _instinfoSLTI;
-      case RISCVInst::SLTIU:
-        return _instinfoSLTIU;
-      case RISCVInst::SLLI:
-        return _instinfoSLLI;
-      case RISCVInst::SRLI:
-        return _instinfoSRLI;
-      case RISCVInst::SRAI:
-        return _instinfoSRAI;
-      case RISCVInst::LB:
-        return _instinfoLB;
-      case RISCVInst::LH:
-        return _instinfoLH;
-      case RISCVInst::LW:
-        return _instinfoLW;
-      case RISCVInst::LBU:
-        return _instinfoLBU;
-      case RISCVInst::LHU:
-        return _instinfoLHU;
-      case RISCVInst::LD:
-        return _instinfoLD;
-      case RISCVInst::SB:
-        return _instinfoSB;
-      case RISCVInst::SH:
-        return _instinfoSH;
-      case RISCVInst::SW:
-        return _instinfoSW;
-      case RISCVInst::SD:
-        return _instinfoSD;
-      case RISCVInst::JAL:
-        return _instinfoJAL;
-      case RISCVInst::J:
-        return _instinfoJ;
-      case RISCVInst::RET:
-        return _instinfoRET;
-      case RISCVInst::LUI:
-        return _instinfoLUI;
-      case RISCVInst::AUIPC:
-        return _instinfoAUIPC;
-      case RISCVInst::LLA:
-        return _instinfoLLA;
-      case RISCVInst::MUL:
-        return _instinfoMUL;
-      case RISCVInst::MULW:
-        return _instinfoMULW;
-      case RISCVInst::MULH:
-        return _instinfoMULH;
-      case RISCVInst::MULHSU:
-        return _instinfoMULHSU;
-      case RISCVInst::MULHU:
-        return _instinfoMULHU;
-      case RISCVInst::DIV:
-        return _instinfoDIV;
-      case RISCVInst::DIVW:
-        return _instinfoDIVW;
-      case RISCVInst::DIVU:
-        return _instinfoDIVU;
-      case RISCVInst::REM:
-        return _instinfoREM;
-      case RISCVInst::REMW:
-        return _instinfoREMW;
-      case RISCVInst::REMU:
-        return _instinfoREMU;
-      case RISCVInst::LR:
-        return _instinfoLR;
-      case RISCVInst::SC:
-        return _instinfoSC;
-      case RISCVInst::AMOSWAP:
-        return _instinfoAMOSWAP;
-      case RISCVInst::AMOADD:
-        return _instinfoAMOADD;
-      case RISCVInst::AMOAND:
-        return _instinfoAMOAND;
-      case RISCVInst::AMOOR:
-        return _instinfoAMOOR;
-      case RISCVInst::AMOXOR:
-        return _instinfoAMOXOR;
-      case RISCVInst::FLW:
-        return _instinfoFLW;
-      case RISCVInst::FSW:
-        return _instinfoFSW;
-      case RISCVInst::LoadImm12:
-        return _instinfoLoadImm12;
-      case RISCVInst::LoadImm32:
-        return _instinfoLoadImm32;
-      case RISCVInst::LoadImm64:
-        return _instinfoLoadImm64;
-      case RISCVInst::MV:
-        return _instinfoMV;
-      default:
-        return TargetInstInfo::get_instinfo(opcode);
+      case RISCVInst::BEQ: return _instinfoBEQ;
+      case RISCVInst::BNE: return _instinfoBNE;
+      case RISCVInst::BLE: return _instinfoBLE;
+      case RISCVInst::BGT: return _instinfoBGT;
+      case RISCVInst::BLT: return _instinfoBLT;
+      case RISCVInst::BGE: return _instinfoBGE;
+      case RISCVInst::BLEU: return _instinfoBLEU;
+      case RISCVInst::BGTU: return _instinfoBGTU;
+      case RISCVInst::BLTU: return _instinfoBLTU;
+      case RISCVInst::BGEU: return _instinfoBGEU;
+      case RISCVInst::ADD: return _instinfoADD;
+      case RISCVInst::ADDW: return _instinfoADDW;
+      case RISCVInst::SUB: return _instinfoSUB;
+      case RISCVInst::SUBW: return _instinfoSUBW;
+      case RISCVInst::XOR: return _instinfoXOR;
+      case RISCVInst::OR: return _instinfoOR;
+      case RISCVInst::AND: return _instinfoAND;
+      case RISCVInst::SLL: return _instinfoSLL;
+      case RISCVInst::SRL: return _instinfoSRL;
+      case RISCVInst::SRA: return _instinfoSRA;
+      case RISCVInst::SLT: return _instinfoSLT;
+      case RISCVInst::SLTU: return _instinfoSLTU;
+      case RISCVInst::ADDI: return _instinfoADDI;
+      case RISCVInst::XORI: return _instinfoXORI;
+      case RISCVInst::ORI: return _instinfoORI;
+      case RISCVInst::ANDI: return _instinfoANDI;
+      case RISCVInst::SLTI: return _instinfoSLTI;
+      case RISCVInst::SLTIU: return _instinfoSLTIU;
+      case RISCVInst::SLLI: return _instinfoSLLI;
+      case RISCVInst::SRLI: return _instinfoSRLI;
+      case RISCVInst::SRAI: return _instinfoSRAI;
+      case RISCVInst::LB: return _instinfoLB;
+      case RISCVInst::LH: return _instinfoLH;
+      case RISCVInst::LW: return _instinfoLW;
+      case RISCVInst::LBU: return _instinfoLBU;
+      case RISCVInst::LHU: return _instinfoLHU;
+      case RISCVInst::LD: return _instinfoLD;
+      case RISCVInst::SB: return _instinfoSB;
+      case RISCVInst::SH: return _instinfoSH;
+      case RISCVInst::SW: return _instinfoSW;
+      case RISCVInst::SD: return _instinfoSD;
+      case RISCVInst::JAL: return _instinfoJAL;
+      case RISCVInst::J: return _instinfoJ;
+      case RISCVInst::RET: return _instinfoRET;
+      case RISCVInst::LUI: return _instinfoLUI;
+      case RISCVInst::AUIPC: return _instinfoAUIPC;
+      case RISCVInst::LLA: return _instinfoLLA;
+      case RISCVInst::MUL: return _instinfoMUL;
+      case RISCVInst::MULW: return _instinfoMULW;
+      case RISCVInst::MULH: return _instinfoMULH;
+      case RISCVInst::MULHSU: return _instinfoMULHSU;
+      case RISCVInst::MULHU: return _instinfoMULHU;
+      case RISCVInst::DIV: return _instinfoDIV;
+      case RISCVInst::DIVW: return _instinfoDIVW;
+      case RISCVInst::DIVU: return _instinfoDIVU;
+      case RISCVInst::REM: return _instinfoREM;
+      case RISCVInst::REMW: return _instinfoREMW;
+      case RISCVInst::REMU: return _instinfoREMU;
+      case RISCVInst::LR: return _instinfoLR;
+      case RISCVInst::SC: return _instinfoSC;
+      case RISCVInst::AMOSWAP: return _instinfoAMOSWAP;
+      case RISCVInst::AMOADD: return _instinfoAMOADD;
+      case RISCVInst::AMOAND: return _instinfoAMOAND;
+      case RISCVInst::AMOOR: return _instinfoAMOOR;
+      case RISCVInst::AMOXOR: return _instinfoAMOXOR;
+      case RISCVInst::FLW: return _instinfoFLW;
+      case RISCVInst::FSW: return _instinfoFSW;
+      case RISCVInst::LoadImm12: return _instinfoLoadImm12;
+      case RISCVInst::LoadImm32: return _instinfoLoadImm32;
+      case RISCVInst::LoadImm64: return _instinfoLoadImm64;
+      case RISCVInst::MV: return _instinfoMV;
+      default: return TargetInstInfo::get_instinfo(opcode);
     }
   }
   bool matchBranch(MIRInst* inst, MIRBlock*& target, double& prob) override {

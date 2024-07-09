@@ -140,7 +140,7 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
     const auto canonicalizedType = ctx.registerInfo->getCanonicalizedRegisterTypeForClass(allocationClass);
     const auto& list = ctx.registerInfo->get_allocation_list(allocationClass);
     const std::unordered_set<uint32_t> allocableISARegs{ list.cbegin(), list.cend() };  // 可用来分配的物理寄存器
-    constexpr auto DebugRA = true;
+    constexpr auto DebugRA = false;
     if (DebugRA) std::cerr << "allocate for class " << allocationClass << std::endl;
 
     std::unordered_set<uint32_t> blockList;

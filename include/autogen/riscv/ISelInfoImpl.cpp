@@ -1741,6 +1741,40 @@ static bool matchAndSelectPattern37(MIRInst* inst1, ISelContext& ctx) {
   }
 
   /* match predicate for operands  */
+  if (not(isOperandIReg(op2) && isZero(op3) &&
+          isCompareOp(op4, CompareOp::ICmpNotEqual))) {
+    return false;
+  }
+
+  /** Select Inst **/
+  auto op6 = (op1);
+  auto op7 = (getZero(op3));
+  auto op8 = (op2);
+  /* select inst SLTU */
+  auto inst2 = new MIRInst(SLTU);
+  inst2->set_operand(0, op6);
+  inst2->set_operand(1, op7);
+  inst2->set_operand(2, op8);
+  ctx.insert_inst(inst2);
+
+  /* Replace Operand */
+  ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst2));
+  ctx.remove_inst(inst1);
+  return true;
+}
+static bool matchAndSelectPattern38(MIRInst* inst1, ISelContext& ctx) {
+  uint32_t rootOpcode = InstICmp;
+  /** Match Inst **/
+  /* match inst InstICmp */
+  MIROperand* op1 = nullptr;
+  MIROperand* op2 = nullptr;
+  MIROperand* op3 = nullptr;
+  MIROperand* op4 = nullptr;
+  if (not matchInstICmp(inst1, op1, op2, op3, op4)) {
+    return false;
+  }
+
+  /* match predicate for operands  */
   if (not(isOperandIReg(op2) && isOperandIReg(op3) &&
           isCompareOp(op4, CompareOp::ICmpSignedLessEqual))) {
     return false;
@@ -1777,7 +1811,7 @@ static bool matchAndSelectPattern37(MIRInst* inst1, ISelContext& ctx) {
 /* InstICmp matchAndSelectPatternInstICmpend */
 
 /* InstBranch matchAndSelectPatternInstBranch begin */
-static bool matchAndSelectPattern38(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern39(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstBranch;
   /** Match Inst **/
   /* match inst InstBranch */
@@ -2026,17 +2060,20 @@ static bool matchAndSelectImpl(MIRInst* inst,
         success = true;
         break;
       }
-      break;
-    }
-    case InstBranch: {
       if (matchAndSelectPattern38(inst, ctx)) {
         success = true;
         break;
       }
       break;
     }
-    default:
+    case InstBranch: {
+      if (matchAndSelectPattern39(inst, ctx)) {
+        success = true;
+        break;
+      }
       break;
+    }
+    default: break;
   }
   if (debugMatchSelect) {
     auto& instInfo = ctx.codegen_ctx().instInfo.get_instinfo(inst);

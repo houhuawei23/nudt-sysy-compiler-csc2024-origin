@@ -4,7 +4,7 @@
 
 namespace mir {
 void MIRBlock::print(std::ostream& os, CodeGenContext& ctx) {
-    os << "  ";
+    os << " ";
     for (auto& inst : _insts) {
         os << "\t";
         auto& info = ctx.instInfo.get_instinfo(inst);

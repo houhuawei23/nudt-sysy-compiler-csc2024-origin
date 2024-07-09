@@ -144,8 +144,6 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
         case InstAnd:
         case InstOr:
         case InstXor: {
-            auto* src1 = inst->operand(1);
-            auto* src2 = inst->operand(2);
             imm2regBeta(inst, 1);
             imm2regBeta(inst, 2);
             break;
@@ -155,7 +153,7 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
             auto* src2 = inst->operand(2);
             imm2regBeta(inst, 1);
 
-            if (src2->is_imm()) { /* sub to add*/
+            if (src2->is_imm()) { /* sub to add */
                 auto neg = getNeg(src2);
                 if (isOperandImm12(neg)) {
                     inst->set_opcode(InstAdd);
@@ -168,14 +166,17 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
             break;
         }
         case InstNeg: {
-            auto* val = inst->operand(1);
-            /* sub dst, x0, src2 */
+            auto val = inst->operand(1);
+            /* neg dst, val
+            ->
+            sub dst, x0, val */
             inst->set_opcode(InstSub);
             inst->set_operand(1, getZero(val));
             inst->set_operand(2, val);
             break;
         }
         case InstAbs: {
+            /* abs dst, val */
             imm2regBeta(inst, 1);
             break;
         }

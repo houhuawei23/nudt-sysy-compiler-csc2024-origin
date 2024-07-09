@@ -104,6 +104,7 @@ public:  // utils function
                 default: assert(false && "unsupported float type");
             }
         } else if (type->isPointer()) {
+            // rv64
             return OperandType::Int64;
         }
         return OperandType::Special;

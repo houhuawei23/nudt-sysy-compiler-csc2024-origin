@@ -75,6 +75,7 @@ enum class OperandType : uint32_t {
     Special,
     HighBits,
     LowBits,
+    Alignment
 };
 constexpr bool isIntType(OperandType type) { return type <= OperandType::Int64; }
 constexpr bool isFloatType(OperandType type) { return type == OperandType::Float32; }

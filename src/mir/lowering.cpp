@@ -222,8 +222,7 @@ MIRFunction* create_mir_function(ir::Function* ir_func, MIRFunction* mir_func,
         if (ir_inst->valueId() != ir::ValueId::vALLOCA)
             continue;
 
-        auto pointee_type =
-            dyn_cast<ir::PointerType>(ir_inst->type())->baseType();
+        auto pointee_type = dyn_cast<ir::PointerType>(ir_inst->type())->baseType();
         uint32_t align = 4;  // TODO: align, need bind to ir object
         auto storage = mir_func->add_stack_obj(
             codegen_ctx.next_id(),  // id
@@ -503,7 +502,7 @@ void lower(ir::LoadInst* ir_inst, LoweringContext& ctx) {
     const uint32_t align = 4;
     auto inst = new MIRInst(InstLoad);
     inst->set_operand(0, ret); inst->set_operand(1, ptr);
-    inst->set_operand(2, MIROperand::as_imm(align, OperandType::Special));
+    inst->set_operand(2, MIROperand::as_imm(align, OperandType::Alignment));
     ctx.emit_inst(inst);
     ctx.add_valmap(ir_inst, ret);
 }
@@ -513,7 +512,7 @@ void lower(ir::StoreInst* ir_inst, LoweringContext& ctx) {
     inst->set_operand(0, ctx.map2operand(ir_inst->ptr()));
     inst->set_operand(1, ctx.map2operand(ir_inst->value()));
     const uint32_t align = 4;
-    inst->set_operand(2, MIROperand::as_imm(align, OperandType::Special));
+    inst->set_operand(2, MIROperand::as_imm(align, OperandType::Alignment));
     ctx.emit_inst(inst);
 }
 /* ReturnInst */

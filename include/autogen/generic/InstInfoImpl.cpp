@@ -14,10 +14,8 @@ class GENERICInstInfoJump final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -42,14 +40,10 @@ class GENERICInstInfoBranch final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagUse;
-      case 1:
-        return OperandFlagMetadata;
-      case 2:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagUse;
+      case 1: return OperandFlagMetadata;
+      case 2: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -75,8 +69,7 @@ class GENERICInstInfoUnreachable final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      default:
-        assert(false && "Invalid operand index");
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -99,14 +92,10 @@ class GENERICInstInfoLoad final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -130,14 +119,10 @@ class GENERICInstInfoStore final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagUse;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagUse;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -161,14 +146,10 @@ class GENERICInstInfoAdd final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -194,14 +175,10 @@ class GENERICInstInfoSub final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -225,14 +202,10 @@ class GENERICInstInfoMul final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -258,14 +231,10 @@ class GENERICInstInfoUDiv final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -289,14 +258,10 @@ class GENERICInstInfoURem final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -320,14 +285,10 @@ class GENERICInstInfoAnd final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -353,14 +314,10 @@ class GENERICInstInfoOr final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -386,14 +343,10 @@ class GENERICInstInfoXor final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -419,14 +372,10 @@ class GENERICInstInfoShl final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -450,14 +399,10 @@ class GENERICInstInfoLShr final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -481,14 +426,10 @@ class GENERICInstInfoAShr final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -512,14 +453,10 @@ class GENERICInstInfoSDiv final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -543,14 +480,10 @@ class GENERICInstInfoSRem final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -574,14 +507,10 @@ class GENERICInstInfoSMin final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -607,14 +536,10 @@ class GENERICInstInfoSMax final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -640,12 +565,9 @@ class GENERICInstInfoNeg final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -668,12 +590,9 @@ class GENERICInstInfoAbs final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -696,14 +615,10 @@ class GENERICInstInfoFAdd final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -729,14 +644,10 @@ class GENERICInstInfoFSub final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -760,14 +671,10 @@ class GENERICInstInfoFMul final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -793,14 +700,10 @@ class GENERICInstInfoFDiv final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -824,12 +727,9 @@ class GENERICInstInfoFNeg final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -852,12 +752,9 @@ class GENERICInstInfoFAbs final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -880,16 +777,11 @@ class GENERICInstInfoFFma final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      case 3:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      case 3: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -914,16 +806,11 @@ class GENERICInstInfoICmp final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      case 3:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      case 3: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -948,16 +835,11 @@ class GENERICInstInfoFCmp final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      case 3:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      case 3: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -982,12 +864,9 @@ class GENERICInstInfoSExt final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1010,12 +889,9 @@ class GENERICInstInfoZExt final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1038,12 +914,9 @@ class GENERICInstInfoTrunc final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1066,12 +939,9 @@ class GENERICInstInfoF2U final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1094,12 +964,9 @@ class GENERICInstInfoF2S final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1122,12 +989,9 @@ class GENERICInstInfoU2F final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1150,12 +1014,9 @@ class GENERICInstInfoS2F final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1178,10 +1039,8 @@ class GENERICInstInfoFCast final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1204,12 +1063,9 @@ class GENERICInstInfoCopy final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1232,16 +1088,11 @@ class GENERICInstInfoSelect final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      case 3:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      case 2: return OperandFlagUse;
+      case 3: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1266,12 +1117,9 @@ class GENERICInstInfoLoadGlobalAddress final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1296,12 +1144,9 @@ class GENERICInstInfoLoadImm final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1324,12 +1169,9 @@ class GENERICInstInfoLoadStackObjectAddr final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1356,12 +1198,9 @@ class GENERICInstInfoCopyFromReg final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1384,12 +1223,9 @@ class GENERICInstInfoCopyToReg final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1414,12 +1250,9 @@ class GENERICInstInfoLoadImmToReg final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1442,12 +1275,9 @@ class GENERICInstInfoLoadRegFromStack final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagMetadata;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagDef;
+      case 1: return OperandFlagMetadata;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1470,12 +1300,9 @@ class GENERICInstInfoStoreRegToStack final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0:
-        return OperandFlagMetadata;
-      case 1:
-        return OperandFlagUse;
-      default:
-        assert(false && "Invalid operand index");
+      case 0: return OperandFlagMetadata;
+      case 1: return OperandFlagUse;
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1498,8 +1325,7 @@ class GENERICInstInfoReturn final : public InstInfo {
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      default:
-        assert(false && "Invalid operand index");
+      default: assert(false && "Invalid operand index");
     }
   }
 
@@ -1568,108 +1394,58 @@ class GENERICInstInfo final : public TargetInstInfo {
   GENERICInstInfo() = default;
   InstInfo& get_instinfo(uint32_t opcode) {
     switch (opcode) {
-      case GENERICInst::Jump:
-        return _instinfoJump;
-      case GENERICInst::Branch:
-        return _instinfoBranch;
-      case GENERICInst::Unreachable:
-        return _instinfoUnreachable;
-      case GENERICInst::Load:
-        return _instinfoLoad;
-      case GENERICInst::Store:
-        return _instinfoStore;
-      case GENERICInst::Add:
-        return _instinfoAdd;
-      case GENERICInst::Sub:
-        return _instinfoSub;
-      case GENERICInst::Mul:
-        return _instinfoMul;
-      case GENERICInst::UDiv:
-        return _instinfoUDiv;
-      case GENERICInst::URem:
-        return _instinfoURem;
-      case GENERICInst::And:
-        return _instinfoAnd;
-      case GENERICInst::Or:
-        return _instinfoOr;
-      case GENERICInst::Xor:
-        return _instinfoXor;
-      case GENERICInst::Shl:
-        return _instinfoShl;
-      case GENERICInst::LShr:
-        return _instinfoLShr;
-      case GENERICInst::AShr:
-        return _instinfoAShr;
-      case GENERICInst::SDiv:
-        return _instinfoSDiv;
-      case GENERICInst::SRem:
-        return _instinfoSRem;
-      case GENERICInst::SMin:
-        return _instinfoSMin;
-      case GENERICInst::SMax:
-        return _instinfoSMax;
-      case GENERICInst::Neg:
-        return _instinfoNeg;
-      case GENERICInst::Abs:
-        return _instinfoAbs;
-      case GENERICInst::FAdd:
-        return _instinfoFAdd;
-      case GENERICInst::FSub:
-        return _instinfoFSub;
-      case GENERICInst::FMul:
-        return _instinfoFMul;
-      case GENERICInst::FDiv:
-        return _instinfoFDiv;
-      case GENERICInst::FNeg:
-        return _instinfoFNeg;
-      case GENERICInst::FAbs:
-        return _instinfoFAbs;
-      case GENERICInst::FFma:
-        return _instinfoFFma;
-      case GENERICInst::ICmp:
-        return _instinfoICmp;
-      case GENERICInst::FCmp:
-        return _instinfoFCmp;
-      case GENERICInst::SExt:
-        return _instinfoSExt;
-      case GENERICInst::ZExt:
-        return _instinfoZExt;
-      case GENERICInst::Trunc:
-        return _instinfoTrunc;
-      case GENERICInst::F2U:
-        return _instinfoF2U;
-      case GENERICInst::F2S:
-        return _instinfoF2S;
-      case GENERICInst::U2F:
-        return _instinfoU2F;
-      case GENERICInst::S2F:
-        return _instinfoS2F;
-      case GENERICInst::FCast:
-        return _instinfoFCast;
-      case GENERICInst::Copy:
-        return _instinfoCopy;
-      case GENERICInst::Select:
-        return _instinfoSelect;
-      case GENERICInst::LoadGlobalAddress:
-        return _instinfoLoadGlobalAddress;
-      case GENERICInst::LoadImm:
-        return _instinfoLoadImm;
+      case GENERICInst::Jump: return _instinfoJump;
+      case GENERICInst::Branch: return _instinfoBranch;
+      case GENERICInst::Unreachable: return _instinfoUnreachable;
+      case GENERICInst::Load: return _instinfoLoad;
+      case GENERICInst::Store: return _instinfoStore;
+      case GENERICInst::Add: return _instinfoAdd;
+      case GENERICInst::Sub: return _instinfoSub;
+      case GENERICInst::Mul: return _instinfoMul;
+      case GENERICInst::UDiv: return _instinfoUDiv;
+      case GENERICInst::URem: return _instinfoURem;
+      case GENERICInst::And: return _instinfoAnd;
+      case GENERICInst::Or: return _instinfoOr;
+      case GENERICInst::Xor: return _instinfoXor;
+      case GENERICInst::Shl: return _instinfoShl;
+      case GENERICInst::LShr: return _instinfoLShr;
+      case GENERICInst::AShr: return _instinfoAShr;
+      case GENERICInst::SDiv: return _instinfoSDiv;
+      case GENERICInst::SRem: return _instinfoSRem;
+      case GENERICInst::SMin: return _instinfoSMin;
+      case GENERICInst::SMax: return _instinfoSMax;
+      case GENERICInst::Neg: return _instinfoNeg;
+      case GENERICInst::Abs: return _instinfoAbs;
+      case GENERICInst::FAdd: return _instinfoFAdd;
+      case GENERICInst::FSub: return _instinfoFSub;
+      case GENERICInst::FMul: return _instinfoFMul;
+      case GENERICInst::FDiv: return _instinfoFDiv;
+      case GENERICInst::FNeg: return _instinfoFNeg;
+      case GENERICInst::FAbs: return _instinfoFAbs;
+      case GENERICInst::FFma: return _instinfoFFma;
+      case GENERICInst::ICmp: return _instinfoICmp;
+      case GENERICInst::FCmp: return _instinfoFCmp;
+      case GENERICInst::SExt: return _instinfoSExt;
+      case GENERICInst::ZExt: return _instinfoZExt;
+      case GENERICInst::Trunc: return _instinfoTrunc;
+      case GENERICInst::F2U: return _instinfoF2U;
+      case GENERICInst::F2S: return _instinfoF2S;
+      case GENERICInst::U2F: return _instinfoU2F;
+      case GENERICInst::S2F: return _instinfoS2F;
+      case GENERICInst::FCast: return _instinfoFCast;
+      case GENERICInst::Copy: return _instinfoCopy;
+      case GENERICInst::Select: return _instinfoSelect;
+      case GENERICInst::LoadGlobalAddress: return _instinfoLoadGlobalAddress;
+      case GENERICInst::LoadImm: return _instinfoLoadImm;
       case GENERICInst::LoadStackObjectAddr:
         return _instinfoLoadStackObjectAddr;
-      case GENERICInst::CopyFromReg:
-        return _instinfoCopyFromReg;
-      case GENERICInst::CopyToReg:
-        return _instinfoCopyToReg;
-      case GENERICInst::LoadImmToReg:
-        return _instinfoLoadImmToReg;
-      case GENERICInst::LoadRegFromStack:
-        return _instinfoLoadRegFromStack;
-      case GENERICInst::StoreRegToStack:
-        return _instinfoStoreRegToStack;
-      case GENERICInst::Return:
-        return _instinfoReturn;
-      default:
-        return TargetInstInfo::get_instinfo(opcode);
+      case GENERICInst::CopyFromReg: return _instinfoCopyFromReg;
+      case GENERICInst::CopyToReg: return _instinfoCopyToReg;
+      case GENERICInst::LoadImmToReg: return _instinfoLoadImmToReg;
+      case GENERICInst::LoadRegFromStack: return _instinfoLoadRegFromStack;
+      case GENERICInst::StoreRegToStack: return _instinfoStoreRegToStack;
+      case GENERICInst::Return: return _instinfoReturn;
+      default: return TargetInstInfo::get_instinfo(opcode);
     }
   }
   bool matchBranch(MIRInst* inst, MIRBlock*& target, double& prob) override {

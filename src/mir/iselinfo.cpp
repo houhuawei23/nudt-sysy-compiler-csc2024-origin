@@ -53,13 +53,13 @@ MIRInst* ISelContext::lookup_def(MIROperand* op) {
 }
 
 void ISelContext::run_isel(MIRFunction* func) {
-    bool debugISel = true;
+    bool debugISel = false;
     auto dumpInst = [&](MIRInst* inst) {
         auto& instInfo = _codegen_ctx.instInfo.get_instinfo(inst);
         instInfo.print(std::cerr << "match&select: ", *inst, false);
         std::cerr << std::endl;
     };
-    // TODO: implement
+
     auto& isel_info = _codegen_ctx.iselInfo;
 
     //! fix point algorithm: 循环执行指令选择和替换，直到不再变化。

@@ -39,8 +39,6 @@ EC_RISCV_GCC=2
 EC_LLI=3
 EC_TIMEOUT=124
 
-TIMEOUT=1
-
 usage() {
     echo "Usage: $0 [-t <test_path>] [-o <output_dir>] [-r <result_file>] [-r <result_file>][-h]"
     echo "Options:"
@@ -177,14 +175,16 @@ function run_compiler_test() {
     touch "${gen_c}"
     cat "${single_file}" >"${gen_c}"
 
-    ./main -f "${single_file}" -i -t ${PASSES_STR} -o "${gen_ll}" "${OPT_LEVEL}" "${LOG_LEVEL}"
+    timeout $TIMEOUT ./main -f "${single_file}" -i -t ${PASSES_STR} -o "${gen_ll}" "${OPT_LEVEL}" "${LOG_LEVEL}"
     if [ $? != 0 ]; then
+        echo "${RED}[TIMEOUT]${RESET}: ./main -f ${single_file} -i -t ${PASSES_STR} -o ${gen_ll} ${OPT_LEVEL} ${LOG_LEVEL}"
         return $EC_MAIN
     fi
     
     timeout $TIMEOUT ./main -f "${single_file}" -S -t ${PASSES_STR} -o "${gen_s}" "${OPT_LEVEL}" "${LOG_LEVEL}"
     mainres=$?
     if [ $mainres == $EC_TIMEOUT ]; then
+        echo "${RED}[TIMEOUT]${RESET}: ./main -f ${single_file} -S -t ${PASSES_STR} -o ${gen_s} ${OPT_LEVEL} ${LOG_LEVEL}"
         return $EC_TIMEOUT
     fi
     if [ $mainres != 0 ]; then
@@ -198,8 +198,9 @@ function run_compiler_test() {
         return $EC_RISCV_GCC
     fi
     # -c -nostdlib -nostdinc -static
-    timeout $TIMEOUT qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gen_o}" >"${gen_out}"
+    timeout $TIMEOUT qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gen_o}" <"${in_file}" >"${gen_out}"
     if [ $? == $EC_TIMEOUT ]; then # time out
+        echo "${RED}[TIMEOUT]${RESET}: qemu-riscv64 -L /usr/riscv64-linux-gnu/ ${gen_o} <${in_file} >${gen_out}"
         return $EC_TIMEOUT
     fi
     if [ -f $in_file ]; then
@@ -309,7 +310,7 @@ if [ -d "$test_path" ]; then
     echo "====   INFO   ===="
     echo "PASSES: ${PASSES_STR}"
 
-    ALL_CNT=$((PASS_CNT + WRONG_CNT + SKIP_CNT))
+    ALL_CNT=$((PASS_CNT + WRONG_CNT + SKIP_CNT + TIMEOUT_CNT))
     echo "${GREEN}PASS ${RESET}: ${PASS_CNT}"
     echo "${RED}WRONG${RESET}: ${WRONG_CNT}"
     echo "${RED}TIMEOUT${RESET}: ${TIMEOUT_CNT}"

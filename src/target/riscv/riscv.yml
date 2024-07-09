@@ -775,6 +775,18 @@ InstSelInfo: {
           replace: { name: SLTIU, rd: $dst, rs1: $src1, imm: getOne($src2) },
         },
         {
+          pattern:
+            {
+              name: InstICmp,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              op: $op,
+              predicate: "isOperandIReg($src1) && isZero($src2) && isCompareOp($op, CompareOp::ICmpNotEqual)",
+            },
+          replace: { name: SLTU, rd: $dst, rs1: getZero($src2), rs2: $src1 },
+        },
+        {
           # x<=y -> !(y<x)
           pattern:
             {
@@ -891,8 +903,7 @@ ScheduleModel:
             # IntegerArithmeticEarlyB: [],
             # IntegerArithmeticLateAB: [],
             # IntegerArithmeticEarlyLateB: [],
-            Branch:
-              [
+            Branch: [
                 JAL,
                 RET,
                 BEQ,
