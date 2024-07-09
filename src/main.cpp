@@ -19,6 +19,7 @@
 #include "pass/analysis/pdom.hpp"
 #include "pass/optimize/inline.hpp"
 #include "pass/optimize/reg2mem.hpp"
+#include "pass/optimize/ADCE.hpp"
 
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
@@ -97,6 +98,8 @@ int main(int argc, char* argv[]) {
                 pm->run(new pass::Reg2Mem());
             } else if (pass_name.compare("inline") == 0){
                 pm->run(new pass::Inline());
+            } else if (pass_name.compare("adce") == 0){
+                pm->run(new pass::ADCE());
             }
             else {
                 assert(false && "Invalid pass name");

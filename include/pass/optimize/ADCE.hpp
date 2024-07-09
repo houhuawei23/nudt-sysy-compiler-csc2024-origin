@@ -12,6 +12,8 @@ namespace pass
             void run(ir::Function* func, topAnalysisInfoManager* tp)override;
         private:
             pdomTree* pdctx;
+            void ADCEInfoCheck(ir::Function* func);
+            ir::BasicBlock* getTargetBB(ir::BasicBlock* bb);
     };
 
 } // namespace pass
