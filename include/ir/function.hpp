@@ -14,6 +14,7 @@ protected:
     BasicBlock* _header;
     Function* _parent;
     std::set<BasicBlock*> _exits;
+    std::set<BasicBlock*> _latchs;
 
 public:
     Loop(BasicBlock* header, Function* parent) {
@@ -23,6 +24,8 @@ public:
     BasicBlock* header() const{ return _header; }
     Function* parent() const{ return _parent; }
     std::set<BasicBlock*>& blocks() { return _blocks; }
+    std::set<BasicBlock*>& exits() { return _exits; }
+    std::set<BasicBlock*>& latchs() {return _latchs; }
     bool contains(BasicBlock* block) const{ return _blocks.find(block) != _blocks.end(); }
     BasicBlock* getlooppPredecessor() const{
       BasicBlock* predecessor = nullptr;

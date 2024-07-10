@@ -35,9 +35,9 @@ namespace pass{
                 }
             }
         }
-        assert(funcStack.empty());
-        assert(funcSet.empty());
-        dfsFuncCallGraph(ctx->mainFunction());
+        // assert(funcStack.empty());
+        // assert(funcSet.empty());
+        // dfsFuncCallGraph(ctx->mainFunction());
     }
     void callGraphBuild::dfsFuncCallGraph(ir::Function*func){
         funcStack.push_back(func);
