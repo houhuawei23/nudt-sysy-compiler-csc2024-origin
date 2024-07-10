@@ -25,13 +25,12 @@ CMMC_CONSTEXPR std::string_view staticEnumName() {
 
 template <typename Enum, Enum Value>
 CMMC_CONSTEXPR std::string_view enumName(Enum val) {
-    if constexpr (static_cast<uint32_t>(Value) >= 128) {  // make clangd happy
-        // CMMC_UNUSED(val);
+    if constexpr (static_cast<uint32_t>(Value) >= 128) { 
+        // make clangd happy
         return "Unknown";
     } else {
         CMMC_CONSTEXPR auto name = staticEnumName<Enum, Value>();
         if CMMC_CONSTEXPR (name[0] == '(') {
-            // CMMC_UNUSED(val);
             return "Unknown";
         }
         if (val == Value)

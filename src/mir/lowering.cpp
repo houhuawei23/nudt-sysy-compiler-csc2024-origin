@@ -7,6 +7,9 @@
 #include "mir/fastAllocator.hpp"
 #include "mir/linearAllocator.hpp"
 #include "target/riscv/riscvtarget.hpp"
+
+#include "support/StaticReflection.hpp"
+
 #include <iostream>
 #include <fstream>
 
@@ -352,6 +355,8 @@ MIRInst* create_mir_inst(ir::Instruction* ir_inst, LoweringContext& ctx) {
             lower(dyn_cast<ir::CallInst>(ir_inst), ctx);
             break;
         default:
+            const auto valueIdEnumName = utils::enumName(static_cast<ir::ValueId>(ir_inst->valueId()));
+            std::cerr << valueIdEnumName << ": not supported inst" << std::endl;
             assert(false && "not supported inst");
             break;
     }
