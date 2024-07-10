@@ -22,13 +22,15 @@ std::any SysYIRGenerator::visitBlockStmt(SysYParser::BlockStmtContext* ctx) {
   ir::SymbolTable::BlockScope scope(mTables);
   for (auto item : ctx->blockItem()) {
     visit(item);
-    if (auto teststmt = item->stmt()) {
-      // break, continue, return 后的语句不再翻译
-      auto bk = teststmt->breakStmt();
-      auto ct = teststmt->continueStmt();
-      auto ret = teststmt->returnStmt();
-      if (bk || ct || ret)
-        break;
+    if (mBuilder.curBlock()->isTerminal()) {
+      // std::cerr << "curBlock is terminal!" << std::endl;
+      /*
+      curBlock is sequencially set as curBlock, so if curBlock is Terminal,
+      means this blockStmt is over, just break.
+
+      当前块如果已经Terminal, 后续的 blockItem 不会创建新的块, 可以直接 break.
+      */
+      break;
     }
   }
   return nullptr;
@@ -78,8 +80,10 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
     auto store = mBuilder.makeInst<ir::StoreInst>(value, func->retValPtr());
   }
 
-  auto br = mBuilder.makeInst<ir::BranchInst>(func->exit());
-  ir::BasicBlock::block_link(mBuilder.curBlock(), func->exit());
+  if (not mBuilder.curBlock()->isTerminal()) {
+    auto br = mBuilder.makeInst<ir::BranchInst>(func->exit());
+    ir::BasicBlock::block_link(mBuilder.curBlock(), func->exit());
+  }
 
   return std::any();
 }
@@ -160,11 +164,13 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
 
     cond = mBuilder.castToBool(cond);  //* cast to i1
     //* create cond br inst
-    mBuilder.makeInst<ir::BranchInst>(cond, lhs_t_target, lhs_f_target);
+    if (not mBuilder.curBlock()->isTerminal()) {
+      mBuilder.makeInst<ir::BranchInst>(cond, lhs_t_target, lhs_f_target);
 
-    //! [CFG] link the basic block
-    ir::BasicBlock::block_link(mBuilder.curBlock(), lhs_t_target);
-    ir::BasicBlock::block_link(mBuilder.curBlock(), lhs_f_target);
+      //! [CFG] link the basic block
+      ir::BasicBlock::block_link(mBuilder.curBlock(), lhs_t_target);
+      ir::BasicBlock::block_link(mBuilder.curBlock(), lhs_f_target);
+    }
   }
 
   {  //! VISIT then block
