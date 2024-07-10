@@ -159,6 +159,9 @@ namespace pass{
                     _callees[func]=std::set<ir::Function*>();
                 }
             }
+            bool isNoCallee(ir::Function* func){
+                return _callees[func].empty();
+            }
             void refresh() override;
     };
 };
