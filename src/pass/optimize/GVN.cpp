@@ -42,6 +42,8 @@ namespace pass
             return getValueNumber(unary);
         else if (auto getelementptr = dynamic_cast<ir::GetElementPtrInst *>(inst))
             return getValueNumber(getelementptr);
+        else if (auto load = dynamic_cast<ir::LoadInst *>(inst))
+            return getValueNumber(load);
         // else if (auto phi = dynamic_cast<ir::PhiInst *>(inst))
         //     return getValueNumber(phi);
         // else if (auto call = dynamic_cast<ir::CallInst *>(inst))
@@ -105,6 +107,25 @@ namespace pass
                 auto getidx = checkHashtable(getelementptr->index());
 
                 if (arval == getval && aridx == getidx)
+                {
+                    return Value;
+                }
+            }
+        }
+        return static_cast<ir::Value*>(inst);
+    }
+
+    ir::Value *GVN::getValueNumber(ir::LoadInst *inst)
+    {
+        auto arval = checkHashtable(inst->ptr());
+        bool artype = inst->type()->isPointer();
+        for (auto [Key, Value] : _Hashtable)
+        {
+            if (auto load = dynamic_cast<ir::LoadInst *>(Key))
+            {
+                auto getval = checkHashtable(load->ptr());
+                bool artype = load->type()->isPointer();
+                if (arval == getval && artype && artype)
                 {
                     return Value;
                 }

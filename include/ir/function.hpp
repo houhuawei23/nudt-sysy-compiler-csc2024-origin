@@ -20,9 +20,55 @@ public:
         _header = header;
         _parent = parent;
     }
-    BasicBlock* header() { return _header; }
-    Function* parent() { return _parent; }
+    BasicBlock* header() const{ return _header; }
+    Function* parent() const{ return _parent; }
     std::set<BasicBlock*>& blocks() { return _blocks; }
+    bool contains(BasicBlock* block) const{ return _blocks.find(block) != _blocks.end(); }
+    BasicBlock* getlooppPredecessor() const{
+      BasicBlock* predecessor = nullptr;
+      BasicBlock* Header = header();
+      for (auto* pred : Header->pre_blocks()){
+        if(!contains(pred)){
+          if (predecessor && (predecessor != pred)){
+            return nullptr;//多个前驱
+          }
+          predecessor = pred;
+        }
+      }
+      return predecessor;//返回唯一的predecessor
+    }
+    BasicBlock* getLoopPreheader() const{
+      BasicBlock* preheader = getlooppPredecessor();
+      if (!preheader)
+        return nullptr;
+      if (preheader->next_blocks().size() != 1)
+        return nullptr;
+      return preheader;
+    }
+    BasicBlock* getLoopLatch() const{
+      BasicBlock* latch = nullptr;
+      BasicBlock* Header = header();
+      for (auto* pred : Header->pre_blocks()){
+        if (contains(pred)){
+          if (latch)
+            return nullptr;
+          latch = pred;
+        }
+      }
+      return latch;//返回唯一的latch
+    }
+    bool hasDedicatedExits() const{
+      for (auto exitbb : _exits){
+        for (auto pred : exitbb->pre_blocks()){
+          if (!contains(pred))
+            return false;
+        }
+      }
+      return true;
+    }
+    bool isLoopSimplifyForm() const{
+      return getLoopPreheader() && getLoopLatch() && hasDedicatedExits();
+    }
 };
 
 class Function : public User {
