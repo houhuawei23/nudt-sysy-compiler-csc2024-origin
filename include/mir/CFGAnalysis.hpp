@@ -27,6 +27,8 @@ public:  // get function
     const std::vector<MIRBlockEdge>& successors(MIRBlock* block) const {
         return _block2CFGInfo.at(block).successors;
     }
+public:  // Just for Debug
+    void dump(std::ostream& out);
 };
 CFGAnalysis calcCFG(MIRFunction& mfunc, CodeGenContext& ctx);
 

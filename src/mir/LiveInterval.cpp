@@ -7,13 +7,26 @@
 
 namespace mir {
 /* 为每一条指令编号 */
-static void assignInstNum(MIRFunction& mfunc, LiveVariablesInfo& info) {
+static void assignInstNum(MIRFunction& mfunc, LiveVariablesInfo& info, CodeGenContext& ctx) {
+    constexpr bool DebugAssign = true;
     auto& num = info.inst2Num;
     InstNum current = 0;
     for (auto& block : mfunc.blocks()) {
         for (auto& inst : block.get()->insts()) {
             num[inst] = current;
             current += defaultIncrement;
+        }
+    }
+
+    if (DebugAssign) {
+        for (auto& block : mfunc.blocks()) {
+            std::cerr << block->name() << ": \n";
+            for (auto& inst : block.get()->insts()) {
+                std::cerr << num[inst] << ": ";
+                auto& instInfo = ctx.instInfo.get_instinfo(inst);
+                instInfo.print(std::cerr, *inst, false);
+                std::cerr << "\n";
+            }
         }
     }
 }
@@ -142,7 +155,7 @@ LiveVariablesInfo calcLiveIntervals(MIRFunction& mfunc, CodeGenContext& ctx) {
     }
 
     // stage 3: calculate live intervals
-    assignInstNum(mfunc, info);  // 指令编号
+    assignInstNum(mfunc, info, ctx);  // 指令编号
     for (auto& block : mfunc.blocks()) {
         auto& blockInfo = info.block2Info[block.get()];
         std::unordered_map<RegNum, LiveSegment> curSegment;  // 当前块内的活跃寄存器集合

@@ -55,7 +55,7 @@ class BasicBlock : public Value {
 //   size_t pdomLevel;
   size_t looplevel;
 
- protected:
+protected:
   Function* mFunction;
   inst_list mInsts;
 

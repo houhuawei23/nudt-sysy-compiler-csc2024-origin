@@ -146,7 +146,7 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
     std::unordered_set<uint32_t> blockList;
     bool fixHazard = true;  // --> RISC-V特性
 
-    /* Transfer of Function Parameters */
+    /* 函数参数的传递 */
     std::unordered_map<uint32_t, MIROperand> inStackArguments;
     for (auto inst : mfunc.blocks().front()->insts()) {
         if (inst->opcode() == InstLoadRegFromStack) {
@@ -157,8 +157,8 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
         }
     }
 
+    /* 常数的处理 */
     /*
-     Process of Constant
      constants: uint32_t -> MIRInst*
         - nullptr: 该虚拟寄存器已被多条指令定义            (删除)
         - inst: 该虚拟寄存器仅仅被InstFlagLoadConstant定义 (存储)
@@ -167,13 +167,13 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
     for (auto& block : mfunc.blocks()) {
         for (auto inst : block->insts()) {
             auto& instInfo = ctx.instInfo.get_instinfo(inst);
-            if (requireFlag(instInfo.inst_flag(), InstFlagLoadConstant)) {
+            if (requireFlag(instInfo.inst_flag(), InstFlagLoadConstant)) {  /* 加载常数到寄存器 */
                 auto reg = inst->operand(0)->reg();
                 if (isVirtualReg(reg)) {
                     if (!constants.count(reg)) constants[reg] = inst;
                     else constants[reg] = nullptr;
                 }
-            } else {
+            } else {  /* 考虑其他指令 */
                 for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
                     auto flag = instInfo.operand_flag(idx);
                     if (!(flag & OperandFlagDef)) continue;
