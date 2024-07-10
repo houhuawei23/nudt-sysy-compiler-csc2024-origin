@@ -12,6 +12,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <queue>
 
 namespace mir {
 void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& target);
@@ -111,8 +112,7 @@ void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& tar
     };
     size_t stageIdx = 0;
 
-    auto dumpStageResult = [&stageIdx](std::string stage, 
-                                      MIRFunction* mir_func, CodeGenContext& codegen_ctx) {
+    auto dumpStageResult = [&stageIdx](std::string stage, MIRFunction* mir_func, CodeGenContext& codegen_ctx) {
         if (not debugLowering) return;
         auto fileName = mir_func->name() +  std::to_string(stageIdx) + "_" + stage + ".ll";
         std::ofstream fout("./.debug/" + fileName);
@@ -143,13 +143,13 @@ void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& tar
             isel_ctx.run_isel(mir_func);    
             dumpStageResult("AfterIsel", mir_func, codegen_ctx);
         }
-        /* 4.3 register coalescing */
+        /* 4.3 Optimize: register coalescing */
 
-        /* 4.4 peephole optimization */
+        /* 4.4 Optimize: peephole optimization */
 
         /* 4.5 pre-RA legalization */
 
-        /* 4.6 pre-RA scheduling, minimize register usage */
+        /* 4.6 Optimize: pre-RA scheduling, minimize register usage */
         // {
         //     preRASchedule(*mir_func, codegen_ctx);
         //     dumpStageResult("AfterPreRASchedule", mir_func, codegen_ctx);
@@ -199,7 +199,24 @@ MIRFunction* create_mir_function(ir::Function* ir_func, MIRFunction* mir_func,
     std::unordered_map<ir::Value*, MIROperand*> storage_map;
     auto& target = codegen_ctx.target;
     auto& datalayout = target.get_datalayout();
-    for (auto ir_block : ir_func->blocks()) {
+    std::vector<ir::BasicBlock*> block_vec;
+
+    /* bfs遍历函数中的block */
+    {
+        std::queue<ir::BasicBlock*> q;
+        std::unordered_map<ir::BasicBlock*, int> vis;
+        auto entry = *(ir_func->blocks().begin()); q.push(entry);
+        while (!q.empty()) {
+            auto tmp = q.front(); q.pop(); vis[tmp] = 1;
+            block_vec.push_back(tmp);
+            for (auto suc : tmp->next_blocks()) {
+                if (vis.count(suc)) continue;
+                q.push(suc);
+            }
+        }
+    }
+
+    for (auto ir_block : block_vec) {
         mir_func->blocks().push_back(std::make_unique<MIRBlock>(mir_func, "label" + std::to_string(codegen_ctx.next_id_label())));
         block_map.emplace(ir_block, mir_func->blocks().back().get());
     }
@@ -299,9 +316,7 @@ MIRInst* create_mir_inst(ir::Instruction* ir_inst, LoweringContext& ctx) {
         case ir::ValueId::vSEXT:
         case ir::ValueId::vFPTRUNC:
         case ir::ValueId::vFPTOSI:
-        case ir::ValueId::vSITOFP:
-            lower(dyn_cast<ir::UnaryInst>(ir_inst), ctx);
-            break;
+        case ir::ValueId::vSITOFP: lower(dyn_cast<ir::UnaryInst>(ir_inst), ctx); break;
         case ir::ValueId::vADD:
         case ir::ValueId::vFADD:
         case ir::ValueId::vSUB:
@@ -313,17 +328,13 @@ MIRInst* create_mir_inst(ir::Instruction* ir_inst, LoweringContext& ctx) {
         case ir::ValueId::vFDIV:
         case ir::ValueId::vUREM:
         case ir::ValueId::vSREM:
-        case ir::ValueId::vFREM:
-            lower(dyn_cast<ir::BinaryInst>(ir_inst), ctx);
-            break;
+        case ir::ValueId::vFREM: lower(dyn_cast<ir::BinaryInst>(ir_inst), ctx); break;
         case ir::ValueId::vIEQ:
         case ir::ValueId::vINE:
         case ir::ValueId::vISGT:
         case ir::ValueId::vISGE:
         case ir::ValueId::vISLT:
-        case ir::ValueId::vISLE:
-            lower(dyn_cast<ir::ICmpInst>(ir_inst), ctx);
-            break;
+        case ir::ValueId::vISLE: lower(dyn_cast<ir::ICmpInst>(ir_inst), ctx); break;
         case ir::ValueId::vFOEQ:
         case ir::ValueId::vFONE:
         case ir::ValueId::vFOGT:
@@ -354,6 +365,8 @@ MIRInst* create_mir_inst(ir::Instruction* ir_inst, LoweringContext& ctx) {
         case ir::ValueId::vCALL:
             lower(dyn_cast<ir::CallInst>(ir_inst), ctx);
             break;
+        case ir::ValueId::vMEMSET: lower(dyn_cast<ir::MemsetInst>(ir_inst), ctx); break;
+        case ir::ValueId::vBITCAST: lower(dyn_cast<ir::BitCastInst>(ir_inst), ctx); break;
         default:
             const auto valueIdEnumName = utils::enumName(static_cast<ir::ValueId>(ir_inst->valueId()));
             std::cerr << valueIdEnumName << ": not supported inst" << std::endl;

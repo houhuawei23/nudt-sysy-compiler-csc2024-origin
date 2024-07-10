@@ -3,8 +3,27 @@
 #include "mir/CFGAnalysis.hpp"
 
 namespace mir {
+void CFGAnalysis::dump(std::ostream& out) {
+    for (auto [bb, info] : _block2CFGInfo) {
+        out << bb->name() << ": \n";
+
+        out << "the predecessors are as follows: \n";
+        for (auto pre : info.predecessors) {
+            out << "\tblock: " << pre.block->name() << ", prob: " << pre.prob << "\n";
+        }
+        out << "\n";
+
+        out << "the successors are as follows: \n";
+        for (auto suc : info.successors) {
+            out << "\tblock: " << suc.block->name() << ", prob: " << suc.prob << "\n";
+        }
+        out << "\n";
+    }
+}
+
 CFGAnalysis calcCFG(MIRFunction& mfunc, CodeGenContext& ctx) {
     assert(ctx.flags.endsWithTerminator);  // 确保该函数以终止指令结束
+    constexpr bool DebugCFG = false;
     CFGAnalysis res;
     auto& CFGInfo = res.block2CFGInfo();
     auto& blocks = mfunc.blocks();
@@ -42,6 +61,8 @@ CFGAnalysis calcCFG(MIRFunction& mfunc, CodeGenContext& ctx) {
             for (auto item : table) connect(block.get(), dynamic_cast<MIRBlock*>(item), prob);
         }
     }
+
+    if (DebugCFG) res.dump(std::cerr);
 
     return res;
 }
