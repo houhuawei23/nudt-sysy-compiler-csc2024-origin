@@ -4,6 +4,7 @@
 #include "visitor/visitor.hpp"
 #include "pass/pass.hpp"
 #include "pass/analysis/dom.hpp"
+#include "pass/analysis/CFGAnalysis.hpp"
 #include "pass/optimize/mem2reg.hpp"
 #include "pass/optimize/DCE.hpp"
 #include "pass/optimize/SCP.hpp"
@@ -91,8 +92,6 @@ int main(int argc, char* argv[]) {
             else {
                 assert(false && "Invalid pass name");
             }
-
-            
         }
     }
     // module_ir->print(std::cout);
@@ -123,6 +122,7 @@ int main(int argc, char* argv[]) {
     };
 
     //! 3. Code Generation
+    pm->run(new pass::CFGAnalysis());
     if (config.gen_asm) {
         auto target = mir::RISCVTarget();
         // auto target = mir::GENERICTarget();

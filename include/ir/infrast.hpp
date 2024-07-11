@@ -114,15 +114,19 @@ protected:
     for (auto succ : bb->next_blocks())
       BasicBlockDfs(succ, func);
   }
-  // for CFG
+
+public:  // for CFG
   static void block_link(ir::BasicBlock* pre, ir::BasicBlock* next) {
     pre->next_blocks().emplace_back(next);
     next->pre_blocks().emplace_back(pre);
   }
-
   static void delete_block_link(ir::BasicBlock* pre, ir::BasicBlock* next) {
     pre->next_blocks().remove(next);
     next->pre_blocks().remove(pre);
+  }
+  void clear_block_link() {
+    mNextBlocks.clear();
+    mPreBlocks.clear();
   }
 
   // bool dominate(BasicBlock* bb) {
@@ -141,29 +145,21 @@ protected:
   void print(std::ostream& os) const override;
 };
 
-/**
- * @brief Base class for all instructions in IR
- *
- */
+/* Instruction */
 class Instruction : public User {
-  // Instuction 的类型也通过 mValueId
- protected:
+protected:
   BasicBlock* mBlock;
-
- public:
+public:
   // Construct a new Instruction object
-  Instruction(ValueId itype = vINSTRUCTION,
-              Type* ret_type = Type::void_type(),
-              BasicBlock* pblock = nullptr,
-              const_str_ref name = "")
+  Instruction(ValueId itype=vINSTRUCTION, Type* ret_type=Type::void_type(),
+              BasicBlock* pblock=nullptr, const_str_ref name="")
       : User(ret_type, itype, name), mBlock(pblock) {}
-  // get
-  auto block() const { return mBlock; };
-
-  // set
+public:  // get function
+  auto block() const { return mBlock; }
+public:  // set function
   void setBlock(BasicBlock* parent) { mBlock = parent; }
-
-  // inst type check
+  void setvarname();
+public:  // check function
   bool isTerminator();
   bool isUnary();
   bool isBinary();
@@ -171,14 +167,9 @@ class Instruction : public User {
   bool isMemory();
   bool isNoName();
   bool isAggressiveAlive();
-
-  // for isa, cast and dyn_cast
   static bool classof(const Value* v) { return v->valueId() >= vINSTRUCTION; }
-
-  void setvarname();  // change varname to pass lli
-
+public:
   void virtual print(std::ostream& os) const = 0;
-
   virtual Value* getConstantRepl() { return nullptr; };
   Instruction* copy_inst(std::function<Value*(Value*)> getValue);
 };
