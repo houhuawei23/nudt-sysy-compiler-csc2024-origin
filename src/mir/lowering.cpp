@@ -110,22 +110,23 @@ void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& tar
         os << styleMap[Style::RESET];
         os << msg << std::endl;
     };
-    size_t stageIdx = 0;
 
-    auto dumpStageResult = [&stageIdx](std::string stage, MIRFunction* mir_func, CodeGenContext& codegen_ctx) {
-        if (not debugLowering) return;
-        auto fileName = mir_func->name() +  std::to_string(stageIdx) + "_" + stage + ".ll";
-        std::ofstream fout("./.debug/" + fileName);
-        mir_func->print(fout, codegen_ctx);
-        stageIdx++;
-    };
 
     //! 4. lower all functions
     for (auto& ir_func : ir_module.funcs()) {
+        size_t stageIdx = 0;
+
+        auto dumpStageResult = [&stageIdx](std::string stage, MIRFunction* mir_func, CodeGenContext& codegen_ctx) {
+            if (not debugLowering) return;
+            auto fileName = mir_func->name() +  std::to_string(stageIdx) + "_" + stage + ".ll";
+            std::ofstream fout("./.debug/" + fileName);
+            mir_func->print(fout, codegen_ctx);
+            stageIdx++;
+        };
         auto mir_func = func_map[ir_func];
         if (ir_func->blocks().empty()) continue;
         if (debugLowering) {
-            auto fileName = mir_func->name() + "_"  +  std::to_string(stageIdx) +  "BeforeLowering.ll";
+            auto fileName = mir_func->name()  +  std::to_string(stageIdx) + "_" +  "BeforeLowering.ll";
             std::ofstream fout("./.debug/" + fileName);
             ir_func->print(fout);
             stageIdx++;
@@ -134,6 +135,9 @@ void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& tar
         /* 4.1: lower function body to generic MIR */
         {
             create_mir_function(ir_func, mir_func, codegen_ctx, lowering_ctx);
+            if(not mir_func->verify(std::cerr, codegen_ctx)) { 
+                std::cerr << "Lowering Error: " << mir_func->name() << " failed to verify." << std::endl;
+            }
             dumpStageResult("AfterLowering", mir_func, codegen_ctx);
         }
 
@@ -189,6 +193,8 @@ void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& tar
 
 MIRFunction* create_mir_function(ir::Function* ir_func, MIRFunction* mir_func,
                                  CodeGenContext& codegen_ctx, LoweringContext& lowering_ctx) {
+    
+    lowering_ctx.set_mir_func(mir_func);
     /* Some Debug Information */
     constexpr bool debugLowerFunc = false;
     constexpr bool DebugCreateMirFunction = false;
@@ -216,7 +222,7 @@ MIRFunction* create_mir_function(ir::Function* ir_func, MIRFunction* mir_func,
         }
     }
 
-    for (auto ir_block : block_vec) {
+    for (auto ir_block : ir_func->blocks()) {
         mir_func->blocks().push_back(std::make_unique<MIRBlock>(mir_func, "label" + std::to_string(codegen_ctx.next_id_label())));
         block_map.emplace(ir_block, mir_func->blocks().back().get());
     }
@@ -488,14 +494,43 @@ void lower(ir::BinaryInst* ir_inst, LoweringContext& ctx) {
 void emit_branch(ir::BasicBlock* srcblock, ir::BasicBlock* dstblock, LoweringContext& lctx);
 void lower(ir::BranchInst* ir_inst, LoweringContext& ctx) {
     auto src_block = ir_inst->block();
-
+    auto mir_func = ctx._mir_func;
+    const auto codegen_ctx = ctx._code_gen_ctx;
     if (ir_inst->is_cond()) {
-        // TODO: conditional branch
+        // conditional branch
+/*
+    branch cond, iftrue, iffalse
+    -> MIR
+preblock:
+    ...
+    branch cond, iftrue
+
+nextblock:
+    jump iffalse
+
+    ...
+*/
         auto inst = new MIRInst(InstBranch);
         inst->set_operand(0, ctx.map2operand(ir_inst->cond()));
         inst->set_operand(1, MIROperand::as_reloc(ctx.map2block(ir_inst->iftrue())));
         inst->set_operand(2, MIROperand::as_prob(0.5));
         ctx.emit_inst(inst);
+        auto findBlockIter = [mir_func] (const MIRBlock* block) {
+            return std::find_if(mir_func->blocks().begin(), mir_func->blocks().end(), 
+                [block](const std::unique_ptr<MIRBlock>& mir_block) {
+                            return mir_block.get() == block;
+                        });
+        };
+        {
+        auto curBlockIter = findBlockIter(ctx.get_mir_block());
+        assert(curBlockIter != mir_func->blocks().end());
+
+        auto newBlock = std::make_unique<MIRBlock>(ctx._mir_func, "label" + std::to_string(codegen_ctx->next_id_label()));
+        auto newBlockPtr = newBlock.get();
+        // insert new block after current block
+        mir_func->blocks().insert(++curBlockIter, std::move(newBlock));
+        ctx.set_mir_block(newBlockPtr);
+        }
         auto jump_inst = new MIRInst(InstJump);
         jump_inst->set_operand(0, MIROperand::as_reloc(ctx.map2block(ir_inst->iffalse())));
         ctx.emit_inst(jump_inst);

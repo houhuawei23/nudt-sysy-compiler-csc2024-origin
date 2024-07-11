@@ -283,6 +283,7 @@ public:  // set function
     }
 public:
     void print(std::ostream& os);
+    bool verify(std::ostream& os, CodeGenContext& ctx) const;
 };
 using MIRInstList = std::list<MIRInst*>;
 
@@ -306,6 +307,7 @@ public:  // set function
     void set_trip_count(double trip_count) { _trip_count = trip_count; }
 public:
     void print(std::ostream& os, CodeGenContext& ctx) override;
+    bool verify(std::ostream& os, CodeGenContext& ctx) const;
 };
 
 /* StackObjectUsage */
@@ -362,6 +364,7 @@ public:  // set function
 public:  // utils function
     void print(std::ostream& os, CodeGenContext& ctx) override;
     void print_cfg(std::ostream& os);
+    bool verify(std::ostream& os, CodeGenContext& ctx) const;
 };
 
 /* MIRZeroStorage */
@@ -432,5 +435,6 @@ public:  // get function
     MIRGlobalObject_UPtrVec& global_objs() { return _global_objs; }
 public:
     void print(std::ostream& os);
+    bool verify() const;
 };
 }

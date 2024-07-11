@@ -36,4 +36,53 @@ void MIRDataStorage::print(std::ostream& os, CodeGenContext& ctx) {
     }
 }
 
+bool MIRInst::verify(std::ostream& os, CodeGenContext& ctx) const {
+    // TODO: implement verification
+    return true;
+}
+
+bool MIRBlock::verify(std::ostream& os, CodeGenContext& ctx) const {
+    if(_insts.empty()) return false;
+
+    for(auto& inst : _insts) {
+        if(not inst->verify(os, ctx)) {
+            return false;
+        }
+    }
+    const auto lastInst = _insts.back();
+    const auto& lastInstInfo = ctx.instInfo.get_instinfo(lastInst);
+    if((lastInstInfo.inst_flag() & InstFlagTerminator) == 0) {
+        os << "Error: block " << name() << " does not end with a terminator" << std::endl;
+        return false;
+    }
+    for(auto& inst : _insts) {
+        const auto& info = ctx.instInfo.get_instinfo(inst);
+        if((info.inst_flag() & InstFlagTerminator) and inst != lastInst) {
+            os << "Error: block " << name() << " has multiple terminators" << std::endl;
+            return false;
+        } 
+    }
+    return true;
+}
+
+bool MIRFunction::verify(std::ostream& os, CodeGenContext& ctx) const {
+    for(auto& block : _blocks) {
+        if(not block->verify(os, ctx)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+
+// bool MIRModule::verify() const {
+//     for (auto& func : _functions) {
+//         if(not func->verify()) {
+//             return false;
+//         }
+//     }
+//     return true;
+// }
+
+
 }  // namespace mir
