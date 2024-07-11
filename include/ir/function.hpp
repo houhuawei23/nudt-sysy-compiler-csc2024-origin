@@ -82,22 +82,12 @@ class Function : public User {
 
   block_ptr_list mBlocks;     // blocks of the function
   arg_ptr_vector mArguments;  // formal args
-  // std::list<Loop*> mLoops;
-  // std::map<ir::BasicBlock*, ir::Loop*> _headToLoop;
 
-  //* function has concrete local var for return value,
-  //* addressed by mRetValueAddr
   Value* mRetValueAddr = nullptr;  // return value
   BasicBlock* mEntry = nullptr;    // entry block
   BasicBlock* mExit = nullptr;     // exit block
   size_t mVarCnt = 0;              // for local variables count
   size_t argCnt = 0;               // formal arguments count
-
-  // // for call graph
-  // std::set<ir::Function*> mCallees;
-  // bool _is_called;
-  // bool _is_inline;
-  // bool _is_lib;
 
  public:
   Function(Type* TypeFunction,

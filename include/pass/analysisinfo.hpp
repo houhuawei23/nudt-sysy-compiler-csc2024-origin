@@ -3,6 +3,7 @@
 #include "ir/ir.hpp"
 #include <unordered_map>
 #include <vector>
+#include <queue>
 
 namespace pass{
     template<typename PassUnit> class analysisInfo;
@@ -36,6 +37,7 @@ namespace pass{
             std::unordered_map<ir::BasicBlock*,int>_domlevel;
             std::unordered_map<ir::BasicBlock*,std::vector<ir::BasicBlock*>>_domson;
             std::unordered_map<ir::BasicBlock*,std::vector<ir::BasicBlock*>>_domfrontier;
+            std::vector<ir::BasicBlock*>_BFSDomTreeVector;
         public:
             domTree(ir::Function*func,topAnalysisInfoManager* tp):FunctionACtx(func,tp){}
             ir::BasicBlock*idom(ir::BasicBlock*bb){return _idom[bb];}
@@ -46,6 +48,7 @@ namespace pass{
             void set_domlevel(ir::BasicBlock*bb,int lv){_domlevel[bb]=lv;}
             std::vector<ir::BasicBlock*>& domson(ir::BasicBlock*bb){return _domson[bb];}
             std::vector<ir::BasicBlock*>& domfrontier(ir::BasicBlock*bb){return _domfrontier[bb];}
+            std::vector<ir::BasicBlock*>& BFSDomTreeVector(){return _BFSDomTreeVector;}
             void clearAll(){
                 _idom.clear();
                 _sdom.clear();
@@ -69,6 +72,23 @@ namespace pass{
                     bbIdom=_idom[bbIdom];
                 }
                 return false;
+            }
+            void BFSDomTreeInfoRefresh(){
+                std::queue<ir::BasicBlock*>bbqueue;
+                std::unordered_map<ir::BasicBlock*,bool>vis;
+                for(auto bb:_pu->blocks())vis[bb]=false;
+                _BFSDomTreeVector.clear();
+                bbqueue.push(_pu->entry());
+                while(not bbqueue.empty()){
+                    auto bb=bbqueue.front();
+                    bbqueue.pop();
+                    if(not vis[bb]){
+                        _BFSDomTreeVector.push_back(bb);
+                        vis[bb]=true;
+                        for(auto bbDomSon:_domson[bb])
+                            bbqueue.push(bbDomSon);
+                    }
+                }
             }
     };
 
