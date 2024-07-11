@@ -127,7 +127,6 @@ enum ValueId {
   vBITCAST,
   vMEMSET,
 
-  // instructions class id
   vINSTRUCTION,
   // vMEM_BEGIN,
   vALLOCA,

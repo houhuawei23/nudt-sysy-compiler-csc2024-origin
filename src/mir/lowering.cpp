@@ -205,19 +205,17 @@ MIRFunction* create_mir_function(ir::Function* ir_func, MIRFunction* mir_func,
     std::unordered_map<ir::Value*, MIROperand*> storage_map;
     auto& target = codegen_ctx.target;
     auto& datalayout = target.get_datalayout();
-    std::vector<ir::BasicBlock*> block_vec;
 
-    /* bfs遍历函数中的block */
+    /* bfs */
+    std::vector<ir::BasicBlock*> block_vec;
     {
-        std::queue<ir::BasicBlock*> q;
-        std::unordered_map<ir::BasicBlock*, int> vis;
-        auto entry = *(ir_func->blocks().begin()); q.push(entry);
+        std::queue<ir::BasicBlock*> q; std::unordered_map<ir::BasicBlock*, int> mp;
+        auto entry = *(ir_func->blocks().begin()); q.push(entry); mp[entry] = 1;
         while (!q.empty()) {
-            auto tmp = q.front(); q.pop(); vis[tmp] = 1;
-            block_vec.push_back(tmp);
-            for (auto suc : tmp->next_blocks()) {
-                if (vis.count(suc)) continue;
-                q.push(suc);
+            auto tmp = q.front(); q.pop(); block_vec.push_back(tmp);
+            for (auto succ : tmp->next_blocks()) {
+                if (mp.count(succ)) continue;
+                q.push(succ); mp[succ] = 1;
             }
         }
     }

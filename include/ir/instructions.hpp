@@ -230,31 +230,23 @@ class CallInst : public Instruction {
  *      2. br label <dest>
  */
 class BranchInst : public Instruction {
-  // br i1 <cond>, label <iftrue>, label <iffalse>
-  // br label <dest>
   bool mIsCond = false;
-
- public:
-  //* Condition Branch
-  BranchInst(Value* cond,
-             BasicBlock* iftrue,
-             BasicBlock* iffalse,
-             BasicBlock* parent = nullptr,
-             const_str_ref name = "")
+public:
+  /* Condition Branch */
+  BranchInst(Value* cond, BasicBlock* iftrue, BasicBlock* iffalse,
+             BasicBlock* parent=nullptr, const_str_ref name="")
       : Instruction(vBR, Type::void_type(), parent, name), mIsCond(true) {
     addOperand(cond);
     addOperand(iftrue);
     addOperand(iffalse);
   }
-  //* UnCondition Branch
-  BranchInst(BasicBlock* dest,
-             BasicBlock* parent = nullptr,
-             const_str_ref name = "")
+  /* UnCondition Branch */
+  BranchInst(BasicBlock* dest, BasicBlock* parent=nullptr,
+             const_str_ref name="")
       : Instruction(vBR, Type::void_type(), parent, name), mIsCond(false) {
     addOperand(dest);
   }
-
-  // get
+public:  // get function
   bool is_cond() const { return mIsCond; }
   auto cond() const {
     assert(mIsCond && "not a conditional branch");
@@ -273,8 +265,7 @@ class BranchInst : public Instruction {
     return operand(0)->as<BasicBlock>();
   }
   void replaceDest(ir::BasicBlock* olddest, ir::BasicBlock* newdest);
-
- public:
+public:
   static bool classof(const Value* v) { return v->valueId() == vBR; }
   void print(std::ostream& os) const override;
 };
