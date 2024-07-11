@@ -15,6 +15,7 @@ namespace pass{
     void simplifyCFG::run(ir::Function* func, topAnalysisInfoManager* tp){
         if(!func->entry())return;
         // func->print(std::cout);
+        bool isChange=false;
         bool isWhile=true;
         while(isWhile){
             isWhile=false;
@@ -22,9 +23,10 @@ namespace pass{
             isWhile|=MergeBlock(func);
             isWhile|=removeSingleIncomingPhi(func);
             isWhile|=removeSingleBrBlock(func);
+            isChange=isWhile or isChange;
         }
 
-        tp->CFGChange(func);
+        if(isChange)tp->CFGChange(func);
     }
     //condition 1
     //移除所有没有从前驱和从末尾不可达的块

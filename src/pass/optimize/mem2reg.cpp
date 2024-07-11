@@ -210,6 +210,7 @@ void Mem2Reg::insertphi() {
                     auto allocabaseType =
                         dyn_cast<ir::PointerType>(alloca->type())->baseType();
                     phi = new ir::PhiInst(Y, allocabaseType);
+                    allphi.push_back(phi);
                     Y->emplace_first_inst(phi);
                     Phiset.insert(Y);
                     PhiMap[Y].insert({phi, alloca});
@@ -311,6 +312,27 @@ void Mem2Reg::rename(ir::Function* F) {
             if (pa.first->uses().empty())
                 pa.first->block()->delete_inst(pa.first);
         }
+
+    for (ir::PhiInst *phiinst : allphi){
+        simplifyphi(phiinst);
+    }
+}
+
+void Mem2Reg::simplifyphi(ir::PhiInst *phi){
+    ir::Value* preval = nullptr;
+    ir::BasicBlock* bb = phi->block();
+    for (size_t i = 0; i < phi->getsize(); i++){
+        if (preval == nullptr)
+            preval = phi->getValue(i);
+        else{
+            if (preval != phi->getValue(i))
+                return;
+        }
+            
+    }
+    phi->replaceAllUseWith(preval);
+    bb->delete_inst(phi);
+    return;
 }
 void Mem2Reg::promotememToreg(ir::Function* F) {
     // 预处理Allocas中不能被mem2reg的变量(没有use的变量和onlystore的变量，onlystore的变量只有唯一的到达定义，不能形成phi指令)
@@ -344,6 +366,7 @@ void Mem2Reg::promotememToreg(ir::Function* F) {
     // F->print(std::cout);
     rename(F);
     // F->print(std::cout);
+
 }
 
 // 主函数

@@ -53,7 +53,7 @@ class BasicBlock : public Value {
 //   // std::set<BasicBlock*> dom;//those bb was dominated by self
 //   size_t domLevel;
 //   size_t pdomLevel;
-  size_t looplevel;
+  // size_t looplevel;
 
 protected:
   Function* mFunction;

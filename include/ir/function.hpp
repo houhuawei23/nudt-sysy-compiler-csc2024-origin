@@ -14,15 +14,64 @@ protected:
     BasicBlock* _header;
     Function* _parent;
     std::set<BasicBlock*> _exits;
+    std::set<BasicBlock*> _latchs;
 
 public:
     Loop(BasicBlock* header, Function* parent) {
         _header = header;
         _parent = parent;
     }
-    BasicBlock* header() { return _header; }
-    Function* parent() { return _parent; }
+    BasicBlock* header() const{ return _header; }
+    Function* parent() const{ return _parent; }
     std::set<BasicBlock*>& blocks() { return _blocks; }
+    std::set<BasicBlock*>& exits() { return _exits; }
+    std::set<BasicBlock*>& latchs() {return _latchs; }
+    bool contains(BasicBlock* block) const{ return _blocks.find(block) != _blocks.end(); }
+    BasicBlock* getlooppPredecessor() const{
+      BasicBlock* predecessor = nullptr;
+      BasicBlock* Header = header();
+      for (auto* pred : Header->pre_blocks()){
+        if(!contains(pred)){
+          if (predecessor && (predecessor != pred)){
+            return nullptr;//多个前驱
+          }
+          predecessor = pred;
+        }
+      }
+      return predecessor;//返回唯一的predecessor
+    }
+    BasicBlock* getLoopPreheader() const{
+      BasicBlock* preheader = getlooppPredecessor();
+      if (!preheader)
+        return nullptr;
+      if (preheader->next_blocks().size() != 1)
+        return nullptr;
+      return preheader;
+    }
+    BasicBlock* getLoopLatch() const{
+      BasicBlock* latch = nullptr;
+      BasicBlock* Header = header();
+      for (auto* pred : Header->pre_blocks()){
+        if (contains(pred)){
+          if (latch)
+            return nullptr;
+          latch = pred;
+        }
+      }
+      return latch;//返回唯一的latch
+    }
+    bool hasDedicatedExits() const{
+      for (auto exitbb : _exits){
+        for (auto pred : exitbb->pre_blocks()){
+          if (!contains(pred))
+            return false;
+        }
+      }
+      return true;
+    }
+    bool isLoopSimplifyForm() const{
+      return getLoopPreheader() && getLoopLatch() && hasDedicatedExits();
+    }
 };
 
 class Function : public User {
@@ -33,22 +82,12 @@ class Function : public User {
 
   block_ptr_list mBlocks;     // blocks of the function
   arg_ptr_vector mArguments;  // formal args
-  // std::list<Loop*> mLoops;
-  // std::map<ir::BasicBlock*, ir::Loop*> _headToLoop;
 
-  //* function has concrete local var for return value,
-  //* addressed by mRetValueAddr
   Value* mRetValueAddr = nullptr;  // return value
   BasicBlock* mEntry = nullptr;    // entry block
   BasicBlock* mExit = nullptr;     // exit block
   size_t mVarCnt = 0;              // for local variables count
   size_t argCnt = 0;               // formal arguments count
-
-  // // for call graph
-  // std::set<ir::Function*> mCallees;
-  // bool _is_called;
-  // bool _is_inline;
-  // bool _is_lib;
 
  public:
   Function(Type* TypeFunction, const_str_ref name="",

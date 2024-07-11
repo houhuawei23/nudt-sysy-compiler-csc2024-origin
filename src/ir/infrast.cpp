@@ -78,9 +78,10 @@ void BasicBlock::emplace_first_inst(Instruction* inst) {
 
 void BasicBlock::emplace_back_inst(Instruction* i) {
   if (isTerminal()) {
-    std::cerr << "[ERROR] insert a non-terminal inst to a terminal bb"
+    std::cerr << "[ERROR] emplace_back a non-terminal inst to a terminal bb"
               << std::endl;
-    // return;
+    assert(false);
+    return;
   }
   mInsts.emplace_back(i);
   i->setBlock(this);

@@ -30,15 +30,14 @@ namespace pass{
                         // func->callees().insert(calleePtr);
                         // func->set_is_called(true);
                         cgctx->callees(func).insert(calleePtr);
+                        cgctx->set_isCalled(func,true);
                     }
                 }
             }
         }
-        assert(funcStack.empty());
-        assert(funcSet.empty());
-        dfsFuncCallGraph(ctx->mainFunction());
-
-
+        // assert(funcStack.empty());
+        // assert(funcSet.empty());
+        // dfsFuncCallGraph(ctx->mainFunction());
     }
     void callGraphBuild::dfsFuncCallGraph(ir::Function*func){
         funcStack.push_back(func);
@@ -59,5 +58,18 @@ namespace pass{
         }
         funcStack.pop_back();
         funcSet.erase(func);
+    }
+
+    void callGraphCheck::run(ir::Module* ctx, topAnalysisInfoManager* tp){
+        cgctx=tp->getCallGraph();
+        using namespace std;
+        for(auto func:ctx->funcs()){
+            if(cgctx->isLib(func))continue;
+            cout<<"Function "<<func->name()<<"("<<cgctx->isInline(func)<<" for inline) called :"<<endl;
+            for(auto funccallee:cgctx->callees(func)){
+                cout<<funccallee->name()<<"\t";
+            }
+            cout<<endl;
+        }
     }
 }

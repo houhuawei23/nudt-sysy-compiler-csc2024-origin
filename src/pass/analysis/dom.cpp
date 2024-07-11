@@ -171,7 +171,6 @@ namespace pass
             domctx->set_idom(bb,idom[bb]);
             domctx->set_sdom(bb,vertex[semi[bb]]);
         }
-
     }
     
     void domFrontierGen::getDomTree(ir::Function* func){
@@ -284,13 +283,11 @@ namespace pass
     }
 
     void domInfoPass::run(ir::Function* func, topAnalysisInfoManager* tp){
-        preProcDom ppd=preProcDom();
-        idomGen idg=idomGen();
-        domFrontierGen dfg=domFrontierGen();
-        domInfoCheck dic=domInfoCheck();
-        ppd.run(func,tp);
-        idg.run(func,tp);
-        dfg.run(func,tp);
+        preProcDom ppd = preProcDom();
+        idomGen idg = idomGen();
+        domFrontierGen dfg = domFrontierGen();
+        domInfoCheck dic = domInfoCheck();
+        ppd.run(func,tp); idg.run(func,tp); dfg.run(func,tp);
         // dic.run(func,tp);
     }
 

@@ -291,7 +291,10 @@ Value* UnaryInst::getConstantRepl() {
       case vZEXT:
         return Constant::gen_i32(cval->i1());
         break;
+      case vFNEG:
+        return Constant::gen_f32(-float(cval->f32()));
       default:
+        std::cerr<<valueId()<<std::endl;
         assert(false && "Invalid scid from UnaryInst::getConstantRepl");
         break;
     }

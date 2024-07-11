@@ -85,7 +85,10 @@ void User::refresh_operand_index() {
   }
 }
 void User::setOperand(size_t index, Value* value) {
-  assert(index < mOperands.size());
+  if(index >= mOperands.size()){
+    std::cerr<<"index="<<index<<", but mOperands max size="<<mOperands.size()<<std::endl;
+    assert(index < mOperands.size());
+  }
   mOperands[index]->set_value(value);
   value->uses().emplace_back(mOperands[index]);
 }

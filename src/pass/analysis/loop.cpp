@@ -18,6 +18,9 @@ namespace pass{
                 }
             }
         }
+        for(auto iLoop:lpctx->loops()){
+            loopGetExits(iLoop);
+        }
     }
     void loopAnalysis::addLoopBlocks(ir::Function*func,ir::BasicBlock* header,ir::BasicBlock* tail){
         ir::Loop* curLoop;
@@ -26,6 +29,7 @@ namespace pass{
         auto findLoop=lpctx->head2loop(header);
         if(findLoop==nullptr){
             curLoop=new ir::Loop(header,func);
+            curLoop->latchs().insert(tail);
             // func->Loops().push_back(curLoop);
             lpctx->loops().push_back(curLoop);
             // headerToLoop[header]=curLoop;
@@ -36,6 +40,7 @@ namespace pass{
         else{
             // curLoop=headerToLoop[header];
             curLoop=lpctx->head2loop(header);
+            curLoop->latchs().insert(tail);
         }
         ir::block_ptr_stack bbStack;
         bbStack.push(tail);
@@ -53,6 +58,17 @@ namespace pass{
             }
         }
     }
+
+    void loopAnalysis::loopGetExits(ir::Loop* plp){
+        for(auto bb:plp->blocks()){
+            for(auto bbNext:bb->next_blocks()){
+                if(plp->blocks().count(bbNext)==0){
+                    plp->exits().insert(bbNext);
+                }
+            }
+        }
+    }
+
     void loopInfoCheck::run(ir::Function* func,topAnalysisInfoManager* tp){
         using namespace std;
         if(!func->entry())return;

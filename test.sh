@@ -150,7 +150,8 @@ function run_llvm_test() {
     cat "${sy_h}" >"${llvm_c}"
     cat "${single_file}" >>"${llvm_c}"
 
-    clang --no-warnings -emit-llvm -S "${llvm_c}" -o "${llvm_ll}" -O1
+    clang --no-warnings -emit-llvm -S "${llvm_c}" -o "${llvm_ll}" -O3 -std=c90
+    # -Wimplicit-function-declaration
     llvm-link --suppress-warnings "${llvm_ll}" "${link_ll}" -S -o "${llvm_llinked}"
 
     if [ -f "$in_file" ]; then

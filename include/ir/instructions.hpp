@@ -265,7 +265,20 @@ public:  // get function
     return operand(0)->as<BasicBlock>();
   }
   void replaceDest(ir::BasicBlock* olddest, ir::BasicBlock* newdest);
-public:
+  void set_iftrue(BasicBlock* bb){
+    assert(mIsCond and "not a conditional branch");  
+    setOperand(1,bb);
+  }
+  void set_iffalse(BasicBlock* bb){
+    assert(mIsCond and "not a conditional branch");
+    setOperand(2,bb);
+  }
+  void set_dest(BasicBlock* bb){
+    assert(not mIsCond and "not an unconditional branch");
+    setOperand(0,bb);
+  }
+
+ public:
   static bool classof(const Value* v) { return v->valueId() == vBR; }
   void print(std::ostream& os) const override;
 };
