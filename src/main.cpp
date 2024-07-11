@@ -61,10 +61,9 @@ int main(int argc, char* argv[]) {
     auto module_ir = gen.build_ir();
 
     //! 2. Optimization Passes
-    pass::topAnalysisInfoManager* tAIM=new pass::topAnalysisInfoManager(module_ir);
+    pass::topAnalysisInfoManager* tAIM = new pass::topAnalysisInfoManager(module_ir);
     tAIM->initialize();
-    pass::PassManager* pm=new pass::PassManager(module_ir,tAIM);
-    
+    pass::PassManager* pm = new pass::PassManager(module_ir,tAIM);
 
     if (not config.pass_names.empty()) {
         for (auto pass_name : config.pass_names) {
@@ -104,8 +103,6 @@ int main(int argc, char* argv[]) {
             else {
                 assert(false && "Invalid pass name");
             }
-
-            
         }
     }
     // module_ir->print(std::cout);

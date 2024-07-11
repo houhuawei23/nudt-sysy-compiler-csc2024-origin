@@ -28,69 +28,68 @@ namespace pass{
     using ModuleACtx=analysisInfo<ir::Module>;
     using FunctionACtx=analysisInfo<ir::Function>;
 
-    // add new analysis info of ir here!
-    // dom Tree
-    class domTree:public FunctionACtx{//also used as pdom
-        protected:
-            std::unordered_map<ir::BasicBlock*,ir::BasicBlock*>_idom;
-            std::unordered_map<ir::BasicBlock*,ir::BasicBlock*>_sdom;
-            std::unordered_map<ir::BasicBlock*,int>_domlevel;
-            std::unordered_map<ir::BasicBlock*,std::vector<ir::BasicBlock*>>_domson;
-            std::unordered_map<ir::BasicBlock*,std::vector<ir::BasicBlock*>>_domfrontier;
-            std::vector<ir::BasicBlock*>_BFSDomTreeVector;
-        public:
-            domTree(ir::Function*func,topAnalysisInfoManager* tp):FunctionACtx(func,tp){}
-            ir::BasicBlock*idom(ir::BasicBlock*bb){return _idom[bb];}
-            void set_idom(ir::BasicBlock*bb,ir::BasicBlock* idbb){_idom[bb]=idbb;}
-            ir::BasicBlock*sdom(ir::BasicBlock*bb){return _sdom[bb];}
-            void set_sdom(ir::BasicBlock*bb,ir::BasicBlock* sdbb){_sdom[bb]=sdbb;}
-            int domlevel(ir::BasicBlock*bb){return _domlevel[bb];}
-            void set_domlevel(ir::BasicBlock*bb,int lv){_domlevel[bb]=lv;}
-            std::vector<ir::BasicBlock*>& domson(ir::BasicBlock*bb){return _domson[bb];}
-            std::vector<ir::BasicBlock*>& domfrontier(ir::BasicBlock*bb){return _domfrontier[bb];}
-            std::vector<ir::BasicBlock*>& BFSDomTreeVector(){return _BFSDomTreeVector;}
-            void clearAll(){
-                _idom.clear();
-                _sdom.clear();
-                _domson.clear();
-                _domfrontier.clear();
-                _domlevel.clear();
+// add new analysis info of ir here!
+// dom Tree
+class domTree:public FunctionACtx{//also used as pdom
+    protected:
+        std::unordered_map<ir::BasicBlock*,ir::BasicBlock*>_idom;
+        std::unordered_map<ir::BasicBlock*,ir::BasicBlock*>_sdom;
+        std::unordered_map<ir::BasicBlock*,int>_domlevel;
+        std::unordered_map<ir::BasicBlock*,std::vector<ir::BasicBlock*>>_domson;
+        std::unordered_map<ir::BasicBlock*,std::vector<ir::BasicBlock*>>_domfrontier;
+        std::vector<ir::BasicBlock*>_BFSDomTreeVector;
+    public:
+        domTree(ir::Function*func,topAnalysisInfoManager* tp):FunctionACtx(func,tp){}
+        ir::BasicBlock*idom(ir::BasicBlock*bb){return _idom[bb];}
+        void set_idom(ir::BasicBlock*bb,ir::BasicBlock* idbb){_idom[bb]=idbb;}
+        ir::BasicBlock*sdom(ir::BasicBlock*bb){return _sdom[bb];}
+        void set_sdom(ir::BasicBlock*bb,ir::BasicBlock* sdbb){_sdom[bb]=sdbb;}
+        int domlevel(ir::BasicBlock*bb){return _domlevel[bb];}
+        void set_domlevel(ir::BasicBlock*bb,int lv){_domlevel[bb]=lv;}
+        std::vector<ir::BasicBlock*>& domson(ir::BasicBlock*bb){return _domson[bb];}
+        std::vector<ir::BasicBlock*>& domfrontier(ir::BasicBlock*bb){return _domfrontier[bb];}
+        std::vector<ir::BasicBlock*>& BFSDomTreeVector(){return _BFSDomTreeVector;}
+        void clearAll(){
+            _idom.clear();
+            _sdom.clear();
+            _domson.clear();
+            _domfrontier.clear();
+            _domlevel.clear();
+        }
+        void initialize(){
+            clearAll();
+            for(auto bb:_pu->blocks()){
+                _domson[bb]=std::vector<ir::BasicBlock*>();
+                _domfrontier[bb]=std::vector<ir::BasicBlock*>();
             }
-            void initialize(){
-                clearAll();
-                for(auto bb:_pu->blocks()){
-                    _domson[bb]=std::vector<ir::BasicBlock*>();
-                    _domfrontier[bb]=std::vector<ir::BasicBlock*>();
+        }
+        void refresh() override;
+        bool dominate(ir::BasicBlock* bb1,ir::BasicBlock* bb2){
+            if(bb1==bb2)return true;
+            auto bbIdom=_idom[bb2];
+            while(bbIdom!=nullptr){
+                if(bbIdom==bb1)return true;
+                bbIdom=_idom[bbIdom];
+            }
+            return false;
+        }
+        void BFSDomTreeInfoRefresh(){
+            std::queue<ir::BasicBlock*> bbqueue;
+            std::unordered_map<ir::BasicBlock*, bool> vis;
+            for (auto bb : _pu->blocks()) vis[bb] = false;
+            _BFSDomTreeVector.clear();
+            bbqueue.push(_pu->entry());
+
+            while (!bbqueue.empty()) {
+                auto bb = bbqueue.front(); bbqueue.pop();
+                if (!vis[bb]) {
+                    _BFSDomTreeVector.push_back(bb);
+                    vis[bb] = true;
+                    for(auto bbDomSon : _domson[bb]) bbqueue.push(bbDomSon);
                 }
             }
-            void refresh() override;
-            bool dominate(ir::BasicBlock* bb1,ir::BasicBlock* bb2){
-                if(bb1==bb2)return true;
-                auto bbIdom=_idom[bb2];
-                while(bbIdom!=nullptr){
-                    if(bbIdom==bb1)return true;
-                    bbIdom=_idom[bbIdom];
-                }
-                return false;
-            }
-            void BFSDomTreeInfoRefresh(){
-                std::queue<ir::BasicBlock*>bbqueue;
-                std::unordered_map<ir::BasicBlock*,bool>vis;
-                for(auto bb:_pu->blocks())vis[bb]=false;
-                _BFSDomTreeVector.clear();
-                bbqueue.push(_pu->entry());
-                while(not bbqueue.empty()){
-                    auto bb=bbqueue.front();
-                    bbqueue.pop();
-                    if(not vis[bb]){
-                        _BFSDomTreeVector.push_back(bb);
-                        vis[bb]=true;
-                        for(auto bbDomSon:_domson[bb])
-                            bbqueue.push(bbDomSon);
-                    }
-                }
-            }
-    };
+        }
+};
 
 
     class pdomTree:public FunctionACtx{//also used as pdom
