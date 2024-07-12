@@ -73,7 +73,8 @@ class domTree:public FunctionACtx{//also used as pdom
             }
             return false;
         }
-        void BFSDomTreeInfoRefresh(){
+        void BFSDomTreeInfoRefresh() {
+            constexpr bool DebugBFS = true;
             std::queue<ir::BasicBlock*> bbqueue;
             std::unordered_map<ir::BasicBlock*, bool> vis;
             for (auto bb : _pu->blocks()) vis[bb] = false;
@@ -86,6 +87,14 @@ class domTree:public FunctionACtx{//also used as pdom
                     _BFSDomTreeVector.push_back(bb);
                     vis[bb] = true;
                     for(auto bbDomSon : _domson[bb]) bbqueue.push(bbDomSon);
+                }
+            }
+
+            std::cerr << "the size is " << _BFSDomTreeVector.size() << "\n";
+            std::cerr << "vis size is " << vis.size() << "\n";
+            if (DebugBFS) {
+                for (auto bb : _BFSDomTreeVector) {
+                    std::cerr << bb->name() << std::endl;
                 }
             }
         }
