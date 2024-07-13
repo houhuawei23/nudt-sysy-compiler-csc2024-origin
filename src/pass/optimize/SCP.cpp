@@ -6,7 +6,7 @@ static std::set<ir::Instruction*>worklist;
 
 namespace pass{
     void SCP::run(ir::Function* func, topAnalysisInfoManager* tp){
-        if(!func->entry())return;
+        if(func->isOnlyDeclare())return;
         // func->print(std::cout);
         for(auto bb:func->blocks()){
             for(auto instIter=bb->insts().begin();instIter!=bb->insts().end();){

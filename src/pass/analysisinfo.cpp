@@ -10,6 +10,7 @@ using namespace pass;
 void topAnalysisInfoManager::initialize(){
     mCallGraph=new callGraph(mModule,this);
     for(auto func:mModule->funcs()){
+        if(func->blocks().empty())continue;
         mDomTree[func]=new domTree(func,this);
         mPDomTree[func]=new pdomTree(func,this);
         mLoopInfo[func]=new loopInfo(func,this);

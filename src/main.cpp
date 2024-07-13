@@ -111,11 +111,12 @@ int main(int argc, char* argv[]) {
 
     //! 3. Code Generation
     for (auto fun : module_ir->funcs()) {
+        if(fun->isOnlyDeclare())continue;
         auto dom_ctx = tAIM->getDomTree(fun);
         dom_ctx->refresh();
         dom_ctx->BFSDomTreeInfoRefresh();
         for (auto bb : dom_ctx->BFSDomTreeVector()) {
-            std::cerr << bb->name() << std::endl;
+            std::cout << bb->name() << std::endl;
         }
     }
     if (config.gen_asm) {
