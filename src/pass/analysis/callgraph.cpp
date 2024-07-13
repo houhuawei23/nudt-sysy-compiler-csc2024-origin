@@ -5,7 +5,7 @@ namespace pass{
         cgctx=tp->getCallGraph();
         cgctx->initialize();
         for(auto func:ctx->funcs()){//initialize call info for functions
-            if(not func->entry())
+            if(func->isOnlyDeclare())
                 // func->set_is_lib(true);
                 cgctx->set_isLib(func,true);
             else

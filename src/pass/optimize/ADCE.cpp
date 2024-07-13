@@ -9,7 +9,7 @@ namespace pass{
     void ADCE::run(ir::Function* func, topAnalysisInfoManager* tp){
         bool isCFGChange=false;
         bool isCallGraphChange=false;
-        if(not func->entry())return ;
+        if(func->isOnlyDeclare())return ;
         pdctx=tp->getPDomTree(func);
         pdctx->refresh();
         liveBB.clear();

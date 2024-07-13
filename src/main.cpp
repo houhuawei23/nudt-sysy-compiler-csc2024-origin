@@ -17,7 +17,6 @@
 #include "pass/optimize/inline.hpp"
 #include "pass/optimize/reg2mem.hpp"
 #include "pass/optimize/ADCE.hpp"
-
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
 #include "mir/lowering.hpp"
@@ -29,8 +28,6 @@ int main(int argc, char* argv[]) {
     sysy::Config config;
     config.parse_cmd_args(argc, argv);
     config.print_info();
-
-    // std::cout << "Build time: " << __TIME__ << " " << __DATE__ << std::endl;
 
     if (config.infile.empty()) {
         cerr << "Error: input file not specified" << endl;
@@ -124,7 +121,15 @@ int main(int argc, char* argv[]) {
     };
 
     //! 3. Code Generation
-    pm->run(new pass::CFGAnalysis());
+    for (auto fun : module_ir->funcs()) {
+        if(fun->isOnlyDeclare())continue;
+        auto dom_ctx = tAIM->getDomTree(fun);
+        dom_ctx->refresh();
+        dom_ctx->BFSDomTreeInfoRefresh();
+        for (auto bb : dom_ctx->BFSDomTreeVector()) {
+            std::cout << bb->name() << std::endl;
+        }
+    }
     if (config.gen_asm) {
         auto target = mir::RISCVTarget();
         // auto target = mir::GENERICTarget();

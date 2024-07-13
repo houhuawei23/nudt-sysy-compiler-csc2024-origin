@@ -25,7 +25,7 @@ namespace pass
 {
     //pre process for dom calc
     void preProcDom::run(ir::Function* func, topAnalysisInfoManager* tp){
-        if(!func->entry())return;
+        if(func->isOnlyDeclare())return;
         auto blocklist=func->blocks();
         std::vector<ir::BasicBlock*>worklist;
         for(auto bbiter=blocklist.begin();bbiter!=blocklist.end();){
@@ -104,7 +104,7 @@ namespace pass
     }
 
     void idomGen::run(ir::Function* func, topAnalysisInfoManager* tp){
-        if(!func->entry())return;
+        if(func->isOnlyDeclare())return;
         domctx=tp->getDomTree(func);
         domctx->clearAll();
         domctx->initialize();
@@ -217,7 +217,7 @@ namespace pass
 
     //generate dom tree
     void domFrontierGen::run(ir::Function* func, topAnalysisInfoManager *tp){
-        if(!func->entry())return;
+        if(func->isOnlyDeclare())return;
         domctx=tp->getDomTree(func);
         getDomTree(func);
         getDomInfo(func->entry(),0);
@@ -227,7 +227,7 @@ namespace pass
 
     //debug info print pass
     void domInfoCheck::run(ir::Function* func,topAnalysisInfoManager* tp){
-        if(!func->entry())return;
+        if(func->isOnlyDeclare())return;
         domctx=tp->getDomTree(func);
         using namespace std;
         cout<<"In Function \""<<func->name()<<"\""<<endl;
@@ -280,6 +280,13 @@ namespace pass
             }
             cout<<endl;
         }
+        cout<<endl;
+        domctx->BFSDomTreeInfoRefresh();
+        cout<<"BFSDomTreeVector:"<<endl;
+        for(auto bb:domctx->BFSDomTreeVector()){
+            cout<<bb->name()<<"\t";
+        }
+        cout<<endl<<endl;
     }
 
     void domInfoPass::run(ir::Function* func, topAnalysisInfoManager* tp){
@@ -288,7 +295,7 @@ namespace pass
         domFrontierGen dfg = domFrontierGen();
         domInfoCheck dic = domInfoCheck();
         ppd.run(func,tp); idg.run(func,tp); dfg.run(func,tp);
-        // dic.run(func,tp);
+        dic.run(func,tp);
     }
 
 } // namespace pass

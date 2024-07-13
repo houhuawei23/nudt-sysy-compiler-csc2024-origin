@@ -145,18 +145,8 @@ class Function : public User {
   auto varInc() { return mVarCnt++; }
   void setVarCnt(size_t x) { mVarCnt = x; }
 
-  // auto& Loops() { return mLoops; }
-  // auto& headToLoop() { return _headToLoop; }
+  bool isOnlyDeclare(){return mBlocks.empty();}
 
-  // auto& callees() const { return mCallees; }
-  // auto& callees() { return mCallees; }
-  // // get and set for callgraph
-  // bool get_is_inline() { return _is_inline; }
-  // void set_is_inline(bool b) { _is_inline = b; }
-  // bool get_is_called() { return _is_called; }
-  // void set_is_called(bool b) { _is_called = b; }
-  // bool get_is_lib() { return _is_lib; }
-  // void set_is_lib(bool b) { _is_lib = b; }
 
  public:
   static bool classof(const Value* v) { return v->valueId() == vFUNCTION; }

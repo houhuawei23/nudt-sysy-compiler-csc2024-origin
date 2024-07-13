@@ -28,7 +28,7 @@ namespace pass{
     }
 
     void mySCCP::run(ir::Function* func, topAnalysisInfoManager* tp){
-        if(!func->entry())return;
+        if(func->isOnlyDeclare())return;
         livePreNum.clear();
         worklist.clear();
         executableFlag.clear();

@@ -5,7 +5,7 @@ static std::unordered_map<ir::BasicBlock*,int>stLoopLevel;
 
 namespace pass{
     void loopAnalysis::run(ir::Function* func,topAnalysisInfoManager* tp){
-        if(!func->entry())return;
+        if(func->isOnlyDeclare())return;
         domctx=tp->getDomTree(func);
         domctx->refresh();
         lpctx=tp->getLoopInfo(func);
@@ -71,7 +71,7 @@ namespace pass{
 
     void loopInfoCheck::run(ir::Function* func,topAnalysisInfoManager* tp){
         using namespace std;
-        if(!func->entry())return;
+        if(func->isOnlyDeclare())return;
         lpctx=tp->getLoopInfo(func);
         cout<<"In Function \""<<func->name()<<"\": "<<endl;
         int cnt=0;

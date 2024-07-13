@@ -73,10 +73,12 @@ class domTree:public FunctionACtx{//also used as pdom
             }
             return false;
         }
-        void BFSDomTreeInfoRefresh(){
+        void BFSDomTreeInfoRefresh() {
             std::queue<ir::BasicBlock*> bbqueue;
             std::unordered_map<ir::BasicBlock*, bool> vis;
-            for (auto bb : _pu->blocks()) vis[bb] = false;
+            for (auto bb : _pu->blocks()){
+                vis[bb] = false;
+            } 
             _BFSDomTreeVector.clear();
             bbqueue.push(_pu->entry());
 
