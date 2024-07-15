@@ -6,7 +6,7 @@ import os
 
 target = sys.argv[1]
 dst = sys.argv[2]
-src = os.path.dirname(os.path.abspath(__file__)) + "/cmmc_sysy_rt.cpp"
+src = os.path.dirname(os.path.abspath(__file__)) + "/LoopParallel.cpp"
 
 gcc_ref_command = {
     "RISCV": "riscv64-linux-gnu-g++-12 -O3 -DNDEBUG -march=rv64gc_zba_zbb -fno-stack-protector -fomit-frame-pointer -mcpu=sifive-u74 -mabi=lp64d -mcmodel=medlow -ffp-contract=on -w ".split(),
