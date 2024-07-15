@@ -23,6 +23,7 @@ public:
     BasicBlock* header() const{ return _header; }
     Function* parent() const{ return _parent; }
     std::set<BasicBlock*>& blocks() { return _blocks; }
+    std::set<BasicBlock*>& exits() {return _exits; }
     bool contains(BasicBlock* block) const{ return _blocks.find(block) != _blocks.end(); }
     BasicBlock* getlooppPredecessor() const{
       BasicBlock* predecessor = nullptr;

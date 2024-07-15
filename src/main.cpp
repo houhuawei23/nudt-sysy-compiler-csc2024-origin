@@ -20,6 +20,7 @@
 #include "pass/optimize/inline.hpp"
 #include "pass/optimize/reg2mem.hpp"
 #include "pass/optimize/ADCE.hpp"
+#include "pass/optimize/loopsimplify.hpp"
 
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
@@ -100,6 +101,8 @@ int main(int argc, char* argv[]) {
                 pm->run(new pass::Inline());
             } else if (pass_name.compare("adce") == 0){
                 pm->run(new pass::ADCE());
+            } else if (pass_name.compare("loopsimplify") == 0){
+                pm->run(new pass::loopsimplify());
             }
             else {
                 assert(false && "Invalid pass name");

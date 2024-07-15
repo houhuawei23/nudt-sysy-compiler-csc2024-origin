@@ -6,3 +6,165 @@
 #include <vector>
 #include <queue>
 #include <algorithm>
+
+namespace pass{
+    ir::BasicBlock* loopsimplify::insertUniqueBackedgeBlock(ir::Loop* L,ir::BasicBlock* preheader,topAnalysisInfoManager* tp){
+        ir::BasicBlock* header = L->header();
+        ir::Function* F = header->function();
+
+        if (!preheader)
+            return nullptr;
+        
+        std::vector<ir::BasicBlock*> BackedgeBBs;
+        for (ir::BasicBlock* BB : header->pre_blocks()){
+            if (BB != preheader)
+                BackedgeBBs.push_back(BB);
+        }
+
+        ir::BasicBlock* BEBB = F->newBlock();
+        ir::BranchInst* jmp = new ir::BranchInst(header,BEBB);
+        BEBB->emplace_back_inst(jmp);
+        ir::BasicBlock::block_link(BEBB,header);
+
+        for (auto &inst : header->insts())
+        {
+            if (ir::PhiInst* phiinst = dyn_cast<ir::PhiInst>(inst)){
+                ir::PhiInst* BEphi = new ir::PhiInst(BEBB,phiinst->type());
+                BEBB->emplace_first_inst(BEphi);
+                bool hasuniqueval = true;
+                ir::Value* uniqueval = nullptr;
+                for (ir::BasicBlock* BB : BackedgeBBs){
+                    ir::Value* val = phiinst->getvalfromBB(BB);
+                    BEphi->addIncoming(val,BB);
+                    if (hasuniqueval){
+                        if (!uniqueval){
+                            uniqueval = val;
+                        }
+                        else if (uniqueval != val){
+                            hasuniqueval = false;
+                        }
+                    }
+                }
+                for (ir::BasicBlock* BB : BackedgeBBs){
+                    phiinst->delBlock(BB);
+                }
+                phiinst->addIncoming(BEphi,BEBB);
+                if (hasuniqueval){
+                    BEphi->replaceAllUseWith(uniqueval);
+                    BEBB->delete_inst(BEphi);
+                }
+            }
+        }
+
+        for (ir::BasicBlock* BB : BackedgeBBs){
+            auto inst = BB->insts().back();
+            ir::BasicBlock::delete_block_link(BB,header);
+            ir::BasicBlock::block_link(BB,BEBB);
+            if (ir::BranchInst* brinst = dyn_cast<ir::BranchInst>(inst)){
+                brinst->replaceDest(header,BEBB);
+            }
+        }
+        L->blocks().insert(BEBB);
+        return BEBB;
+    }
+
+    ir::BasicBlock* loopsimplify::insertUniquePreheader(ir::Loop* L,topAnalysisInfoManager* tp){
+        ir::BasicBlock* header = L->header();
+        ir::Function* F = header->function();
+        ir::BasicBlock* preheader = L->getlooppPredecessor();
+
+        ir::BasicBlock* newpre = F->newBlock();
+        ir::BranchInst* jmp = new ir::BranchInst(header,newpre);
+        newpre->emplace_back_inst(jmp);
+        ir::BranchInst* br = dyn_cast<ir::BranchInst>(preheader->insts().back());
+        br->replaceDest(header,newpre);
+        ir::BasicBlock::delete_block_link(preheader,header);
+        ir::BasicBlock::block_link(newpre,header);
+        ir::BasicBlock::block_link(preheader,newpre);
+
+        for (auto inst : header->insts()){
+            if (ir::PhiInst* phiinst = dyn_cast<ir::PhiInst>(inst)){
+                phiinst->replaceoldtonew(preheader,newpre);
+            }
+        }
+        L->blocks().insert(newpre);
+        return newpre;
+    }   
+
+    void loopsimplify::insertUniqueExitBlock(ir::Loop* L,topAnalysisInfoManager* tp){
+        ir::Function* F = L->header()->function();
+        std::vector<ir::BasicBlock*> InLoopPred;
+        for (ir::BasicBlock* exit : L->exits()){
+            if (exit->pre_blocks().size() > 1){
+                InLoopPred.clear();
+                for (ir::BasicBlock* pred : exit->pre_blocks()){
+                    if (L->contains(pred)){
+                        InLoopPred.push_back(pred);
+                    }
+                }
+
+                for (ir::BasicBlock* pred : InLoopPred){
+                    ir::BasicBlock* newBB = F->newBlock();
+                    ir::BranchInst* jmp = new ir::BranchInst(exit,newBB);
+                    newBB->emplace_back_inst(jmp);
+                    ir::BasicBlock::delete_block_link(pred,exit);
+                    ir::BasicBlock::block_link(pred,newBB);
+                    ir::BasicBlock::block_link(newBB,exit);
+                    for (auto inst : exit->insts()){
+                        if (ir::PhiInst* phiinst = dyn_cast<ir::PhiInst>(inst)){
+                            phiinst->replaceoldtonew(pred,newBB);
+                        }
+                    }
+
+                }
+                //需要更新_exits
+            }
+        }
+        return ;
+    }
+
+    bool loopsimplify::simplifyOneLoop(ir::Loop* L,topAnalysisInfoManager* tp){
+        bool changed = false;
+        if (L->isLoopSimplifyForm())
+            return false;
+        //如果有多条回边
+        ir::BasicBlock* preheader = L->getLoopPreheader();
+        ir::BasicBlock* LoopLatch = L->getLoopLatch();
+        if (!preheader){
+            preheader = insertUniquePreheader(L,tp);
+            if (preheader)
+                changed = true;
+        }
+
+        if (!LoopLatch){
+            LoopLatch = insertUniqueBackedgeBlock(L,preheader,tp);
+            if (LoopLatch)
+                changed = true;
+        }
+
+        if (L->hasDedicatedExits()){
+            insertUniqueExitBlock(L,tp);
+            changed = true;
+        }
+
+        return changed;
+    }
+
+    void loopsimplify::run(ir::Function* func, topAnalysisInfoManager* tp){
+        
+        loopInfo* LI = tp->getLoopInfo(func);
+        LI->refresh();
+        auto loops = LI->loops();
+        bool changed = false;
+        for (auto L : loops){
+            changed |= simplifyOneLoop(L,tp);
+            // if (!L->isLoopSimplifyForm()){
+            //     assert("loop is not in simplify form");
+            // }
+        }
+        if (changed){
+            //update loopinfo
+            tp->CFGChange(func);
+        }
+    }
+}

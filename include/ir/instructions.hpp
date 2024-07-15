@@ -493,6 +493,7 @@ class PhiInst : public Instruction {
   void delValue(Value* val);
   void delBlock(BasicBlock* bb);
   void replaceBlock(BasicBlock* newBB, size_t k);
+  void replaceoldtonew(BasicBlock* oldBB, BasicBlock* newBB);
 
   void print(std::ostream& os) const override;
   Value* getConstantRepl() override;

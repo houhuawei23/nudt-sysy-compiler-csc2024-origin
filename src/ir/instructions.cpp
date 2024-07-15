@@ -653,6 +653,15 @@ void PhiInst::replaceBlock(BasicBlock* newBB, size_t k) {
   setOperand(2 * k + 1, newBB);
 }
 
+void PhiInst::replaceoldtonew(BasicBlock* newbb,BasicBlock* oldbb){
+  size_t i;
+  for (i = 0; i < mSize; i++) {
+    if (getBlock(i) == oldbb)
+      break;
+  }
+  setOperand(2 * i + 1, newbb);
+}
+
 /*
  * @brief: BitcastInst::print
  * @details:

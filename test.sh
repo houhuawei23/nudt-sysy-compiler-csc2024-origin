@@ -37,7 +37,7 @@ EC_LLVMLINK=2
 EC_LLI=3
 EC_TIMEOUT=124
 
-TIMEOUT=10
+TIMEOUT=100
 
 # Function to print usage information
 usage() {

@@ -381,15 +381,22 @@ bool Mem2Reg::promotemem2reg(ir::Function* F) {
             if (auto* ai = dyn_cast<ir::AllocaInst>(inst)) {
                 // 这里不是ai->type()->is_xx(),
                 // 而应该是其指针原来的类型->is_xx()
-                auto aitype = ai->type();
-                if (aitype and aitype->isPointer()) {
-                    auto pttype = dyn_cast<ir::PointerType>(aitype);
-                    auto aibasetype = pttype->baseType();
-                    if (aibasetype->isFloat32() or aibasetype->isInt32() or
-                        aibasetype->isBool()) {
-                        if (is_promoted(ai))
-                            Allocas.push_back(ai);
-                    }
+                // auto aitype = ai->type();
+                // if (aitype and aitype->isPointer()) {
+                //     auto pttype = dyn_cast<ir::PointerType>(aitype);
+                //     auto aibasetype = pttype->baseType();
+                //     if (aibasetype->isFloat32() or aibasetype->isInt32() or
+                //         aibasetype->isBool() or aibasetype->isArray()) {
+                //         if (is_promoted(ai))
+                //             Allocas.push_back(ai);
+                //     }
+                // }
+                if (ai->isScalar()) {
+                    
+                    // if (is_promoted(ai)) {
+                        // ai->print(std::cerr); std::cerr << "\n";
+                        Allocas.push_back(ai);
+                    // }
                 }
             }
         }
