@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <cassert>
+#include "support/arena.hpp"
 namespace ir {
 // mir
 class DataLayout;
@@ -35,6 +36,7 @@ class Type {
   size_t mSize;
 
  public:
+  static constexpr auto arenaSource = utils::Arena::Source::IR;
   Type(BType btype, size_t size = 4) : mBtype(btype), mSize(size) {}
   virtual ~Type() = default;
 
@@ -95,12 +97,13 @@ class Type {
   }
 };
 
+SYSYC_ARENA_TRAIT(Type, IR);
+
 class PointerType : public Type {
- protected:
   Type* mBaseType;
-  PointerType(Type* baseType) : Type(POINTER, 4), mBaseType(baseType) {}
 
  public:
+  PointerType(Type* baseType) : Type(POINTER, 4), mBaseType(baseType) {}
   static PointerType* gen(Type* baseType);
 
   auto baseType() const { return mBaseType; }
@@ -110,10 +113,11 @@ class ArrayType : public Type {
  protected:
   std::vector<size_t> mDims;  // dimensions
   Type* mBaseType;            // size_t or float
+
+ public:
   ArrayType(Type* baseType, std::vector<size_t> dims, size_t capacity = 1)
       : Type(ARRAY, capacity * 4), mBaseType(baseType), mDims(dims) {}
 
- public:
   static ArrayType* gen(Type* baseType,
                         std::vector<size_t> dims,
                         size_t capacity = 1);
@@ -130,10 +134,9 @@ class FunctionType : public Type {
   Type* mRetType;
   std::vector<Type*> mArgTypes;
 
+ public:  // Gen
   FunctionType(Type* ret_type, const type_ptr_vector& arg_types = {})
       : Type(FUNCTION, 8), mRetType(ret_type), mArgTypes(arg_types) {}
-
- public:  // Gen
   static FunctionType* gen(Type* ret_type, const type_ptr_vector& arg_types);
 
   //! get the return type of the function

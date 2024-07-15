@@ -1,5 +1,5 @@
 #include "ir/value.hpp"
-
+#include "support/arena.hpp"
 namespace ir {
 //! Use
 size_t Use::index() const {
@@ -57,7 +57,7 @@ Value* User::operand(size_t index) const {
 void User::addOperand(Value* value) {
   assert(value != nullptr && "value cannot be nullptr");
 
-  auto new_use = new Use(mOperands.size(), this, value);
+  auto new_use = utils::make<Use>(mOperands.size(), this, value);
 
   /* add use to user.mOperands*/
   mOperands.emplace_back(new_use);

@@ -56,6 +56,9 @@ sudo cp ./antlr/antlr-4.12.0-complete.jar /usr/local/lib/
 export CLASSPATH=".:/usr/local/lib/antlr-4.12.0-complete.jar"
 alias antlr4="java -jar /usr/local/lib/antlr-4.12.0-complete.jar"
 alias grun="java org.antlr.v4.gui.TestRig"
+
+## tldr: Simplified and community-driven man pages
+sudo apt-get install -y tldr && tldr -u
 ```
 
 ## cmake
@@ -132,6 +135,11 @@ llc -march=riscv64 -mcpu=generic-rv64 test.rv64.ll -o test.rv64.s
 ```bash
 # merge multiple commits into one
 git merge --squash <source-branch>
+
+#  - Create and switch to a new branch based on a specific reference (branch, remote/branch, tag are examples of valid references):
+git checkout -b {{branch_name}} {{reference}}
+
+git checkout -b mid_end origin/mid_end
 
 # jinja2 template gen
 python ./src/target/gen.py ./src/target/riscv.yml ./include/target

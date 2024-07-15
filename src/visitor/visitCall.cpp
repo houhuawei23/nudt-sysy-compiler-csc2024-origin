@@ -43,6 +43,7 @@ std::any SysYIRGenerator::visitCall(SysYParser::CallContext* ctx) {
     final_rargs.push_back(val);
   }
   auto inst = mBuilder.makeInst<ir::CallInst>(callee, final_rargs);
+  // auto inst = mBuilder.makeInstBeta<ir::CallInst>(callee, final_rargs);
   return dyn_cast_Value(inst);
 }
 }  // namespace sysy

@@ -43,6 +43,7 @@ Value* IRBuilder::makeBinary(BinaryOp op, Value* lhs, Value* rhs) {
     return ValueId::vInvalid;
   }();
   auto res = makeInst<BinaryInst>(vid, lhs->type(), lhs, rhs);
+  // auto res = makeInstBeta<BinaryInst>(vid, lhs->type(), lhs, rhs);
   return res;
 }
 

@@ -39,6 +39,8 @@ EC_TIMEOUT=124
 
 TIMEOUT=100
 
+lli_cmd="lli-14"
+
 # Function to print usage information
 usage() {
     echo "Usage: $0 [-t <test_path>] [-o <output_dir>] [-r <result_file>] [-r <result_file>][-h]"
@@ -155,9 +157,9 @@ function run_llvm_test() {
     llvm-link --suppress-warnings "${llvm_ll}" "${link_ll}" -S -o "${llvm_llinked}"
 
     if [ -f "$in_file" ]; then
-        lli "${llvm_llinked}" >"${llvm_out}" <"${in_file}"
+        $lli_cmd "${llvm_llinked}" >"${llvm_out}" <"${in_file}"
     else
-        lli "${llvm_llinked}" >"${llvm_out}"
+        $lli_cmd "${llvm_llinked}" >"${llvm_out}"
     fi
     local llvmres=$?
     # llvm compiler end
@@ -195,19 +197,19 @@ function run_gen_test() {
     fi
 
     if [ -f "$in_file" ]; then
-        timeout $TIMEOUT lli "${gen_llinked}" >"${gen_out}" <"${in_file}"
+        timeout $TIMEOUT $lli_cmd "${gen_llinked}" >"${gen_out}" <"${in_file}"
         if [ $? == $EC_TIMEOUT ]; then # time out
             return $EC_TIMEOUT
         fi
         # not timeout, re-run
-        lli "${gen_llinked}" >"${gen_out}" <"${in_file}"
+        $lli_cmd "${gen_llinked}" >"${gen_out}" <"${in_file}"
     else
-        timeout $TIMEOUT lli "${gen_llinked}" >"${gen_out}"
+        timeout $TIMEOUT $lli_cmd "${gen_llinked}" >"${gen_out}"
         if [ $? == $EC_TIMEOUT ]; then
             return $EC_TIMEOUT
         fi
         # not timeout, re-run
-        lli "${gen_llinked}" >"${gen_out}"
+        $lli_cmd "${gen_llinked}" >"${gen_out}"
     fi
     local res=$?
     # gen compiler end

@@ -4,6 +4,8 @@
 #include <algorithm>
 // #include "ir/constant.hpp"
 #include "ir/utils_ir.hpp"
+#include "support/arena.hpp"
+
 namespace ir {
 
 void Module::addGlobalVar(const_str_ref name, GlobalVariable* gv) {
@@ -24,9 +26,7 @@ Function* Module::findFunction(const_str_ref name) const {
 Function* Module::addFunction(Type* type, const_str_ref name) {
   // re-def name
   assert(findFunction(name) == nullptr && "re-add function!");
-
-  ir::Function* func = new Function(type, name, this);
-
+  auto func = utils::make<Function>(type, name, this);
   mFuncTable.emplace(name, func);
   mFunctions.emplace_back(func);
   return func;

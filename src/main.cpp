@@ -50,7 +50,8 @@ int main(int argc, char* argv[]) {
     SysYParser::CompUnitContext* ast_root = parser.compUnit();
 
     //! 1. IR Generation
-    ir::Module* base_module = new ir::Module();
+    auto module = ir::Module();
+    ir::Module* base_module = &module;
     sysy::SysYIRGenerator gen(base_module, ast_root);
     auto module_ir = gen.build_ir();
 

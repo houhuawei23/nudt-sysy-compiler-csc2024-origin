@@ -2,23 +2,22 @@
 #include "ir/utils_ir.hpp"
 #include "ir/type.hpp"
 #include "ir/instructions.hpp"
-
+#include "support/arena.hpp"
 namespace ir {
 BasicBlock* Function::newBlock() {
-  auto nb = new BasicBlock("", this);
+  auto nb = utils::make<BasicBlock>("", this);
   mBlocks.emplace_back(nb);
   return nb;
 }
 
 BasicBlock* Function::newEntry(const_str_ref name) {
   assert(mEntry == nullptr);
-  mEntry = new BasicBlock(name, this);
+  mEntry = utils::make<BasicBlock>(name, this);
   mBlocks.emplace_back(mEntry);
   return mEntry;
 }
 BasicBlock* Function::newExit(const_str_ref name) {
-  assert(mExit == nullptr);
-  mExit = new BasicBlock(name, this);
+  mExit = utils::make<BasicBlock>(name, this);
   mBlocks.emplace_back(mExit);
   return mExit;
 }
@@ -136,7 +135,7 @@ Function* Function::copy_func() {
     ValueCopy[gvalue] = gvalue;
   }
   // copy func
-  auto copyfunc = new Function(type(), name() + "_copy", mModule);
+  auto copyfunc = utils::make<Function>(type(), name() + "_copy", mModule);
   // copy args
   for (auto arg : mArguments) {
     Value* copyarg = copyfunc->new_arg(arg->type(), "");
