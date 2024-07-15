@@ -8,7 +8,25 @@
 #include <sys/mman.h>
 #include <sys/wait.h>
 
+#include <iostream>
+#include <fstream>
+
+#include <cassert>
 #define alignTo(size, align) ((size) + (align) - 1) / (align) * (align)
+
+void Worker::dump(std::ostream& os) const {
+  os << "worker: \n";
+  os << "  pid: " << pid << "\n";
+  os << "  stackAddr: " << stackAddr << "\n";
+  os << "  core: " << core << "\n";
+  os << "  status: " << status << "\n";
+  os << "  func: " << func << "\n";
+  os << "  beg: " << beg << "\n";
+  os << "  end: " << end << "\n";
+}
+void Worker::dump() const {
+
+}
 
 Worker workers[maxThreads];
 
@@ -33,9 +51,20 @@ void Futex::post() {
             nullptr, 0);
   }
 }
+
+
 int workerRun(void* workerPtr) {
   auto& worker = *static_cast<Worker*>(workerPtr);
 
+  // FIXME: IOT instruction (core dumped)
+  // std::ofstream fout("worker" + std::to_string(worker.core) + ".log");
+  // if(not fout.is_open()) {
+  //   std::cerr << "Failed to open worker log file" << std::endl;
+  //   assert(false);
+  //   return 1;
+  // }
+  // worker.dump(fout);
+  // fout.close();
   cpu_set_t set;
   CPU_SET(worker.core, &set);
   auto pid = static_cast<pid_t>(syscall(SYS_gettid));
@@ -45,7 +74,9 @@ int workerRun(void* workerPtr) {
     // wait for worker to be ready
     worker.ready.wait();
     // run the loop function
+    std::atomic_thread_fence(std::memory_order_seq_cst);
     worker.func.load()(worker.beg.load(), worker.end.load());
+    std::atomic_thread_fence(std::memory_order_seq_cst);
     // signal worker is done
     worker.done.post();
   }
@@ -75,6 +106,7 @@ __attribute((destructor)) void destroyRuntime() {
     waitpid(worker.pid, nullptr, 0);
     // munmap(worker.stackAddr, stackSize);
   }
+  fprintf(stderr, "destroyRuntime\n");
 }
 
 std::size_t getNumThreads() {

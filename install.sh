@@ -11,6 +11,8 @@ sudo apt install -y qemu-user gcc-riscv64-linux-gnu g++-12-riscv64-linux-gnu
 
 sudo apt install gdb-multiarch 
 
+sudo apt install tldr valgrind
+
 sudo ln -s /usr/bin/llvm-link-14 /usr/bin/llvm-link
 
 

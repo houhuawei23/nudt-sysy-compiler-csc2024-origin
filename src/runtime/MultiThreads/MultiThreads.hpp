@@ -13,6 +13,8 @@
 
 #include <bits/types.h>
 
+#include <iostream>
+
 constexpr std::size_t maxThreads = 4;
 
 constexpr std::size_t stackSize = 1024 * 1024;
@@ -40,7 +42,10 @@ struct Worker final {
   std::atomic_int32_t beg, end;
 
   Futex ready, done;
+  void dump(std::ostream& os) const;
+  void dump() const;
 };
+
 
 int workerRun(void* workerPtr);
 
