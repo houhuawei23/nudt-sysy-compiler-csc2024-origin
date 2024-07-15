@@ -295,7 +295,7 @@ namespace pass
         domFrontierGen dfg = domFrontierGen();
         domInfoCheck dic = domInfoCheck();
         ppd.run(func,tp); idg.run(func,tp); dfg.run(func,tp);
-        dic.run(func,tp);
+        // dic.run(func,tp);
     }
 
 } // namespace pass

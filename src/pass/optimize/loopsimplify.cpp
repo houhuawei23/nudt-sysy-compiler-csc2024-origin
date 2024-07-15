@@ -153,18 +153,23 @@ namespace pass{
     void loopsimplify::run(ir::Function* func, topAnalysisInfoManager* tp){
         
         loopInfo* LI = tp->getLoopInfo(func);
-        LI->refresh();
-        auto loops = LI->loops();
-        bool changed = false;
-        for (auto L : loops){
+        if (LI){
+            LI->refresh();
+            auto loops = LI->loops();
+            bool changed = false;
+            for (auto L : loops){
             changed |= simplifyOneLoop(L,tp);
             // if (!L->isLoopSimplifyForm()){
             //     assert("loop is not in simplify form");
             // }
-        }
-        if (changed){
+            }
+            if (changed){
             //update loopinfo
-            tp->CFGChange(func);
+                tp->CFGChange(func);
+            }
         }
+        
+        return ;
+        
     }
 }
