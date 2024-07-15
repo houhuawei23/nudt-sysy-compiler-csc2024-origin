@@ -25,7 +25,7 @@ namespace pass
 {
     //pre process for dom calc
     void preProcPostDom::run(ir::Function* func,topAnalysisInfoManager* tp){
-        if(!func->entry())return;
+        if(func->isOnlyDeclare())return;
         auto blocklist=func->blocks();
         for(auto bbiter=blocklist.begin();bbiter!=blocklist.end();){
             auto bb=*bbiter;
@@ -94,7 +94,7 @@ namespace pass
     }
 
     void ipostDomGen::run(ir::Function* func, topAnalysisInfoManager* tp){
-        if(!func->entry())return;
+        if(func->isOnlyDeclare())return;
         pdctx=tp->getPDomTree(func);
         pdctx->clearAll();
         pdctx->initialize();
@@ -211,7 +211,7 @@ namespace pass
 
     //generate dom tree
     void postDomFrontierGen::run(ir::Function* func, topAnalysisInfoManager* tp){
-        if(!func->entry())return;
+        if(func->isOnlyDeclare())return;
         pdctx=tp->getPDomTree(func);
         getDomTree(func);
         getDomInfo(func->entry(),0);
@@ -223,7 +223,7 @@ namespace pass
 
     //debug info print pass
     void postDomInfoCheck::run(ir::Function* func,topAnalysisInfoManager* tp){
-        if(!func->entry())return;
+        if(func->isOnlyDeclare())return;
         pdctx=tp->getPDomTree(func);
         using namespace std;
         cout<<"In Function \""<<func->name()<<"\""<<endl;

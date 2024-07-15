@@ -57,12 +57,22 @@ class topAnalysisInfoManager{
         // bb info
     public:
         topAnalysisInfoManager(ir::Module* pm):mModule(pm),mCallGraph(nullptr){}
-        domTree* getDomTree(ir::Function* func){return mDomTree[func];}
-        pdomTree* getPDomTree(ir::Function* func){return mPDomTree[func];}
-        loopInfo* getLoopInfo(ir::Function* func){return mLoopInfo[func];}
+        domTree* getDomTree(ir::Function* func){
+            if(func->isOnlyDeclare())return nullptr;
+            return mDomTree[func];
+        }
+        pdomTree* getPDomTree(ir::Function* func){
+            if(func->isOnlyDeclare())return nullptr;
+            return mPDomTree[func];
+        }
+        loopInfo* getLoopInfo(ir::Function* func){
+            if(func->isOnlyDeclare())return nullptr;
+            return mLoopInfo[func];
+        }
         callGraph* getCallGraph(){return mCallGraph;}
         void initialize();
         void CFGChange(ir::Function* func){
+            if(func->isOnlyDeclare())return;
             mDomTree[func]->setOff();
             mPDomTree[func]->setOff();
             mLoopInfo[func]->setOff();

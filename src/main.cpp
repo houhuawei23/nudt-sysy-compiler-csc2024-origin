@@ -1,11 +1,7 @@
 #include <iostream>
-
 #include "support/config.hpp"
-
 #include "SysYLexer.h"
-
 #include "visitor/visitor.hpp"
-
 #include "pass/pass.hpp"
 #include "pass/analysis/dom.hpp"
 #include "pass/optimize/mem2reg.hpp"
@@ -25,7 +21,6 @@
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
 #include "mir/lowering.hpp"
-
 #include "target/riscv/riscv.hpp"
 #include "target/riscv/riscvtarget.hpp"
 
@@ -39,8 +34,6 @@ int main(int argc, char* argv[]) {
     sysy::Config config;
     config.parse_cmd_args(argc, argv);
     config.print_info();
-
-    // std::cout << "Build time: " << __TIME__ << " " << __DATE__ << std::endl;
 
     if (config.infile.empty()) {
         cerr << "Error: input file not specified" << endl;
@@ -62,10 +55,9 @@ int main(int argc, char* argv[]) {
     auto module_ir = gen.build_ir();
 
     //! 2. Optimization Passes
-    pass::topAnalysisInfoManager* tAIM=new pass::topAnalysisInfoManager(module_ir);
+    pass::topAnalysisInfoManager* tAIM = new pass::topAnalysisInfoManager(module_ir);
     tAIM->initialize();
-    pass::PassManager* pm=new pass::PassManager(module_ir,tAIM);
-    
+    pass::PassManager* pm = new pass::PassManager(module_ir,tAIM);
 
     if (not config.pass_names.empty()) {
         for (auto pass_name : config.pass_names) {
@@ -107,8 +99,6 @@ int main(int argc, char* argv[]) {
             else {
                 assert(false && "Invalid pass name");
             }
-
-            
         }
     }
     // module_ir->print(std::cout);
@@ -124,6 +114,15 @@ int main(int argc, char* argv[]) {
     }
 
     //! 3. Code Generation
+    for (auto fun : module_ir->funcs()) {
+        if(fun->isOnlyDeclare())continue;
+        auto dom_ctx = tAIM->getDomTree(fun);
+        dom_ctx->refresh();
+        dom_ctx->BFSDomTreeInfoRefresh();
+        for (auto bb : dom_ctx->BFSDomTreeVector()) {
+            std::cout << bb->name() << std::endl;
+        }
+    }
     if (config.gen_asm) {
         auto target = mir::RISCVTarget();
         // auto target = mir::GENERICTarget();

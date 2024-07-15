@@ -6,7 +6,7 @@ namespace pass{
     
     void DCE::run(ir::Function* func, topAnalysisInfoManager* tp){
         alive.clear();
-        if(!func->entry())return;
+        if(func->isOnlyDeclare())return;
         // func->rename();
         // func->print(std::cout);
         for(auto bb:func->blocks()){//扫描所有的指令,只要是isAlive的就加到alive列表中

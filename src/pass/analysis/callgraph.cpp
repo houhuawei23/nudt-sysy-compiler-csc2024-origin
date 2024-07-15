@@ -5,7 +5,7 @@ namespace pass{
         cgctx=tp->getCallGraph();
         cgctx->initialize();
         for(auto func:ctx->funcs()){//initialize call info for functions
-            if(not func->entry())
+            if(func->isOnlyDeclare())
                 // func->set_is_lib(true);
                 cgctx->set_isLib(func,true);
             else
@@ -35,9 +35,9 @@ namespace pass{
                 }
             }
         }
-        assert(funcStack.empty());
-        assert(funcSet.empty());
-        dfsFuncCallGraph(ctx->mainFunction());
+        // assert(funcStack.empty());
+        // assert(funcSet.empty());
+        // dfsFuncCallGraph(ctx->mainFunction());
     }
     void callGraphBuild::dfsFuncCallGraph(ir::Function*func){
         funcStack.push_back(func);
