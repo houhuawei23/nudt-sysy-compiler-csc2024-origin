@@ -4,10 +4,14 @@ namespace pass{
     void irCheck::run(ir::Module* ctx, topAnalysisInfoManager* tp){
         bool isPass=true;
         for(auto func:ctx->funcs()){
+            if(func->isOnlyDeclare())continue;
+            cerr<<"Testing function \""<<func->name()<<"\" ..."<<endl;
             isPass=isPass and runDefUseTest(func);
             isPass=isPass and runCFGTest(func);
             isPass=isPass and runPhiTest(func);
         }
+        if(not isPass)
+            assert(false && "didn't pass irCheck!");
     }
 
     bool irCheck::checkDefUse(ir::Value* val){
@@ -22,6 +26,7 @@ namespace pass{
             }
         }
         auto user=dyn_cast<ir::User>(val);
+        if(user==nullptr)return isPass;
         int realIdx=0;
         for(auto op:user->operands()){
             auto muser=op->user();
@@ -53,10 +58,10 @@ namespace pass{
             }
             realIdx++;
         }
+        return isPass;
     }
 
     bool irCheck::runDefUseTest(ir::Function* func){
-        cerr<<"Testing function\""<<func->name()<<"\"..."<<endl;
         bool isPass=true;
         for(auto bb:func->blocks()){
             bool bbOK=checkDefUse(bb);
@@ -67,9 +72,6 @@ namespace pass{
                 isPass=false;
                 cerr<<"Error occur in BB:\""<<bb->name()<<"\"!"<<endl;
             }
-        }
-        if(isPass){
-            cerr<<"Function\""<<func->name()<<"\" pass!"<<endl;
         }
         return isPass;
     }
@@ -107,7 +109,7 @@ namespace pass{
                 phiIter++;
                 instIter++;
             }
-            if(ir::isa<ir::PhiInst>(*instIter)){
+            if(dyn_cast<ir::PhiInst>(*instIter)!=nullptr){
                 cerr<<"In BB\""<<bb->name()<<"\", we got a phiinst not in phiinst list!"<<endl;
                 isPass=false;
             }

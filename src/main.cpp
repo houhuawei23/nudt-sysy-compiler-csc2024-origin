@@ -17,7 +17,7 @@
 #include "pass/optimize/reg2mem.hpp"
 #include "pass/optimize/ADCE.hpp"
 #include "pass/optimize/loopsimplify.hpp"
-
+#include "pass/analysis/irtest.hpp"
 #include "pass/analysis/ControlFlowGraph.hpp"
 
 #include "pass/optimize/InstCombine/ArithmeticReduce.hpp"
@@ -107,6 +107,8 @@ int main(int argc, char* argv[]) {
             } else if(pass_name.compare("instcombine") == 0){
                 // recommend: -p mem2reg -p instcombine -p dce
                 pm->run(new pass::ArithmeticReduce());
+            } else if (pass_name.compare("test") == 0){
+                pm->run(new pass::irCheck());
             }
             else {
                 assert(false && "Invalid pass name");
