@@ -236,7 +236,62 @@ namespace pass{
             }
             else{
                 // 判断这样的块是否可以删除
-                
+                // 遍历curBB和preBB的destBB Incoming,查看对应value是不是一致, 如果能够一致就可以进一步
+                bool isExchange=true;
+                for(auto pinst:destBB->phi_insts()){
+                    auto phiinst=dyn_cast<ir::PhiInst>(pinst);
+                    auto curBBIncomingVal=phiinst->getvalfromBB(curBB);
+                    for(auto bbIncoming:curBBdestBBPreBBIntersection){
+                        auto nowIncomingVal=phiinst->getvalfromBB(bbIncoming);
+                        if(nowIncomingVal!=curBBIncomingVal){
+                            isExchange=false;
+                            break;
+                        }
+                    }
+                    if(not isExchange)break;
+                }
+                if(not isExchange)continue;
+                /*
+                    1. curBBdestBBPreBBIntersection中的块, 直接变为无条件跳转到destBB, 删除它们到curBB的链接
+                    2. 对于不在curBBdestBBPreBBIntersection中的但是在curBBPreBBs中的, 删除到curBB的链接, 替换跳转目标到curBB,
+                        添加对应块的到达定值
+                    3. 删除curBB到destBB的链接, 删除curBB的到达定值, 删除curBB
+                */
+                for(auto curBBPreBB:curBBpreBBs){
+                    if(destBBpreBBs.count(curBBPreBB)){
+                        //修改terminator为无条件跳转
+                        curBBPreBB->delete_inst(curBBPreBB->terminator());
+                        auto newBrInst=new ir::BranchInst(destBB,curBBPreBB);
+                        curBBPreBB->emplace_back_inst(newBrInst);
+                        //修改链接
+                        ir::BasicBlock::delete_block_link(curBBPreBB,curBB);
+                    }
+                    else{
+                        //修改链接
+                        ir::BasicBlock::delete_block_link(curBBPreBB,curBB);
+                        //修改跳转目标
+                        auto brTerminator=dyn_cast<ir::BranchInst>(curBBPreBB->terminator());
+                        if(brTerminator->is_cond()){
+                            if(brTerminator->iffalse()==curBB)brTerminator->set_iffalse(destBB);
+                            if(brTerminator->iftrue()==curBB)brTerminator->set_iftrue(destBB);
+                        }
+                        else{
+                            if(brTerminator->dest()==curBB)brTerminator->set_dest(destBB);
+                        }
+                        //添加到达定值
+                        for(auto pinst:destBB->phi_insts()){
+                            auto phiinst=dyn_cast<ir::PhiInst>(pinst);
+                            phiinst->addIncoming(phiinst->getvalfromBB(curBB),curBBPreBB);
+                        }
+                    }
+                }
+                //删除curBB
+                ir::BasicBlock::delete_block_link(curBB,destBB);
+                for(auto pinst:destBB->phi_insts()){
+                    auto phiinst=dyn_cast<ir::PhiInst>(pinst);
+                    phiinst->delBlock(curBB);
+                }
+                func->delBlock(curBB);
             }
         }
         return ischanged;
