@@ -98,7 +98,6 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
     const auto next = func->newBlock();
     next->addComment("next");
 
-    ir::BasicBlock::block_link(func->entry(), next);
     func->entry()->emplace_back_inst(
         mBuilder.makeIdenticalInst<ir::BranchInst>(next));
 
@@ -193,14 +192,12 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
     const auto other = func->newBlock();
     other->addComment("other");
     next->emplace_back_inst(mBuilder.makeIdenticalInst<ir::BranchInst>(other));
-    ir::BasicBlock::block_link(next, other); /* next -> other */
     /* other is the init block of blockStmt */
     {
       mBuilder.set_pos(other);
       visitBlockStmt(ctx->blockStmt());
       if (not mBuilder.curBlock()->isTerminal()) {
         mBuilder.makeInst<ir::BranchInst>(func->exit());
-        ir::BasicBlock::block_link(mBuilder.curBlock(), func->exit());
       }
     }
 

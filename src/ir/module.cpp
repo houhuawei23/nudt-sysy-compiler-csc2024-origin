@@ -42,10 +42,10 @@ void Module::delFunction(ir::Function* func) {
 }
 
 // readable ir print
-void Module::print(std::ostream& os) {
+void Module::print(std::ostream& os) const {
   //! print all global values
   // rename();
-  for (auto gv : globalVars()) {
+  for (auto gv : mGlobalVariables) {
     os << *gv << std::endl;
   }
 
@@ -66,4 +66,12 @@ void Module::rename() {
   }
 }
 
+bool Module::verify(std::ostream& os) const {
+  for (auto func : mFunctions) {
+    if (not func->verify(os)) {
+      return false;
+    }
+  }
+  return true;
+}
 }  // namespace ir

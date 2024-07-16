@@ -100,8 +100,7 @@ void Function::print(std::ostream& os) const {
 }
 
 void Function::rename() {
-  if (mBlocks.empty())
-    return;
+  if (mBlocks.empty()) return;
   setVarCnt(0);
   for (auto arg : mArguments) {
     std::string argname = "%" + std::to_string(varInc());
@@ -112,11 +111,9 @@ void Function::rename() {
     bb->set_idx(blockIdx);
     blockIdx++;
     for (auto inst : bb->insts()) {
-      if (inst->isNoName())
-        continue;
+      if (inst->isNoName()) continue;
       auto callpt = dyn_cast<CallInst>(inst);
-      if (callpt and callpt->isVoid())
-        continue;
+      if (callpt and callpt->isVoid()) continue;
       inst->setvarname();
     }
   }
@@ -164,8 +161,7 @@ Function* Function::copy_func() {
   }
 
   auto getValue = [&](Value* val) -> Value* {
-    if (auto c = dyn_cast<Constant>(val))
-      return c;
+    if (auto c = dyn_cast<Constant>(val)) return c;
     return ValueCopy[val];
   };
 
@@ -173,8 +169,7 @@ Function* Function::copy_func() {
   std::vector<PhiInst*> phis;
   std::set<BasicBlock*> vis;
   BasicBlock::BasicBlockDfs(mEntry, [&](BasicBlock* bb) -> bool {
-    if (vis.count(bb))
-      return true;
+    if (vis.count(bb)) return true;
     vis.insert(bb);
     auto bbCpy = dyn_cast<BasicBlock>(ValueCopy[bb]);
     for (auto inst : bb->insts()) {
@@ -182,8 +177,7 @@ Function* Function::copy_func() {
       copyinst->setBlock(bbCpy);
       ValueCopy[inst] = copyinst;
       bbCpy->insts().emplace_back(copyinst);
-      if (auto phi = dyn_cast<PhiInst>(inst))
-        phis.emplace_back(phi);
+      if (auto phi = dyn_cast<PhiInst>(inst)) phis.emplace_back(phi);
     }
     return false;
   });
@@ -196,6 +190,15 @@ Function* Function::copy_func() {
     }
   }
   return copyfunc;
+}
+
+bool Function::verify(std::ostream& os) const {
+  for (auto block : mBlocks) {
+    if (not block->verify(os)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 }  // namespace ir

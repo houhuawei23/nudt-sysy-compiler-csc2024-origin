@@ -9,9 +9,22 @@ void Argument::print(std::ostream& os) const {
   os << *type() << " " << name();
 }
 bool BasicBlock::isTerminal() const {
-  if (mInsts.empty())
-    return false;
+  if (mInsts.empty()) return false;
   return mInsts.back()->isTerminator();
+}
+
+bool BasicBlock::verify(std::ostream& os) const {
+  if (mInsts.empty()) return false;
+  for (auto inst : mInsts) {
+    if (inst->isTerminator() and inst != mInsts.back()) {
+      os << "block have terminator inst not at the end" << std::endl;
+      return false;
+    }
+  }
+  // end with a terminator inst
+  if (not mInsts.back()->isTerminator()) return false;
+
+  return true;
 }
 
 void BasicBlock::print(std::ostream& os) const {
@@ -72,8 +85,7 @@ void BasicBlock::emplace_first_inst(Instruction* inst) {
   auto pos = mInsts.begin();
   mInsts.emplace(pos, inst);
   inst->setBlock(this);
-  if (auto phiInst = dyn_cast<PhiInst>(inst))
-    mPhiInsts.emplace_front(phiInst);
+  if (auto phiInst = dyn_cast<PhiInst>(inst)) mPhiInsts.emplace_front(phiInst);
 }
 
 void BasicBlock::emplace_back_inst(Instruction* i) {
@@ -105,8 +117,7 @@ void BasicBlock::delete_inst(Instruction* inst) {
     op->uses().remove(op_use);
   }
   mInsts.remove(inst);
-  if (auto phiInst = dyn_cast<PhiInst>(inst))
-    mPhiInsts.remove(phiInst);
+  if (auto phiInst = dyn_cast<PhiInst>(inst)) mPhiInsts.remove(phiInst);
 
   // delete inst;
 }
@@ -118,8 +129,7 @@ void BasicBlock::force_delete_inst(Instruction* inst) {
     op->uses().remove(op_use);
   }
   mInsts.remove(inst);
-  if (auto phiInst = dyn_cast<PhiInst>(inst))
-    mPhiInsts.remove(phiInst);
+  if (auto phiInst = dyn_cast<PhiInst>(inst)) mPhiInsts.remove(phiInst);
 }
 
 void BasicBlock::replaceinst(Instruction* old_inst, Value* new_) {

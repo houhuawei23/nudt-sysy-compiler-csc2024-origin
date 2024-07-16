@@ -46,7 +46,8 @@ class Module {
 
   void rename();
   // readable ir print
-  void print(std::ostream& os);
+  void print(std::ostream& os) const;
+  bool verify(std::ostream& os) const;
 };
 
 SYSYC_ARENA_TRAIT(Module, IR);

@@ -40,7 +40,7 @@ EC_TIMEOUT=124
 TIMEOUT=100
 
 lli_cmd="lli-14"
-
+llvm_link_cmd="llvm-link-14"
 # Function to print usage information
 usage() {
     echo "Usage: $0 [-t <test_path>] [-o <output_dir>] [-r <result_file>] [-r <result_file>][-h]"
@@ -154,7 +154,7 @@ function run_llvm_test() {
 
     clang --no-warnings -emit-llvm -S "${llvm_c}" -o "${llvm_ll}" -O3 -std=c90
     # -Wimplicit-function-declaration
-    llvm-link --suppress-warnings "${llvm_ll}" "${link_ll}" -S -o "${llvm_llinked}"
+    $llvm_link_cmd --suppress-warnings "${llvm_ll}" "${link_ll}" -S -o "${llvm_llinked}"
 
     if [ -f "$in_file" ]; then
         $lli_cmd "${llvm_llinked}" >"${llvm_out}" <"${in_file}"
@@ -191,7 +191,7 @@ function run_gen_test() {
         return $EC_MAIN
     fi
 
-    llvm-link --suppress-warnings ./test/link/link.ll "${gen_ll}" -S -o "${gen_llinked}"
+    $llvm_link_cmd --suppress-warnings ./test/link/link.ll "${gen_ll}" -S -o "${gen_llinked}"
     if [ $? != 0 ]; then
         return $EC_LLVMLINK
     fi

@@ -156,5 +156,6 @@ class Function : public User {
 
   void rename();
   void print(std::ostream& os) const override;
+  bool verify(std::ostream& os) const;
 };
 }  // namespace ir
