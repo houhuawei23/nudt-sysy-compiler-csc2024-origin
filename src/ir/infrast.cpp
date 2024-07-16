@@ -98,7 +98,8 @@ void BasicBlock::emplace_back_inst(Instruction* i) {
   mInsts.emplace_back(i);
   i->setBlock(this);
   if (auto phiInst = dyn_cast<PhiInst>(i))
-    assert(false and "a phi can not be inserted at the back of a bb");
+    // assert(false and "a phi can not be inserted at the back of a bb");
+    mPhiInsts.emplace_back(phiInst);
 }
 void Instruction::setvarname() {
   auto cur_func = mBlock->function();

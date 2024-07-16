@@ -17,7 +17,7 @@
 #include "pass/optimize/reg2mem.hpp"
 #include "pass/optimize/ADCE.hpp"
 #include "pass/optimize/loopsimplify.hpp"
-
+#include "pass/analysis/irtest.hpp"
 #include "pass/analysis/ControlFlowGraph.hpp"
 
 #include "mir/mir.hpp"
@@ -102,6 +102,8 @@ int main(int argc, char* argv[]) {
                 pm->run(new pass::ADCE());
             } else if (pass_name.compare("loopsimplify") == 0){
                 pm->run(new pass::loopsimplify());
+            } else if (pass_name.compare("test") == 0){
+                pm->run(new pass::irCheck());
             }
             else {
                 assert(false && "Invalid pass name");
