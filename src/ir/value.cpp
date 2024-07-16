@@ -27,7 +27,9 @@ void Use::set_value(Value* value) {
 //! Value
 
 void Value::replaceAllUseWith(Value* mValue) {
-  for (auto puse : mUses) {
+  for (auto puseIter=mUses.begin();puseIter!=mUses.end();) {
+    auto puse=*puseIter;
+    puseIter++;
     puse->user()->setOperand(puse->index(), mValue);
   }
   mUses.clear();
@@ -89,7 +91,10 @@ void User::setOperand(size_t index, Value* value) {
     std::cerr<<"index="<<index<<", but mOperands max size="<<mOperands.size()<<std::endl;
     assert(index < mOperands.size());
   }
-  mOperands[index]->set_value(value);
+  auto oldVal=mOperands[index]->value();
+  oldVal->uses().remove(mOperands[index]);
+  auto newUse=new Use(index, this, value);
+  mOperands[index]=newUse;
   value->uses().emplace_back(mOperands[index]);
 }
 
