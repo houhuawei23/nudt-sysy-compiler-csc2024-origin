@@ -20,6 +20,8 @@
 
 #include "pass/analysis/ControlFlowGraph.hpp"
 
+#include "pass/optimize/InstCombine/ArithmeticReduce.hpp"
+
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
 #include "mir/lowering.hpp"
@@ -102,6 +104,9 @@ int main(int argc, char* argv[]) {
                 pm->run(new pass::ADCE());
             } else if (pass_name.compare("loopsimplify") == 0){
                 pm->run(new pass::loopsimplify());
+            } else if(pass_name.compare("instcombine") == 0){
+                // recommend: -p mem2reg -p instcombine -p dce
+                pm->run(new pass::ArithmeticReduce());
             }
             else {
                 assert(false && "Invalid pass name");
