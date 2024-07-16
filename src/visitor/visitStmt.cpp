@@ -82,7 +82,6 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
 
   if (not mBuilder.curBlock()->isTerminal()) {
     auto br = mBuilder.makeInst<ir::BranchInst>(func->exit());
-    ir::BasicBlock::block_link(mBuilder.curBlock(), func->exit());
   }
 
   return std::any();
@@ -168,8 +167,6 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
       mBuilder.makeInst<ir::BranchInst>(cond, lhs_t_target, lhs_f_target);
 
       //! [CFG] link the basic block
-      ir::BasicBlock::block_link(mBuilder.curBlock(), lhs_t_target);
-      ir::BasicBlock::block_link(mBuilder.curBlock(), lhs_f_target);
     }
   }
 
@@ -178,7 +175,6 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
     visit(ctx->stmt(0));  //* may change the basic block
     if (not mBuilder.curBlock()->isTerminal()) {
       mBuilder.makeInst<ir::BranchInst>(merge_block);
-      ir::BasicBlock::block_link(mBuilder.curBlock(), merge_block);
     }
   }
 
@@ -189,7 +185,6 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
       visit(elsestmt);
     if (not mBuilder.curBlock()->isTerminal()) {
       mBuilder.makeInst<ir::BranchInst>(merge_block);
-      ir::BasicBlock::block_link(mBuilder.curBlock(), merge_block);
     }
   }
 
@@ -223,7 +218,6 @@ std::any SysYIRGenerator::visitWhileStmt(SysYParser::WhileStmtContext* ctx) {
 
   // jump without cond, directly jump to judge block
   mBuilder.makeInst<ir::BranchInst>(judge_block);
-  ir::BasicBlock::block_link(mBuilder.curBlock(), judge_block);
 
   {  // visit cond
     mBuilder.set_pos(judge_block);
@@ -238,9 +232,7 @@ std::any SysYIRGenerator::visitWhileStmt(SysYParser::WhileStmtContext* ctx) {
     cond = mBuilder.castToBool(cond);
 
     mBuilder.makeInst<ir::BranchInst>(cond, tTarget, fTarget);
-    //! [CFG] link
-    ir::BasicBlock::block_link(mBuilder.curBlock(), tTarget);
-    ir::BasicBlock::block_link(mBuilder.curBlock(), fTarget);
+
   }
 
   {  // visit loop block
@@ -248,7 +240,6 @@ std::any SysYIRGenerator::visitWhileStmt(SysYParser::WhileStmtContext* ctx) {
     visit(ctx->stmt());
 
     mBuilder.makeInst<ir::BranchInst>(judge_block);
-    ir::BasicBlock::block_link(mBuilder.curBlock(), judge_block);
 
     // pop header and exit block
     mBuilder.pop_loop();
@@ -265,7 +256,6 @@ std::any SysYIRGenerator::visitBreakStmt(SysYParser::BreakStmtContext* ctx) {
   assert(breakDest);
 
   const auto res = mBuilder.makeInst<ir::BranchInst>(breakDest);
-  ir::BasicBlock::block_link(mBuilder.curBlock(), breakDest);
 
   // create a basic block
   const auto next_block = mBuilder.curBlock()->function()->newBlock();
@@ -280,7 +270,6 @@ std::any SysYIRGenerator::visitContinueStmt(
   assert(continueDest);
 
   const auto res = mBuilder.makeInst<ir::BranchInst>(continueDest);
-  ir::BasicBlock::block_link(mBuilder.curBlock(), continueDest);
 
   const auto next_block = mBuilder.curBlock()->function()->newBlock();
 

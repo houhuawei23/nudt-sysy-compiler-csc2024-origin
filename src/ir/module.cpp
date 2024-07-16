@@ -4,6 +4,8 @@
 #include <algorithm>
 // #include "ir/constant.hpp"
 #include "ir/utils_ir.hpp"
+#include "support/arena.hpp"
+
 namespace ir {
 
 void Module::addGlobalVar(const_str_ref name, GlobalVariable* gv) {
@@ -24,9 +26,7 @@ Function* Module::findFunction(const_str_ref name) const {
 Function* Module::addFunction(Type* type, const_str_ref name) {
   // re-def name
   assert(findFunction(name) == nullptr && "re-add function!");
-
-  ir::Function* func = new Function(type, name, this);
-
+  auto func = utils::make<Function>(type, name, this);
   mFuncTable.emplace(name, func);
   mFunctions.emplace_back(func);
   return func;
@@ -42,10 +42,10 @@ void Module::delFunction(ir::Function* func) {
 }
 
 // readable ir print
-void Module::print(std::ostream& os) {
+void Module::print(std::ostream& os) const {
   //! print all global values
   // rename();
-  for (auto gv : globalVars()) {
+  for (auto gv : mGlobalVariables) {
     os << *gv << std::endl;
   }
 
@@ -66,4 +66,12 @@ void Module::rename() {
   }
 }
 
+bool Module::verify(std::ostream& os) const {
+  for (auto func : mFunctions) {
+    if (not func->verify(os)) {
+      return false;
+    }
+  }
+  return true;
+}
 }  // namespace ir

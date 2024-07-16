@@ -4,6 +4,7 @@
 #include "ir/utils_ir.hpp"
 #include "ir/value.hpp"
 #include <algorithm>
+#include <functional>
 namespace ir {
 /**
  * @brief Argument represents an incoming formal argument to a Function.
@@ -139,6 +140,8 @@ class BasicBlock : public Value {
   static bool classof(const Value* v) { return v->valueId() == vBASIC_BLOCK; }
 
   void print(std::ostream& os) const override;
+
+  bool verify(std::ostream& os) const;
 };
 
 /**

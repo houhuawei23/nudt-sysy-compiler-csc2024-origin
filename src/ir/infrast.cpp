@@ -2,16 +2,29 @@
 #include "ir/function.hpp"
 #include "ir/utils_ir.hpp"
 #include "ir/instructions.hpp"
-
+#include "support/arena.hpp"
 namespace ir {
 
 void Argument::print(std::ostream& os) const {
   os << *type() << " " << name();
 }
 bool BasicBlock::isTerminal() const {
-  if (mInsts.empty())
-    return false;
+  if (mInsts.empty()) return false;
   return mInsts.back()->isTerminator();
+}
+
+bool BasicBlock::verify(std::ostream& os) const {
+  if (mInsts.empty()) return false;
+  for (auto inst : mInsts) {
+    if (inst->isTerminator() and inst != mInsts.back()) {
+      os << "block have terminator inst not at the end" << std::endl;
+      return false;
+    }
+  }
+  // end with a terminator inst
+  if (not mInsts.back()->isTerminator()) return false;
+
+  return true;
 }
 
 void BasicBlock::print(std::ostream& os) const {
@@ -72,8 +85,7 @@ void BasicBlock::emplace_first_inst(Instruction* inst) {
   auto pos = mInsts.begin();
   mInsts.emplace(pos, inst);
   inst->setBlock(this);
-  if (auto phiInst = dyn_cast<PhiInst>(inst))
-    mPhiInsts.emplace_front(phiInst);
+  if (auto phiInst = dyn_cast<PhiInst>(inst)) mPhiInsts.emplace_front(phiInst);
 }
 
 void BasicBlock::emplace_back_inst(Instruction* i) {
@@ -105,8 +117,7 @@ void BasicBlock::delete_inst(Instruction* inst) {
     op->uses().remove(op_use);
   }
   mInsts.remove(inst);
-  if (auto phiInst = dyn_cast<PhiInst>(inst))
-    mPhiInsts.remove(phiInst);
+  if (auto phiInst = dyn_cast<PhiInst>(inst)) mPhiInsts.remove(phiInst);
 
   // delete inst;
 }
@@ -118,8 +129,7 @@ void BasicBlock::force_delete_inst(Instruction* inst) {
     op->uses().remove(op_use);
   }
   mInsts.remove(inst);
-  if (auto phiInst = dyn_cast<PhiInst>(inst))
-    mPhiInsts.remove(phiInst);
+  if (auto phiInst = dyn_cast<PhiInst>(inst)) mPhiInsts.remove(phiInst);
 }
 
 void BasicBlock::replaceinst(Instruction* old_inst, Value* new_) {
@@ -163,82 +173,82 @@ bool Instruction::isAggressiveAlive() {
 // TODO: need modify, use builder to create inst
 Instruction* Instruction::copy_inst(std::function<Value*(Value*)> getValue) {
   if (auto allocainst = dyn_cast<AllocaInst>(this)) {
-    if (allocainst->isScalar())
-      return new AllocaInst(allocainst->baseType());
-    // TODO 复制数组的alloca
-    else {
+    if (allocainst->isScalar()) {
+      return utils::make<AllocaInst>(allocainst->baseType());
+    } else {  // TODO 复制数组的alloca
       auto basetype = dyn_cast<ArrayType>(allocainst->baseType());
-      std::vector<size_t> dims = basetype->dims();
-      return new AllocaInst(basetype->baseType(), dims);
+      return utils::make<AllocaInst>(basetype->baseType(), basetype->dims());
     }
   } else if (auto storeinst = dyn_cast<StoreInst>(this)) {
     auto value = getValue(storeinst->operand(0));
     auto addr = getValue(storeinst->operand(1));
-    return new StoreInst(value, addr);
+    return utils::make<StoreInst>(value, addr);
   } else if (auto loadinst = dyn_cast<LoadInst>(this)) {
     auto ptr = getValue(loadinst->ptr());
-    return new LoadInst(ptr, loadinst->type(), nullptr);
+    return utils::make<LoadInst>(ptr, loadinst->type(), nullptr);
   } else if (auto returninst = dyn_cast<ReturnInst>(this)) {
-    return new ReturnInst(getValue(returninst->returnValue()));
+    return utils::make<ReturnInst>(getValue(returninst->returnValue()));
   } else if (auto unaryinst = dyn_cast<UnaryInst>(this)) {
     auto value = getValue(unaryinst->value());
-    return new UnaryInst(unaryinst->valueId(), unaryinst->type(), value);
+    return utils::make<UnaryInst>(unaryinst->valueId(), unaryinst->type(),
+                                  value);
   } else if (auto binaryinst = dyn_cast<BinaryInst>(this)) {
     auto lhs = getValue(binaryinst->lValue());
     auto rhs = getValue(binaryinst->rValue());
-    return new BinaryInst(binaryinst->valueId(), binaryinst->type(), lhs, rhs,
-                          nullptr);
+    return utils::make<BinaryInst>(binaryinst->valueId(), binaryinst->type(),
+                                   lhs, rhs, nullptr);
   } else if (auto callinst = dyn_cast<CallInst>(this)) {
     auto callee = callinst->callee();
     std::vector<Value*> args;
     for (auto arg : callinst->rargs()) {
       args.push_back(getValue(arg->value()));
     }
-    return new CallInst(callee, args);
+    return utils::make<CallInst>(callee, args);
   } else if (auto branchinst = dyn_cast<BranchInst>(this)) {
     if (branchinst->is_cond()) {
       auto cond = getValue(branchinst->cond());
       auto true_bb = dyn_cast<BasicBlock>(getValue(branchinst->iftrue()));
       auto false_bb = dyn_cast<BasicBlock>(getValue(branchinst->iffalse()));
-      return new BranchInst(cond, true_bb, false_bb);
+      return utils::make<BranchInst>(cond, true_bb, false_bb);
     } else {
       auto dest_bb = dyn_cast<BasicBlock>(getValue(branchinst->dest()));
-      return new BranchInst(dest_bb);
+      return utils::make<BranchInst>(dest_bb);
     }
   } else if (auto icmpinst = dyn_cast<ICmpInst>(this)) {
     auto lhs = getValue(icmpinst->lhs());
     auto rhs = getValue(icmpinst->rhs());
-    return new ICmpInst(icmpinst->valueId(), lhs, rhs, nullptr);
+    return utils::make<ICmpInst>(icmpinst->valueId(), lhs, rhs, nullptr);
   } else if (auto fcmpinst = dyn_cast<FCmpInst>(this)) {
     auto lhs = getValue(fcmpinst->lhs());
     auto rhs = getValue(fcmpinst->rhs());
-    return new FCmpInst(fcmpinst->valueId(), lhs, rhs, nullptr);
+    return utils::make<FCmpInst>(fcmpinst->valueId(), lhs, rhs, nullptr);
   } else if (auto bitcastinst = dyn_cast<BitCastInst>(this)) {
     auto value = getValue(bitcastinst->value());
-    return new BitCastInst(bitcastinst->type(), value, nullptr);
+    return utils::make<BitCastInst>(bitcastinst->type(), value, nullptr);
   } else if (auto memsetinst = dyn_cast<MemsetInst>(this)) {
     auto value = getValue(memsetinst->value());
-    return new MemsetInst(memsetinst->type(), value, nullptr);
+    return utils::make<MemsetInst>(memsetinst->type(), value, nullptr);
   } else if (auto getelemenptrinst = dyn_cast<GetElementPtrInst>(this)) {
     auto value = getValue(getelemenptrinst->value());
     auto idx = getValue(getelemenptrinst->index());
     if (getelemenptrinst->getid() == 0) {
       auto basetype = getelemenptrinst->baseType();
-      return new GetElementPtrInst(basetype, value, idx);
+      return utils::make<GetElementPtrInst>(basetype, value, idx);
     } else if (getelemenptrinst->getid() == 1) {
       auto basetype = dyn_cast<ArrayType>(getelemenptrinst->baseType());
       std::vector<size_t> dims = basetype->dims();
       auto curdims = getelemenptrinst->cur_dims();
-      return new GetElementPtrInst(basetype->baseType(), value, idx, dims,
-                                   curdims);
+      return utils::make<GetElementPtrInst>(basetype->baseType(), value, idx,
+                                            dims, curdims);
     } else {
       auto basetype = getelemenptrinst->baseType();
       auto curdims = getelemenptrinst->cur_dims();
-      return new GetElementPtrInst(basetype, value, idx, curdims);
+      return utils::make<GetElementPtrInst>(basetype, value, idx, curdims);
     }
   } else if (auto phiinst = dyn_cast<PhiInst>(this)) {
-    return new PhiInst(nullptr, phiinst->type());
+    return utils::make<PhiInst>(nullptr, phiinst->type());
   } else {
+    assert(false and "not support inst type");
     return nullptr;
   }
 }

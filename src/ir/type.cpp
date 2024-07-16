@@ -3,6 +3,7 @@
 
 #include <variant>  // dynamic_cast
 
+#include "support/arena.hpp"
 namespace ir {
 /// Type instance construct functions BEGIN
 Type* Type::void_type() {
@@ -137,17 +138,13 @@ void Type::print(std::ostream& os) {
 }
 
 PointerType* PointerType::gen(Type* base_type) {
-    PointerType* ptype = new PointerType(base_type);
-    return ptype;
+    return utils::make<PointerType>(base_type);
 }
 ArrayType* ArrayType::gen(Type* baseType, std::vector<size_t> dims, size_t capacity) {
-    ArrayType* ptype = new ArrayType(baseType, dims, capacity);
-    return ptype;
+    return utils::make<ArrayType>(baseType, dims, capacity);
 }
 FunctionType* FunctionType::gen(Type* ret_type,
                                 const type_ptr_vector& arg_types) {
-    FunctionType* ftype = new FunctionType(ret_type, arg_types);
-    return ftype;
+    return utils::make<FunctionType>(ret_type, arg_types);
 }
-
 }  // namespace ir

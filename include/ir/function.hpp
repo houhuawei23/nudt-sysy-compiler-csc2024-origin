@@ -5,6 +5,7 @@
 #include "ir/type.hpp"
 #include "ir/value.hpp"
 #include "support/utils.hpp"
+#include "support/arena.hpp"
 
 namespace ir {
 
@@ -137,7 +138,7 @@ class Function : public User {
   }
 
   auto new_arg(Type* btype, const_str_ref name = "") {
-    auto arg = new Argument(btype, argCnt, this, name);
+    auto arg = utils::make<Argument>(btype, argCnt, this, name);
     argCnt++;
     mArguments.emplace_back(arg);
     return arg;
@@ -155,5 +156,6 @@ class Function : public User {
 
   void rename();
   void print(std::ostream& os) const override;
+  bool verify(std::ostream& os) const;
 };
 }  // namespace ir

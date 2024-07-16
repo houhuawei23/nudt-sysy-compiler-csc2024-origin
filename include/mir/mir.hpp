@@ -483,7 +483,6 @@ class MIRModule {
     ir::Module* _ir_module;
 
    public:
-    MIRModule() = default;
     MIRModule(ir::Module* ir_module, Target& target)
         : _ir_module(ir_module), _target(target) {}
 

@@ -33,6 +33,7 @@ class PassManager{
         }
         void run(FunctionPass* fp){
             for(auto func:_irModule->funcs()){
+                if(func->isOnlyDeclare()) continue;
                 fp->run(func,tAIM);
             }
         }

@@ -498,11 +498,6 @@ std::any SysYIRGenerator::visitAndExp(SysYParser::AndExpContext* ctx) {
     lhs_value = mBuilder.castToBool(lhs_value);
 
     mBuilder.makeInst<ir::BranchInst>(lhs_value, lhs_t_target, lhs_f_target);
-
-    //! 2 [for CFG] link cur_block and target
-    // visit may change the cur_block, so need to reload the cur block
-    ir::BasicBlock::block_link(mBuilder.curBlock(), lhs_t_target);
-    ir::BasicBlock::block_link(mBuilder.curBlock(), lhs_f_target);
   }
 
   //! 3 visit and generate code for rhs block
@@ -537,11 +532,6 @@ std::any SysYIRGenerator::visitOrExp(SysYParser::OrExpContext* ctx) {
     lhs_value = mBuilder.castToBool(lhs_value);
 
     mBuilder.makeInst<ir::BranchInst>(lhs_value, lhs_t_target, lhs_f_target);
-
-    //! 2 [for CFG] link cur_block and target
-    // visit may change the cur_block, so need to reload the cur block
-    ir::BasicBlock::block_link(mBuilder.curBlock(), lhs_t_target);
-    ir::BasicBlock::block_link(mBuilder.curBlock(), lhs_f_target);
   }
 
   //! 3 visit and generate code for rhs block

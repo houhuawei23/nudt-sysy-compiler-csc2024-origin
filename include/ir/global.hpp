@@ -3,6 +3,7 @@
 #include "ir/type.hpp"
 #include "ir/value.hpp"
 #include "support/utils.hpp"
+#include "support/arena.hpp"
 namespace ir {
 /*
  * @brief: GlobalVariable
@@ -52,10 +53,11 @@ class GlobalVariable : public User {
                              bool is_const = false,
                              const std::vector<size_t> dims = {}) {
     GlobalVariable* var = nullptr;
-    if (dims.size() == 0)
-      var = new GlobalVariable(base_type, init, parent, name, is_const);
-    else
-      var = new GlobalVariable(base_type, init, dims, parent, name, is_const);
+    if (dims.size() == 0) {
+      var = utils::make<GlobalVariable>(base_type, init, parent, name, is_const);
+    } else {
+      var = utils::make<GlobalVariable>(base_type, init, dims, parent, name, is_const);
+    }
     return var;
   }
 
