@@ -94,16 +94,15 @@ namespace pass{
                     auto newTarget=getTargetBB(trueTarget);
                     assert(newTarget!=nullptr);
                     terInst->set_iftrue(newTarget);
-                    ir::BasicBlock::block_link(bb,newTarget);
                 }
                 if(not liveBB[terInst->iffalse()]){
                     auto newTarget=getTargetBB(falseTarget);
                     assert(newTarget!=nullptr);
                     terInst->set_iffalse(newTarget);
-                    ir::BasicBlock::block_link(bb,newTarget);
                 }
                 if(terInst->iffalse()==terInst->iftrue()){
-                    auto newBr=new ir::BranchInst(terInst->iftrue());
+                    auto dest=terInst->iftrue();
+                    auto newBr=new ir::BranchInst(dest);
                     newBr->setBlock(bb);
                     bb->force_delete_inst(terInst);
                     bb->emplace_back_inst(newBr);
@@ -117,12 +116,32 @@ namespace pass{
                     auto newTarget=getTargetBB(jmpTarget);
                     assert(newTarget!=nullptr);
                     terInst->set_dest(newTarget);
-                    ir::BasicBlock::block_link(bb,newTarget);
                 }
             }
         }
-        if(isCFGChange)tp->CFGChange(func);
+        if(isCFGChange){
+            tp->CFGChange(func);
+            //rebuild CFG
+            for(auto bb:func->blocks()){
+                bb->pre_blocks().clear();
+                bb->next_blocks().clear();
+            }
+            for(auto bb:func->blocks()){
+                auto terInst=bb->terminator();
+                auto brTerInst=dyn_cast<ir::BranchInst>(terInst);
+                if(brTerInst){
+                    if(brTerInst->is_cond()){
+                        ir::BasicBlock::block_link(bb,brTerInst->iftrue());
+                        ir::BasicBlock::block_link(bb,brTerInst->iffalse());
+                    }
+                    else{
+                        ir::BasicBlock::block_link(bb,brTerInst->dest());
+                    }
+                }
+            }
+        }
         if(isCallGraphChange)tp->CallChange();
+        
     }
 
     ir::BasicBlock* ADCE::getTargetBB(ir::BasicBlock* bb){

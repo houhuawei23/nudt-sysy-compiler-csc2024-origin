@@ -24,7 +24,9 @@ namespace pass{
 
     void SCP::addConstFlod(ir::Instruction* inst){
         auto replval=inst->getConstantRepl();
-        for(auto puse:inst->uses()){
+        for(auto puseIter=inst->uses().begin();puseIter!=inst->uses().end();){
+            auto puse=*puseIter;
+            puseIter++;
             auto puser=puse->user();
             puser->setOperand(puse->index(),replval);
             auto puserInst=dyn_cast<ir::Instruction>(puser);
