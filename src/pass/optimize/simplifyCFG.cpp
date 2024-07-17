@@ -25,6 +25,8 @@ namespace pass{
             // func->rename();
             // func->print(std::cerr);
             isWhile|=removeSingleBrBlock(func);
+            // func->rename();
+            // func->print(std::cerr);
             isChange=isWhile or isChange;
         }
 
@@ -269,6 +271,7 @@ namespace pass{
                     else{
                         //修改链接
                         ir::BasicBlock::delete_block_link(curBBPreBB,curBB);
+                        ir::BasicBlock::block_link(curBBPreBB,destBB);
                         //修改跳转目标
                         auto brTerminator=dyn_cast<ir::BranchInst>(curBBPreBB->terminator());
                         if(brTerminator->is_cond()){
