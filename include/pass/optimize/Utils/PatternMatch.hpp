@@ -20,7 +20,7 @@ struct MatchContext final {
 
 template <typename T, typename Derived>
 class GenericMatcher {
- public:
+  public:
   bool operator()(const MatchContext<Value>& ctx) const noexcept {
     if (auto val = dynamic_cast<T*>(ctx.value)) {
       return (static_cast<const Derived*>(this))->handle(MatchContext<T>{val});
@@ -32,7 +32,7 @@ class GenericMatcher {
 class AnyMatcher {
   Value*& mValue;
 
- public:
+  public:
   explicit AnyMatcher(Value*& value) noexcept : mValue{value} {}
   bool operator()(const MatchContext<Value>& ctx) const noexcept {
     mValue = ctx.value;
@@ -47,7 +47,7 @@ inline auto any(Value*& val) {
 class BooleanMatcher {
   Value*& mValue;
 
- public:
+  public:
   explicit BooleanMatcher(Value*& value) noexcept : mValue{value} {}
   bool operator()(const MatchContext<Value>& ctx) const noexcept {
     mValue = ctx.value;
@@ -62,7 +62,7 @@ inline auto boolean(Value*& val) {
 class ConstantIntMatcher {
   int64_t& mVal;
 
- public:
+  public:
   ConstantIntMatcher(int64_t& value) : mVal{value} {}
   bool operator()(const MatchContext<Value>& ctx) const {
     if (auto value = ctx.value->dynCast<Constant>()) {
@@ -75,11 +75,11 @@ class ConstantIntMatcher {
   }
 };
 
-class ConstatIntValMatcher {
+class ConstantIntValMatcher {
   int64_t mVal;
 
- public:
-  ConstatIntValMatcher(int64_t value) : mVal{value} {}
+  public:
+  ConstantIntValMatcher(int64_t value) : mVal{value} {}
   bool operator()(const MatchContext<Value>& ctx) const {
     if (auto value = ctx.value->dynCast<Constant>()) {
       if (value->type()->isInt32()) {
@@ -95,7 +95,46 @@ inline auto int_(int64_t& val) noexcept {
 }
 
 inline auto intval_(int64_t val) {
-  return ConstatIntValMatcher{val};
+  return ConstantIntValMatcher{val};
+}
+
+class ConstantFloatMatcher {
+  float& mVal;
+
+  public:
+  ConstantFloatMatcher(float& value) : mVal{value} {}
+  bool operator()(const MatchContext<Value>& ctx) const {
+    if (auto value = ctx.value->dynCast<Constant>()) {
+      if (value->type()->isFloat32()) {
+        mVal = value->f32();
+        return true;
+      }
+    }
+    return false;
+  }
+};
+
+class ConstantFloatValMatcher {
+  float mVal;
+
+  public:
+  ConstantFloatValMatcher(float value) : mVal{value} {}
+  bool operator()(const MatchContext<Value>& ctx) const {
+    if (auto value = ctx.value->dynCast<Constant>()) {
+      if (value->type()->isFloat32()) {
+        return mVal == value->f32();
+      }
+    }
+    return false;
+  }
+};
+
+inline auto float_(float& val) noexcept {
+  return ConstantFloatMatcher{val};
+}
+
+inline auto floatval_(float val) {
+  return ConstantFloatValMatcher{val};
 }
 
 template <bool IsCommutative, typename LhsMatcher, typename RhsMatcher>
@@ -108,7 +147,7 @@ class BinaryInstMatcher final
   LhsMatcher mLhsMatcher;
   RhsMatcher mRhsMatcher;
 
- public:
+  public:
   BinaryInstMatcher(ValueId valueId,
                     LhsMatcher lhsMatcher,
                     RhsMatcher rhsMatcher)
@@ -131,6 +170,117 @@ template <typename LhsMatcher, typename RhsMatcher>
 auto add(LhsMatcher lhsMatcher, RhsMatcher rhsMatcher) {
   return BinaryInstMatcher<true, LhsMatcher, RhsMatcher>{
       ValueId::vADD, lhsMatcher, rhsMatcher};
+}
+
+template <typename LhsMatcher, typename RhsMatcher>
+auto sub(LhsMatcher lhsMatcher, RhsMatcher rhsMatcher) {
+  return BinaryInstMatcher<false, LhsMatcher, RhsMatcher>{
+      ValueId::vSUB, lhsMatcher, rhsMatcher};
+}
+
+template <typename LhsMatcher, typename RhsMatcher>
+auto mul(LhsMatcher lhsMatcher, RhsMatcher rhsMatcher) {
+  return BinaryInstMatcher<true, LhsMatcher, RhsMatcher>{
+      ValueId::vMUL, lhsMatcher, rhsMatcher};
+}
+
+template <typename LhsMatcher, typename RhsMatcher>
+auto sdiv(LhsMatcher lhsMatcher, RhsMatcher rhsMatcher) {
+  return BinaryInstMatcher<false, LhsMatcher, RhsMatcher>{
+      ValueId::vSDIV, lhsMatcher, rhsMatcher};
+}
+
+template <typename LhsMatcher, typename RhsMatcher>
+auto srem(LhsMatcher lhsMatcher, RhsMatcher rhsMatcher) {
+  return BinaryInstMatcher<false, LhsMatcher, RhsMatcher>{
+      ValueId::vSREM, lhsMatcher, rhsMatcher};
+}
+
+template <typename LhsMatcher, typename RhsMatcher>
+auto fadd(LhsMatcher lhsMatcher, RhsMatcher rhsMatcher) {
+  return BinaryInstMatcher<true, LhsMatcher, RhsMatcher>{
+      ValueId::vFADD, lhsMatcher, rhsMatcher};
+}
+
+template <typename LhsMatcher, typename RhsMatcher>
+auto fsub(LhsMatcher lhsMatcher, RhsMatcher rhsMatcher) {
+  return BinaryInstMatcher<false, LhsMatcher, RhsMatcher>{
+      ValueId::vFSUB, lhsMatcher, rhsMatcher};
+}
+
+template <typename LhsMatcher, typename RhsMatcher>
+auto fmul(LhsMatcher lhsMatcher, RhsMatcher rhsMatcher) {
+  return BinaryInstMatcher<true, LhsMatcher, RhsMatcher>{
+      ValueId::vFMUL, lhsMatcher, rhsMatcher};
+}
+template <typename LhsMatcher, typename RhsMatcher>
+auto fdiv(LhsMatcher lhsMatcher, RhsMatcher rhsMatcher) {
+  return BinaryInstMatcher<false, LhsMatcher, RhsMatcher>{
+      ValueId::vFDIV, lhsMatcher, rhsMatcher};
+}
+
+// class CastMatcher
+
+template <typename LhsMatcher, typename RhsMatcher>
+class ICmpInstMatcher final
+    : public GenericMatcher<ICmpInst, ICmpInstMatcher<LhsMatcher, RhsMatcher>> {
+  ValueId mValueId;
+  // CmpOp mCmpOp;
+  LhsMatcher mLhsMatcher;
+  RhsMatcher mRhsMatcher;
+
+  public:
+  explicit ICmpInstMatcher(ValueId valueId,
+                           LhsMatcher lhsMatcher,
+                           RhsMatcher rhsMatcher)
+      : mValueId{valueId}, mLhsMatcher{lhsMatcher}, mRhsMatcher{rhsMatcher} {}
+
+  bool handle(const MatchContext<ICmpInst>& ctx) const {
+    if (mValueId != ValueId::vInvalid and mValueId != ctx.value->valueId()) {
+      return false;
+    }
+    if (mLhsMatcher(ctx.getOperand(0)) and mRhsMatcher(ctx.getOperand(1))) {
+      return true;
+    }
+    return false;
+  }
+};
+
+template <typename Matcher>
+class OneUseMatcher {
+  Matcher mMatcher;
+
+  public:
+  explicit OneUseMatcher(Matcher matcher) : mMatcher{matcher} {}
+  bool operator()(const MatchContext<Value>& ctx) const {
+    if (auto inst = ctx.value->dynCast<Instruction>()) {
+      if (not(inst->uses().size() == 1)) {
+        return false;
+      } else {
+        return mMatcher(ctx);
+      }
+    }
+    return false;
+  }
+};
+
+template <typename Matcher>
+auto oneUse(Matcher matcher) {
+  return OneUseMatcher<Matcher>{matcher};
+}
+
+class ExactlyMatcher final {
+  Value*& mVal;
+
+  public:
+  explicit ExactlyMatcher(Value*& val) noexcept : mVal{val} {}
+  bool operator()(const MatchContext<Value>& ctx) const noexcept {
+    return ctx.value == mVal;
+  }
+};
+
+inline auto exactly(Value*& val) noexcept {
+  return ExactlyMatcher{val};
 }
 
 }  // namespace pass
