@@ -176,7 +176,7 @@ Function* Function::copy_func() {
       auto copyinst = inst->copy_inst(getValue);
       copyinst->setBlock(bbCpy);
       ValueCopy[inst] = copyinst;
-      bbCpy->insts().emplace_back(copyinst);
+      bbCpy->emplace_back_inst(copyinst);
       if (auto phi = dyn_cast<PhiInst>(inst)) phis.emplace_back(phi);
     }
     return false;

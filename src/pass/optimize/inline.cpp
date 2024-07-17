@@ -9,6 +9,8 @@
 namespace pass {
 void Inline::callinline(ir::CallInst* call) {
     ir::Function* callee = call->callee();//被调用的需要被展开的函数
+    if(callee->isFloat32())
+        ;
     ir::Function* copyfunc = callee->copy_func(); //callee的复制，展开的是这个函数而不是callee
     ir::BasicBlock* nowBB = call->block();
     ir::Function* caller = nowBB->function();
@@ -87,31 +89,38 @@ void Inline::callinline(ir::CallInst* call) {
     for (size_t i = 0; i < copyfunc->args().size(); i++) {
         auto realArg = call->operand(i);
         auto formalArg = copyfunc->arg_i(i);
-        if (!formalArg->type()->isPointer()) {  // 如果传递参数不是数组等指针，直接替换
+        if (!formalArg->type()->isPointer()) {  // 如果传递参数不是高维数组等指针，直接替换TODO 加入一维数组的判断
             formalArg->replaceAllUseWith(realArg);
         } else {  // 如果传递参数是数组等指针
-            std::vector<ir::StoreInst*> storetomove;
-            for (auto use : formalArg->uses()) {
-                if (ir::StoreInst* storeinst = dyn_cast<ir::StoreInst>(use->user())) {
-                    storetomove.push_back(storeinst);
-                    auto allocainst = storeinst->ptr();
-                    std::vector<ir::LoadInst*> loadtoremove;
-                    for (auto allocause : allocainst->uses()) {
-                        if (ir::LoadInst* loadinst = dyn_cast<ir::LoadInst>(allocause->user())) {
-                            loadtoremove.push_back(loadinst);
+            auto baseType = formalArg->type()->dynCast<ir::PointerType>()->baseType();
+            if (!baseType->isPointer()){
+                formalArg->replaceAllUseWith(realArg);
+            }
+            else{
+                std::vector<ir::StoreInst*> storetomove;
+                for (auto use : formalArg->uses()) {
+                    if (ir::StoreInst* storeinst = dyn_cast<ir::StoreInst>(use->user())) {
+                        storetomove.push_back(storeinst);
+                        auto allocainst = storeinst->ptr();
+                        std::vector<ir::LoadInst*> loadtoremove;
+                        for (auto allocause : allocainst->uses()) {
+                            if (ir::LoadInst* loadinst = dyn_cast<ir::LoadInst>(allocause->user())) {
+                                loadtoremove.push_back(loadinst);
+                            }
+                        }
+                        for (auto rmloadinst : loadtoremove) {
+                            rmloadinst->replaceAllUseWith(realArg);
+                            auto loadBB = rmloadinst->block();
+                            loadBB->delete_inst(rmloadinst);
                         }
                     }
-                    for (auto rmloadinst : loadtoremove) {
-                        rmloadinst->replaceAllUseWith(realArg);
-                        auto loadBB = rmloadinst->block();
-                        loadBB->delete_inst(rmloadinst);
-                    }
+                }
+                for (auto rmstoreinst : storetomove) {
+                    auto storeBB = rmstoreinst->block();
+                    storeBB->delete_inst(rmstoreinst);
                 }
             }
-            for (auto rmstoreinst : storetomove) {
-                auto storeBB = rmstoreinst->block();
-                storeBB->delete_inst(rmstoreinst);
-            }
+            
         }
     }
     // 删除caller中调用copyfunc的call指令
