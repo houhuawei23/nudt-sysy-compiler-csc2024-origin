@@ -177,6 +177,14 @@ bool ArithmeticReduce::runOnBlock(ir::IRBuilder& builder,
                                           v3);
     }
 
+    // FIXME: reduce single value phiInst
+    PhiInst* phiInst = nullptr;
+    if (phi(phiInst)(matchCtx)) {
+      if (phiInst->operands().size() == 1) {
+        return phiInst->operand(0);
+      }
+    }
+
     return nullptr;
   };
   const auto ret = reduceBlock(builder, block, reducer);

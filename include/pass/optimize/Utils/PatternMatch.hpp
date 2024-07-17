@@ -246,6 +246,21 @@ class ICmpInstMatcher final
   }
 };
 
+class PhiMatcher final : public GenericMatcher<PhiInst, PhiMatcher> {
+  PhiInst*& mPhi;
+
+  public:
+  explicit PhiMatcher(PhiInst*& phi) noexcept : mPhi{phi} {}
+  bool handle(const MatchContext<PhiInst>& ctx) const {
+    mPhi = ctx.value;
+    return true;
+  }
+};
+
+inline auto phi(PhiInst*& phi) noexcept {
+  return PhiMatcher{phi};
+}
+
 template <typename Matcher>
 class OneUseMatcher {
   Matcher mMatcher;
