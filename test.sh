@@ -39,8 +39,8 @@ EC_TIMEOUT=124
 
 TIMEOUT=100
 
-lli_cmd="lli-17"
-llvm_link_cmd="llvm-link-17"
+lli_cmd="lli-14"
+llvm_link_cmd="llvm-link-14"
 # Function to print usage information
 usage() {
     echo "Usage: $0 [-t <test_path>] [-o <output_dir>] [-r <result_file>] [-r <result_file>][-h]"

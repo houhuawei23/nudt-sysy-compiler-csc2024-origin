@@ -4,7 +4,7 @@
 #include <algorithm>
 
 namespace pass {
-void CFGAnalysis::run(ir::Function* func, topAnalysisInfoManager* tp) {
+void CFGAnalysisHHW::run(ir::Function* func, topAnalysisInfoManager* tp) {
   // TODO: Implement CFG analysis
   /* clear the CFG: clear pres/nexts of all blocks */
   for (auto block : func->blocks()) {
@@ -34,7 +34,7 @@ void CFGAnalysis::run(ir::Function* func, topAnalysisInfoManager* tp) {
   assert(check(std::cerr, func));
   std::cerr << func->name() << " CFG analysis done" << std::endl;
 }
-bool CFGAnalysis::check(std::ostream& os, ir::Function* func) const {
+bool CFGAnalysisHHW::check(std::ostream& os, ir::Function* func) const {
   auto findBlock = [](ir::BasicBlock* block,
                       std::list<ir::BasicBlock*>& blockList) {
     return std::find(blockList.begin(), blockList.end(), block) !=

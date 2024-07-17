@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
     pass::topAnalysisInfoManager* tAIM = new pass::topAnalysisInfoManager(module_ir);
     tAIM->initialize();
     pass::PassManager* pm = new pass::PassManager(module_ir,tAIM);
-    pm->run(new pass::CFGAnalysis());
+    pm->run(new pass::CFGAnalysisHHW());
 
     if (not config.pass_names.empty()) {
         for (auto pass_name : config.pass_names) {

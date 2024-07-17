@@ -335,6 +335,7 @@ public:
     explicit MIRJumpTable(std::string symbol) : MIRRelocable(symbol) {}
 public:  // get function
     auto& data() { return _data; }
+    void print(std::ostream& os, CodeGenContext& ctx) {}
 };
 
 /* MIRFunction */
