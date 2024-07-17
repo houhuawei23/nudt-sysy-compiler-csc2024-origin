@@ -1,13 +1,9 @@
 #include "ir/ir.hpp"
-
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
 #include "mir/instinfo.hpp"
 #include "mir/iselinfo.hpp"
-
 #include "mir/utils.hpp"
-// #include "target/generic/InstInfoDecl.hpp"
-
 #include <optional>
 
 namespace mir {
@@ -44,9 +40,18 @@ MIROperand* ISelContext::get_inst_def(MIRInst* inst) {
 
 MIRInst* ISelContext::lookup_def(MIROperand* op) {
     assert(op != nullptr);
-    auto iter = _inst_map.find(op);
+    auto iter = _inst_map.find(op->reg());
     if (iter != _inst_map.end()) {
         return iter->second;
+    }
+
+    std::cerr << "op address " << op << "\n";
+    if (isOperandVReg(op)) {
+        std::cerr << "virtual reg v" << (op->reg() ^ virtualRegBegin) << "\n";
+    } else if (isOperandISAReg(op)) {
+        std::cerr << "physical reg i" << op->reg() << "\n";
+    } else {
+        std::cerr << "satck\n";
     }
 
     assert(false && "def not found");
@@ -91,6 +96,7 @@ void ISelContext::run_isel(MIRFunction* func) {
         // }
 
         //! 指令遍历和分析: 对每个基本块的指令进行遍历，执行指令选择和替换。
+        std::cerr << "function " << func->name() << "\n";
         for (auto& block : func->blocks()) {
             if (debugISel) {
                 std::cout << block->name() << std::endl;
@@ -103,7 +109,9 @@ void ISelContext::run_isel(MIRFunction* func) {
                     if (instinfo.operand_flag(idx) & OperandFlagDef) {
                         auto def = inst->operand(idx);
                         if (def->is_reg() && isVirtualReg(def->reg())) {
-                            _inst_map.emplace(def, inst);
+                            std::cerr << "def reg v " << (def->reg() ^ virtualRegBegin) << "\n";
+                            std::cerr << "def address " << def << "\n";
+                            _inst_map.emplace(def->reg(), inst);
                         }
                     }
                 }

@@ -1,3 +1,6 @@
+#include "pass/pass.hpp"
+#include "pass/analysisinfo.hpp"
+#include "pass/analysis/dom.hpp"
 #include "mir/mir.hpp"
 #include "mir/lowering.hpp"
 #include "mir/target.hpp"
@@ -7,23 +10,24 @@
 #include "mir/fastAllocator.hpp"
 #include "mir/linearAllocator.hpp"
 #include "target/riscv/riscvtarget.hpp"
-
 #include "support/StaticReflection.hpp"
-
 #include <iostream>
 #include <fstream>
 #include <queue>
 
 namespace mir {
-void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& target);
+void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& target, 
+                       pass::topAnalysisInfoManager* tAIM);
 MIRFunction* create_mir_function(ir::Function* ir_func, MIRFunction* mir_func,
-                                 CodeGenContext& codegen_ctx, LoweringContext& lowering_ctx);
+                                 CodeGenContext& codegen_ctx, LoweringContext& lowering_ctx, 
+                                 pass::topAnalysisInfoManager* tAIM);
 MIRInst* create_mir_inst(ir::Instruction* ir_inst, LoweringContext& ctx);
 void lower_GetElementPtr(ir::inst_iterator begin, ir::inst_iterator end, LoweringContext& ctx);
 
-std::unique_ptr<MIRModule> create_mir_module(ir::Module& ir_module, Target& target) {
+std::unique_ptr<MIRModule> create_mir_module(ir::Module& ir_module, Target& target,
+                                             pass::topAnalysisInfoManager* tAIM) {
     auto mir_module_uptr = std::make_unique<MIRModule>(&ir_module, target);
-    create_mir_module(ir_module, *mir_module_uptr, target);
+    create_mir_module(ir_module, *mir_module_uptr, target, tAIM);
     return mir_module_uptr;
 }
 
@@ -32,7 +36,7 @@ union FloatUint32 {
     uint32_t u;
 } fu32;
 
-void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& target) {
+void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& target, pass::topAnalysisInfoManager* tAIM) {
     constexpr bool debugLowering = true;
 
     auto& functions = mir_module.functions();
@@ -134,7 +138,7 @@ void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& tar
 
         /* 4.1: lower function body to generic MIR */
         {
-            create_mir_function(ir_func, mir_func, codegen_ctx, lowering_ctx);
+            create_mir_function(ir_func, mir_func, codegen_ctx, lowering_ctx, tAIM);
             if(not mir_func->verify(std::cerr, codegen_ctx)) { 
                 std::cerr << "Lowering Error: " << mir_func->name() << " failed to verify." << std::endl;
             }
@@ -149,7 +153,8 @@ void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& tar
         }
         /* 4.3 Optimize: register coalescing */
 
-        /* 4.4 Optimize: peephole optimization */
+        /* 4.4 Optimize: peephole optimization (窥孔优化) */
+        // while (genericPeepholeOpt(*mir_func, codegen_ctx));
 
         /* 4.5 pre-RA legalization */
 
@@ -164,6 +169,7 @@ void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& tar
             codegen_ctx.registerInfo = new RISCVRegisterInfo();
             if (codegen_ctx.registerInfo) {
                 GraphColoringAllocate(*mir_func, codegen_ctx, infoIPRA);
+                // fastAllocator(*mir_func, codegen_ctx, infoIPRA);
                 dumpStageResult("AfterGraphColoring", mir_func, codegen_ctx);
             }
         }
@@ -185,6 +191,11 @@ void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& tar
         postLegalizeFunc(*mir_func, codegen_ctx);
         
         /* 4.11 verify */
+        
+        /* 4.12 Add Function to IPRA cache */
+        if(codegen_ctx.registerInfo) {
+            infoIPRA.add(codegen_ctx, *mir_func);
+        }
 
         dumpStageResult("AfterCodeGen", mir_func, codegen_ctx);
     }
@@ -192,7 +203,8 @@ void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& tar
 }
 
 MIRFunction* create_mir_function(ir::Function* ir_func, MIRFunction* mir_func,
-                                 CodeGenContext& codegen_ctx, LoweringContext& lowering_ctx) {
+                                 CodeGenContext& codegen_ctx, LoweringContext& lowering_ctx, 
+                                 pass::topAnalysisInfoManager* tAIM) {
     
     lowering_ctx.set_mir_func(mir_func);
     /* Some Debug Information */
@@ -205,20 +217,6 @@ MIRFunction* create_mir_function(ir::Function* ir_func, MIRFunction* mir_func,
     std::unordered_map<ir::Value*, MIROperand*> storage_map;
     auto& target = codegen_ctx.target;
     auto& datalayout = target.get_datalayout();
-
-    /* bfs */
-    std::vector<ir::BasicBlock*> block_vec;
-    {
-        std::queue<ir::BasicBlock*> q; std::unordered_map<ir::BasicBlock*, int> mp;
-        auto entry = *(ir_func->blocks().begin()); q.push(entry); mp[entry] = 1;
-        while (!q.empty()) {
-            auto tmp = q.front(); q.pop(); block_vec.push_back(tmp);
-            for (auto succ : tmp->next_blocks()) {
-                if (mp.count(succ)) continue;
-                q.push(succ); mp[succ] = 1;
-            }
-        }
-    }
 
     for (auto ir_block : ir_func->blocks()) {
         mir_func->blocks().push_back(std::make_unique<MIRBlock>(mir_func, "label" + std::to_string(codegen_ctx.next_id_label())));
@@ -241,19 +239,16 @@ MIRFunction* create_mir_function(ir::Function* ir_func, MIRFunction* mir_func,
 
     //! 3. process alloca, new stack object for each alloca
     lowering_ctx.set_mir_block(block_map.at(ir_func->entry()));  // entry
-    for (auto& ir_inst :
-         ir_func->entry()->insts()) {  // note: all alloca in entry
-        if (ir_inst->valueId() != ir::ValueId::vALLOCA)
-            continue;
+    for (auto& ir_inst : ir_func->entry()->insts()) {  // NOTE: all alloca in entry
+        if (ir_inst->valueId() != ir::ValueId::vALLOCA) continue;
 
         auto pointee_type = dyn_cast<ir::PointerType>(ir_inst->type())->baseType();
         uint32_t align = 4;  // TODO: align, need bind to ir object
         auto storage = mir_func->add_stack_obj(
-            codegen_ctx.next_id(),  // id
-            static_cast<uint32_t>(
-                pointee_type->size()),  //! size, datalayout; if array??
-            align,                      // align
-            0,                          // offset
+            codegen_ctx.next_id(),                        // id
+            static_cast<uint32_t>(pointee_type->size()),  // size
+            align,                                        // align
+            0,                                            // offset
             StackObjectUsage::Local);
         storage_map.emplace(ir_inst, storage);
         // emit load stack object addr inst
@@ -299,6 +294,7 @@ MIRFunction* create_mir_function(ir::Function* ir_func, MIRFunction* mir_func,
     if (DebugCreateMirFunction) std::cerr << "stage 4: lowering all blocks" << std::endl;
     return mir_func;
 }
+
 void lower(ir::UnaryInst* ir_inst, LoweringContext& ctx);
 void lower(ir::BinaryInst* ir_inst, LoweringContext& ctx);
 void lower(ir::BranchInst* ir_inst, LoweringContext& ctx);
@@ -344,38 +340,20 @@ MIRInst* create_mir_inst(ir::Instruction* ir_inst, LoweringContext& ctx) {
         case ir::ValueId::vFOGT:
         case ir::ValueId::vFOGE:
         case ir::ValueId::vFOLT:
-        case ir::ValueId::vFOLE:
-            lower(dyn_cast<ir::FCmpInst>(ir_inst), ctx);
-            break;
-        case ir::ValueId::vALLOCA:
-            std::cerr << "alloca not supported" << std::endl;
-            break;
-        case ir::ValueId::vLOAD:
-            lower(dyn_cast<ir::LoadInst>(ir_inst), ctx);
-            break;
-        case ir::ValueId::vSTORE:
-            lower(dyn_cast<ir::StoreInst>(ir_inst), ctx);
-            break;
-        case ir::ValueId::vGETELEMENTPTR:
-            // lower(dyn_cast<ir::GetElementPtrInst>(ir_inst), ctx);
-            assert(false && "not supported inst");
-            break;
-        case ir::ValueId::vRETURN:
-            lower(dyn_cast<ir::ReturnInst>(ir_inst), ctx);
-            break;
-        case ir::ValueId::vBR:
-            lower(dyn_cast<ir::BranchInst>(ir_inst), ctx);
-            break;
-        case ir::ValueId::vCALL:
-            lower(dyn_cast<ir::CallInst>(ir_inst), ctx);
-            break;
+        case ir::ValueId::vFOLE: lower(dyn_cast<ir::FCmpInst>(ir_inst), ctx); break;
+        case ir::ValueId::vALLOCA: std::cerr << "alloca not supported" << std::endl; break;
+        case ir::ValueId::vLOAD: lower(dyn_cast<ir::LoadInst>(ir_inst), ctx); break;
+        case ir::ValueId::vSTORE: lower(dyn_cast<ir::StoreInst>(ir_inst), ctx); break;
+        case ir::ValueId::vGETELEMENTPTR: assert(false && "not supported inst");
+        case ir::ValueId::vRETURN: lower(dyn_cast<ir::ReturnInst>(ir_inst), ctx); break;
+        case ir::ValueId::vBR: lower(dyn_cast<ir::BranchInst>(ir_inst), ctx); break;
+        case ir::ValueId::vCALL: lower(dyn_cast<ir::CallInst>(ir_inst), ctx); break;
         case ir::ValueId::vMEMSET: lower(dyn_cast<ir::MemsetInst>(ir_inst), ctx); break;
         case ir::ValueId::vBITCAST: lower(dyn_cast<ir::BitCastInst>(ir_inst), ctx); break;
         default:
             const auto valueIdEnumName = utils::enumName(static_cast<ir::ValueId>(ir_inst->valueId()));
             std::cerr << valueIdEnumName << ": not supported inst" << std::endl;
             assert(false && "not supported inst");
-            break;
     }
     return nullptr;
 }
@@ -515,9 +493,7 @@ nextblock:
         ctx.emit_inst(inst);
         auto findBlockIter = [mir_func] (const MIRBlock* block) {
             return std::find_if(mir_func->blocks().begin(), mir_func->blocks().end(), 
-                [block](const std::unique_ptr<MIRBlock>& mir_block) {
-                            return mir_block.get() == block;
-                        });
+                [block](const std::unique_ptr<MIRBlock>& mir_block) { return mir_block.get() == block; });
         };
         {
         auto curBlockIter = findBlockIter(ctx.get_mir_block());

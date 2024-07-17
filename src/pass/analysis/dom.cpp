@@ -226,67 +226,67 @@ namespace pass
     }
 
     //debug info print pass
-    void domInfoCheck::run(ir::Function* func,topAnalysisInfoManager* tp){
-        if(func->isOnlyDeclare())return;
-        domctx=tp->getDomTree(func);
+    void domInfoCheck::run(ir::Function* func,topAnalysisInfoManager* tp) {
+        if (func->isOnlyDeclare()) return;
+        domctx = tp->getDomTree(func);
         using namespace std;
-        cout<<"In Function \""<<func->name()<<"\""<<endl;
-        for(auto bb:func->blocks()){
-            cout<<bb->name()<<" Prec: ";
-            for(auto bbpre:bb->pre_blocks()){
-                cout<<"\t"<<bbpre->name();
-            }
-            cout<<endl;
-        }
-        cout<<endl;
-        for(auto bb:func->blocks()){
-            cout<<bb->name()<<" Succ: ";
-            for(auto bbnext:bb->next_blocks()){
-                cout<<"\t"<<bbnext->name();
-            }
-            cout<<endl;
-        }
-        cout<<endl;
-        for(auto bb:func->blocks()){
-            cout<<bb->name()<<" idom: ";
-            if(domctx->idom(bb))
-                cout<<"\t"<<domctx->idom(bb)->name();
-            else
-                cout<<"null";
-            cout<<endl;
-        }
-        cout<<endl;
-        for(auto bb:func->blocks()){
-            cout<<bb->name()<<" sdom: ";
-            if(domctx->sdom(bb))
-                cout<<"\t"<<domctx->sdom(bb)->name();
-            else
-                cout<<"null";
-            cout<<endl;
-        }
-        cout<<endl;
-        for(auto bb:func->blocks()){
-            cout<<bb->name()<<" domTreeSons: ";
-            for(auto bbson:domctx->domson(bb)){
-                cout<<bbson->name()<<'\t';
-            }
-            cout<<endl;
-        }
-        cout<<endl;
-        for(auto bb:func->blocks()){
-            cout<<bb->name()<<" domFrontier: ";
-            for(auto bbf:domctx->domfrontier(bb)){
-                cout<<bbf->name()<<'\t';
-            }
-            cout<<endl;
-        }
-        cout<<endl;
-        domctx->BFSDomTreeInfoRefresh();
-        cout<<"BFSDomTreeVector:"<<endl;
-        for(auto bb:domctx->BFSDomTreeVector()){
-            cout<<bb->name()<<"\t";
-        }
-        cout<<endl<<endl;
+        // cout<<"In Function \""<<func->name()<<"\""<<endl;
+        // for(auto bb:func->blocks()){
+        //     cout<<bb->name()<<" Prec: ";
+        //     for(auto bbpre:bb->pre_blocks()){
+        //         cout<<"\t"<<bbpre->name();
+        //     }
+        //     cout<<endl;
+        // }
+        // cout<<endl;
+        // for(auto bb:func->blocks()){
+        //     cout<<bb->name()<<" Succ: ";
+        //     for(auto bbnext:bb->next_blocks()){
+        //         cout<<"\t"<<bbnext->name();
+        //     }
+        //     cout<<endl;
+        // }
+        // cout<<endl;
+        // for(auto bb:func->blocks()){
+        //     cout<<bb->name()<<" idom: ";
+        //     if(domctx->idom(bb))
+        //         cout<<"\t"<<domctx->idom(bb)->name();
+        //     else
+        //         cout<<"null";
+        //     cout<<endl;
+        // }
+        // cout<<endl;
+        // for(auto bb:func->blocks()){
+        //     cout<<bb->name()<<" sdom: ";
+        //     if(domctx->sdom(bb))
+        //         cout<<"\t"<<domctx->sdom(bb)->name();
+        //     else
+        //         cout<<"null";
+        //     cout<<endl;
+        // }
+        // cout<<endl;
+        // for(auto bb:func->blocks()){
+        //     cout<<bb->name()<<" domTreeSons: ";
+        //     for(auto bbson:domctx->domson(bb)){
+        //         cout<<bbson->name()<<'\t';
+        //     }
+        //     cout<<endl;
+        // }
+        // cout<<endl;
+        // for(auto bb:func->blocks()){
+        //     cout<<bb->name()<<" domFrontier: ";
+        //     for(auto bbf:domctx->domfrontier(bb)){
+        //         cout<<bbf->name()<<'\t';
+        //     }
+        //     cout<<endl;
+        // }
+        // cout<<endl;
+        // domctx->BFSDomTreeInfoRefresh();
+        // cout<<"BFSDomTreeVector:"<<endl;
+        // for(auto bb:domctx->BFSDomTreeVector()){
+        //     cout<<bb->name()<<"\t";
+        // }
+        // cout<<endl<<endl;
     }
 
     void domInfoPass::run(ir::Function* func, topAnalysisInfoManager* tp){

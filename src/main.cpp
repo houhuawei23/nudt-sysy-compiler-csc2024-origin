@@ -121,19 +121,24 @@ int main(int argc, char* argv[]) {
     };
 
     //! 3. Code Generation
+    constexpr bool DebugDomBFS = false;
     for (auto fun : module_ir->funcs()) {
         if(fun->isOnlyDeclare())continue;
         auto dom_ctx = tAIM->getDomTree(fun);
         dom_ctx->refresh();
         dom_ctx->BFSDomTreeInfoRefresh();
-        for (auto bb : dom_ctx->BFSDomTreeVector()) {
-            std::cout << bb->name() << std::endl;
+        auto dom_vec = dom_ctx->BFSDomTreeVector();
+
+        if (DebugDomBFS) {
+            for (auto bb : dom_ctx->BFSDomTreeVector()) {
+                std::cerr << bb->name() << " ";
+            }
+            std::cerr << "\n";
         }
     }
     if (config.gen_asm) {
         auto target = mir::RISCVTarget();
-        // auto target = mir::GENERICTarget();
-        auto mir_module = mir::create_mir_module(*module_ir, target);
+        auto mir_module = mir::create_mir_module(*module_ir, target, tAIM);
         if (config.outfile.empty()) {
             target.emit_assembly(std::cout, *mir_module);
         } else {

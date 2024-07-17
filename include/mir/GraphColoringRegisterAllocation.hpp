@@ -4,6 +4,8 @@
 #include "mir/CFGAnalysis.hpp"
 #include "mir/LiveInterval.hpp"
 #include "mir/RegisterAllocator.hpp"
+#include "support/StaticReflection.hpp"
+#include "target/riscv/riscv.hpp"
 #include <vector>
 #include <stack>
 #include <queue>
@@ -14,16 +16,22 @@
 namespace mir {
 struct RegNumComparator final {
     const std::unordered_map<RegNum, double>* weights;
-    bool operator()(RegNum lhs, RegNum rhs) const { return weights->at(lhs) > weights->at(rhs); }
+    
+    bool operator()(RegNum lhs, RegNum rhs) const {
+        return weights->at(lhs) > weights->at(rhs);
+    }
 };
 
 /*
  * @brief: Interference Graph (干涉图)
  * @note: 
  *      成员变量: 
- *          1. std::unordered_map<RegNum, std::unordered_set<RegNum>> _adj -- 干涉图 (存储每个节点的邻近节点)
- *          2. std::unordered_map<RegNum, uint32_t> _degree -- 存储干涉图中虚拟寄存器节点的度数
- *          3. Queue _queue -- 优先队列, 存储可分配物理寄存器的虚拟寄存器节点
+ *          1. std::unordered_map<RegNum, std::unordered_set<RegNum>> _adj
+ *               干涉图 (存储每个节点的邻近节点)
+ *          2. std::unordered_map<RegNum, uint32_t> _degree
+ *               存储干涉图中虚拟寄存器节点的度数
+ *          3. Queue _queue
+ *               优先队列, 存储可分配物理寄存器的虚拟寄存器节点
  */
 class InterferenceGraph final {
     std::unordered_map<RegNum, std::unordered_set<RegNum>> _adj;
@@ -40,7 +48,8 @@ public:  /* About Degree Function */
     [[nodiscard]] bool empty() const { return _degree.empty(); }
     [[nodiscard]] size_t size() const { return _degree.size(); }
 public:  /* util function */
-    void add_edge(RegNum lhs, RegNum rhs) {  /* 功能: 加边 */
+    /* 功能: 加边 */
+    void add_edge(RegNum lhs, RegNum rhs) {
         assert(lhs != rhs);
         assert((isVirtualReg(lhs) || isISAReg(lhs)) && (isVirtualReg(rhs) || isISAReg(rhs)));
         if (_adj[lhs].count(rhs)) return;
@@ -54,7 +63,8 @@ public:  /* util function */
         if (isVirtualReg(lhs)) ++_degree[lhs];
         if (isVirtualReg(rhs)) ++_degree[rhs];
     }
-    void prepare_for_assign(const std::unordered_map<RegNum, double>& weights, uint32_t k) {  /* 功能: 为图着色寄存器分配做准备 */
+    /* 功能: 为图着色寄存器分配做准备 */
+    void prepare_for_assign(const std::unordered_map<RegNum, double>& weights, uint32_t k) {
         _queue = Queue{ RegNumComparator{ &weights } };
         for (auto& [reg, degree] : _degree) {
             if (degree < k) {  /* 度数小于k, 可进行图着色分配 */
@@ -63,7 +73,8 @@ public:  /* util function */
             }
         }
     }
-    RegNum pick_to_assign(uint32_t k) {  /* 功能: 选择虚拟寄存器来为其分配物理寄存器 */
+    /* 功能: 选择虚拟寄存器来为其分配物理寄存器 */
+    RegNum pick_to_assign(uint32_t k) {
         if (_queue.empty()) return invalidReg;
         auto u = _queue.top(); _queue.pop();
         assert(isVirtualReg(u)); assert(adj(u).size() < k);
@@ -139,25 +150,30 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
     /* Prepare for Graph Coloring Allocation */
     const auto canonicalizedType = ctx.registerInfo->getCanonicalizedRegisterTypeForClass(allocationClass);
     const auto& list = ctx.registerInfo->get_allocation_list(allocationClass);
-    const std::unordered_set<uint32_t> allocableISARegs{ list.cbegin(), list.cend() };  // 可用来分配的物理寄存器
-    constexpr auto DebugRA = false;
-    if (DebugRA) std::cerr << "allocate for class " << allocationClass << std::endl;
+    const std::unordered_set<uint32_t> allocableISARegs{ list.cbegin(), list.cend() };
+    
+    constexpr auto DebugRA = true;
+    if (DebugRA) {
+        std::cerr << "allocate for class " << allocationClass << std::endl;
+    }
 
-    std::unordered_set<uint32_t> blockList;
+    std::unordered_set<uint32_t> blockList;  // 存储spill到内存的寄存器
     bool fixHazard = true;  // --> RISC-V特性
 
-    /* 函数参数的传递 */
+    /* 处理【函数参数的传递】 */
     std::unordered_map<uint32_t, MIROperand> inStackArguments;
     for (auto inst : mfunc.blocks().front()->insts()) {
         if (inst->opcode() == InstLoadRegFromStack) {
             auto dst = inst->operand(0)->reg();
             auto src = inst->operand(1);
             auto& obj = mfunc.stack_objs().at(src);
-            if (obj.usage == StackObjectUsage::Argument) inStackArguments.emplace(dst, *src);
+            if (obj.usage == StackObjectUsage::Argument) {
+                inStackArguments.emplace(dst, *src);
+            }
         }
     }
 
-    /* 常数的处理 */
+    /* 处理【常数】 --> 为什么要进行该处理？？？ */
     /*
      constants: uint32_t -> MIRInst*
         - nullptr: 该虚拟寄存器已被多条指令定义            (删除)
@@ -167,7 +183,8 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
     for (auto& block : mfunc.blocks()) {
         for (auto inst : block->insts()) {
             auto& instInfo = ctx.instInfo.get_instinfo(inst);
-            if (requireFlag(instInfo.inst_flag(), InstFlagLoadConstant)) {  /* 加载常数到寄存器 */
+            
+            if (requireFlag(instInfo.inst_flag(), InstFlagLoadConstant)) {
                 auto reg = inst->operand(0)->reg();
                 if (isVirtualReg(reg)) {
                     if (!constants.count(reg)) constants[reg] = inst;
@@ -191,6 +208,7 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
         for (auto k : eraseKey) constants.erase(k);
     }
 
+    /* 不断迭代, 开始进行图着色寄存器分配算法 */
     while (true) {
         auto liveInterval = calcLiveIntervals(mfunc, ctx);
         if (DebugRA) mfunc.print(std::cerr, ctx);
@@ -237,7 +255,9 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
         /* ISA Specific Reg */
         for (auto& block : mfunc.blocks()) {
             auto& instructions = block->insts();
-            std::unordered_set<uint32_t> underRenamedISAReg;
+            std::unordered_set<uint32_t> underRenamedISAReg;  // 寄存器重命名
+
+            /* 收集待重命名的寄存器 */
             const auto collectUnderRenamedISARegs = [&](MIRInstList::iterator it) {
                 while (it != instructions.end()) {
                     auto inst = *it;
@@ -257,11 +277,13 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
             };
             collectUnderRenamedISARegs(instructions.begin());
             
-            std::unordered_set<uint32_t> lockedISAReg;
+            std::unordered_set<uint32_t> lockedISAReg;  // 被锁住的ISA寄存器
             std::unordered_set<uint32_t> liveVRegs;
             for (auto vreg : liveInterval.block2Info.at(block.get()).ins) {
                 assert(isVirtualReg(vreg));
-                if (vregSet.count(vreg)) liveVRegs.insert(vreg);
+                if (vregSet.count(vreg)) {
+                    liveVRegs.insert(vreg);
+                }
             }
             
             const auto tripCount = blockFreq.query(block.get());
@@ -302,12 +324,16 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
                 /* Call Instruction */
                 if (requireFlag(instInfo.inst_flag(), InstFlagCall)) {
                     const IPRAInfo* calleeUsage = nullptr;
-                    if (auto symbol = inst->operand(0)->reloc()) calleeUsage = infoIPRA.query(symbol);
+                    if (auto symbol = inst->operand(0)->reloc()) {
+                        calleeUsage = infoIPRA.query(symbol->name());
+                    }
                 
                     if (calleeUsage) {
                         for (auto isaReg : *calleeUsage) {
-                            if (isAllocatableType(isaReg->type())) {
-                                for (auto vreg : liveVRegs) graph.add_edge(vreg, isaReg->reg());
+                            if (isAllocatableType(ctx.registerInfo->getCanonicalizedRegisterType(isaReg))) {
+                                for (auto vreg : liveVRegs) {
+                                    graph.add_edge(vreg, isaReg);
+                                }
                             }
                         }
                     } else {
@@ -325,9 +351,10 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
                     if (instInfo.operand_flag(idx) & OperandFlagDef) {
                         auto op = inst->operand(idx);
                         if (!isAllocatableType(op->type())) continue;
+
                         def_use_time[op->reg()].insert(liveInterval.inst2Num.at(inst));
                         if (isOperandISAReg(op) && !ctx.registerInfo->is_zero_reg(op->reg())) {
-                            lockedISAReg.insert(op->reg());
+                            lockedISAReg.insert(op->reg());  // op被锁定
                             for (auto vreg : liveVRegs) graph.add_edge(vreg, op->reg());
                         } else if (isOperandVReg(op)) {
                             liveVRegs.insert(op->reg());
@@ -344,6 +371,9 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
 
         auto vregs = graph.collect_nodes();
         assert(vregs.size() == vregSet.size());
+        if (DebugRA) {
+            std::cerr << vregs.size() << std::endl;
+        }
         for (size_t i = 0; i < vregs.size(); i++) {
             auto u = vregs[i];
             auto& liveIntervalU = liveInterval.reg2Interval.at(u);
@@ -387,7 +417,9 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
             for (auto& [begin, end] : liveRange.segments) {
                 weight += static_cast<double>(end - begin) * getBlockFreq(end);
             }
-            if (auto iter = copy_hint.find(vreg); iter != copy_hint.end())  weight += 100.0 * static_cast<double>(iter->second.size());
+            if (auto iter = copy_hint.find(vreg); iter != copy_hint.end()) {
+                weight += 100.0 * static_cast<double>(iter->second.size());
+            }
             if (constants.count(vreg)) weight -= 1.0;
             weights.emplace(vreg, weight);
         }
@@ -417,6 +449,9 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
                 spillRegister = true;
                 break;
             }
+            if (DebugRA) {
+                std::cerr << "push " << (u ^ virtualRegBegin) << std::endl;
+            }
             assignStack.push(u);
         }
 
@@ -427,8 +462,11 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
                 std::unordered_map<RegNum, double> map;
                 for (auto [reg, v] : iter->second) {
                     if (isVirtualReg(reg)) {
-                        if (auto it = regMap.find(reg); it != regMap.end() && !exclude.count(it->second)) map[it->second] += v;
-                        else if (!exclude.count(reg)) map[reg] += v;
+                        if (auto it = regMap.find(reg); it != regMap.end() && !exclude.count(it->second)) {
+                            map[it->second] += v;
+                        } else if (!exclude.count(reg)) {
+                            map[reg] += v;
+                        }
                     }
                 }
                 if (map.empty()) return std::nullopt;
@@ -538,10 +576,12 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
         auto u = graph.pick_to_spill(blockList, weights, k);
         blockList.insert(u);
         if (DebugRA) {
-            std::cerr << "spill " << (u ^ virtualRegBegin) << std::endl;
-            std::cerr << "block list " << blockList.size() << " " << graph.size() << std::endl;
+            std::cerr << "spill " << (u ^ virtualRegBegin) << "\n";
+            std::cerr << "block list " << blockList.size() << " " << graph.size() << "\n";
         }
-        if (!isVirtualReg(u)) assert(false && "the error occurs in the graph coloring register allocation");
+        if (!isVirtualReg(u)) {
+            assert(false && "the error occurs in the graph coloring register allocation");
+        }
         const auto size = getOperandSize(canonicalizedType);
         bool alreadyInStack = inStackArguments.count(u);
         bool rematerializeConstant = constants.count(u);
@@ -604,7 +644,7 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
                     if (rematerializeConstant) {
                         instructions.insert(it, copy_inst);
                     } else {
-                        auto tmp = new MIRInst(InstLoadRegFromStack);
+                        auto tmp = new MIRInst{ InstLoadRegFromStack };
                         tmp->set_operand(0, MIROperand::as_vreg(u - virtualRegBegin, canonicalizedType));
                         auto tmpStack = new MIROperand(stackStorage);
                         tmp->set_operand(1, tmpStack);
@@ -635,7 +675,7 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
                             if (!hasReg) break;
                             it++;
                         }
-                        auto tmp = new MIRInst(InstStoreRegToStack);
+                        auto tmp = new MIRInst{ InstStoreRegToStack };
                         tmp->set_operand(0, MIROperand::as_vreg(u - virtualRegBegin, canonicalizedType));
                         auto tmpStack = new MIROperand(stackStorage);
                         tmp->set_operand(1, tmpStack);

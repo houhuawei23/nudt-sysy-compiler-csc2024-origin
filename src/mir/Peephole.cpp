@@ -157,7 +157,12 @@ bool machineInstCSE(MIRFunction& func, CodeGenContext& ctx) {
 }
 
 bool deadInstElimination(MIRFunction& func, CodeGenContext& ctx) {
-    return false;
+    bool modified = false;
+    for (auto& block : func.blocks()) {
+        auto& instructions = block->insts();
+    }
+    
+    return modified;
 }
 
 bool removeInvisibleInsts(MIRFunction& func, CodeGenContext& ctx) {

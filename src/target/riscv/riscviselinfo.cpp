@@ -63,7 +63,6 @@ static bool selectAddrOffset(MIROperand* addr, ISelContext& ctx,
         instInfo.print(std::cerr << "selectAddrOffset: ", *inst, false);
         std::cerr << std::endl;
     };
-    // TODO: Select address offset for load/store instructions
 
     const auto addrInst = ctx.lookup_def(addr);
     if (addrInst) {
@@ -309,8 +308,7 @@ void RISCVISelInfo::legalizeInstWithStackOperand(InstLegalizeContext& ctx,
             inst->set_operand(0, oldSrc); /* src2 := src */
             inst->set_operand(1, offset); /* offset */
             inst->set_operand(2, base);   /* base */
-            inst->set_operand(
-                3, getAlign(isOperandGR(*inst->operand(0)) ? 8 : 4)); /* align */
+            inst->set_operand(3, getAlign(isOperandGR(*inst->operand(0)) ? 8 : 4)); /* align */
 
             break;
         }

@@ -2,7 +2,7 @@
 
 namespace pass {
 void CFGAnalysis::run(ir::Module* ctx, topAnalysisInfoManager* tp) {
-    constexpr bool DebugCFG = true;
+    constexpr bool DebugCFG = false;
     for (auto func : ctx->funcs()) {
         for (auto bb : func->blocks()) {
             bb->clear_block_link();

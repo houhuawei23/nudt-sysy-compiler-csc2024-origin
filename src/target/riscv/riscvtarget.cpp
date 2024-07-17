@@ -6,7 +6,7 @@
 namespace mir {
 constexpr int32_t passingByRegBase = 0x100000;
 void RISCVFrameInfo::emit_call(ir::CallInst* inst, LoweringContext& lowering_ctx) {
-    constexpr bool isDebug = false;
+    constexpr bool Debug = false;
     /* 1. 相关被调用函数 */
     auto irCalleeFunc = inst->callee();
     auto mirCalleeFunc = lowering_ctx.func_map.at(irCalleeFunc);
@@ -18,15 +18,15 @@ void RISCVFrameInfo::emit_call(ir::CallInst* inst, LoweringContext& lowering_ctx
     int32_t gprCount = 0, fprCount = 0;
     for (auto use : inst->rargs()) {
         auto arg = use->value();
-        if (not arg->type()->isFloatPoint()) {
+        if (!arg->type()->isFloatPoint()) {
             if (gprCount < 8) {
-                if (isDebug) std::cerr << "gprCount: " << gprCount << std::endl;
+                if (Debug) std::cerr << "gprCount: " << gprCount << std::endl;
                 offsets.push_back(passingByRegBase + gprCount++);
                 continue;
             }
         } else {
             if (fprCount < 8) {
-                if (isDebug) std::cerr << "fprCount: " << fprCount << std::endl;
+                if (Debug) std::cerr << "fprCount: " << fprCount << std::endl;
                 offsets.push_back(passingByRegBase + fprCount++);
                 continue;
             }
@@ -35,7 +35,6 @@ void RISCVFrameInfo::emit_call(ir::CallInst* inst, LoweringContext& lowering_ctx
         /* 2.2 如果寄存器已满, 则计算栈上的位置, 更新当前栈偏移curOffset */
         int32_t size = arg->type()->size();
         int32_t align = 4;
-
         int32_t minimumSize = sizeof(uint64_t);
         size = std::max(size, minimumSize);
         align = std::max(align, minimumSize);
@@ -89,15 +88,9 @@ void RISCVFrameInfo::emit_call(ir::CallInst* inst, LoweringContext& lowering_ctx
         if (offset >= passingByRegBase) {  /* pass by reg */
             MIROperand* dst = nullptr;
             if (isFloatType(val->type())) {
-                dst = MIROperand::as_isareg(
-                    RISCV::F10 + static_cast<uint32_t>(offset - passingByRegBase),
-                    OperandType::Float32);
-
+                dst = MIROperand::as_isareg(RISCV::F10 + static_cast<uint32_t>(offset - passingByRegBase), OperandType::Float32);
             } else {
-                std::cerr << "X" << (offset - passingByRegBase) << std::endl;
-                dst = MIROperand::as_isareg(
-                    RISCV::X10 + static_cast<uint32_t>(offset - passingByRegBase),
-                    OperandType::Int64);
+                dst = MIROperand::as_isareg(RISCV::X10 + static_cast<uint32_t>(offset - passingByRegBase), OperandType::Int64);
             }
             assert(dst);
             lowering_ctx.emit_copy(dst, val);
@@ -217,19 +210,19 @@ void RISCVFrameInfo::emit_return(ir::ReturnInst* ir_inst,
 }
 
 void RISCVTarget::postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) {
-    constexpr bool isDebug = false;
+    constexpr bool Debug = false;
 
     auto dumpInst = [&](MIRInst* inst) {
         auto& instInfo = ctx.instInfo.get_instinfo(inst);
         instInfo.print(std::cerr << "rvPostLegalizeFunc: ", *inst, false);
         std::cerr << std::endl;
     };
-    if (isDebug)
+    if (Debug)
         func.print(std::cerr, ctx);
     /* fix pcrel addressing */
     for (auto blockIter = func.blocks().begin();
          blockIter != func.blocks().end();) {
-        if (isDebug)
+        if (Debug)
             std::cerr << "block: " << blockIter->get()->name() << std::endl;
         auto nextIter = std::next(blockIter);
 
@@ -246,14 +239,14 @@ void RISCVTarget::postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) {
             for (auto instIter = insts.begin(); instIter != insts.end();
                  instIter++) {
                 auto& inst = *instIter;
-                if (isDebug) {
+                if (Debug) {
                     dumpInst(inst);
                 }
                 if (inst->opcode() == RISCV::AUIPC) {
                     /* AUIPC dst, imm */
                     if (instIter == insts.begin() &&
                         blockIter != func.blocks().begin()) {
-                        if (isDebug)
+                        if (Debug)
                             std::cerr << "first in block" << std::endl;
                         assert(inst->operand(1)->type() ==
                                OperandType::HighBits);
@@ -265,7 +258,7 @@ void RISCVTarget::postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) {
                         auipcMap[inst->operand(1)->reloc()][inst->operand(0)] =
                             blockIter->get();
                     } else {
-                        if (isDebug)
+                        if (Debug)
                             std::cerr << "not first in block" << std::endl;
                         /** other insts */
                         auto newBlock = std::make_unique<MIRBlock>(
@@ -313,7 +306,7 @@ void RISCVTarget::postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) {
                             auto op =
                                 getLowBits(MIROperand::as_reloc(pcrelBlock));
                             inst->set_operand(idx, op);
-                            if (isDebug) {
+                            if (Debug) {
                                 instInfo.print(
                                     std::cerr << "fix pcrel: ", *inst, false);
                             }
@@ -327,7 +320,7 @@ void RISCVTarget::postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) {
 
         blockIter = nextIter;
     }  // blockIter
-    if (isDebug) func.print(std::cerr, ctx);
+    if (Debug) func.print(std::cerr, ctx);
 }  // postLegalizeFunc
 
 void RISCVTarget::emit_assembly(std::ostream& out, MIRModule& module) {

@@ -1,15 +1,15 @@
 #pragma once
 #include <unordered_set>
 #include "mir/mir.hpp"
+#include "mir/LiveInterval.hpp"
 #include "mir/instinfo.hpp"
-// #include "mir/target.hpp"
 #include <optional>
 
 namespace mir {
 class CodeGenContext;
 class ISelContext {
     CodeGenContext& _codegen_ctx;
-    std::unordered_map<MIROperand*, MIRInst*> _inst_map, _constant_map;
+    std::unordered_map<RegNum, MIRInst*> _inst_map, _constant_map;
     MIRBlock* _curr_block;
     std::list<MIRInst*>::iterator _insert_point;
 

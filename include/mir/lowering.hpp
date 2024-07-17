@@ -1,4 +1,5 @@
 #pragma once
+#include "pass/analysisinfo.hpp"
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
 #include "mir/iselinfo.hpp"
@@ -25,7 +26,6 @@ public:
     MIRFunction* memsetFunc;
 public:
     LoweringContext(MIRModule& mir_module, Target& target) : _mir_module(mir_module), _target(target) {
-        // memsetFunc = new MIRFunction("memset", &_mir_module);
         _mir_module.functions().push_back(std::make_unique<MIRFunction>("_memset", &mir_module));
         memsetFunc = _mir_module.functions().back().get();
     }
@@ -61,7 +61,7 @@ public:  // ir_val -> mir_operand
     MIROperand* map2operand(ir::Value* ir_val) {
         /* 1. Local Value */
         auto iter = _val_map.find(ir_val);
-        if (iter != _val_map.end()) return iter->second;
+        if (iter != _val_map.end()) return new MIROperand(*(iter->second));
 
         /* 2. Global Value */
         if (auto gvar = dyn_cast<ir::GlobalVariable>(ir_val)) {
@@ -103,12 +103,13 @@ public:  // utils function
                 case ir::FLOAT: return OperandType::Float32;
                 default: assert(false && "unsupported float type");
             }
-        } else if (type->isPointer()) {
-            // rv64
+        } else if (type->isPointer()) {  // NOTE: rv64
             return OperandType::Int64;
+        } else {
+            return OperandType::Special;
         }
-        return OperandType::Special;
     }
 };
-std::unique_ptr<MIRModule> create_mir_module(ir::Module& ir_module, Target& target);
+std::unique_ptr<MIRModule> create_mir_module(ir::Module& ir_module, Target& target, 
+                                             pass::topAnalysisInfoManager* tAIM);
 }  // namespace mir

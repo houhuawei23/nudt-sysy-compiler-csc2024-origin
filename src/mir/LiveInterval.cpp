@@ -8,7 +8,7 @@
 namespace mir {
 /* 为每一条指令编号 */
 static void assignInstNum(MIRFunction& mfunc, LiveVariablesInfo& info, CodeGenContext& ctx) {
-    constexpr bool DebugAssign = true;
+    constexpr bool DebugAssign = false;
     auto& num = info.inst2Num;
     InstNum current = 0;
     for (auto& block : mfunc.blocks()) {
