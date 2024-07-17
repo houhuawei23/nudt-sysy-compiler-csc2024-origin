@@ -20,7 +20,7 @@ class ISelContext {
 
     std::unordered_map<MIROperand*, uint32_t> _use_cnt;
 
-   public:
+public:
     ISelContext(CodeGenContext& codegen_ctx) : _codegen_ctx(codegen_ctx) {}
     void run_isel(MIRFunction* func);
     bool has_one_use(MIROperand* op);
@@ -54,7 +54,7 @@ struct InstLegalizeContext final {
 };
 
 class TargetISelInfo {
-   public:
+public:
     virtual ~TargetISelInfo() = default;
     virtual bool is_legal_geninst(uint32_t opcode) const = 0;
 
@@ -68,39 +68,29 @@ class TargetISelInfo {
     virtual void postLegalizeInst(const InstLegalizeContext& ctx) const = 0;
 };
 
-enum CompareOp : uint32_t {
-    ICmpEqual,
-    ICmpNotEqual,
-    ICmpSignedLessThan,
-    ICmpSignedLessEqual,
-    ICmpSignedGreaterThan,
-    ICmpSignedGreaterEqual,
-    ICmpUnsignedLessThan,
-    ICmpUnsignedLessEqual,
-    ICmpUnsignedGreaterThan,
-    ICmpUnsignedGreaterEqual,
-
-    FCmpOrderedEqual,
-    FCmpOrderedNotEqual,
-    FCmpOrderedLessThan,
-    FCmpOrderedLessEqual,
-    FCmpOrderedGreaterThan,
-    FCmpOrderedGreaterEqual,
-    FCmpUnorderedEqual,
-    FCmpUnorderedNotEqual,
-    FCmpUnorderedLessThan,
-    FCmpUnorderedLessEqual,
-    FCmpUnorderedGreaterThan,
-    FCmpUnorderedGreaterEqual
-};
 static bool isCompareOp(MIROperand* operand, CompareOp cmpOp) {
     auto op = static_cast<uint32_t>(operand->imm());
     return op == static_cast<uint32_t>(cmpOp);
 }
 
+static bool isICmpEqualityOp(MIROperand* operand) {
+    const auto op = static_cast<CompareOp>(operand->imm());
+    switch (op) {
+        case CompareOp::ICmpEqual:
+        case CompareOp::ICmpNotEqual:
+            return true;
+        default:
+            return false;
+    }
+}
+
 //! helper function to create a new MIRInstq
 
 uint32_t select_copy_opcode(MIROperand* dst, MIROperand* src);
+
+inline MIROperand* getNeg(MIROperand* operand) {
+    return MIROperand::as_imm(-operand->imm(), operand->type());
+}
 
 inline MIROperand* getHighBits(MIROperand* operand) {
     assert(isOperandReloc(operand));

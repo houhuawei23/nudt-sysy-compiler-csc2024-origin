@@ -7,13 +7,13 @@
 # set -Eeux
 
 # # gen target files from template
-# targets=("generic" "riscv") #  "riscv"
+targets=("generic" "riscv") #  "riscv"
 
 # # gen.py generic_data.yml isa_data.yml output_dir
-# for target in ${targets[@]}; do
-# python3 "./src/target/template/gen.py" "./src/target/generic/generic.yml" \
-# "./src/target/${target}/${target}.yml" "./include/autogen/${target}/"
-# done
+for target in ${targets[@]}; do
+    python3 "./src/target/template/gen.py" "./src/target/generic/generic.yml" \
+    "./src/target/${target}/${target}.yml" "./include/autogen/${target}/"
+done
 
 # python3 ./src/target/template/gen.py ./src/target/generic/generic.yml \
 # ./src/target/generic/generic.yml ./include/target/generic/

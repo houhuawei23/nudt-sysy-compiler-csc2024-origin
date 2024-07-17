@@ -5,7 +5,6 @@
 
 #include "support/arena.hpp"
 namespace ir {
-/// Type instance construct functions BEGIN
 Type* Type::void_type() {
     static Type voidType(VOID);
     return &voidType;
@@ -94,30 +93,23 @@ bool Type::isArray() {
 void Type::print(std::ostream& os) {
     auto basetype = btype();
     switch (basetype) {
-        case INT1:
-            os << "i1";
+        case INT1: os << "i1";
             break;
-        case INT32:
-            os << "i32";
+        case INT32: os << "i32";
             break;
-        case FLOAT:
-            os << "float";
+        case FLOAT: os << "float";
             break;
-        case DOUBLE:
-            os << "float";
+        case DOUBLE: os << "float";
             break;
-        case VOID:
-            os << "void";
+        case VOID: os << "void";
             break;
-        case FUNCTION:
-            os << "function";
+        case FUNCTION: os << "function";
             break;
         case POINTER:
             static_cast<const PointerType*>(this)->baseType()->print(os);
             os << "*";
             break;
-        case LABEL:
-            break;
+        case LABEL: break;
         case ARRAY:
             if (auto atype = static_cast<ArrayType*>(this)) {
                 size_t dims = atype->dims_cnt();
@@ -132,8 +124,7 @@ void Type::print(std::ostream& os) {
                 assert(false);
             }
             break;
-        default:
-            break;
+        default: break;
     }
 }
 

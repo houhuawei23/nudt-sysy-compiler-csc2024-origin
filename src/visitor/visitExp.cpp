@@ -30,8 +30,7 @@ std::any SysYIRGenerator::visitNumberExp(SysYParser::NumberExpContext* ctx) {
 
 /*
  * @brief: Visit Var Expression
- * @details:
- *      var: ID (LBRACKET exp RBRACKET)*;
+ * @details: var: ID (LBRACKET exp RBRACKET)*;
  */
 std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
   const auto varname = ctx->var()->ID()->getText();
@@ -198,8 +197,7 @@ std::any SysYIRGenerator::visitLValue(SysYParser::LValueContext* ctx) {
 
 /*
  * @brief Visit Unary Expression
- * @details:
- *      + - ! exp
+ * @details: + - ! exp
  */
 std::any SysYIRGenerator::visitUnaryExp(SysYParser::UnaryExpContext* ctx) {
   ir::Value* res = nullptr;
@@ -254,9 +252,9 @@ std::any SysYIRGenerator::visitParenExp(SysYParser::ParenExpContext* ctx) {
 }
 
 /*
- * @brief Visit Multiplicative Expression
+ * @brief:  Visit Multiplicative Expression
  *      exp (MUL | DIV | MODULO) exp
- * @details
+ * @details: 
  *      1. mul: 整型乘法
  *      2. fmul: 浮点型乘法
  *
@@ -335,9 +333,8 @@ std::any SysYIRGenerator::visitMultiplicativeExp(
 }
 
 /*
- * @brief Visit Additive Expression
- * @details:
- *      exp (ADD | SUB) exp
+ * @brief: Visit Additive Expression
+ * @details: exp (ADD | SUB) exp
  */
 std::any SysYIRGenerator::visitAdditiveExp(
     SysYParser::AdditiveExpContext* ctx) {

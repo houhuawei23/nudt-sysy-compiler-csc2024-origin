@@ -46,6 +46,7 @@ if __name__ == "__main__":
         "match_insts_list": tar.generic_insts_list,
         "match_insts_dict": tar.generic_insts_dict,
         "branch_list": tar.branch_list,
+        "models": tar.models,
     }
     # print(tar.branch_list)
     gen_file_jinja2("InstInfoDecl.hpp.jinja2", output_dir, params)
@@ -56,8 +57,8 @@ if __name__ == "__main__":
     gen_file_jinja2("ISelInfoDecl.hpp.jinja2", output_dir, params)
     gen_file_jinja2("ISelInfoImpl.cpp.jinja2", output_dir, params)
 
-    # gen_file_jinja2("ScheduleModelDecl.hpp.jinja2", output_dir, params)
-    # gen_file_jinja2("ScheduleModelImpl.cpp.jinja2", output_dir, params)
+    gen_file_jinja2("ScheduleModelDecl.hpp.jinja2", output_dir, params)
+    gen_file_jinja2("ScheduleModelImpl.cpp.jinja2", output_dir, params)
 
 """
 解析 pattern, replace, 得到 match_list, select_list

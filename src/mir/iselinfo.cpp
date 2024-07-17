@@ -59,7 +59,7 @@ void ISelContext::run_isel(MIRFunction* func) {
         instInfo.print(std::cerr << "match&select: ", *inst, false);
         std::cerr << std::endl;
     };
-    // TODO: implement
+
     auto& isel_info = _codegen_ctx.iselInfo;
 
     //! fix point algorithm: 循环执行指令选择和替换，直到不再变化。
@@ -92,10 +92,8 @@ void ISelContext::run_isel(MIRFunction* func) {
 
         //! 指令遍历和分析: 对每个基本块的指令进行遍历，执行指令选择和替换。
         for (auto& block : func->blocks()) {
-            ir::BasicBlock* ir_block = block->ir_block();
             if (debugISel) {
-                std::cout << "for all ir_block: ";
-                std::cout << ir_block->name() << std::endl;
+                std::cout << block->name() << std::endl;
             }
 
             // check ssa form, get inst map
@@ -132,8 +130,6 @@ void ISelContext::run_isel(MIRFunction* func) {
                         dumpInst(inst);
                     }
 
-                    // std::cout << "  [match&select] inst: " << inst->opcode()
-                    //           << std::endl;
                     auto opcode = inst->opcode();
                     //! do pattern match and select inst
                     auto res = isel_info->match_select(inst, *this);
@@ -177,10 +173,11 @@ void ISelContext::run_isel(MIRFunction* func) {
                 }
             }
         }
-
+        if(debugISel) {
+            func->print(std::cout << "after isel:\n", _codegen_ctx);
+        }
         if (modified) {
-            if (debugISel)
-                std::cout << "run_isel modified, continue!\n" << std::endl;
+            if (debugISel) std::cout << "run_isel modified, continue!\n" << std::endl;
             continue;
         }
         // not modified, check illegal inst
@@ -242,6 +239,8 @@ void postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) {
             }
         }
     }
+
+    ctx.target.postLegalizeFunc(func, ctx);
 }
 
 }  // namespace mir

@@ -358,6 +358,7 @@ InstInfo: {
             # dst, reloc; Def, Metadata
             # int_reg, reloc
             # format: "LoadGlobalAddress {dst}, {reloc}"
+            # LoadGlobalAddress dst[INTREG], reloc[RELOC]
             format: ["LoadGlobalAddress", " ", 0, ", ", 1],
             operands:
               {
