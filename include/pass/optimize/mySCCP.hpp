@@ -6,7 +6,7 @@
 #include <queue>
 #include "ir/ir.hpp"
 #include "pass/pass.hpp"
-
+// 稀疏常量传播: SCCP (Sparse Conditional Constant Propagation)
 namespace pass{
     class mySCCP:public FunctionPass{
         public:

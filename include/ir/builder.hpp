@@ -143,7 +143,8 @@ class IRBuilder {
   auto makeInst(Args&&... args) {
     auto inst = utils::make<T>(std::forward<Args>(args)...);
     inst->setBlock(mBlock);
-    mBlock->emplace_back_inst(inst);
+    // mBlock->emplace_back_inst(inst);
+    mBlock->insts().insert(mInsertPos, inst);
     return inst;
   }
 
@@ -152,7 +153,14 @@ class IRBuilder {
     return utils::make<T>(std::forward<Args>(args)...);
   }
 
-
+  template <typename T, typename... Args>
+  auto makeInstBeta(Args&&... args) {
+    auto inst = utils::make<T>(std::forward<Args>(args)...);
+    inst->setBlock(mBlock);
+    // mBlock->emplace_back_inst(inst);
+    mBlock->insts().insert(mInsertPos, inst);
+    return inst;
+  }
 };
 
 }  // namespace ir
