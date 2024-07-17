@@ -4,6 +4,7 @@
 #include "visitor/visitor.hpp"
 #include "pass/pass.hpp"
 #include "pass/analysis/dom.hpp"
+#include "pass/analysis/CFGAnalysis.hpp"
 #include "pass/optimize/mem2reg.hpp"
 #include "pass/optimize/DCE.hpp"
 #include "pass/optimize/SCP.hpp"
@@ -27,13 +28,8 @@
 #include "mir/lowering.hpp"
 #include "target/riscv/riscv.hpp"
 #include "target/riscv/riscvtarget.hpp"
-
 using namespace std;
-
-/*
- * @brief: ./main -f test.c -i -t mem2reg -o gen.ll -O0 -L0
- */
-
+/* ./main -f test.c -i -t mem2reg -o gen.ll -O0 -L0 */
 int main(int argc, char* argv[]) {
     sysy::Config config;
     config.parse_cmd_args(argc, argv);
@@ -66,7 +62,7 @@ int main(int argc, char* argv[]) {
     pass::topAnalysisInfoManager* tAIM = new pass::topAnalysisInfoManager(module_ir);
     tAIM->initialize();
     pass::PassManager* pm = new pass::PassManager(module_ir,tAIM);
-    pm->run(new pass::CFGAnalysis());
+    pm->run(new pass::CFGAnalysisHHW());
 
     if (not config.pass_names.empty()) {
         for (auto pass_name : config.pass_names) {
@@ -126,6 +122,21 @@ int main(int argc, char* argv[]) {
             module_ir->print(fout);
         }
     }
+    auto preName = [](const std::string& filePath) {
+        size_t lastSlashPos = filePath.find_last_of("/\\");
+        if (lastSlashPos == std::string::npos) {
+            lastSlashPos = -1;  // 如果没有找到 '/', 则从字符串开头开始
+        }
+
+        // 找到最后一个 '.' 的位置
+        size_t lastDotPos = filePath.find_last_of('.');
+        if (lastDotPos == std::string::npos || lastDotPos < lastSlashPos) {
+            lastDotPos = filePath.size();  // 如果没有找到 '.', 则到字符串末尾
+        }
+
+        // 提取 '/' 和 '.' 之间的子字符串
+        return filePath.substr(lastSlashPos + 1, lastDotPos - lastSlashPos - 1);
+    };
 
     //! 3. Code Generation
     // for (auto fun : module_ir->funcs()) {
@@ -146,6 +157,10 @@ int main(int argc, char* argv[]) {
         } else {
             ofstream fout;
             fout.open(config.outfile);
+            target.emit_assembly(fout, *mir_module);
+        }
+        {
+            ofstream fout("./.debug/" + preName(config.infile) + ".s");
             target.emit_assembly(fout, *mir_module);
         }
     }

@@ -12,11 +12,11 @@ class {{target_name}}InstInfo{{inst_name}} final: public InstInfo {
 public:
     {{target_name}}InstInfo{{inst_name}}() = default;
 
-    uint32_t operand_num() override {
+    uint32_t operand_num() const override {
         return {{inst_info_dict[inst_name].operands|length}};
     }
 
-    OperandFlag operand_flag(uint32_t idx) override{
+    OperandFlag operand_flag(uint32_t idx) const override {
         switch (idx) {
             {%- for idx, op in inst_info_dict[inst_name].operands.items() -%}
                 case {{idx}}:
@@ -27,14 +27,14 @@ public:
         }
     }
     
-    uint32_t inst_flag() override {
+    uint32_t inst_flag() const override {
         return InstFlagNone 
             {%- for flag in inst_info_dict[inst_name].flag -%}
                 | InstFlag{{flag}} 
             {%- endfor -%};
     }
 
-    std::string_view name() override{
+    std::string_view name() const override{
         return "{{target_name}}.{{inst_name}}";
     }
 

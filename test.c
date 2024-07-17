@@ -1,17 +1,16 @@
-int a;
-int func(int p) {
-  if (p) {
-    return 0;
-  } else {
-    return 1;
-  }
-
-  int x = 2;
-  return x;
-}
 int main() {
-  int b;
-  a = 10;
-  b = func(a);
-  return b;
+    int a[2] = {1, 2};
+    int i;
+    i = 0;
+    int n;
+    n = 2;
+    putint(i);
+
+    while (i < n) {
+        int tmp;
+        tmp = a[i];
+        i = i + 1;
+    }
+
+    return 0;
 }

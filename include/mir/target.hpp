@@ -7,6 +7,7 @@
 #include "mir/registerinfo.hpp"
 #include "mir/ScheduleModel.hpp"
 namespace mir {
+class TargetFrameInfo;
 /*
  * @brief: Target Class (抽象基类)
  * @note: 
@@ -18,13 +19,14 @@ class Target {
     
     public:  // get function
         virtual DataLayout& get_datalayout() = 0;
-        // virtual  TargetScheduleModel& get_schedule_model()  = 0;
+        virtual  TargetScheduleModel& get_schedule_model()  = 0;
         virtual TargetInstInfo& get_target_inst_info() = 0;
         virtual TargetISelInfo& get_target_isel_info() = 0;
         virtual TargetFrameInfo& get_target_frame_info() = 0;
         virtual TargetRegisterInfo& get_register_info() = 0;
 
     public:  // assembly
+        virtual void postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx)  {}
         virtual void emit_assembly(std::ostream& out, MIRModule& module) = 0;
 };
 
@@ -57,7 +59,7 @@ struct CodeGenContext final {
     uint32_t next_id() { return ++idx; }
 
     uint32_t label_idx = 0;
-    uint32_t next_id_label() { return ++label_idx; }
+    uint32_t next_id_label() { return label_idx++; }
 };
 
 // using TargetBuilder = std::pair<std::string_view, std::function<Targe*()> >;

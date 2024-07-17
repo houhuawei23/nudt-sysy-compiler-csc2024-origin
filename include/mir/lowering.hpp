@@ -4,51 +4,40 @@
 #include "mir/iselinfo.hpp"
 
 namespace mir {
-/*
- * @brief: LoweringContext
- * @note:
- *      将IR转换为MIR --> 转换数据结构 (ir --> mir)
- */
+/* LoweringContext */
 class LoweringContext {
-   public:
+public:
     Target& _target;
     MIRModule& _mir_module;
     MIRFunction* _mir_func = nullptr;
     MIRBlock* _mir_block = nullptr;
 
-    // map
-    std::unordered_map<ir::Value*, MIROperand*> _val_map; /* local in function*/
-    std::unordered_map<ir::Function*, MIRFunction*> func_map; /* global */
-    std::unordered_map<ir::GlobalVariable*, MIRGlobalObject*>gvar_map; /* global */
-    std::unordered_map<ir::BasicBlock*, MIRBlock*>
-        _block_map; /* local in function*/
+    std::unordered_map<ir::Value*, MIROperand*> _val_map;                /* local variable mappings */
+    std::unordered_map<ir::Function*, MIRFunction*> func_map;            /* global */
+    std::unordered_map<ir::GlobalVariable*, MIRGlobalObject*> gvar_map;  /* global */
+    std::unordered_map<ir::BasicBlock*, MIRBlock*> _block_map;           /* local in function */
 
-
-    // pointer type for target platform
+    /* Pointer Type for Target Platform */
     OperandType _ptr_type = OperandType::Int64;
 
-    // code gen context
+    /* Code Generate Context */
     CodeGenContext* _code_gen_ctx = nullptr;
-
-   public:
-    LoweringContext(MIRModule& mir_module, Target& target)
-        : _mir_module(mir_module), _target(target) {}
-
-    // void set_mir_module(MIRModule& mir_module) { _mir_module = mir_module; }
-
-   public:  // set function
-    void set_code_gen_ctx(CodeGenContext* code_gen_ctx) {
-        _code_gen_ctx = code_gen_ctx;
+    MIRFunction* memsetFunc;
+public:
+    LoweringContext(MIRModule& mir_module, Target& target) : _mir_module(mir_module), _target(target) {
+        // memsetFunc = new MIRFunction("memset", &_mir_module);
+        _mir_module.functions().push_back(std::make_unique<MIRFunction>("_memset", &mir_module));
+        memsetFunc = _mir_module.functions().back().get();
     }
+public:  // set function
+    void set_code_gen_ctx(CodeGenContext* code_gen_ctx) { _code_gen_ctx = code_gen_ctx; }
     void set_mir_func(MIRFunction* mir_func) { _mir_func = mir_func; }
     void set_mir_block(MIRBlock* mir_block) { _mir_block = mir_block; }
-
-   public:  // get function
+public:  // get function
     MIRModule& get_mir_module() { return _mir_module; };
     MIRBlock* get_mir_block() const { return _mir_block; }
     OperandType get_ptr_type() { return _ptr_type; }
-
-   public:
+public:  // gen function
     MIROperand* new_vreg(ir::Type* type) {
         auto optype = get_optype(type);
         return MIROperand::as_vreg(_code_gen_ctx->next_id(), optype);
@@ -56,91 +45,70 @@ class LoweringContext {
     MIROperand* new_vreg(OperandType type) {
         return MIROperand::as_vreg(_code_gen_ctx->next_id(), type);
     }
-
+public:  // emit function
     void emit_inst(MIRInst* inst) { _mir_block->insts().emplace_back(inst); }
-
-    // emit copy generic inst
     void emit_copy(MIROperand* dst, MIROperand* src) {
-        uint32_t mir_opcode;
         auto inst = new MIRInst(select_copy_opcode(dst, src));
         inst->set_operand(0, dst);
         inst->set_operand(1, src);
         emit_inst(inst);
     }
-
-   public:  // ir_val -> mir_operand
+public:  // ir_val -> mir_operand
     void add_valmap(ir::Value* ir_val, MIROperand* mir_operand) {
-        if (_val_map.count(ir_val))
-            assert(false && "value already mapped");
+        if (_val_map.count(ir_val)) assert(false && "value already mapped");
         _val_map.emplace(ir_val, mir_operand);
     }
-
     MIROperand* map2operand(ir::Value* ir_val) {
+        /* 1. Local Value */
         auto iter = _val_map.find(ir_val);
-        if (iter != _val_map.end())
-            return iter->second;
-        // gen the operand
+        if (iter != _val_map.end()) return iter->second;
+
+        /* 2. Global Value */
         if (auto gvar = dyn_cast<ir::GlobalVariable>(ir_val)) {
             auto ptr = new_vreg(_ptr_type);
-            // must find in gvar_map
             auto inst = new MIRInst(InstLoadGlobalAddress);
-            auto g_reloc = gvar_map.at(gvar)->_reloc.get();  // MIRRelocable*
+            auto g_reloc = gvar_map.at(gvar)->reloc.get();  // MIRRelocable*
             auto operand = MIROperand::as_reloc(g_reloc);
-            inst->set_operand(0, ptr);
-            inst->set_operand(1, operand);
+            inst->set_operand(0, ptr); inst->set_operand(1, operand);
             emit_inst(inst);
             return ptr;
         }
-        // constant
-        // NOTE: constant cant not be cached in _val_map
+
+        /* 3. Constant */
         if (not ir::isa<ir::Constant>(ir_val)) {
-            std::cerr << "error: must be constant" << std::endl;
+            std::cerr << "error: " << ir_val->name() << " must be constant" << std::endl;
             assert(false);
         }
+
         auto const_val = dyn_cast<ir::Constant>(ir_val);
         if (ir_val->type()->isInt()) {
             auto imm = MIROperand::as_imm(const_val->i32(), OperandType::Int32);
             return imm;
         }
-        std::cerr << "TODO: map2operand not implemented for type" << std::endl;
+
         assert(false);
         return nullptr;
     }
-
-    MIRBlock* map2block(ir::BasicBlock* ir_block) {
-        assert(ir_block != nullptr);
-        auto iter = _block_map.find(ir_block);
-        if (iter != _block_map.end()) {
-            return iter->second;
-        }
-        assert(false && "block not found");
-    }
-
-   public:  // utils function
+    MIRBlock* map2block(ir::BasicBlock* ir_block) { return _block_map.at(ir_block); }
+public:  // utils function
     static OperandType get_optype(ir::Type* type) {
         if (type->isInt()) {
             switch (type->btype()) {
-                case ir::INT1:
-                    return OperandType::Bool;
-                case ir::INT32:
-                    return OperandType::Int32;
-                default:
-                    assert(false && "unsupported int type");
+                case ir::INT1: return OperandType::Bool;
+                case ir::INT32: return OperandType::Int32;
+                default: assert(false && "unsupported int type");
             }
         } else if (type->isFloatPoint()) {
             switch (type->btype()) {
-                case ir::FLOAT:
-                    return OperandType::Float32;
-                    break;
-                default:
-                    assert(false && "unsupported float type");
+                case ir::FLOAT: return OperandType::Float32;
+                default: assert(false && "unsupported float type");
             }
+        } else if (type->isPointer()) {
+            // rv64
+            return OperandType::Int64;
         }
-
         return OperandType::Special;
     }
 };
-
-std::unique_ptr<MIRModule> create_mir_module(ir::Module& ir_module,
-                                             Target& target);
+std::unique_ptr<MIRModule> create_mir_module(ir::Module& ir_module, Target& target);
 }  // namespace mir

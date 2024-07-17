@@ -203,7 +203,7 @@ class BinaryInst : public Instruction {
   void print(std::ostream& os) const override;
   Value* getConstantRepl() override;
 };
-
+/* CallInst */
 class CallInst : public Instruction {
   Function* mCallee = nullptr;
 
@@ -223,33 +223,30 @@ class CallInst : public Instruction {
   void print(std::ostream& os) const override;
 };
 
-//! Conditional or Unconditional Branch instruction.
+/*
+ * @brief: Conditional or Unconditional Branch Instruction
+ * @note:
+ *      1. br i1 <cond>, label <iftrue>, label <iffalse>
+ *      2. br label <dest>
+ */
 class BranchInst : public Instruction {
-  // br i1 <cond>, label <iftrue>, label <iffalse>
-  // br label <dest>
   bool mIsCond = false;
-
- public:
-  //* Condition Branch
-  BranchInst(Value* cond,
-             BasicBlock* iftrue,
-             BasicBlock* iffalse,
-             BasicBlock* parent = nullptr,
-             const_str_ref name = "")
+public:
+  /* Condition Branch */
+  BranchInst(Value* cond, BasicBlock* iftrue, BasicBlock* iffalse,
+             BasicBlock* parent=nullptr, const_str_ref name="")
       : Instruction(vBR, Type::void_type(), parent, name), mIsCond(true) {
     addOperand(cond);
     addOperand(iftrue);
     addOperand(iffalse);
   }
-  //* UnCondition Branch
-  BranchInst(BasicBlock* dest,
-             BasicBlock* parent = nullptr,
-             const_str_ref name = "")
+  /* UnCondition Branch */
+  BranchInst(BasicBlock* dest, BasicBlock* parent=nullptr,
+             const_str_ref name="")
       : Instruction(vBR, Type::void_type(), parent, name), mIsCond(false) {
     addOperand(dest);
   }
-
-  // get
+public:  // get function
   bool is_cond() const { return mIsCond; }
   auto cond() const {
     assert(mIsCond && "not a conditional branch");
@@ -286,9 +283,10 @@ class BranchInst : public Instruction {
   void print(std::ostream& os) const override;
 };
 
-//! ICmpInst
-//! <result> = icmp <cond> <ty> <op1>, <op2>
-// icmp ne i32 1, 2
+/*
+ * @brief: ICmpInst
+ * @note: <result> = icmp <cond> <ty> <op1>, <op2>
+ */
 class ICmpInst : public Instruction {
  public:
   ICmpInst(ValueId itype,
@@ -314,7 +312,7 @@ class ICmpInst : public Instruction {
   Value* getConstantRepl() override;
 };
 
-//! FCmpInst
+/* FCmpInst */
 class FCmpInst : public Instruction {
  public:
   FCmpInst(ValueId itype,
@@ -344,9 +342,8 @@ class FCmpInst : public Instruction {
 };
 
 /*
- * @brief bitcast Instruction
- * @details:
- *      <result> = bitcast <ty> <value> to i8*
+ * @brief Bitcast Instruction
+ * @note: <result> = bitcast <ty> <value> to i8*
  */
 class BitCastInst : public Instruction {
  public:
@@ -506,5 +503,4 @@ class PhiInst : public Instruction {
   void print(std::ostream& os) const override;
   Value* getConstantRepl() override;
 };
-
-}  // namespace ir
+}

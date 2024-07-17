@@ -27,8 +27,7 @@ enum RISCVRegister : uint32_t {
     F24, F25, F26, F27, F28, F29, F30, F31,
     FPREnd,
 };
-// clang-format on
-// return address
+/* 保存返回地址 */
 static auto ra = MIROperand::as_isareg(RISCVRegister::X1, OperandType::Int64);
 
 // stack pointer
@@ -42,12 +41,16 @@ constexpr bool isOperandGR(MIROperand& operand) {
     return GPRBegin <= reg && reg < GPREnd;
 }
 
+/*
+ * @note: 相关寄存器功能: 
+ *      1. a1 -- return value
+ */
 static std::string_view getRISCVGPRTextualName(uint32_t idx) noexcept {
     constexpr std::string_view name[] = {
-        "zero", "ra", "sp",  "gp",  "tp", "t0", "t1", "t2",  //
-        "s0",   "s1", "a0",  "a1",  "a2", "a3", "a4", "a5",  //
-        "a6",   "a7", "s2",  "s3",  "s4", "s5", "s6", "s7",  //
-        "s8",   "s9", "s10", "s11", "t3", "t4", "t5", "t6",  //
+        "zero", "ra", "sp",  "gp",  "tp", "t0", "t1", "t2",
+        "s0",   "s1", "a0",  "a1",  "a2", "a3", "a4", "a5",
+        "a6",   "a7", "s2",  "s3",  "s4", "s5", "s6", "s7",
+        "s8",   "s9", "s10", "s11", "t3", "t4", "t5", "t6",
     };
     return name[idx];
 }
@@ -71,7 +74,7 @@ static std::ostream& operator<<(std::ostream& os, OperandDumper opdp) {
     } else if (operand->is_imm()) {
         os << operand->imm();
     } else if (operand->is_prob()) {
-        os << "prob ";
+        os << " prob " << operand->prob();
     } else if (operand->is_reloc()) {
         if (operand->type() == OperandType::HighBits) {
             os << "%pcrel_hi(";

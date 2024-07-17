@@ -1,20 +1,10 @@
-/*
- * @file builder.hpp
- *
- */
 #pragma once
-
 #include <any>
 #include "ir/infrast.hpp"
 #include "ir/instructions.hpp"
 
 #include "support/arena.hpp"
 namespace ir {
-
-/*
- * @brief: IR Builder for Module.
- *
- */
 class IRBuilder {
  private:
   BasicBlock* mBlock = nullptr;  // current basic block for insert instruction

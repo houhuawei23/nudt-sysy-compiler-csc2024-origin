@@ -91,9 +91,8 @@ class Function : public User {
   size_t argCnt = 0;               // formal arguments count
 
  public:
-  Function(Type* TypeFunction,
-           const_str_ref name = "",
-           Module* parent = nullptr)
+  Function(Type* TypeFunction, const_str_ref name="",
+           Module* parent=nullptr)
       : User(TypeFunction, vFUNCTION, name), mModule(parent) {
     argCnt = 0;
     mRetValueAddr = nullptr;

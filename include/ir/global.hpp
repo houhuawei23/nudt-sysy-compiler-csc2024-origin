@@ -5,8 +5,14 @@
 #include "support/utils.hpp"
 #include "support/arena.hpp"
 namespace ir {
+/* GlobalVariable */
 /*
- * @brief: GlobalVariable
+ * @brief: GlobalVariable Class
+ * @note: 
+ *      1. Array (全局矢量)
+ *      2. Scalar (全局标量)
+ * @var: 
+ *      1. _parent: 当前
  */
 class GlobalVariable : public User {
  protected:

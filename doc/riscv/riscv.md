@@ -6,6 +6,12 @@ memory for inter-processor synchronization.
 - The standard double-precision floating-point extension, denoted by “D”, expands the floating-point registers, and adds double-precision computational instructions, loads, and stores. 
 - The standard “C” compressed instruction extension provides narrower 16-bit forms of common instructions.
 
+
+`lla rd, symbol` x[rd] = &symbol
+Load Local Address. **Pseudoinstruction**, RV32I and RV64I.
+Loads the address of symbol into x[rd]. 
+Expands into `auipc rd, offsetHi` then `addi rd, rd, offsetLo`.
+
 `add rd, rs1, rs2`
     Add. R-type, RV32I and RV64I
 `addi rd, rs1, immediate`
@@ -53,6 +59,9 @@ blt rs1, rs2, offset
 `bne rs1, rs2, offset` 001
     if (rs1 6= rs2) pc += sext(offset)
     Branch if Not Equal. B-type, RV32I and RV64I
+
+
+
 
 nanke:
 

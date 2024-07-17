@@ -3,7 +3,7 @@
 #include "pass/pass.hpp"
 #include <iostream>
 namespace pass {
-class CFGAnalysis : public FunctionPass {
+class CFGAnalysisHHW : public FunctionPass {
   bool check(std::ostream& os, ir::Function* func) const;
 
  public:

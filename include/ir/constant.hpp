@@ -1,15 +1,11 @@
 #pragma once
-
 #include "ir/type.hpp"
 #include "ir/utils_ir.hpp"
 #include "ir/value.hpp"
 #include "support/arena.hpp"
 
 namespace ir {
-/**
- * @brief Constant Value in IR
- * Same Constant val is ther same Object, managed by the cache
- */
+/* Constant Class */
 class Constant : public User {
   static std::map<std::string, Constant*> cache;
 

@@ -1,19 +1,14 @@
 #pragma once
-
 #include <stdlib.h>
 #include <iostream>
-
 #include <vector>
 #include <cassert>
 #include "support/arena.hpp"
 namespace ir {
-// mir
 class DataLayout;
-
 class Type;
 class PointerType;
 class FunctionType;
-
 using type_ptr_vector = std::vector<Type*>;
 
 // ir base type
@@ -30,6 +25,7 @@ typedef enum : size_t {
   UNDEFINE
 } BType;
 
+/* Type */
 class Type {
  protected:
   BType mBtype;
@@ -98,7 +94,7 @@ class Type {
 };
 
 SYSYC_ARENA_TRAIT(Type, IR);
-
+/* PointerType */
 class PointerType : public Type {
   Type* mBaseType;
 
@@ -108,7 +104,7 @@ class PointerType : public Type {
 
   auto baseType() const { return mBaseType; }
 };
-
+/* ArrayType */
 class ArrayType : public Type {
  protected:
   std::vector<size_t> mDims;  // dimensions
@@ -128,7 +124,7 @@ class ArrayType : public Type {
   auto& dims() const { return mDims; }
   auto baseType() const { return mBaseType; }
 };
-
+/* FunctionType */
 class FunctionType : public Type {
  protected:
   Type* mRetType;
@@ -144,4 +140,4 @@ class FunctionType : public Type {
 
   auto& argTypes() const { return mArgTypes; }
 };
-}  // namespace ir
+}

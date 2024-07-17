@@ -9,7 +9,7 @@ from typing import List, Dict, Tuple
 
 from iinfo import load_inst_info, get_mirgen_insts
 from isel import load_isel_info, parse_isel_item
-
+from ische import loadInstScheduleInfo
 
 class Target:
     # gen_data_yml: str
@@ -57,6 +57,8 @@ class Target:
                 self.isel_dict[isel_item["match_inst_name"]] = []
             self.isel_dict[isel_item["match_inst_name"]].append(isel_item)
 
+        # 3. Load ISA Schedule Info
+        self.models = loadInstScheduleInfo(isa_data_yml)
     # for []
     def __getitem__(self, key):
         return getattr(self, key, None)

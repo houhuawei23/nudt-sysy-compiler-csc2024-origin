@@ -57,6 +57,29 @@ export CLASSPATH=".:/usr/local/lib/antlr-4.12.0-complete.jar"
 alias antlr4="java -jar /usr/local/lib/antlr-4.12.0-complete.jar"
 alias grun="java org.antlr.v4.gui.TestRig"
 
+# LLVM
+llvm-15-dev
+
+# ninja
+ninja-build
+
+# google test
+libgtest-dev
+
+## BackEnd
+# qemu
+sudo apt install qemu-system-riscv64
+sudo apt install qemu-system-arm
+
+# cross-compiler
+sudo apt install gcc-riscv64-linux-gnu
+# or gcc-riscv64-unknown-elf, or gcc-11-riscv64-linux-gnu
+gcc-arm-linux-gnueabihf
+# c++
+g++-12-riscv64-linux-gnu 
+g++-12-arm-linux-gnueabihf 
+
+
 ## tldr: Simplified and community-driven man pages
 sudo apt-get install -y tldr && tldr -u
 ```
@@ -128,8 +151,15 @@ llc -march=riscv64 test.rv64.ll -o test.rv64.s
 riscv64-linux-gnu-gcc -march=rv64gc t.s  
 # qemu
 qemu-riscv64 -L /usr/riscv64-linux-gnu/ a.out 
-
 llc -march=riscv64 -mcpu=generic-rv64 test.rv64.ll -o test.rv64.s
+
+
+# debug assembly code
+./qemu.sh ./test/.local_test/local_test.c
+# new terminal
+./gdb.sh ./gen.o
+
+
 ```
 
 ```bash
@@ -148,7 +178,12 @@ python ./src/target/gen.py ./src/target/riscv.yml ./include/target
 cd build
 make format_check # check format
 make format       # format all src and include files
+
+# backend
+sudo apt install binutils-riscv64-linux-gnu
+sudo apt install gcc-riscv64-linux-gnu
 ```
+
 ## code到AST的分析
 
 antlr4是一个编译器前端生成工具，可以生成多种目标语言的前端。本项目生成的目标语言是C++。
