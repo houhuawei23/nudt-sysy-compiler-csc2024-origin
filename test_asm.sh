@@ -1,7 +1,25 @@
 #!/bin/bash
 # Use the Script: ./test.sh -t test/2021/functional/001_var_defn.sy -p mem2reg -p dce
 set -u
-# set -x
+# set -x # print each command before executing it
+# set -e # exit on error
+
+qemu_riscv64="qemu-riscv64"
+llvm_lli="llvm-lli-14"
+riscv64_gpp="riscv64-linux-gnu-g++-12"
+riscv64_gcc="riscv64-linux-gnu-gcc-12"
+
+function riscv64_gcc_compile() {
+    $riscv64_gcc -march=rv64gc -mabi=lp64d -mcmodel=medlow -ffp-contract=on -O0 $@
+}
+
+function riscv64_gpp_compile() {
+    $riscv64_gpp -march=rv64gc -mabi=lp64d -mcmodel=medlow -ffp-contract=on -O0 $@
+}
+
+function qemu_riscv64_run() {
+    $qemu_riscv64 -L "/usr/riscv64-linux-gnu/" $@
+}
 
 TIMEOUT=0.5
 
@@ -13,7 +31,6 @@ SKIP_CNT=0
 
 WRONG_FILES=()
 TIMEOUT_FILES=()
-
 PASSES=()
 
 OPT_LEVEL="-O0"
@@ -142,19 +159,22 @@ function run_gcc_test() {
     riscv64-linux-gnu-g++ -S -march=rv64gc -mabi=lp64d -mcmodel=medlow -ffp-contract=on "${gcc_c}" -o "${gcc_s}" -O0
     riscv64-linux-gnu-g++ -march=rv64gc -mabi=lp64d -mcmodel=medlow -ffp-contract=on "${gcc_c}" -o "${gcc_o}" -O0
     if [ -f $in_file ]; then
-        timeout $TIMEOUT qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gcc_o}" <"${in_file}" >"${gcc_out}"
+        # timeout $TIMEOUT
+        qemu_riscv64_run $gcc_o <$in_file >$gcc_out
+        timeout $TIMEOUT $qemu_riscv64 -L "/usr/riscv64-linux-gnu/" "${gcc_o}" <"${in_file}" >"${gcc_out}"
         if [ $? == $EC_TIMEOUT ]; then # time out
-            echo "${RED}[TIMEOUT]${RESET}: qemu-riscv64 -L /usr/riscv64-linux-gnu/ ${gen_o} <${in_file} >${gen_out}"
+            echo "${RED}[TIMEOUT]${RESET}: $qemu_riscv64 -L /usr/riscv64-linux-gnu/ ${gen_o} <${in_file} >${gen_out}"
             return $EC_TIMEOUT
         fi
-        qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gcc_o}" <"${in_file}" >"${gcc_out}"
+        $qemu_riscv64 -L "/usr/riscv64-linux-gnu/" "${gcc_o}" <"${in_file}" >"${gcc_out}"
     else
-        timeout $TIMEOUT qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gcc_o}" >"${gcc_out}"
+        # timeout $TIMEOUT bash -c "$(eval echo qemu_riscv64_run $gcc_o >$gcc_out)"
+        timeout $TIMEOUT $qemu_riscv64 -L "/usr/riscv64-linux-gnu/" "${gcc_o}" >"${gcc_out}"
         if [ $? == $EC_TIMEOUT ]; then # time out
-            echo "${RED}[TIMEOUT]${RESET}: qemu-riscv64 -L /usr/riscv64-linux-gnu/ ${gen_o} <${in_file} >${gen_out}"
+            echo "${RED}[TIMEOUT]${RESET}: $qemu_riscv64 -L /usr/riscv64-linux-gnu/ ${gen_o} <${in_file} >${gen_out}"
             return $EC_TIMEOUT
         fi
-        qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gcc_o}" >"${gcc_out}"
+        $qemu_riscv64 -L "/usr/riscv64-linux-gnu/" "${gcc_o}" >"${gcc_out}"
     fi
     local qemu_res=$?
     return $qemu_res
@@ -204,25 +224,25 @@ function run_compiler_test() {
 
     local gen_elf="${output_dir}/gen.elf"
     # for test
-    riscv64-linux-gnu-gcc -O0 -march=rv64gc -mabi=lp64d -mcmodel=medlow "${gen_s}" ${sy_c} ${memset_s} -o "${gen_o}"
+    riscv64_gcc_compile ${gen_s} ${sy_c} ${memset_s} -o ${gen_o}
     if [ $? != 0 ]; then
         return $EC_RISCV_GCC
     fi
 
     if [ -f $in_file ]; then
-        timeout $TIMEOUT qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gen_o}" <"${in_file}" >"${gen_out}"
+        $qemu_riscv64 $TIMEOUT qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gen_o}" <"${in_file}" >"${gen_out}"
         if [ $? == $EC_TIMEOUT ]; then # time out
             echo "${RED}[TIMEOUT]${RESET}: qemu-riscv64 -L /usr/riscv64-linux-gnu/ ${gen_o} <${in_file} >${gen_out}"
             return $EC_TIMEOUT
         fi
-        qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gen_o}" <"${in_file}" >"${gen_out}"
+        $qemu_riscv64 -L "/usr/riscv64-linux-gnu/" "${gen_o}" <"${in_file}" >"${gen_out}"
     else
         timeout $TIMEOUT qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gen_o}" >"${gen_out}"
         if [ $? == $EC_TIMEOUT ]; then # time out
             echo "${RED}[TIMEOUT]${RESET}: qemu-riscv64 -L /usr/riscv64-linux-gnu/ ${gen_o} >${gen_out}"
             return $EC_TIMEOUT
         fi
-        qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gen_o}" >"${gen_out}"
+        $qemu_riscv64 -L "/usr/riscv64-linux-gnu/" "${gen_o}" >"${gen_out}"
     fi
 
     # qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gen_o}" >"${gen_out}"
@@ -236,12 +256,6 @@ function run_test_asm() {
     local single_file="$1"
     local output_dir="$2"
     local result_file="$3"
-
-    if [ $? != 0 ]; then
-        echo "${CYAN}[SKIP]${RESET} ${single_file}"
-        SKIP_CNT=$((SKIP_CNT + 1))
-        return 0
-    fi
 
     if [ -f "$single_file" ]; then
         echo "${YELLOW}[Testing]${RESET} $single_file"

@@ -80,7 +80,7 @@ void RISCVFrameInfo::emit_call(ir::CallInst* inst, LoweringContext& lowering_ctx
             lowering_ctx.emit_inst(newInst);
         }
     }
-    /* 为通过寄存器传递的参数生成相应的寄存器赋值指令 */
+    /* prepare args: 为通过寄存器传递的参数生成相应的寄存器赋值指令 */
     for (uint32_t idx = 0; idx < inst->rargs().size(); idx++) {
         auto arg = inst->operand(idx);
         const auto offset = offsets[idx];

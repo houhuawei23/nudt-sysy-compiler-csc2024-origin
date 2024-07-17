@@ -1,111 +1,15 @@
-/*
-    SPDX-License-Identifier: Apache-2.0
-    Copyright 2023 CMMC Authors
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-        http://www.apache.org/licenses/LICENSE-2.0
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-*/
+#include "LoopParallel.hpp"
 
-// #include <algorithm>
 #include <array>
-#include <atomic>  /* atomic operations for concurrency control */
-#include <cerrno>  /* error codes */
-#include <csignal> /* handling signals */
-#include <cstdint> /* fixed-size integer types */
-#include <cstdio>  /* std input/output */
-#include <ctime>   /* time functions */
-#include <limits>  /* numeric limits for fundamental types */
+#include <algorithm>
+#include <limits>
+#include <ctime> /* time functions */
 
-/* strcut timespec, for time intervals in low-level system functions */
+#include <sys/mman.h>
+#include <sys/wait.h>
+
 #include <bits/types/struct_timespec.h>
-#include <linux/futex.h> /* for futexes (fast user-space mutexes) */
-#include <sched.h>       /* thread scheduling */
-#include <sys/mman.h>    /* memory mapping: mmap, munmap */
-#include <sys/syscall.h> /* system calls */
-#include <sys/wait.h>    /* wait for child processes */
-#include <unistd.h>      /* POSIX api */
 
-constexpr uint32_t maxThreads = 4;
-constexpr auto stackSize = 1024 * 1024;  // 1MB
-constexpr auto threadCreationFlags = CLONE_VM | CLONE_FS | CLONE_FILES |
-                                     CLONE_SIGHAND | CLONE_THREAD |
-                                     CLONE_SYSVSEM;
-using CmmcForLoop = void (*)(int32_t beg, int32_t end);
-
-namespace {
-class Futex final {
-  std::atomic_uint32_t storage;
-
-  public:
-  void wait() {
-    uint32_t one = 1;
-    /* compare storage with 1,
-    if equal, set it to 0 and return,
-    if not, wait for a signal */
-    while (!storage.compare_exchange_strong(one, 0)) {
-      one = 1;
-      syscall(SYS_futex, reinterpret_cast<long>(&storage), FUTEX_WAIT, 0,
-              nullptr, nullptr, 0);
-    }
-  }
-
-  void post() {
-    uint32_t zero = 0;
-    if (storage.compare_exchange_strong(zero, 1)) {
-      syscall(SYS_futex, reinterpret_cast<long>(&storage), FUTEX_WAKE, 1,
-              nullptr, nullptr, 0);
-    }
-  }
-};
-
-struct Worker final {
-  pid_t pid;
-  void* stack;
-  std::atomic_uint32_t core;
-  std::atomic_uint32_t run;
-  std::atomic<CmmcForLoop> func;
-  std::atomic_int32_t beg;
-  std::atomic_int32_t end;
-
-  Futex ready, done;
-};
-Worker workers[maxThreads];  // NOLINT
-
-static_assert(std::atomic_uint32_t::is_always_lock_free);
-static_assert(std::atomic_int32_t::is_always_lock_free);
-static_assert(std::atomic<void*>::is_always_lock_free);
-static_assert(std::atomic<CmmcForLoop>::is_always_lock_free);
-
-int cmmcWorker(void* ptr) {
-  auto& worker = *static_cast<Worker*>(ptr);
-  {
-    cpu_set_t set;
-    CPU_SET(worker.core, &set);
-    auto pid = static_cast<pid_t>(syscall(SYS_gettid));
-    sched_setaffinity(pid, sizeof(set), &set);
-  }
-  while (worker.run) {
-    // wait for task
-    worker.ready.wait();
-    if (!worker.run)
-      break;
-    // exec task
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-    worker.func.load()(worker.beg.load(), worker.end.load());
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-    // fprintf(stderr, "finish %d %d\n", worker.beg.load(),
-    // worker.end.load()); signal completion
-    worker.done.post();
-  }
-  return 0;
-}
-}  // namespace
 /* make sure names inside 'extern "C"' are not changed by mangling */
 extern "C" {
 /* execute before main() */
