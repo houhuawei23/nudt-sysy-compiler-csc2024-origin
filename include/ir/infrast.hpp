@@ -3,41 +3,33 @@
 #include "ir/type.hpp"
 #include "ir/utils_ir.hpp"
 #include "ir/value.hpp"
-
+#include <algorithm>
+#include <functional>
 namespace ir {
-
 /**
  * @brief Argument represents an incoming formal argument to a Function.
  * 形式参数，因为它是“形式的”，所以不包含实际值，而是表示特定函数的参数的类型、参数编号和属性。
  * 当在所述函数体中使用时，参数当然代表调用该函数的实际参数的值。
  */
 class Argument : public Value {
-   protected:
-    Function* _parent;
-    int _index;
-    std::vector<int> _dims;  // 维数信息
+ protected:
+  Function* mFunction;
+  size_t mIndex;
 
-   public:
-    Argument(Type* type,
-             size_t index,
-             Function* parent = nullptr,
-             const_str_ref name = "")
-        : Value(type, vARGUMENT, name), _index(index), _parent(parent) {}
+ public:
+  Argument(Type* type,
+           size_t index,
+           Function* parent = nullptr,
+           const_str_ref name = "")
+      : Value(type, vARGUMENT, name), mIndex(index), mFunction(parent) {}
 
-    Function* parent() const { return _parent; }
+  auto function() const { return mFunction; }
 
-    int index() const { return _index; }
+  auto index() const { return mIndex; }
 
-    std::vector<int>& dims() { return _dims; }  // get ref?
+  static bool classof(const Value* v) { return v->valueId() == vARGUMENT; }
 
-    int dim_num() const { return _dims.size(); }
-    int dim(int i) const { return _dims[i]; }
-
-    // for isa<>
-    static bool classof(const Value* v) { return v->scid() == vARGUMENT; }
-
-    // ir print
-    void print(std::ostream& os) override;
+  void print(std::ostream& os) const override;
 };
 
 /**
@@ -47,132 +39,119 @@ class Argument : public Value {
  * records its predecessor and successor `BasicBlock`s.
  */
 class BasicBlock : public Value {
-    // _type: label_type()
+  // mType: TypeLabel()
 
-    // dom info for anlaysis
-   public:
-    BasicBlock* idom;
-    BasicBlock* sdom;
-    std::vector<BasicBlock*> domTree;      // sons in dom Tree
-    std::vector<BasicBlock*> domFrontier;  // dom frontier
-    // std::set<BasicBlock*> dom;//those bb was dominated by self
-    int domLevel;
 
-   protected:
-    Function* _parent;
-    inst_list _insts;
+protected:
+  Function* mFunction;
+  inst_list mInsts;
 
-    // for CFG
-    block_ptr_list _next_blocks;
-    block_ptr_list _pre_blocks;
+  // for CFG
+  block_ptr_list mNextBlocks;
+  block_ptr_list mPreBlocks;
+  // specially for Phi
+  inst_list mPhiInsts;
 
-    int _depth = 0;
-    bool _is_terminal = false;
+  size_t mDepth = 0;
 
-    uint32_t _idx = 0;
+  size_t mIdx = 0;
 
-   public:
-    BasicBlock(const_str_ref name = "", Function* parent = nullptr)
-        : Value(Type::label_type(), vBASIC_BLOCK, name),
-          _parent(parent){
+ public:
+  BasicBlock(const_str_ref name = "", Function* parent = nullptr)
+      : Value(Type::TypeLabel(), vBASIC_BLOCK, name), mFunction(parent){};
+  auto idx() const { return mIdx; }
+  void set_idx(uint32_t idx) { mIdx = idx; }
+  /* must override */
+  std::string name() const override { return "bb" + std::to_string(mIdx); }
+  auto depth() const { return mDepth; }
 
-          };
-    uint32_t idx() const { return _idx; }
-    void set_idx(uint32_t idx) { _idx = idx; }
-    std::string name() const { return "bb" + std::to_string(_idx); }
-    // get
-    int depth() const { return _depth; }
+  auto empty() const { return mInsts.empty(); }
 
-    bool empty() const { return _insts.empty(); }
+  //* get Data Attributes
+  auto function() const { return mFunction; }
 
-    //* get Data Attributes
-    Function* parent() const { return _parent; }
+  void set_parent(Function* parent) { mFunction = parent; }
 
-    inst_list& insts() { return _insts; }
+  auto& insts() { return mInsts; }
 
-    block_ptr_list& next_blocks() { return _next_blocks; }
-    block_ptr_list& pre_blocks() { return _pre_blocks; }
+  auto& phi_insts() { return mPhiInsts; }
 
-    void set_depth(int d) { _depth = d; }  // ?
+  auto& next_blocks() const { return mNextBlocks; }
+  auto& pre_blocks() const { return mPreBlocks; }
+  auto& next_blocks() { return mNextBlocks; }
+  auto& pre_blocks() { return mPreBlocks; }
 
-    void emplace_back_inst(Instruction* i);
+  void set_depth(size_t d) { mDepth = d; }  // ?
+  void emplace_inst(inst_iterator pos, Instruction* i);
 
-    void emplace_inst(inst_iterator pos,
-                      Instruction* i);  // didn't check is_terminal
+  void emplace_first_inst(Instruction* i);
+  void emplace_back_inst(Instruction* i);
 
-    void emplace_first_inst(Instruction* i);  // didn't check is_terminal
+  void delete_inst(Instruction* inst);
 
-    void delete_inst(Instruction* inst);
+  void force_delete_inst(Instruction* inst);
 
-    void force_delete_inst(Instruction* inst);
+  void replaceinst(Instruction* old, Value* new_);
 
-    // for CFG
-    static void block_link(ir::BasicBlock* pre, ir::BasicBlock* next) {
-        pre->next_blocks().emplace_back(next);
-        next->pre_blocks().emplace_back(pre);
-    }
+  auto terminator() { return mInsts.back(); }
+  static void BasicBlockDfs(BasicBlock* bb,
+                            std::function<bool(BasicBlock*)> func) {
+    if (func(bb))
+      return;
+    for (auto succ : bb->next_blocks())
+      BasicBlockDfs(succ, func);
+  }
 
-    bool dominate(BasicBlock* bb) {
-        if (this == bb)
-            return true;
-        for (auto bbnext : domTree) {
-            if (bbnext->dominate(bb))
-                return true;
-        }
-        return false;
-    }
+public:  // for CFG
+  static void block_link(ir::BasicBlock* pre, ir::BasicBlock* next) {
+    pre->next_blocks().emplace_back(next);
+    next->pre_blocks().emplace_back(pre);
+  }
+  static void delete_block_link(ir::BasicBlock* pre, ir::BasicBlock* next) {
+    pre->next_blocks().remove(next);
+    next->pre_blocks().remove(pre);
+  }
+  void clear_block_link() {
+    mNextBlocks.clear();
+    mPreBlocks.clear();
+  }
 
-    // for isa<>
-    static bool classof(const Value* v) { return v->scid() == vBASIC_BLOCK; }
-    // ir print
-    void print(std::ostream& os) override;
+  bool isTerminal() const;
+
+  static bool classof(const Value* v) { return v->valueId() == vBASIC_BLOCK; }
+
+  void print(std::ostream& os) const override;
+
+  bool verify(std::ostream& os) const;
 };
 
-/**
- * @brief Base class for all instructions in IR
- *
- */
+/* Instruction */
 class Instruction : public User {
-    // Instuction 的类型也通过 _scid
-   protected:
-    BasicBlock* _parent;
-
-   public:
-    // Construct a new Instruction object
-    Instruction(ValueId itype = vINSTRUCTION,
-                Type* ret_type = Type::void_type(),
-                BasicBlock* pblock = nullptr,
-                const_str_ref name = "")
-        : User(ret_type, itype, name), _parent(pblock) {}
-    // get
-    BasicBlock* parent() { return _parent; };
-
-    // set
-    void set_parent(BasicBlock* parent) { _parent = parent; }
-
-    // inst type check
-    bool is_terminator() { return _scid == vRETURN || _scid == vBR; }
-    bool is_unary() { return _scid > vUNARY_BEGIN && _scid < vUNARY_END; };
-    bool is_binary() { return _scid > vBINARY_BEGIN && _scid < vBINARY_END; };
-    bool is_bitwise() { return false; }
-    bool is_memory() {
-        return _scid == vALLOCA || _scid == vLOAD || _scid == vSTORE ||
-               _scid == vGETELEMENTPTR;
-    };
-    bool is_conversion();
-    bool is_compare();
-    bool is_other();
-    bool is_icmp();
-    bool is_fcmp();
-    bool is_math();
-    bool is_noname() { return is_terminator() or _scid == vSTORE; }
-
-    // for isa, cast and dyn_cast
-    static bool classof(const Value* v) { return v->scid() >= vINSTRUCTION; }
-
-    void setvarname();  // change varname to pass lli
-
-    void virtual print(std::ostream& os) = 0;
+protected:
+  BasicBlock* mBlock;
+public:
+  // Construct a new Instruction object
+  Instruction(ValueId itype=vINSTRUCTION, Type* ret_type=Type::void_type(),
+              BasicBlock* pblock=nullptr, const_str_ref name="")
+      : User(ret_type, itype, name), mBlock(pblock) {}
+public:  // get function
+  auto block() const { return mBlock; }
+public:  // set function
+  void setBlock(BasicBlock* parent) { mBlock = parent; }
+  void setvarname();
+public:  // check function
+  bool isTerminator();
+  bool isUnary();
+  bool isBinary();
+  bool isBitWise();
+  bool isMemory();
+  bool isNoName();
+  bool isAggressiveAlive();
+  static bool classof(const Value* v) { return v->valueId() >= vINSTRUCTION; }
+public:
+  void virtual print(std::ostream& os) const = 0;
+  virtual Value* getConstantRepl() { return nullptr; };
+  Instruction* copy_inst(std::function<Value*(Value*)> getValue);
 };
 
 }  // namespace ir

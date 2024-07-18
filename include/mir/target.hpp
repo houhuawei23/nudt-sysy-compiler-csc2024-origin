@@ -2,26 +2,33 @@
 #pragma once
 #include "mir/mir.hpp"
 #include "mir/datalayout.hpp"
-#include "mir/instinfo.hpp"
 #include "mir/iselinfo.hpp"
+#include "mir/instinfo.hpp"
 #include "mir/frameinfo.hpp"
-// clang-format on
+#include "mir/registerinfo.hpp"
+#include "mir/ScheduleModel.hpp"
 namespace mir {
+class TargetFrameInfo;
+/*
+ * @brief: Target Class (抽象基类)
+ * @note: 
+ *      存储目标架构 (RISC-V OR ARM)相关信息
+ */
 class Target {
-    // getDataLayout
-    // getScheduleModel
-    // getISelInfo
-    // getFrameInfo
-    // getRegisterInfo
-    // emitAssembly
-   public:
-    virtual ~Target() = default;
-    virtual DataLayout& get_datalayout() = 0;
-    // virtual  TargetScheduleModel& get_schedule_model()  = 0;
-    virtual TargetInstInfo& get_inst_info() = 0;
-    // virtual  TargetISelInfo& get_isel_info()  = 0;
-    virtual TargetFrameInfo& get_frame_info() = 0;
-    // virtual  TargetRegisterInfo* get_register_info()  = 0;
+    public:
+        virtual ~Target() = default;
+    
+    public:  // get function
+        virtual DataLayout& get_datalayout() = 0;
+        virtual  TargetScheduleModel& get_schedule_model()  = 0;
+        virtual TargetInstInfo& get_target_inst_info() = 0;
+        virtual TargetISelInfo& get_target_isel_info() = 0;
+        virtual TargetFrameInfo& get_target_frame_info() = 0;
+        virtual TargetRegisterInfo& get_register_info() = 0;
+
+    public:  // assembly
+        virtual void postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx)  {}
+        virtual void emit_assembly(std::ostream& out, MIRModule& module) = 0;
 };
 
 struct MIRFlags final {
@@ -33,17 +40,27 @@ struct MIRFlags final {
     bool postLegal = false;
 };
 
+/*
+ * @brief: CodeGenContext Struct
+ */
 struct CodeGenContext final {
     Target& target;
-    //  TargetScheduleModel& scheduleModel;
     DataLayout& dataLayout;
     TargetInstInfo& instInfo;
-    //  TargetISelInfo& iselInfo;
     TargetFrameInfo& frameInfo;
-    //  TargetRegisterInfo* registerInfo;
+
     MIRFlags flags;
+    
+    TargetISelInfo* iselInfo;
+    TargetRegisterInfo* registerInfo;
+    
+    TargetScheduleModel* scheduleModel;
+
     uint32_t idx = 0;
     uint32_t next_id() { return ++idx; }
+
+    uint32_t label_idx = 0;
+    uint32_t next_id_label() { return label_idx++; }
 };
 
 // using TargetBuilder = std::pair<std::string_view, std::function<Targe*()> >;

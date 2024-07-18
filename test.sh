@@ -1,6 +1,9 @@
 #!/bin/bash
-# dont ignore unset variables
-set -u
+
+# ./test.sh -t test/2021/functional/ -p mem2reg -p dce -p scp -p sccp -p simplifycfg -L1
+
+set -u # dont ignore unset variables
+# set -x # print all executed commands
 
 PASS_CNT=0
 WRONG_CNT=0
@@ -9,6 +12,12 @@ TIMEOUT_CNT=0
 
 WRONG_FILES=()
 TIMEOUT_FILES=()
+
+PASSES=()
+
+OPT_LEVEL="-O0"
+LOG_LEVEL="-L0"
+
 # Color setting
 RED=$(tput setaf 1)
 GREEN=$(tput setaf 2)
@@ -30,6 +39,17 @@ EC_TIMEOUT=124
 
 TIMEOUT=3
 
+error_code=0 # 0 for exe success
+
+EC_MAIN=1
+EC_LLVMLINK=2
+EC_LLI=3
+EC_TIMEOUT=124
+
+TIMEOUT=100
+
+lli_cmd="lli-14"
+llvm_link_cmd="llvm-link-14"
 # Function to print usage information
 usage() {
     echo "Usage: $0 [-t <test_path>] [-o <output_dir>] [-r <result_file>] [-r <result_file>][-h]"
@@ -39,25 +59,59 @@ usage() {
     echo "  -r <result_file>    Specify the file to store the test results (default: test/result.txt)"
     echo "  -h                  Print this help message"
 }
-
+# ./test.sh -t test/2021/functional/001_var_defn.sy -p mem2reg -p dce
 # Parse command line arguments
-while getopts ":ht:o:r:" opt; do
-    case $opt in
-    h)
+
+# getopt
+SHORT="h,t:,o:,r:,p:,O:,L:"
+LONG="help,test_path:,output_dir:,result_file:,pass:opt_level:,log_level:"
+OPTS=$(getopt --options $SHORT --longoptions $LONG --name "$0" -- "$@")
+
+if [ $? -ne 0 ]; then
+    echo "Error parsing command line arguments" >&2
+    usage
+    exit 1
+fi
+
+eval set -- "$OPTS"
+
+while true; do
+    case "$1" in
+    -h | --help)
         usage
         exit 0
         ;;
-    t)
-        test_path="$OPTARG"
+    -t | --test_path)
+        test_path="$2"
+        shift 2
         ;;
-    o)
-        output_dir="$OPTARG"
+    -o | --output_dir)
+        output_dir="$2"
+        shift 2
         ;;
-    r)
-        result_file="$OPTARG"
+    -r | --result_file)
+        result_file="$2"
+        shift 2
         ;;
-    :)
-        echo "Option -$OPTARG requires an argument." >&2
+    -p | --pass)
+        # check not empty and not start with --
+        PASSES+=("$2")
+        shift 2
+        ;;
+    -O | --opt_level)
+        OPT_LEVEL="-O$2"
+        shift 2
+        ;;
+    -L | --log_level)
+        LOG_LEVEL="-L$2"
+        shift 2
+        ;;
+    --)
+        shift
+        break
+        ;;
+    *)
+        echo "Invalid option: $1" >&2
         usage
         exit 1
         ;;
@@ -69,7 +123,13 @@ while getopts ":ht:o:r:" opt; do
     esac
 done
 
-shift $((OPTIND - 1))
+# Handle remaining arguments (non-option arguments)
+# Use $@ or $1, $2, etc. depending on the specific needs
+
+PASSES_STR=$(
+    IFS=" "
+    echo "${PASSES[*]}"
+)
 
 # Ensure output directory exists
 if [ ! -d "$output_dir" ]; then
@@ -106,13 +166,14 @@ function run_llvm_test() {
     cat "${sy_h}" >"${llvm_c}"
     cat "${single_file}" >>"${llvm_c}"
 
-    clang --no-warnings -emit-llvm -S "${llvm_c}" -o "${llvm_ll}" -O0
-    llvm-link --suppress-warnings "${llvm_ll}" "${link_ll}" -S -o "${llvm_llinked}"
+    clang --no-warnings -emit-llvm -S "${llvm_c}" -o "${llvm_ll}" -O3 -std=c90
+    # -Wimplicit-function-declaration
+    $llvm_link_cmd --suppress-warnings "${llvm_ll}" "${link_ll}" -S -o "${llvm_llinked}"
 
     if [ -f "$in_file" ]; then
-        lli "${llvm_llinked}" >"${llvm_out}" <"${in_file}"
+        $lli_cmd "${llvm_llinked}" >"${llvm_out}" <"${in_file}"
     else
-        lli "${llvm_llinked}" >"${llvm_out}"
+        $lli_cmd "${llvm_llinked}" >"${llvm_out}"
     fi
     local llvmres=$?
     # llvm compiler end
@@ -138,30 +199,31 @@ function run_gen_test() {
     touch "${gen_c}"
     cat "${single_file}" >"${gen_c}"
 
-    ./main "$single_file" >"${gen_ll}"
+    # ./main "$single_file" >"${gen_ll}"
+    ./main -f "${single_file}" -i -t ${PASSES_STR} -o "${gen_ll}" "${OPT_LEVEL}" "${LOG_LEVEL}"
     if [ $? != 0 ]; then
         return $EC_MAIN
     fi
 
-    llvm-link --suppress-warnings ./test/link/link.ll "${gen_ll}" -S -o "${gen_llinked}"
+    $llvm_link_cmd --suppress-warnings ./test/link/link.ll "${gen_ll}" -S -o "${gen_llinked}"
     if [ $? != 0 ]; then
         return $EC_LLVMLINK
     fi
 
     if [ -f "$in_file" ]; then
-        timeout $TIMEOUT lli "${gen_llinked}" >"${gen_out}" <"${in_file}"
+        timeout $TIMEOUT $lli_cmd "${gen_llinked}" >"${gen_out}" <"${in_file}"
         if [ $? == $EC_TIMEOUT ]; then # time out
             return $EC_TIMEOUT
         fi
         # not timeout, re-run
-        lli "${gen_llinked}" >"${gen_out}" <"${in_file}"
+        $lli_cmd "${gen_llinked}" >"${gen_out}" <"${in_file}"
     else
-        timeout $TIMEOUT lli "${gen_llinked}" >"${gen_out}"
+        timeout $TIMEOUT $lli_cmd "${gen_llinked}" >"${gen_out}"
         if [ $? == $EC_TIMEOUT ]; then
             return $EC_TIMEOUT
         fi
         # not timeout, re-run
-        lli "${gen_llinked}" >"${gen_out}"
+        $lli_cmd "${gen_llinked}" >"${gen_out}"
     fi
     local res=$?
     # gen compiler end
@@ -223,9 +285,13 @@ function run_test() {
     fi
 }
 
+## main run
+
 # if test_path is a file
 if [ -f "$test_path" ]; then
     run_test "$test_path" "$output_dir" "$result_file"
+    # run_gen_test $test_path $output_dir $result_file
+    echo "${GREEN}OPT PASSES${RESET}: ${PASSES_STR}"
 fi
 
 # if test_path is a directory
@@ -255,6 +321,7 @@ if [ -d "$test_path" ]; then
     done
 
     echo "====   INFO   ===="
+    echo "PASSES: ${PASSES_STR}"
 
     ALL_CNT=$((PASS_CNT + WRONG_CNT))
     echo "${GREEN}PASS ${RESET}: ${PASS_CNT}"

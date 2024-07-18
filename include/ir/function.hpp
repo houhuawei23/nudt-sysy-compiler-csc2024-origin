@@ -5,125 +5,156 @@
 #include "ir/type.hpp"
 #include "ir/value.hpp"
 #include "support/utils.hpp"
+#include "support/arena.hpp"
 
 namespace ir {
 
-// for BasicBlock sort
-inline bool compareBB(const BasicBlock* b1, const BasicBlock* b2) {
-    // return a1->priority < a2->priority;
-    return b1->idx() < b2->idx();
+class Loop {
+protected:
+    std::set<BasicBlock*> _blocks;
+    BasicBlock* _header;
+    Function* _parent;
+    std::set<BasicBlock*> _exits;
+    std::set<BasicBlock*> _latchs;
 
-    // if (a1->name().size() > 1 && a2->name().size() > 1)
-    //     return std::stoi(a1->name().substr(2)) <
-    //            std::stoi(a2->name().substr(2));
-    // else {
-    //     assert(false && "compareBB error");
-    // }
-}
+public:
+    Loop(BasicBlock* header, Function* parent) {
+        _header = header;
+        _parent = parent;
+    }
+    BasicBlock* header() const{ return _header; }
+    Function* parent() const{ return _parent; }
+    std::set<BasicBlock*>& blocks() { return _blocks; }
+    std::set<BasicBlock*>& exits() { return _exits; }
+    std::set<BasicBlock*>& latchs() {return _latchs; }
+    bool contains(BasicBlock* block) const{ return _blocks.find(block) != _blocks.end(); }
+    BasicBlock* getlooppPredecessor() const{
+      BasicBlock* predecessor = nullptr;
+      BasicBlock* Header = header();
+      for (auto* pred : Header->pre_blocks()){
+        if(!contains(pred)){
+          if (predecessor && (predecessor != pred)){
+            return nullptr;//多个前驱
+          }
+          predecessor = pred;
+        }
+      }
+      return predecessor;//返回唯一的predecessor
+    }
+    BasicBlock* getLoopPreheader() const{
+      BasicBlock* preheader = getlooppPredecessor();
+      if (!preheader)
+        return nullptr;
+      if (preheader->next_blocks().size() != 1)
+        return nullptr;
+      return preheader;
+    }
+    BasicBlock* getLoopLatch() const{
+      BasicBlock* latch = nullptr;
+      BasicBlock* Header = header();
+      for (auto* pred : Header->pre_blocks()){
+        if (contains(pred)){
+          if (latch)
+            return nullptr;
+          latch = pred;
+        }
+      }
+      return latch;//返回唯一的latch
+    }
+    bool hasDedicatedExits() const{
+      for (auto exitbb : _exits){
+        for (auto pred : exitbb->pre_blocks()){
+          if (!contains(pred))
+            return false;
+        }
+      }
+      return true;
+    }
+    bool isLoopSimplifyForm() const{
+      return getLoopPreheader() && getLoopLatch() && hasDedicatedExits();
+    }
+};
 
 class Function : public User {
-    friend class Module;
+  friend class Module;
 
-   protected:
-    Module* _parent = nullptr;  // parent Module
+ protected:
+  Module* mModule = nullptr;  // parent Module
 
-    block_ptr_list _blocks;       // blocks of the function
-    block_ptr_list _exit_blocks;  // exit blocks
-    arg_ptr_vector _args;         // formal args
+  block_ptr_list mBlocks;     // blocks of the function
+  arg_ptr_vector mArguments;  // formal args
 
-    //* function has concrete local var for return value,
-    //* addressed by _ret_value_ptr
-    Value* _ret_value_ptr = nullptr;  // return value
-    BasicBlock* _entry = nullptr;     // entry block
-    BasicBlock* _exit = nullptr;      // exit block
-    BasicBlock* _next = nullptr;
-    int var_cnt = 0;   // for local variables count
-    int _arg_cnt = 0;  // formal arguments count
+  Value* mRetValueAddr = nullptr;  // return value
+  BasicBlock* mEntry = nullptr;    // entry block
+  BasicBlock* mExit = nullptr;     // exit block
+  size_t mVarCnt = 0;              // for local variables count
+  size_t argCnt = 0;               // formal arguments count
 
-    bool _is_defined = false;
+ public:
+  Function(Type* TypeFunction, const_str_ref name="",
+           Module* parent=nullptr)
+      : User(TypeFunction, vFUNCTION, name), mModule(parent) {
+    argCnt = 0;
+    mRetValueAddr = nullptr;
+  }
 
-   public:
-    Function(Type* func_type, const_str_ref name = "", Module* parent = nullptr)
-        : User(func_type, vFUNCTION, name), _parent(parent) {
-        _is_defined = false;
-        _arg_cnt = 0;
-        _ret_value_ptr = nullptr;
-    }
+  //* get
+  auto module() const { return mModule; }
 
-    //* get
-    int getvarcnt() { return var_cnt++; }
-    void setvarcnt(int x) { var_cnt = x; }
-    void set_next(BasicBlock* next) { _next = next; }
-    
-    BasicBlock* next() { return _next; }
-    Module* parent() const { return _parent; }
+  // return value
+  auto retValPtr() const { return mRetValueAddr; }
+  auto retType() const { return mType->as<FunctionType>()->retType(); }
 
-    //* return
-    Type* ret_type() const {
-        FunctionType* ftype = dyn_cast<FunctionType>(type());
-        return ftype->ret_type();
-    }
+  void setRetValueAddr(Value* value) {
+    assert(mRetValueAddr == nullptr && "new_ret_value can not call 2th");
+    mRetValueAddr = value;
+  }
 
-    Value* ret_value_ptr() const { return _ret_value_ptr; }
+  //* Block
+  auto& blocks() const { return mBlocks; }
+  auto& blocks() { return mBlocks; }
 
-    void set_ret_value_ptr(Value* value) {
-        assert(_ret_value_ptr == nullptr && "new_ret_value can not call 2th");
-        _ret_value_ptr = value;
-    }
+  auto entry() const { return mEntry; }
+  void setEntry(ir::BasicBlock* bb) { mEntry = bb; }
 
-    //* Block
-    block_ptr_list& blocks() { return _blocks; }
+  auto exit() const { return mExit; }
+  void setExit(ir::BasicBlock* bb) { mExit = bb; }
 
-    block_ptr_list& exit_blocks() { return _exit_blocks; }
+  BasicBlock* newBlock();
+  BasicBlock* newEntry(const_str_ref name = "");
+  BasicBlock* newExit(const_str_ref name = "");
 
-    auto entry() const { return _entry; }
+  void delBlock(BasicBlock* bb);
+  void forceDelBlock(BasicBlock* bb);
 
-    auto exit() const { return _exit; }
+  //* Arguments
+  auto& args() const { return mArguments; }
+  auto& argTypes() const { return mType->as<FunctionType>()->argTypes(); }
 
-    BasicBlock* new_block();
+  auto arg_i(size_t idx) {
+    assert(idx < argCnt && "idx out of args vector");
+    return mArguments[idx];
+  }
 
-    void delete_block(BasicBlock* bb);
+  auto new_arg(Type* btype, const_str_ref name = "") {
+    auto arg = utils::make<Argument>(btype, argCnt, this, name);
+    argCnt++;
+    mArguments.emplace_back(arg);
+    return arg;
+  }
 
-    BasicBlock* new_entry(const_str_ref name = "") {
-        assert(_entry == nullptr);
-        _entry = new BasicBlock(name, this);
-        _blocks.emplace_back(_entry);
-        return _entry;
-    }
+  auto varInc() { return mVarCnt++; }
+  void setVarCnt(size_t x) { mVarCnt = x; }
 
-    BasicBlock* new_exit(const_str_ref name = "") {
-        assert(_exit == nullptr);
-        _exit = new BasicBlock(name, this);
-        _blocks.emplace_back(_exit);
-        return _exit;
-    }
+  bool isOnlyDeclare(){return mBlocks.empty();}
 
-    //* Arguments
-    arg_ptr_vector& args() { return _args; }
 
-    type_ptr_vector& arg_types() {
-        return dyn_cast<FunctionType>(type())->arg_types();
-    }
+ public:
+  static bool classof(const Value* v) { return v->valueId() == vFUNCTION; }
+  ir::Function* copy_func();
 
-    Argument* arg_i(int idx) {
-        assert(idx < _arg_cnt && "idx out of args vector");
-        return _args[idx];
-    }
-
-    Argument* new_arg(Type* btype, const_str_ref name = "") {
-        auto arg = new Argument(btype, _arg_cnt, this, name);
-        _arg_cnt++;
-        _args.emplace_back(arg);
-        return arg;
-    }
-
-    //* print blocks in ascending order
-    void sort_blocks() { _blocks.sort(compareBB); }
-
-   public:
-    static bool classof(const Value* v) { return v->scid() == vFUNCTION; }
-    void print(std::ostream& os) override;
-
-    void rename();
+  void rename();
+  void print(std::ostream& os) const override;
+  bool verify(std::ostream& os) const;
 };
 }  // namespace ir

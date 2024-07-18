@@ -1,0 +1,949 @@
+Target:
+  name: RISCV
+  infos: [InstInfo, InstSelInfo]
+InstInfo: {
+    # Templates
+    Templates: {
+        Rtype: {
+            # format: "{mnem} {rd}, {rs1}, {rs2}",
+            format: [mnem, " ", 0, ", ", 1, ", ", 2],
+            operands:
+              {
+                0: { name: rd, type: GPR, flag: Def },
+                1: { name: rs1, type: GPR, flag: Use },
+                2: { name: rs2, type: GPR, flag: Use },
+              },
+          },
+        Itype: {
+            # format: "$mnem $rd, $rs1, $imm",
+            format: [mnem, " ", 0, ", ", 1, ", ", 2],
+            operands:
+              {
+                0: { name: rd, type: GPR, flag: Def },
+                1: { name: rs1, type: GPR, flag: Use },
+                2: { name: imm, type: IMM12, flag: Metadata },
+              },
+          },
+        Stype: {
+            # format: "$mnem $rs2, $offset($rs1)",
+            format: [mnem, " ", 0, ", ", 1, "(", 2, ")"],
+            operands:
+              {
+                0: { name: rs2, type: GPR, flag: Use },
+                1: { name: offset, type: IMM12, flag: Metadata },
+                2: { name: rs1, type: GPR, flag: Use }, # BaseLike
+              },
+          },
+        Ltype:
+          {
+            format: [mnem, " ", 0, ", ", 1, "(", 2, ")"],
+            operands:
+              {
+                0: { name: rd, type: GPR, flag: Def },
+                1: { name: offset, type: IMM12, flag: Metadata },
+                2: { name: rs1, type: GPR, flag: Use }, # BaseLike
+              },
+          },
+        Utype: {
+            # format: "$mnem $rd, $imm",
+            format: [mnem, " ", 0, ", ", 1],
+            operands:
+              {
+                0: { name: rd, type: GPR, flag: Def },
+                1: { name: imm, type: IMM20, flag: Metadata },
+              },
+          },
+        # for Pseudos
+        # branch Btype-Itype offset-imm
+        Branches:
+          {
+            format: ["mnem", " ", 0, ", ", 1, ", ", 2, " # ", 3],
+            operands:
+              {
+                0: { name: rs1, type: GPR, flag: Use },
+                1: { name: rs2, type: GPR, flag: Use },
+                2: { name: target, type: reloc, flag: Metadata },
+                3: { name: prob, type: prob, flag: Metadata },
+              },
+            flag: [Branch, Terminator],
+            instances: [
+                { name: BEQ, mnem: "beq" }, # ==
+                { name: BNE, mnem: "bne" }, # !=
+                { name: BLE, mnem: "ble" }, # <=
+                { name: BGT, mnem: "bgt" }, # >
+                { name: BLT, mnem: "blt" }, # <
+                { name: BGE, mnem: "bge" }, # >=
+                { name: BLEU, mnem: "bleu" }, # unsigned <=
+                { name: BGTU, mnem: "bgtu" }, # unsigned >
+                { name: BLTU, mnem: "bltu" }, # unsigned <
+                { name: BGEU, mnem: "bgeu" }, # unsigned >=
+              ],
+          },
+      },
+    # Instances
+    Instances: {
+        # RV32I Base Integer Instructions
+        # RRR
+        ADD: { mnem: "add", template: Rtype },
+        ADDW: { mnem: "addw", template: Rtype }, # RV64
+        SUB: { mnem: "sub", template: Rtype },
+        SUBW: { mnem: "subw", template: Rtype }, # RV64
+        XOR: { mnem: "xor", template: Rtype },
+        OR: { mnem: "or", template: Rtype },
+        AND: { mnem: "and", template: Rtype },
+        SLL: { mnem: "sll", template: Rtype },
+        SRL: { mnem: "srl", template: Rtype },
+        SRA: { mnem: "sra", template: Rtype },
+        SLT: { mnem: "slt", template: Rtype },
+        SLTU: { mnem: "sltu", template: Rtype },
+        # RII
+        ADDI: { mnem: "addi", template: Itype },
+        XORI: { mnem: "xori", template: Itype },
+        ORI: { mnem: "ori", template: Itype },
+        ANDI: { mnem: "andi", template: Itype },
+        SLTI: { mnem: "slti", template: Itype },
+        SLTIU: { mnem: "sltiu", template: Itype },
+        # RII-shift
+        SLLI:
+          {
+            mnem: "slli",
+            template: Itype,
+            operands: { imm: { type: UIMM6, flag: Metadata } },
+          },
+        SRLI:
+          {
+            mnem: "srli",
+            template: Itype,
+            operands: { imm: { type: UIMM6, flag: Metadata } },
+          },
+        SRAI:
+          {
+            mnem: "srai",
+            template: Itype,
+            operands: { imm: { type: UIMM6, flag: Metadata } },
+          },
+        # Load
+        LB: { mnem: "lb", template: Ltype, flag: [Load] },
+        LH: { mnem: "lh", template: Ltype, flag: [Load] },
+        LW: { mnem: "lw", template: Ltype, flag: [Load] },
+        LBU: { mnem: "lbu", template: Ltype, flag: [Load] },
+        LHU: { mnem: "lhu", template: Ltype, flag: [Load] },
+        LD: { mnem: "ld", template: Ltype, flag: [Load] }, # RV64
+        # Store
+        SB: { mnem: "sb", template: Stype, flag: [Store] },
+        SH: { mnem: "sh", template: Stype, flag: [Store] },
+        SW: { mnem: "sw", template: Stype, flag: [Store] },
+        SD: { mnem: "sd", template: Stype, flag: [Store] }, # RV64
+
+        # BEQ: { mnem: "beq", template: Itype, flag: [Branch, Terminator] },
+        # BNE: { mnem: "bne", template: Itype, flag: [Branch, Terminator] },
+        # BLT: { mnem: "blt", template: Itype, flag: [Branch, Terminator] },
+        # BGE: { mnem: "bge", template: Itype, flag: [Branch, Terminator] },
+        # BLTU: { mnem: "bltu", template: Itype, flag: [Branch, Terminator] },
+        # BGEU: { mnem: "bgeu", template: Itype, flag: [Branch, Terminator] },
+        # J JType-Utype
+        # JAL: { mnem: "jal", template: Utype, flag: [Call] },
+        # JALR: { mnem: "jalr", template: Itype, flag: [Call] },
+        # CALL:
+        #   {
+        #     format: ["call", " ", 0],
+        #     operands: { 0: { name: target, type: reloc, flag: Metadata } },
+        #     flag: [Call, Presudo],
+        #   },
+        JAL:
+          {
+            format: ["jal", " ", 0],
+            operands: { 0: { name: target, type: reloc, flag: Metadata } },
+            flag: [Call],
+          },
+        J:
+          {
+            format: ["j", " ", 0],
+            operands: { 0: { name: target, type: reloc, flag: Metadata } },
+            flag: [Branch, Terminator, NoFallThrough],
+          },
+        RET:
+          {
+            format: ["ret"],
+            operands: {},
+            flag: [Return, Terminator, NoFallThrough],
+          },
+        # RIU lui, auipc
+        LUI: { mnem: "lui", template: Utype, flag: [LoadConstant] },
+        # auipc rd, imm: x[rd] = pc + sext(imm[31:12] << 12)
+        AUIPC: { mnem: "auipc", template: Utype, flag: [PCRel, LoadConstant] },
+
+        # lla rd, symbol: x[rd] = &symbol, Presudo, Load Local Address
+        LLA:
+          {
+            format: ["lla", " ", 0, ", ", 1],
+            operands:
+              {
+                0: { name: rd, type: GPR, flag: Def },
+                1: { name: symbol, type: reloc, flag: Metadata },
+              },
+          },
+        # RV32M Multiply Extension
+        MUL: { mnem: "mul", template: Rtype },
+        MULW: { mnem: "mulw", template: Rtype }, # RV64I
+        MULH: { mnem: "mulh", template: Rtype },
+        MULHSU: { mnem: "mulhsu", template: Rtype },
+        MULHU: { mnem: "mulhu", template: Rtype },
+        DIV: { mnem: "div", template: Rtype },
+        DIVW: { mnem: "divw", template: Rtype }, # RV64I
+        DIVU: { mnem: "divu", template: Rtype },
+        REM: { mnem: "rem", template: Rtype },
+        REMW: { mnem: "remw", template: Rtype }, # RV64I
+        REMU: { mnem: "remu", template: Rtype },
+
+        # RV32A Atomic Instructions
+        LR: { mnem: "lr.w", template: Rtype }, # Load Reserved
+        SC: { mnem: "sc.w", template: Rtype }, # Store Conditional
+        AMOSWAP: { mnem: "amoswap.w", template: Rtype },
+        AMOADD: { mnem: "amoadd.w", template: Rtype },
+        AMOAND: { mnem: "amoand.w", template: Rtype },
+        AMOOR: { mnem: "amoor.w", template: Rtype },
+        AMOXOR: { mnem: "amoxor.w", template: Rtype },
+        # RV32F Single-Precision Floating-Point Instructions
+
+        FLW:
+          {
+            format: ["flw", " ", 0, ", ", 1, "(", 2, ")"],
+            operands:
+              {
+                0: { name: rd, type: FPR, flag: Def },
+                1: { name: offset, type: IMM12, flag: Metadata },
+                2: { name: rs1, type: BaseLike, flag: Use }, # BaseLike
+              },
+            flag: [Load],
+          },
+        FSW:
+          {
+            format: ["fsw", " ", 0, ", ", 1, "(", 2, ")"],
+            operands:
+              {
+                0: { name: rs2, type: FPR, flag: Use },
+                1: { name: offset, type: IMM12, flag: Metadata },
+                2: { name: rs1, type: BaseLike, flag: Use }, # BaseLike
+              },
+            flag: [Store],
+          },
+
+        # Pseudos
+        # nop
+        LoadImm12:
+          {
+            format: ["li", " ", 0, ", ", 1],
+            operands:
+              {
+                0: { name: rd, type: GPR, flag: Def },
+                1: { name: imm, type: NonZeroImm12, flag: Metadata },
+              },
+            flag: [LoadConstant],
+          },
+        LoadImm32:
+          {
+            format: ["li", " ", 0, ", ", 1],
+            operands:
+              {
+                0: { name: rd, type: GPR, flag: Def },
+                1: { name: imm, type: NonZeroImm32, flag: Metadata },
+              },
+            flag: [LoadConstant],
+          },
+        LoadImm64:
+          {
+            format: ["li", " ", 0, ", ", 1],
+            operands:
+              {
+                0: { name: rd, type: GPR, flag: Def },
+                1: { name: imm, type: NonZeroImm64, flag: Metadata },
+              },
+            flag: [LoadConstant],
+          },
+        MV:
+          {
+            format: ["mv", " ", 0, ", ", 1],
+            operands:
+              {
+                0: { name: rd, type: GPR, flag: Def },
+                1: { name: rs1, type: GPR, flag: Use },
+              },
+            flag: [RegCopy],
+          },
+      },
+  }
+InstSelInfo: {
+    # templates
+    Templates: {},
+    # instances
+    Instances: [
+        {
+          # LoadGlobalAddress dst[INTREG], reloc[RELOC]
+          pattern: { name: InstLoadGlobalAddress, dst: $dst, addr: $addr },
+          replace: {
+              name: LLA, # lla rd, symbol
+              rd: "getVRegAs(ctx, $dst)",
+              symbol: $addr,
+            },
+        },
+        {
+          pattern: { name: InstLoadGlobalAddress, dst: $dst, addr: $addr },
+          replace:
+            {
+              name: ADDI,
+              rd: $dst,
+              rs1:
+                {
+                  name: AUIPC,
+                  rd: "getVRegAs(ctx, $dst)",
+                  imm: getHighBits($addr),
+                },
+              imm: getLowBits($addr),
+            },
+        },
+
+        # { pattern: { name: InstLoadStackObjectAddr } },
+
+        # load and store
+        {
+          # InstLoad
+          pattern: {
+              name: InstLoad,
+              dst: $dst,
+              addr: $addr,
+              ## align: $align,
+              predicate: "selectAddrOffset($addr, ctx, [$base], [$offset])",
+            },
+          replace: {
+              name: getLoadOpcode($dst),
+              ref: LB,
+              rd: $dst,
+              rs1: $base,
+              offset: $offset, # align: $align, # todo, process load inst info
+            },
+        },
+        {
+          # InstStore
+          pattern: {
+              name: InstStore,
+              addr: $addr, # align: $align,
+              src: $src,
+              predicate: "isOperandVRegOrISAReg($src) && selectAddrOffset($addr, ctx, [$base], [$offset])",
+            },
+          replace:
+            {
+              name: getStoreOpcode($src),
+              ref: SB,
+              rs2: $src,
+              rs1: $base,
+              offset: $offset,
+            },
+        },
+        # Control Flow
+        {
+          pattern: { name: InstJump, target: $target },
+          replace: { name: J, target: $target },
+        },
+        {
+          # Return
+          pattern: { name: InstReturn },
+          replace: { name: RET },
+        },
+        {
+          # name list
+          pattern:
+            {
+              name: [InstLoadImm, InstLoadImmToReg],
+              dst: $dst,
+              imm: $imm,
+              predicate: isZero($imm),
+            },
+          replace: { name: MV, rd: $dst, rs1: getZero($dst) },
+        },
+        {
+          pattern:
+            {
+              name: [InstLoadImm, InstLoadImmToReg],
+              dst: $dst,
+              imm: $imm,
+              predicate: isOperandNonZeroImm12($imm),
+            },
+          replace: { name: LoadImm12, rd: $dst, imm: $imm },
+        },
+        # InstAdd
+        {
+          pattern:
+            {
+              name: InstAdd,
+              dst: $dst,
+              src1: { name: InstShl, src1: $src1, src2: $imm },
+              src2: $src2,
+              predicate: "isOperandIReg($dst) && isOperandIReg($src1) && isOperandIReg($src2) && ($imm).isImm() && ($imm).imm() == 1",
+            },
+          replace: { name: SH1ADD, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+        {
+          # imm = 1,2,3
+          pattern:
+            {
+              name: InstAdd,
+              dst: $dst,
+              src1: $src1,
+              src2: { name: InstShl, dst: $dst, src1: $src1, src2: $imm },
+              predicate: "isOperandIReg($dst) && isOperandIReg($src1) && isOperandIReg($src2) && ($imm).isImm() && ($imm).imm() == 1",
+            },
+          replace: { name: SH1ADD, rd: $src1, rs1: $src2, rs2: $src1 },
+        },
+        {
+          pattern:
+            {
+              name: InstAdd,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandI64($dst) && isOperandIReg($src1) && isOperandIReg($src2),
+            },
+          replace: { name: ADD, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+
+        {
+          pattern:
+            {
+              name: InstAdd,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandI32($dst) && isOperandIReg($src1) && isOperandIReg($src2),
+            },
+          replace: { name: ADDW, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+        # InstSub
+        {
+          pattern:
+            {
+              name: InstSub,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandI64($dst) && isOperandIReg($src1) && isOperandIReg($src2),
+            },
+          replace: { name: SUB, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+        {
+          pattern:
+            {
+              name: InstSub,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandI32($dst) && isOperandIReg($src1) && isOperandIReg($src2),
+            },
+          replace: { name: SUBW, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+        # InstMul
+        {
+          pattern:
+            {
+              name: InstMul,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandI64($dst) && isOperandIReg($src1) && isOperandIReg($src2),
+            },
+          replace: { name: MUL, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+        {
+          pattern:
+            {
+              name: InstMul,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandI32($dst) && isOperandIReg($src1) && isOperandIReg($src2),
+            },
+          replace: { name: MULW, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+        # InstUDiv
+        {
+          pattern:
+            {
+              name: InstUDiv,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandI64($dst) && isOperandIReg($src1) && isOperandIReg($src2),
+            },
+          replace: { name: DIVU, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+        {
+          pattern:
+            {
+              name: InstUDiv,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandI32($dst) && isOperandIReg($src1) && isOperandIReg($src2),
+            },
+          replace: { name: DIVUW, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+        # InstURem
+        {
+          pattern:
+            {
+              name: InstURem,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandI64($dst) && isOperandIReg($src1) && isOperandIReg($src2),
+            },
+          replace: { name: REMU, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+        {
+          pattern:
+            {
+              name: InstURem,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandI32($dst) && isOperandIReg($src1) && isOperandIReg($src2),
+            },
+          replace: { name: REMUW, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+        #! BinaryRegOpcode???
+        {
+          pattern:
+            {
+              name: [InstAnd, InstOr, InstXor],
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandIReg($src1) && isOperandIReg($src2),
+            },
+          replace:
+            {
+              name: getIntegerBinaryRegOpcode(rootOpcode),
+              ref: AND,
+              rd: $dst,
+              rs1: $src1,
+              rs2: $src2,
+            },
+        },
+        # BinaryImm
+        {
+          pattern:
+            {
+              name: [InstAnd, InstOr, InstXor],
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandIReg($src1) && isOperandImm12($src2),
+            },
+          replace:
+            {
+              name: getIntegerBinaryImmOpcode(rootOpcode),
+              ref: ANDI,
+              rd: $dst,
+              rs1: $src1,
+              imm: $src2,
+            },
+        },
+        # InstShl
+        {
+          pattern:
+            {
+              name: InstShl,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandI64($dst) && isOperandIReg($src1) && isOperandIReg($src2),
+            },
+          replace: { name: SLL, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+        {
+          pattern:
+            {
+              name: InstShl,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandI32($dst) && isOperandIReg($src1) && isOperandIReg($src2),
+            },
+          replace: { name: SLLW, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+        # InstLShr
+        {
+          pattern:
+            {
+              name: InstLShr,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandI64($dst) && isOperandIReg($src1) && isOperandIReg($src2),
+            },
+          replace: { name: SRL, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+        {
+          pattern:
+            {
+              name: InstLShr,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandI32($dst) && isOperandIReg($src1) && isOperandIReg($src2),
+            },
+          replace: { name: SRLW, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+        # InstAShr
+        {
+          pattern:
+            {
+              name: InstAShr,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandI64($dst) && isOperandIReg($src1) && isOperandIReg($src2),
+            },
+          replace: { name: SRA, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+        {
+          pattern:
+            {
+              name: InstAShr,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandI32($dst) && isOperandIReg($src1) && isOperandIReg($src2),
+            },
+          replace: { name: SRAW, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+        # InstSDiv
+        {
+          pattern:
+            {
+              name: InstSDiv,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandI64($dst) && isOperandIReg($src1) && isOperandIReg($src2),
+            },
+          replace: { name: DIV, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+        {
+          pattern:
+            {
+              name: InstSDiv,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandI32($dst) && isOperandIReg($src1) && isOperandIReg($src2),
+            },
+          replace: { name: DIVW, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+        # InstSRem
+        {
+          pattern:
+            {
+              name: InstSRem,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandI64($dst) && isOperandIReg($src1) && isOperandIReg($src2),
+            },
+          replace: { name: REM, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+        {
+          pattern:
+            {
+              name: InstSRem,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandI32($dst) && isOperandIReg($src1) && isOperandIReg($src2),
+            },
+          replace: { name: REMW, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+        # InstMin
+        {
+          pattern:
+            {
+              name: InstSMin,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandIReg($src1) && isOperandIReg($src2),
+            },
+
+          replace: { name: MIN, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+        # InstMax
+        {
+          pattern:
+            {
+              name: InstSMax,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandIReg($src1) && isOperandIReg($src2),
+            },
+          replace: { name: MAX, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+        # InstAbs
+        {
+          pattern:
+            {
+              name: InstAbs,
+              dst: $dst,
+              src: $src,
+              predicate: isOperandIReg($src) && isOperandI32($dst),
+            },
+          replace:
+            {
+              name: MAX,
+              rd: $dst,
+              rs1:
+                {
+                  name: SUBW,
+                  rd: "getVRegAs(ctx, $dst)",
+                  rs1: getZero($dst),
+                  rs2: $src,
+                },
+              rs2: $src,
+            },
+        },
+        #! InstICmp: SLT, SLTU, SLTI, SLTIU: TODO
+        {
+          pattern:
+            {
+              name: InstICmp,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              op: $op,
+              predicate: "isOperandIReg($src1) && isOperandIReg($src2) && isCompareOp($op, CompareOp::ICmpSignedLessThan)",
+            },
+          replace: { name: SLT, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+        # SLTU
+        {
+          pattern:
+            {
+              name: InstICmp,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              op: $op,
+              predicate: "isOperandIReg($src1) && isOperandIReg($src2) && isCompareOp($op, CompareOp::ICmpUnsignedLessThan)",
+            },
+          replace: { name: SLTU, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+
+        {
+          pattern:
+            {
+              name: InstICmp,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              op: $op,
+              predicate: "isOperandIReg($src1) && isOperandIReg($src2) && isCompareOp($op, CompareOp::ICmpSignedGreaterThan)",
+            },
+          replace: { name: SLT, rd: $dst, rs1: $src2, rs2: $src1 },
+        },
+        {
+          pattern:
+            {
+              name: InstICmp,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              op: $op,
+              predicate: "isOperandIReg($src1) && isOperandIReg($src2) && isCompareOp($op, CompareOp::ICmpUnsignedGreaterThan)",
+            },
+          replace: { name: SLTU, rd: $dst, rs1: $src2, rs2: $src1 },
+        },
+        {
+          pattern:
+            {
+              name: InstICmp,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              op: $op,
+              predicate: "isOperandIReg($src1) && isZero($src2) && isCompareOp($op, CompareOp::ICmpEqual)",
+            },
+          replace: { name: SLTIU, rd: $dst, rs1: $src1, imm: getOne($src2) },
+        },
+        {
+          pattern:
+            {
+              name: InstICmp,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              op: $op,
+              predicate: "isOperandIReg($src1) && isZero($src2) && isCompareOp($op, CompareOp::ICmpNotEqual)",
+            },
+          replace: { name: SLTU, rd: $dst, rs1: getZero($src2), rs2: $src1 },
+        },
+        {
+          # x<=y -> !(y<x)
+          pattern:
+            {
+              name: InstICmp,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              op: $op,
+              predicate: "isOperandIReg($src1) && isOperandIReg($src2) && isCompareOp($op, CompareOp::ICmpSignedLessEqual)",
+            },
+          replace:
+            {
+              name: XORI,
+              rd: $dst,
+              rs1:
+                {
+                  name: SLT,
+                  rd: "getVRegAs(ctx, $dst)",
+                  rs1: $src2,
+                  rs2: $src1,
+                },
+              imm: getOne($src2),
+            },
+        },
+        # branch
+        {
+          pattern:
+            {
+              name: InstBranch,
+              cond: $cond,
+              target: $target,
+              prob: $prob,
+              predicate: isOperandIReg($cond),
+            },
+          replace:
+            {
+              name: BNE,
+              rs1: $cond,
+              rs2: getZero($cond),
+              target: $target,
+              prob: $prob,
+            },
+        },
+      ],
+  }
+
+ScheduleModel:
+  #
+  { sifive_u74: {
+        #
+        Classes: {
+            #
+            IntegerArithmetic: [
+                ADDI,
+                SLTI,
+                SLTIU,
+                ANDI,
+                ORI,
+                XORI,
+                SLLI,
+                SRLI,
+                SRAI,
+                LUI,
+                AUIPC,
+                ADD,
+                SLT,
+                SLTU,
+                AND,
+                OR,
+                XOR,
+                SLL,
+                SRL,
+                SUB,
+                SRA,
+                # ADDIW,
+                # SLLIW,
+                # SRLIW,
+                # SRAIW,
+                ADDW,
+                SUBW,
+                # SLLW,
+                # SRLW,
+                # SRAW,
+                # ADD_UW,
+                # SLLI_UW,
+                # ANDN,
+                # ORN,
+                # XNOR,
+                # MIN,
+                # MINU,
+                # MAX,
+                # MAXU,
+                # SEXT_B,
+                # SEXT_H,
+                # SEXT_W,
+                # ZEXT_H,
+                # ZEXT_W,
+                LoadImm12,
+                # MoveGPR,
+                MV,
+                InstLoadStackObjectAddr,
+                InstCopy,
+                InstCopyFromReg,
+                InstCopyToReg,
+              ],
+            SlowLoadImm: [
+                InstLoadImm,
+                LoadImm32,
+                LoadImm64,
+                # LoadImm64Complex
+              ],
+            # IntegerArithmeticLateB:
+            #   [ROL, ROLW, ROR, RORI, RORIW, RORW, CLZ, CLZW, CTZ, CTZW, ORC_B],
+            # IntegerArithmeticEarlyB: [],
+            # IntegerArithmeticLateAB: [],
+            # IntegerArithmeticEarlyLateB: [],
+            Branch: [
+                JAL,
+                RET,
+                BEQ,
+                BNE,
+                BLT,
+                BLE,
+                BGT,
+                BGE,
+                BLTU,
+                BLEU,
+                BGTU,
+                BGEU,
+                J,
+                # JR,
+                # UNIMP,
+              ],
+            LoadStore: [
+                LB,
+                LH,
+                LW,
+                LBU,
+                LHU,
+                SB,
+                SH,
+                SW,
+                LD,
+                # LWU,
+                SD,
+                InstStoreRegToStack,
+                # AMOADD_W,
+              ],
+            Multi: [MUL, MULH, MULHSU, MULHU, MULW],
+            DivRem: [DIVW, REMW],
+            # SDivRemW: [DIVW, REMW],
+            # FPCycle1: [],
+            # FPCycle2: [],
+            # FPCycle4: [],
+            # FPCycle5: [],
+            # FPDiv: [],
+            # FPLoadStore: [],
+            # GeneralLoad: [InstLoadRegFromStack],
+          },
+      } }

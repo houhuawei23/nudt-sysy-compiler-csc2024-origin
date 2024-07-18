@@ -1,0 +1,47 @@
+====  RESULT  ====
+[WRONG] files:
+./test/2021/functional//061_sort_test1.sy
+./test/2021/functional//062_sort_test2.sy
+./test/2021/functional//063_sort_test3.sy
+./test/2021/functional//065_sort_test5.sy
+./test/2021/functional//066_sort_test6.sy
+./test/2021/functional//067_sort_test7.sy
+./test/2021/functional//071_exchange_array.sy
+./test/2021/functional//073_backpack.sy
+./test/2021/functional//074_matrix_add.sy
+./test/2021/functional//075_matrix_sub.sy
+./test/2021/functional//076_matrix_mul.sy
+./test/2021/functional//077_matrix_tran.sy
+./test/2021/functional//1084_palindrome_number.sy
+./test/2021/functional//1088_array_concat.sy
+./test/2021/functional//1091_line_search.sy
+[TIMEOUT] files:
+./test/2021/functional//046_op_priority4.sy
+./test/2021/functional//049_unary_op.sy
+./test/2021/functional//050_unary_op2.sy
+./test/2021/functional//051_logi_assign.sy
+./test/2021/functional//057_if_complex_expr.sy
+./test/2021/functional//058_short_circuit.sy
+./test/2021/functional//064_sort_test4.sy
+./test/2021/functional//068_genealogical_tree.sy
+./test/2021/functional//069_greatest_common_divisor.sy
+./test/2021/functional//070_multiplication_puzzle.sy
+./test/2021/functional//072_percolation.sy
+./test/2021/functional//078_big_int_mul.sy
+./test/2021/functional//079_calculator.sy
+./test/2021/functional//080_color.sy
+./test/2021/functional//1073_exchange_value.sy
+./test/2021/functional//1074_itera_sqrt.sy
+./test/2021/functional//1078_decbinoct.sy
+./test/2021/functional//1080_lcm.sy
+./test/2021/functional//1081_jump_game.sy
+./test/2021/functional//1082_int_split.sy
+./test/2021/functional//1086_bin_search.sy
+./test/2021/functional//1090_insert_order.sy
+====   INFO   ====
+PASSES: 
+PASS : 66
+WRONG: 15
+TIMEOUT: 22
+SKIP : 0
+ALL  : 81

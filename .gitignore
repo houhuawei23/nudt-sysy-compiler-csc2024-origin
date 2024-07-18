@@ -1,6 +1,11 @@
 *.local
 *.s
 
+**/__pycache__
+*.local
+*.s
+mytest.sh
+gdbtest.sh
 **/build
 **/lib
 **/local
