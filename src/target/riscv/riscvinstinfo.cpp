@@ -14,4 +14,4 @@ namespace mir::RISCV {
 }  // namespace RISCV
 
 //! Dont Change This Line!
-#include "autogen/riscv/InstInfoImpl.cpp"
+#include "autogen/riscv/InstInfoImpl.hpp"

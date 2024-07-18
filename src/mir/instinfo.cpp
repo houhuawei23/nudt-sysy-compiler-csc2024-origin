@@ -78,4 +78,4 @@ static std::ostream& operator<<(std::ostream& os, OperandDumper opdp) {
 
 }  // namespace mir::GENERIC
 
-#include "autogen/generic/InstInfoImpl.cpp"
+#include "autogen/generic/InstInfoImpl.hpp"

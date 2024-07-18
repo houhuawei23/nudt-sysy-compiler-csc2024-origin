@@ -6,7 +6,7 @@
 #include "target/riscv/riscv.hpp"
 #include "autogen/riscv/ScheduleModelDecl.hpp"
 
-#include "autogen/riscv/ScheduleModelImpl.cpp"
+#include "autogen/riscv/ScheduleModelImpl.hpp"
 
 namespace mir::RISCV {
 

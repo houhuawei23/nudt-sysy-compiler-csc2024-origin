@@ -107,7 +107,7 @@ static MIROperand* getOne(MIROperand* operand) {
 }  // namespace mir::RISCV
 
 //! Dont Change !!
-#include "autogen/riscv/ISelInfoImpl.cpp"
+#include "autogen/riscv/ISelInfoImpl.hpp"
 
 namespace mir::RISCV {
 
