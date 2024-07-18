@@ -9,6 +9,8 @@
 #include <unordered_map>
 #include <vector>
 #include "ir/type.hpp"
+
+#include "support/arena.hpp"
 // #include <queue>      // for block list priority queue
 // #include <algorithm>  // for block list sort
 namespace ir {
@@ -89,6 +91,7 @@ class Use {
   void set_user(User* user);
 };
 
+SYSYC_ARENA_TRAIT(Use, IR)
 /**
  * @brief Base Class for all classes having 'value' to be used.?
  * @attention
@@ -205,6 +208,8 @@ class Value {
   std::string mComment;
 
  public:
+  static constexpr auto arenaSource = utils::Arena::Source::IR;
+
   Value(Type* type, ValueId scid = vValue, const_str_ref name = "")
       : mType(type), mValueId(scid), mName(name), mUses() {}
   virtual ~Value() = default;

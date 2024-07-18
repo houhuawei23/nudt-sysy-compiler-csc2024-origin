@@ -2,6 +2,8 @@
 #include <any>
 #include "ir/infrast.hpp"
 #include "ir/instructions.hpp"
+
+#include "support/arena.hpp"
 namespace ir {
 class IRBuilder {
  private:
@@ -129,15 +131,25 @@ class IRBuilder {
 
   template <typename T, typename... Args>
   auto makeInst(Args&&... args) {
-    auto inst = new T(std::forward<Args>(args)...);
+    auto inst = utils::make<T>(std::forward<Args>(args)...);
     inst->setBlock(mBlock);
-    mBlock->emplace_back_inst(inst);
+    // mBlock->emplace_back_inst(inst);
+    mBlock->insts().insert(mInsertPos, inst);
     return inst;
   }
 
   template <typename T, typename... Args>
   auto makeIdenticalInst(Args&&... args) {
-    return new T(std::forward<Args>(args)...);
+    return utils::make<T>(std::forward<Args>(args)...);
+  }
+
+  template <typename T, typename... Args>
+  auto makeInstBeta(Args&&... args) {
+    auto inst = utils::make<T>(std::forward<Args>(args)...);
+    inst->setBlock(mBlock);
+    // mBlock->emplace_back_inst(inst);
+    mBlock->insts().insert(mInsertPos, inst);
+    return inst;
   }
 };
 

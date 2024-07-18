@@ -39,10 +39,13 @@ Value* IRBuilder::makeBinary(BinaryOp op, Value* lhs, Value* rhs) {
             assert(false && "makeBinary: invalid op!");
         }
       }
+      default:
+        assert(false && "makeBinary: invalid type!");
     }
     return ValueId::vInvalid;
   }();
   auto res = makeInst<BinaryInst>(vid, lhs->type(), lhs, rhs);
+  // auto res = makeInstBeta<BinaryInst>(vid, lhs->type(), lhs, rhs);
   return res;
 }
 
@@ -77,6 +80,8 @@ Value* IRBuilder::makeUnary(ValueId vid, Value* val, Type* ty) {
     case ValueId::vFPTRUNC:
       assert(val->type()->isFloatPoint() && ty->isFloatPoint());
       break;
+    default:
+      assert(false && "makeUnary: invalid vid!");
   }
 
   res = makeInst<UnaryInst>(vid, ty, val);
@@ -145,8 +150,9 @@ Value* IRBuilder::makeCmp(CmpOp op, Value* lhs, Value* rhs) {
           default:
             assert(false && "makeCmp: invalid op!");
         }
+      default:
+        assert(false && "makeCmp: invalid type!");
     }
-    assert(false && "makeCmp: invalid type!");
     return ValueId::vInvalid;
   }();
 

@@ -2,6 +2,7 @@
 #include "ir/type.hpp"
 #include "ir/utils_ir.hpp"
 #include "ir/value.hpp"
+#include "support/arena.hpp"
 
 namespace ir {
 /* Constant Class */
@@ -57,8 +58,7 @@ class Constant : public User {
       return iter->second;
     }
 
-    Constant* c;
-    c = new Constant(val, name);
+    auto c = utils::make<Constant>(val, name);
     auto res = cache.emplace(name, c);
     return c;
   }
@@ -140,9 +140,7 @@ class Constant : public User {
     if (iter != cache.end()) {
       return iter->second;
     }
-
-    Constant* c;
-    c = new Constant();
+    auto c = utils::make<Constant>();
     auto res = cache.emplace(name, c);
     return c;
   }
@@ -154,15 +152,13 @@ class Constant : public User {
       return iter->second;
     }
 
-    auto c = new Constant(name);
+    auto c = utils::make<Constant>(name);
     auto res = cache.emplace(name, c);
     return c;
   }
 
  public:
-  std::string comment() const override {
-    return name();
-  }
+  std::string comment() const override { return name(); }
   // get
   bool i1() const {
     if (not isBool()) {

@@ -79,6 +79,9 @@ gcc-arm-linux-gnueabihf
 g++-12-riscv64-linux-gnu 
 g++-12-arm-linux-gnueabihf 
 
+
+## tldr: Simplified and community-driven man pages
+sudo apt-get install -y tldr && tldr -u
 ```
 
 ## cmake
@@ -162,6 +165,11 @@ llc -march=riscv64 -mcpu=generic-rv64 test.rv64.ll -o test.rv64.s
 ```bash
 # merge multiple commits into one
 git merge --squash <source-branch>
+
+#  - Create and switch to a new branch based on a specific reference (branch, remote/branch, tag are examples of valid references):
+git checkout -b {{branch_name}} {{reference}}
+
+git checkout -b mid_end origin/mid_end
 
 # jinja2 template gen
 python ./src/target/gen.py ./src/target/riscv.yml ./include/target

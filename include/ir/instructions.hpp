@@ -459,6 +459,8 @@ class GetElementPtrInst : public Instruction {
 class PhiInst : public Instruction {
  protected:
   size_t mSize;
+  std::unordered_map<ir::BasicBlock*,ir::Value*>mbbToVal;
+
 
  public:
   PhiInst(BasicBlock* bb,
@@ -471,6 +473,7 @@ class PhiInst : public Instruction {
     for (size_t i = 0; i < mSize; i++) {
       addOperand(vals[i]);
       addOperand(bbs[i]);
+      mbbToVal[bbs[i]]=vals[i];
     }
   }
   auto getValue(size_t k) const { return operand(2 * k); }
@@ -482,14 +485,20 @@ class PhiInst : public Instruction {
 
   auto getsize() { return mSize; }
   void addIncoming(Value* val, BasicBlock* bb) {
+    if(mbbToVal.count(bb)){
+      assert(false && "Trying to add a duplicated basic block!");
+    }
     addOperand(val);
     addOperand(bb);
     // 更新操作数的数量
+    mbbToVal[bb]=val;
     mSize++;
   }
   void delValue(Value* val);
   void delBlock(BasicBlock* bb);
   void replaceBlock(BasicBlock* newBB, size_t k);
+  void replaceoldtonew(BasicBlock* oldBB, BasicBlock* newBB);
+  void refreshMap();
 
   void print(std::ostream& os) const override;
   Value* getConstantRepl() override;

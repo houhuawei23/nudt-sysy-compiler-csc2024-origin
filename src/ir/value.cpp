@@ -1,5 +1,5 @@
 #include "ir/value.hpp"
-
+#include "support/arena.hpp"
 namespace ir {
 //! Use
 size_t Use::index() const {
@@ -27,7 +27,9 @@ void Use::set_value(Value* value) {
 //! Value
 
 void Value::replaceAllUseWith(Value* mValue) {
-  for (auto puse : mUses) {
+  for (auto puseIter=mUses.begin();puseIter!=mUses.end();) {
+    auto puse=*puseIter;
+    puseIter++;
     puse->user()->setOperand(puse->index(), mValue);
   }
   mUses.clear();
@@ -57,7 +59,7 @@ Value* User::operand(size_t index) const {
 void User::addOperand(Value* value) {
   assert(value != nullptr && "value cannot be nullptr");
 
-  auto new_use = new Use(mOperands.size(), this, value);
+  auto new_use = utils::make<Use>(mOperands.size(), this, value);
 
   /* add use to user.mOperands*/
   mOperands.emplace_back(new_use);
@@ -89,7 +91,10 @@ void User::setOperand(size_t index, Value* value) {
     std::cerr<<"index="<<index<<", but mOperands max size="<<mOperands.size()<<std::endl;
     assert(index < mOperands.size());
   }
-  mOperands[index]->set_value(value);
+  auto oldVal=mOperands[index]->value();
+  oldVal->uses().remove(mOperands[index]);
+  auto newUse=new Use(index, this, value);
+  mOperands[index]=newUse;
   value->uses().emplace_back(mOperands[index]);
 }
 

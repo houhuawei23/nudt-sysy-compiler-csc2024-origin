@@ -3,6 +3,7 @@
 #include <cassert>
 #include <map>
 #include <vector>
+#include <algorithm>
 #include <queue>
 #include "ir/ir.hpp"
 #include "pass/pass.hpp"
@@ -13,7 +14,7 @@ namespace pass{
             void run(ir::Function* func, topAnalysisInfoManager* tp)override;
             
         private:
-            ir::BasicBlock* getSingleDest(ir::BasicBlock* bb);
+            bool getSingleDest(ir::BasicBlock* bb);
             ir::BasicBlock* getMergeBlock(ir::BasicBlock* bb);
             bool MergeBlock(ir::Function* func);
             bool removeNoPreBlock(ir::Function* func);

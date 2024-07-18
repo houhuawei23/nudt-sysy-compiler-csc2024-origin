@@ -1,4 +1,3 @@
-#include "pass/optimize/optimize.hpp"
 #include "pass/optimize/GCM.hpp"
 #include <set>
 #include <cassert>

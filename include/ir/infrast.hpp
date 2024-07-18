@@ -4,6 +4,7 @@
 #include "ir/utils_ir.hpp"
 #include "ir/value.hpp"
 #include <algorithm>
+#include <functional>
 namespace ir {
 /**
  * @brief Argument represents an incoming formal argument to a Function.
@@ -40,20 +41,6 @@ class Argument : public Value {
 class BasicBlock : public Value {
   // mType: TypeLabel()
 
-//   // dom info for anlaysis
-//  public:
-//   BasicBlock* idom;
-//   BasicBlock* sdom;
-//   BasicBlock* ipdom;
-//   BasicBlock* spdom;
-//   std::vector<BasicBlock*> domTree;      // sons in dom Tree
-//   std::vector<BasicBlock*> domFrontier;  // dom frontier
-//   std::vector<BasicBlock*> pdomTree;
-//   std::vector<BasicBlock*> pdomFrontier;
-//   // std::set<BasicBlock*> dom;//those bb was dominated by self
-//   size_t domLevel;
-//   size_t pdomLevel;
-  // size_t looplevel;
 
 protected:
   Function* mFunction;
@@ -129,20 +116,13 @@ public:  // for CFG
     mPreBlocks.clear();
   }
 
-  // bool dominate(BasicBlock* bb) {
-  //   if (this == bb)
-  //     return true;
-  //   for (auto bbnext : domTree) {
-  //     if (bbnext->dominate(bb))
-  //       return true;
-  //   }
-  //   return false;
-  // }
   bool isTerminal() const;
 
   static bool classof(const Value* v) { return v->valueId() == vBASIC_BLOCK; }
 
   void print(std::ostream& os) const override;
+
+  bool verify(std::ostream& os) const;
 };
 
 /* Instruction */

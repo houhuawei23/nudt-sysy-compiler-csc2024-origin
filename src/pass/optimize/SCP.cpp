@@ -1,7 +1,7 @@
 #include "pass/optimize/optimize.hpp"
 #include "pass/optimize/SCP.hpp"
 #include <vector>
-//当前是简单常量传播遍
+//当前是简单常量传播遍 Simple Constant Propagation
 static std::set<ir::Instruction*>worklist;
 
 namespace pass{

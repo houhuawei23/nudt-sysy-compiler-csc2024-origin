@@ -4,9 +4,12 @@
 #include "ir/global.hpp"
 #include "ir/value.hpp"
 
+#include "support/arena.hpp"
+
 namespace ir {
 class Module {
  private:
+  utils::Arena mArena;
   std::vector<Function*> mFunctions;
   std::unordered_map<std::string, Function*> mFuncTable;
 
@@ -14,7 +17,7 @@ class Module {
   std::unordered_map<std::string, GlobalVariable*> mGlobalVariableTable;
 
  public:
-  Module() = default;
+  Module() : mArena{utils::Arena::Source::IR} {};
 
   //! get
   auto& funcs() const { return mFunctions; }
@@ -30,6 +33,9 @@ class Module {
 
   void rename();
   // readable ir print
-  void print(std::ostream& os);
+  void print(std::ostream& os) const;
+  bool verify(std::ostream& os) const;
 };
+
+SYSYC_ARENA_TRAIT(Module, IR);
 }

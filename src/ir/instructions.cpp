@@ -596,19 +596,69 @@ void PhiInst::print(std::ostream& os) const {
 }
 
 BasicBlock* PhiInst::getbbfromVal(Value* val) {
-  for (size_t i = 0; i < mSize; i++) {
+  //! only return first matched val
+  for(size_t i = 0; i < mSize; i++){
     if (getValue(i) == val)
       return getBlock(i);
   }
+  assert(false && "can't find match basic block!");
   return nullptr;
 }
 
 Value* PhiInst::getvalfromBB(BasicBlock* bb) {
-  for (size_t i = 0; i < mSize; i++) {
-    if (getBlock(i) == bb)
-      return getValue(i);
-  }
+  // for(auto mpair:mbbToVal){
+  //   std::cerr<<mpair.first->name()<<"\t"<<mpair.second->name()<<std::endl;
+  // }
+  refreshMap();
+  if(mbbToVal.count(bb))return mbbToVal[bb];
+  assert(false && "can't find match value!");
   return nullptr;
+}
+
+
+void PhiInst::delValue(Value* val) {
+  //! only delete the first matched value
+  size_t i;
+  auto bb=getbbfromVal(val);
+  for (i = 0; i < mSize; i++) {
+    if (getValue(i) == val)
+      break;
+  }
+  delete_operands(2 * i);
+  delete_operands(2 * i);
+  mSize--;
+  mbbToVal.erase(bb);
+}
+
+void PhiInst::delBlock(BasicBlock* bb) {
+  if(not mbbToVal.count(bb))
+    assert(false and "can't find bb incoming!");
+  size_t i;
+  for (i = 0; i < mSize; i++) {
+    if (getBlock(i) == bb)
+      break;
+  }
+  delete_operands(2 * i);
+  delete_operands(2 * i);
+  mSize--;
+  mbbToVal.erase(bb);
+}
+
+void PhiInst::replaceBlock(BasicBlock* newBB, size_t k) {
+  assert(k<mSize);
+  refreshMap();
+  auto val=mbbToVal[getBlock(k)];
+  mbbToVal.erase(getBlock(k));
+  setOperand(2 * k + 1, newBB);
+  mbbToVal[newBB]=val;
+}
+
+void PhiInst::replaceoldtonew(BasicBlock* newbb,BasicBlock* oldbb){
+  assert(mbbToVal.count(oldbb));
+  refreshMap();
+  auto val=mbbToVal[oldbb];
+  delBlock(oldbb);
+  addIncoming(val,newbb);
 }
 
 Value* PhiInst::getConstantRepl() {
@@ -624,32 +674,11 @@ Value* PhiInst::getConstantRepl() {
   return curval;
 }
 
-void PhiInst::delValue(Value* val) {
-  size_t i;
-  for (i = 0; i < mSize; i++) {
-    if (getValue(i) == val)
-      break;
+void PhiInst::refreshMap(){
+  mbbToVal.clear();
+  for(size_t i=0;i<mSize;i++){
+    mbbToVal[getBlock(i)]=getValue(i);
   }
-  assert(i != mSize);
-  delete_operands(2 * i);
-  delete_operands(2 * i);
-  mSize--;
-}
-
-void PhiInst::delBlock(BasicBlock* bb) {
-  size_t i;
-  for (i = 0; i < mSize; i++) {
-    if (getBlock(i) == bb)
-      break;
-  }
-  assert(i != mSize);
-  delete_operands(2 * i);
-  delete_operands(2 * i);
-  mSize--;
-}
-
-void PhiInst::replaceBlock(BasicBlock* newBB, size_t k) {
-  setOperand(2 * k + 1, newBB);
 }
 
 /*

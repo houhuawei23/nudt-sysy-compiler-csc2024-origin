@@ -17,6 +17,12 @@
 #include "pass/optimize/inline.hpp"
 #include "pass/optimize/reg2mem.hpp"
 #include "pass/optimize/ADCE.hpp"
+#include "pass/optimize/loopsimplify.hpp"
+#include "pass/analysis/irtest.hpp"
+#include "pass/analysis/ControlFlowGraph.hpp"
+
+#include "pass/optimize/InstCombine/ArithmeticReduce.hpp"
+
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
 #include "mir/lowering.hpp"
@@ -44,14 +50,19 @@ int main(int argc, char* argv[]) {
     SysYParser::CompUnitContext* ast_root = parser.compUnit();
 
     //! 1. IR Generation
-    ir::Module* base_module = new ir::Module();
+    auto module = ir::Module();
+    ir::Module* base_module = &module;
     sysy::SysYIRGenerator gen(base_module, ast_root);
     auto module_ir = gen.build_ir();
-
+    if(not module_ir->verify(std::cerr)) {
+        std::cerr << "IR verification failed" << std::endl;
+        assert(false && "IR verification failed");
+    }
     //! 2. Optimization Passes
     pass::topAnalysisInfoManager* tAIM = new pass::topAnalysisInfoManager(module_ir);
     tAIM->initialize();
     pass::PassManager* pm = new pass::PassManager(module_ir,tAIM);
+    pm->run(new pass::CFGAnalysisHHW());
 
     if (not config.pass_names.empty()) {
         for (auto pass_name : config.pass_names) {
@@ -87,6 +98,13 @@ int main(int argc, char* argv[]) {
                 pm->run(new pass::Inline());
             } else if (pass_name.compare("adce") == 0){
                 pm->run(new pass::ADCE());
+            } else if (pass_name.compare("loopsimplify") == 0){
+                pm->run(new pass::loopsimplify());
+            } else if(pass_name.compare("instcombine") == 0){
+                // recommend: -p mem2reg -p instcombine -p dce
+                pm->run(new pass::ArithmeticReduce());
+            } else if (pass_name.compare("test") == 0){
+                pm->run(new pass::irCheck());
             }
             else {
                 assert(false && "Invalid pass name");

@@ -2,23 +2,22 @@
 #include "ir/utils_ir.hpp"
 #include "ir/type.hpp"
 #include "ir/instructions.hpp"
-
+#include "support/arena.hpp"
 namespace ir {
 BasicBlock* Function::newBlock() {
-  auto nb = new BasicBlock("", this);
+  auto nb = utils::make<BasicBlock>("", this);
   mBlocks.emplace_back(nb);
   return nb;
 }
 
 BasicBlock* Function::newEntry(const_str_ref name) {
   assert(mEntry == nullptr);
-  mEntry = new BasicBlock(name, this);
+  mEntry = utils::make<BasicBlock>(name, this);
   mBlocks.emplace_back(mEntry);
   return mEntry;
 }
 BasicBlock* Function::newExit(const_str_ref name) {
-  assert(mExit == nullptr);
-  mExit = new BasicBlock(name, this);
+  mExit = utils::make<BasicBlock>(name, this);
   mBlocks.emplace_back(mExit);
   return mExit;
 }
@@ -101,8 +100,7 @@ void Function::print(std::ostream& os) const {
 }
 
 void Function::rename() {
-  if (mBlocks.empty())
-    return;
+  if (mBlocks.empty()) return;
   setVarCnt(0);
   for (auto arg : mArguments) {
     std::string argname = "%" + std::to_string(varInc());
@@ -113,11 +111,9 @@ void Function::rename() {
     bb->set_idx(blockIdx);
     blockIdx++;
     for (auto inst : bb->insts()) {
-      if (inst->isNoName())
-        continue;
+      if (inst->isNoName()) continue;
       auto callpt = dyn_cast<CallInst>(inst);
-      if (callpt and callpt->isVoid())
-        continue;
+      if (callpt and callpt->isVoid()) continue;
       inst->setvarname();
     }
   }
@@ -136,7 +132,7 @@ Function* Function::copy_func() {
     ValueCopy[gvalue] = gvalue;
   }
   // copy func
-  auto copyfunc = new Function(type(), name() + "_copy", mModule);
+  auto copyfunc = utils::make<Function>(type(), name() + "_copy", mModule);
   // copy args
   for (auto arg : mArguments) {
     Value* copyarg = copyfunc->new_arg(arg->type(), "");
@@ -165,8 +161,7 @@ Function* Function::copy_func() {
   }
 
   auto getValue = [&](Value* val) -> Value* {
-    if (auto c = dyn_cast<Constant>(val))
-      return c;
+    if (auto c = dyn_cast<Constant>(val)) return c;
     return ValueCopy[val];
   };
 
@@ -174,17 +169,15 @@ Function* Function::copy_func() {
   std::vector<PhiInst*> phis;
   std::set<BasicBlock*> vis;
   BasicBlock::BasicBlockDfs(mEntry, [&](BasicBlock* bb) -> bool {
-    if (vis.count(bb))
-      return true;
+    if (vis.count(bb)) return true;
     vis.insert(bb);
     auto bbCpy = dyn_cast<BasicBlock>(ValueCopy[bb]);
     for (auto inst : bb->insts()) {
       auto copyinst = inst->copy_inst(getValue);
       copyinst->setBlock(bbCpy);
       ValueCopy[inst] = copyinst;
-      bbCpy->insts().emplace_back(copyinst);
-      if (auto phi = dyn_cast<PhiInst>(inst))
-        phis.emplace_back(phi);
+      bbCpy->emplace_back_inst(copyinst);
+      if (auto phi = dyn_cast<PhiInst>(inst)) phis.emplace_back(phi);
     }
     return false;
   });
@@ -197,6 +190,15 @@ Function* Function::copy_func() {
     }
   }
   return copyfunc;
+}
+
+bool Function::verify(std::ostream& os) const {
+  for (auto block : mBlocks) {
+    if (not block->verify(os)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 }  // namespace ir

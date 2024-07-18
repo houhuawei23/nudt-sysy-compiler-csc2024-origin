@@ -335,6 +335,7 @@ public:
     explicit MIRJumpTable(std::string symbol) : MIRRelocable(symbol) {}
 public:  // get function
     auto& data() { return _data; }
+    void print(std::ostream& os, CodeGenContext& ctx) {}
 };
 
 /* MIRFunction */
@@ -427,10 +428,11 @@ private:
     MIRFunction_UPtrVec _functions;
     MIRGlobalObject_UPtrVec _global_objs;
     ir::Module* _ir_module;
-public:
-    MIRModule() = default;
-    MIRModule(ir::Module* ir_module, Target& target) : _ir_module(ir_module), _target(target) {}
-public:  // get function
+
+   public:
+    MIRModule(ir::Module* ir_module, Target& target)
+        : _ir_module(ir_module), _target(target) {}
+
     MIRFunction_UPtrVec& functions() { return _functions; }
     MIRGlobalObject_UPtrVec& global_objs() { return _global_objs; }
 public:
