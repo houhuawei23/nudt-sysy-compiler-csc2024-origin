@@ -60,17 +60,13 @@ namespace pass
         ir::BasicBlock *destBB = instruction->block()->function()->entry(); // 初始化放置块为entry块,整棵树的root
         ir::BasicBlock *opBB;
 
-        for (auto op : instruction->operands()) // 遍历使用这条指令的所有指令
+        for (auto op : instruction->operands()) // 遍历这条指令使用的所有指令
         {
             if (dyn_cast<ir::Instruction>(op->value()))
             {
                 auto opInst = dyn_cast<ir::Instruction>(op->value());
                 scheduleEarly(opInst);
                 opBB = opInst->block();
-                // if (opBB->domLevel > destBB->domLevel)
-                // {
-                //     destBB = opBB;
-                // }
                 if (domctx->domlevel(opBB) > domctx->domlevel(destBB))
                 {
                     destBB = opBB;
@@ -93,7 +89,7 @@ namespace pass
         insts_visited.insert(instruction);
 
         ir::BasicBlock *destBB = nullptr;
-        for (auto use : instruction->uses()) // 遍历这条指令使用的所有指令
+        for (auto use : instruction->uses()) // 遍历使用这条指令的所有指令
         {
             if (dyn_cast<ir::Instruction>(use->user()))
             {

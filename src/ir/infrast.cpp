@@ -176,7 +176,7 @@ Instruction* Instruction::copy_inst(std::function<Value*(Value*)> getValue) {
   if (auto allocainst = dyn_cast<AllocaInst>(this)) {
     if (allocainst->isScalar()) {
       return utils::make<AllocaInst>(allocainst->baseType());
-    } else {  // TODO 复制数组的alloca
+    } else { 
       auto basetype = dyn_cast<ArrayType>(allocainst->baseType());
       return utils::make<AllocaInst>(basetype->baseType(), basetype->dims());
     }

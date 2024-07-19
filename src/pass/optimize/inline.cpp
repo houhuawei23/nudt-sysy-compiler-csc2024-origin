@@ -9,8 +9,6 @@
 namespace pass {
 void Inline::callinline(ir::CallInst* call) {
     ir::Function* callee = call->callee();//被调用的需要被展开的函数
-    if(callee->isFloat32())
-        ;
     ir::Function* copyfunc = callee->copy_func(); //callee的复制，展开的是这个函数而不是callee
     ir::BasicBlock* nowBB = call->block();
     ir::Function* caller = nowBB->function();
