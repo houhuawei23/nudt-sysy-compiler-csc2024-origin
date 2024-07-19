@@ -15,8 +15,9 @@ set -e
 asmfile="./test/.out/gen.s"
 outfile="./gen.o"
 memset_s="./test/link/memset.s"
+compiler_path="./compiler"
 
-# ./main -f $infile -S -o $asmfile
+# ./compiler -f $infile -S -o $asmfile
 
 riscv64-linux-gnu-gcc -ggdb -static -march=rv64gc -mabi=lp64d -mcmodel=medlow \
  -o "${outfile}" "${asmfile}" "${memset_s}" ./test/link/link.c

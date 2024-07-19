@@ -8,7 +8,7 @@ qemu_riscv64="qemu-riscv64"
 llvm_lli="llvm-lli-14"
 riscv64_gpp="riscv64-linux-gnu-g++-12"
 riscv64_gcc="riscv64-linux-gnu-gcc-12"
-
+compiler_path="./compiler"
 function riscv64_gcc_compile() {
     $riscv64_gcc -march=rv64gc -mabi=lp64d -mcmodel=medlow -ffp-contract=on -O0 $@
 }
@@ -156,8 +156,8 @@ function run_gcc_test() {
     cat "${sy_c}" >"${gcc_c}"
     cat "${single_file}" >>"${gcc_c}"
 
-    riscv64-linux-gnu-g++ -S -march=rv64gc -mabi=lp64d -mcmodel=medlow -ffp-contract=on "${gcc_c}" -o "${gcc_s}" -O0
-    riscv64-linux-gnu-g++ -march=rv64gc -mabi=lp64d -mcmodel=medlow -ffp-contract=on "${gcc_c}" -o "${gcc_o}" -O0
+    $riscv64_gpp -S -march=rv64gc -mabi=lp64d -mcmodel=medlow -ffp-contract=on "${gcc_c}" -o "${gcc_s}" -O0
+    $riscv64_gpp -march=rv64gc -mabi=lp64d -mcmodel=medlow -ffp-contract=on "${gcc_c}" -o "${gcc_o}" -O0
     if [ -f $in_file ]; then
         # timeout $TIMEOUT
         qemu_riscv64_run $gcc_o <$in_file >$gcc_out
@@ -206,25 +206,24 @@ function run_compiler_test() {
     cat "${single_file}" >"${gen_c}"
 
     # emit llvm ir
-    timeout $TIMEOUT ./main -f "${single_file}" -i -t ${PASSES_STR} -o "${gen_ll}" "${OPT_LEVEL}" "${LOG_LEVEL}"
+    timeout $TIMEOUT $compiler_path -f "${single_file}" -i -t ${PASSES_STR} -o "${gen_ll}" "${OPT_LEVEL}" "${LOG_LEVEL}"
     if [ $? != 0 ]; then
-        echo "${RED}[TIMEOUT]${RESET}: ./main -f ${single_file} -i -t ${PASSES_STR} -o ${gen_ll} ${OPT_LEVEL} ${LOG_LEVEL}"
+        echo "${RED}[TIMEOUT]${RESET}: $compiler_path -f ${single_file} -i -t ${PASSES_STR} -o ${gen_ll} ${OPT_LEVEL} ${LOG_LEVEL}"
         return $EC_MAIN
     fi
     # emit assembly code
-    timeout $TIMEOUT ./main -f "${single_file}" -S -t ${PASSES_STR} -o "${gen_s}" "${OPT_LEVEL}" "${LOG_LEVEL}"
+    timeout $TIMEOUT $compiler_path -f "${single_file}" -S -t ${PASSES_STR} -o "${gen_s}" "${OPT_LEVEL}" "${LOG_LEVEL}"
     mainres=$?
     if [ $mainres == $EC_TIMEOUT ]; then
-        echo "${RED}[TIMEOUT]${RESET}: ./main -f ${single_file} -S -t ${PASSES_STR} -o ${gen_s} ${OPT_LEVEL} ${LOG_LEVEL}"
+        echo "${RED}[TIMEOUT]${RESET}: $compiler_path -f ${single_file} -S -t ${PASSES_STR} -o ${gen_s} ${OPT_LEVEL} ${LOG_LEVEL}"
         return $EC_TIMEOUT
     fi
     if [ $mainres != 0 ]; then
         return $EC_MAIN
     fi
 
-    local gen_elf="${output_dir}/gen.elf"
     # for test
-    riscv64_gcc_compile ${gen_s} ${sy_c} ${memset_s} -o ${gen_o}
+    riscv64_gcc_compile ${gen_s} ${sy_c} -o ${gen_o}
     if [ $? != 0 ]; then
         return $EC_RISCV_GCC
     fi

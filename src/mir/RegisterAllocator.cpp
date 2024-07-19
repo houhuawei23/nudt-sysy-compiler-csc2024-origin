@@ -6,7 +6,7 @@
 
 namespace mir {
 void IPRAUsageCache::add(const CodeGenContext& ctx, MIRFunction& mfunc) {
-    constexpr bool Debug = true;
+    constexpr bool Debug = false;
     IPRAInfo info;
 
     for (auto& block : mfunc.blocks()) {

@@ -12,7 +12,7 @@
 #include "target/riscv/riscv.hpp"
 #include "target/riscv/riscvtarget.hpp"
 using namespace std;
-/* ./main -f test.c -i -t mem2reg -o gen.ll -O0 -L0 */
+/* ./compiler -f test.c -i -t mem2reg -o gen.ll -O0 -L0 */
 int main(int argc, char* argv[]) {
     sysy::Config config;
     // config.parse_cmd_args(argc, argv);

@@ -5,8 +5,10 @@ import subprocess
 import os
 
 target = sys.argv[1]
-dst = sys.argv[2]
-src = os.path.dirname(os.path.abspath(__file__)) + "/LoopParallel.cpp"
+# infile = sys.argv[2]
+outfile = sys.argv[2]
+# src = os.path.dirname(os.path.abspath(__file__)) + "/LoopParallel.cpp"
+infile = os.path.dirname(os.path.abspath(__file__)) + "/memset.cpp"
 
 gcc_ref_command = {
     "RISCV": "riscv64-linux-gnu-g++-12 -O3 -DNDEBUG -march=rv64gc_zba_zbb -fno-stack-protector -fomit-frame-pointer -mcpu=sifive-u74 -mabi=lp64d -mcmodel=medlow -ffp-contract=on -w ".split(),
@@ -14,9 +16,12 @@ gcc_ref_command = {
 }[target]
 
 ret = subprocess.check_output(
-    gcc_ref_command + [src, "-S", "-o", "/dev/stdout"]
+    gcc_ref_command + [infile, "-S", "-o", "/dev/stdout"]
 ).decode("utf-8")
-with open(dst, "w") as f:
+
+# print(ret)
+
+with open(outfile, "w") as f:
     f.write("// Automatically generated file, do not edit!\n")
     f.write('R"(')
     f.write(ret)

@@ -16,6 +16,9 @@ namespace mir {
  * @brief: RISCVDataLayout Class
  * @note: RISC-V数据信息 (64位)
  */
+static const std::string SysYRuntime = 
+#include "autogen/riscv/Runtime.hpp"
+;
 class RISCVDataLayout final : public DataLayout {
 public:
     Endian edian() override { return Endian::Little; }
@@ -69,59 +72,7 @@ public:  // sa stage (stack allocation stage)
         RISCV::adjust_reg(insts, std::prev(insts.end()), RISCV::sp, RISCV::sp, stack_size);
     }
     int32_t insert_prologue_epilogue(MIRFunction* func, std::unordered_set<MIROperand*>& callee_saved_regs,
-                                     CodeGenContext& ctx, MIROperand* return_addr_reg) override {
-        std::vector<std::pair<MIROperand*, MIROperand*>> saved;
-
-        /* find the callee saved registers */
-        /* allocate stack space for callee-saved registers */
-        {
-            for (auto op : callee_saved_regs) {
-                auto size = getOperandSize(
-                    ctx.registerInfo->getCanonicalizedRegisterType(op->type()));
-                auto alignment = size;
-                auto stack = func->add_stack_obj(ctx.next_id(), size, alignment, 0, StackObjectUsage::CalleeSaved);
-
-                saved.emplace_back(op, stack);
-            }
-        }
-        /* return address register */
-        auto size = getOperandSize(return_addr_reg->type());
-        auto alignment = size;
-        auto stack = func->add_stack_obj(ctx.next_id(), size, alignment, 0, StackObjectUsage::CalleeSaved);
-        saved.emplace_back(return_addr_reg, stack);
-
-
-        /* insert the prologue and epilogue */
-        {
-            for (auto& block : func->blocks()) {
-                auto& instructions = block->insts();
-
-                // 1. 开始执行指令之前保存相关的调用者维护寄存器
-                if (&block == &func->blocks().front()) {
-                    for (auto [op, stack] : saved) {
-                        auto inst = new MIRInst{InstStoreRegToStack};
-                        inst->set_operand(0, stack);
-                        inst->set_operand(1, op);
-                        instructions.push_front(inst);
-                    }
-                }
-
-                // 2. 函数返回之前将相关的调用者维护寄存器释放
-                auto exit = instructions.back();
-                auto& instInfo = ctx.instInfo.get_instinfo(exit);
-                if (requireFlag(instInfo.inst_flag(), InstFlagReturn)) {
-                    auto pos = std::prev(instructions.end());
-                    for (auto [op, stack] : saved) {
-                        auto inst = new MIRInst{InstLoadRegFromStack};
-                        inst->set_operand(0, op);
-                        inst->set_operand(1, stack);
-                        instructions.insert(pos, inst);
-                    }
-                }
-            }
-        }
-        return 0;
-    }
+                                     CodeGenContext& ctx, MIROperand* return_addr_reg) override ;
 public:  // alignment
     size_t get_stackpointer_alignment() override { return 8; }
 };

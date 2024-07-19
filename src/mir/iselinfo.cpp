@@ -96,7 +96,7 @@ void ISelContext::run_isel(MIRFunction* func) {
         // }
 
         //! 指令遍历和分析: 对每个基本块的指令进行遍历，执行指令选择和替换。
-        std::cerr << "function " << func->name() << "\n";
+        // std::cerr << "function " << func->name() << "\n";
         for (auto& block : func->blocks()) {
             if (debugISel) {
                 std::cout << block->name() << std::endl;
@@ -109,8 +109,8 @@ void ISelContext::run_isel(MIRFunction* func) {
                     if (instinfo.operand_flag(idx) & OperandFlagDef) {
                         auto def = inst->operand(idx);
                         if (def->is_reg() && isVirtualReg(def->reg())) {
-                            std::cerr << "def reg v " << (def->reg() ^ virtualRegBegin) << "\n";
-                            std::cerr << "def address " << def << "\n";
+                            // std::cerr << "def reg v " << (def->reg() ^ virtualRegBegin) << "\n";
+                            // std::cerr << "def address " << def << "\n";
                             _inst_map.emplace(def->reg(), inst);
                         }
                     }

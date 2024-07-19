@@ -19,3 +19,5 @@ sudo ln -s /usr/bin/llvm-link-14 /usr/bin/llvm-link
 # qemu-system-* is for system emulation
 
 ln -s /usr/bin/llvm-link-14 /usr/bin/llvm-link
+
+sudo apt install libantlr4-runtime-dev antlr4 libgtest-dev default-jdk

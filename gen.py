@@ -6,7 +6,7 @@ compiler_path = sys.argv[1]
 test_path = sys.argv[2]
 out_path = sys.argv[3]
 
-# python gen.py ./main ./test/2021/functional ./test/2021/functional/asm
+# python gen.py ./compiler ./test/2021/functional ./test/2021/functional/asm
 
 def run_compiler(
     source_path,

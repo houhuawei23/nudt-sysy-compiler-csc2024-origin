@@ -12,12 +12,12 @@ namespace sysy {
 -S: gen assembly
 -O[0-3]: opt level
 
-./main -f test.c -i -t mem2reg dce -o gen.ll
-./main -f test.c -i -t mem2reg -o gen.ll -O0 -L0
+./compiler-f test.c -i -t mem2reg dce -o gen.ll
+./compiler -f test.c -i -t mem2reg -o gen.ll -O0 -L0
 */
 
 std::string_view HELP = R"(
-Usage: ./main [options]
+Usage: ./compiler [options]
   -f {filename}         input file
   -i                    Generate IR
   -t {passname} ...     opt passes names to run
@@ -27,8 +27,8 @@ Usage: ./main [options]
   -L[0-2]               log level: 0=SILENT, 1=INFO, 2=DEBUG
 
 Examples:
-$ ./main -f test.c -i -t mem2reg -o gen.ll -O0 -L0
-$ ./main -f test.c -i -t mem2reg dce -o gen.ll
+$ ./compiler -f test.c -i -t mem2reg -o gen.ll -O0 -L0
+$ ./compiler -f test.c -i -t mem2reg dce -o gen.ll
 )";
 
 void Config::print_help() {

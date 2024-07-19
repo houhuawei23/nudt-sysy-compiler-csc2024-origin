@@ -5,6 +5,8 @@
 set -u # dont ignore unset variables
 # set -x # print all executed commands
 
+compiler_path="./compiler"
+
 PASS_CNT=0
 WRONG_CNT=0
 ALL_CNT=0
@@ -199,8 +201,8 @@ function run_gen_test() {
     touch "${gen_c}"
     cat "${single_file}" >"${gen_c}"
 
-    # ./main "$single_file" >"${gen_ll}"
-    ./main -f "${single_file}" -i -t ${PASSES_STR} -o "${gen_ll}" "${OPT_LEVEL}" "${LOG_LEVEL}"
+    # ./compiler "$single_file" >"${gen_ll}"
+    $compiler_path -f "${single_file}" -i -t ${PASSES_STR} -o "${gen_ll}" "${OPT_LEVEL}" "${LOG_LEVEL}"
     if [ $? != 0 ]; then
         return $EC_MAIN
     fi

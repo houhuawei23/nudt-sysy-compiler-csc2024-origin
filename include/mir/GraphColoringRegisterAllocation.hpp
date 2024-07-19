@@ -152,7 +152,7 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
     const auto& list = ctx.registerInfo->get_allocation_list(allocationClass);
     const std::unordered_set<uint32_t> allocableISARegs{ list.cbegin(), list.cend() };
     
-    constexpr auto DebugRA = true;
+    constexpr auto DebugRA = false;
     if (DebugRA) {
         std::cerr << "allocate for class " << allocationClass << std::endl;
     }
@@ -712,6 +712,6 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
             }
         }
     }
-    std::cerr << "regMap's size is " << regMap.size() << std::endl;
+    // std::cerr << "regMap's size is " << regMap.size() << std::endl;
 }
 }
