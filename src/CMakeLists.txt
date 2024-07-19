@@ -12,11 +12,11 @@ add_subdirectory(mir)
 add_subdirectory(support)
 add_subdirectory(target)
 
-add_executable(main
+add_executable(compiler
     ${SRC_FILES}
 )
 
-target_link_libraries(main PUBLIC 
+target_link_libraries(compiler PUBLIC 
     ir
     visitor  
     pass

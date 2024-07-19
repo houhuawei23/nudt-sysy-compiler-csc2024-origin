@@ -31,6 +31,7 @@ class Config {
     ~Config() = default;
 
     void parse_cmd_args(int argc, char* argv[]);
+    void parseSubmitArgs(int argc, char* argv[]);
     void print_help();
     void print_info();
 

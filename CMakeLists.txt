@@ -90,6 +90,6 @@ COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_LIST_DIR}/submit/compile.py ${S
 COMMAND cd ${SUBMIT_DIR}
 COMMAND ${Python3_EXECUTABLE} ${SUBMIT_DIR}/compile.py ${SUBMIT_DIR} compiler
 # COMMAND make
-DEPENDS main
+DEPENDS compiler
 )
 
