@@ -148,6 +148,7 @@ public:
                 _loops.clear();
                 _head2loop.clear();
             }
+            bool isHeader(ir::BasicBlock* bb){return _head2loop.count(bb);}
             void refresh() override;
     };
 
