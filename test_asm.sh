@@ -305,6 +305,12 @@ function run_test_asm() {
     fi
 }
 
+# if not a file ot directory, exit
+if [[ ! -f "$test_path"  && ! -d "$test_path" ]]; then
+    echo "Invalid test_path: $test_path"
+    exit 1
+fi
+
 # if test_path is a file
 if [ -f "$test_path" ]; then
     run_test_asm "$test_path" "$output_dir" "$result_file"

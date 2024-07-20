@@ -16,6 +16,144 @@
 #include <queue>
 
 namespace mir {
+
+
+MIROperand* FloatPointConstantPool::getFloatConstant(class LoweringContext& ctx, float val){
+  uint32_t rep;
+  memcpy(&rep, &val, sizeof(float));
+  const auto it = mFloatMap.find(rep);
+  uint32_t offset;
+  if(it != mFloatMap.cend()) {
+    offset = it->second;
+  } else {
+    if (not mFloatDataStorage) {
+        auto storage = std::make_unique<MIRDataStorage>(MIRDataStorage::Storage{}, true, "float_const_pool", true);
+        mFloatDataStorage = storage.get();
+        auto pool = std::make_unique<MIRGlobalObject>(sizeof(float), std::move(storage), nullptr);
+        ctx.get_mir_module().global_objs().push_back(std::move(pool));
+    }
+    offset = mFloatMap[rep] = mFloatDataStorage->append_word(rep) * sizeof(float);
+  }
+
+  const auto ptrType = ctx.get_ptr_type();
+  const auto base = ctx.new_vreg(ptrType);
+
+  // LoadGlobalAddress base, reloc(mFloatDataStorage)
+  auto loadGlobalAddrInst = new MIRInst(InstLoadGlobalAddress);
+  loadGlobalAddrInst->set_operand(0, base);
+  loadGlobalAddrInst->set_operand(1, MIROperand::as_reloc(mFloatDataStorage));
+  ctx.emit_inst(loadGlobalAddrInst);
+  
+  // Add addr, base, offset
+  const auto addr = ctx.new_vreg(ptrType);
+  auto addInst = new MIRInst(InstAdd);
+  addInst->set_operand(0, addr);
+  addInst->set_operand(1, base);
+  addInst->set_operand(2, MIROperand::as_imm(offset, ptrType));
+  ctx.emit_inst(addInst);
+
+  // Load dst, addr, 4
+  const auto dst = ctx.new_vreg(OperandType::Float32);
+  auto loadInst = new MIRInst(InstLoad);
+  loadInst->set_operand(0, dst);
+  loadInst->set_operand(1, addr);
+  loadInst->set_operand(2, MIROperand::as_imm(4, OperandType::Special));    
+  ctx.emit_inst(loadInst);  
+  return dst;
+}
+
+
+static OperandType get_optype(ir::Type* type) {
+  if (type->isInt()) {
+    switch (type->btype()) {
+      case ir::INT1: return OperandType::Bool;
+      case ir::INT32: return OperandType::Int32;
+      default: assert(false && "unsupported int type");
+    }
+  } else if (type->isFloatPoint()) {
+    switch (type->btype()) {
+      case ir::FLOAT: return OperandType::Float32;
+      default: assert(false && "unsupported float type");
+    }
+  } else if (type->isPointer()) {  // NOTE: rv64
+    return OperandType::Int64;
+  } else {
+    return OperandType::Special;
+  }
+}
+
+MIROperand* LoweringContext::new_vreg(ir::Type* type) {
+  auto optype = get_optype(type);
+  return MIROperand::as_vreg(_code_gen_ctx->next_id(), optype);
+}
+
+MIROperand* LoweringContext::new_vreg(OperandType type) {
+  return MIROperand::as_vreg(_code_gen_ctx->next_id(), type);
+}
+
+void LoweringContext::add_valmap(ir::Value* ir_val, MIROperand* mir_operand) {
+  if (_val_map.count(ir_val)) assert(false && "value already mapped");
+  _val_map.emplace(ir_val, mir_operand);
+}
+
+MIROperand* LoweringContext::map2operand(ir::Value* ir_val) {
+  /* 1. Local Value */
+  auto iter = _val_map.find(ir_val);
+  if (iter != _val_map.end()) return new MIROperand(*(iter->second));
+
+  /* 2. Global Value */
+  if (auto gvar = dyn_cast<ir::GlobalVariable>(ir_val)) {
+    auto ptr = new_vreg(_ptr_type);
+    auto inst = new MIRInst(InstLoadGlobalAddress);
+    auto g_reloc = gvar_map.at(gvar)->reloc.get();  // MIRRelocable*
+    auto operand = MIROperand::as_reloc(g_reloc);
+    inst->set_operand(0, ptr);
+    inst->set_operand(1, operand);
+    emit_inst(inst);
+    return ptr;
+  }
+
+  /* 3. Constant */
+  if (not ir::isa<ir::Constant>(ir_val)) {
+    std::cerr << "error: " << ir_val->name() << " must be constant"
+              << std::endl;
+    assert(false);
+  }
+
+  auto const_val = dyn_cast<ir::Constant>(ir_val);
+  if (const_val->type()->isInt()) {
+    auto imm = MIROperand::as_imm(const_val->i32(), OperandType::Int32);
+    return imm;
+  }
+  // TODO: support float constant
+  if (const_val->type()->isFloat32()) {
+    if (auto fpOperand = _code_gen_ctx->iselInfo->materializeFPConstant(
+          const_val->f32(), *this)) {
+      return fpOperand;
+    }
+
+    auto fpOperand =
+      mFloatConstantPool.getFloatConstant(*this, const_val->f32());
+    
+    return fpOperand;
+  }
+  std::cerr << "Map2Operand Error: Not Supported IR Value Type: "
+            << utils::enumName(static_cast<ir::BType>(ir_val->type()->btype()))
+            << std::endl;
+  assert(false && "Not Supported Type.");
+  return nullptr;
+}
+
+void LoweringContext::emit_inst(MIRInst* inst) {
+  _mir_block->insts().emplace_back(inst);
+}
+void LoweringContext::emit_copy(MIROperand* dst, MIROperand* src) {
+  auto inst = new MIRInst(select_copy_opcode(dst, src));
+  inst->set_operand(0, dst);
+  inst->set_operand(1, src);
+  emit_inst(inst);
+}
+
 void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& target, 
                        pass::topAnalysisInfoManager* tAIM);
 MIRFunction* create_mir_function(ir::Function* ir_func, MIRFunction* mir_func,
@@ -52,8 +190,7 @@ void create_mir_module(ir::Module& ir_module, MIRModule& mir_module, Target& tar
     }
 
     //! 2. for all global variables, create MIRGlobalObject
-    for (auto ir_gval : ir_module.globalVars()) {
-        auto ir_gvar = dyn_cast<ir::GlobalVariable>(ir_gval);
+    for (auto ir_gvar : ir_module.globalVars()) {
         auto name = ir_gvar->name().substr(1);  /* remove '@' */
         /* 基础类型 (int OR float) */
         auto type = dyn_cast<ir::PointerType>(ir_gvar->type())->baseType();
@@ -373,7 +510,8 @@ void lower(ir::UnaryInst* ir_inst, LoweringContext& ctx) {
 
     auto ret = ctx.new_vreg(ir_inst->type());
     auto inst = new MIRInst(gc_instid);
-    inst->set_operand(0, ret); inst->set_operand(1, ctx.map2operand(ir_inst->operand(0)));
+    inst->set_operand(0, ret); 
+    inst->set_operand(1, ctx.map2operand(ir_inst->operand(0)));
     ctx.emit_inst(inst);
     ctx.add_valmap(ir_inst, ret);
 }

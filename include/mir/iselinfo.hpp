@@ -3,10 +3,12 @@
 #include "mir/mir.hpp"
 #include "mir/LiveInterval.hpp"
 #include "mir/instinfo.hpp"
+#include "mir/lowering.hpp"
 #include <optional>
 
 namespace mir {
 class CodeGenContext;
+class LoweringContext;
 class ISelContext {
     CodeGenContext& _codegen_ctx;
     std::unordered_map<RegNum, MIRInst*> _inst_map, _constant_map;
@@ -66,6 +68,8 @@ public:
                                               StackObject& obj) const = 0;
 
     virtual void postLegalizeInst(const InstLegalizeContext& ctx) const = 0;
+    virtual MIROperand* materializeFPConstant(float fpVal, LoweringContext& loweringCtx)
+        const = 0;
 };
 
 static bool isCompareOp(MIROperand* operand, CompareOp cmpOp) {

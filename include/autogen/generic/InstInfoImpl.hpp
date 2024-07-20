@@ -7,7 +7,7 @@
 GENERIC_NAMESPACE_BEGIN
 
 class GENERICInstInfoJump final : public InstInfo {
-  public:
+public:
   GENERICInstInfoJump() = default;
 
   uint32_t operand_num() const override { return 1; }
@@ -33,7 +33,7 @@ class GENERICInstInfoJump final : public InstInfo {
 };
 
 class GENERICInstInfoBranch final : public InstInfo {
-  public:
+public:
   GENERICInstInfoBranch() = default;
 
   uint32_t operand_num() const override { return 3; }
@@ -62,7 +62,7 @@ class GENERICInstInfoBranch final : public InstInfo {
 };
 
 class GENERICInstInfoUnreachable final : public InstInfo {
-  public:
+public:
   GENERICInstInfoUnreachable() = default;
 
   uint32_t operand_num() const override { return 0; }
@@ -85,7 +85,7 @@ class GENERICInstInfoUnreachable final : public InstInfo {
 };
 
 class GENERICInstInfoLoad final : public InstInfo {
-  public:
+public:
   GENERICInstInfoLoad() = default;
 
   uint32_t operand_num() const override { return 3; }
@@ -112,7 +112,7 @@ class GENERICInstInfoLoad final : public InstInfo {
 };
 
 class GENERICInstInfoStore final : public InstInfo {
-  public:
+public:
   GENERICInstInfoStore() = default;
 
   uint32_t operand_num() const override { return 3; }
@@ -139,7 +139,7 @@ class GENERICInstInfoStore final : public InstInfo {
 };
 
 class GENERICInstInfoAdd final : public InstInfo {
-  public:
+public:
   GENERICInstInfoAdd() = default;
 
   uint32_t operand_num() const override { return 3; }
@@ -168,7 +168,7 @@ class GENERICInstInfoAdd final : public InstInfo {
 };
 
 class GENERICInstInfoSub final : public InstInfo {
-  public:
+public:
   GENERICInstInfoSub() = default;
 
   uint32_t operand_num() const override { return 3; }
@@ -195,7 +195,7 @@ class GENERICInstInfoSub final : public InstInfo {
 };
 
 class GENERICInstInfoMul final : public InstInfo {
-  public:
+public:
   GENERICInstInfoMul() = default;
 
   uint32_t operand_num() const override { return 3; }
@@ -224,7 +224,7 @@ class GENERICInstInfoMul final : public InstInfo {
 };
 
 class GENERICInstInfoUDiv final : public InstInfo {
-  public:
+public:
   GENERICInstInfoUDiv() = default;
 
   uint32_t operand_num() const override { return 3; }
@@ -251,7 +251,7 @@ class GENERICInstInfoUDiv final : public InstInfo {
 };
 
 class GENERICInstInfoURem final : public InstInfo {
-  public:
+public:
   GENERICInstInfoURem() = default;
 
   uint32_t operand_num() const override { return 3; }
@@ -278,7 +278,7 @@ class GENERICInstInfoURem final : public InstInfo {
 };
 
 class GENERICInstInfoAnd final : public InstInfo {
-  public:
+public:
   GENERICInstInfoAnd() = default;
 
   uint32_t operand_num() const override { return 3; }
@@ -307,7 +307,7 @@ class GENERICInstInfoAnd final : public InstInfo {
 };
 
 class GENERICInstInfoOr final : public InstInfo {
-  public:
+public:
   GENERICInstInfoOr() = default;
 
   uint32_t operand_num() const override { return 3; }
@@ -336,7 +336,7 @@ class GENERICInstInfoOr final : public InstInfo {
 };
 
 class GENERICInstInfoXor final : public InstInfo {
-  public:
+public:
   GENERICInstInfoXor() = default;
 
   uint32_t operand_num() const override { return 3; }
@@ -365,7 +365,7 @@ class GENERICInstInfoXor final : public InstInfo {
 };
 
 class GENERICInstInfoShl final : public InstInfo {
-  public:
+public:
   GENERICInstInfoShl() = default;
 
   uint32_t operand_num() const override { return 3; }
@@ -392,7 +392,7 @@ class GENERICInstInfoShl final : public InstInfo {
 };
 
 class GENERICInstInfoLShr final : public InstInfo {
-  public:
+public:
   GENERICInstInfoLShr() = default;
 
   uint32_t operand_num() const override { return 3; }
@@ -419,7 +419,7 @@ class GENERICInstInfoLShr final : public InstInfo {
 };
 
 class GENERICInstInfoAShr final : public InstInfo {
-  public:
+public:
   GENERICInstInfoAShr() = default;
 
   uint32_t operand_num() const override { return 3; }
@@ -446,7 +446,7 @@ class GENERICInstInfoAShr final : public InstInfo {
 };
 
 class GENERICInstInfoSDiv final : public InstInfo {
-  public:
+public:
   GENERICInstInfoSDiv() = default;
 
   uint32_t operand_num() const override { return 3; }
@@ -473,7 +473,7 @@ class GENERICInstInfoSDiv final : public InstInfo {
 };
 
 class GENERICInstInfoSRem final : public InstInfo {
-  public:
+public:
   GENERICInstInfoSRem() = default;
 
   uint32_t operand_num() const override { return 3; }
@@ -500,7 +500,7 @@ class GENERICInstInfoSRem final : public InstInfo {
 };
 
 class GENERICInstInfoSMin final : public InstInfo {
-  public:
+public:
   GENERICInstInfoSMin() = default;
 
   uint32_t operand_num() const override { return 3; }
@@ -529,7 +529,7 @@ class GENERICInstInfoSMin final : public InstInfo {
 };
 
 class GENERICInstInfoSMax final : public InstInfo {
-  public:
+public:
   GENERICInstInfoSMax() = default;
 
   uint32_t operand_num() const override { return 3; }
@@ -558,7 +558,7 @@ class GENERICInstInfoSMax final : public InstInfo {
 };
 
 class GENERICInstInfoNeg final : public InstInfo {
-  public:
+public:
   GENERICInstInfoNeg() = default;
 
   uint32_t operand_num() const override { return 2; }
@@ -583,7 +583,7 @@ class GENERICInstInfoNeg final : public InstInfo {
 };
 
 class GENERICInstInfoAbs final : public InstInfo {
-  public:
+public:
   GENERICInstInfoAbs() = default;
 
   uint32_t operand_num() const override { return 2; }
@@ -608,7 +608,7 @@ class GENERICInstInfoAbs final : public InstInfo {
 };
 
 class GENERICInstInfoFAdd final : public InstInfo {
-  public:
+public:
   GENERICInstInfoFAdd() = default;
 
   uint32_t operand_num() const override { return 3; }
@@ -637,7 +637,7 @@ class GENERICInstInfoFAdd final : public InstInfo {
 };
 
 class GENERICInstInfoFSub final : public InstInfo {
-  public:
+public:
   GENERICInstInfoFSub() = default;
 
   uint32_t operand_num() const override { return 3; }
@@ -664,7 +664,7 @@ class GENERICInstInfoFSub final : public InstInfo {
 };
 
 class GENERICInstInfoFMul final : public InstInfo {
-  public:
+public:
   GENERICInstInfoFMul() = default;
 
   uint32_t operand_num() const override { return 3; }
@@ -693,7 +693,7 @@ class GENERICInstInfoFMul final : public InstInfo {
 };
 
 class GENERICInstInfoFDiv final : public InstInfo {
-  public:
+public:
   GENERICInstInfoFDiv() = default;
 
   uint32_t operand_num() const override { return 3; }
@@ -720,7 +720,7 @@ class GENERICInstInfoFDiv final : public InstInfo {
 };
 
 class GENERICInstInfoFNeg final : public InstInfo {
-  public:
+public:
   GENERICInstInfoFNeg() = default;
 
   uint32_t operand_num() const override { return 2; }
@@ -745,7 +745,7 @@ class GENERICInstInfoFNeg final : public InstInfo {
 };
 
 class GENERICInstInfoFAbs final : public InstInfo {
-  public:
+public:
   GENERICInstInfoFAbs() = default;
 
   uint32_t operand_num() const override { return 2; }
@@ -770,7 +770,7 @@ class GENERICInstInfoFAbs final : public InstInfo {
 };
 
 class GENERICInstInfoFFma final : public InstInfo {
-  public:
+public:
   GENERICInstInfoFFma() = default;
 
   uint32_t operand_num() const override { return 4; }
@@ -799,7 +799,7 @@ class GENERICInstInfoFFma final : public InstInfo {
 };
 
 class GENERICInstInfoICmp final : public InstInfo {
-  public:
+public:
   GENERICInstInfoICmp() = default;
 
   uint32_t operand_num() const override { return 4; }
@@ -828,7 +828,7 @@ class GENERICInstInfoICmp final : public InstInfo {
 };
 
 class GENERICInstInfoFCmp final : public InstInfo {
-  public:
+public:
   GENERICInstInfoFCmp() = default;
 
   uint32_t operand_num() const override { return 4; }
@@ -857,7 +857,7 @@ class GENERICInstInfoFCmp final : public InstInfo {
 };
 
 class GENERICInstInfoSExt final : public InstInfo {
-  public:
+public:
   GENERICInstInfoSExt() = default;
 
   uint32_t operand_num() const override { return 2; }
@@ -882,7 +882,7 @@ class GENERICInstInfoSExt final : public InstInfo {
 };
 
 class GENERICInstInfoZExt final : public InstInfo {
-  public:
+public:
   GENERICInstInfoZExt() = default;
 
   uint32_t operand_num() const override { return 2; }
@@ -907,7 +907,7 @@ class GENERICInstInfoZExt final : public InstInfo {
 };
 
 class GENERICInstInfoTrunc final : public InstInfo {
-  public:
+public:
   GENERICInstInfoTrunc() = default;
 
   uint32_t operand_num() const override { return 2; }
@@ -932,7 +932,7 @@ class GENERICInstInfoTrunc final : public InstInfo {
 };
 
 class GENERICInstInfoF2U final : public InstInfo {
-  public:
+public:
   GENERICInstInfoF2U() = default;
 
   uint32_t operand_num() const override { return 2; }
@@ -957,7 +957,7 @@ class GENERICInstInfoF2U final : public InstInfo {
 };
 
 class GENERICInstInfoF2S final : public InstInfo {
-  public:
+public:
   GENERICInstInfoF2S() = default;
 
   uint32_t operand_num() const override { return 2; }
@@ -982,7 +982,7 @@ class GENERICInstInfoF2S final : public InstInfo {
 };
 
 class GENERICInstInfoU2F final : public InstInfo {
-  public:
+public:
   GENERICInstInfoU2F() = default;
 
   uint32_t operand_num() const override { return 2; }
@@ -1007,7 +1007,7 @@ class GENERICInstInfoU2F final : public InstInfo {
 };
 
 class GENERICInstInfoS2F final : public InstInfo {
-  public:
+public:
   GENERICInstInfoS2F() = default;
 
   uint32_t operand_num() const override { return 2; }
@@ -1032,7 +1032,7 @@ class GENERICInstInfoS2F final : public InstInfo {
 };
 
 class GENERICInstInfoFCast final : public InstInfo {
-  public:
+public:
   GENERICInstInfoFCast() = default;
 
   uint32_t operand_num() const override { return 1; }
@@ -1056,7 +1056,7 @@ class GENERICInstInfoFCast final : public InstInfo {
 };
 
 class GENERICInstInfoCopy final : public InstInfo {
-  public:
+public:
   GENERICInstInfoCopy() = default;
 
   uint32_t operand_num() const override { return 2; }
@@ -1081,7 +1081,7 @@ class GENERICInstInfoCopy final : public InstInfo {
 };
 
 class GENERICInstInfoSelect final : public InstInfo {
-  public:
+public:
   GENERICInstInfoSelect() = default;
 
   uint32_t operand_num() const override { return 4; }
@@ -1110,7 +1110,7 @@ class GENERICInstInfoSelect final : public InstInfo {
 };
 
 class GENERICInstInfoLoadGlobalAddress final : public InstInfo {
-  public:
+public:
   GENERICInstInfoLoadGlobalAddress() = default;
 
   uint32_t operand_num() const override { return 2; }
@@ -1137,7 +1137,7 @@ class GENERICInstInfoLoadGlobalAddress final : public InstInfo {
 };
 
 class GENERICInstInfoLoadImm final : public InstInfo {
-  public:
+public:
   GENERICInstInfoLoadImm() = default;
 
   uint32_t operand_num() const override { return 2; }
@@ -1162,7 +1162,7 @@ class GENERICInstInfoLoadImm final : public InstInfo {
 };
 
 class GENERICInstInfoLoadStackObjectAddr final : public InstInfo {
-  public:
+public:
   GENERICInstInfoLoadStackObjectAddr() = default;
 
   uint32_t operand_num() const override { return 2; }
@@ -1191,7 +1191,7 @@ class GENERICInstInfoLoadStackObjectAddr final : public InstInfo {
 };
 
 class GENERICInstInfoCopyFromReg final : public InstInfo {
-  public:
+public:
   GENERICInstInfoCopyFromReg() = default;
 
   uint32_t operand_num() const override { return 2; }
@@ -1216,7 +1216,7 @@ class GENERICInstInfoCopyFromReg final : public InstInfo {
 };
 
 class GENERICInstInfoCopyToReg final : public InstInfo {
-  public:
+public:
   GENERICInstInfoCopyToReg() = default;
 
   uint32_t operand_num() const override { return 2; }
@@ -1243,7 +1243,7 @@ class GENERICInstInfoCopyToReg final : public InstInfo {
 };
 
 class GENERICInstInfoLoadImmToReg final : public InstInfo {
-  public:
+public:
   GENERICInstInfoLoadImmToReg() = default;
 
   uint32_t operand_num() const override { return 2; }
@@ -1268,7 +1268,7 @@ class GENERICInstInfoLoadImmToReg final : public InstInfo {
 };
 
 class GENERICInstInfoLoadRegFromStack final : public InstInfo {
-  public:
+public:
   GENERICInstInfoLoadRegFromStack() = default;
 
   uint32_t operand_num() const override { return 2; }
@@ -1293,7 +1293,7 @@ class GENERICInstInfoLoadRegFromStack final : public InstInfo {
 };
 
 class GENERICInstInfoStoreRegToStack final : public InstInfo {
-  public:
+public:
   GENERICInstInfoStoreRegToStack() = default;
 
   uint32_t operand_num() const override { return 2; }
@@ -1318,7 +1318,7 @@ class GENERICInstInfoStoreRegToStack final : public InstInfo {
 };
 
 class GENERICInstInfoReturn final : public InstInfo {
-  public:
+public:
   GENERICInstInfoReturn() = default;
 
   uint32_t operand_num() const override { return 0; }
@@ -1390,7 +1390,7 @@ class GENERICInstInfo final : public TargetInstInfo {
   GENERICInstInfoStoreRegToStack _instinfoStoreRegToStack;
   GENERICInstInfoReturn _instinfoReturn;
 
-  public:
+public:
   GENERICInstInfo() = default;
   InstInfo& get_instinfo(uint32_t opcode) {
     switch (opcode) {

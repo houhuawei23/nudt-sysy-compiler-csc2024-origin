@@ -136,6 +136,7 @@ public:
                                     MIROperand* op,
                                     StackObject& obj) const override;
     void postLegalizeInst(const InstLegalizeContext& ctx) const override;
+    MIROperand* materializeFPConstant(float fpVal, LoweringContext& loweringCtx) const override;
 };
 
 

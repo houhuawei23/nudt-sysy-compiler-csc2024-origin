@@ -31,7 +31,7 @@ void MIRZeroStorage::print(std::ostream& os, CodeGenContext& ctx) {}
 void MIRDataStorage::print(std::ostream& os, CodeGenContext& ctx) {
     for (auto& val : _data) {
         os << "\t.4byte\t";
-        if (is_float()) os << (float)val << std::endl;
+        if (is_float()) os << val << std::endl;
         else os << val << std::endl;
     }
 }

@@ -18,7 +18,7 @@ class RISCVScheduleModel_sifive_u74 final : public TargetScheduleModel {
 
   RISCVScheduleClassDivRem mScheduleClass_DivRem;
 
-  public:
+public:
   ScheduleClass& getInstScheClass(uint32_t opcode) override {
     switch (opcode) {
       case ADDI:

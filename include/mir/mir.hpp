@@ -413,7 +413,7 @@ struct MIRGlobalObject {
     MIRRelocable_UPtr reloc;  /* MIRZeroStorage OR MIRDataStorage */
 
     MIRGlobalObject() = default;
-    MIRGlobalObject(size_t align, std::unique_ptr<MIRRelocable> reloc, MIRModule* parent)
+    MIRGlobalObject(size_t align, std::unique_ptr<MIRRelocable> reloc, MIRModule* parent = nullptr)
         : parent(parent), align(align), reloc(std::move(reloc)) {}
     void print(std::ostream& os);
 };

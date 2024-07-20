@@ -41,6 +41,16 @@ constexpr bool isOperandGR(MIROperand& operand) {
     return GPRBegin <= reg && reg < GPREnd;
 }
 
+constexpr bool isOperandFPR(MIROperand& operand) {
+    if (not operand.is_reg() || not isFloatType(operand.type()))
+        return false;
+    if(isVirtualReg(operand.reg())) {
+        return true;
+    }
+    auto reg = operand.reg();
+    return FPRBegin <= reg && reg < FPREnd;
+}
+
 /*
  * @note: 相关寄存器功能: 
  *      1. a1 -- return value
@@ -68,6 +78,8 @@ static std::ostream& operator<<(std::ostream& os, OperandDumper opdp) {
             os << "so" << (operand->reg() ^ stackObjectBegin);
         } else if (isOperandGR(*operand)) {
             os << getRISCVGPRTextualName(operand->reg());
+        } else if (isOperandFPR(*operand)){
+            os << "f" << (operand->reg() - FPRBegin);
         } else {
             os << "[reg]";
         }
@@ -95,6 +107,9 @@ constexpr bool isOperandImm12(MIROperand* operand) {
     if (operand->is_reloc() && operand->type() == OperandType::LowBits)
         return true;
     return operand->is_imm() && isSignedImm<12>(operand->imm());
+}
+constexpr bool isOperandImm32(MIROperand* operand) {
+    return operand->is_imm() && isSignedImm<32>(operand->imm());
 }
 
 constexpr bool isOperandNonZeroImm12(MIROperand* operand) {
