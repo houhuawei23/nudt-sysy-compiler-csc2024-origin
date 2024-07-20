@@ -75,21 +75,21 @@ find_package(Python3 REQUIRED)
 
 set(SUBMIT_DIR ${CMAKE_CURRENT_BINARY_DIR}/submit)
 
-add_custom_target(submit ALL
-COMMAND ${CMAKE_COMMAND} -E rm -rf ${SUBMIT_DIR}
-COMMAND ${CMAKE_COMMAND} -E make_directory ${SUBMIT_DIR}
-COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_LIST_DIR}/submit/Makefile ${SUBMIT_DIR}/Makefile
-COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/src ${SUBMIT_DIR}/src
-COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/include ${SUBMIT_DIR}/include
-COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/src/antlr4/*.cpp ${SUBMIT_DIR}/src/
-COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/src/antlr4/*.h ${SUBMIT_DIR}/include/
-COMMAND ${CMAKE_COMMAND} -E rm -rf ${SUBMIT_DIR}/src/runtime
-COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_LIST_DIR}/submit/file_filter.py ${SUBMIT_DIR}
-COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_LIST_DIR}/submit/header_fix.py ${SUBMIT_DIR}
-COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_LIST_DIR}/submit/compile.py ${SUBMIT_DIR}/compile.py
-COMMAND cd ${SUBMIT_DIR}
-COMMAND ${Python3_EXECUTABLE} ${SUBMIT_DIR}/compile.py ${SUBMIT_DIR} compiler
-# COMMAND make
-DEPENDS compiler
-)
+# add_custom_target(submit ALL
+# COMMAND ${CMAKE_COMMAND} -E rm -rf ${SUBMIT_DIR}
+# COMMAND ${CMAKE_COMMAND} -E make_directory ${SUBMIT_DIR}
+# COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_LIST_DIR}/submit/Makefile ${SUBMIT_DIR}/Makefile
+# COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/src ${SUBMIT_DIR}/src
+# COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/include ${SUBMIT_DIR}/include
+# COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/src/antlr4/*.cpp ${SUBMIT_DIR}/src/
+# COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/src/antlr4/*.h ${SUBMIT_DIR}/include/
+# COMMAND ${CMAKE_COMMAND} -E rm -rf ${SUBMIT_DIR}/src/runtime
+# COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_LIST_DIR}/submit/file_filter.py ${SUBMIT_DIR}
+# COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_LIST_DIR}/submit/header_fix.py ${SUBMIT_DIR}
+# COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_LIST_DIR}/submit/compile.py ${SUBMIT_DIR}/compile.py
+# COMMAND cd ${SUBMIT_DIR}
+# COMMAND ${Python3_EXECUTABLE} ${SUBMIT_DIR}/compile.py ${SUBMIT_DIR} compiler
+# # COMMAND make
+# DEPENDS compiler
+# )
 

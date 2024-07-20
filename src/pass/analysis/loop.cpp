@@ -61,6 +61,7 @@ namespace pass{
     }
 
     void loopAnalysis::loopGetExits(ir::Loop* plp){
+        plp->blocks().insert(plp->header());
         for(auto bb:plp->blocks()){
             if(lpctx->isHeader(bb) and bb!=plp->header()){
                 auto sblp=lpctx->head2loop(bb);

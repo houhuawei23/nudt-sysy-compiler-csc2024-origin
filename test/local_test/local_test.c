@@ -1,13 +1,14 @@
-int func(int a){
-    int i = 0;
-    int b;
-    while (i < 100){
-        b = a + 2;
-        i+=1;
-    }
-    return b;
-}
 int main(){
-    func(3);
+    int a[5]={1,2,3,4,5};
+    int i=0;
+    int sum=0;
+    while(i<5){
+        sum=sum+a[i];
+        if(i==3){
+            sum=sum+2*a[i];
+        }
+        i = i+1;
+    }
+    
     return 0;
 }
