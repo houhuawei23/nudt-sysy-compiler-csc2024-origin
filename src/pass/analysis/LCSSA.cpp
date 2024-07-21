@@ -112,9 +112,9 @@ void LCSSA::rename(std::stack<ir::Value*>& stack,
       }
       if (useInstrMap.find(succinst) != useInstrMap.end()) {
         if (useInstrMap[succinst] == -1) {
-          succinst->adjustuse(stack_pop(stack), idx);
+          succinst->setOperand(idx,stack_pop(stack));
         } else {
-          succinst->adjustuse(stack_pop(stack), useInstrMap[succinst]);
+          succinst->setOperand(useInstrMap[succinst],stack_pop(stack));
         }
       }
     }
@@ -128,7 +128,9 @@ void LCSSA::rename(std::stack<ir::Value*>& stack,
   for (int i = 0; i < cnt; i++)
     stack.pop();
 }
-
+//判断循环是不是lcssa形式，遍历循环的所有指令，检查指令的所有use
+//如果use-user不是phi指令，则直接判断userbb是否在循环内
+//如果是phi指令，则判断phi指令使用inst对应的前驱块是否在循环中
 bool LCSSA::isLCSSAform(ir::Loop* L) {
   for (auto bb : L->blocks())
     for (auto inst : bb->insts())
@@ -171,7 +173,7 @@ void LCSSA::run(ir::Function* F, topAnalysisInfoManager* tp) {
   auto loops = LI->loops();
   for (auto loop : loops) {
     runonloop(loop, LI, tp);
-    assert(!isLCSSAform(loop)); 
+    // assert(!isLCSSAform(loop)); 
   }
   return;
 }

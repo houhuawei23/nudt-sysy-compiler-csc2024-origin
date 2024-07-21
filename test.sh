@@ -199,7 +199,7 @@ function run_gen_test() {
     touch "${gen_c}"
     cat "${single_file}" >"${gen_c}"
 
-    # ./main "$single_file" >"${gen_ll}"
+    # ./compiler "$single_file" >"${gen_ll}"
     ./compiler -f "${single_file}" -i -t ${PASSES_STR} -o "${gen_ll}" "${OPT_LEVEL}" "${LOG_LEVEL}"
     if [ $? != 0 ]; then
         return $EC_MAIN

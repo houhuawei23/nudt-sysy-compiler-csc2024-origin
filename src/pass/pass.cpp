@@ -17,6 +17,7 @@
 #include "pass/optimize/loopsimplify.hpp"
 #include "pass/analysis/irtest.hpp"
 #include "pass/analysis/ControlFlowGraph.hpp"
+#include "pass/analysis/LCSSA.hpp"
 
 #include "pass/optimize/InstCombine/ArithmeticReduce.hpp"
 namespace pass {
@@ -60,7 +61,10 @@ void PassManager::runPasses(std::vector<std::string> passes) {
         run(new pass::ArithmeticReduce());
       } else if (pass_name.compare("test") == 0) {
         run(new pass::irCheck());
-      } else {
+      } else if (pass_name.compare("LCSSA") == 0){
+        run(new pass::LCSSA());
+      }
+      else {
         assert(false && "Invalid pass name");
       }
     }
