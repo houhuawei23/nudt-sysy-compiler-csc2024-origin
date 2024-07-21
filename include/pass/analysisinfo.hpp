@@ -189,12 +189,12 @@ public:
 
     class indVarInfo:public FunctionACtx{
         private:
-            std::unordered_map<ir::Loop*,std::vector<ir::indVar*>>_loopToIndvar;
+            std::unordered_map<ir::Loop*,ir::indVar*>_loopToIndvar;
         public:
             indVarInfo(ir::Function* fp,topAnalysisInfoManager* tp):FunctionACtx(fp,tp){}
-            std::vector<ir::indVar*>& getIndvar(ir::Loop* loop){return _loopToIndvar[loop];}
+            ir::indVar* getIndvar(ir::Loop* loop){return _loopToIndvar[loop];}
             void clearAll(){_loopToIndvar.clear();}
             void refresh() override;
-            void initialize();
+            void addIndVar(ir::Loop* lp,ir::indVar* idv){_loopToIndvar[lp]=idv;}
     };
 };

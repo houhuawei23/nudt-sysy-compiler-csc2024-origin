@@ -8,7 +8,7 @@ namespace pass{
         private:
             loopInfo* lpctx;
             indVarInfo* ivctx;
-            void addIndVar(ir::Loop* lp, ir::Constant* mbegin, ir::Constant* mstep, ir::Value* mend);
+            void addIndVar(ir::Loop* lp, ir::Constant* mbegin, ir::Constant* mstep, ir::Value* mend, ir::BinaryInst* iterinst, ir::Instruction* cmpinst);
             
     };
 

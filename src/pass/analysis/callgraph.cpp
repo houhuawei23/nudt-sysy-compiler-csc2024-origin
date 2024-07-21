@@ -3,6 +3,7 @@
 namespace pass{
     void callGraphBuild::run(ir::Module* ctx,topAnalysisInfoManager* tp){
         cgctx=tp->getCallGraph();
+        cgctx->clearAll();
         cgctx->initialize();
         for(auto func:ctx->funcs()){//initialize call info for functions
             if(func->isOnlyDeclare())
