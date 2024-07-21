@@ -12,7 +12,7 @@ class LCSSA : public FunctionPass {
   public:
   bool isLCSSAform(ir::Loop* L);
   ir::Value* stack_pop(std::stack<ir::Value*>& stack);
-  void rename(std::stack<ir::Value*>& stack, ir::BasicBlock* bb, std::map<ir::Instruction*, int> useInstrMap, std::set<ir::Instruction*> defInstrs);
+  void rename(std::stack<ir::Value*>& stack, ir::BasicBlock* bb, std::map<ir::Instruction*, int> useInstrMap, std::set<ir::Instruction*> defInsts, ir::Value* old);
   void addDef(std::set<ir::Instruction*>& definsts, ir::Instruction* inst);
   void makeExitPhi(ir::Instruction* inst, ir::BasicBlock* exit, ir::Loop* L);
   bool isUseout(ir::Instruction* inst, ir::Loop* L);

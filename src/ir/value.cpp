@@ -35,6 +35,20 @@ void Value::replaceAllUseWith(Value* mValue) {
   mUses.clear();
 }
 
+void Value::replaceUseWith(Value* mValue, size_t index){
+  size_t cnt = 0;
+  for (auto puseIter=mUses.begin();puseIter!=mUses.end();) {
+    if (cnt == index){
+      auto puse=*puseIter;
+      puse->user()->setOperand(puse->index(), mValue);
+      return;
+    }
+    puseIter++;
+    cnt++;
+  }
+  assert("did not find user");
+}
+
 void Value::setComment(const_str_ref comment) {
   if (!mComment.empty()) {
     std::cerr << "re-set basicblock comment!" << std::endl;

@@ -6,25 +6,20 @@
 #include <queue>
 #include <algorithm>
 namespace pass {
+ir::Value* LCSSA::stack_pop(std::stack<ir::Value*>& stack) {
+  if (stack.empty()) return ir::Constant::gen_undefine();
+  return stack.top();
+}
 bool LCSSA::isUseout(ir::Instruction* inst, ir::Loop* L) {
   for (auto use : inst->uses()) {
     ir::Instruction* userinst = dyn_cast<ir::Instruction>(use->user());
     ir::BasicBlock* userbb = userinst->block();
-    std::vector<ir::BasicBlock*>
-        userbbVector;  // phi指令对同一个val的使用可能来自不同的bb
-    userbbVector.push_back(userbb);
     if (auto userphi = dyn_cast<ir::PhiInst>(userinst)) {
-      userbbVector.pop_back();
-      for (size_t i = 0; i < userphi->getsize(); i++) {
-        auto phival = userphi->getValue(i);
-        auto phibb = userphi->getBlock(i);
-        if (phival == inst) userbbVector.push_back(phibb);
-      }
+      userbb = userphi->getBlock(use->index() / 2);
     }
-    for (auto bb : userbbVector) {
-      if (!L->contains(bb)) {
-        return true;
-      }
+
+    if (!L->contains(userbb)) {
+      return true;
     }
   }
   return false;
@@ -53,68 +48,58 @@ void LCSSA::makeExitPhi(ir::Instruction* inst,
     exitphi->addIncoming(inst, bb);
   }
 
-  std::map<ir::Instruction*, int> useinstmap;
-  std::set<ir::Instruction*> definsts;
+  std::map<ir::Instruction*, int>
+      useinstmap;  // 记录在循环外使用与其useidx的映射
+  std::set<ir::Instruction*> definsts;  // 记录对inst的定义
   std::stack<ir::Value*> valstack;
   addDef(definsts, exitphi);
   addDef(definsts, inst);
-  int idx = 0;
+  int idx = -1;
   for (auto use : inst->uses()) {
+    idx++;
     ir::Instruction* userinst = dyn_cast<ir::Instruction>(use->user());
     ir::BasicBlock* userbb = userinst->block();
-    std::vector<ir::BasicBlock*>
-        userbbVector;  // phi指令对同一个val的使用可能来自不同的bb
-    userbbVector.push_back(userbb);
+    if (L->contains(userbb)) continue;
     if (auto userphi = dyn_cast<ir::PhiInst>(userinst)) {
-      userbbVector.pop_back();
-      for (size_t i = 0; i < userphi->getsize(); i++) {
-        auto phival = userphi->getValue(i);
-        auto phibb = userphi->getBlock(i);
-        if (phival == inst) userbbVector.push_back(phibb);
-      }
+      userbb = userphi->getBlock(use->index() / 2);
     }
-    for (auto bb : userbbVector) {
-      if (!L->contains(bb)) {
-        useinstmap[userinst] = idx;  //?
-      }
+
+    if (!L->contains(userbb)) {
+      useinstmap[userinst] = idx;
     }
-    idx++;
   }
   useinstmap[exitphi] = -1;
-  rename(valstack, exit, useinstmap, definsts);
+  rename(valstack, exit, useinstmap, definsts, inst);
 }
 
-ir::Value* LCSSA::stack_pop(std::stack<ir::Value*>& stack) {
-  if (stack.empty()) return ir::Constant::gen_undefine();
-  return stack.top();
-}
-
-void LCSSA::rename(std::stack<ir::Value*>& stack,
-                   ir::BasicBlock* bb,
-                   std::map<ir::Instruction*, int> useInstrMap,
-                   std::set<ir::Instruction*> defInstrs) {
+void LCSSA::rename(std::stack<ir::Value*>& stack, ir::BasicBlock* bb, std::map<ir::Instruction*, int> useInstrMap, std::set<ir::Instruction*> defInsts, ir::Value* old) {
   int cnt = 0;
-  for (auto inst : bb->insts()) {
-    if (auto phi = dyn_cast<ir::PhiInst>(inst) &&
-                   useInstrMap.find(inst) != useInstrMap.end()) {
-      inst->adjustuse(stack_pop(stack), useInstrMap[inst]);
+  for (ir::Instruction* inst : bb->insts()) {
+    
+    // std::cerr << inst->isa<ir::PhiInst>() << std::endl;
+    // std::cerr << (useInstrMap.find(inst) != useInstrMap.end()) << std::endl;
+    if (!dyn_cast<ir::PhiInst>(inst) && (useInstrMap.find(inst) != useInstrMap.end())) {  // 说明phi是inst的使用者
+      old->replaceUseWith(stack_pop(stack), useInstrMap[inst]);
+      // std::cerr << "in" << std::endl;
     }
-    if (defInstrs.find(inst) != defInstrs.end()) {
-      stack.push(inst);
+    if (defInsts.find(inst) != defInsts.end()) {
+      stack.push(inst);  // 更新到达定义
       cnt++;
     }
   }
+
+  //处理succbb
   int idx = 0;
-  for (auto succ : bb->next_blocks()) {
+  for (auto succ : bb->next_blocks()) {  // 更新succ的phi
     for (auto succinst : succ->insts()) {
-      if (!dyn_cast<ir::PhiInst>(succinst)) {
+      if (!dyn_cast<ir::PhiInst>(succinst)) {  // 没有phi就直接break
         break;
       }
       if (useInstrMap.find(succinst) != useInstrMap.end()) {
         if (useInstrMap[succinst] == -1) {
-          succinst->setOperand(idx,stack_pop(stack));
+          old->replaceUseWith(stack_pop(stack), idx);
         } else {
-          succinst->setOperand(useInstrMap[succinst],stack_pop(stack));
+          old->replaceUseWith(stack_pop(stack), useInstrMap[succinst]);
         }
       }
     }
@@ -122,38 +107,13 @@ void LCSSA::rename(std::stack<ir::Value*>& stack,
   }
 
   for (ir::BasicBlock* domson : DT->domson(bb)) {
-    rename(stack, domson, useInstrMap, defInstrs);
+    rename(stack, domson, useInstrMap, defInsts, old);
   }
 
   for (int i = 0; i < cnt; i++)
     stack.pop();
 }
-//判断循环是不是lcssa形式，遍历循环的所有指令，检查指令的所有use
-//如果use-user不是phi指令，则直接判断userbb是否在循环内
-//如果是phi指令，则判断phi指令使用inst对应的前驱块是否在循环中
-bool LCSSA::isLCSSAform(ir::Loop* L) {
-  for (auto bb : L->blocks())
-    for (auto inst : bb->insts())
-      for (auto use : inst->uses()) {
-        ir::Instruction* userinst = dyn_cast<ir::Instruction>(use->user());
-        ir::BasicBlock* userbb = userinst->block();
-        std::vector<ir::BasicBlock*> userbbVector;
-        userbbVector.push_back(userbb);
-        if (auto userphi = dyn_cast<ir::PhiInst>(userinst)) {
-          userbbVector.pop_back();
-          for (size_t i = 0; i < userphi->getsize(); i++) {
-            auto phival = userphi->getValue(i);
-            auto phibb = userphi->getBlock(i);
-            if (phival == inst) userbbVector.push_back(phibb);
-          }
-        }
-        for (auto userbb : userbbVector) {
-          if (userbb != bb && !L->contains(userbb)) return false;
-        }
-      }
 
-  return true;
-}
 void LCSSA::runonloop(ir::Loop* L, loopInfo* LI, topAnalysisInfoManager* tp) {
   for (ir::BasicBlock* BB : L->blocks()) {
     for (ir::Instruction* inst : BB->insts()) {
@@ -173,8 +133,26 @@ void LCSSA::run(ir::Function* F, topAnalysisInfoManager* tp) {
   auto loops = LI->loops();
   for (auto loop : loops) {
     runonloop(loop, LI, tp);
-    // assert(!isLCSSAform(loop)); 
+    // assert(isLCSSAform(loop));
   }
   return;
+}
+
+// 判断循环是不是lcssa形式，遍历循环的所有指令，检查指令的所有use
+// 如果use-user不是phi指令，则直接判断userbb是否在循环内
+// 如果是phi指令，则判断phi指令使用inst对应的前驱块是否在循环中
+bool LCSSA::isLCSSAform(ir::Loop* L) {
+  for (auto bb : L->blocks())
+    for (auto inst : bb->insts())
+      for (auto use : inst->uses()) {
+        ir::Instruction* userinst = dyn_cast<ir::Instruction>(use->user());
+        ir::BasicBlock* userbb = userinst->block();
+        if (auto userphi = dyn_cast<ir::PhiInst>(userinst)) {
+          userbb = userphi->getBlock(use->index() / 2);
+        }
+        if (userbb != bb && !L->contains(userbb)) return false;
+      }
+
+  return true;
 }
 }  // namespace pass
