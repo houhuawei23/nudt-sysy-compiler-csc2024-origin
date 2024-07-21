@@ -10,6 +10,7 @@ namespace pass{
         domctx=tp->getDomTree(func);
         domctx->refresh();
         lpctx=tp->getLoopInfo(func);
+        lpctx->clearAll();
         for(auto bb:func->blocks())lpctx->set_looplevel(bb,0);
         for(auto bb:func->blocks()){
             if(bb->pre_blocks().empty())continue;
