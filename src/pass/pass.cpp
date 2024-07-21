@@ -17,6 +17,7 @@
 #include "pass/optimize/loopsimplify.hpp"
 #include "pass/analysis/irtest.hpp"
 #include "pass/analysis/ControlFlowGraph.hpp"
+#include "pass/analysis/indvar.hpp"
 #include "pass/analysis/LCSSA.hpp"
 
 #include "pass/optimize/InstCombine/ArithmeticReduce.hpp"
@@ -61,6 +62,8 @@ void PassManager::runPasses(std::vector<std::string> passes) {
         run(new pass::ArithmeticReduce());
       } else if (pass_name.compare("test") == 0) {
         run(new pass::irCheck());
+      } else if (pass_name.compare("indvar") == 0) {
+        run(new pass::indVarAnalysis());
       } else if (pass_name.compare("LCSSA") == 0){
         run(new pass::LCSSA());
       }

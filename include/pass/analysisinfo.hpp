@@ -11,6 +11,7 @@ namespace pass{
     class pdomTree;
     class loopInfo;
     class callGraph;
+    class indVarInfo;
     class topAnalysisInfoManager;
     
     template<typename PassUnit>
@@ -183,5 +184,17 @@ public:
                 return _callees[func].empty();
             }
             void refresh() override;
+    };
+
+
+    class indVarInfo:public FunctionACtx{
+        private:
+            std::unordered_map<ir::Loop*,std::vector<ir::indVar*>>_loopToIndvar;
+        public:
+            indVarInfo(ir::Function* fp,topAnalysisInfoManager* tp):FunctionACtx(fp,tp){}
+            std::vector<ir::indVar*>& getIndvar(ir::Loop* loop){return _loopToIndvar[loop];}
+            void clearAll(){_loopToIndvar.clear();}
+            void refresh() override;
+            void initialize();
     };
 };

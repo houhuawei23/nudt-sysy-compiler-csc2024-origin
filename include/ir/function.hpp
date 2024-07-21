@@ -81,7 +81,6 @@ public:
       return getLoopPreheader() && getLoopLatch() && hasDedicatedExits();
     }
 
-
 };
 
 class Function : public User {
@@ -166,4 +165,30 @@ class Function : public User {
   void print(std::ostream& os) const override;
   bool verify(std::ostream& os) const;
 };
+
+class indVar{
+  private:// only for constant beginvar and stepvar
+    Constant* mbeginVar;
+    Value* mendVar;
+    Constant* mstepVar;
+    bool mendIsConst;
+  public:
+    indVar(Constant* mbegin,Value* mend,Constant* mstep):
+      mbeginVar(mbegin),mendVar(mend),mstepVar(mstep){
+        mendIsConst=dyn_cast<Constant>(mendVar)!=nullptr;
+      }
+    int getBegin(){return mbeginVar->i32();}
+    int getStep(){return mstepVar->i32();}
+    bool isEndVarConst(){return mendIsConst;}
+    int getEndVar(){
+      if(mendIsConst){
+        auto mendConst=dyn_cast<Constant>(mendVar);
+        return mendConst->i32();
+      }
+      else
+        assert(false && "endVar is not constant");
+    }
+
+};
+
 }  // namespace ir
