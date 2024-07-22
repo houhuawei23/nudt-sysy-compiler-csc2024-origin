@@ -172,7 +172,7 @@ static void preRAScheduleBlock(MIRBlock& block, const CodeGenContext& ctx) {
         for (uint32_t idx = 0; idx < instInfo.operand_num(); ++idx) {
             auto op = inst->operand(idx);
             auto opflag = instInfo.operand_flag(idx);
-            if (op->is_reg()) {
+            if (op->isReg()) {
                 /** before stack allocate, after sa, sobj is replaced by reg */
                 if (isOperandStackObject(op)) {
                     continue;
@@ -294,7 +294,7 @@ uint32_t ScheduleState::queryRegisterLatency(const MIRInst& inst,
                                              uint32_t idx) {
     /* 查询寄存器延迟 */
     {
-        if (not inst.operand(idx)->is_reg())
+        if (not inst.operand(idx)->isReg())
             return 0;
         const auto reg = inst.operand(idx)->reg();
         if (not(isISAReg(reg) or isVirtualReg(reg))) {

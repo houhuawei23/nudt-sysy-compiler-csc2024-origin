@@ -1,11 +1,11 @@
 #include "ir/ir.hpp"
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
-
+#include "support/StaticReflection.hpp"
 namespace mir {
 void MIRBlock::print(std::ostream& os, CodeGenContext& ctx) {
     os << " ";
-    for (auto& inst : _insts) {
+    for (auto& inst : mInsts) {
         os << "\t";
         auto& info = ctx.instInfo.get_instinfo(inst);
         os << "[" << info.name() << "] ";
@@ -15,12 +15,14 @@ void MIRBlock::print(std::ostream& os, CodeGenContext& ctx) {
 }
 
 void MIRFunction::print(std::ostream& os, CodeGenContext& ctx) {
-    for (auto &[ref, obj] : _stack_objs) {
+    for (auto &[ref, obj] : mStackObjects) {
         os << " so" << (ref->reg() ^ stackObjectBegin)
            << " size = " << obj.size << " align = " << obj.alignment
-           << " offset = " << obj.offset << std::endl;
+           << " offset = " << obj.offset 
+           << " usage = " << utils::enumName(obj.usage)
+           << std::endl;
     }
-    for (auto& block : _blocks) {
+    for (auto& block : mBlocks) {
         os << block->name() << ":" << std::endl;
         block->print(os, ctx);
     }
@@ -29,7 +31,7 @@ void MIRFunction::print(std::ostream& os, CodeGenContext& ctx) {
 /* Information of MIRRelocable */
 void MIRZeroStorage::print(std::ostream& os, CodeGenContext& ctx) {}
 void MIRDataStorage::print(std::ostream& os, CodeGenContext& ctx) {
-    for (auto& val : _data) {
+    for (auto& val : mData) {
         os << "\t.4byte\t";
         if (is_float()) os << val << std::endl;
         else os << val << std::endl;
@@ -42,20 +44,20 @@ bool MIRInst::verify(std::ostream& os, CodeGenContext& ctx) const {
 }
 
 bool MIRBlock::verify(std::ostream& os, CodeGenContext& ctx) const {
-    if(_insts.empty()) return false;
+    if(mInsts.empty()) return false;
 
-    for(auto& inst : _insts) {
+    for(auto& inst : mInsts) {
         if(not inst->verify(os, ctx)) {
             return false;
         }
     }
-    const auto lastInst = _insts.back();
+    const auto lastInst = mInsts.back();
     const auto& lastInstInfo = ctx.instInfo.get_instinfo(lastInst);
     if((lastInstInfo.inst_flag() & InstFlagTerminator) == 0) {
         os << "Error: block " << name() << " does not end with a terminator" << std::endl;
         return false;
     }
-    for(auto& inst : _insts) {
+    for(auto& inst : mInsts) {
         const auto& info = ctx.instInfo.get_instinfo(inst);
         if((info.inst_flag() & InstFlagTerminator) and inst != lastInst) {
             os << "Error: block " << name() << " has multiple terminators" << std::endl;
@@ -66,7 +68,7 @@ bool MIRBlock::verify(std::ostream& os, CodeGenContext& ctx) const {
 }
 
 bool MIRFunction::verify(std::ostream& os, CodeGenContext& ctx) const {
-    for(auto& block : _blocks) {
+    for(auto& block : mBlocks) {
         if(not block->verify(os, ctx)) {
             return false;
         }

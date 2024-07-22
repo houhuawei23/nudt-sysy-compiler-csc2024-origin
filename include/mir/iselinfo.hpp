@@ -4,105 +4,116 @@
 #include "mir/LiveInterval.hpp"
 #include "mir/instinfo.hpp"
 #include "mir/lowering.hpp"
+#include "support/arena.hpp"
 #include <optional>
 
 namespace mir {
 class CodeGenContext;
 class LoweringContext;
-class ISelContext {
-    CodeGenContext& _codegen_ctx;
-    std::unordered_map<RegNum, MIRInst*> _inst_map, _constant_map;
-    MIRBlock* _curr_block;
-    std::list<MIRInst*>::iterator _insert_point;
+class ISelContext : public MIRBuilder {
+  CodeGenContext& mCodeGenCtx;
+  std::unordered_map<RegNum, MIRInst*> mInstMap, mConstantMap;
 
-    // mReplaceList
-    std::unordered_map<MIROperand*, MIROperand*> _replace_map;
+  // mReplaceList
+  std::unordered_map<MIROperand*, MIROperand*> mReplaceMap;
 
-    std::unordered_set<MIRInst*> _remove_work_list, _replace_block_list;
+  std::unordered_set<MIRInst*> mRemoveWorkList, mReplaceList;
 
-    std::unordered_map<MIROperand*, uint32_t> _use_cnt;
+  std::unordered_map<MIROperand*, uint32_t> mUseCnt;
 
 public:
-    ISelContext(CodeGenContext& codegen_ctx) : _codegen_ctx(codegen_ctx) {}
-    void run_isel(MIRFunction* func);
-    bool has_one_use(MIROperand* op);
-    MIRInst* lookup_def(MIROperand* op);
+  ISelContext(CodeGenContext& ctx) : mCodeGenCtx(ctx) {}
+  void run_isel(MIRFunction* func);
+  bool has_one_use(MIROperand* op);
+  MIRInst* lookup_def(MIROperand* op);
 
-    void remove_inst(MIRInst* inst);
-    void replace_operand(MIROperand* src, MIROperand* dst);
+  void remove_inst(MIRInst* inst);
+  void replace_operand(MIROperand* src, MIROperand* dst);
 
-    MIROperand* get_inst_def(MIRInst* inst);
+  MIROperand* get_inst_def(MIRInst* inst);
 
-    void insert_inst(MIRInst* inst) {
-        assert(inst != nullptr);
-        _curr_block->insts().emplace(_insert_point, inst);
-    }
-    MIRInst* new_inst(uint32_t opcode) {
-        MIRInst* inst = new MIRInst(opcode);
-        insert_inst(inst);
-        return inst;
-    }
-    CodeGenContext& codegen_ctx() { return _codegen_ctx; }
-    MIRBlock* curr_block() { return _curr_block; }
+  void insert_inst(MIRInst* inst) {
+    assert(inst != nullptr);
+    mCurrBlock->insts().emplace(mInsertPoint, inst);
+  }
+  CodeGenContext& codegen_ctx() { return mCodeGenCtx; }
+  MIRBlock* curr_block() { return mCurrBlock; }
 };
 
-struct InstLegalizeContext final {
-    MIRInst*& inst;
-    MIRInstList& instructions;
-    MIRInstList::iterator iter;
-    CodeGenContext& codeGenCtx;
-    std::optional<std::list<std::unique_ptr<MIRBlock>>::iterator> blockIter;
-    MIRFunction& func;
+class InstLegalizeContext final : public MIRBuilder {
+public:
+  MIRInst*& inst;
+  MIRInstList& instructions;
+  MIRInstList::iterator iter;
+  CodeGenContext& codeGenCtx;
+  std::optional<std::list<std::unique_ptr<MIRBlock>>::iterator> blockIter;
+  MIRFunction& func;
+
+public:
+  InstLegalizeContext(
+    MIRInst*& i,
+    MIRInstList& insts,
+    MIRInstList::iterator iter,
+    CodeGenContext& ctx,
+    std::optional<std::list<std::unique_ptr<MIRBlock>>::iterator> biter,
+    MIRFunction& f)
+    : inst(i),
+      instructions(insts),
+      iter(iter),
+      codeGenCtx(ctx),
+      blockIter(biter),
+      func(f) {}
 };
 
 class TargetISelInfo {
 public:
-    virtual ~TargetISelInfo() = default;
-    virtual bool is_legal_geninst(uint32_t opcode) const = 0;
+  virtual ~TargetISelInfo() = default;
+  virtual bool isLegalInst(uint32_t opcode) const = 0;
 
-    virtual bool match_select(MIRInst* inst, ISelContext& ctx) const = 0;
+  virtual bool match_select(MIRInst* inst, ISelContext& ctx) const = 0;
 
-    /* */
-    virtual void legalizeInstWithStackOperand(InstLegalizeContext& ctx,
-                                              MIROperand* op,
-                                              StackObject& obj) const = 0;
+  /* */
+  virtual void legalizeInstWithStackOperand(InstLegalizeContext& ctx,
+                                            MIROperand* op,
+                                            StackObject& obj) const = 0;
 
-    virtual void postLegalizeInst(const InstLegalizeContext& ctx) const = 0;
-    virtual MIROperand* materializeFPConstant(float fpVal, LoweringContext& loweringCtx)
-        const = 0;
+  virtual void postLegalizeInst(const InstLegalizeContext& ctx) const = 0;
+  virtual MIROperand* materializeFPConstant(
+    float fpVal,
+    LoweringContext& loweringCtx) const = 0;
 };
 
 static bool isCompareOp(MIROperand* operand, CompareOp cmpOp) {
-    auto op = static_cast<uint32_t>(operand->imm());
-    return op == static_cast<uint32_t>(cmpOp);
+  auto op = static_cast<uint32_t>(operand->imm());
+  return op == static_cast<uint32_t>(cmpOp);
 }
 
 static bool isICmpEqualityOp(MIROperand* operand) {
-    const auto op = static_cast<CompareOp>(operand->imm());
-    switch (op) {
-        case CompareOp::ICmpEqual:
-        case CompareOp::ICmpNotEqual:
-            return true;
-        default:
-            return false;
-    }
+  const auto op = static_cast<CompareOp>(operand->imm());
+  switch (op) {
+    case CompareOp::ICmpEqual:
+    case CompareOp::ICmpNotEqual:
+      return true;
+    default:
+      return false;
+  }
 }
 
-//! helper function to create a new MIRInstq
+//! helper function to create a new MIRInst
 
 uint32_t select_copy_opcode(MIROperand* dst, MIROperand* src);
 
 inline MIROperand* getNeg(MIROperand* operand) {
-    return MIROperand::as_imm(-operand->imm(), operand->type());
+  return MIROperand::asImm(-operand->imm(), operand->type());
 }
 
 inline MIROperand* getHighBits(MIROperand* operand) {
-    assert(isOperandReloc(operand));
-    return new MIROperand{operand->storage(), OperandType::HighBits};
+  assert(isOperandReloc(operand));
+  return utils::make<MIROperand>(operand->storage(), OperandType::HighBits);
 }
 inline MIROperand* getLowBits(MIROperand* operand) {
-    assert(isOperandReloc(operand));
-    return new MIROperand{operand->storage(), OperandType::LowBits};
+  assert(isOperandReloc(operand));
+  return utils::make<MIROperand>(operand->storage(), OperandType::LowBits);
 }
 
 }  // namespace mir

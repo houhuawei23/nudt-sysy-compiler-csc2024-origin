@@ -88,7 +88,7 @@ void cleanupRegFlags(MIRFunction& mfunc, CodeGenContext& ctx) {
             auto& instinfo = ctx.instInfo.get_instinfo(inst);
             for (uint32_t idx = 0; idx < instinfo.operand_num(); idx++) {
                 auto op = inst->operand(idx);
-                if (op->is_reg()) {
+                if (op->isReg()) {
                     auto reg = std::get<MIRRegister*>(op->storage());
                     reg->set_flag(RegisterFlagNone);
                 }

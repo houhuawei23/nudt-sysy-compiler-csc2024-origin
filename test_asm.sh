@@ -229,7 +229,7 @@ function run_compiler_test() {
     fi
 
     if [ -f $in_file ]; then
-        $qemu_riscv64 $TIMEOUT qemu-riscv64 -L "/usr/riscv64-linux-gnu/" "${gen_o}" <"${in_file}" >"${gen_out}"
+        timeout $TIMEOUT $qemu_riscv64 -L "/usr/riscv64-linux-gnu/" "${gen_o}" <"${in_file}" >"${gen_out}"
         if [ $? == $EC_TIMEOUT ]; then # time out
             echo "${RED}[TIMEOUT]${RESET}: qemu-riscv64 -L /usr/riscv64-linux-gnu/ ${gen_o} <${in_file} >${gen_out}"
             return $EC_TIMEOUT
@@ -259,11 +259,13 @@ function run_test_asm() {
     if [ -f "$single_file" ]; then
         echo "${YELLOW}[Testing]${RESET} $single_file"
 
+        run_compiler_test "${single_file}" "${output_dir}" "${result_file}"
+        local res=$?
+        
         run_gcc_test "${single_file}" "${output_dir}" "${result_file}"
         local gccres=$?
 
-        run_compiler_test "${single_file}" "${output_dir}" "${result_file}"
-        local res=$?
+
 
         diff "${gen_out}" "${gcc_out}" >"${output_dir}/diff.out"
         local diff_res=$?

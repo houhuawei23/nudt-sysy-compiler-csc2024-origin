@@ -5,7 +5,7 @@
 #include "mir/LiveInterval.hpp"
 #include "mir/RegisterAllocator.hpp"
 #include "support/StaticReflection.hpp"
-#include "target/riscv/riscv.hpp"
+#include "target/riscv/RISCV.hpp"
 #include <vector>
 #include <stack>
 #include <queue>
@@ -166,7 +166,7 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
         if (inst->opcode() == InstLoadRegFromStack) {
             auto dst = inst->operand(0)->reg();
             auto src = inst->operand(1);
-            auto& obj = mfunc.stack_objs().at(src);
+            auto& obj = mfunc.stackObjs().at(src);
             if (obj.usage == StackObjectUsage::Argument) {
                 inStackArguments.emplace(dst, *src);
             }
@@ -338,7 +338,7 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
                         }
                     } else {
                         for (auto isaReg : ctx.registerInfo->get_allocation_list(allocationClass)) {
-                            if (ctx.frameInfo.is_caller_saved(*MIROperand::as_isareg(isaReg, OperandType::Special))) {
+                            if (ctx.frameInfo.isCallerSaved(*MIROperand::asISAReg(isaReg, OperandType::Special))) {
                                 for (auto vreg : liveVRegs) graph.add_edge(isaReg, vreg);
                             }
                         }
@@ -543,7 +543,7 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
                             }
 
                             double curCost = -static_cast<double>(minDist);
-                            if (ctx.frameInfo.is_callee_saved(*MIROperand::as_isareg(reg, OperandType::Special))) {
+                            if (ctx.frameInfo.isCalleeSaved(*MIROperand::asISAReg(reg, OperandType::Special))) {
                                 curCost += calleeSavedCost;
                             }
                             return curCost;
@@ -592,7 +592,7 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
         } else if (rematerializeConstant) {
             copy_inst = constants.at(u);
         } else {
-            stackStorage = *mfunc.add_stack_obj(ctx.next_id(), size, size, 0, StackObjectUsage::RegSpill);
+            stackStorage = *mfunc.newStackObject(ctx.nextId(), size, size, 0, StackObjectUsage::RegSpill);
         }
 
         std::unordered_set<MIRInst*> newInsts;
@@ -644,10 +644,15 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
                     if (rematerializeConstant) {
                         instructions.insert(it, copy_inst);
                     } else {
-                        auto tmp = new MIRInst{ InstLoadRegFromStack };
-                        tmp->set_operand(0, MIROperand::as_vreg(u - virtualRegBegin, canonicalizedType));
-                        auto tmpStack = new MIROperand(stackStorage);
-                        tmp->set_operand(1, tmpStack);
+                        // auto tmp = new MIRInst{ InstLoadRegFromStack };
+                        // tmp->set_operand(0, MIROperand::asVReg(u - virtualRegBegin, canonicalizedType));
+                        // auto tmpStack = new MIROperand(stackStorage);
+                        // tmp->set_operand(1, tmpStack);
+                        auto tmp = utils::make<MIRInst>(InstLoadRegFromStack, {
+                            MIROperand::asVReg(u - virtualRegBegin, canonicalizedType),
+                            utils::make<MIROperand>(stackStorage)
+                        });
+
                         instructions.insert(it, tmp);
                     }
 
@@ -676,7 +681,7 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
                             it++;
                         }
                         auto tmp = new MIRInst{ InstStoreRegToStack };
-                        tmp->set_operand(0, MIROperand::as_vreg(u - virtualRegBegin, canonicalizedType));
+                        tmp->set_operand(0, MIROperand::asVReg(u - virtualRegBegin, canonicalizedType));
                         auto tmpStack = new MIROperand(stackStorage);
                         tmp->set_operand(1, tmpStack);
                         auto newInst = instructions.insert(it, tmp);
@@ -707,7 +712,7 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
                 if (op->type() > OperandType::Float32) continue;
                 if (isOperandVReg(op)) {
                     const auto isaReg = regMap.at(op->reg());
-                    *op = *MIROperand::as_isareg(isaReg, op->type());
+                    *op = *MIROperand::asISAReg(isaReg, op->type());
                 }
             }
         }

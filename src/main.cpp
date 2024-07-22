@@ -9,14 +9,19 @@
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
 #include "mir/lowering.hpp"
-#include "target/riscv/riscv.hpp"
-#include "target/riscv/riscvtarget.hpp"
+#include "target/riscv/RISCV.hpp"
+#include "target/riscv/RISCVTarget.hpp"
+
+#include "support/FileSystem.hpp"
+
+namespace fs = std::filesystem;
+
 using namespace std;
 /* ./compiler -f test.c -i -t mem2reg -o gen.ll -O0 -L0 */
 int main(int argc, char* argv[]) {
-    sysy::Config config;
-    // config.parse_cmd_args(argc, argv);
-    config.parseSubmitArgs(argc, argv);
+    auto& config = sysy::Config::getInstance();
+    config.parse_cmd_args(argc, argv);
+    // config.parseSubmitArgs(argc, argv);
     config.print_info();
 
     if (config.infile.empty()) {
@@ -24,6 +29,11 @@ int main(int argc, char* argv[]) {
         config.print_help();
         return EXIT_FAILURE;
     }
+    // mkdir ./.debug/xxx/ for debug info
+    if (config.log_level == sysy::LogLevel::DEBUG) {
+      utils::ensure_directory_exists(config.debugDir());
+    }
+
     ifstream fin(config.infile);
 
     antlr4::ANTLRInputStream input(fin);
@@ -91,7 +101,7 @@ int main(int argc, char* argv[]) {
     }
     if (config.gen_asm) {
         auto target = mir::RISCVTarget();
-        auto mir_module = mir::create_mir_module(*module_ir, target, tAIM);
+        auto mir_module = mir::createMIRModule(*module_ir, target, tAIM);
         if (config.outfile.empty()) {
             target.emit_assembly(std::cout, *mir_module);
         } else {

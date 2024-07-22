@@ -1,7 +1,7 @@
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
 #include "mir/iselinfo.hpp"
-#include "target/riscv/riscv.hpp"
+#include "target/riscv/RISCV.hpp"
 #include "autogen/riscv/InstInfoDecl.hpp"
 #include "autogen/riscv/ISelInfoDecl.hpp"
 #include "support/StaticReflection.hpp"
@@ -9,46 +9,66 @@
 namespace mir::RISCV {
 
 static MIROperand* getVRegAs(ISelContext& ctx, MIROperand* ref) {
-  return MIROperand::as_vreg(ctx.codegen_ctx().next_id(), ref->type());
+  return MIROperand::asVReg(ctx.codegen_ctx().nextId(), ref->type());
 }
 
 constexpr RISCVInst getIntegerBinaryRegOpcode(uint32_t opcode) {
   switch (opcode) {
-    case InstAnd: return AND;
-    case InstOr: return OR;
-    case InstXor: return XOR;
-    default: assert(false && "Unsupported binary register instruction");
+    case InstAnd:
+      return AND;
+    case InstOr:
+      return OR;
+    case InstXor:
+      return XOR;
+    default:
+      assert(false && "Unsupported binary register instruction");
   }
 }
 constexpr RISCVInst getIntegerBinaryImmOpcode(uint32_t opcode) {
   switch (opcode) {
-    case InstAnd: return ANDI;
-    case InstOr: return ORI;
-    case InstXor: return XORI;
-    default: assert(false && "Unsupported binary immediate instruction");
+    case InstAnd:
+      return ANDI;
+    case InstOr:
+      return ORI;
+    case InstXor:
+      return XORI;
+    default:
+      assert(false && "Unsupported binary immediate instruction");
   }
 }
 
 static RISCVInst getLoadOpcode(MIROperand* dst) {
   switch (dst->type()) {
     case OperandType::Bool:
-    case OperandType::Int8: return LB;
-    case OperandType::Int16: return LH;
-    case OperandType::Int32: return LW;
-    case OperandType::Int64: return LD;
-    case OperandType::Float32: return FLW;
-    default: assert(false && "Unsupported operand type for load instruction");
+    case OperandType::Int8:
+      return LB;
+    case OperandType::Int16:
+      return LH;
+    case OperandType::Int32:
+      return LW;
+    case OperandType::Int64:
+      return LD;
+    case OperandType::Float32:
+      return FLW;
+    default:
+      assert(false && "Unsupported operand type for load instruction");
   }
 }
 static RISCVInst getStoreOpcode(MIROperand* src) {
   switch (src->type()) {
     case OperandType::Bool:
-    case OperandType::Int8: return SB;
-    case OperandType::Int16: return SH;
-    case OperandType::Int32: return SW;
-    case OperandType::Int64: return SD;
-    case OperandType::Float32: return FSW;
-    default: assert(false && "Unsupported operand type for store instruction");
+    case OperandType::Int8:
+      return SB;
+    case OperandType::Int16:
+      return SH;
+    case OperandType::Int32:
+      return SW;
+    case OperandType::Int64:
+      return SD;
+    case OperandType::Float32:
+      return FSW;
+    default:
+      assert(false && "Unsupported operand type for store instruction");
   }
 }
 
@@ -68,8 +88,12 @@ static bool selectFCmpOpcode(MIROperand* opcode,
   outrhs = rhs;
   RISCVInst newOpcode;
   switch (op) {
-    case CompareOp::FCmpOrderedLessThan: newOpcode = FLT_S; break;
-    case CompareOp::FCmpOrderedLessEqual: newOpcode = FLE_S; break;
+    case CompareOp::FCmpOrderedLessThan:
+      newOpcode = FLT_S;
+      break;
+    case CompareOp::FCmpOrderedLessEqual:
+      newOpcode = FLE_S;
+      break;
     case CompareOp::FCmpOrderedGreaterThan:
       outlhs = rhs;
       outrhs = lhs;
@@ -80,10 +104,13 @@ static bool selectFCmpOpcode(MIROperand* opcode,
       outrhs = lhs;
       newOpcode = FLE_S;
       break;
-    case CompareOp::FCmpOrderedEqual: newOpcode = FEQ_S; break;
-    default: return false;
+    case CompareOp::FCmpOrderedEqual:
+      newOpcode = FEQ_S;
+      break;
+    default:
+      return false;
   }
-  outOpcode = MIROperand::as_imm(newOpcode, OperandType::Special);
+  outOpcode = MIROperand::asImm(newOpcode, OperandType::Special);
   // std::cerr << "newOpcode: " << newOpcode << std::endl;
   return true;
 }
@@ -104,7 +131,7 @@ static bool selectAddrOffset(MIROperand* addr,
     if (debug) dumpInst(addrInst);
     if (addrInst->opcode() == InstLoadStackObjectAddr) {
       base = addrInst->operand(1);
-      offset = MIROperand::as_imm(0, OperandType::Int64);
+      offset = MIROperand::asImm(0, OperandType::Int64);
       return true;
     }
     if (addrInst->opcode() == InstLoadGlobalAddress) {
@@ -112,7 +139,7 @@ static bool selectAddrOffset(MIROperand* addr,
   }
   if (isOperandIReg(addr)) {
     base = addr;
-    offset = MIROperand::as_imm(0, OperandType::Int64);
+    offset = MIROperand::asImm(0, OperandType::Int64);
     return true;
   }
   return false;
@@ -126,16 +153,16 @@ static bool isOperandI32(MIROperand* op) {
 }
 
 static bool isZero(MIROperand* operand) {
-  if (operand->is_reg() && operand->reg() == RISCV::X0) return true;
-  return operand->is_imm() && operand->imm() == 0;
+  if (operand->isReg() && operand->reg() == RISCV::X0) return true;
+  return operand->isImm() && operand->imm() == 0;
 }
 
 static MIROperand* getZero(MIROperand* operand) {
-  return MIROperand::as_isareg(RISCV::X0, operand->type());
+  return MIROperand::asISAReg(RISCV::X0, operand->type());
 }
 
 static MIROperand* getOne(MIROperand* operand) {
-  return MIROperand::as_imm(1, operand->type());
+  return MIROperand::asImm(1, operand->type());
 }
 
 }  // namespace mir::RISCV
@@ -145,7 +172,7 @@ static MIROperand* getOne(MIROperand* operand) {
 
 namespace mir::RISCV {
 
-bool RISCVISelInfo::is_legal_geninst(uint32_t opcode) const {
+bool RISCVISelInfo::isLegalInst(uint32_t opcode) const {
   return true;
 }
 static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
@@ -153,11 +180,9 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
 
   auto imm2regBeta = [&](MIRInst* oldInst, uint32_t opIdx) {
     auto op = oldInst->operand(opIdx);
-    if (op->is_imm()) {
+    if (op->isImm()) {
       auto reg = getVRegAs(ctx, op);
-      auto newInst = ctx.new_inst(InstLoadImm);
-      newInst->set_operand(0, reg);
-      newInst->set_operand(1, op);
+      auto newInst = ctx.insertMIRInst(InstLoadImm, {reg, op});
       oldInst->set_operand(opIdx, reg);
       modified = true;
     }
@@ -176,7 +201,7 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
       auto* src2 = inst->operand(2);
       imm2regBeta(inst, 1);
 
-      if (src2->is_imm()) { /* sub to add */
+      if (src2->isImm()) { /* sub to add */
         auto neg = getNeg(src2);
         if (isOperandImm12(neg)) {
           inst->set_opcode(InstAdd);
@@ -226,14 +251,12 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
          * sltiu dst, newdst, 1
          */
         auto newDst = getVRegAs(ctx, inst->operand(0));
-        auto newInst = ctx.new_inst(InstXor);
-        newInst->set_operand(0, newDst);
-        newInst->set_operand(1, inst->operand(1));
-        newInst->set_operand(2, inst->operand(2));
+
+        ctx.insertMIRInst(InstXor,
+                          {newDst, inst->operand(1), inst->operand(2)});
 
         inst->set_operand(1, newDst); /* icmp */
         inst->set_operand(2, getZero(inst->operand(2)));
-        // ctx.remove_inst(inst);
         modified = true;
       } else {
         imm2regBeta(inst, 1);
@@ -247,7 +270,7 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
     }
     case InstFCmp: {
       const auto op = static_cast<CompareOp>(inst->operand(3)->imm());
-      if( op == CompareOp::FCmpOrderedNotEqual){
+      if (op == CompareOp::FCmpOrderedNotEqual) {
         /**
          * FCmp dst, src1, src2, NE
          * ->
@@ -257,15 +280,13 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
         auto newDst = getVRegAs(ctx, inst->operand(0));
         auto dst = inst->operand(0);
         inst->set_operand(0, newDst);
-        inst->set_operand(3, MIROperand::as_imm(CompareOp::FCmpOrderedEqual, OperandType::Special));
+        inst->set_operand(3, MIROperand::asImm(CompareOp::FCmpOrderedEqual,
+                                               OperandType::Special));
 
-        auto newInst = ctx.new_inst(InstXor);
-        newInst->set_operand(0, dst);
-        newInst->set_operand(1, newDst);
-        newInst->set_operand(2, getOne(newDst));
+        ctx.insertMIRInst(InstXor, {dst, newDst, getOne(newDst)});
 
         modified = true;
-        break;  
+        break;
       }
       // switch (op) {
       //   case CompareOp::FCmpOrderedNotEqual:
@@ -289,11 +310,27 @@ bool RISCVISelInfo::match_select(MIRInst* inst, ISelContext& ctx) const {
 }
 
 static MIROperand* getAlign(int64_t immVal) {
-  return MIROperand::as_imm(immVal, OperandType::Special);
+  return MIROperand::asImm(immVal, OperandType::Special);
 }
+
+// void RISCVISelInfo::adjustReg(MIRInstList& insts,
+//                               MIRInstList::iterator& iter,
+//                               MIROperand*& dst,
+//                               MIROperand*& src,
+//                               int64_t& imm) const {
+//   //
+//   if (-2048 <= imm && imm <= 2047) {
+//     // imm 12
+//     return;
+//   }
+//   // else
+//   // imm 32
+// }
+
 /**
  * sw rs2, offset(rs1)
  * M[x[rs1] + sext(offset)] = x[rs2][31: 0]
+ *
  * lw rd, offset(rs1) or lw rd, rs1, offset
  * x[rd] = sext(M[x[rs1] + sext(offset)][31:0])
  */
@@ -303,6 +340,8 @@ void RISCVISelInfo::legalizeInstWithStackOperand(InstLegalizeContext& ctx,
   bool debugLISO = false;
 
   auto& inst = ctx.inst;
+  auto& insts = ctx.instructions;
+  auto& iter = ctx.iter;
   auto& instInfo = ctx.codeGenCtx.instInfo.get_instinfo(inst);
   auto dumpInst = [&](MIRInst* inst) {
     instInfo.print(std::cerr, *inst, true);
@@ -311,13 +350,14 @@ void RISCVISelInfo::legalizeInstWithStackOperand(InstLegalizeContext& ctx,
   if (debugLISO) {
     instInfo.print(std::cerr, *inst, true);
   }
-  int64_t immVal = obj.offset;
+  int64_t immVal = obj.offset;  // rs1
   switch (inst->opcode()) {
     case SD:
     case SW:
     case SH:
     case SB:
     case FSW: {
+      // rel addr = obj.offset + offset
       immVal += inst->operand(1)->imm();
       break;
     }
@@ -329,18 +369,125 @@ void RISCVISelInfo::legalizeInstWithStackOperand(InstLegalizeContext& ctx,
     case LB:
     case LBU:
     case FLW: {
+      // rel addr = obj.offset + offset
       immVal += inst->operand(1)->imm();
       break;
     }
-    default: break;
+    default:
+      break;
   }
 
   MIROperand* base = sp;
-  auto offset = MIROperand::as_imm(immVal, OperandType::Int64);
+
+  auto fixLargeImm = [&](MIROperand* immOffset) {
+    // if immVal > 2^11 -1 (2047), need to legalize offset
+    /**
+     * can fix load, cant fix store.
+     * Store:
+     * sw rs2, obj
+     * -->
+     * sw rs2, offset(sp)
+     * change to:
+     * --> !! wrong !! rs2 was overide!!
+     * li rs2, offset
+     * add rs2, rs2, sp
+     * sw rs2, 0(rs2)
+     *
+     * Load:
+     * lw rd, obj
+     * -->
+     * lw rd, offset(sp)
+     * change to:
+     * --> !! correct, rd finally overide by correct value.
+     * li rd, offset
+     * add rd, rd, sp
+     * lw rd, 0(rd)
+     *
+     * LoadStackObjAddr:
+     * LoadStackObjAddr dst, obj *
+     * -->
+     * addi dst, sp, offset *
+     * change to:
+     * -->
+     * li dst, offset
+     * addw dst, dst, sp *
+     *
+     * InstStoreRegToStack:
+     * StoreRegToStack obj, src *
+     * -->
+     * sw src, offset(sp)
+     * change to:
+     * -->
+     * li src, offset
+     * sw
+     */
+    if (-2048 < immVal and immVal <= 2047) {
+      return false;
+    }
+
+    std::cerr << "immVal(" << immVal << ") > 2047" << std::endl;
+    switch (inst->opcode()) {
+      case InstLoadStackObjectAddr: {
+        auto dst = inst->operand(0);
+        // li dst, offset
+        auto liInst = ctx.makeMIRInst(RISCV::LoadImm32, {dst, immOffset});
+        insts.insert(iter, liInst);
+        // add dst, dst, sp
+        inst->set_opcode(ADDW);
+        inst->set_operand(1, dst);
+        inst->set_operand(2, base);
+        return true;
+        break;
+      }
+      // case SD:
+      // case SW:
+      // case SH:
+      // case SB:
+      // case FSW:
+      case LD:
+      case LW:
+      // case LWU:
+      case LH:
+      case LHU:
+      case LB:
+      case LBU:
+      case FLW: {
+        if (debugLISO) {
+          std::cerr << "sw rs2, obj" << std::endl;
+        }
+        auto dst = inst->operand(0);
+        // li rs2, offset
+        auto liInst = ctx.makeMIRInst(RISCV::LoadImm32, {dst, immOffset});
+        insts.insert(iter, liInst);
+        // addw rs2, rs2, sp
+        auto addInst = ctx.makeMIRInst(ADDW, {dst, dst, base});
+        insts.insert(iter, addInst);
+        // sw rs2, 0(rs2)
+        inst->set_operand(1, MIROperand::asImm(0, OperandType::Int64));
+        inst->set_operand(2, dst);
+        return true;
+        break;
+      }
+      default:
+        return false;
+    }
+  };
+
+  auto offset = MIROperand::asImm(immVal, OperandType::Int64);
+  // FIXME: error, need free rigster for imm load
+  if (fixLargeImm(offset)) {
+    return;
+  }
 
   switch (inst->opcode()) {
     case InstLoadStackObjectAddr: {
       /**
+       * LoadStackObjAddr {dst:INTREG, Def}, {obj:StackObject, Metadata}
+       *
+       * LoadStackObjAddr dst, obj
+       * ->
+       * addi dst, sp, offset
+       *
        * addi rd, rs1, imm
        * x[rd] = x[rs1] + sext(imm)
        */
@@ -354,15 +501,20 @@ void RISCVISelInfo::legalizeInstWithStackOperand(InstLegalizeContext& ctx,
     case InstStoreRegToStack: {
       /**
        * StoreRegToStack obj[0 Metadata], src[1 Use]
+       *
        * sw rs2[0 Use], offset[1 Metadata](rs1[2 Use])
        * M[x[rs1] + sext(offset)] = x[rs2][31: 0]
+       *
+       * StoreRegToStack obj, src
+       * ->
+       * sw src, offset(sp)
        */
       if (debugLISO) std::cout << "sw rs2, offset(rs1)" << std::endl;
       inst->set_opcode(isOperandGR(*inst->operand(1)) ? SD : FSW);
       auto oldSrc = inst->operand(1);
       inst->set_operand(0, oldSrc); /* src2 := src */
       inst->set_operand(1, offset); /* offset */
-      inst->set_operand(2, base);   /* base */
+      inst->set_operand(2, base);   /* base = sp */
       inst->set_operand(
         3, getAlign(isOperandGR(*inst->operand(0)) ? 8 : 4)); /* align */
 
@@ -372,6 +524,10 @@ void RISCVISelInfo::legalizeInstWithStackOperand(InstLegalizeContext& ctx,
       /**
        * LoadRegFromStack dst[0 Def], obj[1 Metadata]
        * lw rd, offset(rs1)
+       *
+       * LoadRegFromStack dst, obj
+       * ->
+       * lw dst, offset(sp)
        */
       if (debugLISO) std::cout << "lw rd, offset(rs1)" << std::endl;
 
@@ -387,6 +543,13 @@ void RISCVISelInfo::legalizeInstWithStackOperand(InstLegalizeContext& ctx,
     case SH:
     case SB:
     case FSW: {
+      /**
+       * sw rs2, offset(rs1)
+       *
+       * sw rs2, obj
+       * ->
+       * sw rs2, offset(sp)
+       */
       if (debugLISO) std::cout << "sw rs2, offset(rs1)" << std::endl;
       inst->set_operand(1, offset);
       inst->set_operand(2, base);
@@ -400,6 +563,13 @@ void RISCVISelInfo::legalizeInstWithStackOperand(InstLegalizeContext& ctx,
     case LB:
     case LBU:
     case FLW: {
+      /**
+       * lw rd, offset(rs1)
+       *
+       * lw rd, obj
+       * ->
+       * lw rd, offset(sp)
+       */
       if (debugLISO) std::cout << "lw rd, offset(rs1)" << std::endl;
       //! careful with the order of operands,
       //! sw and lw have different order
@@ -411,6 +581,10 @@ void RISCVISelInfo::legalizeInstWithStackOperand(InstLegalizeContext& ctx,
       std::cerr << "Unsupported instruction for legalizeInstWithStackOperand"
                 << std::endl;
   }
+
+  // lw rd, offset(rs1) or sw rs2, offset(rs1)
+  // their offset may overflow, need to adjust it
+  // RISCV::adjust_reg()
 }
 
 void RISCVISelInfo::postLegalizeInst(const InstLegalizeContext& ctx) const {
@@ -423,7 +597,7 @@ void RISCVISelInfo::postLegalizeInst(const InstLegalizeContext& ctx) const {
       const auto src = inst->operand(1);
       if (isOperandIReg(dst) && isOperandIReg(src)) {
         inst->set_opcode(MV);
-      } else if(isOperandFPR(*dst) && isOperandFPR(*src)) {
+      } else if (isOperandFPR(*dst) && isOperandFPR(*src)) {
         inst->set_opcode(FMV_S);
       } else {
         std::cerr << "Unsupported instruction for postLegalizeInst"
@@ -435,19 +609,20 @@ void RISCVISelInfo::postLegalizeInst(const InstLegalizeContext& ctx) const {
     case InstLoadImm: {
       const auto dst = inst->operand(0);
       const auto src = inst->operand(1);
-      if(isOperandIReg(dst)) {
-        if(isZero(src)) {
+      if (isOperandIReg(dst)) {
+        if (isZero(src)) {
           inst->set_opcode(MV);
           inst->set_operand(1, getZero(src));
           return;
-        } else if(isOperandImm12(src)) {
+        } else if (isOperandImm12(src)) {
           inst->set_opcode(LoadImm12);
           return;
-        } else if(isOperandImm32(src)) {
+        } else if (isOperandImm32(src)) {
           inst->set_opcode(LoadImm32);
           return;
         }
-        std::cerr << "Unsupported InstLoadImm for postLegalizeInst" << std::endl;
+        std::cerr << "Unsupported InstLoadImm for postLegalizeInst"
+                  << std::endl;
         assert(false);
       }
     }
@@ -464,27 +639,23 @@ MIROperand* RISCVISelInfo::materializeFPConstant(
   memcpy(&rep, &val, sizeof(float));
   if (rep == 0) {
     // fmv.w.x
-    const auto dst = loweringCtx.new_vreg(OperandType::Float32);
-    auto inst = new MIRInst{FMV_W_X};
-    inst->set_operand(0, dst);
-    inst->set_operand(1, MIROperand::as_isareg(RISCV::X0, OperandType::Int32));
-    loweringCtx.emit_inst(inst);
+    const auto dst = loweringCtx.newVReg(OperandType::Float32);
+
+    loweringCtx.emitInstBeta(
+      FMV_W_X, {dst, MIROperand::asISAReg(RISCV::X0, OperandType::Int32)});
     return dst;
   }
   return nullptr;
   if ((rep & 0xfff) == 0) {
     // lui + fmv.w.x
     const auto high = (rep >> 12);
-    const auto gpr = loweringCtx.new_vreg(OperandType::Int32);
-    const auto fpr = loweringCtx.new_vreg(OperandType::Float32);
-    auto inst = new MIRInst{LUI};
-    inst->set_operand(0, gpr);
-    inst->set_operand(1, MIROperand::as_imm(high, OperandType::Int32));
-    loweringCtx.emit_inst(inst);
-    inst = new MIRInst{FMV_W_X};
-    inst->set_operand(0, fpr);
-    inst->set_operand(1, gpr);
-    loweringCtx.emit_inst(inst);
+    const auto gpr = loweringCtx.newVReg(OperandType::Int32);
+    const auto fpr = loweringCtx.newVReg(OperandType::Float32);
+
+    loweringCtx.emitInstBeta(
+      LUI, {gpr, MIROperand::asImm(high, OperandType::Int32)});
+
+    loweringCtx.emitInstBeta(FMV_W_X, {fpr, gpr});
     return fpr;
   }
   return nullptr;

@@ -152,6 +152,24 @@ class TestResult:
             print(repr(process.stdout))
             print("stderr:")
             print(repr(process.stderr))
+    
+    def save_result(self, filename: str):
+        with open(filename, "w", encoding="utf-8") as f:
+            f.write(f"Test {self.test_name}")
+            for type in ResultType:
+                if type == ResultType.PASSED:
+                    continue
+                f.write(f"\n{type.name}:\n")
+                for src, process in self.cases_result[type]:
+                    f.write(f"test: {src}\n")
+                    f.write(f"returncode: {process.returncode}\n")
+                    f.write("stdout:\n")
+                    f.write(repr(process.stdout))
+                    f.write("\n")
+                    f.write("stderr:\n")
+                    f.write(repr(process.stderr))
+                    f.write("\n")
+
 
 
 result = TestResult("SysY compiler functional")
@@ -201,9 +219,13 @@ def compare_output_with_standard_file(
 
     if output != standard_answer:
         print(" Output mismatch")
-        print("output:", output[:10], end="")
         print("--------")
-        print("stdans:", standard_answer[:10], end="")
+        print("output:")
+        print(output[:10], end="")
+        print("--------")
+        print("stdans:")
+        print(standard_answer[:10], end="")
+        print("--------")
         return False
     return True
 
@@ -326,7 +348,12 @@ def test_single_case(test_case_rel_path: str, target: str):
 # test_year_cases("2023", "riscv", "functional")
 # test_single_case("2023/functional/04_arr_defn3.sy", "riscv")
 
+# import time
+from datetime import datetime
 
+now = datetime.now()
+
+dt_string = now.strftime("%Y_%m_%d_%H:%M")
 class Test:
     def __init__(self, target: str, year: str, test_kind: str):
         self.target = target
@@ -343,11 +370,12 @@ class Test:
             lambda x: self.sysy_compiler_qemu(x, self.target),
         )
         self.result.print_result_overview()
+        self.result.save_result(f"./{self.year}_{self.test_kind}_{dt_string}.md")
 
     def run_single_case(self, test_case_rel_path: str):
         test_case_path = os.path.join(tests_path, test_case_rel_path)
         self.sysy_compiler_qemu(test_case_path, self.target)
-        self.result.print_result_overview()
+        # self.result.print_result_overview()
         for type in ResultType:
             if len(self.result.cases_result[type]) > 0:
                 self.result.print_result(type)
@@ -416,4 +444,5 @@ class Test:
 
 test_instance = Test("riscv", "2023", "functional")
 test_instance.run()
-# test_instance.run_single_case("2023/functional/04_arr_defn3.sy")
+# test_instance.run_single_case("2023/functional/75_max_flow.sy")
+# test_instance.run_single_case("2023/functional/00_main.sy")

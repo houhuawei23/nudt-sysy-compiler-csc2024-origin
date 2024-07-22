@@ -469,6 +469,16 @@ InstSelInfo: {
             },
           replace: { name: LoadImm12, rd: $dst, imm: $imm },
         },
+        {
+          pattern:
+            {
+              name: [InstLoadImm, InstLoadImmToReg],
+              dst: $dst,
+              imm: $imm,
+              predicate: isOperandNonZeroImm32($imm),
+            },
+          replace: { name: LoadImm32, rd: $dst, imm: $imm },
+        },
         # InstAdd
         {
           pattern:
@@ -992,6 +1002,16 @@ InstSelInfo: {
         # { pattern: {
         #   name: [InstFAdd, InstFSub, InstFMul, InstFDiv],
         # } },
+        {
+          pattern:
+            {
+              name: InstZExt,
+              dst: $dst,
+              src: $src,
+              predicate: isOperandBoolReg($src),
+            },
+          replace: { name: InstCopy, dst: $dst, src: $src },
+        },
       ],
   }
 

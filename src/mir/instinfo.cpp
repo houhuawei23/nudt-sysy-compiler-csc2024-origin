@@ -5,13 +5,13 @@
 
 namespace mir {
 uint32_t offset = GENERIC::GENERICInstBegin + 1;
-InstInfo& TargetInstInfo::get_instinfo(uint32_t opcode) {
+const InstInfo& TargetInstInfo::get_instinfo(uint32_t opcode) const {
   return GENERIC::getGENERICInstInfo().get_instinfo(opcode + offset);
 }
 
 bool TargetInstInfo::matchBranch(MIRInst* inst,
                                  MIRBlock*& target,
-                                 double& prob) {
+                                 double& prob) const {
   auto oldOpcode = inst->opcode();
   inst->set_opcode(oldOpcode + offset);
   bool res = GENERIC::getGENERICInstInfo().matchBranch(inst, target, prob);
@@ -49,7 +49,7 @@ struct OperandDumper {
 static std::ostream& operator<<(std::ostream& os, OperandDumper opdp) {
   auto operand = opdp.operand;
   os << "[";
-  if (operand->is_reg()) {
+  if (operand->isReg()) {
     if (isVirtualReg(operand->reg())) {
       dumpVirtualReg(os, operand);
     } else if (isStackObject(operand->reg())) {
@@ -57,16 +57,16 @@ static std::ostream& operator<<(std::ostream& os, OperandDumper opdp) {
     } else {
       os << "isa " << operand->reg();
     }
-  } else if (operand->is_imm()) {
+  } else if (operand->isImm()) {
     os << getType(operand->type()) << operand->imm();
     if (operand->type() == OperandType::Special) {
       os << " (" << utils::enumName(static_cast<CompareOp>(operand->imm()))
          << ")";
     }
 
-  } else if (operand->is_prob()) {
+  } else if (operand->isProb()) {
     os << "prob " << operand->prob();
-  } else if (operand->is_reloc()) {
+  } else if (operand->isReloc()) {
     os << "reloc ";
     os << operand->reloc()->name();
   } else {

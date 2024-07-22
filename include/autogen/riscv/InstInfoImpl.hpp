@@ -14,11 +14,16 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagUse;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagMetadata;
-      case 3: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagUse;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagMetadata;
+      case 3:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -28,7 +33,7 @@ public:
 
   std::string_view name() const override { return "RISCV.BEQ"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "beq"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -45,11 +50,16 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagUse;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagMetadata;
-      case 3: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagUse;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagMetadata;
+      case 3:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -59,7 +69,7 @@ public:
 
   std::string_view name() const override { return "RISCV.BNE"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "bne"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -76,11 +86,16 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagUse;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagMetadata;
-      case 3: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagUse;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagMetadata;
+      case 3:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -90,7 +105,7 @@ public:
 
   std::string_view name() const override { return "RISCV.BLE"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "ble"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -107,11 +122,16 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagUse;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagMetadata;
-      case 3: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagUse;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagMetadata;
+      case 3:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -121,7 +141,7 @@ public:
 
   std::string_view name() const override { return "RISCV.BGT"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "bgt"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -138,11 +158,16 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagUse;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagMetadata;
-      case 3: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagUse;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagMetadata;
+      case 3:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -152,7 +177,7 @@ public:
 
   std::string_view name() const override { return "RISCV.BLT"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "blt"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -169,11 +194,16 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagUse;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagMetadata;
-      case 3: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagUse;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagMetadata;
+      case 3:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -183,7 +213,7 @@ public:
 
   std::string_view name() const override { return "RISCV.BGE"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "bge"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -200,11 +230,16 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagUse;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagMetadata;
-      case 3: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagUse;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagMetadata;
+      case 3:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -214,7 +249,7 @@ public:
 
   std::string_view name() const override { return "RISCV.BLEU"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "bleu"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -231,11 +266,16 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagUse;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagMetadata;
-      case 3: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagUse;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagMetadata;
+      case 3:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -245,7 +285,7 @@ public:
 
   std::string_view name() const override { return "RISCV.BGTU"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "bgtu"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -262,11 +302,16 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagUse;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagMetadata;
-      case 3: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagUse;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagMetadata;
+      case 3:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -276,7 +321,7 @@ public:
 
   std::string_view name() const override { return "RISCV.BLTU"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "bltu"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -293,11 +338,16 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagUse;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagMetadata;
-      case 3: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagUse;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagMetadata;
+      case 3:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -307,7 +357,7 @@ public:
 
   std::string_view name() const override { return "RISCV.BGEU"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "bgeu"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -324,10 +374,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -335,7 +389,7 @@ public:
 
   std::string_view name() const override { return "RISCV.FADD_S"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "fadd.s"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -351,10 +405,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -362,7 +420,7 @@ public:
 
   std::string_view name() const override { return "RISCV.FSUB_S"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "fsub.s"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -378,10 +436,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -389,7 +451,7 @@ public:
 
   std::string_view name() const override { return "RISCV.FMUL_S"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "fmul.s"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -405,10 +467,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -416,7 +482,7 @@ public:
 
   std::string_view name() const override { return "RISCV.FDIV_S"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "fdiv.s"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -432,10 +498,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -443,7 +513,7 @@ public:
 
   std::string_view name() const override { return "RISCV.FMIN_S"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "fmin.s"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -459,10 +529,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -470,7 +544,7 @@ public:
 
   std::string_view name() const override { return "RISCV.FMAX_S"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "fmax.s"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -486,11 +560,16 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      case 3: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      case 3:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -498,7 +577,7 @@ public:
 
   std::string_view name() const override { return "RISCV.FMADD_S"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "fmadd.s"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -515,11 +594,16 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      case 3: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      case 3:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -527,7 +611,7 @@ public:
 
   std::string_view name() const override { return "RISCV.FMSUB_S"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "fmsub.s"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -544,11 +628,16 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      case 3: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      case 3:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -556,7 +645,7 @@ public:
 
   std::string_view name() const override { return "RISCV.FNMADD_S"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "fnmadd.s"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -573,11 +662,16 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      case 3: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      case 3:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -585,7 +679,7 @@ public:
 
   std::string_view name() const override { return "RISCV.FNMSUB_S"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "fnmsub.s"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -602,9 +696,12 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -612,7 +709,7 @@ public:
 
   std::string_view name() const override { return "RISCV.FNEG_S"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "fneg.s"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
@@ -627,9 +724,12 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -637,7 +737,7 @@ public:
 
   std::string_view name() const override { return "RISCV.FABS_S"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "fabs.s"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
@@ -652,9 +752,12 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -662,7 +765,7 @@ public:
 
   std::string_view name() const override { return "RISCV.FMV_S"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "fmv.s"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
@@ -677,9 +780,12 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -687,7 +793,7 @@ public:
 
   std::string_view name() const override { return "RISCV.FSQRT_S"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "fsqrt.s"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
@@ -702,9 +808,12 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -712,7 +821,7 @@ public:
 
   std::string_view name() const override { return "RISCV.FSGNJ_S"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "fsgnj.s"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
@@ -727,9 +836,12 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -737,7 +849,7 @@ public:
 
   std::string_view name() const override { return "RISCV.FCLASS_S"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "fclass.s"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
@@ -752,9 +864,12 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -762,7 +877,7 @@ public:
 
   std::string_view name() const override { return "RISCV.FMV_X_W"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "fmv.x.w"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
@@ -777,9 +892,12 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -787,7 +905,7 @@ public:
 
   std::string_view name() const override { return "RISCV.FCVT_WU_S"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "fcvt.wu.s"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
@@ -802,9 +920,12 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -812,7 +933,7 @@ public:
 
   std::string_view name() const override { return "RISCV.FMV_W_X"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "fmv.w.x"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
@@ -827,9 +948,12 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -837,7 +961,7 @@ public:
 
   std::string_view name() const override { return "RISCV.FCVT_S_W"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "fcvt.s.w"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
@@ -852,9 +976,12 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -862,7 +989,7 @@ public:
 
   std::string_view name() const override { return "RISCV.FCVT_S_WU"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "fcvt.s.wu"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
@@ -877,10 +1004,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -888,7 +1019,7 @@ public:
 
   std::string_view name() const override { return "RISCV.FEQ_S"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "feq.s"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -904,10 +1035,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -915,7 +1050,7 @@ public:
 
   std::string_view name() const override { return "RISCV.FLT_S"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "flt.s"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -931,10 +1066,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -942,7 +1081,7 @@ public:
 
   std::string_view name() const override { return "RISCV.FLE_S"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "fle.s"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -958,9 +1097,12 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -968,7 +1110,7 @@ public:
 
   std::string_view name() const override { return "RISCV.FCVT_W_S"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "fcvt.w.s"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", rtz";
@@ -983,10 +1125,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -994,7 +1140,7 @@ public:
 
   std::string_view name() const override { return "RISCV.ADD"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "add"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -1010,10 +1156,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1021,7 +1171,7 @@ public:
 
   std::string_view name() const override { return "RISCV.ADDW"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "addw"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -1037,10 +1187,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1048,7 +1202,7 @@ public:
 
   std::string_view name() const override { return "RISCV.SUB"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "sub"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -1064,10 +1218,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1075,7 +1233,7 @@ public:
 
   std::string_view name() const override { return "RISCV.SUBW"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "subw"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -1091,10 +1249,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1102,7 +1264,7 @@ public:
 
   std::string_view name() const override { return "RISCV.XOR"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "xor"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -1118,10 +1280,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1129,7 +1295,7 @@ public:
 
   std::string_view name() const override { return "RISCV.OR"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "or"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -1145,10 +1311,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1156,7 +1326,7 @@ public:
 
   std::string_view name() const override { return "RISCV.AND"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "and"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -1172,10 +1342,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1183,7 +1357,7 @@ public:
 
   std::string_view name() const override { return "RISCV.SLL"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "sll"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -1199,10 +1373,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1210,7 +1388,7 @@ public:
 
   std::string_view name() const override { return "RISCV.SRL"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "srl"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -1226,10 +1404,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1237,7 +1419,7 @@ public:
 
   std::string_view name() const override { return "RISCV.SRA"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "sra"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -1253,10 +1435,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1264,7 +1450,7 @@ public:
 
   std::string_view name() const override { return "RISCV.SLT"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "slt"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -1280,10 +1466,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1291,7 +1481,7 @@ public:
 
   std::string_view name() const override { return "RISCV.SLTU"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "sltu"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -1307,10 +1497,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1318,7 +1512,7 @@ public:
 
   std::string_view name() const override { return "RISCV.ADDI"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "addi"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -1334,10 +1528,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1345,7 +1543,7 @@ public:
 
   std::string_view name() const override { return "RISCV.XORI"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "xori"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -1361,10 +1559,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1372,7 +1574,7 @@ public:
 
   std::string_view name() const override { return "RISCV.ORI"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "ori"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -1388,10 +1590,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1399,7 +1605,7 @@ public:
 
   std::string_view name() const override { return "RISCV.ANDI"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "andi"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -1415,10 +1621,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1426,7 +1636,7 @@ public:
 
   std::string_view name() const override { return "RISCV.SLTI"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "slti"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -1442,10 +1652,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1453,7 +1667,7 @@ public:
 
   std::string_view name() const override { return "RISCV.SLTIU"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "sltiu"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -1469,10 +1683,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1480,7 +1698,7 @@ public:
 
   std::string_view name() const override { return "RISCV.SLLI"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "slli"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -1496,10 +1714,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1507,7 +1729,7 @@ public:
 
   std::string_view name() const override { return "RISCV.SRLI"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "srli"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -1523,10 +1745,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1534,7 +1760,7 @@ public:
 
   std::string_view name() const override { return "RISCV.SRAI"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "srai"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -1550,10 +1776,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagMetadata;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagMetadata;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1561,7 +1791,7 @@ public:
 
   std::string_view name() const override { return "RISCV.LB"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "lb"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << "("
@@ -1577,10 +1807,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagMetadata;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagMetadata;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1588,7 +1822,7 @@ public:
 
   std::string_view name() const override { return "RISCV.LH"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "lh"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << "("
@@ -1604,10 +1838,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagMetadata;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagMetadata;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1615,7 +1853,7 @@ public:
 
   std::string_view name() const override { return "RISCV.LW"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "lw"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << "("
@@ -1631,10 +1869,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagMetadata;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagMetadata;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1642,7 +1884,7 @@ public:
 
   std::string_view name() const override { return "RISCV.LBU"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "lbu"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << "("
@@ -1658,10 +1900,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagMetadata;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagMetadata;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1669,7 +1915,7 @@ public:
 
   std::string_view name() const override { return "RISCV.LHU"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "lhu"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << "("
@@ -1685,10 +1931,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagMetadata;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagMetadata;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1696,7 +1946,7 @@ public:
 
   std::string_view name() const override { return "RISCV.LD"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "ld"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << "("
@@ -1712,10 +1962,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagUse;
-      case 1: return OperandFlagMetadata;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagUse;
+      case 1:
+        return OperandFlagMetadata;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1723,7 +1977,7 @@ public:
 
   std::string_view name() const override { return "RISCV.SB"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "sb"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << "("
@@ -1739,10 +1993,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagUse;
-      case 1: return OperandFlagMetadata;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagUse;
+      case 1:
+        return OperandFlagMetadata;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1750,7 +2008,7 @@ public:
 
   std::string_view name() const override { return "RISCV.SH"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "sh"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << "("
@@ -1766,10 +2024,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagUse;
-      case 1: return OperandFlagMetadata;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagUse;
+      case 1:
+        return OperandFlagMetadata;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1777,7 +2039,7 @@ public:
 
   std::string_view name() const override { return "RISCV.SW"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "sw"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << "("
@@ -1793,10 +2055,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagUse;
-      case 1: return OperandFlagMetadata;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagUse;
+      case 1:
+        return OperandFlagMetadata;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1804,7 +2070,7 @@ public:
 
   std::string_view name() const override { return "RISCV.SD"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "sd"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << "("
@@ -1820,8 +2086,10 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1829,7 +2097,7 @@ public:
 
   std::string_view name() const override { return "RISCV.JAL"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "jal"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)};
   }
@@ -1843,8 +2111,10 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1855,7 +2125,7 @@ public:
 
   std::string_view name() const override { return "RISCV.J"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "j"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)};
   }
@@ -1869,7 +2139,8 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      default: assert(false && "Invalid operand index");
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1880,7 +2151,7 @@ public:
 
   std::string_view name() const override { return "RISCV.RET"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "ret";
   }
 };
@@ -1893,9 +2164,12 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1905,7 +2179,7 @@ public:
 
   std::string_view name() const override { return "RISCV.LUI"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "lui"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
@@ -1920,9 +2194,12 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1932,7 +2209,7 @@ public:
 
   std::string_view name() const override { return "RISCV.AUIPC"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "auipc"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
@@ -1947,9 +2224,12 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1957,7 +2237,7 @@ public:
 
   std::string_view name() const override { return "RISCV.LLA"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "lla"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
@@ -1972,10 +2252,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1983,7 +2267,7 @@ public:
 
   std::string_view name() const override { return "RISCV.MUL"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "mul"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -1999,10 +2283,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -2010,7 +2298,7 @@ public:
 
   std::string_view name() const override { return "RISCV.MULW"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "mulw"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -2026,10 +2314,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -2037,7 +2329,7 @@ public:
 
   std::string_view name() const override { return "RISCV.MULH"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "mulh"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -2053,10 +2345,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -2064,7 +2360,7 @@ public:
 
   std::string_view name() const override { return "RISCV.MULHSU"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "mulhsu"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -2080,10 +2376,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -2091,7 +2391,7 @@ public:
 
   std::string_view name() const override { return "RISCV.MULHU"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "mulhu"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -2107,10 +2407,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -2118,7 +2422,7 @@ public:
 
   std::string_view name() const override { return "RISCV.DIV"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "div"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -2134,10 +2438,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -2145,7 +2453,7 @@ public:
 
   std::string_view name() const override { return "RISCV.DIVW"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "divw"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -2161,10 +2469,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -2172,7 +2484,7 @@ public:
 
   std::string_view name() const override { return "RISCV.DIVU"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "divu"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -2188,10 +2500,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -2199,7 +2515,7 @@ public:
 
   std::string_view name() const override { return "RISCV.REM"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "rem"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -2215,10 +2531,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -2226,7 +2546,7 @@ public:
 
   std::string_view name() const override { return "RISCV.REMW"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "remw"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -2242,10 +2562,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -2253,7 +2577,7 @@ public:
 
   std::string_view name() const override { return "RISCV.REMU"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "remu"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -2269,10 +2593,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -2280,7 +2608,7 @@ public:
 
   std::string_view name() const override { return "RISCV.LR"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "lr.w"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -2296,10 +2624,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -2307,7 +2639,7 @@ public:
 
   std::string_view name() const override { return "RISCV.SC"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "sc.w"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -2323,10 +2655,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -2334,7 +2670,7 @@ public:
 
   std::string_view name() const override { return "RISCV.AMOSWAP"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "amoswap.w"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -2350,10 +2686,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -2361,7 +2701,7 @@ public:
 
   std::string_view name() const override { return "RISCV.AMOADD"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "amoadd.w"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -2377,10 +2717,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -2388,7 +2732,7 @@ public:
 
   std::string_view name() const override { return "RISCV.AMOAND"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "amoand.w"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -2404,10 +2748,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -2415,7 +2763,7 @@ public:
 
   std::string_view name() const override { return "RISCV.AMOOR"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "amoor.w"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -2431,10 +2779,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -2442,7 +2794,7 @@ public:
 
   std::string_view name() const override { return "RISCV.AMOXOR"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "amoxor.w"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
@@ -2458,10 +2810,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagMetadata;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagMetadata;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -2469,7 +2825,7 @@ public:
 
   std::string_view name() const override { return "RISCV.FLW"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "flw"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << "("
@@ -2485,10 +2841,14 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagUse;
-      case 1: return OperandFlagMetadata;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagUse;
+      case 1:
+        return OperandFlagMetadata;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -2496,7 +2856,7 @@ public:
 
   std::string_view name() const override { return "RISCV.FSW"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "fsw"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << "("
@@ -2512,9 +2872,12 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -2524,7 +2887,7 @@ public:
 
   std::string_view name() const override { return "RISCV.LoadImm12"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "li"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
@@ -2539,9 +2902,12 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -2551,7 +2917,7 @@ public:
 
   std::string_view name() const override { return "RISCV.LoadImm32"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "li"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
@@ -2566,9 +2932,12 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -2578,7 +2947,7 @@ public:
 
   std::string_view name() const override { return "RISCV.LoadImm64"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "li"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
@@ -2593,9 +2962,12 @@ public:
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -2603,7 +2975,7 @@ public:
 
   std::string_view name() const override { return "RISCV.MV"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "mv"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
@@ -2710,108 +3082,207 @@ class RISCVInstInfo final : public TargetInstInfo {
 
 public:
   RISCVInstInfo() = default;
-  InstInfo& get_instinfo(uint32_t opcode) {
+  const InstInfo& get_instinfo(uint32_t opcode) const override {
     switch (opcode) {
-      case RISCVInst::BEQ: return _instinfoBEQ;
-      case RISCVInst::BNE: return _instinfoBNE;
-      case RISCVInst::BLE: return _instinfoBLE;
-      case RISCVInst::BGT: return _instinfoBGT;
-      case RISCVInst::BLT: return _instinfoBLT;
-      case RISCVInst::BGE: return _instinfoBGE;
-      case RISCVInst::BLEU: return _instinfoBLEU;
-      case RISCVInst::BGTU: return _instinfoBGTU;
-      case RISCVInst::BLTU: return _instinfoBLTU;
-      case RISCVInst::BGEU: return _instinfoBGEU;
-      case RISCVInst::FADD_S: return _instinfoFADD_S;
-      case RISCVInst::FSUB_S: return _instinfoFSUB_S;
-      case RISCVInst::FMUL_S: return _instinfoFMUL_S;
-      case RISCVInst::FDIV_S: return _instinfoFDIV_S;
-      case RISCVInst::FMIN_S: return _instinfoFMIN_S;
-      case RISCVInst::FMAX_S: return _instinfoFMAX_S;
-      case RISCVInst::FMADD_S: return _instinfoFMADD_S;
-      case RISCVInst::FMSUB_S: return _instinfoFMSUB_S;
-      case RISCVInst::FNMADD_S: return _instinfoFNMADD_S;
-      case RISCVInst::FNMSUB_S: return _instinfoFNMSUB_S;
-      case RISCVInst::FNEG_S: return _instinfoFNEG_S;
-      case RISCVInst::FABS_S: return _instinfoFABS_S;
-      case RISCVInst::FMV_S: return _instinfoFMV_S;
-      case RISCVInst::FSQRT_S: return _instinfoFSQRT_S;
-      case RISCVInst::FSGNJ_S: return _instinfoFSGNJ_S;
-      case RISCVInst::FCLASS_S: return _instinfoFCLASS_S;
-      case RISCVInst::FMV_X_W: return _instinfoFMV_X_W;
-      case RISCVInst::FCVT_WU_S: return _instinfoFCVT_WU_S;
-      case RISCVInst::FMV_W_X: return _instinfoFMV_W_X;
-      case RISCVInst::FCVT_S_W: return _instinfoFCVT_S_W;
-      case RISCVInst::FCVT_S_WU: return _instinfoFCVT_S_WU;
-      case RISCVInst::FEQ_S: return _instinfoFEQ_S;
-      case RISCVInst::FLT_S: return _instinfoFLT_S;
-      case RISCVInst::FLE_S: return _instinfoFLE_S;
-      case RISCVInst::FCVT_W_S: return _instinfoFCVT_W_S;
-      case RISCVInst::ADD: return _instinfoADD;
-      case RISCVInst::ADDW: return _instinfoADDW;
-      case RISCVInst::SUB: return _instinfoSUB;
-      case RISCVInst::SUBW: return _instinfoSUBW;
-      case RISCVInst::XOR: return _instinfoXOR;
-      case RISCVInst::OR: return _instinfoOR;
-      case RISCVInst::AND: return _instinfoAND;
-      case RISCVInst::SLL: return _instinfoSLL;
-      case RISCVInst::SRL: return _instinfoSRL;
-      case RISCVInst::SRA: return _instinfoSRA;
-      case RISCVInst::SLT: return _instinfoSLT;
-      case RISCVInst::SLTU: return _instinfoSLTU;
-      case RISCVInst::ADDI: return _instinfoADDI;
-      case RISCVInst::XORI: return _instinfoXORI;
-      case RISCVInst::ORI: return _instinfoORI;
-      case RISCVInst::ANDI: return _instinfoANDI;
-      case RISCVInst::SLTI: return _instinfoSLTI;
-      case RISCVInst::SLTIU: return _instinfoSLTIU;
-      case RISCVInst::SLLI: return _instinfoSLLI;
-      case RISCVInst::SRLI: return _instinfoSRLI;
-      case RISCVInst::SRAI: return _instinfoSRAI;
-      case RISCVInst::LB: return _instinfoLB;
-      case RISCVInst::LH: return _instinfoLH;
-      case RISCVInst::LW: return _instinfoLW;
-      case RISCVInst::LBU: return _instinfoLBU;
-      case RISCVInst::LHU: return _instinfoLHU;
-      case RISCVInst::LD: return _instinfoLD;
-      case RISCVInst::SB: return _instinfoSB;
-      case RISCVInst::SH: return _instinfoSH;
-      case RISCVInst::SW: return _instinfoSW;
-      case RISCVInst::SD: return _instinfoSD;
-      case RISCVInst::JAL: return _instinfoJAL;
-      case RISCVInst::J: return _instinfoJ;
-      case RISCVInst::RET: return _instinfoRET;
-      case RISCVInst::LUI: return _instinfoLUI;
-      case RISCVInst::AUIPC: return _instinfoAUIPC;
-      case RISCVInst::LLA: return _instinfoLLA;
-      case RISCVInst::MUL: return _instinfoMUL;
-      case RISCVInst::MULW: return _instinfoMULW;
-      case RISCVInst::MULH: return _instinfoMULH;
-      case RISCVInst::MULHSU: return _instinfoMULHSU;
-      case RISCVInst::MULHU: return _instinfoMULHU;
-      case RISCVInst::DIV: return _instinfoDIV;
-      case RISCVInst::DIVW: return _instinfoDIVW;
-      case RISCVInst::DIVU: return _instinfoDIVU;
-      case RISCVInst::REM: return _instinfoREM;
-      case RISCVInst::REMW: return _instinfoREMW;
-      case RISCVInst::REMU: return _instinfoREMU;
-      case RISCVInst::LR: return _instinfoLR;
-      case RISCVInst::SC: return _instinfoSC;
-      case RISCVInst::AMOSWAP: return _instinfoAMOSWAP;
-      case RISCVInst::AMOADD: return _instinfoAMOADD;
-      case RISCVInst::AMOAND: return _instinfoAMOAND;
-      case RISCVInst::AMOOR: return _instinfoAMOOR;
-      case RISCVInst::AMOXOR: return _instinfoAMOXOR;
-      case RISCVInst::FLW: return _instinfoFLW;
-      case RISCVInst::FSW: return _instinfoFSW;
-      case RISCVInst::LoadImm12: return _instinfoLoadImm12;
-      case RISCVInst::LoadImm32: return _instinfoLoadImm32;
-      case RISCVInst::LoadImm64: return _instinfoLoadImm64;
-      case RISCVInst::MV: return _instinfoMV;
-      default: return TargetInstInfo::get_instinfo(opcode);
+      case RISCVInst::BEQ:
+        return _instinfoBEQ;
+      case RISCVInst::BNE:
+        return _instinfoBNE;
+      case RISCVInst::BLE:
+        return _instinfoBLE;
+      case RISCVInst::BGT:
+        return _instinfoBGT;
+      case RISCVInst::BLT:
+        return _instinfoBLT;
+      case RISCVInst::BGE:
+        return _instinfoBGE;
+      case RISCVInst::BLEU:
+        return _instinfoBLEU;
+      case RISCVInst::BGTU:
+        return _instinfoBGTU;
+      case RISCVInst::BLTU:
+        return _instinfoBLTU;
+      case RISCVInst::BGEU:
+        return _instinfoBGEU;
+      case RISCVInst::FADD_S:
+        return _instinfoFADD_S;
+      case RISCVInst::FSUB_S:
+        return _instinfoFSUB_S;
+      case RISCVInst::FMUL_S:
+        return _instinfoFMUL_S;
+      case RISCVInst::FDIV_S:
+        return _instinfoFDIV_S;
+      case RISCVInst::FMIN_S:
+        return _instinfoFMIN_S;
+      case RISCVInst::FMAX_S:
+        return _instinfoFMAX_S;
+      case RISCVInst::FMADD_S:
+        return _instinfoFMADD_S;
+      case RISCVInst::FMSUB_S:
+        return _instinfoFMSUB_S;
+      case RISCVInst::FNMADD_S:
+        return _instinfoFNMADD_S;
+      case RISCVInst::FNMSUB_S:
+        return _instinfoFNMSUB_S;
+      case RISCVInst::FNEG_S:
+        return _instinfoFNEG_S;
+      case RISCVInst::FABS_S:
+        return _instinfoFABS_S;
+      case RISCVInst::FMV_S:
+        return _instinfoFMV_S;
+      case RISCVInst::FSQRT_S:
+        return _instinfoFSQRT_S;
+      case RISCVInst::FSGNJ_S:
+        return _instinfoFSGNJ_S;
+      case RISCVInst::FCLASS_S:
+        return _instinfoFCLASS_S;
+      case RISCVInst::FMV_X_W:
+        return _instinfoFMV_X_W;
+      case RISCVInst::FCVT_WU_S:
+        return _instinfoFCVT_WU_S;
+      case RISCVInst::FMV_W_X:
+        return _instinfoFMV_W_X;
+      case RISCVInst::FCVT_S_W:
+        return _instinfoFCVT_S_W;
+      case RISCVInst::FCVT_S_WU:
+        return _instinfoFCVT_S_WU;
+      case RISCVInst::FEQ_S:
+        return _instinfoFEQ_S;
+      case RISCVInst::FLT_S:
+        return _instinfoFLT_S;
+      case RISCVInst::FLE_S:
+        return _instinfoFLE_S;
+      case RISCVInst::FCVT_W_S:
+        return _instinfoFCVT_W_S;
+      case RISCVInst::ADD:
+        return _instinfoADD;
+      case RISCVInst::ADDW:
+        return _instinfoADDW;
+      case RISCVInst::SUB:
+        return _instinfoSUB;
+      case RISCVInst::SUBW:
+        return _instinfoSUBW;
+      case RISCVInst::XOR:
+        return _instinfoXOR;
+      case RISCVInst::OR:
+        return _instinfoOR;
+      case RISCVInst::AND:
+        return _instinfoAND;
+      case RISCVInst::SLL:
+        return _instinfoSLL;
+      case RISCVInst::SRL:
+        return _instinfoSRL;
+      case RISCVInst::SRA:
+        return _instinfoSRA;
+      case RISCVInst::SLT:
+        return _instinfoSLT;
+      case RISCVInst::SLTU:
+        return _instinfoSLTU;
+      case RISCVInst::ADDI:
+        return _instinfoADDI;
+      case RISCVInst::XORI:
+        return _instinfoXORI;
+      case RISCVInst::ORI:
+        return _instinfoORI;
+      case RISCVInst::ANDI:
+        return _instinfoANDI;
+      case RISCVInst::SLTI:
+        return _instinfoSLTI;
+      case RISCVInst::SLTIU:
+        return _instinfoSLTIU;
+      case RISCVInst::SLLI:
+        return _instinfoSLLI;
+      case RISCVInst::SRLI:
+        return _instinfoSRLI;
+      case RISCVInst::SRAI:
+        return _instinfoSRAI;
+      case RISCVInst::LB:
+        return _instinfoLB;
+      case RISCVInst::LH:
+        return _instinfoLH;
+      case RISCVInst::LW:
+        return _instinfoLW;
+      case RISCVInst::LBU:
+        return _instinfoLBU;
+      case RISCVInst::LHU:
+        return _instinfoLHU;
+      case RISCVInst::LD:
+        return _instinfoLD;
+      case RISCVInst::SB:
+        return _instinfoSB;
+      case RISCVInst::SH:
+        return _instinfoSH;
+      case RISCVInst::SW:
+        return _instinfoSW;
+      case RISCVInst::SD:
+        return _instinfoSD;
+      case RISCVInst::JAL:
+        return _instinfoJAL;
+      case RISCVInst::J:
+        return _instinfoJ;
+      case RISCVInst::RET:
+        return _instinfoRET;
+      case RISCVInst::LUI:
+        return _instinfoLUI;
+      case RISCVInst::AUIPC:
+        return _instinfoAUIPC;
+      case RISCVInst::LLA:
+        return _instinfoLLA;
+      case RISCVInst::MUL:
+        return _instinfoMUL;
+      case RISCVInst::MULW:
+        return _instinfoMULW;
+      case RISCVInst::MULH:
+        return _instinfoMULH;
+      case RISCVInst::MULHSU:
+        return _instinfoMULHSU;
+      case RISCVInst::MULHU:
+        return _instinfoMULHU;
+      case RISCVInst::DIV:
+        return _instinfoDIV;
+      case RISCVInst::DIVW:
+        return _instinfoDIVW;
+      case RISCVInst::DIVU:
+        return _instinfoDIVU;
+      case RISCVInst::REM:
+        return _instinfoREM;
+      case RISCVInst::REMW:
+        return _instinfoREMW;
+      case RISCVInst::REMU:
+        return _instinfoREMU;
+      case RISCVInst::LR:
+        return _instinfoLR;
+      case RISCVInst::SC:
+        return _instinfoSC;
+      case RISCVInst::AMOSWAP:
+        return _instinfoAMOSWAP;
+      case RISCVInst::AMOADD:
+        return _instinfoAMOADD;
+      case RISCVInst::AMOAND:
+        return _instinfoAMOAND;
+      case RISCVInst::AMOOR:
+        return _instinfoAMOOR;
+      case RISCVInst::AMOXOR:
+        return _instinfoAMOXOR;
+      case RISCVInst::FLW:
+        return _instinfoFLW;
+      case RISCVInst::FSW:
+        return _instinfoFSW;
+      case RISCVInst::LoadImm12:
+        return _instinfoLoadImm12;
+      case RISCVInst::LoadImm32:
+        return _instinfoLoadImm32;
+      case RISCVInst::LoadImm64:
+        return _instinfoLoadImm64;
+      case RISCVInst::MV:
+        return _instinfoMV;
+      default:
+        return TargetInstInfo::get_instinfo(opcode);
     }
   }
-  bool matchBranch(MIRInst* inst, MIRBlock*& target, double& prob) override {
+  bool matchBranch(MIRInst* inst,
+                   MIRBlock*& target,
+                   double& prob) const override {
     auto& instInfo = get_instinfo(inst->opcode());
     if (requireFlag(instInfo.inst_flag(), InstFlagBranch)) {
       if (inst->opcode() < ISASpecificBegin) {

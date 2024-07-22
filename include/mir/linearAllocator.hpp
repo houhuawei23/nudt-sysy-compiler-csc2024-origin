@@ -18,7 +18,7 @@ static void linearAllocator(MIRFunction& mfunc, CodeGenContext& ctx) {
 
                 if (!isOperandVReg(op)) continue;
                 auto new_op = selector.getFreeRegister(op->type());
-                if (new_op->is_unused()) {
+                if (new_op->isUnused()) {
                     /* no free register available */
                     continue;
                 } else {

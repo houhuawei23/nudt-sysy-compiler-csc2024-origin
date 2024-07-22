@@ -43,7 +43,7 @@ bool removeUnusedInsts(MIRFunction& func, CodeGenContext& ctx) {
                 if (instInfo.operand_flag(idx) & OperandFlagDef) {
                     auto op = inst->operand(idx);
                     writers[op].push_back(inst);
-                    if (op->is_reg() && isISAReg(op->reg()) &&
+                    if (op->isReg() && isISAReg(op->reg()) &&
                         isAllocableType(op->type())) {
                         special = true;
                     }

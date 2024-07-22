@@ -17,17 +17,17 @@ std::unordered_map<MIROperand*, uint32_t> collect_def_count(
 
 void ISelContext::remove_inst(MIRInst* inst) {
     assert(inst != nullptr);
-    _remove_work_list.insert(inst);
+    mRemoveWorkList.insert(inst);
 }
 void ISelContext::replace_operand(MIROperand* src, MIROperand* dst) {
-    assert(src->is_reg());
+    assert(src->isReg());
     if (src != dst) {
-        _replace_map.emplace(src, dst);
+        mReplaceMap.emplace(src, dst);
     }
 }
 MIROperand* ISelContext::get_inst_def(MIRInst* inst) {
     assert(inst != nullptr);
-    auto& instinfo = _codegen_ctx.instInfo.get_instinfo(inst);
+    auto& instinfo = mCodeGenCtx.instInfo.get_instinfo(inst);
     for (uint32_t idx = 0; idx < instinfo.operand_num(); idx++) {
         if (instinfo.operand_flag(idx) & OperandFlagDef) {
             return inst->operand(idx);
@@ -40,8 +40,8 @@ MIROperand* ISelContext::get_inst_def(MIRInst* inst) {
 
 MIRInst* ISelContext::lookup_def(MIROperand* op) {
     assert(op != nullptr);
-    auto iter = _inst_map.find(op->reg());
-    if (iter != _inst_map.end()) {
+    auto iter = mInstMap.find(op->reg());
+    if (iter != mInstMap.end()) {
         return iter->second;
     }
 
@@ -60,12 +60,12 @@ MIRInst* ISelContext::lookup_def(MIROperand* op) {
 void ISelContext::run_isel(MIRFunction* func) {
     bool debugISel = false;
     auto dumpInst = [&](MIRInst* inst) {
-        auto& instInfo = _codegen_ctx.instInfo.get_instinfo(inst);
+        auto& instInfo = mCodeGenCtx.instInfo.get_instinfo(inst);
         instInfo.print(std::cerr << "match&select: ", *inst, false);
         std::cerr << std::endl;
     };
 
-    auto& isel_info = _codegen_ctx.iselInfo;
+    auto& isel_info = mCodeGenCtx.iselInfo;
 
     //! fix point algorithm: 循环执行指令选择和替换，直到不再变化。
     while (true) {
@@ -73,13 +73,13 @@ void ISelContext::run_isel(MIRFunction* func) {
 
         bool modified = false;
         bool has_illegal = false;
-        _remove_work_list.clear();
-        _replace_block_list.clear();
-        _replace_map.clear();
+        mRemoveWorkList.clear();
+        mReplaceList.clear();
+        mReplaceMap.clear();
 
-        _constant_map.clear();
-        _use_cnt.clear();
-        _inst_map.clear();  //! here!
+        mConstantMap.clear();
+        mUseCnt.clear();
+        mInstMap.clear();  //! here!
         //! 定义和使用计数收集: 遍历所有指令，收集每个定义的计数和使用情况。
         // get def count
         // auto def_count = collect_def_count(func, _codegen_ctx);
@@ -104,19 +104,19 @@ void ISelContext::run_isel(MIRFunction* func) {
 
             // check ssa form, get inst map
             for (auto& inst : block->insts()) {
-                auto& instinfo = _codegen_ctx.instInfo.get_instinfo(inst);
+                auto& instinfo = mCodeGenCtx.instInfo.get_instinfo(inst);
                 for (uint32_t idx = 0; idx < instinfo.operand_num(); idx++) {
                     if (instinfo.operand_flag(idx) & OperandFlagDef) {
                         auto def = inst->operand(idx);
-                        if (def->is_reg() && isVirtualReg(def->reg())) {
+                        if (def->isReg() && isVirtualReg(def->reg())) {
                             // std::cerr << "def reg v " << (def->reg() ^ virtualRegBegin) << "\n";
                             // std::cerr << "def address " << def << "\n";
-                            _inst_map.emplace(def->reg(), inst);
+                            mInstMap.emplace(def->reg(), inst);
                         }
                     }
                 }
             }
-            _curr_block = block.get();
+            mCurrBlock = block.get();
             auto& insts = block->insts();
 
             if (insts.empty())
@@ -125,7 +125,7 @@ void ISelContext::run_isel(MIRFunction* func) {
             auto it = std::prev(insts.end());
             /* in this block */
             while (true) {  // for all insts in block
-                _insert_point = it;
+                mInsertPoint = it;
                 auto& inst = *it;
                 std::optional<std::list<MIRInst*>::iterator> prev;
 
@@ -133,7 +133,7 @@ void ISelContext::run_isel(MIRFunction* func) {
                     prev = std::prev(it);
                 }
                 // if inst not in remove list
-                if (not _remove_work_list.count(inst)) {
+                if (not mRemoveWorkList.count(inst)) {
                     if (debugISel) {
                         dumpInst(inst);
                     }
@@ -158,31 +158,31 @@ void ISelContext::run_isel(MIRFunction* func) {
         for (auto& block : func->blocks()) {
             // remove old insts
             block->insts().remove_if(
-                [&](auto inst) { return _remove_work_list.count(inst); });
+                [&](auto inst) { return mRemoveWorkList.count(inst); });
 
             // replace defs
             for (auto& inst : block->insts()) {
-                if (_replace_block_list.count(inst)) {
+                if (mReplaceList.count(inst)) {
                     //? in replace block list, jump
                     continue;
                 }
-                auto& info = _codegen_ctx.instInfo.get_instinfo(inst);
+                auto& info = mCodeGenCtx.instInfo.get_instinfo(inst);
 
                 for (uint32_t idx = 0; idx < info.operand_num(); idx++) {
                     auto op = inst->operand(idx);
-                    if (not op->is_reg()) {
+                    if (not op->isReg()) {
                         continue;
                     }
                     // replace map: old operand* -> new operand*
-                    auto iter = _replace_map.find(op);
-                    if (iter != _replace_map.end()) {
+                    auto iter = mReplaceMap.find(op);
+                    if (iter != mReplaceMap.end()) {
                         inst->set_operand(idx, iter->second);
                     }
                 }
             }
         }
         if(debugISel) {
-            func->print(std::cout << "after isel:\n", _codegen_ctx);
+            func->print(std::cout << "after isel:\n", mCodeGenCtx);
         }
         if (modified) {
             if (debugISel) std::cout << "run_isel modified, continue!\n" << std::endl;
@@ -198,17 +198,17 @@ void ISelContext::run_isel(MIRFunction* func) {
 }
 
 uint32_t select_copy_opcode(MIROperand* dst, MIROperand* src) {
-    if (dst->is_reg() && isISAReg(dst->reg())) {
+    if (dst->isReg() && isISAReg(dst->reg())) {
         // dst is a isa reg
-        if (src->is_imm()) {
+        if (src->isImm()) {
             return InstLoadImmToReg;
         }
         return InstCopyToReg;
     }
-    if (src->is_imm()) {
+    if (src->isImm()) {
         return InstLoadImmToReg;
     }
-    if (src->is_reg() && isISAReg(src->reg())) {
+    if (src->isReg() && isISAReg(src->reg())) {
         return InstCopyFromReg;
     }
     assert(isOperandVRegORISAReg(src) and isOperandVRegORISAReg(dst));
@@ -216,39 +216,45 @@ uint32_t select_copy_opcode(MIROperand* dst, MIROperand* src) {
 }
 
 void postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) {
-    /* legalize stack operands */
-    for (auto& block : func.blocks()) {
-        auto& insts = block->insts();
-        for (auto it = insts.begin(); it != insts.end();) {
-            auto next = std::next(it);
-            auto& inst = *it;
-            auto& info = ctx.instInfo.get_instinfo(inst);
-            for (uint32_t idx = 0; idx < info.operand_num(); idx++) {
-                auto op = inst->operand(idx);
-                auto lctx = InstLegalizeContext{inst, insts,        it,
-                                                ctx,  std::nullopt, func};
-                if (isOperandStackObject(op)) {
-                    ctx.iselInfo->legalizeInstWithStackOperand(
-                        lctx, op, func.stack_objs().at(op));
-                }
-            }
-            it = next;
+  /* legalize stack operands */
+  for (auto& block : func.blocks()) {
+    auto& insts = block->insts();
+    for (auto it = insts.begin(); it != insts.end();) {
+      auto next = std::next(it);
+      auto& inst = *it;
+      auto& info = ctx.instInfo.get_instinfo(inst);
+      for (uint32_t idx = 0; idx < info.operand_num(); idx++) {
+        auto op = inst->operand(idx);
+        auto lctx =
+          InstLegalizeContext{inst, insts, it, ctx, std::nullopt, func};
+        if (isOperandStackObject(op)) {
+          if (func.stackObjs().find(op) == func.stackObjs().end()) {
+            std::cerr << "stack object not found in function " << func.name()
+                      << std::endl;
+            assert(false);
+          }
+          ctx.iselInfo->legalizeInstWithStackOperand(lctx, op,
+                                                     func.stackObjs().at(op));
+        //   ctx.iselInfo->
         }
+      }
+      it = next;
     }
+  }
 
-    /* iselInfo postLegaliseInst */
-    for (auto& block : func.blocks()) {
-        auto& insts = block->insts();
-        for (auto iter = insts.begin(); iter != insts.end(); iter++) {
-            auto& inst = *iter;
-            if (inst->opcode() < ISASpecificBegin) {
-                ctx.iselInfo->postLegalizeInst(InstLegalizeContext{
-                    inst, insts, iter, ctx, std::nullopt, func});
-            }
-        }
+  /* iselInfo postLegaliseInst */
+  for (auto& block : func.blocks()) {
+    auto& insts = block->insts();
+    for (auto iter = insts.begin(); iter != insts.end(); iter++) {
+      auto& inst = *iter;
+      if (inst->opcode() < ISASpecificBegin) {
+        ctx.iselInfo->postLegalizeInst(
+          InstLegalizeContext{inst, insts, iter, ctx, std::nullopt, func});
+      }
     }
+  }
 
-    ctx.target.postLegalizeFunc(func, ctx);
+  ctx.target.postLegalizeFunc(func, ctx);
 }
 
 }  // namespace mir

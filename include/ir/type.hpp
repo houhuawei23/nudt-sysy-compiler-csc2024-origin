@@ -23,7 +23,7 @@ typedef enum : size_t {
   FUNCTION,
   ARRAY,
   UNDEFINE
-} BType;
+} BType; // FIXME: BType -> BasicTypeRank
 
 /* Type */
 class Type {
