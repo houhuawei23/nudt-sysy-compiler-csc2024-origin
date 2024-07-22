@@ -8,11 +8,12 @@ void indVarAnalysis::run(ir::Function* func,topAnalysisInfoManager* tp) {
     lpctx->refresh();
     ivctx=tp->getIndVarInfo(func);
     ivctx->clearAll();
+    func->rename();
     for(auto lp:lpctx->loops()){
         auto lpHeader=lp->header();
         auto lpPreHeader=lp->getLoopPreheader();
         auto lpHeaderTerminator=dyn_cast<ir::BranchInst>(lpHeader->terminator());
-        if(lpHeaderTerminator!=nullptr)continue;//header's terminator must be brcond
+        if(lpHeaderTerminator==nullptr)continue;//header's terminator must be brcond
         auto lpCond=lpHeaderTerminator->cond();
         auto lpCondScid=lpCond->valueId();
         ir::PhiInst* keyPhiInst;
@@ -66,4 +67,23 @@ void indVarAnalysis::run(ir::Function* func,topAnalysisInfoManager* tp) {
 void indVarAnalysis::addIndVar(ir::Loop* lp, ir::Constant* mbegin, ir::Constant* mstep, ir::Value* mend, ir::BinaryInst* iterinst, ir::Instruction* cmpinst){
     auto pnewIdv=new ir::indVar(mbegin,mend,mstep,iterinst,cmpinst);
     ivctx->addIndVar(lp,pnewIdv);
+}
+
+void indVarInfoCheck::run(ir::Function* func, topAnalysisInfoManager* tp){
+    if(func->isOnlyDeclare())return;
+    lpctx=tp->getLoopInfo(func);
+    lpctx->refresh();
+    ivctx=tp->getIndVarInfo(func);
+    using namespace std;
+    for(auto lp:lpctx->loops()){
+        cerr<<"In loop whose header is "<<lp->header()->name()<<":"<<endl;
+        auto idv=ivctx->getIndvar(lp);
+        if(idv==nullptr){
+            cerr<<"No indvar."<<endl;
+        }
+        else{
+            cerr<<"BeginVar:\t"<<idv->getBeginI32()<<endl;
+            cerr<<"StepVar:\t"<<idv->getStepI32()<<endl;
+        }
+    }
 }
