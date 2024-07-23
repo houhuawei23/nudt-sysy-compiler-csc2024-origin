@@ -465,11 +465,11 @@ class PhiInst : public Instruction {
 
 
  public:
-  PhiInst(BasicBlock* bb,
+  PhiInst(BasicBlock* parent,
           Type* type,
           const std::vector<Value*>& vals = {},
           const std::vector<BasicBlock*>& bbs = {})
-      : Instruction(vPHI, type, bb), mSize(vals.size()) {
+      : Instruction(vPHI, type, parent), mSize(vals.size()) {
     assert(vals.size() == bbs.size() and
            "number of vals and bbs in phi must be equal!");
     for (size_t i = 0; i < mSize; i++) {

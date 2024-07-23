@@ -14,6 +14,53 @@ void tailCallOpt::run(ir::Function* func,topAnalysisInfoManager* tp){
     if(tail_call_vec.empty())
         return;
     std::cerr<<"Function \""<<func->name()<<"\" is tail-recursive, have "<<tail_call_vec.size()<<" tail calls."<<std::endl;
+    //首先要在func的entry前再添加一个entry,以及对应的无条件跳转指令
+    auto newEntry=new ir::BasicBlock("newbb",func);
+    func->blocks().push_front(newEntry);
+    auto oldEntry=func->entry();
+    ir::BasicBlock::block_link(newEntry,oldEntry);
+    auto newBrInst=new ir::BranchInst(oldEntry,newEntry);
+    newEntry->emplace_first_inst(newBrInst);
+    //在oldEntry添加关于参数的phi
+    for(auto arg:func->args()){
+        auto newPhi=new ir::PhiInst(oldEntry,arg->type());
+        oldEntry->emplace_first_inst(newPhi);
+        newPhi->addIncoming(arg,newEntry);
+    }
+    //对于每一个尾调用call指令生成相应的无条件跳转指令
+    for(auto tail_callInst:tail_call_vec){
+        for(auto bbnextIter=tail_callInst->block()->next_blocks().begin();bbnextIter!=tail_callInst->block()->next_blocks().end();){
+            auto bbnext=*bbnextIter;
+            bbnextIter++;
+            ir::BasicBlock::delete_block_link(tail_callInst->block(),bbnext);
+        }
+        auto& curBBInsts=tail_callInst->block()->insts();
+        auto callInstPos=std::find(curBBInsts.begin(),curBBInsts.end(),tail_callInst);
+        callInstPos++;
+        auto newBrInst=new ir::BranchInst(oldEntry,tail_callInst->block());
+        tail_callInst->block()->emplace_inst(callInstPos,newBrInst);
+        ir::BasicBlock::block_link(tail_callInst->block(),oldEntry);
+        auto callInstRArgsIter=tail_callInst->rargs().rbegin();
+        for(auto pinst:oldEntry->phi_insts()){
+            auto phiinst=dyn_cast<ir::PhiInst>(pinst);
+            phiinst->addIncoming((*callInstRArgsIter)->value(),tail_callInst->block());
+            callInstRArgsIter++;
+        }
+        recursiveDeleteInst(*callInstPos);
+        tail_callInst->block()->force_delete_inst(tail_callInst);
+    }
+    for(auto pinst:oldEntry->phi_insts()){
+        auto phiinst=dyn_cast<ir::PhiInst>(pinst);
+        auto oldVal=phiinst->getvalfromBB(newEntry);
+        for(auto puseIter=oldVal->uses().begin();puseIter!=oldVal->uses().end();){
+            auto puse=*puseIter;
+            puseIter++;
+            auto user=puse->user();
+            auto userPhiInst=dyn_cast<ir::PhiInst>(user);
+            if(userPhiInst==phiinst)continue;
+            user->setOperand(puse->index(),phiinst);
+        }
+    }
     
 }
 
@@ -47,4 +94,58 @@ bool tailCallOpt::is_tail_call(ir::Instruction* inst,ir::Function* func){
     }
     else
         return false;    
+}
+
+void tailCallOpt::recursiveDeleteInst(ir::Instruction* inst){
+    auto instBB=inst->block();
+    auto instIter=std::find(instBB->insts().begin(),instBB->insts().end(),inst);
+    ir::BranchInst* brInst;
+    for(;instIter!=instBB->insts().end();){
+        auto curInst=*instIter;
+        instIter++;
+        brInst=dyn_cast<ir::BranchInst>(curInst);
+        if(brInst!=nullptr)
+            break;
+        instBB->force_delete_inst(curInst);
+    }
+    if(brInst->is_cond()){
+        auto trueTarget=brInst->iftrue();
+        auto falseTarget=brInst->iffalse();
+        for(auto pinst:trueTarget->phi_insts()){
+            auto phiinst=dyn_cast<ir::PhiInst>(pinst);
+            phiinst->delBlock(instBB);
+        }
+        for(auto pinst:falseTarget->phi_insts()){
+            auto phiinst=dyn_cast<ir::PhiInst>(pinst);
+            phiinst->delBlock(instBB);
+        }
+        recursiveDeleteBB(trueTarget);
+        recursiveDeleteBB(falseTarget);
+        instBB->force_delete_inst(brInst);
+    }
+    else{
+        auto destTarget=brInst->dest();
+        for(auto pinst:destTarget->phi_insts()){
+            auto phiinst=dyn_cast<ir::PhiInst>(pinst);
+            phiinst->delBlock(instBB);
+        }
+        recursiveDeleteBB(destTarget);
+        instBB->force_delete_inst(brInst);
+    }
+
+}
+
+void tailCallOpt::recursiveDeleteBB(ir::BasicBlock* bb){
+    if(bb->pre_blocks().size()!=0)return;
+    std::vector<ir::BasicBlock*>worklist;
+    worklist.push_back(bb);
+    while(not worklist.empty()){
+        auto bbdel=worklist.back();
+        worklist.pop_back();
+        for(auto bbnext:bb->next_blocks()){
+            if(bbnext->pre_blocks().size()==1)
+                worklist.push_back(bbnext);
+        }
+        bbdel->function()->forceDelBlock(bbdel);
+    }
 }

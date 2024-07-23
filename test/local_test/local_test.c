@@ -1,66 +1,64 @@
 int n;
-int QuickSort(int arr[], int low, int high)
-{
-    if (low < high)
-    {
-        int i;
-        i = low;
-        int j;
-        j = high;
-        int k;
-        k = arr[low];
-        while (i < j)
-        {
-            while(i < j && arr[j] > k - 1)
-            {
-                j = j - 1;
-            }
- 
-            if(i < j)
-            {
-                arr[i] = arr[j];
-                i = i + 1;
-            }
- 
-            while(i < j && arr[i] < k)
-            {
-                i = i + 1;
-            }
- 
-            if(i < j)
-            {
-                arr[j] = arr[i];
-                j = j - 1;
-            }
-        }
- 
-        arr[i] = k;
-        int tmp;
-        tmp = i - 1;
-        tmp = QuickSort(arr, low, tmp);
-        tmp = i + 1;
-        tmp = QuickSort(arr, tmp, high);
+int meanless_calculation(int x, int y){
+    int i = 0;
+    int ret = 0;
+    while (i < x && i < y){
+        i = i + 1;
+        ret = ret + x + i;
     }
-    return 0;
+    return ret;
 }
 
-int main(){
-    n = 10;
-    int a[10];
-    a[0]=4;a[1]=3;a[2]=9;a[3]=2;a[4]=0;
-    a[5]=1;a[6]=6;a[7]=5;a[8]=7;a[9]=8;
-    int i;
-    i = 0;
-    int tmp;
-    tmp = 9;
-    i = QuickSort(a, i, tmp);
-    while (i < n) {
-        int tmp;
-        tmp = a[i];
-        putint(tmp);
-        tmp = 10;
-        putch(tmp);
-        i = i + 1;
+int swap(int arr[], int l, int r){
+    int curr = arr[l];
+    arr[l] = arr[r];
+    arr[r] = curr;
+    return meanless_calculation(l, r);
+}
+
+int median(int arr[], int begin, int end, int pos){
+    int pivot = arr[begin];
+
+    int l = begin;
+    int r = end + 1;
+    int xx = 0;
+    while (1 == 1){
+        while (l < r){
+		    r = r - 1;
+		    if(arr[r] < pivot){
+			    break;
+			}
+            xx = xx + 1;
+        }
+        while (l < r){
+		    l = l + 1;
+		    if(arr[l] >= pivot){
+			    break;
+			}
+		    xx = xx - 1;
+		}
+            
+        if (l == r) break;
+        else {
+            swap(arr, l, r);
+        }
     }
-    return 0;
+    arr[begin] = pivot;
+    swap(arr, begin, l);
+
+    if (l > pos) return median(arr, begin, l, pos);
+    if (l < pos) return median(arr, l + 1, end, pos); 
+
+    return xx;
+}
+
+int a[10000000];
+
+int main(){
+    n = getarray(a);
+    starttime();
+    median(a, 0, n-1, n/2);
+    stoptime();
+    putarray(n, a);
+    return a[n/2] % 256;
 }
