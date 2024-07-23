@@ -227,7 +227,6 @@ class Value {
   /* replace this value with another value,
      for all user use this value */
   void replaceAllUseWith(Value* mValue);
-  void replaceUseWith(Value* mValue, Value* oldVal);
   // manage
   virtual std::string comment() const { return mComment; }
 
