@@ -65,7 +65,7 @@ class Type {
   bool isFloat32();
   bool isDouble();
   bool isFloatPoint() { return isFloat32() || isDouble(); }
-  bool isUnder();
+  bool isUndef();
 
   bool isLabel();
   bool isPointer();

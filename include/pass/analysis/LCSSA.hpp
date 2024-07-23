@@ -11,10 +11,9 @@ class LCSSA : public FunctionPass {
   domTree* DT;
   public:
   bool isLCSSAform(ir::Loop* L);
-  ir::Value* stack_pop(std::stack<ir::Value*>& stack);
-  void rename(std::stack<ir::Value*>& stack, ir::BasicBlock* bb, std::map<ir::Instruction*, int> useInstrMap, std::set<ir::Instruction*> defInsts, ir::Value* old);
-  void addDef(std::set<ir::Instruction*>& definsts, ir::Instruction* inst);
-  void makeExitPhi(ir::Instruction* inst, ir::BasicBlock* exit, ir::Loop* L);
+  void promoteLCSSA(ir::Instruction* usee, ir::Loop* L);
+  void rename(ir::Instruction* Inst, ir::Loop* L, ir::Function* F, std::vector<ir::BasicBlock*> DefsBlock, std::vector<ir::Instruction*> Defs, std::vector<ir::PhiInst*> newphis);
+  std::vector<ir::PhiInst*> insertphi(ir::Instruction* Inst, ir::Loop* L, std::vector<ir::BasicBlock*> &DefsBlock,std::vector<ir::Instruction*> &Defs);
   bool isUseout(ir::Instruction* inst, ir::Loop* L);
   void runonloop(ir::Loop* L,
                  loopInfo* LI,

@@ -260,8 +260,7 @@ void Mem2Reg::rename(ir::Function* F) {
                 if (!AI)
                     continue;
                 if (find(Allocas.begin(), Allocas.end(), AI) != Allocas.end()) {
-                    if (Incommings.find(AI) ==
-                        Incommings.end())  // 如果这条alloca没有到达定义
+                    if (Incommings.find(AI) == Incommings.end())  // 如果这条alloca没有到达定义
                     {
                         Incommings[AI] = ir::Constant::gen_undefine();
                     }
@@ -289,8 +288,7 @@ void Mem2Reg::rename(ir::Function* F) {
 
         for (auto& sBB : BB->next_blocks()) {
             SuccBB = dyn_cast<ir::BasicBlock>(sBB);
-            Worklist.push({SuccBB, Incommings});
-
+            
             for (auto inst : SuccBB->insts()) {
                 if (ir::PhiInst* PHI = dyn_cast<ir::PhiInst>(inst)) {
                     if (PhiMap[SuccBB].find(PHI) == PhiMap[SuccBB].end())
@@ -301,6 +299,11 @@ void Mem2Reg::rename(ir::Function* F) {
                 }
             }
         }
+
+        for (auto dombb : domctx->domson(BB)){
+            Worklist.push({dombb, Incommings});
+        }
+
     }
     while (!instRemovelist.empty()) {
         Inst = instRemovelist.back();

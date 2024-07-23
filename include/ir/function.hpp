@@ -80,6 +80,13 @@ public:
     bool isLoopSimplifyForm() const{
       return getLoopPreheader() && getLoopLatch() && hasDedicatedExits();
     }
+    bool getloopfor(BasicBlock* bb){
+      for (Loop* subLoop : subLoops()){
+        if (subLoop->contains(bb))
+          return false;
+      }
+      return true;
+    }
 
 };
 

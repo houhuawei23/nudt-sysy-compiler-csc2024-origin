@@ -12,7 +12,7 @@ void Constant::print(std::ostream& os) const {
         os << i32();
     } else if (type()->isFloatPoint()) {
         os << name();  // 0x...
-    } else if (type()->isUnder()) {
+    } else if (type()->isUndef()) {
         os << "undef";
     } else {
         assert(false);

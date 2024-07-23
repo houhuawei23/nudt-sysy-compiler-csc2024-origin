@@ -35,16 +35,15 @@ void Value::replaceAllUseWith(Value* mValue) {
   mUses.clear();
 }
 
-void Value::replaceUseWith(Value* mValue, size_t index){
-  size_t cnt = 0;
+void Value::replaceUseWith(Value* mValue, Value* user){
   for (auto puseIter=mUses.begin();puseIter!=mUses.end();) {
-    if (cnt == index){
+
       auto puse=*puseIter;
-      puse->user()->setOperand(puse->index(), mValue);
-      return;
-    }
-    puseIter++;
-    cnt++;
+      puseIter++;
+      if (puse->user() == user){
+        puse->user()->setOperand(puse->index(), mValue);
+        return;
+      }
   }
   assert("did not find user");
 }
