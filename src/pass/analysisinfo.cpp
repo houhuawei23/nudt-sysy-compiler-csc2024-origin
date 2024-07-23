@@ -73,10 +73,4 @@ void indVarInfo::refresh(){
     }
 }
 
-void indVarInfo::initialize(){
-    auto lpctx=_tp->getLoopInfo(_pu);
-    for(auto loop:lpctx->loops()){
-        _loopToIndvar[loop]=std::vector<ir::indVar*>();
-    }
-}
 

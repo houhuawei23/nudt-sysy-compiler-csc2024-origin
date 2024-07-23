@@ -19,6 +19,7 @@
 #include "pass/analysis/ControlFlowGraph.hpp"
 #include "pass/analysis/indvar.hpp"
 #include "pass/analysis/LCSSA.hpp"
+#include "pass/optimize/GlobalToLocal.hpp"
 
 #include "pass/optimize/InstCombine/ArithmeticReduce.hpp"
 namespace pass {
@@ -64,8 +65,11 @@ void PassManager::runPasses(std::vector<std::string> passes) {
         run(new pass::irCheck());
       } else if (pass_name.compare("indvar") == 0) {
         run(new pass::indVarAnalysis());
+        // run(new pass::indVarInfoCheck());
       } else if (pass_name.compare("LCSSA") == 0){
         run(new pass::LCSSA());
+      } else if (pass_name.compare("global2loc") == 0){
+        run(new pass::global2local());
       }
       else {
         assert(false && "Invalid pass name");

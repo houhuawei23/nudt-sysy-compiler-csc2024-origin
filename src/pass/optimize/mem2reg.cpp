@@ -417,7 +417,12 @@ void Mem2Reg::run(ir::Function* F, topAnalysisInfoManager* tp) {
         return;
     domctx=tp->getDomTree(F);
     domctx->refresh();
-
+    Allocas.clear();
+    DefsBlock.clear();
+    UsesBlock.clear();
+    PhiMap.clear();
+    ValueMap.clear();
+    allphi.clear();
     promotemem2reg(F);
 }
 }  // namespace pass

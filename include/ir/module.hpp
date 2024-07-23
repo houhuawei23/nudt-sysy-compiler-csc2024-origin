@@ -28,6 +28,7 @@ class Module {
   Function* findFunction(const_str_ref name) const;
   Function* addFunction(Type* type, const_str_ref name);
   void delFunction(ir::Function* func);
+  void delGlobalVariable(ir::GlobalVariable*gv);
 
   void addGlobalVar(const_str_ref name, GlobalVariable* gv);
 
