@@ -193,12 +193,12 @@ void Mem2Reg::insertphi() {
     // 遍历所有alloca，对于每个alloca，在所有定义块的支配边界中插入phi指令
     std::set<ir::BasicBlock*> Phiset;
     std::vector<ir::BasicBlock*> W;
-    ir::PhiInst* phi;
+    
     ir::BasicBlock* x;
     for (ir::AllocaInst* alloca : Allocas) {
         Phiset.clear();
         W.clear();
-        phi = nullptr;
+        // phi = nullptr;
         for (ir::BasicBlock* BB : DefsBlock[alloca]) {
             W.push_back(BB);
         }
@@ -209,7 +209,7 @@ void Mem2Reg::insertphi() {
                 if (Phiset.find(Y) == Phiset.end()) {
                     auto allocabaseType =
                         dyn_cast<ir::PointerType>(alloca->type())->baseType();
-                    phi = new ir::PhiInst(Y, allocabaseType);
+                    ir::PhiInst* phi = new ir::PhiInst(Y, allocabaseType);
                     allphi.push_back(phi);
                     Y->emplace_first_inst(phi);
                     Phiset.insert(Y);
