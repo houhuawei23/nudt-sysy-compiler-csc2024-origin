@@ -32,7 +32,7 @@ void CFGAnalysisHHW::run(ir::Function* func, topAnalysisInfoManager* tp) {
     }
   }
   assert(check(std::cerr, func));
-  std::cerr << func->name() << " CFG analysis done" << std::endl;
+  // std::cerr << func->name() << " CFG analysis done" << std::endl;
 }
 bool CFGAnalysisHHW::check(std::ostream& os, ir::Function* func) const {
   auto findBlock = [](ir::BasicBlock* block,

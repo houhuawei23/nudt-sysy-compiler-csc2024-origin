@@ -44,7 +44,7 @@ void Reg2Mem::run(ir::Function* func, topAnalysisInfoManager* tp) {
             ir::BasicBlock* prebb = phiinst->getBlock(i);
             ir::Value* phival = phiinst->getValue(i);
             
-            if (phival->type()->isUnder()){//如果是phi或则undef则不插入store
+            if (phival->type()->isUndef()){//如果是phi或则undef则不插入store
                     continue;
             }
             ir::StoreInst* phistore = new ir::StoreInst(phival,variable);
@@ -113,7 +113,7 @@ void Reg2Mem::run(ir::Function* func, topAnalysisInfoManager* tp) {
 //             ir::BasicBlock* prebb = phiinst->getBlock(i);
 //             ir::Value* phival = phiinst->getValue(i);
 //             ir::StoreInst* phistore = new ir::StoreInst(phival,variable);
-//             if (auto inst = dyn_cast<ir::PhiInst>(phival) || phival->type()->isUnder()){//如果是phi或则undef则不插入store
+//             if (auto inst = dyn_cast<ir::PhiInst>(phival) || phival->type()->isUndef()){//如果是phi或则undef则不插入store
 //                     continue;
 //             }
 //             if(prebb->next_blocks().size() == 1){//如果前驱块只有一个后继，直接在前驱块末尾插入store

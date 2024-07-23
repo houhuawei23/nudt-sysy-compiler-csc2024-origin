@@ -653,9 +653,9 @@ void PhiInst::replaceBlock(BasicBlock* newBB, size_t k) {
   mbbToVal[newBB]=val;
 }
 
-void PhiInst::replaceoldtonew(BasicBlock* newbb,BasicBlock* oldbb){
-  assert(mbbToVal.count(oldbb));
+void PhiInst::replaceoldtonew(BasicBlock* oldbb,BasicBlock* newbb){
   refreshMap();
+  assert(mbbToVal.count(oldbb));
   auto val=mbbToVal[oldbb];
   delBlock(oldbb);
   addIncoming(val,newbb);

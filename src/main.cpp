@@ -15,8 +15,8 @@ using namespace std;
 /* ./main -f test.c -i -t mem2reg -o gen.ll -O0 -L0 */
 int main(int argc, char* argv[]) {
     sysy::Config config;
-    // config.parse_cmd_args(argc, argv);
-    config.parseSubmitArgs(argc, argv);
+    config.parse_cmd_args(argc, argv);
+    // config.parseSubmitArgs(argc, argv);
     config.print_info();
 
     if (config.infile.empty()) {

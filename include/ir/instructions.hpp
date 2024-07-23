@@ -24,6 +24,8 @@ class FCmpInst;
 class CallInst;
 
 class PhiInst;
+
+class indVar;
 /*
  * @brief: AllocaInst
  */
@@ -502,6 +504,39 @@ class PhiInst : public Instruction {
 
   void print(std::ostream& os) const override;
   Value* getConstantRepl() override;
+};
+
+class indVar{
+  private:// only for constant beginvar and stepvar
+    Constant* mbeginVar;
+    Value* mendVar;
+    Constant* mstepVar;
+    bool mendIsConst;
+    BinaryInst* miterInst;
+    Instruction* mcmpInst;
+  public:
+    indVar(Constant* mbegin,Value* mend,Constant* mstep, BinaryInst* bininst, Instruction* cmpinst):
+      mbeginVar(mbegin),mendVar(mend),mstepVar(mstep),miterInst(bininst),mcmpInst(cmpinst){
+        mendIsConst=dyn_cast<Constant>(mendVar)!=nullptr;
+      }
+    int getBeginI32(){
+      if(not mbeginVar->isInt32())assert("BeginVar is not i32!");
+      return mbeginVar->i32();
+    }
+    int getStepI32(){
+      if(not mstepVar->isInt32())assert("StepVar is not i32!");
+      return mstepVar->i32();
+    }
+    bool isEndVarConst(){return mendIsConst;}
+    int getEndVar(){
+      if(mendIsConst){
+        auto mendConst=dyn_cast<Constant>(mendVar);
+        return mendConst->i32();
+      }
+      else
+        assert(false && "endVar is not constant");
+    }
+
 };
 
 }  // namespace ir

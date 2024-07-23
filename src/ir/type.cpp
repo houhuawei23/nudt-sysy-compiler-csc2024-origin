@@ -72,7 +72,7 @@ bool Type::isDouble() {
     return mBtype == DOUBLE;
 }
 
-bool Type::isUnder() {
+bool Type::isUndef() {
     return mBtype == UNDEFINE;
 }
 

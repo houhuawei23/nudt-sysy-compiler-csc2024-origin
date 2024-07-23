@@ -4,6 +4,7 @@
 #include "pass/analysis/pdom.hpp"
 #include "pass/analysis/callgraph.hpp"
 #include "pass/analysis/loop.hpp"
+#include "pass/analysis/indvar.hpp"
 
 using namespace pass;
 
@@ -14,6 +15,7 @@ void topAnalysisInfoManager::initialize(){
         mDomTree[func]=new domTree(func,this);
         mPDomTree[func]=new pdomTree(func,this);
         mLoopInfo[func]=new loopInfo(func,this);
+        mIndVarInfo[func]=new indVarInfo(func,this);
     }
 }
 
@@ -57,6 +59,16 @@ void callGraph::refresh(){
         pm.run(&cgb);
         // callGraphCheck cgc=callGraphCheck();
         // pm.run(&cgc);
+        setOn();
+    }
+}
+
+void indVarInfo::refresh(){
+    if(not _isvalid){
+        using namespace pass;
+        PassManager pm=PassManager(_pu->module(),_tp);
+        indVarAnalysis iva=indVarAnalysis();
+        pm.run(&iva);
         setOn();
     }
 }
