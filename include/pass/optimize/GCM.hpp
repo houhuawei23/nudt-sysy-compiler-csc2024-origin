@@ -21,5 +21,7 @@ namespace pass
         void scheduleLate(ir::Instruction *instruction);
         ir::BasicBlock *LCA(ir::BasicBlock *lhs, ir::BasicBlock *rhs);
         bool ispinned(ir::Instruction *instruction);
+        bool ismovable(ir::Instruction *instruction);
+        void LICM(ir::Instruction *instruction);
     };
 }

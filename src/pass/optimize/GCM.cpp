@@ -72,12 +72,14 @@ namespace pass
                     destBB = opBB;
                 }
             }
+
         }
         if (!ispinned(instruction))
         {
             instruction->block()->delete_inst(instruction); // 将指令从bb中移除
-            destBB->emplace_back_inst(instruction);          // 将指令移入destBB
+            destBB->emplace_inst(destBB->insts().end(),instruction); // 将指令移入destBB
             Earlymap[instruction] = destBB;
+
         }
     }
 
@@ -144,7 +146,40 @@ namespace pass
                 curBB=domctx->idom(curBB);
             }
             instruction->block()->delete_inst(instruction); // 将指令从bb中移除
-            bestBB->emplace_back_inst(instruction);          // 将指令移入bestBB
+            bestBB->emplace_inst(bestBB->insts().end(),instruction);       // 将指令移入bestBB
+        }
+    }
+
+    bool GCM::ismovable(ir::Instruction *instruction){
+        auto instbb = instruction->block();
+        auto L = lpctx->getinnermostLoop(instbb);
+        auto F = instbb->function();
+        for (auto op : instruction->operands()) // 遍历这条指令使用的所有指令
+        {
+            auto defbb = F->entry();
+            if (dyn_cast<ir::Instruction>(op->value()))
+            {
+                auto opInst = dyn_cast<ir::Instruction>(op->value());
+                defbb = opInst->block();
+            }
+            if (L->contains(defbb))
+                return false;
+
+        }
+        return true;
+    }
+
+    void GCM::LICM(ir::Instruction *instruction){
+        if (ismovable(instruction)){
+            auto instbb = instruction->block();
+            auto L = lpctx->getinnermostLoop(instbb);
+            auto F = instbb->function();
+            auto preheader = L->getLoopPreheader();
+            instbb->delete_inst(instruction);
+            preheader->emplace_inst(preheader->insts().end(),instruction);
+        }
+        else{
+            return;
         }
     }
 
@@ -176,6 +211,14 @@ namespace pass
         for (auto instruction : pinned)
         {
             scheduleLate(instruction);
+        }
+
+        for (ir::BasicBlock *bb : F->blocks())
+        {
+            for (ir::Instruction *inst : bb->insts())
+            {
+                LICM(inst);
+            }
         }
     }
 } // namespace

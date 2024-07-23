@@ -150,6 +150,9 @@ public:
                 _head2loop.clear();
             }
             bool isHeader(ir::BasicBlock* bb){return _head2loop.count(bb);}
+            ir::Loop* getinnermostLoop(ir::BasicBlock* bb) {
+                return nullptr; // TODO
+            }
             void refresh() override;
     };
 
