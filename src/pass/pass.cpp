@@ -20,7 +20,7 @@
 #include "pass/analysis/indvar.hpp"
 #include "pass/analysis/LCSSA.hpp"
 #include "pass/optimize/GlobalToLocal.hpp"
-
+#include "pass/optimize/TCO.hpp"
 #include "pass/optimize/InstCombine/ArithmeticReduce.hpp"
 namespace pass {
 void PassManager::runPasses(std::vector<std::string> passes) {
@@ -70,6 +70,8 @@ void PassManager::runPasses(std::vector<std::string> passes) {
         run(new pass::LCSSA());
       } else if (pass_name.compare("global2loc") == 0){
         run(new pass::global2local());
+      } else if (pass_name.compare("tco") == 0){
+        run(new pass::tailCallOpt());
       }
       else {
         assert(false && "Invalid pass name");
