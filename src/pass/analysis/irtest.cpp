@@ -2,6 +2,7 @@
 using std::cerr, std::endl;
 namespace pass{
     void irCheck::run(ir::Module* ctx, topAnalysisInfoManager* tp){
+        ctx->rename();
         bool isPass=true;
         for(auto func:ctx->funcs()){
             if(func->isOnlyDeclare())continue;
@@ -20,7 +21,7 @@ namespace pass{
             auto muser=puse->user();
             auto mindex=puse->index();
             auto mvalue=puse->value();
-            if(muser->operands()[mindex]->value()!=mvalue){
+            if(muser->operands()[mindex]->value() != mvalue){
                 cerr<<"Value \""<<muser->name()<<"\" use index "<<mindex<<" operand \""<<mvalue->name()<<"\" got an error!"<<endl;
                 isPass=false;
             }
