@@ -101,8 +101,10 @@ MIROperand* LoweringContext::map2operand(ir::Value* ir_val) {
   /* 1. Local Value: alloca */
 
   // if (iter != valueMap.end()) return new MIROperand(*(iter->second));
-  if (auto iter = valueMap.find(ir_val); iter != valueMap.end())
-    return iter->second;
+  if (auto iter = valueMap.find(ir_val); iter != valueMap.end()) {
+    return new MIROperand(*(iter->second));
+  }
+    // return iter->second;
 
   /* 2. Global Value */
   if (auto gvar = ir_val->dynCast<ir::GlobalVariable>()) {
@@ -185,8 +187,9 @@ void createMIRModule(ir::Module& ir_module,
                      MIRModule& mir_module,
                      Target& target,
                      pass::topAnalysisInfoManager* tAIM) {
-  constexpr bool debugLowering = false;
   auto& config = sysy::Config::getInstance();
+
+  bool debugLowering = config.log_level >= sysy::LogLevel::DEBUG;
 
   auto& functions = mir_module.functions();      // uptr vector
   auto& global_objs = mir_module.global_objs();  // uptr vector
@@ -275,6 +278,7 @@ void createMIRModule(ir::Module& ir_module,
 
   //! 4. lower all functions
   for (auto& ir_func : ir_module.funcs()) {
+    if (ir_func->blocks().empty()) continue;
     // for debug
     size_t stageIdx = 0;
 
@@ -322,7 +326,7 @@ void createMIRModule(ir::Module& ir_module,
     /* Optimize: register coalescing */
 
     /* Optimize: peephole optimization (窥孔优化) */
-    // while (genericPeepholeOpt(*mir_func, codegen_ctx));
+    while (genericPeepholeOpt(*mir_func, codegen_ctx)) {};
 
     /* pre-RA legalization */
 
@@ -379,6 +383,7 @@ void createMIRFunction(ir::Function* ir_func,
                        CodeGenContext& codegen_ctx,
                        LoweringContext& lowering_ctx,
                        pass::topAnalysisInfoManager* tAIM) {
+  if(ir_func->blocks().empty()) return;
   lowering_ctx.setCurrFunc(mir_func);
   /* Some Debug Information */
   constexpr bool DebugCreateMirFunction = false;

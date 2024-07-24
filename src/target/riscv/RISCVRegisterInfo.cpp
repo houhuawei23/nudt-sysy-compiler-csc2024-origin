@@ -17,7 +17,8 @@ std::vector<uint32_t>& RISCVRegisterInfo::get_allocation_list(
       // $a6-$a7
       RISCV::X16, RISCV::X17,
       // $t0-$t6
-      RISCV::X5, RISCV::X6, RISCV::X7, RISCV::X28, RISCV::X29, RISCV::X30, RISCV::X31,
+      // RISCV::X5, 
+      RISCV::X6, RISCV::X7, RISCV::X28, RISCV::X29, RISCV::X30, RISCV::X31,
       // $s0-$s1
       RISCV::X8, RISCV::X9,
       // $s2-$s11
