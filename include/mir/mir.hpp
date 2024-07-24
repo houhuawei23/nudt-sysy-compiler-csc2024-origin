@@ -134,8 +134,8 @@ public:  // operator
   bool operator!=(const MIRRegister& rhs) const { return mReg != rhs.mReg; }
 
 public:  // get function
-  uint32_t reg() { return mReg; }
-  MIRRegisterFlag flag() { return mFlag; }
+  auto reg() const { return mReg; }
+  auto flag() const { return mFlag; }
   MIRRegisterFlag* flag_ptr() { return &mFlag; }
 
 public:  // set function
@@ -145,6 +145,20 @@ public:
   void print(std::ostream& os);
 };
 
+} // namespace mir
+
+
+namespace std {
+    template <>
+    struct hash<mir::MIRRegister> {
+        size_t operator()(const mir::MIRRegister& reg) const noexcept {
+            return hash<uint32_t>{}(reg.reg());
+        }
+    };
+}  // namespace std
+
+
+namespace mir{
 enum MIRGenericInst : uint32_t {
   // Jump
   InstJump,
@@ -227,7 +241,7 @@ enum MIRGenericInst : uint32_t {
 /* MIROperand */
 class MIROperand {
 private:
-  std::variant<std::monostate, MIRRegister*, MIRRelocable*, intmax_t, double>
+  std::variant<std::monostate, MIRRegister, MIRRelocable*, intmax_t, double>
     mStorage{std::monostate{}};
   OperandType mType = OperandType::Special;
 
@@ -249,7 +263,7 @@ public:  // get function
   }
   uint32_t reg() const {
     assert(isReg());
-    return std::get<MIRRegister*>(mStorage)->reg();
+    return std::get<MIRRegister>(mStorage).reg();
   }
   MIRRelocable* reloc() {
     assert(isReloc());
@@ -257,7 +271,7 @@ public:  // get function
   }
   MIRRegisterFlag reg_flag() {
     assert(isReg() && "the operand is not a register");
-    return std::get<MIRRegister*>(mStorage)->flag();
+    return std::get<MIRRegister>(mStorage).flag();
   }
 
 public:  // operator
@@ -272,7 +286,7 @@ public:  // check function
     return std::holds_alternative<intmax_t>(mStorage);
   }
   constexpr bool isReg() const {
-    return std::holds_alternative<MIRRegister*>(mStorage);
+    return std::holds_alternative<MIRRegister>(mStorage);
   }
   constexpr bool isReloc() const {
     return std::holds_alternative<MIRRelocable*>(mStorage);
@@ -296,14 +310,14 @@ public:  // gen function
   }
   // FIXME: have static instance, cant ue utils::make
   static MIROperand* asISAReg(uint32_t reg, OperandType type) {
-    return new MIROperand(new MIRRegister(reg), type);
+    return new MIROperand(MIRRegister(reg), type);
     // return utils::make<MIROperand>(utils::make<MIRRegister>(reg), type);
   }
   static MIROperand* asVReg(uint32_t reg, OperandType type) {
-    return new MIROperand(new MIRRegister(reg + virtualRegBegin), type);
+    return new MIROperand(MIRRegister(reg + virtualRegBegin), type);
   }
   static MIROperand* asStackObj(uint32_t reg, OperandType type) {
-    return new MIROperand(new MIRRegister(reg + stackObjectBegin), type);
+    return new MIROperand(MIRRegister(reg + stackObjectBegin), type);
   }
   static MIROperand* asReloc(MIRRelocable* reloc) {
     return new MIROperand(reloc, OperandType::Special);

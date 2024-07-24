@@ -89,8 +89,8 @@ void cleanupRegFlags(MIRFunction& mfunc, CodeGenContext& ctx) {
             for (uint32_t idx = 0; idx < instinfo.operand_num(); idx++) {
                 auto op = inst->operand(idx);
                 if (op->isReg()) {
-                    auto reg = std::get<MIRRegister*>(op->storage());
-                    reg->set_flag(RegisterFlagNone);
+                    auto reg = std::get<MIRRegister>(op->storage());
+                    reg.set_flag(RegisterFlagNone);
                 }
             }
         }
@@ -186,12 +186,12 @@ LiveVariablesInfo calcLiveIntervals(MIRFunction& mfunc, CodeGenContext& ctx) {
 
                     if (auto it = lastUse.find(id); it != lastUse.end()) {
                         if (it->second.first == inst) {
-                            it->second.second.push_back(std::get<MIRRegister*>(operand->storage())->flag_ptr());
+                            it->second.second.push_back(std::get<MIRRegister>(operand->storage()).flag_ptr());
                         } else {
-                            it->second = {inst, {std::get<MIRRegister*>(operand->storage())->flag_ptr()}};
+                            it->second = {inst, {std::get<MIRRegister>(operand->storage()).flag_ptr()}};
                         }
                     } else {
-                        lastUse[id] = {inst, {std::get<MIRRegister*>(operand->storage())->flag_ptr()}};
+                        lastUse[id] = {inst, {std::get<MIRRegister>(operand->storage()).flag_ptr()}};
                     }
                 }
             }
