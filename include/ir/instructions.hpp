@@ -208,16 +208,18 @@ class BinaryInst : public Instruction {
 /* CallInst */
 class CallInst : public Instruction {
   Function* mCallee = nullptr;
+  bool mIsTail = false;
 
  public:
   CallInst(Function* callee,
            const_value_ptr_vector rargs = {},
            BasicBlock* parent = nullptr,
            const_str_ref name = "")
-      : Instruction(vCALL, callee->retType(), parent, name), mCallee(callee) {
+      : Instruction(vCALL, callee->retType(), parent, name), mCallee(callee), mIsTail(false) {
     addOperands(rargs);
   }
-
+  bool istail(){return mIsTail;}
+  void setIsTail(bool b){mIsTail=b;}
   Function* callee() const { return mCallee; }
   /* real arguments */
   auto& rargs() const { return mOperands; }
@@ -465,11 +467,11 @@ class PhiInst : public Instruction {
 
 
  public:
-  PhiInst(BasicBlock* bb,
+  PhiInst(BasicBlock* parent,
           Type* type,
           const std::vector<Value*>& vals = {},
           const std::vector<BasicBlock*>& bbs = {})
-      : Instruction(vPHI, type, bb), mSize(vals.size()) {
+      : Instruction(vPHI, type, parent), mSize(vals.size()) {
     assert(vals.size() == bbs.size() and
            "number of vals and bbs in phi must be equal!");
     for (size_t i = 0; i < mSize; i++) {

@@ -14,5 +14,7 @@ namespace pass{
             void run(ir::Function* func, topAnalysisInfoManager* tp)override;
         private:
             bool is_tail_call(ir::Instruction* inst,ir::Function* func);
+            void recursiveDeleteInst(ir::Instruction* inst);
+            void recursiveDeleteBB(ir::BasicBlock* bb);
     };
 }
