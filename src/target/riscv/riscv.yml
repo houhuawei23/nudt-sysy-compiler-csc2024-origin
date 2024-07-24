@@ -842,7 +842,19 @@ InstSelInfo: {
               op: $op,
               predicate: "isOperandIReg($src1) && isOperandIReg($src2) && isCompareOp($op, CompareOp::ICmpSignedGreaterEqual)",
             },
-          replace: { name: SLT, rd: $dst, rs1: $src2, rs2: $src1 },
+          replace:
+            {
+              name: XORI,
+              rd: $dst,
+              rs1:
+                {
+                  name: SLT,
+                  rd: "getVRegAs(ctx, $dst)",
+                  rs1: $src1,
+                  rs2: $src2,
+                },
+              imm: getOne($src2),
+            },
         },
         # SLTU
         {

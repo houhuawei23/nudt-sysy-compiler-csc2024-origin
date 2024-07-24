@@ -1620,17 +1620,28 @@ static bool matchAndSelectPattern35(MIRInst* inst1, ISelContext& ctx) {
 
   /** Select Inst **/
   auto op6 = (op1);
-  auto op7 = (op3);
-  auto op8 = (op2);
+  auto op8 = (getVRegAs(ctx, op1));
+  auto op9 = (op2);
+  auto op10 = (op3);
   /* select inst SLT */
   auto inst2 = new MIRInst(SLT);
-  inst2->set_operand(0, op6);
-  inst2->set_operand(1, op7);
-  inst2->set_operand(2, op8);
+  inst2->set_operand(0, op8);
+  inst2->set_operand(1, op9);
+  inst2->set_operand(2, op10);
   ctx.insert_inst(inst2);
 
+  auto op7 = ctx.get_inst_def(inst2);
+
+  auto op11 = (getOne(op3));
+  /* select inst XORI */
+  auto inst3 = new MIRInst(XORI);
+  inst3->set_operand(0, op6);
+  inst3->set_operand(1, op7);
+  inst3->set_operand(2, op11);
+  ctx.insert_inst(inst3);
+
   /* Replace Operand */
-  ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst2));
+  ctx.replace_operand(ctx.get_inst_def(inst1), ctx.get_inst_def(inst3));
   ctx.remove_inst(inst1);
   return true;
 }
