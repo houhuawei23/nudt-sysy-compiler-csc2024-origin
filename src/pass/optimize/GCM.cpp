@@ -150,9 +150,8 @@ namespace pass
         }
     }
 
-    bool GCM::ismovable(ir::Instruction *instruction){
+    bool GCM::ismovable(ir::Instruction *instruction, ir::Loop *L){
         auto instbb = instruction->block();
-        auto L = lpctx->getinnermostLoop(instbb);
         auto F = instbb->function();
         for (auto op : instruction->operands()) // 遍历这条指令使用的所有指令
         {
@@ -169,17 +168,19 @@ namespace pass
         return true;
     }
 
-    void GCM::LICM(ir::Instruction *instruction){
-        if (ismovable(instruction)){
+    void GCM::LICM(ir::Instruction *instruction, ir::Loop* L){
+        if (!L){
+            return ;
+        }
+        if (ismovable(instruction, L)){
             auto instbb = instruction->block();
-            auto L = lpctx->getinnermostLoop(instbb);
-            auto F = instbb->function();
             auto preheader = L->getLoopPreheader();
             instbb->delete_inst(instruction);
             preheader->emplace_inst(preheader->insts().end(),instruction);
+            return;
         }
         else{
-            return;
+            LICM(instruction, lpctx->getfatherloop(L));
         }
     }
 
@@ -215,9 +216,10 @@ namespace pass
 
         for (ir::BasicBlock *bb : F->blocks())
         {
+            ir::Loop* innermostloop = lpctx->getinnermostLoop(bb);
             for (ir::Instruction *inst : bb->insts())
             {
-                LICM(inst);
+                LICM(inst,innermostloop);
             }
         }
     }
