@@ -86,10 +86,12 @@ protected:
 
   void emplace_first_inst(Instruction* i);
   void emplace_back_inst(Instruction* i);
+  void emplace_lastbutone_inst(Instruction* i);
 
   void delete_inst(Instruction* inst);
 
   void force_delete_inst(Instruction* inst);
+  void move_inst(Instruction* inst);
 
   void replaceinst(Instruction* old, Value* new_);
 

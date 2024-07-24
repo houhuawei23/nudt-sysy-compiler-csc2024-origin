@@ -206,9 +206,9 @@ void loopsimplify::run(ir::Function* func, topAnalysisInfoManager* tp) {
   bool changed = false;
   for (auto L : loops) {
     changed |= simplifyOneLoop(L, tp);
-    // if (!L->isLoopSimplifyForm()) {
-    //   assert("loop is not in simplify form");
-    // }
+    if (!L->isLoopSimplifyForm()) {
+      assert("loop is not in simplify form");
+    }
   }
   if (changed) {
     // update loopinfo

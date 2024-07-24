@@ -12,16 +12,13 @@ namespace pass
     {
     private:
         std::set<ir::Instruction *> insts_visited;
-        std::map<ir::Instruction *,ir::BasicBlock *> Earlymap;
     public:
         void run(ir::Function *func, topAnalysisInfoManager* tp) override;
         domTree* domctx;
         loopInfo* lpctx;
-        void scheduleEarly(ir::Instruction *instruction);
-        void scheduleLate(ir::Instruction *instruction);
+        void scheduleEarly(ir::Instruction *instruction, ir::BasicBlock* entry);
+        // void scheduleLate(ir::Instruction *instruction, ir::BasicBlock* exit);
         ir::BasicBlock *LCA(ir::BasicBlock *lhs, ir::BasicBlock *rhs);
         bool ispinned(ir::Instruction *instruction);
-        bool ismovable(ir::Instruction *instruction, ir::Loop* L);
-        void LICM(ir::Instruction *instruction, ir::Loop* L);
     };
 }

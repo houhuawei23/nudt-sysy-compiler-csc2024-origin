@@ -39,33 +39,36 @@ namespace pass
     // 通过指令的类型判断该指令是否固定在bb上
     bool GCM::ispinned(ir::Instruction *instruction)
     {
-        if (dyn_cast<ir::BinaryInst>(instruction)) // 二元运算指令不固定
+        if (dyn_cast<ir::BinaryInst>(instruction)) // 二元运算指令不固定(除法固定，因为除法指令可能产生除零错误)
+        {
+            if (instruction->valueId() == ir::vSDIV || instruction->valueId() == ir::vSREM) 
+                return true;
             return false;
+        }
+           
         else if (dyn_cast<ir::UnaryInst>(instruction)) // 一元运算指令不固定
             return false;
-        else if (dyn_cast<ir::PhiInst>(instruction)) // phi指令不固定
-            return false;
-        else if (dyn_cast<ir::CallInst>(instruction)) // call指令不固定
-            return false;
+        // else if (dyn_cast<ir::CallInst>(instruction)) // call指令不固定
+        //     return false;
         else // 其他指令固定在自己的BB上
             return true;
     }
     // 提前调度:思想是如果把一个指令尽量往前提，那么应该在提之前将该指令参数来自的指令前提
-    void GCM::scheduleEarly(ir::Instruction *instruction)
+    void GCM::scheduleEarly(ir::Instruction *instruction, ir::BasicBlock* entry)
     {
-        if (insts_visited.find(instruction) == insts_visited.end()) // 如果已经访问过，则不进行提前调度
+        if (insts_visited.count(instruction)) // 如果已经访问过，则不进行提前调度
             return;
+        
         insts_visited.insert(instruction);
-
-        ir::BasicBlock *destBB = instruction->block()->function()->entry(); // 初始化放置块为entry块,整棵树的root
+        ir::BasicBlock *destBB = entry; // 初始化放置块为entry块,整棵树的root
         ir::BasicBlock *opBB;
-
-        for (auto op : instruction->operands()) // 遍历这条指令使用的所有指令
+        for (auto opiter = instruction->operands().begin(); opiter != instruction->operands().end();)
         {
-            if (dyn_cast<ir::Instruction>(op->value()))
+            auto op = *opiter;
+            opiter++;
+            if (auto opInst = dyn_cast<ir::Instruction>(op->value()))
             {
-                auto opInst = dyn_cast<ir::Instruction>(op->value());
-                scheduleEarly(opInst);
+                scheduleEarly(opInst, entry);
                 opBB = opInst->block();
                 if (domctx->domlevel(opBB) > domctx->domlevel(destBB))
                 {
@@ -76,151 +79,58 @@ namespace pass
         }
         if (!ispinned(instruction))
         {
-            instruction->block()->delete_inst(instruction); // 将指令从bb中移除
-            destBB->emplace_inst(destBB->insts().end(),instruction); // 将指令移入destBB
-            Earlymap[instruction] = destBB;
-
-        }
-    }
-
-    // 延迟调度
-    void GCM::scheduleLate(ir::Instruction *instruction)
-    {
-        if (insts_visited.find(instruction) == insts_visited.end()) // 如果已经访问过，则不进行延迟调度
-            return;
-        insts_visited.insert(instruction);
-
-        ir::BasicBlock *destBB = nullptr;
-        for (auto use : instruction->uses()) // 遍历使用这条指令的所有指令
-        {
-            if (dyn_cast<ir::Instruction>(use->user()))
-            {
-                ir::Instruction *useInst = dyn_cast<ir::Instruction>(use->user());
-                scheduleLate(useInst);
-                if (ir::PhiInst *phiInst = dyn_cast<ir::PhiInst>(useInst))
-                {
-                    size_t phisize = phiInst->getsize();
-                    for (size_t i = 0; i < phisize; i++)
-                    {
-                        if (ir::Instruction *v = dyn_cast<ir::Instruction>(phiInst->getValue(i)))
-                        {
-                            if (v == instruction)
-                            {
-                                destBB = LCA(destBB, dyn_cast<ir::BasicBlock>(phiInst->getBlock(i)));
-                                break;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    destBB = LCA(destBB, useInst->block());
-                }
-            }
-        }
-
-        if (!destBB)
-            return;
-        if (!ispinned(instruction))
-        {
-
-            // TODO 计算循环深度，在earlyBB和lateBB之间找到循环深度最浅的块插入指令
-            ir::BasicBlock *EarlyBB = Earlymap[instruction];
-            ir::BasicBlock *LateBB = destBB;
-            ir::BasicBlock *bestBB = LateBB;
-            ir::BasicBlock *curBB = LateBB;
-            // while (curBB->domLevel >= EarlyBB->domLevel)
-            // {
-            //     if (curBB->looplevel < bestBB->looplevel)
-            //     {
-            //         bestBB = curBB;
-            //     }
-            //     curBB = curBB->idom;
-            // }
-            while (domctx->domlevel(curBB) >= domctx->domlevel(EarlyBB))
+            auto instbb = instruction->block();
+            if (destBB == instbb)
+                return;
+            
+            ir::BasicBlock *bestBB = instbb;
+            ir::BasicBlock *curBB = instbb;
+            while (domctx->domlevel(curBB) > domctx->domlevel(destBB))
             {
                 if (lpctx->looplevel(curBB) < lpctx->looplevel(bestBB))
-                {
                     bestBB = curBB;
-                }
                 curBB=domctx->idom(curBB);
             }
-            instruction->block()->delete_inst(instruction); // 将指令从bb中移除
-            bestBB->emplace_inst(bestBB->insts().end(),instruction);       // 将指令移入bestBB
-        }
-    }
 
-    bool GCM::ismovable(ir::Instruction *instruction, ir::Loop *L){
-        auto instbb = instruction->block();
-        auto F = instbb->function();
-        for (auto op : instruction->operands()) // 遍历这条指令使用的所有指令
-        {
-            auto defbb = F->entry();
-            if (dyn_cast<ir::Instruction>(op->value()))
-            {
-                auto opInst = dyn_cast<ir::Instruction>(op->value());
-                defbb = opInst->block();
-            }
-            if (L->contains(defbb))
-                return false;
+            if (bestBB == instbb)
+                return;
+            instbb->move_inst(instruction); // 将指令从bb中移除
+            bestBB->emplace_lastbutone_inst(instruction); // 将指令移入destBB
+        }
 
-        }
-        return true;
-    }
 
-    void GCM::LICM(ir::Instruction *instruction, ir::Loop* L){
-        if (!L){
-            return ;
-        }
-        if (ismovable(instruction, L)){
-            auto instbb = instruction->block();
-            auto preheader = L->getLoopPreheader();
-            instbb->delete_inst(instruction);
-            preheader->emplace_inst(preheader->insts().end(),instruction);
-            return;
-        }
-        else{
-            LICM(instruction, L->parent());
-        }
     }
 
     void GCM::run(ir::Function *F,topAnalysisInfoManager* tp)
     {
-        if(not F->entry())return ;
         domctx=tp->getDomTree(F);
         domctx->refresh();
         lpctx=tp->getLoopInfo(F);
         lpctx->refresh();
-        std::vector<ir::Instruction *> pinned;
+        std::vector<ir::Instruction*> pininsts;
+        insts_visited.clear();
+        
         for (ir::BasicBlock *bb : F->blocks())
         {
-            for (ir::Instruction *inst : bb->insts())
-            {
+            for (auto institer = bb->insts().begin(); institer != bb->insts().end();)
+            {   
+                auto inst = *institer;
+                institer++;
                 if (ispinned(inst))
-                {
-                    pinned.push_back(inst);
-                }
+                    pininsts.push_back(inst);
             }
         }
-
-        insts_visited.clear();
-        for (auto instruction : pinned)
-        {
-            scheduleEarly(instruction);
-        }
-        insts_visited.clear();
-        for (auto instruction : pinned)
-        {
-            scheduleLate(instruction);
-        }
-
-        for (ir::BasicBlock *bb : F->blocks())
-        {
-            ir::Loop* innermostloop = lpctx->getinnermostLoop(bb);
-            for (ir::Instruction *inst : bb->insts())
+        
+        for (auto inst : pininsts){
+            insts_visited.clear();
+            for (auto opiter = inst->operands().begin(); opiter != inst->operands().end();)
             {
-                LICM(inst,innermostloop);
+                auto op = *opiter;
+                opiter++;
+                if (ir::Instruction* opinst = dyn_cast<ir::Instruction>(op->value()))
+                    scheduleEarly(opinst,F->entry());
             }
         }
+
     }
 } // namespace
