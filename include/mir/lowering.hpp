@@ -11,7 +11,7 @@ class FloatPointConstantPool {
   std::unordered_map<uint32_t, uint32_t> mFloatMap;
 
 public:
-  MIROperand* getFloatConstant(class LoweringContext& ctx, float val);
+  MIROperand getFloatConstant(class LoweringContext& ctx, float val);
 };
 
 /* LoweringContext */
@@ -25,7 +25,7 @@ public:
   std::unordered_map<ir::GlobalVariable*, MIRGlobalObject*> gvarMap;
 
   /* local variable mappings */
-  std::unordered_map<ir::Value*, MIROperand*> valueMap;
+  std::unordered_map<ir::Value*, MIROperand> valueMap;
   std::unordered_map<ir::BasicBlock*, MIRBlock*> blockMap;
 
   /* Float Point Constant Pool */
@@ -53,15 +53,15 @@ public:
   auto getPointerType() { return pointerType; }
 
   // gen function
-  MIROperand* newVReg(ir::Type* type);
-  MIROperand* newVReg(OperandType type);
+  MIROperand newVReg(ir::Type* type);
+  MIROperand newVReg(OperandType type);
 
   // emit function
-  void emitCopy(MIROperand* dst, MIROperand* src);
+  void emitCopy(MIROperand dst, MIROperand src);
 
   // ir_val -> mir_operand
-  void addValueMap(ir::Value* ir_val, MIROperand* mir_operand);
-  MIROperand* map2operand(ir::Value* ir_val);
+  void addValueMap(ir::Value* ir_val, MIROperand mir_operand);
+  MIROperand map2operand(ir::Value* ir_val);
   MIRBlock* map2block(ir::BasicBlock* ir_block) {
     return blockMap.at(ir_block);
   }

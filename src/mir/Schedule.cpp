@@ -19,12 +19,12 @@ static void topDownScheduling(
     /* debug */
     bool debugSched = false;
     auto dumpIssue = [&](MIRInst* inst) {
-        auto& instInfo = ctx.instInfo.get_instinfo(inst);
+        auto& instInfo = ctx.instInfo.getInstInfo(inst);
         instInfo.print(std::cerr << "issue ", *inst, true);
         std::cerr << std::endl;
     };
     auto dumpReady = [&](MIRInst* inst) {
-        auto& instInfo = ctx.instInfo.get_instinfo(inst);
+        auto& instInfo = ctx.instInfo.getInstInfo(inst);
         instInfo.print(std::cerr << "ready ", *inst, true);
         std::cerr << std::endl;
     };
@@ -76,7 +76,7 @@ static void topDownScheduling(
                 auto& scheClass = model->getInstScheClass(inst->opcode());
 
                 if (scheClass.schedule(state, *inst,
-                                       ctx.instInfo.get_instinfo(inst))) {
+                                       ctx.instInfo.getInstInfo(inst))) {
                     /** inst success scheduled,
                      * add inst to scheduledInsts and update degrees
                      * if new ready, add new to newReadyInsts */
@@ -167,17 +167,17 @@ static void preRAScheduleBlock(MIRBlock& block, const CodeGenContext& ctx) {
     MIRInst* lastSideEffect = nullptr;
     MIRInst* lastInOrder = nullptr;
     for (auto& inst : block.insts()) {
-        auto& instInfo = ctx.instInfo.get_instinfo(inst);
+        auto& instInfo = ctx.instInfo.getInstInfo(inst);
         /* for all operands */
         for (uint32_t idx = 0; idx < instInfo.operand_num(); ++idx) {
             auto op = inst->operand(idx);
             auto opflag = instInfo.operand_flag(idx);
-            if (op->isReg()) {
+            if (op.isReg()) {
                 /** before stack allocate, after sa, sobj is replaced by reg */
                 if (isOperandStackObject(op)) {
                     continue;
                 }
-                const auto reg = op->reg();
+                const auto reg = op.reg();
                 renameMap[inst][idx] = reg;
 
                 if (opflag & OperandFlagUse) {
@@ -245,7 +245,7 @@ static void preRAScheduleBlock(MIRBlock& block, const CodeGenContext& ctx) {
             return;
         os << "block: " << block.name() << std::endl;
         for (auto inst : block.insts()) {
-            auto& instInfo = ctx.instInfo.get_instinfo(inst);
+            auto& instInfo = ctx.instInfo.getInstInfo(inst);
             os << "[" << instInfo.name() << "] ";
             instInfo.print(os, *inst, false);
             os << std::endl;
@@ -257,7 +257,7 @@ static void preRAScheduleBlock(MIRBlock& block, const CodeGenContext& ctx) {
             }
             os << "- antiDeps: \n";
             for (auto target : antiDeps[inst]) {
-                auto& targetInfo = ctx.instInfo.get_instinfo(target);
+                auto& targetInfo = ctx.instInfo.getInstInfo(target);
                 targetInfo.print(os << "  - ", *target, false);
                 os << std::endl;
             }
@@ -294,9 +294,9 @@ uint32_t ScheduleState::queryRegisterLatency(const MIRInst& inst,
                                              uint32_t idx) {
     /* 查询寄存器延迟 */
     {
-        if (not inst.operand(idx)->isReg())
+        if (not inst.operand(idx).isReg())
             return 0;
-        const auto reg = inst.operand(idx)->reg();
+        const auto reg = inst.operand(idx).reg();
         if (not(isISAReg(reg) or isVirtualReg(reg))) {
             return 0;
         }

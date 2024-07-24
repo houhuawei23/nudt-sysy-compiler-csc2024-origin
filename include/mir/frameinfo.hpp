@@ -33,8 +33,8 @@ public:  // lowering stage
   // clang-format on
 
 public:  // ra stage (register allocation)
-  virtual bool isCallerSaved(MIROperand& op) = 0;
-  virtual bool isCalleeSaved(MIROperand& op) = 0;
+  virtual bool isCallerSaved(const MIROperand& op) = 0;
+  virtual bool isCalleeSaved(const MIROperand& op) = 0;
 
 public:  // sa stage (stack allocation)
   virtual int stackPointerAlign() = 0;
@@ -44,8 +44,8 @@ public:  // sa stage (stack allocation)
   /* 插入序言和尾声代码: callee-saved registers 寄存器保护与恢复 */
   virtual int32_t insertPrologueEpilogue(
     MIRFunction* func,
-    std::unordered_set<MIROperand*>& callee_saved_regs,
+    std::unordered_set<MIROperand, MIROperandHasher>& callee_saved_regs,
     CodeGenContext& ctx,
-    MIROperand* return_addr_reg) = 0;
+    MIROperand return_addr_reg) = 0;
 };
 }  // namespace mir

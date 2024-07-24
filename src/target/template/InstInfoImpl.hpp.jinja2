@@ -76,7 +76,7 @@ class {{target_name}}InstInfo final: public TargetInstInfo {
     {%- endfor -%}
 public:
     {{target_name}}InstInfo() = default;
-    const InstInfo& get_instinfo(uint32_t opcode) const override {
+    const InstInfo& getInstInfo(uint32_t opcode) const override {
         switch (opcode) {
             {% for inst_name in inst_name_list -%}
             case {{target_name}}Inst::{{inst_name}}:
@@ -87,19 +87,19 @@ public:
             {%- endif %}
             {%- endfor %}
             default:
-                return TargetInstInfo::get_instinfo(opcode);
+                return TargetInstInfo::getInstInfo(opcode);
         }
     }
     bool matchBranch(MIRInst* inst, MIRBlock*& target, double& prob) const override {
-        auto& instInfo = get_instinfo(inst->opcode());
+        auto& instInfo = getInstInfo(inst->opcode());
         if (requireFlag(instInfo.inst_flag(), InstFlagBranch)) {
             if (inst->opcode() < ISASpecificBegin) {
                 return TargetInstInfo::matchBranch(inst, target, prob); 
             }
             switch (inst->opcode()) {
                 {% for branch in branch_list -%}
-                    case {{branch.name}}: target = dynamic_cast<MIRBlock*>(inst->operand({{branch.target}})->reloc());
-                        prob = {% if branch.prob != -1 %} inst->operand({{branch.prob}})->prob()
+                    case {{branch.name}}: target = dynamic_cast<MIRBlock*>(inst->operand({{branch.target}}).reloc());
+                        prob = {% if branch.prob != -1 %} inst->operand({{branch.prob}}).prob()
                                 {%- else -%} 1.0
                                 {%- endif -%};
                         break;

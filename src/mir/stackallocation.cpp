@@ -5,7 +5,7 @@ struct StackObjectInterval final {
   uint32_t begin, end;
 };
 using Intervals =
-  std::unordered_map<MIROperand*, StackObjectInterval*, MIROperandHasher>;
+  std::unordered_map<MIROperand, StackObjectInterval*, MIROperandHasher>;
 
 struct Slot final {
   uint32_t color;
@@ -15,11 +15,11 @@ struct Slot final {
 };
 
 static void remove_unused_spill_stack_objects(MIRFunction* mfunc) {
-  std::unordered_set<MIROperand*> spill_stack;
+  std::unordered_set<MIROperand, MIROperandHasher> spill_stack;
   /* find the unused spill_stack */
   {
     for (auto& [op, stack] : mfunc->stackObjs()) {
-      assert(isStackObject(op->reg()));
+      assert(isStackObject(op.reg()));
       if (stack.usage == StackObjectUsage::RegSpill) spill_stack.emplace(op);
     }
     for (auto& block : mfunc->blocks()) {
@@ -66,8 +66,9 @@ static void remove_unused_spill_stack_objects(MIRFunction* mfunc) {
  *  - 2. insert prologue and epilogue: save and restore them
  *  - 3. but corresponding stack objs' offset is not determined yet
  * - Determine stack objs' offset:
- *  - 0. CalleeArgument StackObjs: 
- *    - in Lowering from ir to mir function Stage, already determined their offset
+ *  - 0. CalleeArgument StackObjs:
+ *    - in Lowering from ir to mir function Stage, already determined their
+ * offset
  *  - 1. CalleeSaved StackObjs
  *  - 2. Local and RegSpill StackObjs
  *  - 3. Argument StackObjs
@@ -79,7 +80,7 @@ void allocateStackObjects(MIRFunction* func, CodeGenContext& ctx) {
   };
 
   constexpr bool debugSA = false;
-  auto dumpOperand = [&](MIROperand* op) {
+  auto dumpOperand = [&](MIROperand op) {
     std::cerr << mir::RISCV::OperandDumper{op} << std::endl;
   };
   // func is like a callee
@@ -88,16 +89,16 @@ void allocateStackObjects(MIRFunction* func, CodeGenContext& ctx) {
    * registers will be saved in the prologue and restored in the epilogue */
   std::unordered_set<uint32_t> calleeSavedRegs;
   for (auto& block : func->blocks()) {
-    forEachDefOperand(*block, ctx, [&](MIROperand* op) {
-      if (op->isUnused()) return;
-      if (op->isReg() && isISAReg(op->reg()) &&
-          ctx.frameInfo.isCalleeSaved(*op)) {
+    forEachDefOperand(*block, ctx, [&](MIROperand op) {
+      if (op.isUnused()) return;
+      if (op.isReg() && isISAReg(op.reg()) &&
+          ctx.frameInfo.isCalleeSaved(op)) {
         if (debugSA) dumpOperand(op);
-        calleeSavedRegs.insert(op->reg());
+        calleeSavedRegs.insert(op.reg());
       }
     });
   }
-  std::unordered_set<MIROperand*> calleeSaved;
+  std::unordered_set<MIROperand, MIROperandHasher> calleeSaved;
   for (auto reg : calleeSavedRegs) {
     calleeSaved.emplace(MIROperand::asISAReg(
       reg, ctx.registerInfo->getCanonicalizedRegisterType(reg)));
@@ -110,8 +111,7 @@ void allocateStackObjects(MIRFunction* func, CodeGenContext& ctx) {
   remove_unused_spill_stack_objects(func);
   // determine stack objs' offset
   int32_t allocationBase = 0;
-  auto sp_alignment =
-    static_cast<int32_t>(ctx.frameInfo.stackPointerAlign());
+  auto sp_alignment = static_cast<int32_t>(ctx.frameInfo.stackPointerAlign());
 
   auto align_to = [&](int32_t alignment) {
     assert(alignment <= sp_alignment);
@@ -120,7 +120,7 @@ void allocateStackObjects(MIRFunction* func, CodeGenContext& ctx) {
 
   /* 2. determine stack layout for callee arguments, calculate offset  */
   for (auto& [ref, stack] : func->stackObjs()) {
-    assert(isStackObject(ref->reg()));
+    assert(isStackObject(ref.reg()));
     if (stack.usage == StackObjectUsage::CalleeArgument) {
       allocationBase = std::max(
         allocationBase, stack.offset + static_cast<int32_t>(stack.size));
@@ -131,7 +131,7 @@ void allocateStackObjects(MIRFunction* func, CodeGenContext& ctx) {
 
   /* 3. local variables */
 
-  std::vector<MIROperand*> local_callee_saved;
+  std::vector<MIROperand> local_callee_saved;
   for (auto& [op, stack] : func->stackObjs()) {
     if (stack.usage == StackObjectUsage::CalleeSaved) {
       local_callee_saved.push_back(op);
@@ -140,8 +140,8 @@ void allocateStackObjects(MIRFunction* func, CodeGenContext& ctx) {
 
   // sort:
   std::sort(local_callee_saved.begin(), local_callee_saved.end(),
-            [&](const MIROperand* lhs, const MIROperand* rhs) {
-              return lhs->reg() > rhs->reg();
+            [&](const MIROperand lhs, const MIROperand rhs) {
+              return lhs.reg() > rhs.reg();
             });
 
   auto allocate_for = [&](StackObject& stack) {
@@ -187,7 +187,7 @@ void allocateStackObjects(MIRFunction* func, CodeGenContext& ctx) {
     std::cerr << "preAllocatedBase: " << preAllocatedBase << std::endl;
   }
   for (auto& [op, stack] : func->stackObjs()) {
-    assert(isStackObject(op->reg()));
+    assert(isStackObject(op.reg()));
     if (stack.usage == StackObjectUsage::Argument) {
       stack.offset += stack_size + preAllocatedBase;
     }
@@ -198,7 +198,7 @@ void allocateStackObjects(MIRFunction* func, CodeGenContext& ctx) {
 
   for (auto& block : func->blocks()) {
     auto terminator = block->insts().back();
-    auto& instInfo = ctx.instInfo.get_instinfo(terminator);
+    auto& instInfo = ctx.instInfo.getInstInfo(terminator);
     if (requireFlag(instInfo.inst_flag(), InstFlagReturn)) {
       ctx.frameInfo.emitPostSAEpilogue(block.get(), stack_size);
     }

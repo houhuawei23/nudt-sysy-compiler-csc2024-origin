@@ -10,7 +10,7 @@
 
 set -u
 set -e
-
+# set -x
 # infile=$1
 asmfile="./test/.out/gen.s"
 outfile="./gen.o"
@@ -22,4 +22,4 @@ compiler_path="./compiler"
 riscv64-linux-gnu-gcc -ggdb -static -march=rv64gc -mabi=lp64d -mcmodel=medlow \
  -o "${outfile}" "${asmfile}" ./test/link/link.c
 
-sudo qemu-riscv64 -g 1235 $outfile
+sudo qemu-riscv64 -L /usr/riscv64-linux-gnu/ -g 1235 $outfile

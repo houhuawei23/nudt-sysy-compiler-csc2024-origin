@@ -11,7 +11,7 @@
 static bool match{{name}}(
     MIRInst* inst
     {%- for idx, info in match_insts_dict[name].operands.items() -%}
-    , MIROperand*& {{info.name}}
+    , MIROperand& {{info.name}}
     {%- endfor -%}
 )
 {
@@ -40,7 +40,7 @@ static bool matchAndSelectPattern{{isel_item.idx}} (
         {% if match.type == 'match_inst' -%}
             /* match inst {{match.inst_name}} */
             {% for operand_idx in match.capture_list -%}
-                MIROperand* op{{operand_idx}} = nullptr;
+                MIROperand op{{operand_idx}};
             {%- endfor %}
             if (not match{{match.inst_name}}(
                 inst{{isel_item.match_id}}
@@ -57,7 +57,7 @@ static bool matchAndSelectPattern{{isel_item.idx}} (
         {% elif match.type == 'predicate' -%}
             /* match predicate for operands  */
             {% for op in match.new_ops -%}
-                MIROperand* op{{op}} = nullptr;
+                MIROperand op{{op}};
             {%- endfor -%}
             if(not ({{match.code}})) {
                 return false;
@@ -120,7 +120,7 @@ static bool matchAndSelectImpl(MIRInst* inst, ISelContext& ctx, bool debugMatchS
             break;
     }
     if (debugMatchSelect) {
-        auto& instInfo = ctx.codegen_ctx().instInfo.get_instinfo(inst);
+        auto& instInfo = ctx.codegen_ctx().instInfo.getInstInfo(inst);
         std::cerr << instInfo.name();
         if (success) std::cerr << " success." << std::endl;
         else std::cerr << " failed." << std::endl;
@@ -133,10 +133,10 @@ public:
     bool isLegalInst(uint32_t opcode) const override;
     bool match_select(MIRInst* inst, ISelContext& ctx) const override;
     void legalizeInstWithStackOperand(InstLegalizeContext& ctx,
-                                    MIROperand* op,
+                                    MIROperand op,
                                     StackObject& obj) const override;
     void postLegalizeInst(const InstLegalizeContext& ctx) const override;
-    MIROperand* materializeFPConstant(float fpVal, LoweringContext& loweringCtx) const override;
+    MIROperand materializeFPConstant(float fpVal, LoweringContext& loweringCtx) const override;
 };
 
 

@@ -7,7 +7,7 @@ void MIRBlock::print(std::ostream& os, CodeGenContext& ctx) {
     os << " ";
     for (auto& inst : mInsts) {
         os << "\t";
-        auto& info = ctx.instInfo.get_instinfo(inst);
+        auto& info = ctx.instInfo.getInstInfo(inst);
         os << "[" << info.name() << "] ";
         info.print(os, *inst, false);
         os << std::endl;
@@ -16,7 +16,7 @@ void MIRBlock::print(std::ostream& os, CodeGenContext& ctx) {
 
 void MIRFunction::print(std::ostream& os, CodeGenContext& ctx) {
     for (auto &[ref, obj] : mStackObjects) {
-        os << " so" << (ref->reg() ^ stackObjectBegin)
+        os << " so" << (ref.reg() ^ stackObjectBegin)
            << " size = " << obj.size << " align = " << obj.alignment
            << " offset = " << obj.offset 
            << " usage = " << utils::enumName(obj.usage)
@@ -52,13 +52,13 @@ bool MIRBlock::verify(std::ostream& os, CodeGenContext& ctx) const {
         }
     }
     const auto lastInst = mInsts.back();
-    const auto& lastInstInfo = ctx.instInfo.get_instinfo(lastInst);
+    const auto& lastInstInfo = ctx.instInfo.getInstInfo(lastInst);
     if((lastInstInfo.inst_flag() & InstFlagTerminator) == 0) {
         os << "Error: block " << name() << " does not end with a terminator" << std::endl;
         return false;
     }
     for(auto& inst : mInsts) {
-        const auto& info = ctx.instInfo.get_instinfo(inst);
+        const auto& info = ctx.instInfo.getInstInfo(inst);
         if((info.inst_flag() & InstFlagTerminator) and inst != lastInst) {
             os << "Error: block " << name() << " has multiple terminators" << std::endl;
             return false;

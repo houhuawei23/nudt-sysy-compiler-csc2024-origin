@@ -86,9 +86,9 @@ public:
   ~TargetInstInfo() = default;
 
 public:  // get function
-  virtual const InstInfo& get_instinfo(uint32_t opcode) const;
-  const InstInfo& get_instinfo(MIRInst* inst) const {
-    return get_instinfo(inst->opcode());
+  virtual const InstInfo& getInstInfo(uint32_t opcode) const;
+  const InstInfo& getInstInfo(MIRInst* inst) const {
+    return getInstInfo(inst->opcode());
   }
 
 public:  // match function
@@ -96,7 +96,7 @@ public:  // match function
                            MIRBlock*& target,
                            double& prob) const;
 
-  bool matchCopy(MIRInst* inst, MIROperand*& dst, MIROperand*& src) const;
+  bool matchCopy(MIRInst* inst, MIROperand& dst, MIROperand& src) const;
   bool matchConditionalBranch(MIRInst* inst,
                               MIRBlock*& target,
                               double& prob) const;
@@ -106,15 +106,15 @@ public:  // match function
 };
 
 // utils function
-constexpr bool isOperandVRegORISAReg(MIROperand* operand) {
-  return operand->isReg() &&
-         (isVirtualReg(operand->reg()) || isISAReg(operand->reg()));
+constexpr bool isOperandVRegORISAReg(const MIROperand& operand) {
+  return operand.isReg() &&
+         (isVirtualReg(operand.reg()) || isISAReg(operand.reg()));
 }
-constexpr bool isOperandISAReg(MIROperand* operand) {
-  return operand->isReg() && isISAReg(operand->reg());
+constexpr bool isOperandISAReg(const MIROperand& operand) {
+  return operand.isReg() && isISAReg(operand.reg());
 }
-constexpr bool isOperandVReg(MIROperand* operand) {
-  return operand->isReg() && isVirtualReg(operand->reg());
+constexpr bool isOperandVReg(const MIROperand& operand) {
+  return operand.isReg() && isVirtualReg(operand.reg());
 }
 
 constexpr bool requireFlag(InstFlag flag, InstFlag required) {
@@ -131,24 +131,24 @@ constexpr bool requireOneFlag(uint32_t flag, uint32_t required) {
   return (static_cast<uint32_t>(flag) & static_cast<uint32_t>(required)) != 0;
 }
 
-constexpr bool isOperandIReg(MIROperand* operand) {
-  return operand->isReg() && operand->type() <= OperandType::Int64;
+constexpr bool isOperandIReg(const MIROperand& operand) {
+  return operand.isReg() && operand.type() <= OperandType::Int64;
 }
 
-constexpr bool isOperandBoolReg(MIROperand* operand) {
-  return operand->isReg() && operand->type() == OperandType::Bool;
+constexpr bool isOperandBoolReg(const MIROperand& operand) {
+  return operand.isReg() && operand.type() == OperandType::Bool;
 }
 
-constexpr bool isOperandReloc(MIROperand* operand) {
-  return operand->isReloc() && operand->type() == OperandType::Special;
+constexpr bool isOperandReloc(const MIROperand& operand) {
+  return operand.isReloc() && operand.type() == OperandType::Special;
 }
-constexpr bool isOperandVRegOrISAReg(MIROperand* operand) {
-  return operand->isReg() &&
-         (isVirtualReg(operand->reg()) || isISAReg(operand->reg()));
+constexpr bool isOperandVRegOrISAReg(const MIROperand& operand) {
+  return operand.isReg() &&
+         (isVirtualReg(operand.reg()) || isISAReg(operand.reg()));
 }
 
-constexpr bool isOperandStackObject(MIROperand* operand) {
-  return operand->isReg() && isStackObject(operand->reg());
+constexpr bool isOperandStackObject(const MIROperand& operand) {
+  return operand.isReg() && isStackObject(operand.reg());
 }
 
 template <uint32_t N>
@@ -158,7 +158,7 @@ constexpr bool isSignedImm(intmax_t imm) {
   return -x <= imm && imm < x;
 }
 
-void dumpVirtualReg(std::ostream& os, MIROperand* operand);
+void dumpVirtualReg(std::ostream& os, const MIROperand& operand);
 
 }  // namespace mir
 

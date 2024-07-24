@@ -145,20 +145,18 @@ public:
   void print(std::ostream& os);
 };
 
-} // namespace mir
-
+}  // namespace mir
 
 namespace std {
-    template <>
-    struct hash<mir::MIRRegister> {
-        size_t operator()(const mir::MIRRegister& reg) const noexcept {
-            return hash<uint32_t>{}(reg.reg());
-        }
-    };
+template <>
+struct hash<mir::MIRRegister> {
+  size_t operator()(const mir::MIRRegister& reg) const noexcept {
+    return hash<uint32_t>{}(reg.reg());
+  }
+};
 }  // namespace std
 
-
-namespace mir{
+namespace mir {
 enum MIRGenericInst : uint32_t {
   // Jump
   InstJump,
@@ -252,31 +250,31 @@ public:
 
 public:  // get function
   auto& storage() { return mStorage; }
-  auto type() { return mType; }
-  const intmax_t imm() {
+  auto type() const { return mType; }
+  auto imm() const {
     assert(isImm());
     return std::get<intmax_t>(mStorage);
   }
-  double prob() {
+  auto prob() const {
     assert(isProb());
     return std::get<double>(mStorage);
   }
-  uint32_t reg() const {
+  auto reg() const {
     assert(isReg());
     return std::get<MIRRegister>(mStorage).reg();
   }
-  MIRRelocable* reloc() {
+  auto reloc() const{
     assert(isReloc());
     return std::get<MIRRelocable*>(mStorage);
   }
-  MIRRegisterFlag reg_flag() {
+  auto reg_flag() {
     assert(isReg() && "the operand is not a register");
     return std::get<MIRRegister>(mStorage).flag();
   }
 
 public:  // operator
-  bool operator==(const MIROperand& rhs) { return mStorage == rhs.mStorage; }
-  bool operator!=(const MIROperand& rhs) { return mStorage != rhs.mStorage; }
+  bool operator==(const MIROperand& rhs) const { return mStorage == rhs.mStorage; }
+  bool operator!=(const MIROperand& rhs) const { return mStorage != rhs.mStorage; }
 
 public:  // check function
   constexpr bool isUnused() const {
@@ -304,26 +302,26 @@ public:  // check function
 
 public:  // gen function
   template <typename T>
-  static MIROperand* asImm(T val, OperandType type) {
-    return new MIROperand(static_cast<intmax_t>(val), type);
+  static auto asImm(T val, OperandType type) {
+    return MIROperand(static_cast<intmax_t>(val), type);
     // return utils::make<MIROperand>(static_cast<intmax_t>(val), type);
   }
   // FIXME: have static instance, cant ue utils::make
-  static MIROperand* asISAReg(uint32_t reg, OperandType type) {
-    return new MIROperand(MIRRegister(reg), type);
+  static auto asISAReg(uint32_t reg, OperandType type) {
+    return MIROperand(MIRRegister(reg), type);
     // return utils::make<MIROperand>(utils::make<MIRRegister>(reg), type);
   }
-  static MIROperand* asVReg(uint32_t reg, OperandType type) {
-    return new MIROperand(MIRRegister(reg + virtualRegBegin), type);
+  static auto asVReg(uint32_t reg, OperandType type) {
+    return MIROperand(MIRRegister(reg + virtualRegBegin), type);
   }
-  static MIROperand* asStackObj(uint32_t reg, OperandType type) {
-    return new MIROperand(MIRRegister(reg + stackObjectBegin), type);
+  static auto asStackObj(uint32_t reg, OperandType type) {
+    return MIROperand(MIRRegister(reg + stackObjectBegin), type);
   }
-  static MIROperand* asReloc(MIRRelocable* reloc) {
-    return new MIROperand(reloc, OperandType::Special);
+  static auto asReloc(MIRRelocable* reloc) {
+    return MIROperand(reloc, OperandType::Special);
   }
-  static MIROperand* asProb(double prob) {
-    return new MIROperand(prob, OperandType::Special);
+  static auto asProb(double prob) {
+    return MIROperand(prob, OperandType::Special);
   }
 
 public:
@@ -336,7 +334,7 @@ SYSYC_ARENA_TRAIT(MIROperand, MIR)
 
 /* MIROperandHasher */
 struct MIROperandHasher final {
-  size_t operator()(const MIROperand* operand) const { return operand->hash(); }
+  size_t operator()(const MIROperand operand) const { return operand.hash(); }
 };
 
 #include <initializer_list>
@@ -347,39 +345,45 @@ class MIRInst {
 protected:
   uint32_t mOpcode;  // 标明指令的类型
   MIRBlock* mBlock;  // 标明指令所在的块
-  std::array<MIROperand*, max_operand_num> mOperands;  // 指令操作数
+  std::array<MIROperand, max_operand_num> mOperands;  // 指令操作数
 public:
   static constexpr auto arenaSource = utils::Arena::Source::MIR;
 
   MIRInst(uint32_t opcode) : mOpcode(opcode) {}
-  MIRInst(uint32_t opcode, std::initializer_list<MIROperand*> operands) {
+  MIRInst(uint32_t opcode, std::initializer_list<MIROperand> operands) {
     mOpcode = opcode;
     for (auto it = operands.begin(); it != operands.end(); ++it) {
-      assert(*it != nullptr);
+      assert(it->isInit());
       mOperands[it - operands.begin()] = *it;
     }
   }
 
 public:  // get function
   uint32_t opcode() const { return mOpcode; }
-  MIROperand* operand(int idx) const {
-    assert(mOperands[idx] != nullptr);
+  auto operand(int idx) const {
+    assert(idx < max_operand_num);
     return mOperands[idx];
   }
-
+  MIROperand& operand(int idx) {
+    assert(idx < max_operand_num);
+    return mOperands[idx];
+  }
 public:  // set function
   auto set_opcode(uint32_t opcode) {
     mOpcode = opcode;
     return this;
   }
-  MIRInst* set_operand(int idx, MIROperand* opeand) {
-    assert(idx < max_operand_num && opeand != nullptr);
+  MIRInst* set_operand(int idx, MIROperand opeand) {
+    // assert(idx < max_operand_num && opeand != nullptr);
+    assert(idx < max_operand_num && opeand.isInit());
     mOperands[idx] = opeand;
     return this;
   }
-  auto resetOperands(std::initializer_list<MIROperand*> operands) {
+  auto resetOperands(std::initializer_list<MIROperand> operands) {
     for (auto it = operands.begin(); it != operands.end(); ++it) {
-      assert(*it != nullptr);
+      // assert(*it != nullptr);
+      // mOperands[it - operands.begin()] = *it;
+      assert(it->isInit());
       mOperands[it - operands.begin()] = *it;
     }
     return this;
@@ -392,7 +396,6 @@ public:
 using MIRInstList = std::list<MIRInst*>;
 
 SYSYC_ARENA_TRAIT(MIRInst, MIR)
-
 
 /* MIRBlock Class */
 class MIRBlock : public MIRRelocable {
@@ -459,8 +462,8 @@ private:
   ir::Function* mIRFunc;
   MIRModule* mModule;
   std::list<std::unique_ptr<MIRBlock>> mBlocks;
-  std::unordered_map<MIROperand*, StackObject> mStackObjects;
-  std::vector<MIROperand*> mArguments;
+  std::unordered_map<MIROperand, StackObject, MIROperandHasher> mStackObjects;
+  std::vector<MIROperand> mArguments;
 
 public:
   MIRFunction(ir::Function* ir_func, MIRModule* parent);
@@ -471,11 +474,11 @@ public:
   auto& args() { return mArguments; }
   auto& stackObjs() { return mStackObjects; }
 
-  MIROperand* newStackObject(uint32_t id,
-                             uint32_t size,
-                             uint32_t alignment,
-                             int32_t offset,
-                             StackObjectUsage usage) {
+  auto newStackObject(uint32_t id,
+                      uint32_t size,
+                      uint32_t alignment,
+                      int32_t offset,
+                      StackObjectUsage usage) {
     auto ref = MIROperand::asStackObj(id, OperandType::Special);
     mStackObjects.emplace(ref, StackObject{size, alignment, offset, usage});
     return ref;

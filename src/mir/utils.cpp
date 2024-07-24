@@ -90,7 +90,7 @@ void dumpAssembly(std::ostream& os, MIRModule& module, CodeGenContext& ctx) {
         os << bb->name() << ":\n";
       }
       for (auto& inst : bb->insts()) {
-        auto& info = ctx.instInfo.get_instinfo(inst);
+        auto& info = ctx.instInfo.getInstInfo(inst);
         info.print(os << "\t", *inst, false);
         os << std::endl;
       }
@@ -100,9 +100,9 @@ void dumpAssembly(std::ostream& os, MIRModule& module, CodeGenContext& ctx) {
 
 void forEachDefOperand(MIRBlock& block,
                        CodeGenContext& ctx,
-                       const std::function<void(MIROperand* op)>& functor) {
+                       const std::function<void(MIROperand op)>& functor) {
   for (auto& inst : block.insts()) {
-    auto& inst_info = ctx.instInfo.get_instinfo(inst);
+    auto& inst_info = ctx.instInfo.getInstInfo(inst);
     for (uint32_t idx = 0; idx < inst_info.operand_num(); idx++) {
       if (inst_info.operand_flag(idx) & OperandFlagDef) {
         functor(inst->operand(idx));
@@ -113,7 +113,7 @@ void forEachDefOperand(MIRBlock& block,
 
 void forEachDefOperand(MIRFunction& func,
                        CodeGenContext& ctx,
-                       const std::function<void(MIROperand* op)>& functor) {
+                       const std::function<void(MIROperand op)>& functor) {
   for (auto& block : func.blocks()) {
     forEachDefOperand(*block, ctx, functor);
   }

@@ -17,10 +17,10 @@ bool removeIdentityCopies(MIRFunction& func, CodeGenContext& ctx) {
   bool modified = false;
   for (auto& block : func.blocks()) {
     block->insts().remove_if([&](MIRInst* inst) {
-      MIROperand *dst = nullptr, *src = nullptr;
+      MIROperand dst, src;
       ctx.instInfo.matchCopy(inst, dst, src);
-      auto& info = ctx.instInfo.get_instinfo(inst);
-      if (dst and src and dst == src) {
+      auto& info = ctx.instInfo.getInstInfo(inst);
+      if (dst == src) {
         std::cerr << "remove identity copy: ";
         info.print(std::cerr, *inst, false);
         std::cerr << std::endl;
@@ -35,7 +35,7 @@ bool removeIdentityCopies(MIRFunction& func, CodeGenContext& ctx) {
 
 bool removeUnusedInsts(MIRFunction& func, CodeGenContext& ctx) {
     /* writers: map from operand to list of insts that write it */
-    std::unordered_map<MIROperand*, std::vector<MIRInst*>> writers;
+    std::unordered_map<MIROperand, std::vector<MIRInst*>, MIROperandHasher> writers;
 
     /** specail insts: that cant be removed,
      * 1 InstFlagSideEffect,
@@ -48,7 +48,7 @@ bool removeUnusedInsts(MIRFunction& func, CodeGenContext& ctx) {
 
     for (auto& block : func.blocks()) {
         for (auto& inst : block->insts()) {
-            auto& instInfo = ctx.instInfo.get_instinfo(inst);
+            auto& instInfo = ctx.instInfo.getInstInfo(inst);
             bool special = false;
 
             if (requireOneFlag(instInfo.inst_flag(), InstFlagSideEffect)) {
@@ -59,8 +59,8 @@ bool removeUnusedInsts(MIRFunction& func, CodeGenContext& ctx) {
                 if (instInfo.operand_flag(idx) & OperandFlagDef) {
                     auto op = inst->operand(idx);
                     writers[op].push_back(inst);
-                    if (op->isReg() && isISAReg(op->reg()) &&
-                        isAllocableType(op->type())) {
+                    if (op.isReg() && isISAReg(op.reg()) &&
+                        isAllocableType(op.type())) {
                         special = true;
                     }
                 }
@@ -111,7 +111,7 @@ bool removeUnusedInsts(MIRFunction& func, CodeGenContext& ctx) {
         auto& inst = q.front();
         q.pop();
 
-        auto& instInfo = ctx.instInfo.get_instinfo(inst);
+        auto& instInfo = ctx.instInfo.getInstInfo(inst);
         for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
             if (instInfo.operand_flag(idx) & OperandFlagUse) {
                 /* if operand is used, remove from writers */
@@ -129,11 +129,11 @@ bool removeUnusedInsts(MIRFunction& func, CodeGenContext& ctx) {
 
     std::unordered_set<MIRInst*> remove;
     for (auto& [op, writerList] : writers) {
-        if (isISAReg(op->reg()) && isAllocableType(op->type())) {
+        if (isISAReg(op.reg()) && isAllocableType(op.type())) {
             continue;
         }
         for (auto& writer : writerList) {
-            auto& instInfo = ctx.instInfo.get_instinfo(writer);
+            auto& instInfo = ctx.instInfo.getInstInfo(writer);
             if (requireOneFlag(instInfo.inst_flag(),
                                InstFlagSideEffect | InstFlagMultiDef)) {
                 continue;
@@ -186,6 +186,7 @@ bool removeInvisibleInsts(MIRFunction& func, CodeGenContext& ctx) {
 }
 
 bool genericPeepholeOpt(MIRFunction& func, CodeGenContext& ctx) {
+    return false;
     bool modified = false;
     // modified |= eliminateStackLoads(func, ctx);
     // modified |= removeIndirectCopy(func, ctx);

@@ -1566,7 +1566,7 @@ class GENERICInstInfo final : public TargetInstInfo {
 
 public:
   GENERICInstInfo() = default;
-  const InstInfo& get_instinfo(uint32_t opcode) const override {
+  const InstInfo& getInstInfo(uint32_t opcode) const override {
     switch (opcode) {
       case GENERICInst::Jump:
         return _instinfoJump;
@@ -1669,25 +1669,25 @@ public:
       case GENERICInst::Return:
         return _instinfoReturn;
       default:
-        return TargetInstInfo::get_instinfo(opcode);
+        return TargetInstInfo::getInstInfo(opcode);
     }
   }
   bool matchBranch(MIRInst* inst,
                    MIRBlock*& target,
                    double& prob) const override {
-    auto& instInfo = get_instinfo(inst->opcode());
+    auto& instInfo = getInstInfo(inst->opcode());
     if (requireFlag(instInfo.inst_flag(), InstFlagBranch)) {
       if (inst->opcode() < ISASpecificBegin) {
         return TargetInstInfo::matchBranch(inst, target, prob);
       }
       switch (inst->opcode()) {
         case Jump:
-          target = dynamic_cast<MIRBlock*>(inst->operand(0)->reloc());
+          target = dynamic_cast<MIRBlock*>(inst->operand(0).reloc());
           prob = 1.0;
           break;
         case Branch:
-          target = dynamic_cast<MIRBlock*>(inst->operand(1)->reloc());
-          prob = inst->operand(2)->prob();
+          target = dynamic_cast<MIRBlock*>(inst->operand(1).reloc());
+          prob = inst->operand(2).prob();
           break;
         default:
           std::cerr << "Error: unknown branch instruction: " << instInfo.name()

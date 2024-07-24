@@ -21,7 +21,7 @@ function qemu_riscv64_run() {
     $qemu_riscv64 -L "/usr/riscv64-linux-gnu/" $@
 }
 
-TIMEOUT=0.5
+TIMEOUT=1
 
 PASS_CNT=0
 WRONG_CNT=0

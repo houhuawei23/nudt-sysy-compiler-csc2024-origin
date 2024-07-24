@@ -8,8 +8,8 @@
 #include <cstring>
 namespace mir::RISCV {
 
-static MIROperand* getVRegAs(ISelContext& ctx, MIROperand* ref) {
-  return MIROperand::asVReg(ctx.codegen_ctx().nextId(), ref->type());
+static MIROperand getVRegAs(ISelContext& ctx, MIROperand ref) {
+  return MIROperand::asVReg(ctx.codegen_ctx().nextId(), ref.type());
 }
 
 constexpr RISCVInst getIntegerBinaryRegOpcode(uint32_t opcode) {
@@ -37,8 +37,8 @@ constexpr RISCVInst getIntegerBinaryImmOpcode(uint32_t opcode) {
   }
 }
 
-static RISCVInst getLoadOpcode(MIROperand* dst) {
-  switch (dst->type()) {
+static RISCVInst getLoadOpcode(MIROperand dst) {
+  switch (dst.type()) {
     case OperandType::Bool:
     case OperandType::Int8:
       return LB;
@@ -54,8 +54,8 @@ static RISCVInst getLoadOpcode(MIROperand* dst) {
       assert(false && "Unsupported operand type for load instruction");
   }
 }
-static RISCVInst getStoreOpcode(MIROperand* src) {
-  switch (src->type()) {
+static RISCVInst getStoreOpcode(MIROperand src) {
+  switch (src.type()) {
     case OperandType::Bool:
     case OperandType::Int8:
       return SB;
@@ -72,16 +72,16 @@ static RISCVInst getStoreOpcode(MIROperand* src) {
   }
 }
 
-static bool selectFCmpOpcode(MIROperand* opcode,
-                             MIROperand* lhs,
-                             MIROperand* rhs,
-                             MIROperand*& outlhs,
-                             MIROperand*& outrhs,
-                             MIROperand*& outOpcode) {
+static bool selectFCmpOpcode(MIROperand opcode,
+                             MIROperand lhs,
+                             MIROperand rhs,
+                             MIROperand& outlhs,
+                             MIROperand& outrhs,
+                             MIROperand& outOpcode) {
   // std::cerr << "selectFCmpOpcode" << std::endl;
-  const auto op = static_cast<CompareOp>(opcode->imm());
+  const auto op = static_cast<CompareOp>(opcode.imm());
   // std::cerr << "comapre op: " << utils::enumName(op) << std::endl;
-  if (!isOperandFPR(*lhs) or !isOperandFPR(*rhs)) {
+  if (!isOperandFPR(lhs) or !isOperandFPR(rhs)) {
     return false;
   }
   outlhs = lhs;
@@ -115,13 +115,13 @@ static bool selectFCmpOpcode(MIROperand* opcode,
   return true;
 }
 
-static bool selectAddrOffset(MIROperand* addr,
+static bool selectAddrOffset(MIROperand addr,
                              ISelContext& ctx,
-                             MIROperand*& base,
-                             MIROperand*& offset) {
+                             MIROperand& base,
+                             MIROperand& offset) {
   bool debug = false;
   auto dumpInst = [&](MIRInst* inst) {
-    auto& instInfo = ctx.codegen_ctx().instInfo.get_instinfo(inst);
+    auto& instInfo = ctx.codegen_ctx().instInfo.getInstInfo(inst);
     instInfo.print(std::cerr << "selectAddrOffset: ", *inst, false);
     std::cerr << std::endl;
   };
@@ -145,24 +145,24 @@ static bool selectAddrOffset(MIROperand* addr,
   return false;
 }
 
-static bool isOperandI64(MIROperand* op) {
-  return op->type() == OperandType::Int64;
+static bool isOperandI64(MIROperand op) {
+  return op.type() == OperandType::Int64;
 }
-static bool isOperandI32(MIROperand* op) {
-  return op->type() == OperandType::Int32;
-}
-
-static bool isZero(MIROperand* operand) {
-  if (operand->isReg() && operand->reg() == RISCV::X0) return true;
-  return operand->isImm() && operand->imm() == 0;
+static bool isOperandI32(MIROperand op) {
+  return op.type() == OperandType::Int32;
 }
 
-static MIROperand* getZero(MIROperand* operand) {
-  return MIROperand::asISAReg(RISCV::X0, operand->type());
+static bool isZero(MIROperand operand) {
+  if (operand.isReg() && operand.reg() == RISCV::X0) return true;
+  return operand.isImm() && operand.imm() == 0;
 }
 
-static MIROperand* getOne(MIROperand* operand) {
-  return MIROperand::asImm(1, operand->type());
+static MIROperand getZero(MIROperand operand) {
+  return MIROperand::asISAReg(RISCV::X0, operand.type());
+}
+
+static MIROperand getOne(MIROperand operand) {
+  return MIROperand::asImm(1, operand.type());
 }
 
 }  // namespace mir::RISCV
@@ -180,7 +180,7 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
 
   auto imm2regBeta = [&](MIRInst* oldInst, uint32_t opIdx) {
     auto op = oldInst->operand(opIdx);
-    if (op->isImm()) {
+    if (op.isImm()) {
       auto reg = getVRegAs(ctx, op);
       auto newInst = ctx.insertMIRInst(InstLoadImm, {reg, op});
       oldInst->set_operand(opIdx, reg);
@@ -197,11 +197,11 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
       break;
     }
     case InstSub: { /* InstSub dst, src1, src2 */
-      auto* src1 = inst->operand(1);
-      auto* src2 = inst->operand(2);
+      auto src1 = inst->operand(1);
+      auto src2 = inst->operand(2);
       imm2regBeta(inst, 1);
 
-      if (src2->isImm()) { /* sub to add */
+      if (src2.isImm()) { /* sub to add */
         auto neg = getNeg(src2);
         if (isOperandImm12(neg)) {
           inst->set_opcode(InstAdd);
@@ -269,7 +269,7 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
       break;
     }
     case InstFCmp: {
-      const auto op = static_cast<CompareOp>(inst->operand(3)->imm());
+      const auto op = static_cast<CompareOp>(inst->operand(3).imm());
       if (op == CompareOp::FCmpOrderedNotEqual) {
         /**
          * FCmp dst, src1, src2, NE
@@ -309,14 +309,14 @@ bool RISCVISelInfo::match_select(MIRInst* inst, ISelContext& ctx) const {
   return matchAndSelectImpl(inst, ctx, debugMatchSelect);
 }
 
-static MIROperand* getAlign(int64_t immVal) {
+static MIROperand getAlign(int64_t immVal) {
   return MIROperand::asImm(immVal, OperandType::Special);
 }
 
 // void RISCVISelInfo::adjustReg(MIRInstList& insts,
 //                               MIRInstList::iterator& iter,
-//                               MIROperand*& dst,
-//                               MIROperand*& src,
+//                               MIROperand& dst,
+//                               MIROperand& src,
 //                               int64_t& imm) const {
 //   //
 //   if (-2048 <= imm && imm <= 2047) {
@@ -335,14 +335,14 @@ static MIROperand* getAlign(int64_t immVal) {
  * x[rd] = sext(M[x[rs1] + sext(offset)][31:0])
  */
 void RISCVISelInfo::legalizeInstWithStackOperand(InstLegalizeContext& ctx,
-                                                 MIROperand* op,
+                                                 MIROperand op,
                                                  StackObject& obj) const {
   bool debugLISO = false;
 
-  auto& inst = ctx.inst;
+  const auto& inst = ctx.inst;
   auto& insts = ctx.instructions;
   auto& iter = ctx.iter;
-  auto& instInfo = ctx.codeGenCtx.instInfo.get_instinfo(inst);
+  auto& instInfo = ctx.codeGenCtx.instInfo.getInstInfo(inst);
   auto dumpInst = [&](MIRInst* inst) {
     instInfo.print(std::cerr, *inst, true);
     std::cerr << std::endl;
@@ -358,7 +358,7 @@ void RISCVISelInfo::legalizeInstWithStackOperand(InstLegalizeContext& ctx,
     case SB:
     case FSW: {
       // rel addr = obj.offset + offset
-      immVal += inst->operand(1)->imm();
+      immVal += inst->operand(1).imm();
       break;
     }
     case LD:
@@ -370,14 +370,14 @@ void RISCVISelInfo::legalizeInstWithStackOperand(InstLegalizeContext& ctx,
     case LBU:
     case FLW: {
       // rel addr = obj.offset + offset
-      immVal += inst->operand(1)->imm();
+      immVal += inst->operand(1).imm();
       break;
     }
     default:
       break;
   }
 
-  MIROperand* base = sp;
+  MIROperand base = sp;
 
   legalizeAddrBaseOffsetPostRA(ctx.instructions, ctx.iter, base, immVal);
   auto offset = MIROperand::asImm(immVal, OperandType::Int64);
@@ -413,13 +413,13 @@ void RISCVISelInfo::legalizeInstWithStackOperand(InstLegalizeContext& ctx,
        * sw src, offset(sp)
        */
       if (debugLISO) std::cout << "sw rs2, offset(rs1)" << std::endl;
-      inst->set_opcode(isOperandGR(*inst->operand(1)) ? SD : FSW);
+      inst->set_opcode(isOperandGR(inst->operand(1)) ? SD : FSW);
       auto oldSrc = inst->operand(1);
       inst->set_operand(0, oldSrc); /* src2 := src */
       inst->set_operand(1, offset); /* offset */
       inst->set_operand(2, base);   /* base = sp */
       inst->set_operand(
-        3, getAlign(isOperandGR(*inst->operand(0)) ? 8 : 4)); /* align */
+        3, getAlign(isOperandGR(inst->operand(0)) ? 8 : 4)); /* align */
 
       break;
     }
@@ -434,11 +434,11 @@ void RISCVISelInfo::legalizeInstWithStackOperand(InstLegalizeContext& ctx,
        */
       if (debugLISO) std::cout << "lw rd, offset(rs1)" << std::endl;
 
-      inst->set_opcode(isOperandGR(*inst->operand(0)) ? LD : FLW);
+      inst->set_opcode(isOperandGR(inst->operand(0)) ? LD : FLW);
 
       inst->set_operand(1, offset);
       inst->set_operand(2, base);
-      inst->set_operand(3, getAlign(isOperandGR(*inst->operand(0)) ? 8 : 4));
+      inst->set_operand(3, getAlign(isOperandGR(inst->operand(0)) ? 8 : 4));
       break;
     }
     case SD:
@@ -500,7 +500,7 @@ void RISCVISelInfo::postLegalizeInst(const InstLegalizeContext& ctx) const {
       const auto src = inst->operand(1);
       if (isOperandIReg(dst) && isOperandIReg(src)) {
         inst->set_opcode(MV);
-      } else if (isOperandFPR(*dst) && isOperandFPR(*src)) {
+      } else if (isOperandFPR(dst) && isOperandFPR(src)) {
         inst->set_opcode(FMV_S);
       } else {
         std::cerr << "Unsupported instruction for postLegalizeInst"
@@ -534,7 +534,7 @@ void RISCVISelInfo::postLegalizeInst(const InstLegalizeContext& ctx) const {
   }
 }
 
-MIROperand* RISCVISelInfo::materializeFPConstant(
+MIROperand RISCVISelInfo::materializeFPConstant(
   float fpVal,
   LoweringContext& loweringCtx) const {
   const auto val = fpVal;
@@ -548,7 +548,6 @@ MIROperand* RISCVISelInfo::materializeFPConstant(
       FMV_W_X, {dst, MIROperand::asISAReg(RISCV::X0, OperandType::Int32)});
     return dst;
   }
-  return nullptr;
   if ((rep & 0xfff) == 0) {
     // lui + fmv.w.x
     const auto high = (rep >> 12);
@@ -561,6 +560,6 @@ MIROperand* RISCVISelInfo::materializeFPConstant(
     loweringCtx.emitInstBeta(FMV_W_X, {fpr, gpr});
     return fpr;
   }
-  return nullptr;
+  return MIROperand();
 }
 }  // namespace mir::RISCV

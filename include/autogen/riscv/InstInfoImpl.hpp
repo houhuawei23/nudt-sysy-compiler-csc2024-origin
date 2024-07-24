@@ -3082,7 +3082,7 @@ class RISCVInstInfo final : public TargetInstInfo {
 
 public:
   RISCVInstInfo() = default;
-  const InstInfo& get_instinfo(uint32_t opcode) const override {
+  const InstInfo& getInstInfo(uint32_t opcode) const override {
     switch (opcode) {
       case RISCVInst::BEQ:
         return _instinfoBEQ;
@@ -3277,60 +3277,60 @@ public:
       case RISCVInst::MV:
         return _instinfoMV;
       default:
-        return TargetInstInfo::get_instinfo(opcode);
+        return TargetInstInfo::getInstInfo(opcode);
     }
   }
   bool matchBranch(MIRInst* inst,
                    MIRBlock*& target,
                    double& prob) const override {
-    auto& instInfo = get_instinfo(inst->opcode());
+    auto& instInfo = getInstInfo(inst->opcode());
     if (requireFlag(instInfo.inst_flag(), InstFlagBranch)) {
       if (inst->opcode() < ISASpecificBegin) {
         return TargetInstInfo::matchBranch(inst, target, prob);
       }
       switch (inst->opcode()) {
         case BEQ:
-          target = dynamic_cast<MIRBlock*>(inst->operand(2)->reloc());
-          prob = inst->operand(3)->prob();
+          target = dynamic_cast<MIRBlock*>(inst->operand(2).reloc());
+          prob = inst->operand(3).prob();
           break;
         case BNE:
-          target = dynamic_cast<MIRBlock*>(inst->operand(2)->reloc());
-          prob = inst->operand(3)->prob();
+          target = dynamic_cast<MIRBlock*>(inst->operand(2).reloc());
+          prob = inst->operand(3).prob();
           break;
         case BLE:
-          target = dynamic_cast<MIRBlock*>(inst->operand(2)->reloc());
-          prob = inst->operand(3)->prob();
+          target = dynamic_cast<MIRBlock*>(inst->operand(2).reloc());
+          prob = inst->operand(3).prob();
           break;
         case BGT:
-          target = dynamic_cast<MIRBlock*>(inst->operand(2)->reloc());
-          prob = inst->operand(3)->prob();
+          target = dynamic_cast<MIRBlock*>(inst->operand(2).reloc());
+          prob = inst->operand(3).prob();
           break;
         case BLT:
-          target = dynamic_cast<MIRBlock*>(inst->operand(2)->reloc());
-          prob = inst->operand(3)->prob();
+          target = dynamic_cast<MIRBlock*>(inst->operand(2).reloc());
+          prob = inst->operand(3).prob();
           break;
         case BGE:
-          target = dynamic_cast<MIRBlock*>(inst->operand(2)->reloc());
-          prob = inst->operand(3)->prob();
+          target = dynamic_cast<MIRBlock*>(inst->operand(2).reloc());
+          prob = inst->operand(3).prob();
           break;
         case BLEU:
-          target = dynamic_cast<MIRBlock*>(inst->operand(2)->reloc());
-          prob = inst->operand(3)->prob();
+          target = dynamic_cast<MIRBlock*>(inst->operand(2).reloc());
+          prob = inst->operand(3).prob();
           break;
         case BGTU:
-          target = dynamic_cast<MIRBlock*>(inst->operand(2)->reloc());
-          prob = inst->operand(3)->prob();
+          target = dynamic_cast<MIRBlock*>(inst->operand(2).reloc());
+          prob = inst->operand(3).prob();
           break;
         case BLTU:
-          target = dynamic_cast<MIRBlock*>(inst->operand(2)->reloc());
-          prob = inst->operand(3)->prob();
+          target = dynamic_cast<MIRBlock*>(inst->operand(2).reloc());
+          prob = inst->operand(3).prob();
           break;
         case BGEU:
-          target = dynamic_cast<MIRBlock*>(inst->operand(2)->reloc());
-          prob = inst->operand(3)->prob();
+          target = dynamic_cast<MIRBlock*>(inst->operand(2).reloc());
+          prob = inst->operand(3).prob();
           break;
         case J:
-          target = dynamic_cast<MIRBlock*>(inst->operand(0)->reloc());
+          target = dynamic_cast<MIRBlock*>(inst->operand(0).reloc());
           prob = 1.0;
           break;
         default:

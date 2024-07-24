@@ -7,27 +7,26 @@
 #include <optional>
 
 namespace mir {
-
-std::unordered_map<MIROperand*, uint32_t> collect_def_count(
+auto collect_def_count(
     MIRFunction* func,
     CodeGenContext& codegen_ctx) {
     std::cerr << "collect_def_count not implemented yet!" << std::endl;
-    return std::unordered_map<MIROperand*, uint32_t>();
+    return std::unordered_map<MIROperand, uint32_t, MIROperandHasher>();
 }
 
 void ISelContext::remove_inst(MIRInst* inst) {
     assert(inst != nullptr);
     mRemoveWorkList.insert(inst);
 }
-void ISelContext::replace_operand(MIROperand* src, MIROperand* dst) {
-    assert(src->isReg());
+void ISelContext::replace_operand(MIROperand src, MIROperand dst) {
+    assert(src.isReg());
     if (src != dst) {
         mReplaceMap.emplace(src, dst);
     }
 }
-MIROperand* ISelContext::get_inst_def(MIRInst* inst) {
+MIROperand ISelContext::get_inst_def(MIRInst* inst) {
     assert(inst != nullptr);
-    auto& instinfo = mCodeGenCtx.instInfo.get_instinfo(inst);
+    auto& instinfo = mCodeGenCtx.instInfo.getInstInfo(inst);
     for (uint32_t idx = 0; idx < instinfo.operand_num(); idx++) {
         if (instinfo.operand_flag(idx) & OperandFlagDef) {
             return inst->operand(idx);
@@ -35,21 +34,21 @@ MIROperand* ISelContext::get_inst_def(MIRInst* inst) {
     }
     // assert(false && "no def operand found");
     std::cerr << "no def operand found" << std::endl;
-    return nullptr;
+    // return nullptr;
 }
 
-MIRInst* ISelContext::lookup_def(MIROperand* op) {
-    assert(op != nullptr);
-    auto iter = mInstMap.find(op->reg());
+MIRInst* ISelContext::lookup_def(MIROperand op) {
+    // assert(op != nullptr);
+    auto iter = mInstMap.find(op.reg());
     if (iter != mInstMap.end()) {
         return iter->second;
     }
 
-    std::cerr << "op address " << op << "\n";
+    // std::cerr << "op address " << op << "\n";
     if (isOperandVReg(op)) {
-        std::cerr << "virtual reg v" << (op->reg() ^ virtualRegBegin) << "\n";
+        std::cerr << "virtual reg v" << (op.reg() ^ virtualRegBegin) << "\n";
     } else if (isOperandISAReg(op)) {
-        std::cerr << "physical reg i" << op->reg() << "\n";
+        std::cerr << "physical reg i" << op.reg() << "\n";
     } else {
         std::cerr << "satck\n";
     }
@@ -60,7 +59,7 @@ MIRInst* ISelContext::lookup_def(MIROperand* op) {
 void ISelContext::run_isel(MIRFunction* func) {
     bool debugISel = false;
     auto dumpInst = [&](MIRInst* inst) {
-        auto& instInfo = mCodeGenCtx.instInfo.get_instinfo(inst);
+        auto& instInfo = mCodeGenCtx.instInfo.getInstInfo(inst);
         instInfo.print(std::cerr << "match&select: ", *inst, false);
         std::cerr << std::endl;
     };
@@ -104,14 +103,14 @@ void ISelContext::run_isel(MIRFunction* func) {
 
             // check ssa form, get inst map
             for (auto& inst : block->insts()) {
-                auto& instinfo = mCodeGenCtx.instInfo.get_instinfo(inst);
+                auto& instinfo = mCodeGenCtx.instInfo.getInstInfo(inst);
                 for (uint32_t idx = 0; idx < instinfo.operand_num(); idx++) {
                     if (instinfo.operand_flag(idx) & OperandFlagDef) {
                         auto def = inst->operand(idx);
-                        if (def->isReg() && isVirtualReg(def->reg())) {
-                            // std::cerr << "def reg v " << (def->reg() ^ virtualRegBegin) << "\n";
+                        if (def.isReg() && isVirtualReg(def.reg())) {
+                            // std::cerr << "def reg v " << (def.reg() ^ virtualRegBegin) << "\n";
                             // std::cerr << "def address " << def << "\n";
-                            mInstMap.emplace(def->reg(), inst);
+                            mInstMap.emplace(def.reg(), inst);
                         }
                     }
                 }
@@ -166,11 +165,11 @@ void ISelContext::run_isel(MIRFunction* func) {
                     //? in replace block list, jump
                     continue;
                 }
-                auto& info = mCodeGenCtx.instInfo.get_instinfo(inst);
+                auto& info = mCodeGenCtx.instInfo.getInstInfo(inst);
 
                 for (uint32_t idx = 0; idx < info.operand_num(); idx++) {
                     auto op = inst->operand(idx);
-                    if (not op->isReg()) {
+                    if (not op.isReg()) {
                         continue;
                     }
                     // replace map: old operand* -> new operand*
@@ -197,18 +196,18 @@ void ISelContext::run_isel(MIRFunction* func) {
     }  // while end
 }
 
-uint32_t select_copy_opcode(MIROperand* dst, MIROperand* src) {
-    if (dst->isReg() && isISAReg(dst->reg())) {
+uint32_t select_copy_opcode(MIROperand dst, MIROperand src) {
+    if (dst.isReg() && isISAReg(dst.reg())) {
         // dst is a isa reg
-        if (src->isImm()) {
+        if (src.isImm()) {
             return InstLoadImmToReg;
         }
         return InstCopyToReg;
     }
-    if (src->isImm()) {
+    if (src.isImm()) {
         return InstLoadImmToReg;
     }
-    if (src->isReg() && isISAReg(src->reg())) {
+    if (src.isReg() && isISAReg(src.reg())) {
         return InstCopyFromReg;
     }
     assert(isOperandVRegORISAReg(src) and isOperandVRegORISAReg(dst));
@@ -222,7 +221,7 @@ void postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) {
     for (auto it = insts.begin(); it != insts.end();) {
       auto next = std::next(it);
       auto& inst = *it;
-      auto& info = ctx.instInfo.get_instinfo(inst);
+      auto& info = ctx.instInfo.getInstInfo(inst);
       for (uint32_t idx = 0; idx < info.operand_num(); idx++) {
         auto op = inst->operand(idx);
         auto lctx =

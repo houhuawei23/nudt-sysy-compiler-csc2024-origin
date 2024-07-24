@@ -37,13 +37,13 @@ static auto ra = MIROperand::asISAReg(RISCVRegister::X1, OperandType::Int64);
 static auto sp = MIROperand::asISAReg(RISCVRegister::X2, OperandType::Int64);
 
 // utils function
-constexpr bool isOperandGR(MIROperand& operand) {
+constexpr bool isOperandGR(const MIROperand& operand) {
   if (not operand.isReg() || not isIntType(operand.type())) return false;
   auto reg = operand.reg();
   return GPRBegin <= reg && reg < GPREnd;
 }
 
-constexpr bool isOperandFPR(MIROperand& operand) {
+constexpr bool isOperandFPR(const MIROperand& operand) {
   if (not operand.isReg() || not isFloatType(operand.type())) return false;
   if (isVirtualReg(operand.reg())) {
     return true;
@@ -59,45 +59,45 @@ constexpr bool isOperandFPR(MIROperand& operand) {
 static std::string_view getRISCVGPRTextualName(uint32_t idx) noexcept {
   constexpr std::string_view name[] = {
     // clang-format off
-        "zero", "ra", "sp",  "gp",  "tp", "t0", "t1", "t2",
-        "s0",   "s1", "a0",  "a1",  "a2", "a3", "a4", "a5",
-        "a6",   "a7", "s2",  "s3",  "s4", "s5", "s6", "s7",
-        "s8",   "s9", "s10", "s11", "t3", "t4", "t5", "t6",
+    "zero", "ra", "sp",  "gp",  "tp", "t0", "t1", "t2",
+    "s0",   "s1", "a0",  "a1",  "a2", "a3", "a4", "a5",
+    "a6",   "a7", "s2",  "s3",  "s4", "s5", "s6", "s7",
+    "s8",   "s9", "s10", "s11", "t3", "t4", "t5", "t6",
     // clang-format on
   };
   return name[idx];
 }
 
 struct OperandDumper {
-  MIROperand* operand;
+  MIROperand operand;
 };
 
 static std::ostream& operator<<(std::ostream& os, OperandDumper opdp) {
   auto operand = opdp.operand;
-  if (operand->isReg()) {
-    if (isVirtualReg(operand->reg())) {
+  if (operand.isReg()) {
+    if (isVirtualReg(operand.reg())) {
       dumpVirtualReg(os, operand);
-    } else if (isStackObject(operand->reg())) {
-      os << "so" << (operand->reg() ^ stackObjectBegin);
-    } else if (isOperandGR(*operand)) {
-      os << getRISCVGPRTextualName(operand->reg());
-    } else if (isOperandFPR(*operand)) {
-      os << "f" << (operand->reg() - FPRBegin);
+    } else if (isStackObject(operand.reg())) {
+      os << "so" << (operand.reg() ^ stackObjectBegin);
+    } else if (isOperandGR(operand)) {
+      os << getRISCVGPRTextualName(operand.reg());
+    } else if (isOperandFPR(operand)) {
+      os << "f" << (operand.reg() - FPRBegin);
     } else {
       os << "[reg]";
     }
-  } else if (operand->isImm()) {
-    os << operand->imm();
-  } else if (operand->isProb()) {
-    os << " prob " << operand->prob();
-  } else if (operand->isReloc()) {
-    if (operand->type() == OperandType::HighBits) {
+  } else if (operand.isImm()) {
+    os << operand.imm();
+  } else if (operand.isProb()) {
+    os << " prob " << operand.prob();
+  } else if (operand.isReloc()) {
+    if (operand.type() == OperandType::HighBits) {
       os << "%pcrel_hi(";
-    } else if (operand->type() == OperandType::LowBits) {
+    } else if (operand.type() == OperandType::LowBits) {
       os << "%pcrel_lo(";
     }
-    os << operand->reloc()->name();
-    if (operand->type() != OperandType::Special) {
+    os << operand.reloc()->name();
+    if (operand.type() != OperandType::Special) {
       os << ")";
     }
   } else {
@@ -106,28 +106,27 @@ static std::ostream& operator<<(std::ostream& os, OperandDumper opdp) {
   return os;
 }
 
-constexpr bool isOperandImm12(MIROperand* operand) {
-  if (operand->isReloc() && operand->type() == OperandType::LowBits)
-    return true;
-  return operand->isImm() && isSignedImm<12>(operand->imm());
+constexpr bool isOperandImm12(const MIROperand& operand) {
+  if (operand.isReloc() && operand.type() == OperandType::LowBits) return true;
+  return operand.isImm() && isSignedImm<12>(operand.imm());
 }
-constexpr bool isOperandImm32(MIROperand* operand) {
-  return operand->isImm() && isSignedImm<32>(operand->imm());
-}
-
-constexpr bool isOperandNonZeroImm12(MIROperand* operand) {
-  return isOperandImm12(operand) && operand->imm() != 0;
+constexpr bool isOperandImm32(const MIROperand& operand) {
+  return operand.isImm() && isSignedImm<32>(operand.imm());
 }
 
-constexpr bool isOperandNonZeroImm32(MIROperand* operand) {
-  return isOperandImm32(operand) && operand->imm() != 0;
+constexpr bool isOperandNonZeroImm12(const MIROperand& operand) {
+  return isOperandImm12(operand) && operand.imm() != 0;
+}
+
+constexpr bool isOperandNonZeroImm32(const MIROperand& operand) {
+  return isOperandImm32(operand) && operand.imm() != 0;
 }
 
 static auto scratch = MIROperand::asISAReg(RISCV::X5, OperandType::Int64);
 
 static void legalizeAddrBaseOffsetPostRA(MIRInstList& instructions,
                                          MIRInstList::iterator iter,
-                                         MIROperand*& base,
+                                         MIROperand& base,
                                          int64_t& imm) {
   if (-2048 <= imm and imm <= 2047) {
     return;
@@ -145,8 +144,7 @@ static void legalizeAddrBaseOffsetPostRA(MIRInstList& instructions,
     LoadImm32, {scratch, MIROperand::asImm(imm, OperandType::Int32)});
   instructions.insert(iter, loadInst);
 
-  auto addInst = utils::make<MIRInst>(
-    RISCVInst::ADD, {scratch, base, scratch});
+  auto addInst = utils::make<MIRInst>(RISCVInst::ADD, {scratch, base, scratch});
   instructions.insert(iter, addInst);
 
   imm = 0;
@@ -156,8 +154,8 @@ static void legalizeAddrBaseOffsetPostRA(MIRInstList& instructions,
 
 static void legalizeAddrBaseOffsetPostRA(MIRInstList& instructions,
                                          MIRInstList::iterator iter,
-                                         MIROperand*& dst,
-                                         MIROperand*& base,
+                                         MIROperand& dst,
+                                         MIROperand& base,
                                          int64_t& imm) {
   if (-2048 <= imm and imm <= 2047) {
     return;
@@ -193,11 +191,11 @@ static void legalizeAddrBaseOffsetPostRA(MIRInstList& instructions,
 // dst = src + imm
 static void adjust_reg(MIRInstList& instructions,
                        MIRInstList::iterator it,
-                       MIROperand* dst,
-                       MIROperand* src,
+                       MIROperand dst,
+                       MIROperand src,
                        int64_t imm) {
   if (dst == src && imm == 0) return;
-  MIROperand* base = src;
+  MIROperand base = src;
   legalizeAddrBaseOffsetPostRA(instructions, it, base, imm);
   // addi dst, base, imm
   auto inst = utils::make<MIRInst>(

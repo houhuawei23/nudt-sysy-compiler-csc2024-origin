@@ -14,7 +14,7 @@ void RISCVTarget::postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) {
   constexpr bool Debug = false;
 
   auto dumpInst = [&](MIRInst* inst) {
-    auto& instInfo = ctx.instInfo.get_instinfo(inst);
+    auto& instInfo = ctx.instInfo.getInstInfo(inst);
     instInfo.print(std::cerr << "rvPostLegalizeFunc: ", *inst, false);
     std::cerr << std::endl;
   };
@@ -27,7 +27,7 @@ void RISCVTarget::postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) {
 
     /* origin reloc -> (dst -> block)*/
     std::unordered_map<MIRRelocable*,
-                       std::unordered_map<MIROperand*, MIRBlock*>>
+                       std::unordered_map<MIROperand, MIRBlock*, MIROperandHasher>>
       auipcMap;
     while (true) {
       auto& insts = blockIter->get()->insts();
@@ -44,13 +44,13 @@ void RISCVTarget::postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) {
           /* AUIPC dst, imm */
           if (instIter == insts.begin() && blockIter != func.blocks().begin()) {
             if (Debug) std::cerr << "first in block" << std::endl;
-            assert(inst->operand(1)->type() == OperandType::HighBits);
+            assert(inst->operand(1).type() == OperandType::HighBits);
             /** first inst in block, block label lowBits is just
              * inst's dst lowBits */
             // auipcMap[inst->operand(1)][inst->operand(0)] =
             //     getLowBits(MIROperand::as_reloc(blockIter->get()));
             // auto t = blockIter->get();
-            auipcMap[inst->operand(1)->reloc()][inst->operand(0)] =
+            auipcMap[inst->operand(1).reloc()][inst->operand(0)] =
               blockIter->get();
           } else {
             if (Debug) std::cerr << "not first in block" << std::endl;
@@ -65,7 +65,7 @@ void RISCVTarget::postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) {
           }
         } else {
           /* not AUIPC */
-          auto& instInfo = ctx.instInfo.get_instinfo(inst);
+          auto& instInfo = ctx.instInfo.getInstInfo(inst);
 
           // instInfo.print(std::cerr << "!!", *inst,  false);
           for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
@@ -88,9 +88,9 @@ void RISCVTarget::postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) {
               }
             };
 
-            if (operand->isReloc() &&
-                operand->type() == OperandType::LowBits) {
-              auto pcrelBlock = auipcMap.at(operand->reloc()).at(getBase());
+            if (operand.isReloc() &&
+                operand.type() == OperandType::LowBits) {
+              auto pcrelBlock = auipcMap.at(operand.reloc()).at(getBase());
               auto op = getLowBits(MIROperand::asReloc(pcrelBlock));
               inst->set_operand(idx, op);
               if (Debug) {

@@ -15,12 +15,12 @@ void allocateStackObjects(MIRFunction* func, CodeGenContext& ctx);
 /* for each def operand in a block, apply functor */
 void forEachDefOperand(MIRBlock& block,
                        CodeGenContext& ctx,
-                       const std::function<void(MIROperand* op)>& functor);
+                       const std::function<void(MIROperand op)>& functor);
 
 /* for each def operand in a function, apply functor */
 void forEachDefOperand(MIRFunction& func,
                        CodeGenContext& ctx,
-                       const std::function<void(MIROperand* op)>& functor);
+                       const std::function<void(MIROperand op)>& functor);
 
 bool genericPeepholeOpt(MIRFunction& func, CodeGenContext& ctx);
 

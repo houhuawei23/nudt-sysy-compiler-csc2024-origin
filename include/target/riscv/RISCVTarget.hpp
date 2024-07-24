@@ -41,7 +41,7 @@ public:  // lowering stage
 
 public:  // ra stage (register allocation stage)
   // 调用者保存寄存器
-  bool isCallerSaved(MIROperand& op) override {
+  bool isCallerSaved(const MIROperand& op) override {
     const auto reg = op.reg();
     // $ra $t0-$t6 $a0-$a7 $ft0-$ft11 $fa0-$fa7
     return reg == RISCV::X1 || (RISCV::X5 <= reg && reg <= RISCV::X7) ||
@@ -52,7 +52,7 @@ public:  // ra stage (register allocation stage)
            (RISCV::F28 <= reg && reg <= RISCV::F31);
   }
   // 被调用者保存寄存器
-  bool isCalleeSaved(MIROperand& op) override {
+  bool isCalleeSaved(const MIROperand& op) override {
     const auto reg = op.reg();
     // $sp $s0-$s7 $f20-$f30 $gp
     return reg == RISCV::X2 || (RISCV::X8 <= reg && reg <= RISCV::X9) ||
@@ -74,9 +74,9 @@ public:  // sa stage (stack allocation stage)
   }
   int32_t insertPrologueEpilogue(
     MIRFunction* func,
-    std::unordered_set<MIROperand*>& callee_saved_regs,
+    std::unordered_set<MIROperand, MIROperandHasher>& callee_saved_regs,
     CodeGenContext& ctx,
-    MIROperand* return_addr_reg) override;
+    MIROperand return_addr_reg) override;
 
 };
 
@@ -88,7 +88,7 @@ class RISCVRegisterInfo : public TargetRegisterInfo {
 public:  // get function
   /* GPR(General Purpose Registers)/FPR(Floating Point Registers) */
   uint32_t get_alloca_class_cnt() { return 2; }
-  uint32_t get_alloca_class(OperandType type) {
+  uint32_t getAllocationClass(OperandType type) {
     switch (type) {
       case OperandType::Bool:
       case OperandType::Int8:
@@ -123,8 +123,8 @@ public:  // get function
       assert(false && "valid operand type");
     }
   }
-  MIROperand* get_return_address_register() { return RISCV::ra; }
-  MIROperand* get_stack_pointer_register() { return RISCV::sp; }
+  MIROperand get_return_address_register() { return RISCV::ra; }
+  MIROperand get_stack_pointer_register() { return RISCV::sp; }
 
 public:  // check function
   bool is_legal_isa_reg_operand(MIROperand& op) {

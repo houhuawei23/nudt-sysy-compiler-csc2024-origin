@@ -15,22 +15,22 @@ class ISelContext : public MIRBuilder {
   std::unordered_map<RegNum, MIRInst*> mInstMap, mConstantMap;
 
   // mReplaceList
-  std::unordered_map<MIROperand*, MIROperand*> mReplaceMap;
+  std::unordered_map<MIROperand, MIROperand, MIROperandHasher> mReplaceMap;
 
   std::unordered_set<MIRInst*> mRemoveWorkList, mReplaceList;
 
-  std::unordered_map<MIROperand*, uint32_t> mUseCnt;
+  std::unordered_map<MIROperand, uint32_t, MIROperandHasher> mUseCnt;
 
 public:
   ISelContext(CodeGenContext& ctx) : mCodeGenCtx(ctx) {}
   void run_isel(MIRFunction* func);
-  bool has_one_use(MIROperand* op);
-  MIRInst* lookup_def(MIROperand* op);
+  bool has_one_use(MIROperand op);
+  MIRInst* lookup_def(MIROperand op);
 
   void remove_inst(MIRInst* inst);
-  void replace_operand(MIROperand* src, MIROperand* dst);
+  void replace_operand(MIROperand src, MIROperand dst);
 
-  MIROperand* get_inst_def(MIRInst* inst);
+  MIROperand get_inst_def(MIRInst* inst);
 
   void insert_inst(MIRInst* inst) {
     assert(inst != nullptr);
@@ -74,22 +74,22 @@ public:
 
   /* */
   virtual void legalizeInstWithStackOperand(InstLegalizeContext& ctx,
-                                            MIROperand* op,
+                                            MIROperand op,
                                             StackObject& obj) const = 0;
 
   virtual void postLegalizeInst(const InstLegalizeContext& ctx) const = 0;
-  virtual MIROperand* materializeFPConstant(
+  virtual MIROperand materializeFPConstant(
     float fpVal,
     LoweringContext& loweringCtx) const = 0;
 };
 
-static bool isCompareOp(MIROperand* operand, CompareOp cmpOp) {
-  auto op = static_cast<uint32_t>(operand->imm());
+static bool isCompareOp(MIROperand operand, CompareOp cmpOp) {
+  auto op = static_cast<uint32_t>(operand.imm());
   return op == static_cast<uint32_t>(cmpOp);
 }
 
-static bool isICmpEqualityOp(MIROperand* operand) {
-  const auto op = static_cast<CompareOp>(operand->imm());
+static bool isICmpEqualityOp(MIROperand operand) {
+  const auto op = static_cast<CompareOp>(operand.imm());
   switch (op) {
     case CompareOp::ICmpEqual:
     case CompareOp::ICmpNotEqual:
@@ -101,19 +101,19 @@ static bool isICmpEqualityOp(MIROperand* operand) {
 
 //! helper function to create a new MIRInst
 
-uint32_t select_copy_opcode(MIROperand* dst, MIROperand* src);
+uint32_t select_copy_opcode(MIROperand dst, MIROperand src);
 
-inline MIROperand* getNeg(MIROperand* operand) {
-  return MIROperand::asImm(-operand->imm(), operand->type());
+inline MIROperand getNeg( MIROperand operand) {
+  return MIROperand::asImm(-operand.imm(), operand.type());
 }
 
-inline MIROperand* getHighBits(MIROperand* operand) {
+inline MIROperand getHighBits(MIROperand operand) {
   assert(isOperandReloc(operand));
-  return utils::make<MIROperand>(operand->storage(), OperandType::HighBits);
+  return MIROperand(operand.storage(), OperandType::HighBits);
 }
-inline MIROperand* getLowBits(MIROperand* operand) {
+inline MIROperand getLowBits(MIROperand operand) {
   assert(isOperandReloc(operand));
-  return utils::make<MIROperand>(operand->storage(), OperandType::LowBits);
+  return MIROperand(operand.storage(), OperandType::LowBits);
 }
 
 }  // namespace mir

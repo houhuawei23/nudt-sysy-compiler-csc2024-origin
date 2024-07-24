@@ -31,18 +31,18 @@ constexpr int32_t passingByRegBase = 0x100000;
  */
 int32_t RISCVFrameInfo::insertPrologueEpilogue(
   MIRFunction* func,
-  std::unordered_set<MIROperand*>& callee_saved_regs,
+  std::unordered_set<MIROperand, MIROperandHasher>& callee_saved_regs,
   CodeGenContext& ctx,
-  MIROperand* return_addr_reg) {
+  MIROperand return_addr_reg) {
   // op -> stack
-  std::vector<std::pair<MIROperand*, MIROperand*>> saved;
+  std::vector<std::pair<MIROperand, MIROperand>> saved;
 
   /* find the callee saved registers */
   /* allocate stack space for callee-saved registers */
   {
     for (auto op : callee_saved_regs) {
       auto size = getOperandSize(
-        ctx.registerInfo->getCanonicalizedRegisterType(op->type()));
+        ctx.registerInfo->getCanonicalizedRegisterType(op.type()));
       auto alignment = size;
       auto stack = func->newStackObject(ctx.nextId(), size, alignment, 0,
                                         StackObjectUsage::CalleeSaved);
@@ -51,7 +51,7 @@ int32_t RISCVFrameInfo::insertPrologueEpilogue(
     }
   }
   /* return address register */
-  auto size = getOperandSize(return_addr_reg->type());
+  auto size = getOperandSize(return_addr_reg.type());
   auto alignment = size;
   auto stack = func->newStackObject(ctx.nextId(), size, alignment, 0,
                                     StackObjectUsage::CalleeSaved);
@@ -72,7 +72,7 @@ int32_t RISCVFrameInfo::insertPrologueEpilogue(
 
       // 2. 函数返回之前将相关的调用者维护寄存器释放
       auto exit = instructions.back();
-      auto& instInfo = ctx.instInfo.get_instinfo(exit);
+      auto& instInfo = ctx.instInfo.getInstInfo(exit);
       if (requireFlag(instInfo.inst_flag(), InstFlagReturn)) {
         auto pos = std::prev(instructions.end());
         for (auto [op, stack] : saved) {
@@ -171,7 +171,7 @@ void RISCVFrameInfo::emitCall(ir::CallInst* inst,
                                 offset, StackObjectUsage::CalleeArgument);
       // copy val to reg, then store reg to stack
       if (not isOperandVRegOrISAReg(val)) {
-        auto reg = lowering_ctx.newVReg(val->type());
+        auto reg = lowering_ctx.newVReg(val.type());
         lowering_ctx.emitCopy(reg, val);
         val = reg;
       }
@@ -184,8 +184,8 @@ void RISCVFrameInfo::emitCall(ir::CallInst* inst,
     const auto offset = offsets[idx];
     auto val = lowering_ctx.map2operand(arg);
     if (offset >= passingByRegBase) { /* pass by reg */
-      MIROperand* dst = nullptr;
-      if (isFloatType(val->type())) {
+      MIROperand dst;
+      if (isFloatType(val.type())) {
         dst = MIROperand::asISAReg(
           RISCV::F10 + static_cast<uint32_t>(offset - passingByRegBase),
           OperandType::Float32);
@@ -194,7 +194,7 @@ void RISCVFrameInfo::emitCall(ir::CallInst* inst,
           RISCV::X10 + static_cast<uint32_t>(offset - passingByRegBase),
           OperandType::Int64);
       }
-      assert(dst);
+      assert(dst.isInit());
       lowering_ctx.emitCopy(dst, val);
     }
   }
@@ -206,7 +206,7 @@ void RISCVFrameInfo::emitCall(ir::CallInst* inst,
   /* 函数返回值的处理 */
   if (irRetType->isVoid()) return;
   auto retReg = lowering_ctx.newVReg(irRetType);
-  MIROperand* val = nullptr;
+  MIROperand val;
   if (irRetType->isFloatPoint()) { /* return by $fa0 */
     val = MIROperand::asISAReg(RISCV::F10, OperandType::Float32);
   } else { /* return by $a0 */
@@ -236,7 +236,7 @@ void RISCVFrameInfo::emitPrologue(MIRFunction* func,
 
   /* traverse args, split into reg/stack */
   for (auto& arg : args) {
-    if (isIntType(arg->type())) {
+    if (isIntType(arg.type())) {
       if (gprCount < 8) {
         offsets.push_back(passingByRegBase + gprCount++);
         continue;
@@ -249,7 +249,7 @@ void RISCVFrameInfo::emitPrologue(MIRFunction* func,
     }
 
     /* pass by stack */
-    int32_t size = getOperandSize(arg->type());
+    int32_t size = getOperandSize(arg.type());
     int32_t align = 4;  // TODO: check alignment
     int32_t minimumSize = sizeof(uint64_t);
     size = std::max(size, minimumSize);
@@ -264,8 +264,8 @@ void RISCVFrameInfo::emitPrologue(MIRFunction* func,
     const auto& arg = args[idx];
     if (offset >= passingByRegBase) {
       /* $a0-$a7, $f0-$f7 */
-      MIROperand* src = nullptr;
-      if (isFloatType(arg->type())) {
+      MIROperand src;
+      if (isFloatType(arg.type())) {
         src = MIROperand::asISAReg(
           RISCV::F10 + static_cast<uint32_t>(offset - passingByRegBase),
           OperandType::Float32);
@@ -274,7 +274,7 @@ void RISCVFrameInfo::emitPrologue(MIRFunction* func,
           RISCV::X10 + static_cast<uint32_t>(offset - passingByRegBase),
           OperandType::Int64);
       }
-      assert(src);
+      assert(src.isInit());
       // copy isa reg(src) to vreg(arg)
       lowering_ctx.emitCopy(arg, src);
     }
@@ -283,7 +283,7 @@ void RISCVFrameInfo::emitPrologue(MIRFunction* func,
   for (uint32_t idx = 0; idx < args.size(); idx++) {
     const auto offset = offsets[idx];
     const auto& arg = args[idx];
-    const auto size = getOperandSize(arg->type());
+    const auto size = getOperandSize(arg.type());
     const auto align = 4;  // TODO: check alignment
     if (offset < passingByRegBase) {
       auto obj =

@@ -972,7 +972,7 @@ InstSelInfo: {
             },
           replace:
             {
-              name: static_cast<uint32_t>(($cmpOpcode)->imm()),
+              name: static_cast<uint32_t>(($cmpOpcode).imm()),
               ref: FLT_S,
               rd: $dst,
               rs1: $outlhs,

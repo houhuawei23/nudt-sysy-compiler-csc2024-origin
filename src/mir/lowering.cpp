@@ -8,6 +8,7 @@
 #include "mir/utils.hpp"
 #include "mir/GraphColoringRegisterAllocation.hpp"
 #include "mir/fastAllocator.hpp"
+#include "mir/FastAllocator.hpp"
 #include "mir/linearAllocator.hpp"
 #include "target/riscv/RISCVTarget.hpp"
 #include "support/StaticReflection.hpp"
@@ -20,8 +21,8 @@
 namespace fs = std::filesystem;
 namespace mir {
 
-MIROperand* FloatPointConstantPool::getFloatConstant(class LoweringContext& ctx,
-                                                     float val) {
+MIROperand FloatPointConstantPool::getFloatConstant(class LoweringContext& ctx,
+                                                    float val) {
   uint32_t rep;
   memcpy(&rep, &val, sizeof(float));
   const auto it = mFloatMap.find(rep);
@@ -82,29 +83,29 @@ static OperandType get_optype(ir::Type* type) {
   }
 }
 
-MIROperand* LoweringContext::newVReg(ir::Type* type) {
+MIROperand LoweringContext::newVReg(ir::Type* type) {
   auto optype = get_optype(type);
   return MIROperand::asVReg(codeGenctx->nextId(), optype);
 }
 
-MIROperand* LoweringContext::newVReg(OperandType type) {
+MIROperand LoweringContext::newVReg(OperandType type) {
   return MIROperand::asVReg(codeGenctx->nextId(), type);
 }
 
-void LoweringContext::addValueMap(ir::Value* ir_val, MIROperand* mir_operand) {
+void LoweringContext::addValueMap(ir::Value* ir_val, MIROperand mir_operand) {
   if (valueMap.count(ir_val)) assert(false && "value already mapped");
   valueMap.emplace(ir_val, mir_operand);
 }
 
-MIROperand* LoweringContext::map2operand(ir::Value* ir_val) {
+MIROperand LoweringContext::map2operand(ir::Value* ir_val) {
   assert(ir_val && "null ir_val");
   /* 1. Local Value: alloca */
 
   // if (iter != valueMap.end()) return new MIROperand(*(iter->second));
   if (auto iter = valueMap.find(ir_val); iter != valueMap.end()) {
-    return new MIROperand(*(iter->second));
+    return iter->second;
   }
-    // return iter->second;
+  // return iter->second;
 
   /* 2. Global Value */
   if (auto gvar = ir_val->dynCast<ir::GlobalVariable>()) {
@@ -130,8 +131,9 @@ MIROperand* LoweringContext::map2operand(ir::Value* ir_val) {
   }
   // TODO: support float constant
   if (const_val->type()->isFloat32()) {
-    if (auto fpOperand = codeGenctx->iselInfo->materializeFPConstant(
-          const_val->f32(), *this)) {
+    if (auto fpOperand =
+          codeGenctx->iselInfo->materializeFPConstant(const_val->f32(), *this);
+        fpOperand.isInit()) {
       return fpOperand;
     }
 
@@ -144,10 +146,10 @@ MIROperand* LoweringContext::map2operand(ir::Value* ir_val) {
             << utils::enumName(static_cast<ir::BType>(ir_val->type()->btype()))
             << std::endl;
   assert(false && "Not Supported Type.");
-  return nullptr;
+  return MIROperand{};
 }
 
-void LoweringContext::emitCopy(MIROperand* dst, MIROperand* src) {
+void LoweringContext::emitCopy(MIROperand dst, MIROperand src) {
   /* copy dst, src */
   emitInstBeta(select_copy_opcode(dst, src), {dst, src});
 }
@@ -326,7 +328,8 @@ void createMIRModule(ir::Module& ir_module,
     /* Optimize: register coalescing */
 
     /* Optimize: peephole optimization (窥孔优化) */
-    while (genericPeepholeOpt(*mir_func, codegen_ctx)) {};
+    while (genericPeepholeOpt(*mir_func, codegen_ctx)) {
+    };
 
     /* pre-RA legalization */
 
@@ -340,8 +343,9 @@ void createMIRModule(ir::Module& ir_module,
     {
       codegen_ctx.registerInfo = new RISCVRegisterInfo();
       if (codegen_ctx.registerInfo) {
-        GraphColoringAllocate(*mir_func, codegen_ctx, infoIPRA);
+        // GraphColoringAllocate(*mir_func, codegen_ctx, infoIPRA);
         // fastAllocator(*mir_func, codegen_ctx, infoIPRA);
+        fastAllocatorBeta(*mir_func, codegen_ctx, infoIPRA);
         dumpStageResult("AfterGraphColoring", mir_func, codegen_ctx);
       }
     }
@@ -383,7 +387,7 @@ void createMIRFunction(ir::Function* ir_func,
                        CodeGenContext& codegen_ctx,
                        LoweringContext& lowering_ctx,
                        pass::topAnalysisInfoManager* tAIM) {
-  if(ir_func->blocks().empty()) return;
+  if (ir_func->blocks().empty()) return;
   lowering_ctx.setCurrFunc(mir_func);
   /* Some Debug Information */
   constexpr bool DebugCreateMirFunction = false;
@@ -834,7 +838,7 @@ void lower(ir::MemsetInst* ir_inst, LoweringContext& ctx) {
   {
     auto val = ctx.map2operand(ir_pointer);
     auto dst = MIROperand::asISAReg(RISCV::X10, OperandType::Int64);
-    assert(dst);
+    // assert(dst);
     ctx.emitCopy(dst, val);
   }
 
@@ -842,7 +846,7 @@ void lower(ir::MemsetInst* ir_inst, LoweringContext& ctx) {
   {
     auto val = ctx.map2operand(ir::Constant::gen_i32(size));
     auto dst = MIROperand::asISAReg(RISCV::X11, OperandType::Int64);
-    assert(dst);
+    // assert(dst);
     ctx.emitCopy(dst, val);
   }
 
@@ -869,7 +873,7 @@ void lower_GetElementPtr(ir::inst_iterator begin,
   /* 统计GetElementPtr指令数量 */
   auto iter = begin;
   ir::Value* instEnd = nullptr;
-  MIROperand* ptr = base;
+  MIROperand ptr = base;
   std::vector<ir::Value*> idx;
   while (iter != end) {
     idx.push_back(dyn_cast<ir::GetElementPtrInst>(*iter)->index());
@@ -882,12 +886,12 @@ void lower_GetElementPtr(ir::inst_iterator begin,
 
   /* 计算偏移量 */
   int dimension = 0;
-  MIROperand* mir_offset = nullptr;
+  MIROperand mir_offset;
   auto ir_offset = idx[dimension++];
   bool is_constant = dyn_cast<ir::Constant>(ir_offset) ? true : false;
   if (!is_constant) mir_offset = ctx.map2operand(ir_offset);
   if (begin_id == 0) {  // 指针
-    if (mir_offset) {
+    if (mir_offset.isInit()) {
       /* InstMul newPtr, mir_offset, 4 */
       auto newPtr = ctx.newVReg(OperandType::Int32); /* FIXME: Pointer i32? */
       ctx.emitInstBeta(InstMul,
@@ -944,7 +948,7 @@ void lower_GetElementPtr(ir::inst_iterator begin,
       }
     }
 
-    if (mir_offset) {
+    if (mir_offset.isInit()) {
       auto newPtr = ctx.newVReg(OperandType::Int32);
       /* InstMul newPtr, mir_offset, 4 */
       ctx.emitInstBeta(InstMul, {newPtr /* dst */, mir_offset /* src1 */,

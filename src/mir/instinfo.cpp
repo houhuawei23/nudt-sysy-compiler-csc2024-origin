@@ -5,13 +5,13 @@
 
 namespace mir {
 
-static bool isOperandFReg(MIROperand* operand) {
-  return operand->isReg() and isFloatType(operand->type());
+static bool isOperandFReg(MIROperand operand) {
+  return operand.isReg() and isFloatType(operand.type());
 }
 
 uint32_t offset = GENERIC::GENERICInstBegin + 1;
-const InstInfo& TargetInstInfo::get_instinfo(uint32_t opcode) const {
-  return GENERIC::getGENERICInstInfo().get_instinfo(opcode + offset);
+const InstInfo& TargetInstInfo::getInstInfo(uint32_t opcode) const {
+  return GENERIC::getGENERICInstInfo().getInstInfo(opcode + offset);
 }
 
 bool TargetInstInfo::matchBranch(MIRInst* inst,
@@ -25,10 +25,10 @@ bool TargetInstInfo::matchBranch(MIRInst* inst,
 }
 
 bool TargetInstInfo::matchCopy(MIRInst* inst,
-                               MIROperand*& dst,
-                               MIROperand*& src) const {
+                               MIROperand& dst,
+                               MIROperand& src) const {
   //
-  const auto& info = get_instinfo(inst);
+  const auto& info = getInstInfo(inst);
   if (requireFlag(info.inst_flag(), InstFlagRegCopy)) {
     if (info.operand_num() != 2) {
       std::cerr << "Error: invalid operand number for copy instruction: \n";
@@ -70,41 +70,42 @@ static std::string_view getType(OperandType type) {
       assert(false && "Invalid operand type");
   }
 };
-void dumpVirtualReg(std::ostream& os, MIROperand* operand) {
-  assert(operand != nullptr);
-  os << getType(operand->type()) << "v";
-  os << (operand->reg() ^ virtualRegBegin);
+void dumpVirtualReg(std::ostream& os, const MIROperand& operand) {
+  // assert(operand != nullptr);
+  assert(isVirtualReg(operand.reg()));
+  os << getType(operand.type()) << "v";
+  os << (operand.reg() ^ virtualRegBegin);
 }
 }  // namespace mir
 
 namespace mir::GENERIC {
 struct OperandDumper {
-  MIROperand* operand;
+  MIROperand operand;
 };
 
 static std::ostream& operator<<(std::ostream& os, OperandDumper opdp) {
   auto operand = opdp.operand;
   os << "[";
-  if (operand->isReg()) {
-    if (isVirtualReg(operand->reg())) {
+  if (operand.isReg()) {
+    if (isVirtualReg(operand.reg())) {
       dumpVirtualReg(os, operand);
-    } else if (isStackObject(operand->reg())) {
-      os << "so" << (operand->reg() ^ stackObjectBegin);
+    } else if (isStackObject(operand.reg())) {
+      os << "so" << (operand.reg() ^ stackObjectBegin);
     } else {
-      os << "isa " << operand->reg();
+      os << "isa " << operand.reg();
     }
-  } else if (operand->isImm()) {
-    os << getType(operand->type()) << operand->imm();
-    if (operand->type() == OperandType::Special) {
-      os << " (" << utils::enumName(static_cast<CompareOp>(operand->imm()))
+  } else if (operand.isImm()) {
+    os << getType(operand.type()) << operand.imm();
+    if (operand.type() == OperandType::Special) {
+      os << " (" << utils::enumName(static_cast<CompareOp>(operand.imm()))
          << ")";
     }
 
-  } else if (operand->isProb()) {
-    os << "prob " << operand->prob();
-  } else if (operand->isReloc()) {
+  } else if (operand.isProb()) {
+    os << "prob " << operand.prob();
+  } else if (operand.isReloc()) {
     os << "reloc ";
-    os << operand->reloc()->name();
+    os << operand.reloc()->name();
   } else {
     os << "unknown";
   }
