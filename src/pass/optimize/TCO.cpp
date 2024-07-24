@@ -2,6 +2,8 @@
 using namespace pass;
 
 void tailCallOpt::run(ir::Function* func,topAnalysisInfoManager* tp){
+    if(func->isOnlyDeclare())return;
+    bool isChange=false;
     std::vector<ir::CallInst*>tail_call_vec;
     for(auto bb:func->blocks()){
         for(auto inst:bb->insts()){
@@ -14,6 +16,7 @@ void tailCallOpt::run(ir::Function* func,topAnalysisInfoManager* tp){
     if(tail_call_vec.empty())
         return;
     std::cerr<<"Function \""<<func->name()<<"\" is tail-recursive, have "<<tail_call_vec.size()<<" tail calls."<<std::endl;
+    isChange=true;
     //首先要在func的entry前再添加一个entry,以及对应的无条件跳转指令
     auto newEntry=new ir::BasicBlock("newbb",func);
     func->blocks().push_front(newEntry);
@@ -21,11 +24,21 @@ void tailCallOpt::run(ir::Function* func,topAnalysisInfoManager* tp){
     ir::BasicBlock::block_link(newEntry,oldEntry);
     auto newBrInst=new ir::BranchInst(oldEntry,newEntry);
     newEntry->emplace_first_inst(newBrInst);
+    func->setEntry(newEntry);
     //在oldEntry添加关于参数的phi
-    for(auto arg:func->args()){
+    for(auto argIter=func->args().rbegin();argIter!=func->args().rend();argIter++){
+        auto arg=*argIter;
         auto newPhi=new ir::PhiInst(oldEntry,arg->type());
         oldEntry->emplace_first_inst(newPhi);
         newPhi->addIncoming(arg,newEntry);
+        for(auto puseIter=arg->uses().begin();puseIter!=arg->uses().end();){
+            auto puse=*puseIter;
+            puseIter++;
+            auto puserPhiInst=dyn_cast<ir::PhiInst>(puse->user());
+            if(puserPhiInst==newPhi)continue;
+            auto user=puse->user();
+            user->setOperand(puse->index(),newPhi);
+        }
     }
     //对于每一个尾调用call指令生成相应的无条件跳转指令
     for(auto tail_callInst:tail_call_vec){
@@ -36,30 +49,20 @@ void tailCallOpt::run(ir::Function* func,topAnalysisInfoManager* tp){
         }
         auto& curBBInsts=tail_callInst->block()->insts();
         auto callInstPos=std::find(curBBInsts.begin(),curBBInsts.end(),tail_callInst);
-        callInstPos++;
         auto newBrInst=new ir::BranchInst(oldEntry,tail_callInst->block());
         tail_callInst->block()->emplace_inst(callInstPos,newBrInst);
         ir::BasicBlock::block_link(tail_callInst->block(),oldEntry);
-        auto callInstRArgsIter=tail_callInst->rargs().rbegin();
+        auto rargIter=tail_callInst->rargs().begin();
         for(auto pinst:oldEntry->phi_insts()){
             auto phiinst=dyn_cast<ir::PhiInst>(pinst);
-            phiinst->addIncoming((*callInstRArgsIter)->value(),tail_callInst->block());
-            callInstRArgsIter++;
+            phiinst->addIncoming((*rargIter)->value(),tail_callInst->block());
+            rargIter++;
         }
-        recursiveDeleteInst(*callInstPos);
-        tail_callInst->block()->force_delete_inst(tail_callInst);
+        recursiveDeleteInst(tail_callInst);
     }
-    for(auto pinst:oldEntry->phi_insts()){
-        auto phiinst=dyn_cast<ir::PhiInst>(pinst);
-        auto oldVal=phiinst->getvalfromBB(newEntry);
-        for(auto puseIter=oldVal->uses().begin();puseIter!=oldVal->uses().end();){
-            auto puse=*puseIter;
-            puseIter++;
-            auto user=puse->user();
-            auto userPhiInst=dyn_cast<ir::PhiInst>(user);
-            if(userPhiInst==phiinst)continue;
-            user->setOperand(puse->index(),phiinst);
-        }
+    if(isChange){
+        tp->CFGChange(func);
+        tp->CallChange();
     }
     
 }
@@ -111,13 +114,26 @@ void tailCallOpt::recursiveDeleteInst(ir::Instruction* inst){
     if(brInst->is_cond()){
         auto trueTarget=brInst->iftrue();
         auto falseTarget=brInst->iffalse();
-        for(auto pinst:trueTarget->phi_insts()){
+        for(auto pinstIter=trueTarget->phi_insts().begin();pinstIter!=trueTarget->phi_insts().end();){
+            auto pinst=*pinstIter;
+            pinstIter++;
             auto phiinst=dyn_cast<ir::PhiInst>(pinst);
             phiinst->delBlock(instBB);
+            if(phiinst->getsize()==1){
+                phiinst->replaceAllUseWith(phiinst->getValue(0));
+                trueTarget->force_delete_inst(phiinst);
+            }
+                
         }
-        for(auto pinst:falseTarget->phi_insts()){
+        for(auto pinstIter=falseTarget->phi_insts().begin();pinstIter!=falseTarget->phi_insts().end();){
+            auto pinst=*pinstIter;
+            pinstIter++;
             auto phiinst=dyn_cast<ir::PhiInst>(pinst);
             phiinst->delBlock(instBB);
+            if(phiinst->getsize()==1){
+                phiinst->replaceAllUseWith(phiinst->getValue(0));
+                falseTarget->force_delete_inst(phiinst);
+            }
         }
         recursiveDeleteBB(trueTarget);
         recursiveDeleteBB(falseTarget);
@@ -125,9 +141,15 @@ void tailCallOpt::recursiveDeleteInst(ir::Instruction* inst){
     }
     else{
         auto destTarget=brInst->dest();
-        for(auto pinst:destTarget->phi_insts()){
+        for(auto pinstIter=destTarget->phi_insts().begin();pinstIter!=destTarget->phi_insts().end();){
+            auto pinst=*pinstIter;
+            pinstIter++;
             auto phiinst=dyn_cast<ir::PhiInst>(pinst);
             phiinst->delBlock(instBB);
+            if(phiinst->getsize()==1){
+                phiinst->replaceAllUseWith(phiinst->getValue(0));
+                destTarget->force_delete_inst(phiinst);
+            }
         }
         recursiveDeleteBB(destTarget);
         instBB->force_delete_inst(brInst);

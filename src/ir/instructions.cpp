@@ -555,9 +555,14 @@ void GetElementPtrInst::print(std::ostream& os) const {
 
 void CallInst::print(std::ostream& os) const {
   if (callee()->retType()->isVoid()) {
+    if(mIsTail)
+      os<<"tail ";
     os << "call ";
   } else {
-    os << name() << " = call ";
+    os<<name()<<" = ";
+      if(mIsTail)
+        os<<"tail ";
+    os <<"call ";
   }
 
   // retType
