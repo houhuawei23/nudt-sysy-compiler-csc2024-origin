@@ -190,10 +190,10 @@ bool loopsimplify::simplifyOneLoop(ir::Loop* L, topAnalysisInfoManager* tp) {
     if (LoopLatch) changed = true;
   }
 
-  // if (L->hasDedicatedExits()) {
-  //   insertUniqueExitBlock(L, tp);
-  //   changed = true;
-  // }
+  if (L->hasDedicatedExits()) {
+    insertUniqueExitBlock(L, tp);
+    changed = true;
+  }
 
   return changed;
 }
