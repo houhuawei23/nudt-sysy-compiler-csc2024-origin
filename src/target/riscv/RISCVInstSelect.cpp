@@ -130,7 +130,7 @@ static bool selectAddrOffset(MIROperand addr,
   if (addrInst) {
     if (debug) dumpInst(addrInst);
     if (addrInst->opcode() == InstLoadStackObjectAddr) {
-      base = addrInst->operand(1);
+      base = addrInst->operand(1); // obj
       offset = MIROperand::asImm(0, OperandType::Int64);
       return true;
     }

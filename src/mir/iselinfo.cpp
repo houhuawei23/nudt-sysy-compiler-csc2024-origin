@@ -256,11 +256,12 @@ void postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) {
       auto& info = ctx.instInfo.getInstInfo(inst);
       for (uint32_t idx = 0; idx < info.operand_num(); idx++) {
         auto op = inst->operand(idx);
-        // auto lctx = ;
         if (isOperandStackObject(op)) {
           if (func.stackObjs().find(op) == func.stackObjs().end()) {
-            std::cerr << "stack object not found in function " << func.name()
-                      << std::endl;
+            std::cerr << "stack object not found in function " << func.name() << "\n";
+            std::cerr << "stack object so" << (op.reg() ^ stackObjectBegin) << "\n";
+            std::cerr << "instruction: ";
+            info.print(std::cerr, *inst, false); std::cerr << "\n";
             assert(false);
           }
           ctx.iselInfo->legalizeInstWithStackOperand(

@@ -99,8 +99,10 @@ void cleanupRegFlags(MIRFunction& mfunc, CodeGenContext& ctx) {
 
 /* 全局活跃变量分析 */
 LiveVariablesInfo calcLiveIntervals(MIRFunction& mfunc, CodeGenContext& ctx) {
+    constexpr bool Debug = false;
     LiveVariablesInfo info;
     auto cfg = calcCFG(mfunc, ctx);
+    if (Debug) cfg.dump(std::cerr);
 
     // stage 1: collect use/def link
     for (auto& block : mfunc.blocks()) {
@@ -122,6 +124,27 @@ LiveVariablesInfo calcLiveIntervals(MIRFunction& mfunc, CodeGenContext& ctx) {
                     continue;
                 }
             }
+        }
+    }
+    if (Debug) {
+        std::cout << "function: " << mfunc.name() << "\n";
+        for (auto& block : mfunc.blocks()) {
+            auto& blockInfo = info.block2Info[block.get()];
+            std::cout << "block " << block->name() << ": \n";
+
+            std::cout << "\ndef: \n";
+            for (auto def : blockInfo.defs) {
+                if (isVirtualReg) std::cout << "v" << (def ^ virtualRegBegin) << ", ";
+                else std::cout << "i" << def << ", ";
+            }
+            std::cout << "\n";
+
+            std::cout << "\nuse: \n";
+            for (auto use : blockInfo.uses) {
+                if (isVirtualReg) std::cout << "v" << (use ^ virtualRegBegin) << ", ";
+                else std::cout << "i" << use << ", ";
+            }
+            std::cout << "\n";
         }
     }
 

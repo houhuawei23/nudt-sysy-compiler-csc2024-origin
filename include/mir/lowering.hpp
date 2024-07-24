@@ -41,22 +41,18 @@ public:
 public:
   LoweringContext(MIRModule& mir_module, Target& target)
     : module(mir_module), mTarget(target) {
-    module.functions().push_back(
-      std::make_unique<MIRFunction>("_memset", &mir_module));
+    module.functions().push_back(std::make_unique<MIRFunction>("_memset", &mir_module));
     memsetFunc = module.functions().back().get();
   }
 
-  // set function
+public:  // set function
   void setCodeGenCtx(CodeGenContext* ctx) { codeGenctx = ctx; }
-
-  // get function
+public:  // get function
   auto getPointerType() { return pointerType; }
-
-  // gen function
+public:  // gen function
   MIROperand newVReg(ir::Type* type);
   MIROperand newVReg(OperandType type);
-
-  // emit function
+public:  // emit function
   void emitCopy(MIROperand dst, MIROperand src);
 
   // ir_val -> mir_operand
