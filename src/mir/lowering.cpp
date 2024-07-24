@@ -176,6 +176,7 @@ void createMIRFunction(ir::Function* ir_func, MIRFunction* mir_func,
 void createMIRInst(ir::Instruction* ir_inst, LoweringContext& ctx);
 
 void lower_GetElementPtr(ir::inst_iterator begin, ir::inst_iterator end, LoweringContext& ctx);
+void lower_GetElementPtr_beta(ir::inst_iterator begin, ir::inst_iterator end, LoweringContext& ctx);
 
 std::unique_ptr<MIRModule> createMIRModule(ir::Module& ir_module, Target& target,
                                            pass::topAnalysisInfoManager* tAIM) {
@@ -446,12 +447,13 @@ void createMIRFunction(ir::Function* ir_func, MIRFunction* mir_func,
           end++;
           while (end != insts.end() && (*end)->isa<ir::GetElementPtrInst>()) {
             auto preInst = std::prev(end);
-            if ((*end)->dynCast<ir::GetElementPtrInst>()->value() == (*preInst))
+            if ((*end)->dynCast<ir::GetElementPtrInst>()->value() == (*preInst)) {
               end++;
-            else
+            } else {
               break;
+            }
           }
-          lower_GetElementPtr(iter, end, lowering_ctx);
+          lower_GetElementPtr_beta(iter, end, lowering_ctx);  // [iter, end)
           iter = end;
         } else {
           createMIRInst(ir_inst, lowering_ctx);
@@ -550,8 +552,7 @@ void createMIRInst(ir::Instruction* ir_inst, LoweringContext& ctx) {
       lower(dyn_cast<ir::BitCastInst>(ir_inst), ctx);
       break;
     default:
-      const auto valueIdEnumName =
-        utils::enumName(static_cast<ir::ValueId>(ir_inst->valueId()));
+      const auto valueIdEnumName = utils::enumName(static_cast<ir::ValueId>(ir_inst->valueId()));
       std::cerr << valueIdEnumName << ": not supported inst" << std::endl;
       assert(false && "not supported inst");
   }
@@ -559,29 +560,20 @@ void createMIRInst(ir::Instruction* ir_inst, LoweringContext& ctx) {
 void lower(ir::UnaryInst* ir_inst, LoweringContext& ctx) {
   auto gc_instid = [scid = ir_inst->valueId()] {
     switch (scid) {
-      case ir::ValueId::vFNEG:
-        return InstFNeg;
-      case ir::ValueId::vTRUNC:
-        return InstTrunc;
-      case ir::ValueId::vZEXT:
-        return InstZExt;
-      case ir::ValueId::vSEXT:
-        return InstSExt;
-      case ir::ValueId::vFPTRUNC:
-        assert(false && "not supported unary inst");
-      case ir::ValueId::vFPTOSI:
-        return InstF2S;
-      case ir::ValueId::vSITOFP:
-        return InstS2F;
-      default:
-        assert(false && "not supported unary inst");
+      case ir::ValueId::vFNEG: return InstFNeg;
+      case ir::ValueId::vTRUNC: return InstTrunc;
+      case ir::ValueId::vZEXT: return InstZExt;
+      case ir::ValueId::vSEXT: return InstSExt;
+      case ir::ValueId::vFPTRUNC: assert(false && "not supported unary inst");
+      case ir::ValueId::vFPTOSI: return InstF2S;
+      case ir::ValueId::vSITOFP: return InstS2F;
+      default: assert(false && "not supported unary inst");
     }
   }();
 
   /**
    * IR: ir_inst := value [valueId]
-   * ->
-   * MIR: InstXXX dst, src */
+   * -> MIR: InstXXX dst, src */
   auto dst = ctx.newVReg(ir_inst->type());
   ctx.emitInstBeta(gc_instid, {dst, ctx.map2operand(ir_inst->value())});
   ctx.addValueMap(ir_inst, dst);
@@ -614,10 +606,9 @@ void lower(ir::ICmpInst* ir_inst, LoweringContext& ctx) {
 
   ctx.emitInstBeta(InstICmp,
                    {
-                     dst /* dst */, ctx.map2operand(ir_inst->lhs()) /* src1 */,
-                     ctx.map2operand(ir_inst->rhs()) /* src2 */,
-                     MIROperand::asImm(static_cast<uint32_t>(op),
-                                       OperandType::Special) /* op */
+                     dst, ctx.map2operand(ir_inst->lhs()),
+                     ctx.map2operand(ir_inst->rhs()),
+                     MIROperand::asImm(static_cast<uint32_t>(op), OperandType::Special)
                    });
 
   ctx.addValueMap(ir_inst, dst);
@@ -625,30 +616,22 @@ void lower(ir::ICmpInst* ir_inst, LoweringContext& ctx) {
 void lower(ir::FCmpInst* ir_inst, LoweringContext& ctx) {
   auto op = [scid = ir_inst->valueId()] {
     switch (scid) {
-      case ir::ValueId::vFOEQ:
-        return CompareOp::FCmpOrderedEqual;
-      case ir::ValueId::vFONE:
-        return CompareOp::FCmpOrderedNotEqual;
-      case ir::ValueId::vFOGT:
-        return CompareOp::FCmpOrderedGreaterThan;
-      case ir::ValueId::vFOGE:
-        return CompareOp::FCmpOrderedGreaterEqual;
-      case ir::ValueId::vFOLT:
-        return CompareOp::FCmpOrderedLessThan;
-      case ir::ValueId::vFOLE:
-        return CompareOp::FCmpOrderedLessEqual;
-      default:
-        assert(false && "not supported fcmp inst");
+      case ir::ValueId::vFOEQ: return CompareOp::FCmpOrderedEqual;
+      case ir::ValueId::vFONE: return CompareOp::FCmpOrderedNotEqual;
+      case ir::ValueId::vFOGT: return CompareOp::FCmpOrderedGreaterThan;
+      case ir::ValueId::vFOGE: return CompareOp::FCmpOrderedGreaterEqual;
+      case ir::ValueId::vFOLT: return CompareOp::FCmpOrderedLessThan;
+      case ir::ValueId::vFOLE: return CompareOp::FCmpOrderedLessEqual;
+      default: assert(false && "not supported fcmp inst");
     }
   }();
 
   auto dst = ctx.newVReg(ir_inst->type());
   ctx.emitInstBeta(InstFCmp,
                    {
-                     dst /* dst */, ctx.map2operand(ir_inst->lhs()) /* src1 */,
-                     ctx.map2operand(ir_inst->rhs()) /* src2 */,
-                     MIROperand::asImm(static_cast<uint32_t>(op),
-                                       OperandType::Special) /* op */
+                     dst, ctx.map2operand(ir_inst->lhs()),
+                     ctx.map2operand(ir_inst->rhs()),
+                     MIROperand::asImm(static_cast<uint32_t>(op), OperandType::Special)
                    });
   ctx.addValueMap(ir_inst, dst);
 }
@@ -683,8 +666,8 @@ void lower(ir::BinaryInst* ir_inst, LoweringContext& ctx) {
 
   ctx.emitInstBeta(
     gc_instid, {
-                 dst /* dst */, ctx.map2operand(ir_inst->lValue()) /* src1 */,
-                 ctx.map2operand(ir_inst->rValue()) /* src2 */
+                 dst, ctx.map2operand(ir_inst->lValue()),
+                 ctx.map2operand(ir_inst->rValue())
                });
   ctx.addValueMap(ir_inst, dst);
 }
@@ -824,28 +807,42 @@ void lower(ir::MemsetInst* ir_inst, LoweringContext& ctx) {
  * @note:
  *      1. Array: <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32 <idx>
  *      2. Pointer: <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
+ * @details: 
+ *    1. 生成add AND mul指令来计算偏移量
+ *    2. 生成add指令来计算得到目标数组地址
  */
 void lower_GetElementPtr(ir::inst_iterator begin, ir::inst_iterator end, LoweringContext& ctx) {
+  constexpr bool Debug = true;
+  if (Debug) std::cerr << "begin debug GetElementPtr.\n";
   const auto dims = dyn_cast<ir::GetElementPtrInst>(*begin)->cur_dims();
   size_t dims_cnt = 0;
-  const int begin_id = dyn_cast<ir::GetElementPtrInst>(*begin)->getid();
+  const int begin_id = dyn_cast<ir::GetElementPtrInst>(*begin)->getid();  // 判断数组是作为函数参数还是
   const auto base = ctx.map2operand(dyn_cast<ir::GetElementPtrInst>(*begin)->value());
 
-  /* 统计GetElementPtr指令数量 */
+  /* 1. 统计GetElementPtr指令数量 */
   auto iter = begin;
-  ir::Value* instEnd = nullptr;
-  MIROperand* ptr = base;
-  std::vector<ir::Value*> idx;
+  ir::Value* instEnd = nullptr;  // GetElementPtr指令末尾 (包含)
+  MIROperand* ptr = base;        // 基地址
+  std::vector<ir::Value*> idx;   // 统计下标索引
   while (iter != end) {
     idx.push_back(dyn_cast<ir::GetElementPtrInst>(*iter)->index());
+    if (Debug) {
+      // IR Instruction
+      std::cerr << "instruction: ";
+      (*(iter))->print(std::cerr); std::cerr << "\n";
+      
+      // Attribute
+      std::cerr << "index: " << (dyn_cast<ir::GetElementPtrInst>(*iter)->index())->name() << "\n";
+      std::cerr << "id: " << dyn_cast<ir::GetElementPtrInst>(*iter)->getid() << "\n";
+      std::cerr << "dims size is " << dyn_cast<ir::GetElementPtrInst>(*iter)->cur_dims_cnt() << "\n";
+    }
     instEnd = *iter;
-    iter++;
-    dims_cnt++;
+    iter++; dims_cnt++;
   }
-  dims_cnt =
-    std::min(dims_cnt, dyn_cast<ir::GetElementPtrInst>(*begin)->cur_dims_cnt());
+  dims_cnt = std::min(dims_cnt, dyn_cast<ir::GetElementPtrInst>(*begin)->cur_dims_cnt());
+  if (Debug) std::cerr << "dims_cnt: " << dims_cnt << "\n";
 
-  /* 计算偏移量 */
+  /* 2. 计算偏移量 */
   int dimension = 0;
   MIROperand* mir_offset = nullptr;
   auto ir_offset = idx[dimension++];
@@ -854,24 +851,19 @@ void lower_GetElementPtr(ir::inst_iterator begin, ir::inst_iterator end, Lowerin
   if (begin_id == 0) {  // 指针
     if (mir_offset) {
       /* InstMul newPtr, mir_offset, 4 */
-      auto newPtr = ctx.newVReg(OperandType::Int32); /* FIXME: Pointer i32? */
-      ctx.emitInstBeta(InstMul,
-                       {newPtr /* dst */, mir_offset /* src1 */,
-                        MIROperand::asImm(4, OperandType::Int32) /* src2 */});
+      auto newPtr = ctx.newVReg(OperandType::Int32);
+      ctx.emitInstBeta(InstMul, {newPtr, mir_offset, MIROperand::asImm(4, OperandType::Int32)});
       mir_offset = newPtr;
     } else {
       auto ir_offset_constant = dyn_cast<ir::Constant>(ir_offset);
-      mir_offset =
-        ctx.map2operand(ir::Constant::gen_i32(ir_offset_constant->i32() * 4));
+      mir_offset = ctx.map2operand(ir::Constant::gen_i32(ir_offset_constant->i32() * 4));
     }
     /* InstAdd newPtr, ptr, mir_offset */
     auto newPtr = ctx.newVReg(OperandType::Int64);
-    ctx.emitInstBeta(InstAdd,
-                     {newPtr /* dst */, ptr /* src1 */, mir_offset /* src2 */});
+    ctx.emitInstBeta(InstAdd, {newPtr, ptr, mir_offset});
     ptr = newPtr;
     ctx.addValueMap(instEnd, ptr);
   }
-
   if (dimension <= dims_cnt) {
     for (; dimension < dims_cnt; dimension++) {
       /* 乘法 */
@@ -883,8 +875,7 @@ void lower_GetElementPtr(ir::inst_iterator begin, ir::inst_iterator end, Lowerin
         auto newPtr = ctx.newVReg(OperandType::Int32);
         /* InstMul newPtr, mir_offset, alpha */
         ctx.emitInstBeta(
-          InstMul, {newPtr /* dst */, mir_offset /* src1 */,
-                    MIROperand::asImm(alpha, OperandType::Int32) /* src2 */});
+          InstMul, {newPtr, mir_offset, MIROperand::asImm(alpha, OperandType::Int32)});
         mir_offset = newPtr;
       }
 
@@ -902,8 +893,7 @@ void lower_GetElementPtr(ir::inst_iterator begin, ir::inst_iterator end, Lowerin
         auto newPtr = ctx.newVReg(OperandType::Int32);
 
         /* InstAdd newPtr, mir_offset, ir_current_idx */
-        ctx.emitInstBeta(InstAdd, {newPtr /* dst */, mir_offset /* src1 */,
-                                   ctx.map2operand(ir_current_idx) /* src2 */});
+        ctx.emitInstBeta(InstAdd, {newPtr, mir_offset, ctx.map2operand(ir_current_idx)});
 
         mir_offset = newPtr;
       }
@@ -912,7 +902,7 @@ void lower_GetElementPtr(ir::inst_iterator begin, ir::inst_iterator end, Lowerin
     if (mir_offset) {
       auto newPtr = ctx.newVReg(OperandType::Int32);
       /* InstMul newPtr, mir_offset, 4 */
-      ctx.emitInstBeta(InstMul, {newPtr /* dst */, mir_offset /* src1 */,
+      ctx.emitInstBeta(InstMul, {newPtr, mir_offset /* src1 */,
                                  MIROperand::asImm(4, OperandType::Int32)});
       mir_offset = newPtr;
     } else {
@@ -924,6 +914,153 @@ void lower_GetElementPtr(ir::inst_iterator begin, ir::inst_iterator end, Lowerin
     auto newPtr = ctx.newVReg(OperandType::Int64);
     ctx.emitInstBeta(InstAdd, {newPtr, ptr, mir_offset});
     ptr = newPtr;
+    ctx.addValueMap(instEnd, ptr);
+  }
+}
+/*
+ * @brief: lower GetElementPtrInst [begin, end)
+ * @note:
+ *      1. Array: <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32 <idx>
+ *      2. Pointer: <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
+ *      3. 注意: 对于指针的运算我们单独进行处理
+ * @details: 
+ *    1. 生成add AND mul指令来计算偏移量
+ *    2. 生成add指令来计算得到目标数组地址
+ */
+void lower_GetElementPtr_beta(ir::inst_iterator begin, ir::inst_iterator end, LoweringContext& ctx) {
+  constexpr bool Debug = true;
+  if (Debug) {
+    std::cerr << "begin debug GetElementPtr.\n";
+    auto iter = begin;
+    while (iter != end) {
+      auto ir_inst = dyn_cast<ir::GetElementPtrInst>(*iter);
+
+      /* Instruction */
+      std::cerr << "the instruction is: ";
+      ir_inst->print(std::cerr); std::cerr << "\n";
+
+      /* Attribute */
+      std::cerr << "the attribute: \n";
+      std::cerr << "\tindex is: " << ir_inst->index()->name() << "\n";
+      std::cerr << "\tid is: " << ir_inst->getid() << "\n";
+
+      std::cerr << "\n";
+      iter++;
+    }
+  }
+  auto base = ctx.map2operand(dyn_cast<ir::GetElementPtrInst>(*begin)->value());  // 基地址
+  auto iter = begin;
+  MIROperand* ptr = base;
+  ir::Value* instEnd = nullptr;  // GetElementPtr指令末尾 (包含)
+
+  // 1. 指针运算 (Fix Me, still have some bugs)
+  if (dyn_cast<ir::GetElementPtrInst>(*iter)->getid() == 0) {
+    if (Debug) std::cerr << "as function arguments. \n";
+
+    instEnd = *iter;
+    auto ir_inst = dyn_cast<ir::GetElementPtrInst>(*(iter));
+    const auto dims = ir_inst->cur_dims();
+    auto ir_index = ir_inst->index();
+
+    int stride = dims.size() ? dims[0] : 1;
+    if (auto ir_constant = dyn_cast<ir::Constant>(ir_index)) {
+      auto newPtr = ctx.newVReg(OperandType::Int64);
+      ctx.emitInstBeta(InstAdd, {newPtr, ptr, MIROperand::asImm(4 * stride * ir_constant->i32(), OperandType::Int64)});
+      ptr = newPtr;
+    } else {
+      auto newPtr_mul = ctx.newVReg(OperandType::Int64);
+      ctx.emitInstBeta(InstMul, {newPtr_mul, ctx.map2operand(ir_index), MIROperand::asImm(4 * stride, OperandType::Int32)});
+      auto newPtr_add = ctx.newVReg(OperandType::Int64);
+      ctx.emitInstBeta(InstAdd, {newPtr_add, ptr, newPtr_mul});
+      ptr = newPtr_add;
+    }
+    iter++;
+
+    if (iter == end) {
+      ctx.addValueMap(instEnd, ptr);
+      return;
+    }
+  }
+
+  // 2. 数组运算
+  MIROperand* mir_offset = nullptr;
+  auto ir_inst = dyn_cast<ir::GetElementPtrInst>(*iter);
+  instEnd = *iter;
+  ir::Value* ir_offset = ir_inst->index();
+  
+  bool is_constant = dyn_cast<ir::Constant>(ir_offset) ? true : false;
+  if (!is_constant) mir_offset = ctx.map2operand(ir_offset);
+  
+  iter++;
+
+  while (iter != end) {
+    auto ir_inst = dyn_cast<ir::GetElementPtrInst>(*iter);
+    const auto id = ir_inst->getid();
+    const auto dims = ir_inst->cur_dims();
+    const auto alpha = dims.size() ? dims[0] : 1;
+
+    if (id == 0) break;
+    
+    instEnd = *iter;
+    /* 乘法运算 */
+    if (is_constant) {
+      auto ir_offset_constant = dyn_cast<ir::Constant>(ir_offset);
+      ir_offset = ir::Constant::gen_i32(ir_offset_constant->i32() * alpha);
+    } else {
+      auto newPtr = ctx.newVReg(OperandType::Int32);
+      ctx.emitInstBeta(InstMul, {newPtr, mir_offset, MIROperand::asImm(alpha, OperandType::Int32)});
+      mir_offset = newPtr;
+    }
+
+    /* 加法运算 */
+    auto ir_cur_idx = ir_inst->index();
+    if (is_constant && dyn_cast<ir::Constant>(ir_cur_idx)) {
+      auto ir_cur_idx_constant = dyn_cast<ir::Constant>(ir_cur_idx);
+      auto ir_offset_constant = dyn_cast<ir::Constant>(ir_offset);
+      ir_offset = ir::Constant::gen_i32(ir_cur_idx_constant->i32() + ir_offset_constant->i32());
+    } else {
+      if (is_constant) mir_offset = ctx.map2operand(ir_offset);
+      is_constant = false;
+      auto newPtr = ctx.newVReg(OperandType::Int32);
+      ctx.emitInstBeta(InstAdd, {newPtr, mir_offset, ctx.map2operand(ir_cur_idx)});
+      mir_offset = newPtr;
+    }
+
+    iter++;
+  }
+
+  if (mir_offset) {
+    auto newPtr = ctx.newVReg(OperandType::Int32);
+    ctx.emitInstBeta(InstMul, {newPtr, mir_offset, MIROperand::asImm(4, OperandType::Int32)});
+    mir_offset = newPtr;
+  } else {
+    auto ir_offset_constant = dyn_cast<ir::Constant>(ir_offset);
+    mir_offset = ctx.map2operand(ir::Constant::gen_i32(ir_offset_constant->i32() * 4));
+  }
+  auto newPtr = ctx.newVReg(OperandType::Int64);
+  ctx.emitInstBeta(InstAdd, {newPtr, ptr, mir_offset});
+  ptr = newPtr;
+  ctx.addValueMap(instEnd, ptr);
+
+  // 3. 指针运算
+  if (iter != end) {
+    instEnd = *iter;
+    auto ir_inst = dyn_cast<ir::GetElementPtrInst>(*(iter));
+    const auto dims = ir_inst->cur_dims();
+    auto ir_index = ir_inst->index();
+
+    if (auto ir_constant = dyn_cast<ir::Constant>(ir_index)) {
+      auto newPtr = ctx.newVReg(OperandType::Int64);
+      ctx.emitInstBeta(InstAdd, {newPtr, ptr, MIROperand::asImm(4 * ir_constant->i32(), OperandType::Int64)});
+      ptr = newPtr;
+    } else {
+      auto newPtr_mul = ctx.newVReg(OperandType::Int32);
+      ctx.emitInstBeta(InstMul, {newPtr_mul, ctx.map2operand(ir_index), MIROperand::asImm(4, OperandType::Int32)});
+      auto newPtr_add = ctx.newVReg(OperandType::Int64);
+      ctx.emitInstBeta(InstAdd, {newPtr_add, ptr, newPtr_mul});
+      ptr = newPtr_add;
+    }
+
     ctx.addValueMap(instEnd, ptr);
   }
 }

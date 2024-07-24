@@ -6,8 +6,8 @@ set -u
 
 qemu_riscv64="qemu-riscv64"
 llvm_lli="llvm-lli-14"
-riscv64_gpp="riscv64-linux-gnu-g++-12"
-riscv64_gcc="riscv64-linux-gnu-gcc-12"
+riscv64_gpp="riscv64-linux-gnu-g++"
+riscv64_gcc="riscv64-linux-gnu-gcc"
 compiler_path="./compiler"
 function riscv64_gcc_compile() {
     $riscv64_gcc -march=rv64gc -mabi=lp64d -mcmodel=medlow -ffp-contract=on -O0 $@

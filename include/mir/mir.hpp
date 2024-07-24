@@ -213,8 +213,7 @@ private:
 
 public:
   MIROperand() = default;
-  template <typename T>
-  MIROperand(T x, OperandType type) : mStorage(x), mType(type) {}
+  template <typename T> MIROperand(T x, OperandType type) : mStorage(x), mType(type) {}
 
 public:  // get function
   auto& storage() { return mStorage; }

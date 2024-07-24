@@ -388,70 +388,54 @@ public:  // utils function
  *      2. _id : calculate array address OR pointer address
  */
 class GetElementPtrInst : public Instruction {
- protected:
+protected:
   size_t _id = 0;
   std::vector<size_t> _cur_dims = {};
-
- public:
+public:
   //! 1. Pointer <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
-  GetElementPtrInst(Type* base_type,
-                    Value* value,
-                    Value* idx,
-                    BasicBlock* parent = nullptr)
+  GetElementPtrInst(Type* base_type, Value* value, Value* idx,
+                    BasicBlock* parent=nullptr)
       : Instruction(vGETELEMENTPTR, ir::Type::TypePointer(base_type), parent) {
     _id = 0;
     addOperand(value);
     addOperand(idx);
   }
 
-  //! 2. 高维 Array <result> = getelementptr <type>, <type>* <ptrval>, i32 0,
-  //! i32 <idx>
-  GetElementPtrInst(Type* base_type,
-                    Value* value,
-                    Value* idx,
+  //! 2. 高维 Array <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32 <idx>
+  GetElementPtrInst(Type* base_type, Value* value, Value* idx,
                     std::vector<size_t> dims,
                     std::vector<size_t> cur_dims,
-                    BasicBlock* parent = nullptr)
-      : Instruction(vGETELEMENTPTR,
-                    ir::Type::TypePointer(ir::Type::TypeArray(base_type, dims)),
-                    parent),
+                    BasicBlock* parent=nullptr)
+      : Instruction(vGETELEMENTPTR, ir::Type::TypePointer(ir::Type::TypeArray(base_type, dims)), parent),
         _cur_dims(cur_dims) {
     _id = 1;
     addOperand(value);
     addOperand(idx);
   }
 
-  //! 3. 一维 Array <result> = getelementptr <type>, <type>* <ptrval>, i32 0,
-  //! i32 <idx>
-  GetElementPtrInst(Type* base_type,
-                    Value* value,
-                    Value* idx,
+  //! 3. 一维 Array <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32 <idx>
+  GetElementPtrInst(Type* base_type, Value* value, Value* idx,
                     std::vector<size_t> cur_dims,
-                    BasicBlock* parent = nullptr)
+                    BasicBlock* parent=nullptr)
       : Instruction(vGETELEMENTPTR, ir::Type::TypePointer(base_type), parent),
         _cur_dims(cur_dims) {
     _id = 2;
     addOperand(value);
     addOperand(idx);
   }
-
- public:
-  // get function
+public:  // get function
   auto value() const { return operand(0); }
   auto index() const { return operand(1); }
   auto getid() const { return _id; }
-
   Type* baseType() const {
     assert(dyn_cast<PointerType>(type()) && "type error");
     return dyn_cast<PointerType>(type())->baseType();
   }
   auto cur_dims_cnt() const { return _cur_dims.size(); }
   auto& cur_dims() const { return _cur_dims; }
-
- public:  // check function
+public:  // check function
   bool is_arrayInst() const { return _id != 0; }
-
- public:
+public:
   static bool classof(const Value* v) { return v->valueId() == vGETELEMENTPTR; }
   void print(std::ostream& os) const override;
 };
