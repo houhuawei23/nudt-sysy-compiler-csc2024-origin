@@ -40,6 +40,7 @@ namespace pass
         void insertphi();
         void rename(ir::Function *F);
         void simplifyphi(ir::PhiInst *phi);
+        bool coulddelete(ir::AllocaInst *alloca);
         // int getStoreinstindexinBB(ir::BasicBlock *BB, ir::StoreInst *I);
         // int getLoadeinstindexinBB(ir::BasicBlock *BB, ir::LoadInst *I);
     };
