@@ -1,34 +1,23 @@
 #pragma once
-
 #include <cstdint>
 #include <atomic>
-
 #include <sys/syscall.h>
-
 #include <linux/futex.h>
-
 #include <sched.h>
-
 #include <unistd.h>
-
 #include <bits/types.h>
-
 #include <iostream>
 
 constexpr std::size_t maxThreads = 4;
-
 constexpr std::size_t stackSize = 1024 * 1024;
-
 constexpr auto threadCreationFlags = CLONE_VM | CLONE_FS | CLONE_FILES |
                                      CLONE_SIGHAND | CLONE_THREAD |
                                      CLONE_SYSVSEM;
-
 using LoopFuncHeader = void (*)(int32_t beg, int32_t end);
 
 class Futex final {
   std::atomic_uint32_t storage;
-
-  public:
+public:
   void wait();
   void post();
 };

@@ -366,14 +366,14 @@ class BitCastInst : public Instruction {
  * <isvolatile>)
  */
 class MemsetInst : public Instruction {
- public:
-  MemsetInst(Type* type, Value* value, BasicBlock* parent = nullptr)
+public:
+  MemsetInst(Type* type, Value* value, BasicBlock* parent=nullptr)
       : Instruction(vMEMSET, type, parent) {
     addOperand(value);
   }
-
+public:  // get function
   auto value() const { return operand(0); }
-
+public:  // utils function
   static bool classof(const Value* v) { return v->valueId() == vMEMSET; }
   void print(std::ostream& os) const override;
 };

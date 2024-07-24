@@ -3,9 +3,9 @@
 #include <list>
 #include <variant>
 #include <vector>
-
 #include "ir/ir.hpp"
 #include "support/arena.hpp"
+
 namespace mir {
 class MIRRelocable;
 class MIRModule;
@@ -49,17 +49,14 @@ enum CompareOp : uint32_t {
 /* MIRRelocable */
 class MIRRelocable {
   std::string mName;
-
 public:
-  MIRRelocable(const std::string& name = "") : mName(name) {}
+  MIRRelocable(const std::string& name="") : mName(name) {}
   virtual ~MIRRelocable() = default;
-
+public:  // get function
   auto name() const { return mName; }
-
+public:  // utils function
   virtual void print(std::ostream& os, CodeGenContext& ctx) = 0;
-
-  template <typename T>
-  const T* dynCast() const {
+  template <typename T> const T* dynCast() const {
     static_assert(std::is_base_of_v<MIRRelocable, T>);
     return dynamic_cast<const T*>(this);
   }
@@ -69,15 +66,9 @@ public:
 constexpr uint32_t virtualRegBegin = 0b0101U << 28;
 constexpr uint32_t stackObjectBegin = 0b1010U << 28;
 constexpr uint32_t invalidReg = 0b1100U << 28;
-constexpr bool isISAReg(uint32_t x) {
-  return x < virtualRegBegin;
-}
-constexpr bool isVirtualReg(uint32_t x) {
-  return (x & virtualRegBegin) == virtualRegBegin;
-}
-constexpr bool isStackObject(uint32_t x) {
-  return (x & stackObjectBegin) == stackObjectBegin;
-}
+constexpr bool isISAReg(uint32_t x) { return x < virtualRegBegin; }
+constexpr bool isVirtualReg(uint32_t x) { return (x & virtualRegBegin) == virtualRegBegin; }
+constexpr bool isStackObject(uint32_t x) { return (x & stackObjectBegin) == stackObjectBegin; }
 enum class OperandType : uint32_t {
   Bool,
   Int8,
@@ -90,27 +81,17 @@ enum class OperandType : uint32_t {
   LowBits,
   Alignment
 };
-constexpr bool isIntType(OperandType type) {
-  return type <= OperandType::Int64;
-}
-constexpr bool isFloatType(OperandType type) {
-  return type == OperandType::Float32;
-}
+constexpr bool isIntType(OperandType type) { return type <= OperandType::Int64; }
+constexpr bool isFloatType(OperandType type) { return type == OperandType::Float32; }
 constexpr uint32_t getOperandSize(const OperandType type) {
   /* NOTE: RISC-V 64 */
   switch (type) {
-    case OperandType::Int8:
-      return 1;
-    case OperandType::Int16:
-      return 2;
-    case OperandType::Int32:
-      return 4;
-    case OperandType::Int64:
-      return 8;
-    case OperandType::Float32:
-      return 4;
-    default:
-      assert(false && "invalid operand type");
+    case OperandType::Int8: return 1;
+    case OperandType::Int16: return 2;
+    case OperandType::Int32: return 4;
+    case OperandType::Int64: return 8;
+    case OperandType::Float32: return 4;
+    default: assert(false && "invalid operand type");
   }
 }
 
@@ -227,8 +208,7 @@ enum MIRGenericInst : uint32_t {
 /* MIROperand */
 class MIROperand {
 private:
-  std::variant<std::monostate, MIRRegister*, MIRRelocable*, intmax_t, double>
-    mStorage{std::monostate{}};
+  std::variant<std::monostate, MIRRegister*, MIRRelocable*, intmax_t, double> mStorage{std::monostate{}};
   OperandType mType = OperandType::Special;
 
 public:

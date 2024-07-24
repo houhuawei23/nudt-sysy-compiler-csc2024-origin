@@ -15,7 +15,6 @@ sudo apt install tldr valgrind
 
 sudo ln -s /usr/bin/llvm-link-14 /usr/bin/llvm-link
 
-
 # qemu-system-* is for system emulation
 
 ln -s /usr/bin/llvm-link-14 /usr/bin/llvm-link
