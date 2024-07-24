@@ -153,9 +153,6 @@ public:
             ir::Loop* getinnermostLoop(ir::BasicBlock* bb) {
                 return nullptr; // TODO
             }
-            ir::Loop* getfatherloop(ir::Loop* somloop){
-                return nullptr; // TODO
-            }
             void refresh() override;
     };
 

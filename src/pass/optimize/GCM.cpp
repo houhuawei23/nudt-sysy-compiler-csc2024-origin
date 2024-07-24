@@ -180,7 +180,7 @@ namespace pass
             return;
         }
         else{
-            LICM(instruction, lpctx->getfatherloop(L));
+            LICM(instruction, L->parent());
         }
     }
 
