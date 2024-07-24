@@ -123,6 +123,37 @@ constexpr bool isOperandNonZeroImm32(MIROperand* operand) {
   return isOperandImm32(operand) && operand->imm() != 0;
 }
 
+static auto scratch = MIROperand::asISAReg(RISCV::X5, OperandType::Int64);
+
+static void legalizeAddrBaseOffsetPostRA(MIRInstList& instructions,
+                                         MIRInstList::iterator iter,
+                                         MIROperand*& base,
+                                         int64_t& imm) {
+  if (-2048 <= imm and imm <= 2047) {
+    return;
+  }
+  /**
+   * imm(base)
+   * ->
+   * LoadImm32 scratch, imm
+   * ADD scratch, base, scratch
+   * &imm = 0
+   * &base = scratch
+   */
+  // auto inst = *iter;
+  auto loadInst = utils::make<MIRInst>(
+    LoadImm32, {scratch, MIROperand::asImm(imm, OperandType::Int32)});
+  instructions.insert(iter, loadInst);
+
+  auto addInst = utils::make<MIRInst>(
+    RISCVInst::ADD, {scratch, base, scratch});
+  instructions.insert(iter, addInst);
+
+  imm = 0;
+  base = scratch;
+  return;
+}
+
 static void legalizeAddrBaseOffsetPostRA(MIRInstList& instructions,
                                          MIRInstList::iterator iter,
                                          MIROperand*& dst,
@@ -131,12 +162,28 @@ static void legalizeAddrBaseOffsetPostRA(MIRInstList& instructions,
   if (-2048 <= imm and imm <= 2047) {
     return;
   }
+  /**
+   * origin:
+   * dst = base + imm
+   * after adjust:
+   * dst = adjust, new_imm = imm - adjust
+   * dst = base + new_imm
+   */
   if (-4096 <= imm and imm <= 4094) {
     const auto adjust = imm < 0 ? -2048 : 2047;
     auto newInst = utils::make<MIRInst>(
-      RISCVInst::LoadImm32, {dst, MIROperand::asImm(adjust, OperandType::Int32)});
+      RISCVInst::LoadImm32,
+      {dst, MIROperand::asImm(adjust, OperandType::Int32)});
     instructions.insert(iter, newInst);
     imm -= adjust;
+    return;
+  } else {
+    // const auto adjust = imm;
+    // auto newInst = utils::make<MIRInst>(
+    //   RISCVInst::LoadImm32,
+    //   {dst, MIROperand::asImm(adjust, OperandType::Int32)});
+    // instructions.insert(iter, newInst);
+    // imm -= adjust;
     return;
   }
   std::cerr << "adjust_reg: imm out of range: " << imm << std::endl;
@@ -151,7 +198,7 @@ static void adjust_reg(MIRInstList& instructions,
                        int64_t imm) {
   if (dst == src && imm == 0) return;
   MIROperand* base = src;
-  legalizeAddrBaseOffsetPostRA(instructions, it, dst, base, imm);
+  legalizeAddrBaseOffsetPostRA(instructions, it, base, imm);
   // addi dst, base, imm
   auto inst = utils::make<MIRInst>(
     RISCVInst::ADDI, {dst, base, MIROperand::asImm(imm, OperandType::Int64)});

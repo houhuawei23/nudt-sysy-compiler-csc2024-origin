@@ -95,6 +95,8 @@ public:  // match function
   virtual bool matchBranch(MIRInst* inst,
                            MIRBlock*& target,
                            double& prob) const;
+
+  bool matchCopy(MIRInst* inst, MIROperand*& dst, MIROperand*& src) const;
   bool matchConditionalBranch(MIRInst* inst,
                               MIRBlock*& target,
                               double& prob) const;

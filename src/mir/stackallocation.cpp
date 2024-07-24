@@ -25,6 +25,7 @@ static void remove_unused_spill_stack_objects(MIRFunction* mfunc) {
     for (auto& block : mfunc->blocks()) {
       for (auto inst : block->insts()) {
         if (inst->opcode() == InstLoadRegFromStack) {
+          /* LoadRegFromStack dst, obj */
           spill_stack.erase(inst->operand(1));
         }
       }
@@ -35,6 +36,7 @@ static void remove_unused_spill_stack_objects(MIRFunction* mfunc) {
   {
     for (auto& block : mfunc->blocks()) {
       block->insts().remove_if([&](auto inst) {
+        /* StoreRegToStack obj, src */
         return inst->opcode() == InstStoreRegToStack &&
                spill_stack.count(inst->operand(0));
       });

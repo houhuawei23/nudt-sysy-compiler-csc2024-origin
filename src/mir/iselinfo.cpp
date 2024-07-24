@@ -69,7 +69,7 @@ void ISelContext::run_isel(MIRFunction* func) {
 
     //! fix point algorithm: 循环执行指令选择和替换，直到不再变化。
     while (true) {
-        // genericPeepholeOpt(*func, _codegen_ctx);
+        genericPeepholeOpt(*func, mCodeGenCtx);
 
         bool modified = false;
         bool has_illegal = false;

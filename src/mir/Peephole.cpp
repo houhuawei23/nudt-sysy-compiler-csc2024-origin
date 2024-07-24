@@ -191,7 +191,23 @@ bool removeIndirectCopy(MIRFunction& mfunc, CodeGenContext& ctx) {
     return modified;
 }
 bool removeIdentityCopies(MIRFunction& func, CodeGenContext& ctx) {
-    return false;
+  bool modified = false;
+  for (auto& block : func.blocks()) {
+    block->insts().remove_if([&](MIRInst* inst) {
+      MIROperand *dst = nullptr, *src = nullptr;
+      ctx.instInfo.matchCopy(inst, dst, src);
+      auto& info = ctx.instInfo.get_instinfo(inst);
+      if (dst and src and dst == src) {
+        std::cerr << "remove identity copy: ";
+        info.print(std::cerr, *inst, false);
+        std::cerr << std::endl;
+        modified = true;
+        return true;
+      }
+      return false;
+    });
+  }
+  return modified;
 }
 bool removeUnusedInsts(MIRFunction& func, CodeGenContext& ctx) {
     /* writers: map from operand to list of insts that write it */
@@ -340,16 +356,16 @@ bool removeInvisibleInsts(MIRFunction& func, CodeGenContext& ctx) {
 }
 bool genericPeepholeOpt(MIRFunction& func, CodeGenContext& ctx) {
     bool modified = false;
-    modified |= eliminateStackLoads(func, ctx);
-    modified |= removeIndirectCopy(func, ctx);
+    // modified |= eliminateStackLoads(func, ctx);
+    // modified |= removeIndirectCopy(func, ctx);
     modified |= removeIdentityCopies(func, ctx);
-    // modified |= removeUnusedInsts(func, ctx);
-    modified |= applySSAPropagation(func, ctx);
-    modified |= machineConstantCSE(func, ctx);
-    modified |= machineConstantHoist(func, ctx);
-    modified |= machineInstCSE(func, ctx);
-    modified |= deadInstElimination(func, ctx);
-    modified |= removeInvisibleInsts(func, ctx);
+    // // modified |= removeUnusedInsts(func, ctx);
+    // modified |= applySSAPropagation(func, ctx);
+    // modified |= machineConstantCSE(func, ctx);
+    // modified |= machineConstantHoist(func, ctx);
+    // modified |= machineInstCSE(func, ctx);
+    // modified |= deadInstElimination(func, ctx);
+    // modified |= removeInvisibleInsts(func, ctx);
     // modified |= ctx.scheduleModel->peepholeOpt(func, ctx);
     return modified;
 }

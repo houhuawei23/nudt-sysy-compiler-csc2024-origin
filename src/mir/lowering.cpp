@@ -193,6 +193,8 @@ void createMIRModule(ir::Module& ir_module, MIRModule& mir_module,
   constexpr bool debugLowering = true;
   auto& config = sysy::Config::getInstance();
 
+  bool debugLowering = config.log_level >= sysy::LogLevel::DEBUG;
+
   auto& functions = mir_module.functions();      // uptr vector
   auto& global_objs = mir_module.global_objs();  // uptr vector
 
@@ -318,7 +320,7 @@ void createMIRModule(ir::Module& ir_module, MIRModule& mir_module,
     /* Optimize: register coalescing */
 
     /* Optimize: peephole optimization (窥孔优化) */
-    // while (genericPeepholeOpt(*mir_func, codegen_ctx));
+    while (genericPeepholeOpt(*mir_func, codegen_ctx)) {};
 
     /* pre-RA legalization */
 
@@ -373,6 +375,7 @@ void createMIRModule(ir::Module& ir_module, MIRModule& mir_module,
 void createMIRFunction(ir::Function* ir_func, MIRFunction* mir_func,
                        CodeGenContext& codegen_ctx, LoweringContext& lowering_ctx,
                        pass::topAnalysisInfoManager* tAIM) {
+  if(ir_func->blocks().empty()) return;
   lowering_ctx.setCurrFunc(mir_func);
   /* Some Debug Information */
   constexpr bool DebugCreateMirFunction = false;
