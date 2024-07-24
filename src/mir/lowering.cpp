@@ -190,7 +190,6 @@ void createMIRModuleBeta(ir::Module& ir_module, MIRModule& mir_module,
 
 void createMIRModule(ir::Module& ir_module, MIRModule& mir_module,
                      Target& target, pass::topAnalysisInfoManager* tAIM) {
-  constexpr bool debugLowering = true;
   auto& config = sysy::Config::getInstance();
 
   bool debugLowering = config.log_level >= sysy::LogLevel::DEBUG;
