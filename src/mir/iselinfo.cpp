@@ -225,17 +225,16 @@ void postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) {
       auto& info = ctx.instInfo.get_instinfo(inst);
       for (uint32_t idx = 0; idx < info.operand_num(); idx++) {
         auto op = inst->operand(idx);
-        auto lctx =
-          InstLegalizeContext{inst, insts, it, ctx, std::nullopt, func};
+        auto lctx = InstLegalizeContext{inst, insts, it, ctx, std::nullopt, func};
         if (isOperandStackObject(op)) {
           if (func.stackObjs().find(op) == func.stackObjs().end()) {
-            std::cerr << "stack object not found in function " << func.name()
-                      << std::endl;
+            std::cerr << "stack object not found in function " << func.name() << "\n";
+            std::cerr << "stack object so" << (op->reg() ^ stackObjectBegin) << "\n";
+            std::cerr << "instruction: ";
+            info.print(std::cerr, *inst, false); std::cerr << "\n";
             assert(false);
           }
-          ctx.iselInfo->legalizeInstWithStackOperand(lctx, op,
-                                                     func.stackObjs().at(op));
-        //   ctx.iselInfo->
+          ctx.iselInfo->legalizeInstWithStackOperand(lctx, op, func.stackObjs().at(op));
         }
       }
       it = next;

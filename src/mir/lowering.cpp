@@ -145,8 +145,7 @@ MIROperand* LoweringContext::map2operand(ir::Value* ir_val) {
   }
   // TODO: support float constant
   if (const_val->type()->isFloat32()) {
-    if (auto fpOperand = codeGenctx->iselInfo->materializeFPConstant(
-          const_val->f32(), *this)) {
+    if (auto fpOperand = codeGenctx->iselInfo->materializeFPConstant(const_val->f32(), *this)) {
       return fpOperand;
     }
 
@@ -162,7 +161,6 @@ MIROperand* LoweringContext::map2operand(ir::Value* ir_val) {
 }
 
 void LoweringContext::emitCopy(MIROperand* dst, MIROperand* src) {
-  /* copy dst, src */
   emitInstBeta(select_copy_opcode(dst, src), {dst, src});
 }
 
@@ -928,7 +926,7 @@ void lower_GetElementPtr(ir::inst_iterator begin, ir::inst_iterator end, Lowerin
  *    2. 生成add指令来计算得到目标数组地址
  */
 void lower_GetElementPtr_beta(ir::inst_iterator begin, ir::inst_iterator end, LoweringContext& ctx) {
-  constexpr bool Debug = true;
+  constexpr bool Debug = false;
   if (Debug) {
     std::cerr << "begin debug GetElementPtr.\n";
     auto iter = begin;

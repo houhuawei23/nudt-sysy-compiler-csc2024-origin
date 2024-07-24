@@ -603,14 +603,14 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
         const auto size = getOperandSize(canonicalizedType);
         bool alreadyInStack = inStackArguments.count(u);
         bool rematerializeConstant = constants.count(u);
-        MIROperand stackStorage;
+        MIROperand* stackStorage;
         MIRInst* copy_inst = nullptr;
         if (alreadyInStack) {
-            stackStorage = *inStackArguments.at(u);
+            stackStorage = inStackArguments.at(u);
         } else if (rematerializeConstant) {
             copy_inst = constants.at(u);
         } else {
-            stackStorage = *mfunc.newStackObject(ctx.nextId(), size, size, 0, StackObjectUsage::RegSpill);
+            stackStorage = mfunc.newStackObject(ctx.nextId(), size, size, 0, StackObjectUsage::RegSpill);
         }
 
         std::unordered_set<MIRInst*> newInsts;
@@ -668,7 +668,7 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
                         // tmp->set_operand(1, tmpStack);
                         auto tmp = utils::make<MIRInst>(InstLoadRegFromStack, {
                             MIROperand::asVReg(u - virtualRegBegin, canonicalizedType),
-                            utils::make<MIROperand>(stackStorage)
+                            stackStorage
                         });
 
                         instructions.insert(it, tmp);
@@ -699,9 +699,9 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
                             it++;
                         }
                         auto tmp = new MIRInst{ InstStoreRegToStack };
-                        tmp->set_operand(0, MIROperand::asVReg(u - virtualRegBegin, canonicalizedType));
-                        auto tmpStack = new MIROperand(stackStorage);
-                        tmp->set_operand(1, tmpStack);
+                        tmp->set_operand(1, MIROperand::asVReg(u - virtualRegBegin, canonicalizedType));
+                        auto tmpStack = stackStorage;
+                        tmp->set_operand(0, tmpStack);
                         auto newInst = instructions.insert(it, tmp);
                         newInsts.insert(*newInst);
                         loaded = false;

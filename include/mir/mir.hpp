@@ -210,11 +210,9 @@ class MIROperand {
 private:
   std::variant<std::monostate, MIRRegister*, MIRRelocable*, intmax_t, double> mStorage{std::monostate{}};
   OperandType mType = OperandType::Special;
-
 public:
   MIROperand() = default;
   template <typename T> MIROperand(T x, OperandType type) : mStorage(x), mType(type) {}
-
 public:  // get function
   auto& storage() { return mStorage; }
   auto type() { return mType; }
@@ -238,11 +236,9 @@ public:  // get function
     assert(isReg() && "the operand is not a register");
     return std::get<MIRRegister*>(mStorage)->flag();
   }
-
 public:  // operator
   bool operator==(const MIROperand& rhs) { return mStorage == rhs.mStorage; }
   bool operator!=(const MIROperand& rhs) { return mStorage != rhs.mStorage; }
-
 public:  // check function
   constexpr bool isUnused() const {
     return std::holds_alternative<std::monostate>(mStorage);
@@ -262,21 +258,16 @@ public:  // check function
   constexpr bool isInit() const {
     return !std::holds_alternative<std::monostate>(mStorage);
   }
-  template <typename T>
-  bool is() const {
+  template <typename T> bool is() const {
     return std::holds_alternative<T>(mStorage);
   }
-
 public:  // gen function
-  template <typename T>
-  static MIROperand* asImm(T val, OperandType type) {
+  template <typename T> static MIROperand* asImm(T val, OperandType type) {
     return new MIROperand(static_cast<intmax_t>(val), type);
-    // return utils::make<MIROperand>(static_cast<intmax_t>(val), type);
   }
   // FIXME: have static instance, cant ue utils::make
   static MIROperand* asISAReg(uint32_t reg, OperandType type) {
     return new MIROperand(new MIRRegister(reg), type);
-    // return utils::make<MIROperand>(utils::make<MIRRegister>(reg), type);
   }
   static MIROperand* asVReg(uint32_t reg, OperandType type) {
     return new MIROperand(new MIRRegister(reg + virtualRegBegin), type);
@@ -290,7 +281,6 @@ public:  // gen function
   static MIROperand* asProb(double prob) {
     return new MIROperand(prob, OperandType::Special);
   }
-
 public:
   size_t hash() const {
     return std::hash<std::decay_t<decltype(mStorage)>>{}(mStorage);
@@ -436,11 +426,8 @@ public:
   auto& args() { return mArguments; }
   auto& stackObjs() { return mStackObjects; }
 
-  MIROperand* newStackObject(uint32_t id,
-                             uint32_t size,
-                             uint32_t alignment,
-                             int32_t offset,
-                             StackObjectUsage usage) {
+  MIROperand* newStackObject(uint32_t id, uint32_t size, uint32_t alignment,
+                             int32_t offset, StackObjectUsage usage) {
     auto ref = MIROperand::asStackObj(id, OperandType::Special);
     mStackObjects.emplace(ref, StackObject{size, alignment, offset, usage});
     return ref;
