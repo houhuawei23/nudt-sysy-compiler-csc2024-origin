@@ -7,211 +7,243 @@
 #include <optional>
 
 namespace mir {
-auto collect_def_count(
-    MIRFunction* func,
-    CodeGenContext& codegen_ctx) {
-    std::cerr << "collect_def_count not implemented yet!" << std::endl;
-    return std::unordered_map<MIROperand, uint32_t, MIROperandHasher>();
+
+auto collectDefCount(MIRFunction* func, CodeGenContext& ctx) {
+  std::unordered_map<MIROperand, uint32_t, MIROperandHasher> defCount;
+  for (auto& block : func->blocks()) {
+    auto& insts = block->insts();
+    for (auto& inst : insts) {
+      auto& instInfo = ctx.instInfo.getInstInfo(inst);
+      if (requireFlag(instInfo.inst_flag(), InstFlagLoadConstant)) {
+        auto& dst = inst->operand(0);
+        if (isOperandVReg(dst)) {
+          ++defCount[dst];
+        }
+      } else {
+        for (uint32_t idx = 0; idx < instInfo.operand_num(); ++idx)
+          if (instInfo.operand_flag(idx) & OperandFlagDef) {
+            auto& def = inst->operand(idx);
+            if (isOperandVReg(def)) {
+              ++defCount[def];
+            }
+          }
+      }
+    }
+  }
+  return defCount;
+}
+auto collectUseCount(MIRFunction* func, CodeGenContext& ctx) {
+  std::unordered_map<MIROperand, uint32_t, MIROperandHasher> useCount;
+  for (auto& block : func->blocks()) {
+    auto& insts = block->insts();
+    for (auto& inst : insts) {
+      auto& instInfo = ctx.instInfo.getInstInfo(inst);
+      for (uint32_t idx = 0; idx < instInfo.operand_num(); ++idx) {
+        if (instInfo.operand_flag(idx) & OperandFlagUse) {
+          auto& use = inst->operand(idx);
+          if (isOperandVReg(use)) ++useCount[use];
+        }
+      }
+    }
+  }
+  return useCount;
 }
 
 void ISelContext::remove_inst(MIRInst* inst) {
-    assert(inst != nullptr);
-    mRemoveWorkList.insert(inst);
+  assert(inst != nullptr);
+  mRemoveWorkList.insert(inst);
 }
 void ISelContext::replace_operand(MIROperand src, MIROperand dst) {
-    assert(src.isReg());
-    if (src != dst) {
-        mReplaceMap.emplace(src, dst);
-    }
+  assert(src.isReg());
+  if (src != dst) {
+    mReplaceMap.emplace(src, dst);
+  }
 }
-MIROperand ISelContext::get_inst_def(MIRInst* inst) {
-    assert(inst != nullptr);
+MIROperand& ISelContext::get_inst_def(MIRInst* inst) {
+  assert(inst != nullptr);
+  auto& instinfo = mCodeGenCtx.instInfo.getInstInfo(inst);
+  for (uint32_t idx = 0; idx < instinfo.operand_num(); idx++) {
+    if (instinfo.operand_flag(idx) & OperandFlagDef) {
+      return inst->operand(idx);
+    }
+  }
+  // assert(false && "no def operand found");
+  std::cerr << "no def operand found" << std::endl;
+  // return nullptr;
+}
+
+MIRInst* ISelContext::lookupDef(const MIROperand& op) const {
+  assert(op.isInit());
+  const auto iter = mDefinedInst.find(op);
+  if (iter != mDefinedInst.end()) {
+    return iter->second;
+  }
+
+  // std::cerr << "op address " << op << "\n";
+  if (isOperandVReg(op)) {
+    std::cerr << "virtual reg v" << (op.reg() ^ virtualRegBegin) << "\n";
+  } else if (isOperandISAReg(op)) {
+    std::cerr << "physical reg i" << op.reg() << "\n";
+  } else {
+    std::cerr << "satck\n";
+  }
+
+  assert(false && "def not found");
+}
+//! 定义和使用计数收集: 遍历所有指令，收集每个定义的计数和使用情况。
+// get def count
+void ISelContext::calConstantMap(MIRFunction* func) {
+  auto defCount = collectDefCount(func, mCodeGenCtx);
+  for (auto& block : func->blocks()) {
+    for (auto& inst : block->insts()) {
+      // for all insts
+      auto& instinfo = mCodeGenCtx.instInfo.getInstInfo(inst);
+      if (requireFlag(instinfo.inst_flag(), InstFlagLoadConstant)) {
+        // load constant, and def once, can view as constant
+        auto& def = get_inst_def(inst);
+        if (isOperandVReg(def) and defCount[def] <= 1) {
+          mConstantMap.emplace(def, inst);
+        }
+      }
+    }
+  }
+}
+void ISelContext::collectDefinedInst(MIRBlock* block) {
+  for (auto& inst : block->insts()) {
     auto& instinfo = mCodeGenCtx.instInfo.getInstInfo(inst);
     for (uint32_t idx = 0; idx < instinfo.operand_num(); idx++) {
-        if (instinfo.operand_flag(idx) & OperandFlagDef) {
-            return inst->operand(idx);
+      if (instinfo.operand_flag(idx) & OperandFlagDef) {
+        auto def = inst->operand(idx);
+        if (def.isReg() && isVirtualReg(def.reg())) {
+          mDefinedInst.emplace(def, inst);
         }
+      }
     }
-    // assert(false && "no def operand found");
-    std::cerr << "no def operand found" << std::endl;
-    // return nullptr;
+  }
+}
+template <typename Func>
+void traverseBlocks(MIRFunction& func,
+                    Func funcBlock,
+                    std::ostream& os = std::cerr,
+                    bool reverse = false,
+                    bool debug = false) {
+  for (auto& block : func.blocks()) {
+    if (debug) {
+      os << "Traversing block: " << block->name() << std::endl;
+    }
+    funcBlock(block.get());
+  }
 }
 
-MIRInst* ISelContext::lookup_def(MIROperand op) {
-    // assert(op != nullptr);
-    auto iter = mInstMap.find(op.reg());
-    if (iter != mInstMap.end()) {
-        return iter->second;
+template <typename Func>
+void traverseInsts(MIRBlock* block,
+                   CodeGenContext& ctx,
+                   Func funcInst,
+                   std::ostream& os = std::cerr,
+                   bool debug = false) {
+  for (auto& inst : block->insts()) {
+    if (debug) {
+      const auto& instInfo = ctx.instInfo.getInstInfo(inst);
+      instInfo.print(os << "Traversing inst: ", *inst, false);
+      os << std::endl;
     }
-
-    // std::cerr << "op address " << op << "\n";
-    if (isOperandVReg(op)) {
-        std::cerr << "virtual reg v" << (op.reg() ^ virtualRegBegin) << "\n";
-    } else if (isOperandISAReg(op)) {
-        std::cerr << "physical reg i" << op.reg() << "\n";
-    } else {
-        std::cerr << "satck\n";
-    }
-
-    assert(false && "def not found");
+    funcInst(inst);
+  }
 }
 
-void ISelContext::run_isel(MIRFunction* func) {
-    bool debugISel = false;
-    auto dumpInst = [&](MIRInst* inst) {
-        auto& instInfo = mCodeGenCtx.instInfo.getInstInfo(inst);
-        instInfo.print(std::cerr << "match&select: ", *inst, false);
-        std::cerr << std::endl;
-    };
+bool ISelContext::runInstSelectImpl(MIRFunction* func) {
+  auto dumpInst = [&](MIRInst* inst) {
+    auto& instInfo = mCodeGenCtx.instInfo.getInstInfo(inst);
+    instInfo.print(std::cerr << "match&select: ", *inst, false);
+    std::cerr << std::endl;
+  };
+  bool debugISel = false;
 
-    auto& isel_info = mCodeGenCtx.iselInfo;
+  auto& isel_info = mCodeGenCtx.iselInfo;
+  genericPeepholeOpt(*func, mCodeGenCtx);
 
-    //! fix point algorithm: 循环执行指令选择和替换，直到不再变化。
-    while (true) {
-        genericPeepholeOpt(*func, mCodeGenCtx);
+  bool modified = false;
+  bool has_illegal = false;
+  clearInfo();
+  calConstantMap(func);
+  mUseCnt = collectUseCount(func, mCodeGenCtx);
 
-        bool modified = false;
-        bool has_illegal = false;
-        mRemoveWorkList.clear();
-        mReplaceList.clear();
-        mReplaceMap.clear();
+  //! 指令遍历和分析: 对每个基本块的指令进行遍历，执行指令选择和替换。
+  auto matchSelectOnBlock = [&](MIRBlock* block) {
+    collectDefinedInst(block);
 
-        mConstantMap.clear();
-        mUseCnt.clear();
-        mInstMap.clear();  //! here!
-        //! 定义和使用计数收集: 遍历所有指令，收集每个定义的计数和使用情况。
-        // get def count
-        // auto def_count = collect_def_count(func, _codegen_ctx);
-        // for (auto& block : func->blocks()) {
-        //     for (auto& inst : block->insts()) {
-        //         // for all insts
-        //         auto& instinfo = _codegen_ctx.instInfo.get_instinfo(inst);
-        //         if (requireFlag(instinfo.inst_flag(), InstFlagLoadConstant))
-        //         {
-        //             // load constant, and def once, can view as constant
-        //             // auto& def =
-        //         }
-        //     }
-        // }
+    mCurrBlock = block;
+    auto& insts = block->insts();
 
-        //! 指令遍历和分析: 对每个基本块的指令进行遍历，执行指令选择和替换。
-        // std::cerr << "function " << func->name() << "\n";
-        for (auto& block : func->blocks()) {
-            if (debugISel) {
-                std::cout << block->name() << std::endl;
-            }
+    for (auto it = insts.rbegin(); it != insts.rend(); ++it) {
+      // Convert reverse iterator to normal iterator
+      mInsertPoint = std::prev(it.base());
+      auto& inst = *it;
 
-            // check ssa form, get inst map
-            for (auto& inst : block->insts()) {
-                auto& instinfo = mCodeGenCtx.instInfo.getInstInfo(inst);
-                for (uint32_t idx = 0; idx < instinfo.operand_num(); idx++) {
-                    if (instinfo.operand_flag(idx) & OperandFlagDef) {
-                        auto def = inst->operand(idx);
-                        if (def.isReg() && isVirtualReg(def.reg())) {
-                            // std::cerr << "def reg v " << (def.reg() ^ virtualRegBegin) << "\n";
-                            // std::cerr << "def address " << def << "\n";
-                            mInstMap.emplace(def.reg(), inst);
-                        }
-                    }
-                }
-            }
-            mCurrBlock = block.get();
-            auto& insts = block->insts();
+      if (mRemoveWorkList.count(inst)) continue;
 
-            if (insts.empty())
-                continue;
+      if (debugISel) dumpInst(inst);
 
-            auto it = std::prev(insts.end());
-            /* in this block */
-            while (true) {  // for all insts in block
-                mInsertPoint = it;
-                auto& inst = *it;
-                std::optional<std::list<MIRInst*>::iterator> prev;
+      if (isel_info->match_select(inst, *this)) {
+        modified = true;
+      }
+    }
+  };
 
-                if (it != insts.begin()) {
-                    prev = std::prev(it);
-                }
-                // if inst not in remove list
-                if (not mRemoveWorkList.count(inst)) {
-                    if (debugISel) {
-                        dumpInst(inst);
-                    }
+  //! 指令移除和替换: 根据之前的分析结果，移除和替换旧的指令。
+  auto removeAndReplaceOnBlock = [&](MIRBlock* block) {
+    // remove old insts
+    block->insts().remove_if(
+      [&](auto inst) { return mRemoveWorkList.count(inst); });
 
-                    auto opcode = inst->opcode();
-                    //! do pattern match and select inst
-                    auto res = isel_info->match_select(inst, *this);
-                    if (res) {
-                        modified = true;
-                    }
-                }
+    // replace defs
+    for (auto& inst : block->insts()) {
+      if (mReplaceBlockList.count(inst)) {
+        // in replace block list, jump
+        continue;
+      }
+      auto& info = mCodeGenCtx.instInfo.getInstInfo(inst);
 
-                if (prev) {
-                    it = *prev;
-                } else {
-                    break;
-                }
-            }
+      for (uint32_t idx = 0; idx < info.operand_num(); idx++) {
+        auto op = inst->operand(idx);
+        if (not op.isReg()) {
+          continue;
         }
-
-        //! 指令移除和替换: 根据之前的分析结果，移除和替换旧的指令。
-        for (auto& block : func->blocks()) {
-            // remove old insts
-            block->insts().remove_if(
-                [&](auto inst) { return mRemoveWorkList.count(inst); });
-
-            // replace defs
-            for (auto& inst : block->insts()) {
-                if (mReplaceList.count(inst)) {
-                    //? in replace block list, jump
-                    continue;
-                }
-                auto& info = mCodeGenCtx.instInfo.getInstInfo(inst);
-
-                for (uint32_t idx = 0; idx < info.operand_num(); idx++) {
-                    auto op = inst->operand(idx);
-                    if (not op.isReg()) {
-                        continue;
-                    }
-                    // replace map: old operand* -> new operand*
-                    auto iter = mReplaceMap.find(op);
-                    if (iter != mReplaceMap.end()) {
-                        inst->set_operand(idx, iter->second);
-                    }
-                }
-            }
+        // replace map: old operand* -> new operand*
+        if (auto iter = mReplaceMap.find(op); iter != mReplaceMap.end()) {
+          inst->set_operand(idx, iter->second);
         }
-        if(debugISel) {
-            func->print(std::cout << "after isel:\n", mCodeGenCtx);
-        }
-        if (modified) {
-            if (debugISel) std::cout << "run_isel modified, continue!\n" << std::endl;
-            continue;
-        }
-        // not modified, check illegal inst
-        //! 检查和处理非法指令
-        //! 如果存在非法指令，根据情况决定是继续尝试合法化还是报告错误。
-        if (debugISel)
-            std::cout << "run_isel success!" << std::endl;
-        return;
-    }  // while end
+      }
+    }
+  };
+
+  traverseBlocks(*func, matchSelectOnBlock, std::cerr, false, false);
+  traverseBlocks(*func, removeAndReplaceOnBlock, std::cerr, false, false);
+  return modified;
+}
+
+void ISelContext::runInstSelect(MIRFunction* func) {
+  //! fix point algorithm: 循环执行指令选择和替换，直到不再变化。
+  while (runInstSelectImpl(func))
+    ;
 }
 
 uint32_t select_copy_opcode(MIROperand dst, MIROperand src) {
-    if (dst.isReg() && isISAReg(dst.reg())) {
-        // dst is a isa reg
-        if (src.isImm()) {
-            return InstLoadImmToReg;
-        }
-        return InstCopyToReg;
-    }
+  if (dst.isReg() && isISAReg(dst.reg())) {
+    // dst is a isa reg
     if (src.isImm()) {
-        return InstLoadImmToReg;
+      return InstLoadImmToReg;
     }
-    if (src.isReg() && isISAReg(src.reg())) {
-        return InstCopyFromReg;
-    }
-    assert(isOperandVRegORISAReg(src) and isOperandVRegORISAReg(dst));
-    return InstCopy;
+    return InstCopyToReg;
+  }
+  if (src.isImm()) {
+    return InstLoadImmToReg;
+  }
+  if (src.isReg() && isISAReg(src.reg())) {
+    return InstCopyFromReg;
+  }
+  assert(isOperandVRegORISAReg(src) and isOperandVRegORISAReg(dst));
+  return InstCopy;
 }
 
 void postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) {
@@ -224,17 +256,16 @@ void postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) {
       auto& info = ctx.instInfo.getInstInfo(inst);
       for (uint32_t idx = 0; idx < info.operand_num(); idx++) {
         auto op = inst->operand(idx);
-        auto lctx =
-          InstLegalizeContext{inst, insts, it, ctx, std::nullopt, func};
+        // auto lctx = ;
         if (isOperandStackObject(op)) {
           if (func.stackObjs().find(op) == func.stackObjs().end()) {
             std::cerr << "stack object not found in function " << func.name()
                       << std::endl;
             assert(false);
           }
-          ctx.iselInfo->legalizeInstWithStackOperand(lctx, op,
-                                                     func.stackObjs().at(op));
-        //   ctx.iselInfo->
+          ctx.iselInfo->legalizeInstWithStackOperand(
+            InstLegalizeContext{inst, insts, it, ctx, std::nullopt, func}, op,
+            func.stackObjs().at(op));
         }
       }
       it = next;

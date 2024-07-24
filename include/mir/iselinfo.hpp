@@ -12,25 +12,28 @@ class CodeGenContext;
 class LoweringContext;
 class ISelContext : public MIRBuilder {
   CodeGenContext& mCodeGenCtx;
-  std::unordered_map<RegNum, MIRInst*> mInstMap, mConstantMap;
+  std::unordered_map<MIROperand, MIRInst*, MIROperandHasher> mDefinedInst,
+    mConstantMap;
 
   // mReplaceList
   std::unordered_map<MIROperand, MIROperand, MIROperandHasher> mReplaceMap;
 
-  std::unordered_set<MIRInst*> mRemoveWorkList, mReplaceList;
+  std::unordered_set<MIRInst*> mRemoveWorkList, mReplaceBlockList;
 
   std::unordered_map<MIROperand, uint32_t, MIROperandHasher> mUseCnt;
 
 public:
   ISelContext(CodeGenContext& ctx) : mCodeGenCtx(ctx) {}
-  void run_isel(MIRFunction* func);
-  bool has_one_use(MIROperand op);
-  MIRInst* lookup_def(MIROperand op);
+
+  void runInstSelect(MIRFunction* func);
+  bool runInstSelectImpl(MIRFunction* func);
+  bool hasOneUse(MIROperand op);
+  MIRInst* lookupDef(const MIROperand& op) const;
 
   void remove_inst(MIRInst* inst);
   void replace_operand(MIROperand src, MIROperand dst);
 
-  MIROperand get_inst_def(MIRInst* inst);
+  MIROperand& get_inst_def(MIRInst* inst);
 
   void insert_inst(MIRInst* inst) {
     assert(inst != nullptr);
@@ -38,6 +41,18 @@ public:
   }
   CodeGenContext& codegen_ctx() { return mCodeGenCtx; }
   MIRBlock* curr_block() { return mCurrBlock; }
+
+  void clearInfo() {
+    mRemoveWorkList.clear();
+    mReplaceBlockList.clear();
+    mReplaceMap.clear();
+
+    mConstantMap.clear();
+    mUseCnt.clear();
+    mDefinedInst.clear();
+  }
+  void calConstantMap(MIRFunction* func);
+  void collectDefinedInst(MIRBlock* block);
 };
 
 class InstLegalizeContext final : public MIRBuilder {
@@ -73,7 +88,7 @@ public:
   virtual bool match_select(MIRInst* inst, ISelContext& ctx) const = 0;
 
   /* */
-  virtual void legalizeInstWithStackOperand(InstLegalizeContext& ctx,
+  virtual void legalizeInstWithStackOperand(const InstLegalizeContext& ctx,
                                             MIROperand op,
                                             StackObject& obj) const = 0;
 
@@ -103,7 +118,7 @@ static bool isICmpEqualityOp(MIROperand operand) {
 
 uint32_t select_copy_opcode(MIROperand dst, MIROperand src);
 
-inline MIROperand getNeg( MIROperand operand) {
+inline MIROperand getNeg(MIROperand operand) {
   return MIROperand::asImm(-operand.imm(), operand.type());
 }
 

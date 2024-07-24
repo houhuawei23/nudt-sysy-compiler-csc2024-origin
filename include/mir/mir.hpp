@@ -263,7 +263,7 @@ public:  // get function
     assert(isReg());
     return std::get<MIRRegister>(mStorage).reg();
   }
-  auto reloc() const{
+  auto reloc() const {
     assert(isReloc());
     return std::get<MIRRelocable*>(mStorage);
   }
@@ -273,8 +273,12 @@ public:  // get function
   }
 
 public:  // operator
-  bool operator==(const MIROperand& rhs) const { return mStorage == rhs.mStorage; }
-  bool operator!=(const MIROperand& rhs) const { return mStorage != rhs.mStorage; }
+  bool operator==(const MIROperand& rhs) const {
+    return mStorage == rhs.mStorage;
+  }
+  bool operator!=(const MIROperand& rhs) const {
+    return mStorage != rhs.mStorage;
+  }
 
 public:  // check function
   constexpr bool isUnused() const {
@@ -334,7 +338,7 @@ SYSYC_ARENA_TRAIT(MIROperand, MIR)
 
 /* MIROperandHasher */
 struct MIROperandHasher final {
-  size_t operator()(const MIROperand operand) const { return operand.hash(); }
+  size_t operator()(const MIROperand& operand) const { return operand.hash(); }
 };
 
 #include <initializer_list>
@@ -368,6 +372,7 @@ public:  // get function
     assert(idx < max_operand_num);
     return mOperands[idx];
   }
+
 public:  // set function
   auto set_opcode(uint32_t opcode) {
     mOpcode = opcode;

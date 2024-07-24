@@ -322,7 +322,7 @@ void createMIRModule(ir::Module& ir_module,
     /* instruction selection */
     {
       ISelContext isel_ctx(codegen_ctx);
-      isel_ctx.run_isel(mir_func);
+      isel_ctx.runInstSelect(mir_func);
       dumpStageResult("AfterIsel", mir_func, codegen_ctx);
     }
     /* Optimize: register coalescing */

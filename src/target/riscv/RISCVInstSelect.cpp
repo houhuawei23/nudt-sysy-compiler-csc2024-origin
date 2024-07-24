@@ -126,7 +126,7 @@ static bool selectAddrOffset(MIROperand addr,
     std::cerr << std::endl;
   };
 
-  const auto addrInst = ctx.lookup_def(addr);
+  const auto addrInst = ctx.lookupDef(addr);
   if (addrInst) {
     if (debug) dumpInst(addrInst);
     if (addrInst->opcode() == InstLoadStackObjectAddr) {
@@ -334,7 +334,7 @@ static MIROperand getAlign(int64_t immVal) {
  * lw rd, offset(rs1) or lw rd, rs1, offset
  * x[rd] = sext(M[x[rs1] + sext(offset)][31:0])
  */
-void RISCVISelInfo::legalizeInstWithStackOperand(InstLegalizeContext& ctx,
+void RISCVISelInfo::legalizeInstWithStackOperand(const InstLegalizeContext& ctx,
                                                  MIROperand op,
                                                  StackObject& obj) const {
   bool debugLISO = false;

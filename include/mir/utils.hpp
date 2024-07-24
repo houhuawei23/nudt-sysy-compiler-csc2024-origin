@@ -45,4 +45,6 @@ static void DumpForDebug(const CodeLocation& location);
 
 void ReportNotImplemented(const CodeLocation& location);
 void ReportUnreachable(const CodeLocation& location);
+
+
 }  // namespace mir
