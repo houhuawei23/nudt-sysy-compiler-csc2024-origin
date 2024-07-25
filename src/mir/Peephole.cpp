@@ -18,15 +18,14 @@ bool eliminateStackLoads(MIRFunction& mfunc, CodeGenContext& ctx) {
     //     uint32_t versionId = 0;
     //     std::unordered_map<RegNum, uint32_t> reg2Version;
     //     auto defReg = [&](RegNum reg) { reg2Version[reg] = ++versionId; };
-
-    //     std::unordered_map<MIROperand*, std::pair<RegNum, uint32_t>, MIROperandHasher> stack2Reg;  // stack -> (reg, version)
+    //     std::unordered_map<MIROperand, std::pair<RegNum, uint32_t>, MIROperandHasher> stack2Reg;  // stack -> (reg, version)
 
     //     for (auto inst : instructions) {
     //         if (inst->opcode() == InstStoreRegToStack) {
     //             auto obj = inst->operand(0);
     //             auto reg = inst->operand(1);
-    //             if (auto iter = reg2Version.find(reg->reg()); iter != reg2Version.cend()) {
-    //                 stack2Reg[obj] = { reg->reg(), iter->second };
+    //             if (auto iter = reg2Version.find(reg.reg()); iter != reg2Version.cend()) {
+    //                 stack2Reg[obj] = { reg.reg(), iter->second };
     //             } else {
     //                 defReg(reg->reg());
     //                 stack2Reg[obj] = { reg->reg(), versionId };
@@ -357,7 +356,7 @@ bool removeInvisibleInsts(MIRFunction& func, CodeGenContext& ctx) {
 bool genericPeepholeOpt(MIRFunction& func, CodeGenContext& ctx) {
     return false;
     bool modified = false;
-    // modified |= eliminateStackLoads(func, ctx);
+    modified |= eliminateStackLoads(func, ctx);
     // modified |= removeIndirectCopy(func, ctx);
     // modified |= removeIdentityCopies(func, ctx);
     // // modified |= removeUnusedInsts(func, ctx);
