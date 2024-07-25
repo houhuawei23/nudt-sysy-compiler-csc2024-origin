@@ -221,11 +221,8 @@ Value* IRBuilder::makeAlloca(Type* base_type,
   return inst;
 }
 
-Value* IRBuilder::makeGetElementPtr(Type* base_type,
-                                    Value* value,
-                                    Value* idx,
-                                    std::vector<size_t> dims,
-                                    std::vector<size_t> cur_dims) {
+Value* IRBuilder::makeGetElementPtr(Type* base_type, Value* value, Value* idx,
+                                    std::vector<size_t> dims, std::vector<size_t> cur_dims) {
   GetElementPtrInst* inst = nullptr;
   if (dims.size() == 0 && cur_dims.size() == 0) {
     inst = makeInst<GetElementPtrInst>(base_type, value, idx);

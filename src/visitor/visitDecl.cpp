@@ -222,11 +222,8 @@ ir::Value* SysYIRGenerator::visitVarDef_local(SysYParser::VarDefContext* ctx,
  *      1. const
  *      2. variable
  */
-ir::Value* SysYIRGenerator::visitArray_local(SysYParser::VarDefContext* ctx,
-                                             ir::Type* btype,
-                                             bool is_const,
-                                             std::vector<size_t> dims,
-                                             int capacity) {
+ir::Value* SysYIRGenerator::visitArray_local(SysYParser::VarDefContext* ctx, ir::Type* btype,
+                                             bool is_const, std::vector<size_t> dims, int capacity) {
   const auto name = ctx->lValue()->ID()->getText();
   int dimensions = dims.size();
   std::vector<size_t> cur_dims(dims);
@@ -260,8 +257,7 @@ ir::Value* SysYIRGenerator::visitArray_local(SysYParser::VarDefContext* ctx,
   ir::Value* element_ptr = dyn_cast<ir::Value>(alloca_ptr);
   for (int cur = 1; cur <= dimensions; cur++) {
     dims.erase(dims.begin());
-    element_ptr = mBuilder.makeGetElementPtr(
-        btype, element_ptr, ir::Constant::gen_i32(0), dims, cur_dims);
+    element_ptr = mBuilder.makeGetElementPtr(btype, element_ptr, ir::Constant::gen_i32(0), dims, cur_dims);
     cur_dims.erase(cur_dims.begin());
   }
 

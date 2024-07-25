@@ -393,8 +393,7 @@ protected:
   std::vector<size_t> _cur_dims = {};
 public:
   //! 1. Pointer <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
-  GetElementPtrInst(Type* base_type, Value* value, Value* idx,
-                    BasicBlock* parent=nullptr)
+  GetElementPtrInst(Type* base_type, Value* value, Value* idx, BasicBlock* parent=nullptr)
       : Instruction(vGETELEMENTPTR, ir::Type::TypePointer(base_type), parent) {
     _id = 0;
     addOperand(value);
@@ -403,8 +402,7 @@ public:
 
   //! 2. 高维 Array <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32 <idx>
   GetElementPtrInst(Type* base_type, Value* value, Value* idx,
-                    std::vector<size_t> dims,
-                    std::vector<size_t> cur_dims,
+                    std::vector<size_t> dims, std::vector<size_t> cur_dims,
                     BasicBlock* parent=nullptr)
       : Instruction(vGETELEMENTPTR, ir::Type::TypePointer(ir::Type::TypeArray(base_type, dims)), parent),
         _cur_dims(cur_dims) {
@@ -415,8 +413,7 @@ public:
 
   //! 3. 一维 Array <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32 <idx>
   GetElementPtrInst(Type* base_type, Value* value, Value* idx,
-                    std::vector<size_t> cur_dims,
-                    BasicBlock* parent=nullptr)
+                    std::vector<size_t> cur_dims, BasicBlock* parent=nullptr)
       : Instruction(vGETELEMENTPTR, ir::Type::TypePointer(base_type), parent),
         _cur_dims(cur_dims) {
     _id = 2;
