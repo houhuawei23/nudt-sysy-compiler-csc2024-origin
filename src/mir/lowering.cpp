@@ -983,9 +983,16 @@ void lower_GetElementPtr_beta(ir::inst_iterator begin, ir::inst_iterator end, Lo
   MIROperand mir_offset;
   auto ir_inst = dyn_cast<ir::GetElementPtrInst>(*iter);
   instEnd = *iter;
+  auto dims = ir_inst->cur_dims();
   ir::Value* ir_offset = ir_inst->index();
+  int alpha = dims.size() >= 2 ? dims[1] : 1;
   
-  bool is_constant = dyn_cast<ir::Constant>(ir_offset) ? true : false;
+  bool is_constant = ir::isa<ir::Constant>(ir_offset);
+  if (Debug) {
+    std::cerr << "the index is ";
+    if (is_constant) std::cerr << "constant\n";
+    else std::cerr << "variable\n";
+  }
   if (!is_constant) mir_offset = ctx.map2operand(ir_offset);
   
   iter++;
@@ -994,7 +1001,6 @@ void lower_GetElementPtr_beta(ir::inst_iterator begin, ir::inst_iterator end, Lo
     auto ir_inst = dyn_cast<ir::GetElementPtrInst>(*iter);
     const auto id = ir_inst->getid();
     const auto dims = ir_inst->cur_dims();
-    const auto alpha = dims.size() ? dims[0] : 1;
 
     if (id == 0) break;
     
@@ -1023,16 +1029,17 @@ void lower_GetElementPtr_beta(ir::inst_iterator begin, ir::inst_iterator end, Lo
       mir_offset = newPtr;
     }
 
+    alpha = dims.size() >= 2 ? dims[1] : 1;
     iter++;
   }
 
   if (mir_offset.isInit()) {
     auto newPtr = ctx.newVReg(OperandType::Int32);
-    ctx.emitInstBeta(InstMul, {newPtr, mir_offset, MIROperand::asImm(4, OperandType::Int32)});
+    ctx.emitInstBeta(InstMul, {newPtr, mir_offset, MIROperand::asImm(4 * alpha, OperandType::Int32)});
     mir_offset = newPtr;
   } else {
     auto ir_offset_constant = dyn_cast<ir::Constant>(ir_offset);
-    mir_offset = ctx.map2operand(ir::Constant::gen_i32(ir_offset_constant->i32() * 4));
+    mir_offset = ctx.map2operand(ir::Constant::gen_i32(ir_offset_constant->i32() * 4 * alpha));
   }
   auto newPtr = ctx.newVReg(OperandType::Int64);
   ctx.emitInstBeta(InstAdd, {newPtr, ptr, mir_offset});

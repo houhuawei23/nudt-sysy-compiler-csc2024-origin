@@ -1,39 +1,47 @@
-int n;
-int insertsort(int a[])
+int buf[2][100];
+
+// sort [l, r)
+void merge_sort(int l, int r)
 {
-    int i;
-    i = 1;
-    while(i<n)     
-    {
-        int temp;
-        temp=a[i]; 
-        int j;
-        j=i-1;
-        while(j>-1&&temp<a[j])
-        {
-            a[j+1]=a[j];  
-            j = j - 1;
+    if (l + 1 >= r)
+        return;
+
+    int mid = (l + r) / 2;
+    merge_sort(l, mid);
+    merge_sort(mid, r);
+
+    int i = l, j = mid, k = l;
+    while (i < mid && j < r) {
+        if (buf[0][i] < buf[0][j]) {
+            buf[1][k] = buf[0][i];
+            i = i + 1;
+        } else {
+            buf[1][k] = buf[0][j];
+            j = j + 1;
         }
-        a[j+1]=temp; 
-        i = i + 1;
+        k = k + 1;
     }
-    return 0;
+    while (i < mid) {
+        buf[1][k] = buf[0][i];
+        i = i + 1;
+        k = k + 1;
+    }
+    while (j < r) {
+        buf[1][k] = buf[0][j];
+        j = j + 1;
+        k = k + 1;
+    }
+
+    while (l < r) {
+        buf[0][l] = buf[1][l];
+        l = l + 1;
+    }
 }
 
-int main(){
-    n = 10;
-    int a[10];
-    a[0]=4;a[1]=3;a[2]=9;a[3]=2;a[4]=0;
-    a[5]=1;a[6]=6;a[7]=5;a[8]=7;a[9]=8;
-    // int i;
-    // i = insertsort(a);
-    // while (i < n) {
-    //     int tmp;
-    //     tmp = a[i];
-    //     putint(tmp);
-    //     tmp = 10;
-    //     putch(tmp);
-    //     i = i + 1;
-    // }
+int main()
+{
+    int n = getarray(buf[0]);
+    merge_sort(0, n);
+    putarray(n, buf[0]);
     return 0;
 }
