@@ -596,6 +596,13 @@ public:
   }
 
   template <typename T, typename U>
+  auto insertMIRInst(MIRInstList::iterator pos, T&& arg1, std::initializer_list<U> arg2) {
+    auto inst = makeMIRInst(arg1, arg2);
+    mCurrBlock->insts().emplace(pos, inst);
+    return inst;
+  }
+
+  template <typename T, typename U>
   auto emitInstBeta(T&& arg1, std::initializer_list<U> arg2) {
     auto inst = makeMIRInst(arg1, arg2);
     mCurrBlock->insts().emplace_back(inst);
