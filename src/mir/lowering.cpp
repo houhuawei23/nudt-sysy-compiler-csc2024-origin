@@ -419,7 +419,10 @@ void createMIRFunction(ir::Function* ir_func, MIRFunction* mir_func,
 
   //! 4. lowering all blocks
   {
-    for (auto& ir_block : ir_func->blocks()) {
+    auto domCtx = tAIM->getDomTree(ir_func);
+    domCtx->refresh();
+    domCtx->BFSDomTreeInfoRefresh();
+    for (auto& ir_block : domCtx->BFSDomTreeVector()) {
       auto mir_block = block_map[ir_block];
       lowering_ctx.setCurrBlock(mir_block);
 
