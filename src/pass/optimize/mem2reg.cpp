@@ -193,12 +193,12 @@ void Mem2Reg::insertphi() {
     // 遍历所有alloca，对于每个alloca，在所有定义块的支配边界中插入phi指令
     std::set<ir::BasicBlock*> Phiset;
     std::vector<ir::BasicBlock*> W;
-    ir::PhiInst* phi;
+    
     ir::BasicBlock* x;
     for (ir::AllocaInst* alloca : Allocas) {
         Phiset.clear();
         W.clear();
-        phi = nullptr;
+        // phi = nullptr;
         for (ir::BasicBlock* BB : DefsBlock[alloca]) {
             W.push_back(BB);
         }
@@ -209,7 +209,7 @@ void Mem2Reg::insertphi() {
                 if (Phiset.find(Y) == Phiset.end()) {
                     auto allocabaseType =
                         dyn_cast<ir::PointerType>(alloca->type())->baseType();
-                    phi = new ir::PhiInst(Y, allocabaseType);
+                    ir::PhiInst* phi = new ir::PhiInst(Y, allocabaseType);
                     allphi.push_back(phi);
                     Y->emplace_first_inst(phi);
                     Phiset.insert(Y);
@@ -341,27 +341,29 @@ void Mem2Reg::promotememToreg(ir::Function* F) {
     // 预处理Allocas中不能被mem2reg的变量(没有use的变量和onlystore的变量，onlystore的变量只有唯一的到达定义，不能形成phi指令)
     for (unsigned int AllocaNum = 0; AllocaNum != Allocas.size(); AllocaNum++) {
         ir::AllocaInst* ai = Allocas[AllocaNum];
-        if (ai->uses().empty())  // 没有use的变量
+        if (ai->uses().size() == 1)  // 只有一次use的变量
+        {
+            auto aitype = ai->type();
+            if (aitype && aitype->isPointer()) {
+                auto pttype = dyn_cast<ir::PointerType>(aitype);
+                auto aibasetype = pttype->baseType();
+                if (aibasetype->isFloat32() || aibasetype->isInt32() ||
+                    aibasetype->isBool()) {
+                    auto use = *(ai->uses().begin());
+                    ir::Instruction* useinst = use->user()->dynCast<ir::Instruction>();
+                    useinst->block()->delete_inst(useinst);
+                    ai->block()->delete_inst(ai);
+                }
+            }
+            
+        }
+        else if (ai->uses().empty())  // 没有use的变量
         {
             ai->block()->delete_inst(ai);
             RemoveFromAllocasList(AllocaNum);
             continue;
         }
         allocaAnalysis(ai);  // 计算这个变量的使用块集合和定义块集合
-        // if (DefsBlockvector[ai].size() == 1) // 如果onlystore
-        // {
-        //     if (rewriteSingleStoreAlloca(ai)) //
-        //     如果返回true，说明这个变量更新后没有use,直接从allocas删除
-        //     {
-        //         RemoveFromAllocasList(AllocaNum);
-        //         continue;
-        //     }
-        // }
-        // if(OnlyUsedInOneBlock and pormoteSingleBlockAlloca(ai))
-        // {
-        //     RemoveFromAllocasList(AllocaNum);
-        //     continue;
-        // }
     }
     // 插入phi指令
     insertphi();

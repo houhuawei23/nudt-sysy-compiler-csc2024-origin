@@ -82,16 +82,20 @@ void BasicBlock::emplace_first_inst(Instruction* inst) {
   if (inst->isTerminator() and isTerminal()) {
     std::cerr << "[ERROR] insert a terminal inst to a terminal bb" << std::endl;
   }
-  auto pos = mInsts.begin();
-  mInsts.emplace(pos, inst);
-  inst->setBlock(this);
+  
   if (auto phiInst = dyn_cast<PhiInst>(inst)) {
-
-    auto phi = inst->dynCast<PhiInst>();
-    assert(inst->isa<PhiInst>() and "a phi can not be inserted at the front of a bb");
-    // mPhiInsts.emplace_front(phiInst);
     mPhiInsts.push_front(inst);
+    auto pos = mInsts.begin();
+    mInsts.emplace(pos, inst);
   }
+  else{
+    auto pos = mInsts.begin();
+    for (size_t i = 0; i < mPhiInsts.size(); i++){
+      pos++;
+    }
+    mInsts.emplace(pos, inst);
+  }
+  inst->setBlock(this);
 }
 
 void BasicBlock::emplace_back_inst(Instruction* i) {
@@ -107,6 +111,19 @@ void BasicBlock::emplace_back_inst(Instruction* i) {
     // assert(false and "a phi can not be inserted at the back of a bb");
     mPhiInsts.emplace_back(phiInst);
 }
+
+void BasicBlock::emplace_lastbutone_inst(Instruction* i){
+  if (mInsts.size() == 1){
+    emplace_first_inst(i);
+  }
+  else{
+    auto iter = mInsts.end();
+    iter--;
+    emplace_inst(iter, i);
+  }
+  i->setBlock(this);
+}
+
 void Instruction::setvarname() {
   auto cur_func = mBlock->function();
   mName = "%" + std::to_string(cur_func->varInc());
@@ -135,6 +152,12 @@ void BasicBlock::force_delete_inst(Instruction* inst) {
     auto op = op_use->value();
     op->uses().remove(op_use);
   }
+  mInsts.remove(inst);
+  if (auto phiInst = dyn_cast<PhiInst>(inst)) mPhiInsts.remove(phiInst);
+}
+
+void BasicBlock::move_inst(Instruction* inst) {
+  // assert(inst->uses().size()==0);
   mInsts.remove(inst);
   if (auto phiInst = dyn_cast<PhiInst>(inst)) mPhiInsts.remove(phiInst);
 }

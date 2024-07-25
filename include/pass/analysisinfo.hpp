@@ -150,6 +150,21 @@ public:
                 _head2loop.clear();
             }
             bool isHeader(ir::BasicBlock* bb){return _head2loop.count(bb);}
+            ir::Loop* getinnermostLoop(ir::BasicBlock* bb) {
+                ir::Loop* innermost = nullptr;
+                for (auto L : _loops){
+                    if (L->contains(bb)){
+                        if (innermost == nullptr)
+                            innermost = L;
+                        else{
+                            if (_looplevel[L->header()] < _looplevel[innermost->header()])
+                                innermost = L;
+                        }
+                    }
+                }
+                return innermost;
+
+            }
             void refresh() override;
     };
 

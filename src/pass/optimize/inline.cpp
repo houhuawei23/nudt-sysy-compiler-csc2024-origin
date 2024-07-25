@@ -187,6 +187,7 @@ void Inline::run(ir::Module* module, topAnalysisInfoManager* tp) {
 
         functiontoremove.pop_back();
         if (functiontoremove.empty()) {
+            cgctx->setOff();
             cgctx->refresh();
             functiontoremove = getinlineFunc(module);
         }

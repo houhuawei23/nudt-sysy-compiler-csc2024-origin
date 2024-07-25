@@ -52,3 +52,6 @@ gdbtest.sh
 
 .cache
 .~
+test/local_test/local_test.c
+test/local_test/local_test.ll
+
