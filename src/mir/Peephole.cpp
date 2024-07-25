@@ -5,189 +5,79 @@
 
 namespace mir {
 /*
- * @brief: eliminateStackLoads function
+ * @brief: eliminateStackLoads
  * @note: 
  *     消除无用的Load Register from Stack指令
  *     使用前面已经load之后的虚拟寄存器Copy指令来代替   
+ *     NOTE: 后端属于SSA形式, 某一个虚拟寄存器不会被重复定义
  */
 bool eliminateStackLoads(MIRFunction& mfunc, CodeGenContext& ctx) {
+    /* Eliminate Stack Loads: 需要在寄存器分配之前进行优化处理  */
+    if (!ctx.registerInfo || ctx.flags.preRA) return false;
     bool modified = false;
-    // for (auto& block : mfunc.blocks()) {
-    //     auto& instructions = block->insts();
+    for (auto& block : mfunc.blocks()) {
+        auto& instructions = block->insts();
 
-    //     uint32_t versionId = 0;
-    //     std::unordered_map<RegNum, uint32_t> reg2Version;
-    //     auto defReg = [&](RegNum reg) { reg2Version[reg] = ++versionId; };
-    //     std::unordered_map<MIROperand, std::pair<RegNum, uint32_t>, MIROperandHasher> stack2Reg;  // stack -> (reg, version)
+        uint32_t versionId = 0;
+        std::unordered_map<MIROperand, uint32_t, MIROperandHasher> reg2Version;
+        std::unordered_map<MIROperand, std::pair<MIROperand, uint32_t>, MIROperandHasher> stack2Reg;  // stack -> (reg, version)
+        auto defReg = [&](MIROperand reg) { reg2Version[reg] = ++versionId; };
 
-    //     for (auto inst : instructions) {
-    //         if (inst->opcode() == InstStoreRegToStack) {
-    //             auto obj = inst->operand(0);
-    //             auto reg = inst->operand(1);
-    //             if (auto iter = reg2Version.find(reg.reg()); iter != reg2Version.cend()) {
-    //                 stack2Reg[obj] = { reg.reg(), iter->second };
-    //             } else {
-    //                 defReg(reg->reg());
-    //                 stack2Reg[obj] = { reg->reg(), versionId };
-    //             }
-    //         } else if (inst->opcode() == InstLoadRegFromStack) {
-    //             auto dst = inst->operand(0);
-    //             auto obj = inst->operand(1);
-    //             if (auto iter = stack2Reg.find(obj); iter != stack2Reg.cend()) {
-    //                 auto& [reg, ver] = stack2Reg[obj];
-    //                 if (ver == reg2Version[reg]) {
-    //                     // dst <- reg
-    //                     inst->set_opcode(InstCopy);
-    //                     if (isVirtualReg(reg)) {
-    //                         auto vReg = MIROperand::asVReg(reg, dst->type());
-    //                         *obj = *vReg;
-    //                         delete vReg;
-    //                     } else if (isISAReg(reg)) {
-    //                         auto phyReg = MIROperand::asISAReg(reg, dst->type());
-    //                         *obj = *phyReg;
-    //                         delete phyReg;
-    //                     } else {
-    //                         assert(false && "not supported type");
-    //                     }
-    //                     modified = true;
-    //                 }
-    //             }
-    //         }
+        for (auto inst : instructions) {
+            if (inst->opcode() == InstStoreRegToStack) {
+                auto& obj = inst->operand(0);
+                auto& reg = inst->operand(1);
+                if (auto iter = reg2Version.find(reg); iter != reg2Version.cend()) {
+                    stack2Reg[obj] = { reg, iter->second };
+                } else {
+                    defReg(reg);
+                    stack2Reg[obj] = { reg, versionId };
+                }
+            } else if (inst->opcode() == InstLoadRegFromStack) {
+                auto& dst = inst->operand(0);
+                auto& obj = inst->operand(1);
+                if (auto iter = stack2Reg.find(obj); iter != stack2Reg.cend()) {
+                    auto& [reg, ver] = stack2Reg[obj];
+                    if (ver == reg2Version[reg]) {
+                        // dst <- reg
+                        inst->set_opcode(InstCopy);
+                        obj = reg;
+                        modified = true;
+                    }
+                }
+            }
 
-    //         auto& instInfo = ctx.instInfo.get_instinfo(inst);
-    //         for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
-    //             if (instInfo.operand_flag(idx) & OperandFlagDef) {
-    //                 defReg(inst->operand(idx)->reg());
-    //             }
-    //         }
+            auto& instInfo = ctx.instInfo.getInstInfo(inst);
+            for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
+                if (instInfo.operand_flag(idx) & OperandFlagDef) {
+                    defReg(inst->operand(idx));
+                }
+            }
 
-    //         if (requireFlag(instInfo.inst_flag(), InstFlagCall)) {
-    //             std::vector<RegNum> nonVReg;
-    //             for (auto [reg, ver] : reg2Version) {
-    //                 // TODO: use IPRA Info
-    //                 if (isISAReg(reg)) nonVReg.push_back(reg);
-    //             }
-    //             for (auto reg : nonVReg) defReg(reg);
-    //         }
+            /* NOTE: 但是物理寄存器可能会被重复定义, 此时需要更新物理寄存器相关的versionId */
+            if (requireFlag(instInfo.inst_flag(), InstFlagCall)) {
+                std::vector<MIROperand> nonVReg;
+                for (auto [reg, ver] : reg2Version) {
+                    if (isISAReg(reg.reg())) nonVReg.push_back(reg);
+                }
+                for (auto reg : nonVReg) defReg(reg);
+            }
 
-    //         if (inst->opcode() == InstLoadRegFromStack) {
-    //             auto dst = inst->operand(0);
-    //             auto obj = inst->operand(1);
-    //             stack2Reg[obj] = { dst->reg(), reg2Version.at(dst->reg()) };
-    //         }
-    //     }
-    // }
+            /* NOTE: 更新 */
+            if (inst->opcode() == InstLoadRegFromStack) {
+                auto& dst = inst->operand(0);
+                auto& obj = inst->operand(1);
+                stack2Reg[obj] = { dst, reg2Version.at(dst) };
+            }
+        }
+    }
     
     return modified;
 }
-/*
- * @brief: removeIndirectCopy
- * @note: TODO
- */
+
+// TODO
 bool removeIndirectCopy(MIRFunction& mfunc, CodeGenContext& ctx) {
-    if (ctx.flags.dontForward) return false;  // ???
-
-    constexpr bool Debug = true;
-    if (Debug) {
-        std::cerr << "before optimize: \n";
-        mfunc.print(std::cerr, ctx);
-    }
-    bool modified = false;
-
-    // for(auto& block : mfunc.blocks()) {
-    //     auto& instructions = block->insts();
-
-    //     uint32_t versionId = 0;
-    //     std::unordered_map<RegNum, std::pair<RegNum, uint32_t>> reg2Value;  // reg -> (reg, version)
-    //     std::unordered_map<RegNum, uint32_t> version;  // reg -> version
-    //     const auto getVersion = [&](const uint32_t reg) {
-    //         assert(isVirtualReg(reg) || isISAReg(reg));
-    //         if(auto iter = version.find(reg); iter != version.cend()) return iter->second;
-    //         return version[reg] = ++versionId;
-    //     };
-    //     const auto defReg = [&](MIROperand* reg) {
-    //         if(!isOperandVRegOrISAReg(reg)) return;
-    //         version[reg->reg()] = ++versionId;
-    //         reg2Value.erase(reg->reg());
-    //     };
-
-    //     const auto replaceUse = [&](MIRInst* inst, MIROperand* reg) {
-    //         if(!isOperandVRegOrISAReg(reg)) return;
-    //         if(auto iter = reg2Value.find(reg->reg()); iter != reg2Value.cend() && iter->second.second == getVersion(iter->second.first)) {
-    //             if(ctx.flags.preRA && (!isVirtualReg(iter->second.first) &&
-    //                !(ctx.registerInfo && ctx.registerInfo->is_zero_reg(iter->second.first))))
-    //                return;  // should be handled after RA
-    //             auto backup = reg;
-    //             // NOTICE: Don't modify the type
-    //             reg = MIROperand{ MIRRegister{ iter->second.first }, backup.type() };
-    //             if(reg == backup)
-    //                 return;
-    //             auto backupInstOpcode = inst.opcode();
-    //             if(inst.opcode() == InstCopy) {
-    //                 inst.setOpcode(selectCopyOpcode(inst.getOperand(0), reg));
-    //             }
-    //             auto& instInfo = ctx.instInfo.getInstInfo(inst);
-    //             if(instInfo.verify(inst, ctx)) {
-    //                 modified = true;
-    //             } else {
-    //                 reg = backup;
-    //                 inst.setOpcode(backupInstOpcode);
-    //             }
-    //         }
-    //     };
-
-    //     for(auto iter = instructions.begin(); iter != instructions.end();) {
-    //         auto& inst = *iter;
-    //         auto next = std::next(iter);
-
-    //         auto& instInfo = ctx.instInfo.getInstInfo(inst);
-    //         for(uint32_t idx = 0; idx < instInfo.getOperandNum(); ++idx)
-    //             if(instInfo.getOperandFlag(idx) & OperandFlagUse) {
-    //                 auto& operand = inst.getOperand(idx);
-    //                 replaceUse(inst, operand);
-    //             }
-
-    //         MIROperand dst, src;
-    //         if(ctx.instInfo.matchCopy(inst, dst, src)) {
-    //             assert(isOperandVRegOrISAReg(dst) && isOperandVRegOrISAReg(src));
-    //             if(auto it = regValue.find(dst.reg());
-    //                it != regValue.cend() && it->second.first == src.reg() && it->second.second == getVersion(it->second.first)) {
-    //                 instructions.erase(iter);
-    //                 modified = true;
-    //             } else {
-    //                 defReg(dst);
-    //                 regValue[dst.reg()] = { src.reg(), getVersion(src.reg()) };
-    //             }
-    //         } else {
-    //             for(uint32_t idx = 0; idx < instInfo.getOperandNum(); ++idx)
-    //                 if(instInfo.getOperandFlag(idx) & OperandFlagDef) {
-    //                     defReg(inst.getOperand(idx));
-    //                 }
-    //             if(requireFlag(instInfo.getInstFlag(), InstFlagCall)) {
-    //                 std::vector<uint32_t> nonVReg;
-    //                 for(auto [reg, ver] : version) {
-    //                     CMMC_UNUSED(ver);
-    //                     // TODO: use IPRA Info
-    //                     if(isISAReg(reg))
-    //                         nonVReg.push_back(reg);
-    //                 }
-    //                 for(auto reg : nonVReg) {
-    //                     version[reg] = ++versionId;
-    //                     regValue.erase(reg);
-    //                 }
-    //             }
-    //         }
-
-    //         iter = next;
-    //     }
-    // }
-
-    // if (Debug) {
-    //     std::cerr << "after optimize: \n";
-    //     mfunc.print(std::cerr, ctx); 
-    // }
-
-    return modified;
+    return false;
 }
 bool removeIdentityCopies(MIRFunction& func, CodeGenContext& ctx) {
   bool modified = false;
@@ -209,7 +99,6 @@ bool removeIdentityCopies(MIRFunction& func, CodeGenContext& ctx) {
   return modified;
 }
 bool removeUnusedInsts(MIRFunction& func, CodeGenContext& ctx) {
-    /* writers: map from operand to list of insts that write it */
     std::unordered_map<MIROperand, std::vector<MIRInst*>, MIROperandHasher> writers;
 
     /** specail insts: that cant be removed,
@@ -318,8 +207,7 @@ bool removeUnusedInsts(MIRFunction& func, CodeGenContext& ctx) {
     }
 
     for (auto& block : func.blocks()) {
-        block->insts().remove_if(
-            [&](MIRInst* inst) { return remove.count(inst); });
+        block->insts().remove_if([&](MIRInst* inst) { return remove.count(inst); });
     }
 
     if(not remove.empty()) {
@@ -328,7 +216,7 @@ bool removeUnusedInsts(MIRFunction& func, CodeGenContext& ctx) {
         std::cout << "removed " << b << " insts" << std::endl;
     }
 
-    return not remove.empty();
+    return !remove.empty();
 }
 bool applySSAPropagation(MIRFunction& func, CodeGenContext& ctx) {
     return false;
@@ -346,6 +234,14 @@ bool deadInstElimination(MIRFunction& func, CodeGenContext& ctx) {
     bool modified = false;
     for (auto& block : func.blocks()) {
         auto& instructions = block->insts();
+        std::unordered_map<MIROperand, uint32_t, MIROperandHasher> version;
+        uint32_t versionIdx = 0;
+
+        auto getVersion = [&](MIROperand& op) ->uint32_t {
+            if (!isOperandVRegORISAReg(op)) return 0;
+            if (auto iter = version.find(op); iter != version.cend()) return iter->second;
+            return version[op] = ++versionIdx;
+        };
     }
     
     return modified;
@@ -354,12 +250,11 @@ bool removeInvisibleInsts(MIRFunction& func, CodeGenContext& ctx) {
     return false;
 }
 bool genericPeepholeOpt(MIRFunction& func, CodeGenContext& ctx) {
-    return false;
     bool modified = false;
     modified |= eliminateStackLoads(func, ctx);
     // modified |= removeIndirectCopy(func, ctx);
     // modified |= removeIdentityCopies(func, ctx);
-    // // modified |= removeUnusedInsts(func, ctx);
+    // modified |= removeUnusedInsts(func, ctx);
     // modified |= applySSAPropagation(func, ctx);
     // modified |= machineConstantCSE(func, ctx);
     // modified |= machineConstantHoist(func, ctx);

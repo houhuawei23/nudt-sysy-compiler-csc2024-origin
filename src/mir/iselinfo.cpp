@@ -242,7 +242,7 @@ uint32_t select_copy_opcode(MIROperand dst, MIROperand src) {
   if (src.isReg() && isISAReg(src.reg())) {
     return InstCopyFromReg;
   }
-  assert(isOperandVRegORISAReg(src) and isOperandVRegORISAReg(dst));
+  assert(isOperandVRegORISAReg(src) && isOperandVRegORISAReg(dst));
   return InstCopy;
 }
 

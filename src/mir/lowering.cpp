@@ -306,8 +306,7 @@ void createMIRModule(ir::Module& ir_module, MIRModule& mir_module,
     /* Optimize: register coalescing */
 
     /* Optimize: peephole optimization (窥孔优化) */
-    while (genericPeepholeOpt(*mir_func, codegen_ctx)) {
-    };
+    while (genericPeepholeOpt(*mir_func, codegen_ctx)) ;
 
     /* pre-RA legalization */
 

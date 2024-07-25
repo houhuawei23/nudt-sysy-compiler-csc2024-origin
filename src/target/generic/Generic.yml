@@ -62,7 +62,7 @@ enum GenericInst {
     FCast,
 
     /* Others */
-    // dst, src; isOperandVRegOrISAReg
+    // dst, src; isOperandVRegORISAReg
     Copy,
     // dst, cond, true_val, false_val; Def, Use, Use, Use
     // vreg, bool, val, val
