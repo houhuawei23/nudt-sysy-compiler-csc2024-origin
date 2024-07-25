@@ -50,6 +50,7 @@ public:
       case InstCopy:
       case InstCopyFromReg:
       case InstCopyToReg:
+      case LLA:
         return mScheduleClass_IntegerArithmetic;
 
       case InstLoadImm:

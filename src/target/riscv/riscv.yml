@@ -269,6 +269,9 @@ InstInfo: {
         AUIPC: { mnem: "auipc", template: Utype, flag: [PCRel, LoadConstant] },
 
         # lla rd, symbol: x[rd] = &symbol, Presudo, Load Local Address
+        # ->
+        # auipc rd, symbol[31:12]
+        # addi rd, rd, symbol[11:0]
         LLA:
           {
             format: ["lla", " ", 0, ", ", 1],
@@ -1098,6 +1101,9 @@ ScheduleModel:
                 InstCopy,
                 InstCopyFromReg,
                 InstCopyToReg,
+                # add by hhw, need check
+                LLA
+
               ],
             SlowLoadImm: [
                 InstLoadImm,

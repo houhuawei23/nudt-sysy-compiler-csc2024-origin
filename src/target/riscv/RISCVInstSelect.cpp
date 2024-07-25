@@ -130,7 +130,7 @@ static bool selectAddrOffset(MIROperand addr,
   if (addrInst) {
     if (debug) dumpInst(addrInst);
     if (addrInst->opcode() == InstLoadStackObjectAddr) {
-      base = addrInst->operand(1); // obj
+      base = addrInst->operand(1);  // obj
       offset = MIROperand::asImm(0, OperandType::Int64);
       return true;
     }
@@ -278,13 +278,14 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
          * xor dst, newdst, 1
          */
         auto newDst = getVRegAs(ctx, inst->operand(0));
+
         auto dst = inst->operand(0);
         inst->set_operand(0, newDst);
         inst->set_operand(3, MIROperand::asImm(CompareOp::FCmpOrderedEqual,
                                                OperandType::Special));
 
-        ctx.insertMIRInst(InstXor, {dst, newDst, getOne(newDst)});
-
+        ctx.insertMIRInst(++ctx.insertPoint(), InstXor,
+                          {dst, newDst, getOne(newDst)});
         modified = true;
         break;
       }

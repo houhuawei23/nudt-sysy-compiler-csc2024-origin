@@ -64,9 +64,93 @@ blt rs1, rs2, offset
 ## Pseudoinstructions
 
 Pseudoinstruction Base Instruction(s) Meaning
-- `la rd, symbol` -> `auipc rd, symbol[31:12]`/`addi rd, rd, symbol[11:0]`
+
+- `lla rd, symbol` 
+  - -> `auipc rd, symbol[31:12]`/`addi rd, rd, symbol[11:0]`
+  - Load Local address 
+- `la rd, symbol`
   - Load address 
-- `l{b|h|w|d} rd`
+- `l{b|h|w|d} rd, symbol`
+  - Load global
+- `s{b|h|w|d} rd, symbol, rt`
+  - Store global
+- `fl{w|d} rd, symbol, rt`
+  - Floating-point load global
+- `fs{w|d} rd, symbol, rt`
+  - Floating-point store global
+- `li rd, immediate`: Load Immediate
+- `mv rd, rs`: Copy Register
+- `not rd, rs`: One's Complement
+- `sext.w rd, rs`: Sign-extend Word to Word
+- `seqz rd, rs`: Set if Equal to Zero
+
+- `fmv.s rd, rs`: Floating-point Move Single
+- `fabs.s rd, rs`: Single-precision Absolute Value
+- `fneg.s rd, rs`: Single-precision Negate
+- `fmv.d rd, rs`: Floating-point Move Double
+- `fabs.d rd, rs`: Double-precision Absolute Value
+- `fneg.d rd, rs`: Double-precision Negate
+
+- `bgt rs, rt, offset`: Branch if Greater Than >
+- `ble rs, rt, offset`: Branch if Less Than or Equal <=
+- `bgtu rs, rt, offset`: Branch if Greater Than or Equal, Unsigned >
+- `bleu rs, rt, offset`: Branch if Less Than or Equal, Unsigned <=
+
+- `jal offset`: Jump and Link
+- `jalr rs`: Jump and Link Register
+  - `jalr x1, rs, 0`  
+  
+- `call offset`: Call far-away subroutine
+
+- `fence`: Fence on all Memory and I/O operations
+
+- `fscsr rd, rs`: Swap FP control/status register
+- 
+
+RISCV-Reader
+
+lla rd, symbol
+
+```bash
+jal getint
+mv a0, a0
+
+lla a1, a       #*
+sw a0, 0(a1)    #*
+
+# -> Store global
+# sw a0, a, a1
+
+
+```
+
+Directive Description
+.text Subsequent items are stored in the text section (machine code).
+.data Subsequent items are stored in the data section (global variables).
+.bss Subsequent items are stored in the bss section (global variables initialized to 0).
+.section .foo Subsequent items are stored in the section named .foo.
+.align n Align the next datum on a 2n -byte boundary. For example, .align 2 aligns the next value on a word boundary.
+.balign n Align the next datum on a n-byte boundary. For example, .balign 4aligns the next value on a word boundary.
+.globl sym Declare that label sym is global and may be referenced from other files.
+.string "str" Store the string str in memory and null-terminate it.
+.byte b1,..., bn Store the n 8-bit quantities in successive bytes of memory.
+.half w1,...,wn Store the n 16-bit quantities in successive memory halfwords.
+.word w1,...,wn Store the n 32-bit quantities in successive memory words.
+.dword w1,...,wn Store the n 64-bit quantities in successive memory doublewords.
+.float f1,..., fn Store the n single-precision floating-point numbers in successive memory words.
+.double d1,..., dn Store the n double-precision floating-point numbers in successive
+memory doublewords.
+.option rvc Compress subsequent instructions (see Chapter 7).
+.option norvc Don’t compress subsequent instructions.
+.option relax Allow linker relaxations for subsequent instructions.
+.option norelax Don’t allow linker relaxations for subsequent instructions.
+.option pic Subsequent instructions are position-independent code.
+.option nopic Subsequent instructions are position-dependent code.
+.option push Push the current setting of all .options to a stack, so that a subsequent
+.option pop will restore their value.
+.option pop Pop the option stack, restoring all .options to their setting at the time
+of the last .option push.
+
 
 
 , symbol auipc rd, symbol[31:12] Load global l{b|h|w|d} rd, symbol[11:0](rd)
