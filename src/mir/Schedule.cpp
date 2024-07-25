@@ -17,7 +17,7 @@ static void topDownScheduling(
   const CodeGenContext& ctx,
   int32_t waitPenalty) {
   /* debug */
-  bool debugSched = true;
+  bool debugSched = false;
   auto dumpIssue = [&](MIRInst* inst) {
     auto& instInfo = ctx.instInfo.getInstInfo(inst);
     instInfo.print(std::cerr << "issue ", *inst, true);
@@ -120,7 +120,7 @@ static void topDownScheduling(
 }
 
 static void preRAScheduleBlock(MIRBlock& block, const CodeGenContext& ctx) {
-  bool debugPreRASchedule = true;
+  bool debugPreRASchedule = false;
   /* build anti-dependencies */
   std::unordered_map<MIRInst*, std::unordered_set<MIRInst*>> antiDeps;
 

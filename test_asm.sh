@@ -154,6 +154,7 @@ function run_gcc_test() {
     gcc_out="${output_dir}/gcc_out"
 
     cat "${sy_c}" >"${gcc_c}"
+    echo "" >>"${gcc_c}"
     cat "${single_file}" >>"${gcc_c}"
 
     riscv64_gpp_compile -S "${gcc_c}" -o "${gcc_s}" -O3

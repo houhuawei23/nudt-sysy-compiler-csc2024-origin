@@ -314,7 +314,7 @@ void createMIRModule(ir::Module& ir_module, MIRModule& mir_module,
 
     /* Optimize: pre-RA scheduling, minimize register usage */
     {
-      // preRASchedule(*mir_func, codegen_ctx);
+      preRASchedule(*mir_func, codegen_ctx);
       // dumpStageResult("AfterPreRASchedule", mir_func, codegen_ctx);
     }
 

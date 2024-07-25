@@ -825,6 +825,7 @@ InstSelInfo: {
         #! InstICmp: SLT, SLTU, SLTI, SLTIU: TODO
         {
           # ICmpSignedLessThan dst, src1, src2 -> SLT dst, src1, src2
+          # src1 < src2 -> src1 < src2
           pattern:
             {
               name: InstICmp,
@@ -1102,8 +1103,7 @@ ScheduleModel:
                 InstCopyFromReg,
                 InstCopyToReg,
                 # add by hhw, need check
-                LLA
-
+                LLA,
               ],
             SlowLoadImm: [
                 InstLoadImm,
@@ -1149,14 +1149,33 @@ ScheduleModel:
                 # AMOADD_W,
               ],
             Multi: [MUL, MULH, MULHSU, MULHU, MULW],
-            DivRem: [DIVW, REMW],
-            # SDivRemW: [DIVW, REMW],
-            # FPCycle1: [],
-            # FPCycle2: [],
-            # FPCycle4: [],
-            # FPCycle5: [],
-            # FPDiv: [],
-            # FPLoadStore: [],
-            # GeneralLoad: [InstLoadRegFromStack],
+            DivRem: [
+                DIV,
+                # DIVU,
+                REM,
+                REMU,
+                # DIVUW,
+                # REMUW,
+              ],
+            SDivRemW: [DIVW, REMW],
+            FPCycle1: [FMV_X_W],
+            FPCycle2:
+              [
+                FNEG_S,
+                FCVT_S_W,
+                FCVT_S_WU,
+                FMV_S,
+                FMV_W_X,
+                FMIN_S,
+                FMAX_S,
+                FSGNJ_S,
+                FABS_S,
+              ],
+            FPCycle4: [FEQ_S, FLT_S, FLE_S, FCVT_W_S, FCVT_WU_S],
+            FPCycle5:
+              [FADD_S, FSUB_S, FMUL_S, FMADD_S, FMSUB_S, FNMADD_S, FNMSUB_S],
+            FPDiv: [FDIV_S],
+            FPLoadStore: [FLW, FSW],
+            GeneralLoad: [InstLoadRegFromStack],
           },
       } }
