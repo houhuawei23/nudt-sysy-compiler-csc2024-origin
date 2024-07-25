@@ -182,7 +182,7 @@ def run_compiler(
     ./compiler -S -o output src
     ./compiler -S -o output src -O1
     """
-    command = [compiler_path, "-S", "-o", output, src]
+    command = [compiler_path, "-S", "-o", output, src, "-O1"]
     process = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
     return process
 

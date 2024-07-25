@@ -277,6 +277,7 @@ void createMIRModule(ir::Module& ir_module, MIRModule& mir_module,
   //! 4. Lower all Functions
   add_external(infoIPRA);
   for (auto& ir_func : ir_module.funcs()) {
+    if (ir_func->blocks().empty()) continue;
     /* Just for Debug */
     size_t stageIdx = 0;
     auto dumpStageResult = [&](std::string stage, MIRFunction* mir_func, CodeGenContext& codegen_ctx) {
@@ -295,7 +296,6 @@ void createMIRModule(ir::Module& ir_module, MIRModule& mir_module,
       stageIdx++;
     }
 
-    if (ir_func->blocks().empty()) continue;
     const auto mir_func = func_map[ir_func];
     /* lower function body to generic MIR */
     {
@@ -321,10 +321,10 @@ void createMIRModule(ir::Module& ir_module, MIRModule& mir_module,
     /* pre-RA legalization */
 
     /* Optimize: pre-RA scheduling, minimize register usage */
-    // {
-    //     preRASchedule(*mir_func, codegen_ctx);
-    //     dumpStageResult("AfterPreRASchedule", mir_func, codegen_ctx);
-    // }
+    {
+      // preRASchedule(*mir_func, codegen_ctx);
+      // dumpStageResult("AfterPreRASchedule", mir_func, codegen_ctx);
+    }
 
     /* register allocation */
     {
