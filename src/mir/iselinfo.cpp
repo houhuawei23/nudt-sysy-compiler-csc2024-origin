@@ -69,7 +69,6 @@ MIROperand& ISelContext::get_inst_def(MIRInst* inst) {
   }
   // assert(false && "no def operand found");
   std::cerr << "no def operand found" << std::endl;
-  // return nullptr;
 }
 
 MIRInst* ISelContext::lookupDef(const MIROperand& op) const {
@@ -157,7 +156,7 @@ bool ISelContext::runInstSelectImpl(MIRFunction* func) {
     instInfo.print(std::cerr << "match&select: ", *inst, false);
     std::cerr << std::endl;
   };
-  bool debugISel = false;
+  constexpr bool debugISel = false;
 
   auto& isel_info = mCodeGenCtx.iselInfo;
   genericPeepholeOpt(*func, mCodeGenCtx);
@@ -206,9 +205,7 @@ bool ISelContext::runInstSelectImpl(MIRFunction* func) {
 
       for (uint32_t idx = 0; idx < info.operand_num(); idx++) {
         auto op = inst->operand(idx);
-        if (not op.isReg()) {
-          continue;
-        }
+        if (!op.isReg()) continue;
         // replace map: old operand* -> new operand*
         if (auto iter = mReplaceMap.find(op); iter != mReplaceMap.end()) {
           inst->set_operand(idx, iter->second);
@@ -224,24 +221,17 @@ bool ISelContext::runInstSelectImpl(MIRFunction* func) {
 
 void ISelContext::runInstSelect(MIRFunction* func) {
   //! fix point algorithm: 循环执行指令选择和替换，直到不再变化。
-  while (runInstSelectImpl(func))
-    ;
+  while (runInstSelectImpl(func)) ;
 }
 
 uint32_t select_copy_opcode(MIROperand dst, MIROperand src) {
   if (dst.isReg() && isISAReg(dst.reg())) {
-    // dst is a isa reg
-    if (src.isImm()) {
-      return InstLoadImmToReg;
-    }
+    /* NOTE: dst is a ISAReg */
+    if (src.isImm()) return InstLoadImmToReg;
     return InstCopyToReg;
   }
-  if (src.isImm()) {
-    return InstLoadImmToReg;
-  }
-  if (src.isReg() && isISAReg(src.reg())) {
-    return InstCopyFromReg;
-  }
+  if (src.isImm()) return InstLoadImmToReg;
+  if (src.isReg() && isISAReg(src.reg())) return InstCopyFromReg;
   assert(isOperandVRegORISAReg(src) && isOperandVRegORISAReg(dst));
   return InstCopy;
 }
@@ -258,10 +248,13 @@ void postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) {
         auto op = inst->operand(idx);
         if (isOperandStackObject(op)) {
           if (func.stackObjs().find(op) == func.stackObjs().end()) {
-            std::cerr << "stack object not found in function " << func.name() << "\n";
-            std::cerr << "stack object so" << (op.reg() ^ stackObjectBegin) << "\n";
+            std::cerr << "stack object not found in function " << func.name()
+                      << "\n";
+            std::cerr << "stack object so" << (op.reg() ^ stackObjectBegin)
+                      << "\n";
             std::cerr << "instruction: ";
-            info.print(std::cerr, *inst, false); std::cerr << "\n";
+            info.print(std::cerr, *inst, false);
+            std::cerr << "\n";
             assert(false);
           }
           ctx.iselInfo->legalizeInstWithStackOperand(

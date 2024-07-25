@@ -884,42 +884,51 @@ void lower_GetElementPtr_beta(ir::inst_iterator begin, ir::inst_iterator end, Lo
     ctx.emitInstBeta(InstMul, {newPtr, mir_offset, MIROperand::asImm(dims[i], OperandType::Int64)});
     mir_offset = newPtr;
   }
-  iter++;
-
-  while (iter != end) {
-    ir_inst = dyn_cast<ir::GetElementPtrInst>(*iter);
-    dims = ir_inst->cur_dims();
-    instEnd = *iter;
-    auto mir_cur_idx = ctx.map2operand(ir_inst->index());
-
-    /* 乘法运算 */
-    for (int i = 1; i < dims.size(); i++) {
-      auto newPtr = ctx.newVReg(OperandType::Int64);
-      ctx.emitInstBeta(InstMul, {newPtr, mir_cur_idx, MIROperand::asImm(dims[i], OperandType::Int64)});
-      mir_cur_idx = newPtr;
-    }
-
-    /* 加法运算 */
-    auto newPtr = ctx.newVReg(OperandType::Int64);
-    ctx.emitInstBeta(InstAdd, {newPtr, mir_offset, mir_cur_idx});
-    mir_offset = newPtr;
-
-    iter++;
-  }
-
-  /* 偏移量 */
+  /* 1. 偏移量 */
   {
     auto newPtr = ctx.newVReg(OperandType::Int64);
     ctx.emitInstBeta(InstMul, {newPtr, mir_offset, MIROperand::asImm(4, OperandType::Int64)});
     mir_offset = newPtr;
   }
   
-  /* 指针运算 */
+  /* 2. 指针运算 */
   {
     auto newPtr = ctx.newVReg(OperandType::Int64);
     ctx.emitInstBeta(InstAdd, {newPtr, ptr, mir_offset});
     ptr = newPtr;
     ctx.addValueMap(instEnd, ptr);
+  }
+  iter++;
+
+  while (iter != end) {
+    ir_inst = dyn_cast<ir::GetElementPtrInst>(*iter);
+    dims = ir_inst->cur_dims();
+    instEnd = *iter;
+    mir_offset = ctx.map2operand(ir_inst->index());
+
+    /* 乘法运算 */
+    for (int i = 1; i < dims.size(); i++) {
+      auto newPtr = ctx.newVReg(OperandType::Int64);
+      ctx.emitInstBeta(InstMul, {newPtr, mir_offset, MIROperand::asImm(dims[i], OperandType::Int64)});
+      mir_offset = newPtr;
+    }
+
+    /* 偏移量 */
+    {
+      auto newPtr = ctx.newVReg(OperandType::Int64);
+      ctx.emitInstBeta(InstMul, {newPtr, mir_offset, MIROperand::asImm(4, OperandType::Int64)});
+      mir_offset = newPtr;
+    }
+    
+    /* 指针运算 */
+    {
+      auto newPtr = ctx.newVReg(OperandType::Int64);
+      ctx.emitInstBeta(InstAdd, {newPtr, ptr, mir_offset});
+      ptr = newPtr;
+      ctx.addValueMap(instEnd, ptr);
+    }
+
+    iter++;
   }
 }
 }  // namespace mir
