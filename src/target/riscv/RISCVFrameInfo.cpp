@@ -170,7 +170,7 @@ void RISCVFrameInfo::emitCall(ir::CallInst* inst,
         mirFunc->newStackObject(lowering_ctx.codeGenctx->nextId(), size, align,
                                 offset, StackObjectUsage::CalleeArgument);
       // copy val to reg, then store reg to stack
-      if (not isOperandVRegOrISAReg(val)) {
+      if (!isOperandVRegORISAReg(val)) {
         auto reg = lowering_ctx.newVReg(val.type());
         lowering_ctx.emitCopy(reg, val);
         val = reg;

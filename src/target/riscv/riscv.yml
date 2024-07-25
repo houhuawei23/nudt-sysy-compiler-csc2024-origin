@@ -430,7 +430,7 @@ InstSelInfo: {
               name: InstStore,
               addr: $addr, # align: $align,
               src: $src,
-              predicate: "isOperandVRegOrISAReg($src) && selectAddrOffset($addr, ctx, [$base], [$offset])",
+              predicate: "isOperandVRegORISAReg($src) && selectAddrOffset($addr, ctx, [$base], [$offset])",
             },
           replace:
             {

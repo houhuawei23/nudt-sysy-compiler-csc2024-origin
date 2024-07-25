@@ -592,7 +592,7 @@ static bool matchAndSelectPattern4(MIRInst* inst1, ISelContext& ctx) {
   /* match predicate for operands  */
   MIROperand op4;
   MIROperand op5;
-  if (not(isOperandVRegOrISAReg(op2) && selectAddrOffset(op1, ctx, op4, op5))) {
+  if (not(isOperandVRegORISAReg(op2) && selectAddrOffset(op1, ctx, op4, op5))) {
     return false;
   }
 

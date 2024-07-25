@@ -18,8 +18,7 @@ enum OperandFlag : uint32_t {
 
 /*
  * @brief: InstFlag enum
- * @note:
- *      Instruction Flag (指令的相关状态 --> 指明属于什么指令)
+ * @note: Instruction Flag (指令标志 --> 指明属于什么指令)
  */
 enum InstFlag : uint32_t {
   InstFlagNone = 0,
@@ -62,17 +61,13 @@ class InstInfo {
 public:
   InstInfo() = default;
   virtual ~InstInfo() = default;
-
 public:  // get function
   virtual uint32_t operand_num() const = 0;
   virtual OperandFlag operand_flag(uint32_t idx) const = 0;
   virtual uint32_t inst_flag() const = 0;
   virtual std::string_view name() const = 0;
-
 public:  // print
-  virtual void print(std::ostream& out,
-                     MIRInst& inst,
-                     bool printComment) const = 0;
+  virtual void print(std::ostream& out, MIRInst& inst, bool printComment) const = 0;
 };
 
 /*
@@ -84,31 +79,21 @@ class TargetInstInfo {
 public:
   TargetInstInfo() = default;
   ~TargetInstInfo() = default;
-
 public:  // get function
   virtual const InstInfo& getInstInfo(uint32_t opcode) const;
   const InstInfo& getInstInfo(MIRInst* inst) const {
     return getInstInfo(inst->opcode());
   }
-
 public:  // match function
-  virtual bool matchBranch(MIRInst* inst,
-                           MIRBlock*& target,
-                           double& prob) const;
-
+  virtual bool matchBranch(MIRInst* inst, MIRBlock*& target, double& prob) const;
   bool matchCopy(MIRInst* inst, MIROperand& dst, MIROperand& src) const;
-  bool matchConditionalBranch(MIRInst* inst,
-                              MIRBlock*& target,
-                              double& prob) const;
-  bool matchUnconditionalBranch(MIRInst* inst,
-                                MIRBlock*& Target,
-                                double& prob) const;
+  bool matchConditionalBranch(MIRInst* inst, MIRBlock*& target, double& prob) const;
+  bool matchUnconditionalBranch(MIRInst* inst, MIRBlock*& Target, double& prob) const;
 };
 
 // utils function
 constexpr bool isOperandVRegORISAReg(const MIROperand& operand) {
-  return operand.isReg() &&
-         (isVirtualReg(operand.reg()) || isISAReg(operand.reg()));
+  return operand.isReg() && (isVirtualReg(operand.reg()) || isISAReg(operand.reg()));
 }
 constexpr bool isOperandISAReg(const MIROperand& operand) {
   return operand.isReg() && isISAReg(operand.reg());
@@ -116,50 +101,33 @@ constexpr bool isOperandISAReg(const MIROperand& operand) {
 constexpr bool isOperandVReg(const MIROperand& operand) {
   return operand.isReg() && isVirtualReg(operand.reg());
 }
-
 constexpr bool requireFlag(InstFlag flag, InstFlag required) {
-  return (static_cast<uint32_t>(flag) & static_cast<uint32_t>(required)) ==
-         static_cast<uint32_t>(required);
+  return (static_cast<uint32_t>(flag) & static_cast<uint32_t>(required)) == static_cast<uint32_t>(required);
 }
-
 constexpr bool requireFlag(uint32_t flag, InstFlag required) noexcept {
-  return (static_cast<uint32_t>(flag) & static_cast<uint32_t>(required)) ==
-         static_cast<uint32_t>(required);
+  return (static_cast<uint32_t>(flag) & static_cast<uint32_t>(required)) == static_cast<uint32_t>(required);
 }
-
 constexpr bool requireOneFlag(uint32_t flag, uint32_t required) {
   return (static_cast<uint32_t>(flag) & static_cast<uint32_t>(required)) != 0;
 }
-
 constexpr bool isOperandIReg(const MIROperand& operand) {
   return operand.isReg() && operand.type() <= OperandType::Int64;
 }
-
 constexpr bool isOperandBoolReg(const MIROperand& operand) {
   return operand.isReg() && operand.type() == OperandType::Bool;
 }
-
 constexpr bool isOperandReloc(const MIROperand& operand) {
   return operand.isReloc() && operand.type() == OperandType::Special;
 }
-constexpr bool isOperandVRegOrISAReg(const MIROperand& operand) {
-  return operand.isReg() &&
-         (isVirtualReg(operand.reg()) || isISAReg(operand.reg()));
-}
-
 constexpr bool isOperandStackObject(const MIROperand& operand) {
   return operand.isReg() && isStackObject(operand.reg());
 }
-
-template <uint32_t N>
-constexpr bool isSignedImm(intmax_t imm) {
+template <uint32_t N> constexpr bool isSignedImm(intmax_t imm) {
   static_assert(N < 64);
   constexpr auto x = static_cast<intmax_t>(1) << (N - 1);
   return -x <= imm && imm < x;
 }
-
 void dumpVirtualReg(std::ostream& os, const MIROperand& operand);
-
-}  // namespace mir
+}
 
 namespace mir::GENERIC {}  // namespace mir::GENERIC
