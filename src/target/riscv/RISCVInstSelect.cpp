@@ -278,11 +278,13 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
          * xor dst, newdst, 1
          */
         auto newDst = getVRegAs(ctx, inst->operand(0));
+
         auto dst = inst->operand(0);
         inst->set_operand(0, newDst);
         inst->set_operand(3, MIROperand::asImm(CompareOp::FCmpOrderedEqual,
                                                OperandType::Special));
-        ctx.insertMIRInst(--ctx.insertPoint(), InstXor,
+
+        ctx.insertMIRInst(++ctx.insertPoint(), InstXor,
                           {dst, newDst, getOne(newDst)});
         modified = true;
         break;
