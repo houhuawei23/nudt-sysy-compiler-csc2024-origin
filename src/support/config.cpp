@@ -92,13 +92,23 @@ void Config::parseTestArgs(int argc, char* argv[]) {
   }
 }
 
+// clang-format off
 static const auto PassesList = std::vector<std::string>{
-  // "mem2reg",
-  // "inline", "tco", "inline",      "g2l",  "adce", "sccp",
-  // "simplifycfg", "gcm",    "gvn", "instcombine", "sccp", "adce",
-  // "reg2mem"
+  "mem2reg",  //
+  // "inline",   //
+  // "tco",      //
+  // "inline",   //
+  // "g2l",      //
+  "adce",     // passed all functional
+  // "sccp",     //
+  // "simplifycfg",
+  "gcm",  // global code motion
+  "gvn",          // global value numbering: passed
+  "instcombine",  //
+  "adce",         //
+  "reg2mem"
 };
-
+// clang-format on
 /*
 功能测试：compiler -S -o testcase.s testcase.sy
 性能测试：compiler -S -o testcase.s testcase.sy -O1
