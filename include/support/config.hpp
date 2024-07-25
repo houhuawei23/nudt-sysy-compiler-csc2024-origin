@@ -15,22 +15,22 @@ enum LogLevel : uint32_t { SILENT, INFO, DEBUG };
 
 class Config {
 protected:
-  std::ostream* _os;
-  std::ostream* _err_os;
+  std::ostream* mos;
+  std::ostream* merros;
 
 public:
   std::string infile;
   std::string outfile;
 
-  std::vector<std::string> pass_names;
-  bool gen_ir = false;
-  bool gen_asm = false;
+  std::vector<std::string> passes;
+  bool genIR = false;
+  bool genASM = false;
 
-  OptLevel opt_level = OptLevel::O0;
-  LogLevel log_level = LogLevel::SILENT;
+  OptLevel optLevel = OptLevel::O0;
+  LogLevel logLevel = LogLevel::SILENT;
 
 public:
-  Config() : _os(&std::cout), _err_os(&std::cerr) {}
+  Config() : mos(&std::cout), merros(&std::cerr) {}
   Config(int argc, char* argv[]) { parseTestArgs(argc, argv); }
 
   // Delete copy constructor and assignment operator to prevent copies
@@ -44,7 +44,8 @@ public:
   }
   auto debugDir() const {
     // mkdir ./.debug/xxx/ for debug info
-    return fs::path("./.debug") / fs::path(infile).filename().replace_extension("");
+    return fs::path("./.debug") /
+           fs::path(infile).filename().replace_extension("");
   }
 
   void parseTestArgs(int argc, char* argv[]);
@@ -55,8 +56,8 @@ public:
   void print_help();
   void print_info();
 
-  std::ostream& os() const { return *_os; }
-  void set_ostream(std::ostream& os) { _os = &os; }
+  std::ostream& os() const { return *mos; }
+  void set_ostream(std::ostream& os) { mos = &os; }
 };
 
 }  // namespace sysy

@@ -181,7 +181,7 @@ void createMIRModule(ir::Module& ir_module, MIRModule& mir_module,
                      Target& target, pass::topAnalysisInfoManager* tAIM) {
   auto& config = sysy::Config::getInstance();
 
-  bool debugLowering = config.log_level >= sysy::LogLevel::DEBUG;
+  bool debugLowering = config.logLevel >= sysy::LogLevel::DEBUG;
 
   auto& functions = mir_module.functions();      // uptr vector
   auto& global_objs = mir_module.global_objs();  // uptr vector
@@ -313,7 +313,7 @@ void createMIRModule(ir::Module& ir_module, MIRModule& mir_module,
 
     /* Optimize: pre-RA scheduling, minimize register usage */
     {
-      preRASchedule(*mir_func, codegen_ctx);
+      // preRASchedule(*mir_func, codegen_ctx);
       // dumpStageResult("AfterPreRASchedule", mir_func, codegen_ctx);
     }
 

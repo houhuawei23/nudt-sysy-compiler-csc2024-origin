@@ -38,16 +38,16 @@ void Config::print_help() {
 }
 
 void Config::print_info() {
-  if (log_level > LogLevel::SILENT) {
+  if (logLevel > LogLevel::SILENT) {
     std::cout << "In File  : " << infile << std::endl;
     std::cout << "Out File : " << outfile << std::endl;
-    std::cout << "Gen IR   : " << (gen_ir ? "Yes" : "No") << std::endl;
-    std::cout << "Gen ASM  : " << (gen_asm ? "Yes" : "No") << std::endl;
-    std::cout << "Opt Level: " << opt_level << std::endl;
-    std::cout << "Log Level: " << log_level << std::endl;
-    if (not pass_names.empty()) {
+    std::cout << "Gen IR   : " << (genIR ? "Yes" : "No") << std::endl;
+    std::cout << "Gen ASM  : " << (genASM ? "Yes" : "No") << std::endl;
+    std::cout << "Opt Level: " << optLevel << std::endl;
+    std::cout << "Log Level: " << logLevel << std::endl;
+    if (not passes.empty()) {
       std::cout << "Passes   : ";
-      for (const auto& pass : pass_names) {
+      for (const auto& pass : passes) {
         std::cout << " " << pass;
       }
       std::cout << std::endl;
@@ -63,12 +63,12 @@ void Config::parseTestArgs(int argc, char* argv[]) {
         infile = optarg;
         break;
       case 'i':
-        gen_ir = true;
+        genIR = true;
         break;
       case 't':
         // optind start from 1, so we need to minus 1
         while (optind <= argc && *argv[optind - 1] != '-') {
-          pass_names.push_back(argv[optind - 1]);
+          passes.push_back(argv[optind - 1]);
           optind++;
         }
         optind--;  // must!
@@ -77,13 +77,13 @@ void Config::parseTestArgs(int argc, char* argv[]) {
         outfile = optarg;
         break;
       case 'S':
-        gen_asm = true;
+        genASM = true;
         break;
       case 'O':
-        opt_level = static_cast<OptLevel>(std::stoi(optarg));
+        optLevel = static_cast<OptLevel>(std::stoi(optarg));
         break;
       case 'L':
-        log_level = static_cast<LogLevel>(std::stoi(optarg));
+        logLevel = static_cast<LogLevel>(std::stoi(optarg));
         break;
       default:
         print_help();
@@ -92,16 +92,23 @@ void Config::parseTestArgs(int argc, char* argv[]) {
   }
 }
 
+static const auto PassesList = std::vector<std::string>{
+  // "mem2reg",
+  // "inline", "tco", "inline",      "g2l",  "adce", "sccp",
+  // "simplifycfg", "gcm",    "gvn", "instcombine", "sccp", "adce",
+  // "reg2mem"
+};
+
 /*
 功能测试：compiler -S -o testcase.s testcase.sy
 性能测试：compiler -S -o testcase.s testcase.sy -O1
 */
 void Config::parseSubmitArgs(int argc, char* argv[]) {
-  gen_asm = true;
+  genASM = true;
   outfile = argv[3];
   infile = argv[4];
   if (argc == 5) {
-    opt_level = OptLevel::O1;
+    optLevel = OptLevel::O1;
   }
 }
 
@@ -113,6 +120,9 @@ void Config::parseCmdArgs(int argc, char* argv[]) {
   } else {
     print_help();
     exit(EXIT_FAILURE);
+  }
+  if (optLevel == OptLevel::O1) {
+    passes = PassesList;
   }
 }
 
