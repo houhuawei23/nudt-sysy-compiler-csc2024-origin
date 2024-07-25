@@ -1,3 +1,8 @@
+#include <iostream>
+#include <fstream>
+#include <queue>
+#include <filesystem>
+#include <string_view>
 #include "pass/pass.hpp"
 #include "pass/analysisinfo.hpp"
 #include "pass/analysis/dom.hpp"
@@ -13,17 +18,13 @@
 #include "target/riscv/RISCVTarget.hpp"
 #include "support/StaticReflection.hpp"
 #include "support/config.hpp"
-#include <iostream>
-#include <fstream>
-#include <queue>
-#include <filesystem>
-#include <string_view>
+
 namespace fs = std::filesystem;
 namespace mir {
 /* 保存Runtime相关的Caller-Saved Registers */
 void add_external(IPRAUsageCache& infoIPRA) {
   const std::string runtime[] = {"_memset", "putint", "getint", "getch", "getfloat", "getarray", "getfarray", 
-                               "putch", "putarray", "putfloat", "putfarray", "putf"};
+                                 "putch", "putarray", "putfloat", "putfarray", "putf"};
   std::unordered_set<RegNum> caller_saved_reg = {RISCV::X5, RISCV::X6, RISCV::X7, RISCV::X10, RISCV::X11,
                                                  RISCV::X12, RISCV::X13, RISCV::X14, RISCV::X15, RISCV::X16, 
                                                  RISCV::X17,  RISCV::X28, RISCV::X29, RISCV::X30, RISCV::X31, 
@@ -44,7 +45,7 @@ MIROperand FloatPointConstantPool::getFloatConstant(class LoweringContext& ctx, 
   if (it != mFloatMap.cend()) {
     offset = it->second;
   } else {
-    if (not mFloatDataStorage) {
+    if (!mFloatDataStorage) {
       auto storage = std::make_unique<MIRDataStorage>(
         MIRDataStorage::Storage{}, true, "float_const_pool", true);
       mFloatDataStorage = storage.get();
@@ -68,8 +69,7 @@ MIROperand FloatPointConstantPool::getFloatConstant(class LoweringContext& ctx, 
 
   // Load dst, addr, 4
   const auto dst = ctx.newVReg(OperandType::Float32);
-  ctx.emitInstBeta(InstLoad,
-                   {dst, addr, MIROperand::asImm(4, OperandType::Special)});
+  ctx.emitInstBeta(InstLoad, {dst, addr, MIROperand::asImm(4, OperandType::Special)});
   return dst;
 }
 
@@ -86,7 +86,7 @@ static OperandType get_optype(ir::Type* type) {
       default: assert(false && "unsupported float type");
     }
   } else if (type->isPointer()) {
-    // NOTE: rv64
+    /* NOTE: rv64 */
     return OperandType::Int64;
   } else {
     return OperandType::Special;
@@ -110,8 +110,6 @@ void LoweringContext::addValueMap(ir::Value* ir_val, MIROperand mir_operand) {
 MIROperand LoweringContext::map2operand(ir::Value* ir_val) {
   assert(ir_val && "null ir_val");
   /* 1. Local Value: alloca */
-
-  // if (iter != valueMap.end()) return new MIROperand(*(iter->second));
   if (auto iter = valueMap.find(ir_val); iter != valueMap.end()) {
     return iter->second;
   }
@@ -120,8 +118,7 @@ MIROperand LoweringContext::map2operand(ir::Value* ir_val) {
   if (auto gvar = ir_val->dynCast<ir::GlobalVariable>()) {
     auto ptr = newVReg(pointerType);
     /* LoadGlobalAddress ptr, reloc */
-    emitInstBeta(InstLoadGlobalAddress,
-                 {ptr, MIROperand::asReloc(gvarMap.at(gvar)->reloc.get())});
+    emitInstBeta(InstLoadGlobalAddress, {ptr, MIROperand::asReloc(gvarMap.at(gvar)->reloc.get())});
 
     return ptr;
   }
@@ -139,9 +136,7 @@ MIROperand LoweringContext::map2operand(ir::Value* ir_val) {
   }
   // TODO: support float constant
   if (const_val->type()->isFloat32()) {
-    if (auto fpOperand =
-          codeGenctx->iselInfo->materializeFPConstant(const_val->f32(), *this);
-        fpOperand.isInit()) {
+    if (auto fpOperand = codeGenctx->iselInfo->materializeFPConstant(const_val->f32(), *this); fpOperand.isInit()) {
       return fpOperand;
     }
 
@@ -173,8 +168,7 @@ void createMIRInst(ir::Instruction* ir_inst, LoweringContext& ctx);
 void lower_GetElementPtr(ir::inst_iterator begin, ir::inst_iterator end, LoweringContext& ctx);
 void lower_GetElementPtr_beta(ir::inst_iterator begin, ir::inst_iterator end, LoweringContext& ctx);
 
-std::unique_ptr<MIRModule> createMIRModule(ir::Module& ir_module, Target& target,
-                                           pass::topAnalysisInfoManager* tAIM) {
+std::unique_ptr<MIRModule> createMIRModule(ir::Module& ir_module, Target& target, pass::topAnalysisInfoManager* tAIM) {
   auto mir_module_uptr = std::make_unique<MIRModule>(&ir_module, target);
   createMIRModule(ir_module, *mir_module_uptr, target, tAIM);
   return mir_module_uptr;
@@ -205,6 +199,7 @@ void createMIRModule(ir::Module& ir_module, MIRModule& mir_module,
 
   //! 2. for all global variables, create MIRGlobalObject
   for (auto ir_gvar : ir_module.globalVars()) {
+    constexpr bool DebugGlobal = true;
     const auto name = ir_gvar->name().substr(1); /* remove '@' */
     /* 基础类型 (int OR float) */
     auto type = ir_gvar->type()->dynCast<ir::PointerType>()->baseType();
@@ -214,9 +209,9 @@ void createMIRModule(ir::Module& ir_module, MIRModule& mir_module,
     const bool is_float = type->isFloat32();
     const size_t align = 4;
 
-    if (ir_gvar->isInit()) {
-      /* .data: 已初始化的、可修改的全局数据 (Array and Scalar) */
-      /* 全局变量初始化一定为常值表达式 */
+    if (ir_gvar->isInit()) {  /* .data: 已初始化的、可修改的全局数据 (Array and Scalar) */
+      /* NOTE: 全局变量初始化一定为常值表达式 */
+      if (DebugGlobal) std::cerr << "init size is " << ir_gvar->init_cnt() << "\n";
       MIRDataStorage::Storage data;
       for (int i = 0; i < ir_gvar->init_cnt(); i++) {
         const auto constValue = dyn_cast<ir::Constant>(ir_gvar->init(i));
@@ -233,15 +228,12 @@ void createMIRModule(ir::Module& ir_module, MIRModule& mir_module,
         }
         data.push_back(word);
       }
-      auto mir_storage = std::make_unique<MIRDataStorage>(
-        std::move(data), read_only, name, is_float);
-      auto mir_gobj = std::make_unique<MIRGlobalObject>(
-        align, std::move(mir_storage), &mir_module);
+      auto mir_storage = std::make_unique<MIRDataStorage>(std::move(data), read_only, name, is_float);
+      auto mir_gobj = std::make_unique<MIRGlobalObject>(align, std::move(mir_storage), &mir_module);
       mir_module.global_objs().push_back(std::move(mir_gobj));
-    } else { /* .bss: 未初始化的全局数据 (Just Scalar) */
+    } else {  /* .bss: 未初始化的全局数据 (Just Scalar) */
       auto mir_storage = std::make_unique<MIRZeroStorage>(size, name, is_float);
-      auto mir_gobj = std::make_unique<MIRGlobalObject>(
-        align, std::move(mir_storage), &mir_module);
+      auto mir_gobj = std::make_unique<MIRGlobalObject>(align, std::move(mir_storage), &mir_module);
       mir_module.global_objs().push_back(std::move(mir_gobj));
     }
     gvar_map.emplace(ir_gvar, mir_module.global_objs().back().get());
@@ -981,7 +973,11 @@ void lower(ir::GetElementPtrInst* ir_inst, LoweringContext& ctx) {
   auto btype = ir_inst->baseType();
   int stride = 1;
   if (btype->isArray()) {
-    stride = dyn_cast<ir::ArrayType>(btype)->dims()[0];
+    auto dims = dyn_cast<ir::ArrayType>(btype)->dims();
+    for (int i = 0; i < dims.size(); i++) {
+      stride *= dims[i];
+    }
+    // stride = dyn_cast<ir::ArrayType>(btype)->dims()[0];
   }
   auto ir_index = ir_inst->index();
 

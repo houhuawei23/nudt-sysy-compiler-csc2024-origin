@@ -486,34 +486,24 @@ public:
 class MIRDataStorage : public MIRRelocable {
 public:
   using Storage = std::vector<uint32_t>;
-
 private:
   Storage mData;
   bool mIsFloat;
   bool mIsReadonly;
-
 public:
-  MIRDataStorage(const Storage data,
-                 bool readonly,
-                 const std::string& name = "",
-                 bool is_float = false)
-    : MIRRelocable(name),
-      mData(data),
-      mIsReadonly(readonly),
-      mIsFloat(is_float) {}
-
+  MIRDataStorage(const Storage data, bool readonly,
+                 const std::string& name="", bool is_float=false)
+    : MIRRelocable(name), mData(data), mIsReadonly(readonly), mIsFloat(is_float) {}
 public:  // check function
   auto is_readonly() const { return mIsReadonly; }
   auto is_float() const { return mIsFloat; }
-
 public:  // set function
   uint32_t append_word(uint32_t word) {
     auto idx = static_cast<uint32_t>(mData.size());
     mData.push_back(word);
     return idx;
   }
-
-public:
+public:  // utils function
   void print(std::ostream& os, CodeGenContext& ctx) override;
 };
 
@@ -547,9 +537,7 @@ private:
 
 public:
   MIRModule(ir::Module* ir_module, Target& target)
-    : mIRModule(ir_module),
-      mTarget(target),
-      mArena{utils::Arena::Source::MIR} {}
+    : mIRModule(ir_module), mTarget(target), mArena{utils::Arena::Source::MIR} {}
 
   MIRFunction_UPtrVec& functions() { return mFunctions; }
   MIRGlobalObject_UPtrVec& global_objs() { return mGlobalObjects; }

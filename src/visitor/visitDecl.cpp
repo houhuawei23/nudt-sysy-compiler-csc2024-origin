@@ -60,9 +60,7 @@ ir::Value* SysYIRGenerator::visitDeclGlobal(SysYParser::DeclContext* ctx) {
   return dyn_cast_Value(res);
 }
 
-ir::Value* SysYIRGenerator::visitVarDef_global(SysYParser::VarDefContext* ctx,
-                                               ir::Type* btype,
-                                               bool is_const) {
+ir::Value* SysYIRGenerator::visitVarDef_global(SysYParser::VarDefContext* ctx, ir::Type* btype, bool is_const) {
   const auto name = ctx->lValue()->ID()->getText();
 
   // 获得数组的各个维度 (常量)
@@ -84,10 +82,8 @@ ir::Value* SysYIRGenerator::visitVarDef_global(SysYParser::VarDefContext* ctx,
   }
   bool isArray = dims.size() > 0;
 
-  if (isArray)
-    return visitArray_global(ctx, btype, is_const, dims, capacity);
-  else
-    return visitScalar_global(ctx, btype, is_const);
+  if (isArray) return visitArray_global(ctx, btype, is_const, dims, capacity);
+  else return visitScalar_global(ctx, btype, is_const);
 }
 /*
  * @brief: visit global array
@@ -99,11 +95,8 @@ ir::Value* SysYIRGenerator::visitVarDef_global(SysYParser::VarDefContext* ctx,
  *      1. const
  *      2. variable
  */
-ir::Value* SysYIRGenerator::visitArray_global(SysYParser::VarDefContext* ctx,
-                                              ir::Type* btype,
-                                              bool is_const,
-                                              std::vector<size_t> dims,
-                                              int capacity) {
+ir::Value* SysYIRGenerator::visitArray_global(SysYParser::VarDefContext* ctx, ir::Type* btype, bool is_const,
+                                              std::vector<size_t> dims, int capacity) {
   const auto name = ctx->lValue()->ID()->getText();
   int dimensions = dims.size();
 
@@ -131,8 +124,7 @@ ir::Value* SysYIRGenerator::visitArray_global(SysYParser::VarDefContext* ctx,
   }
 
   //! generate global variable and assign
-  auto global_var =
-      ir::GlobalVariable::gen(btype, Arrayinit, mModule, name, is_const, dims);
+  auto global_var = ir::GlobalVariable::gen(btype, Arrayinit, mModule, name, is_const, dims);
   mTables.insert(name, global_var);
   mModule->addGlobalVar(name, global_var);
 
@@ -285,9 +277,7 @@ ir::Value* SysYIRGenerator::visitArray_local(SysYParser::VarDefContext* ctx, ir:
  *      1. const     ignore
  *      2. variable  alloca
  */
-ir::Value* SysYIRGenerator::visitScalar_local(SysYParser::VarDefContext* ctx,
-                                              ir::Type* btype,
-                                              bool is_const) {
+ir::Value* SysYIRGenerator::visitScalar_local(SysYParser::VarDefContext* ctx, ir::Type* btype, bool is_const) {
   const auto name = ctx->lValue()->ID()->getText();
   ir::Value* init = nullptr;
 
@@ -346,10 +336,8 @@ ir::Value* SysYIRGenerator::visitScalar_local(SysYParser::VarDefContext* ctx,
  *      varDef: lValue (ASSIGN initValue)?;
  *      initValue: exp | LBRACE (initValue (COMMA initValue)*)? RBRACE;
  */
-void SysYIRGenerator::visitInitValue_Array(SysYParser::InitValueContext* ctx,
-                                           const int capacity,
-                                           const std::vector<size_t> dims,
-                                           std::vector<ir::Value*>& init) {
+void SysYIRGenerator::visitInitValue_Array(SysYParser::InitValueContext* ctx, const int capacity,
+                                           const std::vector<size_t> dims, std::vector<ir::Value*>& init) {
   if (ctx->exp()) {
     auto value = any_cast_Value(visit(ctx->exp()));
 
@@ -373,8 +361,7 @@ void SysYIRGenerator::visitInitValue_Array(SysYParser::InitValueContext* ctx,
       _path[_d++] = _n;
       _n = 0;
     }
-    std::vector<ir::Value*>
-        indices;  // 大小为数组维度 (存储当前visit的元素的下标)
+    std::vector<ir::Value*> indices;  // 大小为数组维度 (存储当前visit的元素的下标)
     for (int i = 0; i < dims.size() - 1; i++) {
       indices.push_back(ir::Constant::gen_i32(_path[i]));
     }
@@ -386,8 +373,7 @@ void SysYIRGenerator::visitInitValue_Array(SysYParser::InitValueContext* ctx,
       offset += factor * dyn_cast<ir::Constant>(indices[i])->i32();
       factor *= dims[i];
     }
-    if (auto cvalue =
-            dyn_cast<ir::Constant>(value)) {  // 1. 常值 (global OR local)
+    if (auto cvalue = dyn_cast<ir::Constant>(value)) {  // 1. 常值 (global OR local)
       init[offset] = value;
     } else {  // 2. 变量 (just for local)
       if (_is_alloca) {
