@@ -134,14 +134,14 @@ LiveVariablesInfo calcLiveIntervals(MIRFunction& mfunc, CodeGenContext& ctx) {
 
             std::cout << "\ndef: \n";
             for (auto def : blockInfo.defs) {
-                if (isVirtualReg) std::cout << "v" << (def ^ virtualRegBegin) << ", ";
+                if (isVirtualReg(def)) std::cout << "v" << (def ^ virtualRegBegin) << ", ";
                 else std::cout << "i" << def << ", ";
             }
             std::cout << "\n";
 
             std::cout << "\nuse: \n";
             for (auto use : blockInfo.uses) {
-                if (isVirtualReg) std::cout << "v" << (use ^ virtualRegBegin) << ", ";
+                if (isVirtualReg(use)) std::cout << "v" << (use ^ virtualRegBegin) << ", ";
                 else std::cout << "i" << use << ", ";
             }
             std::cout << "\n";
