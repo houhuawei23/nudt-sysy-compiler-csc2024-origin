@@ -18,6 +18,22 @@ class RISCVScheduleModel_sifive_u74 final : public TargetScheduleModel {
 
   RISCVScheduleClassDivRem mScheduleClass_DivRem;
 
+  RISCVScheduleClassSDivRemW mScheduleClass_SDivRemW;
+
+  RISCVScheduleClassFPCycle1 mScheduleClass_FPCycle1;
+
+  RISCVScheduleClassFPCycle2 mScheduleClass_FPCycle2;
+
+  RISCVScheduleClassFPCycle4 mScheduleClass_FPCycle4;
+
+  RISCVScheduleClassFPCycle5 mScheduleClass_FPCycle5;
+
+  RISCVScheduleClassFPDiv mScheduleClass_FPDiv;
+
+  RISCVScheduleClassFPLoadStore mScheduleClass_FPLoadStore;
+
+  RISCVScheduleClassGeneralLoad mScheduleClass_GeneralLoad;
+
 public:
   ScheduleClass& getInstScheClass(uint32_t opcode) override {
     switch (opcode) {
@@ -93,9 +109,54 @@ public:
       case MULW:
         return mScheduleClass_Multi;
 
+      case DIV:
+      case REM:
+      case REMU:
+        return mScheduleClass_DivRem;
+
       case DIVW:
       case REMW:
-        return mScheduleClass_DivRem;
+        return mScheduleClass_SDivRemW;
+
+      case FMV_X_W:
+        return mScheduleClass_FPCycle1;
+
+      case FNEG_S:
+      case FCVT_S_W:
+      case FCVT_S_WU:
+      case FMV_S:
+      case FMV_W_X:
+      case FMIN_S:
+      case FMAX_S:
+      case FSGNJ_S:
+      case FABS_S:
+        return mScheduleClass_FPCycle2;
+
+      case FEQ_S:
+      case FLT_S:
+      case FLE_S:
+      case FCVT_W_S:
+      case FCVT_WU_S:
+        return mScheduleClass_FPCycle4;
+
+      case FADD_S:
+      case FSUB_S:
+      case FMUL_S:
+      case FMADD_S:
+      case FMSUB_S:
+      case FNMADD_S:
+      case FNMSUB_S:
+        return mScheduleClass_FPCycle5;
+
+      case FDIV_S:
+        return mScheduleClass_FPDiv;
+
+      case FLW:
+      case FSW:
+        return mScheduleClass_FPLoadStore;
+
+      case InstLoadRegFromStack:
+        return mScheduleClass_GeneralLoad;
 
       default:
         std::cerr << "getInstScheClass() failed: op: " << opcode << std::endl;
