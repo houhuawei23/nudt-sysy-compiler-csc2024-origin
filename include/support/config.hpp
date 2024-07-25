@@ -31,7 +31,7 @@ public:
 
 public:
   Config() : _os(&std::cout), _err_os(&std::cerr) {}
-  Config(int argc, char* argv[]) { parse_cmd_args(argc, argv); }
+  Config(int argc, char* argv[]) { parseTestArgs(argc, argv); }
 
   // Delete copy constructor and assignment operator to prevent copies
   Config(const Config&) = delete;
@@ -47,8 +47,11 @@ public:
     return fs::path("./.debug") / fs::path(infile).filename().replace_extension("");
   }
 
-  void parse_cmd_args(int argc, char* argv[]);
+  void parseTestArgs(int argc, char* argv[]);
   void parseSubmitArgs(int argc, char* argv[]);
+
+  void parseCmdArgs(int argc, char* argv[]);
+
   void print_help();
   void print_info();
 

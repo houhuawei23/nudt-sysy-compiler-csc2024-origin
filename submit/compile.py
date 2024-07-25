@@ -84,6 +84,7 @@ def compile_project(source_path, target_path):
         raise
 
 # Example usage:
+# python compile.py . ./compiler
 source_path = sys.argv[1]
 target_path = sys.argv[2]
 compile_project(source_path, target_path)
