@@ -15,12 +15,11 @@ ir::BasicBlock* loopsimplify::insertUniqueBackedgeBlock(
   ir::BasicBlock* header = L->header();
   ir::Function* F = header->function();
 
-  if (!preheader)
-    return nullptr;
+  if (!preheader) return nullptr;
 
   std::vector<ir::BasicBlock*> BackedgeBBs;
   for (ir::BasicBlock* BB : header->pre_blocks()) {
-    if (BB != preheader)
+    if (BB != preheader)  // L->contains(BB)
       BackedgeBBs.push_back(BB);
   }
 
@@ -75,6 +74,53 @@ ir::BasicBlock* loopsimplify::insertUniquePreheader(
   ir::BasicBlock* header = L->header();
   ir::Function* F = header->function();
   ir::BasicBlock* preheader = L->getlooppPredecessor();
+  if (!preheader) {  // 有多个循环外的preheader，则插入一个新的汇合块
+    std::vector<ir::BasicBlock*> preBBs;
+    for (ir::BasicBlock* BB : header->pre_blocks()) {
+      if (!L->contains(BB)) preBBs.push_back(BB);
+    }
+    ir::BasicBlock* BEBB = F->newBlock();
+    ir::BranchInst* jmp = new ir::BranchInst(header, BEBB);
+    BEBB->emplace_back_inst(jmp);
+    ir::BasicBlock::block_link(BEBB, header);
+    for (auto& inst : header->insts()) {
+      if (ir::PhiInst* phiinst = dyn_cast<ir::PhiInst>(inst)) {
+        ir::PhiInst* BEphi = new ir::PhiInst(BEBB, phiinst->type());
+        BEBB->emplace_first_inst(BEphi);
+        bool hasuniqueval = true;
+        ir::Value* uniqueval = nullptr;
+        for (ir::BasicBlock* BB : preBBs) {
+          ir::Value* val = phiinst->getvalfromBB(BB);
+          BEphi->addIncoming(val, BB);
+          if (hasuniqueval) {
+            if (!uniqueval) {
+              uniqueval = val;
+            } else if (uniqueval != val) {
+              hasuniqueval = false;
+            }
+          }
+        }
+        for (ir::BasicBlock* BB : preBBs) {
+          phiinst->delBlock(BB);
+        }
+        phiinst->addIncoming(BEphi, BEBB);
+        if (hasuniqueval) {
+          BEphi->replaceAllUseWith(uniqueval);
+          BEBB->delete_inst(BEphi);
+        }
+      }
+    }
+    for (ir::BasicBlock* BB : preBBs) {
+      auto inst = BB->insts().back();
+      ir::BasicBlock::delete_block_link(BB, header);
+      ir::BasicBlock::block_link(BB, BEBB);
+      if (ir::BranchInst* brinst = dyn_cast<ir::BranchInst>(inst)) {
+        brinst->replaceDest(header, BEBB);
+      }
+    }
+    L->blocks().insert(BEBB);
+    return BEBB;
+  }
 
   ir::BasicBlock* newpre = F->newBlock();
   ir::BranchInst* jmp = new ir::BranchInst(header, newpre);
@@ -111,6 +157,8 @@ void loopsimplify::insertUniqueExitBlock(ir::Loop* L,
         ir::BasicBlock* newBB = F->newBlock();
         ir::BranchInst* jmp = new ir::BranchInst(exit, newBB);
         newBB->emplace_back_inst(jmp);
+        ir::BranchInst* br = dyn_cast<ir::BranchInst>(pred->insts().back());
+        br->replaceDest(exit, newBB);
         ir::BasicBlock::delete_block_link(pred, exit);
         ir::BasicBlock::block_link(pred, newBB);
         ir::BasicBlock::block_link(newBB, exit);
@@ -128,21 +176,18 @@ void loopsimplify::insertUniqueExitBlock(ir::Loop* L,
 
 bool loopsimplify::simplifyOneLoop(ir::Loop* L, topAnalysisInfoManager* tp) {
   bool changed = false;
-  if (L->isLoopSimplifyForm())
-    return false;
+  if (L->isLoopSimplifyForm()) return false;
   // 如果有多条回边
   ir::BasicBlock* preheader = L->getLoopPreheader();
   ir::BasicBlock* LoopLatch = L->getLoopLatch();
   if (!preheader) {
     preheader = insertUniquePreheader(L, tp);
-    if (preheader)
-      changed = true;
+    if (preheader) changed = true;
   }
 
   if (!LoopLatch) {
     LoopLatch = insertUniqueBackedgeBlock(L, preheader, tp);
-    if (LoopLatch)
-      changed = true;
+    if (LoopLatch) changed = true;
   }
 
   if (L->hasDedicatedExits()) {
@@ -154,17 +199,16 @@ bool loopsimplify::simplifyOneLoop(ir::Loop* L, topAnalysisInfoManager* tp) {
 }
 
 void loopsimplify::run(ir::Function* func, topAnalysisInfoManager* tp) {
-  if (func->isOnlyDeclare())
-    return;
+  if (func->isOnlyDeclare()) return;
   loopInfo* LI = tp->getLoopInfo(func);
   LI->refresh();
   auto loops = LI->loops();
   bool changed = false;
   for (auto L : loops) {
     changed |= simplifyOneLoop(L, tp);
-    // if (!L->isLoopSimplifyForm()){
-    //     assert("loop is not in simplify form");
-    // }
+    if (!L->isLoopSimplifyForm()) {
+      assert("loop is not in simplify form");
+    }
   }
   if (changed) {
     // update loopinfo

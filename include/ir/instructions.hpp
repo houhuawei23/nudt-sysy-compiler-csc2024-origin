@@ -24,6 +24,8 @@ class FCmpInst;
 class CallInst;
 
 class PhiInst;
+
+class indVar;
 /*
  * @brief: AllocaInst
  */
@@ -206,16 +208,18 @@ class BinaryInst : public Instruction {
 /* CallInst */
 class CallInst : public Instruction {
   Function* mCallee = nullptr;
+  bool mIsTail = false;
 
  public:
   CallInst(Function* callee,
            const_value_ptr_vector rargs = {},
            BasicBlock* parent = nullptr,
            const_str_ref name = "")
-      : Instruction(vCALL, callee->retType(), parent, name), mCallee(callee) {
+      : Instruction(vCALL, callee->retType(), parent, name), mCallee(callee), mIsTail(false) {
     addOperands(rargs);
   }
-
+  bool istail(){return mIsTail;}
+  void setIsTail(bool b){mIsTail=b;}
   Function* callee() const { return mCallee; }
   /* real arguments */
   auto& rargs() const { return mOperands; }
@@ -444,11 +448,11 @@ class PhiInst : public Instruction {
 
 
  public:
-  PhiInst(BasicBlock* bb,
+  PhiInst(BasicBlock* parent,
           Type* type,
           const std::vector<Value*>& vals = {},
           const std::vector<BasicBlock*>& bbs = {})
-      : Instruction(vPHI, type, bb), mSize(vals.size()) {
+      : Instruction(vPHI, type, parent), mSize(vals.size()) {
     assert(vals.size() == bbs.size() and
            "number of vals and bbs in phi must be equal!");
     for (size_t i = 0; i < mSize; i++) {
@@ -483,6 +487,39 @@ class PhiInst : public Instruction {
 
   void print(std::ostream& os) const override;
   Value* getConstantRepl() override;
+};
+
+class indVar{
+  private:// only for constant beginvar and stepvar
+    Constant* mbeginVar;
+    Value* mendVar;
+    Constant* mstepVar;
+    bool mendIsConst;
+    BinaryInst* miterInst;
+    Instruction* mcmpInst;
+  public:
+    indVar(Constant* mbegin,Value* mend,Constant* mstep, BinaryInst* bininst, Instruction* cmpinst):
+      mbeginVar(mbegin),mendVar(mend),mstepVar(mstep),miterInst(bininst),mcmpInst(cmpinst){
+        mendIsConst=dyn_cast<Constant>(mendVar)!=nullptr;
+      }
+    int getBeginI32(){
+      if(not mbeginVar->isInt32())assert("BeginVar is not i32!");
+      return mbeginVar->i32();
+    }
+    int getStepI32(){
+      if(not mstepVar->isInt32())assert("StepVar is not i32!");
+      return mstepVar->i32();
+    }
+    bool isEndVarConst(){return mendIsConst;}
+    int getEndVar(){
+      if(mendIsConst){
+        auto mendConst=dyn_cast<Constant>(mendVar);
+        return mendConst->i32();
+      }
+      else
+        assert(false && "endVar is not constant");
+    }
+
 };
 
 }  // namespace ir

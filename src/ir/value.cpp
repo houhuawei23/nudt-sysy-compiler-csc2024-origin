@@ -35,6 +35,7 @@ void Value::replaceAllUseWith(Value* mValue) {
   mUses.clear();
 }
 
+
 void Value::setComment(const_str_ref comment) {
   if (!mComment.empty()) {
     std::cerr << "re-set basicblock comment!" << std::endl;

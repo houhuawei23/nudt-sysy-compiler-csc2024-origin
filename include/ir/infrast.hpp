@@ -86,10 +86,12 @@ protected:
 
   void emplace_first_inst(Instruction* i);
   void emplace_back_inst(Instruction* i);
+  void emplace_lastbutone_inst(Instruction* i);
 
   void delete_inst(Instruction* inst);
 
   void force_delete_inst(Instruction* inst);
+  void move_inst(Instruction* inst);
 
   void replaceinst(Instruction* old, Value* new_);
 
@@ -149,7 +151,6 @@ public:  // check function
   bool isAggressiveAlive();
   static bool classof(const Value* v) { return v->valueId() >= vINSTRUCTION; }
 public:
-  void adjustuse(Value* val, int idx) {return ;}
   void virtual print(std::ostream& os) const = 0;
   virtual Value* getConstantRepl() { return nullptr; };
   Instruction* copy_inst(std::function<Value*(Value*)> getValue);

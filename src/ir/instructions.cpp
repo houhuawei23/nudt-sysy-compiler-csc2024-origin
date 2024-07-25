@@ -554,9 +554,14 @@ void GetElementPtrInst::print(std::ostream& os) const {
 
 void CallInst::print(std::ostream& os) const {
   if (callee()->retType()->isVoid()) {
+    if(mIsTail)
+      os<<"tail ";
     os << "call ";
   } else {
-    os << name() << " = call ";
+    os<<name()<<" = ";
+      if(mIsTail)
+        os<<"tail ";
+    os <<"call ";
   }
 
   // retType
@@ -652,9 +657,9 @@ void PhiInst::replaceBlock(BasicBlock* newBB, size_t k) {
   mbbToVal[newBB]=val;
 }
 
-void PhiInst::replaceoldtonew(BasicBlock* newbb,BasicBlock* oldbb){
-  assert(mbbToVal.count(oldbb));
+void PhiInst::replaceoldtonew(BasicBlock* oldbb,BasicBlock* newbb){
   refreshMap();
+  assert(mbbToVal.count(oldbb));
   auto val=mbbToVal[oldbb];
   delBlock(oldbb);
   addIncoming(val,newbb);

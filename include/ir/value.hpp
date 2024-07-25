@@ -227,7 +227,6 @@ class Value {
   /* replace this value with another value,
      for all user use this value */
   void replaceAllUseWith(Value* mValue);
-
   // manage
   virtual std::string comment() const { return mComment; }
 
@@ -241,7 +240,7 @@ class Value {
   bool isFloat32() const { return mType->isFloat32(); }
   bool isDouble() const { return mType->isDouble(); }
   bool isFloatPoint() const { return mType->isFloatPoint(); }
-  bool isUnder() const { return mType->isUnder(); }
+  bool isUndef() const { return mType->isUndef(); }
   bool isPointer() const { return mType->isPointer(); }
   bool isVoid() const { return mType->isVoid(); }
 

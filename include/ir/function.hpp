@@ -9,6 +9,8 @@
 
 namespace ir {
 
+class Loop;
+
 class Loop {
 protected:
     std::set<BasicBlock*> _blocks;
@@ -16,6 +18,8 @@ protected:
     Function* _parent;
     std::set<BasicBlock*> _exits;
     std::set<BasicBlock*> _latchs;
+    std::set<Loop*> _subLoops;
+    Loop* _parentLoop;
 
 public:
     Loop(BasicBlock* header, Function* parent) {
@@ -27,6 +31,9 @@ public:
     std::set<BasicBlock*>& blocks() { return _blocks; }
     std::set<BasicBlock*>& exits() { return _exits; }
     std::set<BasicBlock*>& latchs() {return _latchs; }
+    std::set<Loop*>& subLoops() {return _subLoops; }
+    Loop* parent(){return _parentLoop;}
+    void setParent(Loop* lp){_parentLoop=lp;}
     bool contains(BasicBlock* block) const{ return _blocks.find(block) != _blocks.end(); }
     BasicBlock* getlooppPredecessor() const{
       BasicBlock* predecessor = nullptr;
@@ -157,4 +164,5 @@ class Function : public User {
   void print(std::ostream& os) const override;
   bool verify(std::ostream& os) const;
 };
+
 }  // namespace ir

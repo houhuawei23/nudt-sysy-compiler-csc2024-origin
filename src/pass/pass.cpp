@@ -17,8 +17,11 @@
 #include "pass/optimize/loopsimplify.hpp"
 #include "pass/analysis/irtest.hpp"
 #include "pass/analysis/ControlFlowGraph.hpp"
-
+#include "pass/analysis/indvar.hpp"
+#include "pass/optimize/GlobalToLocal.hpp"
+#include "pass/optimize/TCO.hpp"
 #include "pass/optimize/InstCombine/ArithmeticReduce.hpp"
+#include "pass/analysis/CFGPrinter.hpp"
 namespace pass {
 void PassManager::runPasses(std::vector<std::string> passes) {
   run(new pass::CFGAnalysisHHW());
@@ -60,7 +63,17 @@ void PassManager::runPasses(std::vector<std::string> passes) {
         run(new pass::ArithmeticReduce());
       } else if (pass_name.compare("test") == 0) {
         run(new pass::irCheck());
-      } else {
+      } else if (pass_name.compare("indvar") == 0) {
+        run(new pass::indVarAnalysis());
+        // run(new pass::indVarInfoCheck());
+      } else if (pass_name.compare("global2loc") == 0){
+        run(new pass::global2local());
+      } else if (pass_name.compare("tco") == 0){
+        run(new pass::tailCallOpt());
+      } else if (pass_name.compare("cfgprint") == 0){
+        run(new pass::CFGPrinter());
+      }
+      else {
         assert(false && "Invalid pass name");
       }
     }

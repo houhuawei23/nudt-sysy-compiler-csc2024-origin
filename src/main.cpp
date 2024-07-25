@@ -17,11 +17,19 @@
 namespace fs = std::filesystem;
 
 using namespace std;
-/* ./compiler -f test.c -i -t mem2reg -o gen.ll -O0 -L0 */
+/* 
+config.parseTestArgs:
+./compiler -f test.c -i -t mem2reg -o gen.ll -O0 -L0
+
+config.parseSubmitArgs
+./compiler -S -o testcase.s testcase.sy
+ */
 int main(int argc, char* argv[]) {
     auto& config = sysy::Config::getInstance();
-    config.parse_cmd_args(argc, argv);
+
+    // config.parseTestArgs(argc, argv);
     // config.parseSubmitArgs(argc, argv);
+    config.parseCmdArgs(argc, argv);
     config.print_info();
 
     if (config.infile.empty()) {

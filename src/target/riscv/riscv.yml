@@ -821,6 +821,7 @@ InstSelInfo: {
         },
         #! InstICmp: SLT, SLTU, SLTI, SLTIU: TODO
         {
+          # ICmpSignedLessThan dst, src1, src2 -> SLT dst, src1, src2
           pattern:
             {
               name: InstICmp,
@@ -833,6 +834,9 @@ InstSelInfo: {
           replace: { name: SLT, rd: $dst, rs1: $src1, rs2: $src2 },
         },
         {
+          # ICmpSignedGreaterEqual dst, src1, src2 -> not(SLT dst, src1, src2)
+          # src1 >= src2 -> not(src1 < src2)
+          # xori dst, src, 1 -> not(src)
           pattern:
             {
               name: InstICmp,
@@ -858,6 +862,8 @@ InstSelInfo: {
         },
         # SLTU
         {
+          # ICmpUnsignedLessThan dst, src1, src2 -> SLTU dst, src1, src2
+          # src1 < src2 -> src1 < src2
           pattern:
             {
               name: InstICmp,
@@ -869,8 +875,9 @@ InstSelInfo: {
             },
           replace: { name: SLTU, rd: $dst, rs1: $src1, rs2: $src2 },
         },
-
         {
+          # ICmpSignedGreaterThan dst, src1, src2 -> SLT dst, src2, src1
+          # src1 > src2 -> src2 < src1
           pattern:
             {
               name: InstICmp,
@@ -883,6 +890,8 @@ InstSelInfo: {
           replace: { name: SLT, rd: $dst, rs1: $src2, rs2: $src1 },
         },
         {
+          # ICmpUnsignedGreaterThan dst, src1, src2 -> SLTU dst, src2, src1
+          # src1 > src2 -> src2 < src1
           pattern:
             {
               name: InstICmp,
@@ -895,6 +904,8 @@ InstSelInfo: {
           replace: { name: SLTU, rd: $dst, rs1: $src2, rs2: $src1 },
         },
         {
+          # ICmpEqual dst, src1, 0 -> SLTIU dst, src1, 1
+          # src1 == 0 -> sltiu dst, src1, 1
           pattern:
             {
               name: InstICmp,
@@ -907,6 +918,8 @@ InstSelInfo: {
           replace: { name: SLTIU, rd: $dst, rs1: $src1, imm: getOne($src2) },
         },
         {
+          # ICmpNotEqual dst, src1, 0 -> SLTU dst, 0, src1
+          # src1 != 0 -> sltu dst, zero, src1
           pattern:
             {
               name: InstICmp,

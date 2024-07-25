@@ -41,6 +41,12 @@ void Module::delFunction(ir::Function* func) {
   // }
 }
 
+void Module::delGlobalVariable(ir::GlobalVariable* gv){
+  auto pos=std::find(mGlobalVariables.begin(),mGlobalVariables.end(),gv);
+  mGlobalVariables.erase(pos);
+  mGlobalVariableTable.erase(gv->name());
+}
+
 // readable ir print
 void Module::print(std::ostream& os) const {
   //! print all global values
