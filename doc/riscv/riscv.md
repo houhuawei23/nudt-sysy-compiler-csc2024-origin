@@ -61,6 +61,21 @@ blt rs1, rs2, offset
     Branch if Not Equal. B-type, RV32I and RV64I
 
 
+## Pseudoinstructions
+
+Pseudoinstruction Base Instruction(s) Meaning
+- `la rd, symbol` -> `auipc rd, symbol[31:12]`/`addi rd, rd, symbol[11:0]`
+  - Load address 
+- `l{b|h|w|d} rd`
+
+
+, symbol auipc rd, symbol[31:12] Load global l{b|h|w|d} rd, symbol[11:0](rd)
+s{b|h|w|d} rd, symbol, rt auipc rt, symbol[31:12] Store global s{b|h|w|d} rd, symbol[11:0](rt)
+fl{w|d} rd, symbol, rt auipc rt, symbol[31:12] Floating-point load global fl{w|d} rd, symbol[11:0](rt)
+fs{w|d} rd, symbol, rt auipc rt, symbol[31:12] Floating-point store global fs{w|d} rd, symbol[11:0](rt)
+
+
+
 
 
 nanke:

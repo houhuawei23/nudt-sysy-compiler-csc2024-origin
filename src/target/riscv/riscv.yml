@@ -79,6 +79,117 @@ InstInfo: {
                 { name: BGEU, mnem: "bgeu" }, # unsigned >=
               ],
           },
+        FRType: {
+            # $mnem $rd:FPR[Def], $rs1:FPR[Use], $rs2:FPR[Use]
+            format: [mnem, " ", 0, ", ", 1, ", ", 2],
+            operands:
+              {
+                0: { name: rd, type: FPR, flag: Def },
+                1: { name: rs1, type: FPR, flag: Use },
+                2: { name: rs2, type: FPR, flag: Use },
+              },
+            instances: [
+                { name: FADD_S, mnem: "fadd.s" }, # f[rd] = f[rs1] + f[rs2]
+                { name: FSUB_S, mnem: "fsub.s" }, # f[rd] = f[rs1] - f[rs2]
+                { name: FMUL_S, mnem: "fmul.s" }, # f[rd] = f[rs1] * f[rs2]
+                { name: FDIV_S, mnem: "fdiv.s" }, # f[rd] = f[rs1] / f[rs2]
+                { name: FMIN_S, mnem: "fmin.s" }, # f[rd] = min(f[rs1], f[rs2])
+                { name: FMAX_S, mnem: "fmax.s" }, # f[rd] = max(f[rs1], f[rs2])
+              ],
+          },
+
+        FMAType: {
+            # $mnem $rd:FPR[Def], $rs1:FPR[Use], $rs2:FPR[Use], $rs3:FPR[Use]
+            format: [mnem, " ", 0, ", ", 1, ", ", 2, ", ", 3],
+            operands:
+              {
+                0: { name: rd, type: FPR, flag: Def },
+                1: { name: rs1, type: FPR, flag: Use },
+                2: { name: rs2, type: FPR, flag: Use },
+                3: { name: rs3, type: FPR, flag: Use },
+              },
+            instances: [
+                { name: FMADD_S, mnem: "fmadd.s" }, # f[rd] = (f[rs1] * f[rs2]) + f[rs3]
+                { name: FMSUB_S, mnem: "fmsub.s" }, # f[rd] = (f[rs1] * f[rs2]) - f[rs3]
+                { name: FNMADD_S, mnem: "fnmadd.s" }, # f[rd] = -(f[rs1] * f[rs2]) + f[rs3]
+                { name: FNMSUB_S, mnem: "fnmsub.s" }, # f[rd] = -(f[rs1] * f[rs2]) - f[rs3]
+              ],
+          },
+        FFType: {
+            # $mnem $rd:FPR[Def], $rs1:FPR[Use]
+            format: [mnem, " ", 0, ", ", 1],
+            operands:
+              {
+                0: { name: rd, type: FPR, flag: Def },
+                1: { name: rs1, type: FPR, flag: Use },
+              },
+            instances: [
+                { name: FNEG_S, mnem: "fneg.s" }, # f[rd] = -f[rs1]
+                { name: FABS_S, mnem: "fabs.s" }, # f[rd] = abs(f[rs1])
+                { name: FMV_S, mnem: "fmv.s" }, # f[rd] = f[rs1]
+                { name: FSQRT_S, mnem: "fsqrt.s" }, # f[rd] = sqrt(f[rs1])
+                { name: FSGNJ_S, mnem: "fsgnj.s" }, # f[rd] = {f[rs2][31], f[rs1][30:0]}
+
+              ],
+          },
+        FIFType: {
+            # .W.S
+            # $mnem $rd:GPR[Def], $rs1:FPR[Use]
+            format: [mnem, " ", 0, ", ", 1],
+            operands:
+              {
+                0: { name: rd, type: GPR, flag: Def },
+                1: { name: rs1, type: FPR, flag: Use },
+              },
+            instances: [
+                { name: FCLASS_S, mnem: "fclass.s" }, # x[rd] = classify_s(f[rs1])
+                { name: FMV_X_W, mnem: "fmv.x.w" }, # x[rd] = sext(f[rs1][31:0])
+                # { name: FCVT_W_S, mnem: "fcvt.w.s" }, # x[rd] = sext(s32_f32(f[rs1])), default rounding mode RNE
+                { name: FCVT_WU_S, mnem: "fcvt.wu.s" }, # x[rd] = sext(u32_f32(f[rs1]))
+              ],
+          },
+        FFIType: {
+            # .S.W
+            # $mnem $rd:FPR[Def], $rs1:GPR[Use]
+            format: [mnem, " ", 0, ", ", 1],
+            operands:
+              {
+                0: { name: rd, type: FPR, flag: Def },
+                1: { name: rs1, type: GPR, flag: Use },
+              },
+            instances: [
+                { name: FMV_W_X, mnem: "fmv.w.x" }, # f[rd] = x[rs1][31:0]
+                { name: FCVT_S_W, mnem: "fcvt.s.w" }, # f[rd] = f32_s32(x[rs1])
+                { name: FCVT_S_WU, mnem: "fcvt.s.wu" }, # f[rd] = f32_u32(x[rs1])
+              ],
+          },
+        FIFFType: {
+            # $mnem $rd:GPR[Def], $rs1:FPR[Use], $rs2:FPR[Use]
+            format: [mnem, " ", 0, ", ", 1, ", ", 2],
+            operands:
+              {
+                0: { name: rd, type: GPR, flag: Def },
+                1: { name: rs1, type: FPR, flag: Use },
+                2: { name: rs2, type: FPR, flag: Use },
+              },
+            instances: [
+                { name: FEQ_S, mnem: "feq.s" }, # x[rd] = f[rs1] == f[rs2]
+                { name: FLT_S, mnem: "flt.s" }, # x[rd] = f[rs1] < f[rs2]
+                { name: FLE_S, mnem: "fle.s" }, # x[rd] = f[rs1] <= f[rs2]
+              ],
+          },
+        FIFRTZType: {
+            # $mnem $rd:GPR[Def], $rs1:FPR[Use], rtz
+            format: [mnem, " ", 0, ", ", 1, ", rtz"],
+            operands:
+              {
+                0: { name: rd, type: GPR, flag: Def },
+                1: { name: rs1, type: FPR, flag: Use },
+              },
+            instances: [
+                { name: FCVT_W_S, mnem: "fcvt.w.s" }, # x[rd] = sext(s32_f32(f[rs1])), rounding mode RTZ
+              ],
+          },
       },
     # Instances
     Instances: {
@@ -134,22 +245,6 @@ InstInfo: {
         SH: { mnem: "sh", template: Stype, flag: [Store] },
         SW: { mnem: "sw", template: Stype, flag: [Store] },
         SD: { mnem: "sd", template: Stype, flag: [Store] }, # RV64
-
-        # BEQ: { mnem: "beq", template: Itype, flag: [Branch, Terminator] },
-        # BNE: { mnem: "bne", template: Itype, flag: [Branch, Terminator] },
-        # BLT: { mnem: "blt", template: Itype, flag: [Branch, Terminator] },
-        # BGE: { mnem: "bge", template: Itype, flag: [Branch, Terminator] },
-        # BLTU: { mnem: "bltu", template: Itype, flag: [Branch, Terminator] },
-        # BGEU: { mnem: "bgeu", template: Itype, flag: [Branch, Terminator] },
-        # J JType-Utype
-        # JAL: { mnem: "jal", template: Utype, flag: [Call] },
-        # JALR: { mnem: "jalr", template: Itype, flag: [Call] },
-        # CALL:
-        #   {
-        #     format: ["call", " ", 0],
-        #     operands: { 0: { name: target, type: reloc, flag: Metadata } },
-        #     flag: [Call, Presudo],
-        #   },
         JAL:
           {
             format: ["jal", " ", 0],
@@ -205,7 +300,7 @@ InstInfo: {
         AMOOR: { mnem: "amoor.w", template: Rtype },
         AMOXOR: { mnem: "amoxor.w", template: Rtype },
         # RV32F Single-Precision Floating-Point Instructions
-
+        ## Single-Precision Floating-Point Load and Store Instructions
         FLW:
           {
             format: ["flw", " ", 0, ", ", 1, "(", 2, ")"],
@@ -228,7 +323,10 @@ InstInfo: {
               },
             flag: [Store],
           },
-
+        ## Single-Precision Floating-Point Computational Instructions
+        ## Single-Precision Floating-Point Conversion and Move Instructions
+        ## Single-Precision Floating-Point Compare Instructions
+        ## Single-Precision Floating-Point Classify Instruction
         # Pseudos
         # nop
         LoadImm12:
@@ -370,6 +468,16 @@ InstSelInfo: {
               predicate: isOperandNonZeroImm12($imm),
             },
           replace: { name: LoadImm12, rd: $dst, imm: $imm },
+        },
+        {
+          pattern:
+            {
+              name: [InstLoadImm, InstLoadImmToReg],
+              dst: $dst,
+              imm: $imm,
+              predicate: isOperandNonZeroImm32($imm),
+            },
+          replace: { name: LoadImm32, rd: $dst, imm: $imm },
         },
         # InstAdd
         {
@@ -713,6 +821,7 @@ InstSelInfo: {
         },
         #! InstICmp: SLT, SLTU, SLTI, SLTIU: TODO
         {
+          # ICmpSignedLessThan dst, src1, src2 -> SLT dst, src1, src2
           pattern:
             {
               name: InstICmp,
@@ -724,8 +833,37 @@ InstSelInfo: {
             },
           replace: { name: SLT, rd: $dst, rs1: $src1, rs2: $src2 },
         },
+        {
+          # ICmpSignedGreaterEqual dst, src1, src2 -> not(SLT dst, src1, src2)
+          # src1 >= src2 -> not(src1 < src2)
+          # xori dst, src, 1 -> not(src)
+          pattern:
+            {
+              name: InstICmp,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              op: $op,
+              predicate: "isOperandIReg($src1) && isOperandIReg($src2) && isCompareOp($op, CompareOp::ICmpSignedGreaterEqual)",
+            },
+          replace:
+            {
+              name: XORI,
+              rd: $dst,
+              rs1:
+                {
+                  name: SLT,
+                  rd: "getVRegAs(ctx, $dst)",
+                  rs1: $src1,
+                  rs2: $src2,
+                },
+              imm: getOne($src2),
+            },
+        },
         # SLTU
         {
+          # ICmpUnsignedLessThan dst, src1, src2 -> SLTU dst, src1, src2
+          # src1 < src2 -> src1 < src2
           pattern:
             {
               name: InstICmp,
@@ -737,8 +875,9 @@ InstSelInfo: {
             },
           replace: { name: SLTU, rd: $dst, rs1: $src1, rs2: $src2 },
         },
-
         {
+          # ICmpSignedGreaterThan dst, src1, src2 -> SLT dst, src2, src1
+          # src1 > src2 -> src2 < src1
           pattern:
             {
               name: InstICmp,
@@ -751,6 +890,8 @@ InstSelInfo: {
           replace: { name: SLT, rd: $dst, rs1: $src2, rs2: $src1 },
         },
         {
+          # ICmpUnsignedGreaterThan dst, src1, src2 -> SLTU dst, src2, src1
+          # src1 > src2 -> src2 < src1
           pattern:
             {
               name: InstICmp,
@@ -763,6 +904,8 @@ InstSelInfo: {
           replace: { name: SLTU, rd: $dst, rs1: $src2, rs2: $src1 },
         },
         {
+          # ICmpEqual dst, src1, 0 -> SLTIU dst, src1, 1
+          # src1 == 0 -> sltiu dst, src1, 1
           pattern:
             {
               name: InstICmp,
@@ -775,6 +918,8 @@ InstSelInfo: {
           replace: { name: SLTIU, rd: $dst, rs1: $src1, imm: getOne($src2) },
         },
         {
+          # ICmpNotEqual dst, src1, 0 -> SLTU dst, 0, src1
+          # src1 != 0 -> sltu dst, zero, src1
           pattern:
             {
               name: InstICmp,
@@ -829,6 +974,68 @@ InstSelInfo: {
               target: $target,
               prob: $prob,
             },
+        },
+        # float
+        {
+          pattern: { name: InstF2S, dst: $dst, src: $src },
+          replace: { name: FCVT_W_S, rd: $dst, rs1: $src },
+        },
+        {
+          pattern: { name: InstS2F, dst: $dst, src: $src },
+          replace: { name: FCVT_S_W, rd: $dst, rs1: $src },
+        },
+        {
+          # FCmp
+          pattern:
+            {
+              name: InstFCmp,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              op: $op,
+              predicate: "selectFCmpOpcode($op, $src1, $src2, [$outlhs], [$outrhs], [$cmpOpcode])",
+            },
+          replace:
+            {
+              name: static_cast<uint32_t>(($cmpOpcode).imm()),
+              ref: FLT_S,
+              rd: $dst,
+              rs1: $outlhs,
+              rs2: $outrhs,
+            },
+        },
+        {
+          pattern: { name: InstFNeg, dst: $dst, src: $src },
+          replace: { name: FNEG_S, rd: $dst, rs1: $src },
+        },
+        {
+          pattern: { name: InstFAdd, dst: $dst, src1: $src1, src2: $src2 },
+          replace: { name: FADD_S, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+        {
+          pattern: { name: InstFSub, dst: $dst, src1: $src1, src2: $src2 },
+          replace: { name: FSUB_S, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+        {
+          pattern: { name: InstFMul, dst: $dst, src1: $src1, src2: $src2 },
+          replace: { name: FMUL_S, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+        {
+          pattern: { name: InstFDiv, dst: $dst, src1: $src1, src2: $src2 },
+          replace: { name: FDIV_S, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+        # { pattern: {
+        #   name: [InstFAdd, InstFSub, InstFMul, InstFDiv],
+        # } },
+        {
+          pattern:
+            {
+              name: InstZExt,
+              dst: $dst,
+              src: $src,
+              predicate: isOperandBoolReg($src),
+            },
+          replace: { name: InstCopy, dst: $dst, src: $src },
         },
       ],
   }

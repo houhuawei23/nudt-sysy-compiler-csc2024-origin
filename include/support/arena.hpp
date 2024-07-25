@@ -26,8 +26,8 @@ class Arena final {
   ** unsigned integer type capable of holding a pointer to */
   std::uintptr_t mBlockPtr, mBlockEndPtr;
 
- public:
-  enum class Source { IR, Max };
+public:
+  enum class Source { IR, MIR, Max };
   Arena();
   explicit Arena(Source source);
   Arena(const Arena&) = delete;
@@ -49,9 +49,10 @@ constexpr Arena::Source getArenaSource(ArenaSourceTrait<T*>) {
   return getArenaSource(ArenaSourceTrait<T>{});
 }
 
-#define SYSYC_ARENA_TRAIT(TYPE, SOURCE)                            \
-  constexpr utils::Arena::Source getArenaSource(utils::ArenaSourceTrait<TYPE>) { \
-    return utils::Arena::Source::SOURCE;                                  \
+#define SYSYC_ARENA_TRAIT(TYPE, SOURCE)          \
+  constexpr utils::Arena::Source getArenaSource( \
+    utils::ArenaSourceTrait<TYPE>) {             \
+    return utils::Arena::Source::SOURCE;         \
   }
 
 template <typename T, Arena::Source src = T::arenaSource>
@@ -59,24 +60,37 @@ constexpr Arena::Source getArenaSource(ArenaSourceTrait<T>) {
   return src;
 }
 
+/* make<T>(arg1, arg2, arg3, ...) */
 template <typename T, typename... Args>
 T* make(Args&&... args) {
   // std::cerr << "make T: " << typeid(T).name() << std::endl;
   const auto arena = Arena::get(getArenaSource(ArenaSourceTrait<T>{}));
-  assert(arena!= nullptr);
+  assert(arena != nullptr);
   /* size in bytes */
   auto ptr = arena->allocate(sizeof(T), alignof(T));
   return new (ptr) T{std::forward<Args>(args)...};
 }
 
+/* make<MakeType>(arg1, {arg2, arg3, arg4}) */
+template <typename MakeType, typename Arg1T, typename InitItemT>
+MakeType* make(Arg1T&& arg1, std::initializer_list<InitItemT> arg2) {
+  const auto arena = Arena::get(getArenaSource(ArenaSourceTrait<MakeType>{}));
+  assert(arena != nullptr);
+  /* size in bytes */
+  auto ptr = arena->allocate(sizeof(MakeType), alignof(MakeType));
+  return new (ptr)
+    MakeType{std::forward<Arg1T>(arg1),
+             std::forward<std::initializer_list<InitItemT>>(arg2)};
+}
+
 template <Arena::Source source>
 class GeneralArenaAllocator {
- public:
+public:
   template <typename T>
   class ArenaAllocator {
     Arena* mArena;
 
-   public:
+  public:
     ArenaAllocator() : mArena{Arena::get(source)} {};
     template <typename U>
     friend class ArenaAllocator;
@@ -100,11 +114,11 @@ class GeneralArenaAllocator {
 
 template <typename T>
 using ArenaSourceHint = typename GeneralArenaAllocator<getArenaSource(
-    ArenaSourceTrait<T>{})>::template ArenaAllocator<T>;
+  ArenaSourceTrait<T>{})>::template ArenaAllocator<T>;
 
 template <Arena::Source Src, typename T>
 using ArenaAllocator =
-    typename GeneralArenaAllocator<Src>::template ArenaAllocator<T>;
+  typename GeneralArenaAllocator<Src>::template ArenaAllocator<T>;
 
 template <typename T, typename Allocator = ArenaSourceHint<T>>
 using List = std::list<T, Allocator>;
@@ -120,4 +134,4 @@ template <typename Key,
           typename Cmp = std::less<Key>,
           typename Allocator = ArenaSourceHint<std::pair<const Key, Value>>>
 using Map = std::map<Key, Value, Cmp, Allocator>;
-}  // namespace sysyc
+}  // namespace utils

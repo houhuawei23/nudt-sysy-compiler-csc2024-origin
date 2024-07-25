@@ -23,7 +23,7 @@ static void assignInstNum(MIRFunction& mfunc, LiveVariablesInfo& info, CodeGenCo
             std::cerr << block->name() << ": \n";
             for (auto& inst : block.get()->insts()) {
                 std::cerr << num[inst] << ": ";
-                auto& instInfo = ctx.instInfo.get_instinfo(inst);
+                auto& instInfo = ctx.instInfo.getInstInfo(inst);
                 instInfo.print(std::cerr, *inst, false);
                 std::cerr << "\n";
             }
@@ -85,12 +85,12 @@ void LiveInterval::dump(std::ostream& out) const {  // 方便调试
 void cleanupRegFlags(MIRFunction& mfunc, CodeGenContext& ctx) {
     for (auto& block : mfunc.blocks()) {
         for (auto& inst : block.get()->insts()) {
-            auto& instinfo = ctx.instInfo.get_instinfo(inst);
+            auto& instinfo = ctx.instInfo.getInstInfo(inst);
             for (uint32_t idx = 0; idx < instinfo.operand_num(); idx++) {
                 auto op = inst->operand(idx);
-                if (op->is_reg()) {
-                    auto reg = std::get<MIRRegister*>(op->storage());
-                    reg->set_flag(RegisterFlagNone);
+                if (op.isReg()) {
+                    auto reg = std::get<MIRRegister>(op.storage());
+                    reg.set_flag(RegisterFlagNone);
                 }
             }
         }
@@ -99,21 +99,23 @@ void cleanupRegFlags(MIRFunction& mfunc, CodeGenContext& ctx) {
 
 /* 全局活跃变量分析 */
 LiveVariablesInfo calcLiveIntervals(MIRFunction& mfunc, CodeGenContext& ctx) {
+    constexpr bool Debug = false;
     LiveVariablesInfo info;
     auto cfg = calcCFG(mfunc, ctx);
+    if (Debug) cfg.dump(std::cerr);
 
     // stage 1: collect use/def link
     for (auto& block : mfunc.blocks()) {
         auto& blockInfo = info.block2Info[block.get()];
         for (auto& inst : block.get()->insts()) {
-            auto& instInfo = ctx.instInfo.get_instinfo(inst);
+            auto& instInfo = ctx.instInfo.getInstInfo(inst);
             for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
                 const auto flag = instInfo.operand_flag(idx);
                 auto operand = inst->operand(idx);
                 // 非虚拟寄存器 --> continue
                 if (!isOperandVReg(operand)) continue;
 
-                auto id = regNum(*operand);
+                auto id = regNum(operand);
                 if (flag & OperandFlagDef) {  // 变量定义 --> defs insert the id
                     blockInfo.defs.insert(id);
                 } else if (flag & OperandFlagUse) {  // 变量使用 --> defs in other blocks, uses insert the id
@@ -122,6 +124,27 @@ LiveVariablesInfo calcLiveIntervals(MIRFunction& mfunc, CodeGenContext& ctx) {
                     continue;
                 }
             }
+        }
+    }
+    if (Debug) {
+        std::cout << "function: " << mfunc.name() << "\n";
+        for (auto& block : mfunc.blocks()) {
+            auto& blockInfo = info.block2Info[block.get()];
+            std::cout << "block " << block->name() << ": \n";
+
+            std::cout << "\ndef: \n";
+            for (auto def : blockInfo.defs) {
+                if (isVirtualReg(def)) std::cout << "v" << (def ^ virtualRegBegin) << ", ";
+                else std::cout << "i" << def << ", ";
+            }
+            std::cout << "\n";
+
+            std::cout << "\nuse: \n";
+            for (auto use : blockInfo.uses) {
+                if (isVirtualReg(use)) std::cout << "v" << (use ^ virtualRegBegin) << ", ";
+                else std::cout << "i" << use << ", ";
+            }
+            std::cout << "\n";
         }
     }
 
@@ -163,7 +186,7 @@ LiveVariablesInfo calcLiveIntervals(MIRFunction& mfunc, CodeGenContext& ctx) {
         InstNum firstInstNum = 0, lastInstNum = 0;  // 存储当前块中第一条指令和最后一条指令的编号
 
         for (auto inst : block.get()->insts()) {
-            auto& instInfo = ctx.instInfo.get_instinfo(inst);
+            auto& instInfo = ctx.instInfo.getInstInfo(inst);
             const auto instNum = info.inst2Num[inst];
 
             // update firstInstNum and lastInstNum
@@ -175,7 +198,7 @@ LiveVariablesInfo calcLiveIntervals(MIRFunction& mfunc, CodeGenContext& ctx) {
                 const auto flag = instInfo.operand_flag(idx);
                 auto operand = inst->operand(idx);
                 if (!isOperandVReg(operand)) continue;
-                const auto id = regNum(*operand);
+                const auto id = regNum(operand);
 
                 if (flag & OperandFlagUse) {  // update the curSegment and lastUse
                     if (auto it = curSegment.find(id); it != curSegment.end()) {
@@ -186,12 +209,12 @@ LiveVariablesInfo calcLiveIntervals(MIRFunction& mfunc, CodeGenContext& ctx) {
 
                     if (auto it = lastUse.find(id); it != lastUse.end()) {
                         if (it->second.first == inst) {
-                            it->second.second.push_back(std::get<MIRRegister*>(operand->storage())->flag_ptr());
+                            it->second.second.push_back(std::get<MIRRegister>(operand.storage()).flag_ptr());
                         } else {
-                            it->second = {inst, {std::get<MIRRegister*>(operand->storage())->flag_ptr()}};
+                            it->second = {inst, {std::get<MIRRegister>(operand.storage()).flag_ptr()}};
                         }
                     } else {
-                        lastUse[id] = {inst, {std::get<MIRRegister*>(operand->storage())->flag_ptr()}};
+                        lastUse[id] = {inst, {std::get<MIRRegister>(operand.storage()).flag_ptr()}};
                     }
                 }
             }
@@ -200,7 +223,7 @@ LiveVariablesInfo calcLiveIntervals(MIRFunction& mfunc, CodeGenContext& ctx) {
                 const auto flag = instInfo.operand_flag(idx);
                 auto operand = inst->operand(idx);
                 if (!isOperandVReg(operand)) continue;
-                const auto id = regNum(*operand);
+                const auto id = regNum(operand);
 
                 if (flag & OperandFlagDef) {  // defined
                     if (curSegment.count(id)) {  // the register is defined and used in thr block

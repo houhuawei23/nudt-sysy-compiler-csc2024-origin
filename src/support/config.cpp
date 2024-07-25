@@ -2,6 +2,8 @@
 
 #include <cstring>
 #include <getopt.h>
+#include <string_view>
+using namespace std::string_view_literals;
 
 namespace sysy {
 
@@ -12,12 +14,12 @@ namespace sysy {
 -S: gen assembly
 -O[0-3]: opt level
 
-./main -f test.c -i -t mem2reg dce -o gen.ll
-./main -f test.c -i -t mem2reg -o gen.ll -O0 -L0
+./compiler-f test.c -i -t mem2reg dce -o gen.ll
+./compiler -f test.c -i -t mem2reg -o gen.ll -O0 -L0
 */
 
 std::string_view HELP = R"(
-Usage: ./main [options]
+Usage: ./compiler [options]
   -f {filename}         input file
   -i                    Generate IR
   -t {passname} ...     opt passes names to run
@@ -27,8 +29,8 @@ Usage: ./main [options]
   -L[0-2]               log level: 0=SILENT, 1=INFO, 2=DEBUG
 
 Examples:
-$ ./main -f test.c -i -t mem2reg -o gen.ll -O0 -L0
-$ ./main -f test.c -i -t mem2reg dce -o gen.ll
+$ ./compiler -f test.c -i -t mem2reg -o gen.ll -O0 -L0
+$ ./compiler -f test.c -i -t mem2reg dce -o gen.ll
 )";
 
 void Config::print_help() {
@@ -53,12 +55,16 @@ void Config::print_info() {
   }
 }
 
-void Config::parse_cmd_args(int argc, char* argv[]) {
+void Config::parseTestArgs(int argc, char* argv[]) {
   int option;
   while ((option = getopt(argc, argv, "f:it:o:SO:L:")) != -1) {
     switch (option) {
-      case 'f': infile = optarg; break;
-      case 'i': gen_ir = true; break;
+      case 'f':
+        infile = optarg;
+        break;
+      case 'i':
+        gen_ir = true;
+        break;
       case 't':
         // optind start from 1, so we need to minus 1
         while (optind <= argc && *argv[optind - 1] != '-') {
@@ -67,11 +73,21 @@ void Config::parse_cmd_args(int argc, char* argv[]) {
         }
         optind--;  // must!
         break;
-      case 'o': outfile = optarg; break;
-      case 'S': gen_asm = true; break;
-      case 'O': opt_level = static_cast<OptLevel>(std::stoi(optarg)); break;
-      case 'L': log_level = static_cast<LogLevel>(std::stoi(optarg)); break;
-      default: print_help(); exit(EXIT_FAILURE);
+      case 'o':
+        outfile = optarg;
+        break;
+      case 'S':
+        gen_asm = true;
+        break;
+      case 'O':
+        opt_level = static_cast<OptLevel>(std::stoi(optarg));
+        break;
+      case 'L':
+        log_level = static_cast<LogLevel>(std::stoi(optarg));
+        break;
+      default:
+        print_help();
+        exit(EXIT_FAILURE);
     }
   }
 }
@@ -86,6 +102,17 @@ void Config::parseSubmitArgs(int argc, char* argv[]) {
   infile = argv[4];
   if (argc == 5) {
     opt_level = OptLevel::O1;
+  }
+}
+
+void Config::parseCmdArgs(int argc, char* argv[]) {
+  if (argv[1] == "-f"sv) {
+    parseTestArgs(argc, argv);
+  } else if (argv[1] == "-S"sv) {
+    parseSubmitArgs(argc, argv);
+  } else {
+    print_help();
+    exit(EXIT_FAILURE);
   }
 }
 

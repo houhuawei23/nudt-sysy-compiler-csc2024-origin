@@ -378,6 +378,7 @@ InstInfo: {
           },
         LoadStackObjectAddr: {
             # format: "LoadStackObjAddr {dst}, {obj}"
+            # LoadStackObjAddr {dst:INTREG, Def}, {obj:StackObject, Metadata}
             format: ["LoadStackObjectAddr", " ", 0, ", ", 1],
             operands:
               {

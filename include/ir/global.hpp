@@ -13,6 +13,8 @@ namespace ir {
  *      2. Scalar (全局标量)
  * @var: 
  *      1. _parent: 当前
+ * 
+ * GlobalVariable must be PointerType
  */
 class GlobalVariable : public User {
  protected:

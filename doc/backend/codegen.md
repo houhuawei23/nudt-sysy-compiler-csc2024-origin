@@ -212,3 +212,26 @@ for (all global in irmodule.globals){
 }
         
 ```
+
+## cmmc Lowering
+
+IR Module -> MIR Module, for Target
+- input: IR::Module ir_module
+- craete empty MIRModule mir_module
+- for all IR::Function, create empty MIRFunction
+- for all IR::GlobalVariable, create MIRGlobalObject and add to mir_module.global_objs
+- for all IR::Function ir_func:
+  - **fullfill corresponding MIRFunction mir_func**: 
+    - create_mir_function(ir_func, mir_func)
+    - IR::Function -> MIRFunction, MIRInst with GenericMIRInst opcode
+    - MIRInst has MIROperand (VirtualRegister, Constant, MIRRelocable[MIRFunction/MIRBlock/Storage])
+    - 
+  - **Instruction Selection on mir_func**:
+    - ISelContex.run_isel(mir_func)
+    - MIRFunction (GenericMIRInst opcode) -> MIRFunction (RISCVInst opcode)
+  - **Register Allocation on mir_func**:
+    - MIROperand(VirtualRegister) -> MIROperand(PhysicalRegister: RISCV)
+  - **Stack Allocation on mir_func**:
+    - determine stack offset, and leglize all instructions that use stack objects
+  - **Post Legalize on mir_func**: 
+  - 

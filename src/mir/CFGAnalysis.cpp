@@ -40,7 +40,7 @@ CFGAnalysis calcCFG(MIRFunction& mfunc, CodeGenContext& ctx) {
         
         MIRBlock* targetBlock; double prob;
         if (ctx.instInfo.matchBranch(terminator, targetBlock, prob)) {  // Match Jump Branch
-            if (requireFlag(ctx.instInfo.get_instinfo(terminator).inst_flag(), InstFlagNoFallThrough)) {  // unconditional branch
+            if (requireFlag(ctx.instInfo.getInstInfo(terminator).inst_flag(), InstFlagNoFallThrough)) {  // unconditional branch
                 connect(block.get(), targetBlock, 1.0);
             } else {  // conditional
                 if (next != blocks.end()) {  // 非exit块 
@@ -54,8 +54,8 @@ CFGAnalysis calcCFG(MIRFunction& mfunc, CodeGenContext& ctx) {
                     connect(block.get(), targetBlock, prob);
                 }
             }
-        } else if (requireFlag(ctx.instInfo.get_instinfo(terminator).inst_flag(), InstFlagIndirectJump)) {  // jump register
-            const auto jumpTable = dynamic_cast<MIRJumpTable*>(terminator->operand(1)->reloc());
+        } else if (requireFlag(ctx.instInfo.getInstInfo(terminator).inst_flag(), InstFlagIndirectJump)) {  // jump register
+            const auto jumpTable = dynamic_cast<MIRJumpTable*>(terminator->operand(1).reloc());
             auto& table = jumpTable->data();
             prob = 1.0 / static_cast<double>(table.size());
             for (auto item : table) connect(block.get(), dynamic_cast<MIRBlock*>(item), prob);

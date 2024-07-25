@@ -2,27 +2,27 @@
 #include "mir/LiveInterval.hpp"
 #include "mir/target.hpp"
 #include "support/StaticReflection.hpp"
-#include "target/riscv/riscv.hpp"
+#include "target/riscv/RISCV.hpp"
 
 namespace mir {
 void IPRAUsageCache::add(const CodeGenContext& ctx, MIRFunction& mfunc) {
-    constexpr bool Debug = true;
+    constexpr bool Debug = false;
     IPRAInfo info;
 
     for (auto& block : mfunc.blocks()) {
         for (auto inst : block->insts()) {
-            auto& instInfo = ctx.instInfo.get_instinfo(inst);
+            auto& instInfo = ctx.instInfo.getInstInfo(inst);
             
             /* 判断该函数中是否使用到Caller Saved Register */
             for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
                 auto op = inst->operand(idx);
                 if (!isOperandISAReg(op)) continue;
-                if (ctx.frameInfo.is_caller_saved(*op)) info.emplace(op->reg());
+                if (ctx.frameInfo.isCallerSaved(op)) info.emplace(op.reg());
             }
 
             /* 遇到Call指令 */
             if (requireFlag(instInfo.inst_flag(), InstFlagCall)) {
-                auto callee = inst->operand(0)->reloc();
+                auto callee = inst->operand(0).reloc();
                 if (callee->name() != mfunc.name()) {  // 非递归的情况
                     auto calleeInfo = query(callee->name());
                     if (calleeInfo) {

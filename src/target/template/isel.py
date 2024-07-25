@@ -182,6 +182,7 @@ def parse_isel_select(
     operand_map: dict,
     target_insts_dict: dict,
     used_as_operand: bool = False,
+    generic_insts_dict: dict = None,
 ):
     local_map = dict()
 
@@ -217,16 +218,20 @@ def parse_isel_select(
                 operand_map,
                 target_insts_dict,
                 used_as_operand=True,
+                generic_insts_dict=generic_insts_dict
             )
             if not res:
                 return False
 
     # select inst
     operands = list()
-    if inst_ref not in target_insts_dict:
+    if inst_ref in target_insts_dict:
+        inst_info = target_insts_dict[inst_ref]
+    elif inst_ref in generic_insts_dict:
+        inst_info = generic_insts_dict[inst_ref]
+    else:
         print(f"Error: {inst_ref} not in target_insts_dict")
         return False
-    inst_info = target_insts_dict[inst_ref]
     for op_idx, op_info in inst_info["operands"].items():
         operands.append(local_map[op_info["name"]])
 
@@ -281,6 +286,7 @@ def parse_isel_item(isel_item: dict, mirgen_insts_dict: dict, target_insts_dict:
         operand_map,
         target_insts_dict,
         False,
+        mirgen_insts_dict
     )
     if not res:
         return False
@@ -288,8 +294,15 @@ def parse_isel_item(isel_item: dict, mirgen_insts_dict: dict, target_insts_dict:
     match_inst_name = match_item_list[0]["inst_name"]
 
     replace_inst_name = select_item_list[-1]["inst_ref"]
+    if replace_inst_name in target_insts_dict:
+        replace_inst_info = target_insts_dict[replace_inst_name]
+    elif replace_inst_name in mirgen_insts_dict:
+        replace_inst_info = mirgen_insts_dict[replace_inst_name]
+    else:
+        print(f"Error: {replace_inst_name} not in target_insts_dict or mirgen_insts_dict")
+        return False
     replace_operand = has_reg_def(mirgen_insts_dict[match_inst_name]) and has_reg_def(
-        target_insts_dict[replace_inst_name]
+        replace_inst_info
     )
     # isel_item = {
     #     "match_id": root_id,

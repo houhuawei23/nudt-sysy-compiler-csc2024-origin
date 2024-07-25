@@ -4,14 +4,12 @@
 #include <cstdint>
 #include <array>
 #include <algorithm>
-
 #include <sys/mman.h>
 #include <sys/wait.h>
-
 #include <iostream>
 #include <fstream>
-
 #include <cassert>
+
 #define alignTo(size, align) ((size) + (align) - 1) / (align) * (align)
 
 void Worker::dump(std::ostream& os) const {
@@ -38,8 +36,7 @@ void Futex::wait() {
   if not, wait for a signal */
   while (!storage.compare_exchange_strong(one, 0)) {
     one = 1;
-    syscall(SYS_futex, reinterpret_cast<long>(&storage), FUTEX_WAIT, 0, nullptr,
-            nullptr, 0);
+    syscall(SYS_futex, reinterpret_cast<long>(&storage), FUTEX_WAIT, 0, nullptr, nullptr, 0);
   }
 }
 
@@ -47,8 +44,7 @@ void Futex::wait() {
 void Futex::post() {
   uint32_t zero = 0;
   if (storage.compare_exchange_strong(zero, 1)) {
-    syscall(SYS_futex, reinterpret_cast<long>(&storage), FUTEX_WAKE, 1, nullptr,
-            nullptr, 0);
+    syscall(SYS_futex, reinterpret_cast<long>(&storage), FUTEX_WAKE, 1, nullptr, nullptr, 0);
   }
 }
 

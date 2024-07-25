@@ -7,15 +7,17 @@
 GENERIC_NAMESPACE_BEGIN
 
 class GENERICInstInfoJump final : public InstInfo {
-  public:
+public:
   GENERICInstInfoJump() = default;
 
   uint32_t operand_num() const override { return 1; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -26,24 +28,28 @@ class GENERICInstInfoJump final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.Jump"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "Jump"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)};
   }
 };
 
 class GENERICInstInfoBranch final : public InstInfo {
-  public:
+public:
   GENERICInstInfoBranch() = default;
 
   uint32_t operand_num() const override { return 3; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagUse;
-      case 1: return OperandFlagMetadata;
-      case 2: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagUse;
+      case 1:
+        return OperandFlagMetadata;
+      case 2:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -53,7 +59,7 @@ class GENERICInstInfoBranch final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.Branch"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "Branch"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
@@ -62,14 +68,15 @@ class GENERICInstInfoBranch final : public InstInfo {
 };
 
 class GENERICInstInfoUnreachable final : public InstInfo {
-  public:
+public:
   GENERICInstInfoUnreachable() = default;
 
   uint32_t operand_num() const override { return 0; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      default: assert(false && "Invalid operand index");
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -79,23 +86,27 @@ class GENERICInstInfoUnreachable final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.Unreachable"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "Unreachable";
   }
 };
 
 class GENERICInstInfoLoad final : public InstInfo {
-  public:
+public:
   GENERICInstInfoLoad() = default;
 
   uint32_t operand_num() const override { return 3; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -103,7 +114,7 @@ class GENERICInstInfoLoad final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.Load"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "Load"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
@@ -112,17 +123,21 @@ class GENERICInstInfoLoad final : public InstInfo {
 };
 
 class GENERICInstInfoStore final : public InstInfo {
-  public:
+public:
   GENERICInstInfoStore() = default;
 
   uint32_t operand_num() const override { return 3; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagUse;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagUse;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -130,7 +145,7 @@ class GENERICInstInfoStore final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.Store"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "Store"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
@@ -139,17 +154,21 @@ class GENERICInstInfoStore final : public InstInfo {
 };
 
 class GENERICInstInfoAdd final : public InstInfo {
-  public:
+public:
   GENERICInstInfoAdd() = default;
 
   uint32_t operand_num() const override { return 3; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -159,7 +178,7 @@ class GENERICInstInfoAdd final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.Add"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "Add"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
@@ -168,17 +187,21 @@ class GENERICInstInfoAdd final : public InstInfo {
 };
 
 class GENERICInstInfoSub final : public InstInfo {
-  public:
+public:
   GENERICInstInfoSub() = default;
 
   uint32_t operand_num() const override { return 3; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -186,7 +209,7 @@ class GENERICInstInfoSub final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.Sub"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "Sub"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
@@ -195,17 +218,21 @@ class GENERICInstInfoSub final : public InstInfo {
 };
 
 class GENERICInstInfoMul final : public InstInfo {
-  public:
+public:
   GENERICInstInfoMul() = default;
 
   uint32_t operand_num() const override { return 3; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -215,7 +242,7 @@ class GENERICInstInfoMul final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.Mul"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "Mul"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
@@ -224,17 +251,21 @@ class GENERICInstInfoMul final : public InstInfo {
 };
 
 class GENERICInstInfoUDiv final : public InstInfo {
-  public:
+public:
   GENERICInstInfoUDiv() = default;
 
   uint32_t operand_num() const override { return 3; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -242,7 +273,7 @@ class GENERICInstInfoUDiv final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.UDiv"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "UDiv"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
@@ -251,17 +282,21 @@ class GENERICInstInfoUDiv final : public InstInfo {
 };
 
 class GENERICInstInfoURem final : public InstInfo {
-  public:
+public:
   GENERICInstInfoURem() = default;
 
   uint32_t operand_num() const override { return 3; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -269,7 +304,7 @@ class GENERICInstInfoURem final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.URem"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "URem"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
@@ -278,17 +313,21 @@ class GENERICInstInfoURem final : public InstInfo {
 };
 
 class GENERICInstInfoAnd final : public InstInfo {
-  public:
+public:
   GENERICInstInfoAnd() = default;
 
   uint32_t operand_num() const override { return 3; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -298,7 +337,7 @@ class GENERICInstInfoAnd final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.And"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "And"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
@@ -307,17 +346,21 @@ class GENERICInstInfoAnd final : public InstInfo {
 };
 
 class GENERICInstInfoOr final : public InstInfo {
-  public:
+public:
   GENERICInstInfoOr() = default;
 
   uint32_t operand_num() const override { return 3; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -327,7 +370,7 @@ class GENERICInstInfoOr final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.Or"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "Or"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
@@ -336,17 +379,21 @@ class GENERICInstInfoOr final : public InstInfo {
 };
 
 class GENERICInstInfoXor final : public InstInfo {
-  public:
+public:
   GENERICInstInfoXor() = default;
 
   uint32_t operand_num() const override { return 3; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -356,7 +403,7 @@ class GENERICInstInfoXor final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.Xor"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "Xor"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
@@ -365,17 +412,21 @@ class GENERICInstInfoXor final : public InstInfo {
 };
 
 class GENERICInstInfoShl final : public InstInfo {
-  public:
+public:
   GENERICInstInfoShl() = default;
 
   uint32_t operand_num() const override { return 3; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -383,7 +434,7 @@ class GENERICInstInfoShl final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.Shl"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "Shl"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
@@ -392,17 +443,21 @@ class GENERICInstInfoShl final : public InstInfo {
 };
 
 class GENERICInstInfoLShr final : public InstInfo {
-  public:
+public:
   GENERICInstInfoLShr() = default;
 
   uint32_t operand_num() const override { return 3; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -410,7 +465,7 @@ class GENERICInstInfoLShr final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.LShr"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "LShr"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
@@ -419,17 +474,21 @@ class GENERICInstInfoLShr final : public InstInfo {
 };
 
 class GENERICInstInfoAShr final : public InstInfo {
-  public:
+public:
   GENERICInstInfoAShr() = default;
 
   uint32_t operand_num() const override { return 3; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -437,7 +496,7 @@ class GENERICInstInfoAShr final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.AShr"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "AShr"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
@@ -446,17 +505,21 @@ class GENERICInstInfoAShr final : public InstInfo {
 };
 
 class GENERICInstInfoSDiv final : public InstInfo {
-  public:
+public:
   GENERICInstInfoSDiv() = default;
 
   uint32_t operand_num() const override { return 3; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -464,7 +527,7 @@ class GENERICInstInfoSDiv final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.SDiv"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "SDiv"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
@@ -473,17 +536,21 @@ class GENERICInstInfoSDiv final : public InstInfo {
 };
 
 class GENERICInstInfoSRem final : public InstInfo {
-  public:
+public:
   GENERICInstInfoSRem() = default;
 
   uint32_t operand_num() const override { return 3; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -491,7 +558,7 @@ class GENERICInstInfoSRem final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.SRem"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "SRem"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
@@ -500,17 +567,21 @@ class GENERICInstInfoSRem final : public InstInfo {
 };
 
 class GENERICInstInfoSMin final : public InstInfo {
-  public:
+public:
   GENERICInstInfoSMin() = default;
 
   uint32_t operand_num() const override { return 3; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -520,7 +591,7 @@ class GENERICInstInfoSMin final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.SMin"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "SMin"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
@@ -529,17 +600,21 @@ class GENERICInstInfoSMin final : public InstInfo {
 };
 
 class GENERICInstInfoSMax final : public InstInfo {
-  public:
+public:
   GENERICInstInfoSMax() = default;
 
   uint32_t operand_num() const override { return 3; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -549,7 +624,7 @@ class GENERICInstInfoSMax final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.SMax"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "SMax"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
@@ -558,16 +633,19 @@ class GENERICInstInfoSMax final : public InstInfo {
 };
 
 class GENERICInstInfoNeg final : public InstInfo {
-  public:
+public:
   GENERICInstInfoNeg() = default;
 
   uint32_t operand_num() const override { return 2; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -575,7 +653,7 @@ class GENERICInstInfoNeg final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.Neg"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "Neg"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
@@ -583,16 +661,19 @@ class GENERICInstInfoNeg final : public InstInfo {
 };
 
 class GENERICInstInfoAbs final : public InstInfo {
-  public:
+public:
   GENERICInstInfoAbs() = default;
 
   uint32_t operand_num() const override { return 2; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -600,7 +681,7 @@ class GENERICInstInfoAbs final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.Abs"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "Abs"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
@@ -608,17 +689,21 @@ class GENERICInstInfoAbs final : public InstInfo {
 };
 
 class GENERICInstInfoFAdd final : public InstInfo {
-  public:
+public:
   GENERICInstInfoFAdd() = default;
 
   uint32_t operand_num() const override { return 3; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -628,7 +713,7 @@ class GENERICInstInfoFAdd final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.FAdd"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "FAdd"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
@@ -637,17 +722,21 @@ class GENERICInstInfoFAdd final : public InstInfo {
 };
 
 class GENERICInstInfoFSub final : public InstInfo {
-  public:
+public:
   GENERICInstInfoFSub() = default;
 
   uint32_t operand_num() const override { return 3; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -655,7 +744,7 @@ class GENERICInstInfoFSub final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.FSub"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "FSub"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
@@ -664,17 +753,21 @@ class GENERICInstInfoFSub final : public InstInfo {
 };
 
 class GENERICInstInfoFMul final : public InstInfo {
-  public:
+public:
   GENERICInstInfoFMul() = default;
 
   uint32_t operand_num() const override { return 3; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -684,7 +777,7 @@ class GENERICInstInfoFMul final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.FMul"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "FMul"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
@@ -693,17 +786,21 @@ class GENERICInstInfoFMul final : public InstInfo {
 };
 
 class GENERICInstInfoFDiv final : public InstInfo {
-  public:
+public:
   GENERICInstInfoFDiv() = default;
 
   uint32_t operand_num() const override { return 3; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -711,7 +808,7 @@ class GENERICInstInfoFDiv final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.FDiv"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "FDiv"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
@@ -720,16 +817,19 @@ class GENERICInstInfoFDiv final : public InstInfo {
 };
 
 class GENERICInstInfoFNeg final : public InstInfo {
-  public:
+public:
   GENERICInstInfoFNeg() = default;
 
   uint32_t operand_num() const override { return 2; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -737,7 +837,7 @@ class GENERICInstInfoFNeg final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.FNeg"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "FNeg"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
@@ -745,16 +845,19 @@ class GENERICInstInfoFNeg final : public InstInfo {
 };
 
 class GENERICInstInfoFAbs final : public InstInfo {
-  public:
+public:
   GENERICInstInfoFAbs() = default;
 
   uint32_t operand_num() const override { return 2; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -762,7 +865,7 @@ class GENERICInstInfoFAbs final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.FAbs"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "FAbs"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
@@ -770,18 +873,23 @@ class GENERICInstInfoFAbs final : public InstInfo {
 };
 
 class GENERICInstInfoFFma final : public InstInfo {
-  public:
+public:
   GENERICInstInfoFFma() = default;
 
   uint32_t operand_num() const override { return 4; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      case 3: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      case 3:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -789,7 +897,7 @@ class GENERICInstInfoFFma final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.FFma"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "FFma"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
@@ -799,18 +907,23 @@ class GENERICInstInfoFFma final : public InstInfo {
 };
 
 class GENERICInstInfoICmp final : public InstInfo {
-  public:
+public:
   GENERICInstInfoICmp() = default;
 
   uint32_t operand_num() const override { return 4; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      case 3: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      case 3:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -818,7 +931,7 @@ class GENERICInstInfoICmp final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.ICmp"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "ICmp"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
@@ -828,18 +941,23 @@ class GENERICInstInfoICmp final : public InstInfo {
 };
 
 class GENERICInstInfoFCmp final : public InstInfo {
-  public:
+public:
   GENERICInstInfoFCmp() = default;
 
   uint32_t operand_num() const override { return 4; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      case 3: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      case 3:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -847,7 +965,7 @@ class GENERICInstInfoFCmp final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.FCmp"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "FCmp"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
@@ -857,16 +975,19 @@ class GENERICInstInfoFCmp final : public InstInfo {
 };
 
 class GENERICInstInfoSExt final : public InstInfo {
-  public:
+public:
   GENERICInstInfoSExt() = default;
 
   uint32_t operand_num() const override { return 2; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -874,7 +995,7 @@ class GENERICInstInfoSExt final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.SExt"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "SExt"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
@@ -882,16 +1003,19 @@ class GENERICInstInfoSExt final : public InstInfo {
 };
 
 class GENERICInstInfoZExt final : public InstInfo {
-  public:
+public:
   GENERICInstInfoZExt() = default;
 
   uint32_t operand_num() const override { return 2; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -899,7 +1023,7 @@ class GENERICInstInfoZExt final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.ZExt"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "ZExt"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
@@ -907,16 +1031,19 @@ class GENERICInstInfoZExt final : public InstInfo {
 };
 
 class GENERICInstInfoTrunc final : public InstInfo {
-  public:
+public:
   GENERICInstInfoTrunc() = default;
 
   uint32_t operand_num() const override { return 2; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -924,7 +1051,7 @@ class GENERICInstInfoTrunc final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.Trunc"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "Trunc"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
@@ -932,16 +1059,19 @@ class GENERICInstInfoTrunc final : public InstInfo {
 };
 
 class GENERICInstInfoF2U final : public InstInfo {
-  public:
+public:
   GENERICInstInfoF2U() = default;
 
   uint32_t operand_num() const override { return 2; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -949,7 +1079,7 @@ class GENERICInstInfoF2U final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.F2U"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "F2U"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
@@ -957,16 +1087,19 @@ class GENERICInstInfoF2U final : public InstInfo {
 };
 
 class GENERICInstInfoF2S final : public InstInfo {
-  public:
+public:
   GENERICInstInfoF2S() = default;
 
   uint32_t operand_num() const override { return 2; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -974,7 +1107,7 @@ class GENERICInstInfoF2S final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.F2S"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "F2S"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
@@ -982,16 +1115,19 @@ class GENERICInstInfoF2S final : public InstInfo {
 };
 
 class GENERICInstInfoU2F final : public InstInfo {
-  public:
+public:
   GENERICInstInfoU2F() = default;
 
   uint32_t operand_num() const override { return 2; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -999,7 +1135,7 @@ class GENERICInstInfoU2F final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.U2F"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "U2F"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
@@ -1007,16 +1143,19 @@ class GENERICInstInfoU2F final : public InstInfo {
 };
 
 class GENERICInstInfoS2F final : public InstInfo {
-  public:
+public:
   GENERICInstInfoS2F() = default;
 
   uint32_t operand_num() const override { return 2; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1024,7 +1163,7 @@ class GENERICInstInfoS2F final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.S2F"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "S2F"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
@@ -1032,15 +1171,17 @@ class GENERICInstInfoS2F final : public InstInfo {
 };
 
 class GENERICInstInfoFCast final : public InstInfo {
-  public:
+public:
   GENERICInstInfoFCast() = default;
 
   uint32_t operand_num() const override { return 1; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1048,7 +1189,7 @@ class GENERICInstInfoFCast final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.FCast"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "FCast"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
@@ -1056,16 +1197,19 @@ class GENERICInstInfoFCast final : public InstInfo {
 };
 
 class GENERICInstInfoCopy final : public InstInfo {
-  public:
+public:
   GENERICInstInfoCopy() = default;
 
   uint32_t operand_num() const override { return 2; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1073,7 +1217,7 @@ class GENERICInstInfoCopy final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.Copy"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "Copy"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
@@ -1081,18 +1225,23 @@ class GENERICInstInfoCopy final : public InstInfo {
 };
 
 class GENERICInstInfoSelect final : public InstInfo {
-  public:
+public:
   GENERICInstInfoSelect() = default;
 
   uint32_t operand_num() const override { return 4; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      case 2: return OperandFlagUse;
-      case 3: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      case 3:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1100,7 +1249,7 @@ class GENERICInstInfoSelect final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.Select"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "Select"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
@@ -1110,16 +1259,19 @@ class GENERICInstInfoSelect final : public InstInfo {
 };
 
 class GENERICInstInfoLoadGlobalAddress final : public InstInfo {
-  public:
+public:
   GENERICInstInfoLoadGlobalAddress() = default;
 
   uint32_t operand_num() const override { return 2; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1129,7 +1281,7 @@ class GENERICInstInfoLoadGlobalAddress final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.LoadGlobalAddress"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "LoadGlobalAddress"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
@@ -1137,16 +1289,19 @@ class GENERICInstInfoLoadGlobalAddress final : public InstInfo {
 };
 
 class GENERICInstInfoLoadImm final : public InstInfo {
-  public:
+public:
   GENERICInstInfoLoadImm() = default;
 
   uint32_t operand_num() const override { return 2; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1154,7 +1309,7 @@ class GENERICInstInfoLoadImm final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.LoadImm"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "LoadImm"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
@@ -1162,16 +1317,19 @@ class GENERICInstInfoLoadImm final : public InstInfo {
 };
 
 class GENERICInstInfoLoadStackObjectAddr final : public InstInfo {
-  public:
+public:
   GENERICInstInfoLoadStackObjectAddr() = default;
 
   uint32_t operand_num() const override { return 2; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1183,7 +1341,7 @@ class GENERICInstInfoLoadStackObjectAddr final : public InstInfo {
     return "GENERIC.LoadStackObjectAddr";
   }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "LoadStackObjectAddr"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
@@ -1191,16 +1349,19 @@ class GENERICInstInfoLoadStackObjectAddr final : public InstInfo {
 };
 
 class GENERICInstInfoCopyFromReg final : public InstInfo {
-  public:
+public:
   GENERICInstInfoCopyFromReg() = default;
 
   uint32_t operand_num() const override { return 2; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1208,7 +1369,7 @@ class GENERICInstInfoCopyFromReg final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.CopyFromReg"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "CopyFromReg"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
@@ -1216,16 +1377,19 @@ class GENERICInstInfoCopyFromReg final : public InstInfo {
 };
 
 class GENERICInstInfoCopyToReg final : public InstInfo {
-  public:
+public:
   GENERICInstInfoCopyToReg() = default;
 
   uint32_t operand_num() const override { return 2; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1235,7 +1399,7 @@ class GENERICInstInfoCopyToReg final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.CopyToReg"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "CopyToReg"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
@@ -1243,16 +1407,19 @@ class GENERICInstInfoCopyToReg final : public InstInfo {
 };
 
 class GENERICInstInfoLoadImmToReg final : public InstInfo {
-  public:
+public:
   GENERICInstInfoLoadImmToReg() = default;
 
   uint32_t operand_num() const override { return 2; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1260,7 +1427,7 @@ class GENERICInstInfoLoadImmToReg final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.LoadImmToReg"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "LoadImmToReg"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
@@ -1268,16 +1435,19 @@ class GENERICInstInfoLoadImmToReg final : public InstInfo {
 };
 
 class GENERICInstInfoLoadRegFromStack final : public InstInfo {
-  public:
+public:
   GENERICInstInfoLoadRegFromStack() = default;
 
   uint32_t operand_num() const override { return 2; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagDef;
-      case 1: return OperandFlagMetadata;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagMetadata;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1285,7 +1455,7 @@ class GENERICInstInfoLoadRegFromStack final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.LoadRegFromStack"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "LoadRegFromStack"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
@@ -1293,16 +1463,19 @@ class GENERICInstInfoLoadRegFromStack final : public InstInfo {
 };
 
 class GENERICInstInfoStoreRegToStack final : public InstInfo {
-  public:
+public:
   GENERICInstInfoStoreRegToStack() = default;
 
   uint32_t operand_num() const override { return 2; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      case 0: return OperandFlagMetadata;
-      case 1: return OperandFlagUse;
-      default: assert(false && "Invalid operand index");
+      case 0:
+        return OperandFlagMetadata;
+      case 1:
+        return OperandFlagUse;
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1310,7 +1483,7 @@ class GENERICInstInfoStoreRegToStack final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.StoreRegToStack"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "StoreRegToStack"
         << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
@@ -1318,14 +1491,15 @@ class GENERICInstInfoStoreRegToStack final : public InstInfo {
 };
 
 class GENERICInstInfoReturn final : public InstInfo {
-  public:
+public:
   GENERICInstInfoReturn() = default;
 
   uint32_t operand_num() const override { return 0; }
 
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
-      default: assert(false && "Invalid operand index");
+      default:
+        assert(false && "Invalid operand index");
     }
   }
 
@@ -1333,7 +1507,7 @@ class GENERICInstInfoReturn final : public InstInfo {
 
   std::string_view name() const override { return "GENERIC.Return"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) override {
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "Return";
   }
 };
@@ -1390,78 +1564,130 @@ class GENERICInstInfo final : public TargetInstInfo {
   GENERICInstInfoStoreRegToStack _instinfoStoreRegToStack;
   GENERICInstInfoReturn _instinfoReturn;
 
-  public:
+public:
   GENERICInstInfo() = default;
-  InstInfo& get_instinfo(uint32_t opcode) {
+  const InstInfo& getInstInfo(uint32_t opcode) const override {
     switch (opcode) {
-      case GENERICInst::Jump: return _instinfoJump;
-      case GENERICInst::Branch: return _instinfoBranch;
-      case GENERICInst::Unreachable: return _instinfoUnreachable;
-      case GENERICInst::Load: return _instinfoLoad;
-      case GENERICInst::Store: return _instinfoStore;
-      case GENERICInst::Add: return _instinfoAdd;
-      case GENERICInst::Sub: return _instinfoSub;
-      case GENERICInst::Mul: return _instinfoMul;
-      case GENERICInst::UDiv: return _instinfoUDiv;
-      case GENERICInst::URem: return _instinfoURem;
-      case GENERICInst::And: return _instinfoAnd;
-      case GENERICInst::Or: return _instinfoOr;
-      case GENERICInst::Xor: return _instinfoXor;
-      case GENERICInst::Shl: return _instinfoShl;
-      case GENERICInst::LShr: return _instinfoLShr;
-      case GENERICInst::AShr: return _instinfoAShr;
-      case GENERICInst::SDiv: return _instinfoSDiv;
-      case GENERICInst::SRem: return _instinfoSRem;
-      case GENERICInst::SMin: return _instinfoSMin;
-      case GENERICInst::SMax: return _instinfoSMax;
-      case GENERICInst::Neg: return _instinfoNeg;
-      case GENERICInst::Abs: return _instinfoAbs;
-      case GENERICInst::FAdd: return _instinfoFAdd;
-      case GENERICInst::FSub: return _instinfoFSub;
-      case GENERICInst::FMul: return _instinfoFMul;
-      case GENERICInst::FDiv: return _instinfoFDiv;
-      case GENERICInst::FNeg: return _instinfoFNeg;
-      case GENERICInst::FAbs: return _instinfoFAbs;
-      case GENERICInst::FFma: return _instinfoFFma;
-      case GENERICInst::ICmp: return _instinfoICmp;
-      case GENERICInst::FCmp: return _instinfoFCmp;
-      case GENERICInst::SExt: return _instinfoSExt;
-      case GENERICInst::ZExt: return _instinfoZExt;
-      case GENERICInst::Trunc: return _instinfoTrunc;
-      case GENERICInst::F2U: return _instinfoF2U;
-      case GENERICInst::F2S: return _instinfoF2S;
-      case GENERICInst::U2F: return _instinfoU2F;
-      case GENERICInst::S2F: return _instinfoS2F;
-      case GENERICInst::FCast: return _instinfoFCast;
-      case GENERICInst::Copy: return _instinfoCopy;
-      case GENERICInst::Select: return _instinfoSelect;
-      case GENERICInst::LoadGlobalAddress: return _instinfoLoadGlobalAddress;
-      case GENERICInst::LoadImm: return _instinfoLoadImm;
+      case GENERICInst::Jump:
+        return _instinfoJump;
+      case GENERICInst::Branch:
+        return _instinfoBranch;
+      case GENERICInst::Unreachable:
+        return _instinfoUnreachable;
+      case GENERICInst::Load:
+        return _instinfoLoad;
+      case GENERICInst::Store:
+        return _instinfoStore;
+      case GENERICInst::Add:
+        return _instinfoAdd;
+      case GENERICInst::Sub:
+        return _instinfoSub;
+      case GENERICInst::Mul:
+        return _instinfoMul;
+      case GENERICInst::UDiv:
+        return _instinfoUDiv;
+      case GENERICInst::URem:
+        return _instinfoURem;
+      case GENERICInst::And:
+        return _instinfoAnd;
+      case GENERICInst::Or:
+        return _instinfoOr;
+      case GENERICInst::Xor:
+        return _instinfoXor;
+      case GENERICInst::Shl:
+        return _instinfoShl;
+      case GENERICInst::LShr:
+        return _instinfoLShr;
+      case GENERICInst::AShr:
+        return _instinfoAShr;
+      case GENERICInst::SDiv:
+        return _instinfoSDiv;
+      case GENERICInst::SRem:
+        return _instinfoSRem;
+      case GENERICInst::SMin:
+        return _instinfoSMin;
+      case GENERICInst::SMax:
+        return _instinfoSMax;
+      case GENERICInst::Neg:
+        return _instinfoNeg;
+      case GENERICInst::Abs:
+        return _instinfoAbs;
+      case GENERICInst::FAdd:
+        return _instinfoFAdd;
+      case GENERICInst::FSub:
+        return _instinfoFSub;
+      case GENERICInst::FMul:
+        return _instinfoFMul;
+      case GENERICInst::FDiv:
+        return _instinfoFDiv;
+      case GENERICInst::FNeg:
+        return _instinfoFNeg;
+      case GENERICInst::FAbs:
+        return _instinfoFAbs;
+      case GENERICInst::FFma:
+        return _instinfoFFma;
+      case GENERICInst::ICmp:
+        return _instinfoICmp;
+      case GENERICInst::FCmp:
+        return _instinfoFCmp;
+      case GENERICInst::SExt:
+        return _instinfoSExt;
+      case GENERICInst::ZExt:
+        return _instinfoZExt;
+      case GENERICInst::Trunc:
+        return _instinfoTrunc;
+      case GENERICInst::F2U:
+        return _instinfoF2U;
+      case GENERICInst::F2S:
+        return _instinfoF2S;
+      case GENERICInst::U2F:
+        return _instinfoU2F;
+      case GENERICInst::S2F:
+        return _instinfoS2F;
+      case GENERICInst::FCast:
+        return _instinfoFCast;
+      case GENERICInst::Copy:
+        return _instinfoCopy;
+      case GENERICInst::Select:
+        return _instinfoSelect;
+      case GENERICInst::LoadGlobalAddress:
+        return _instinfoLoadGlobalAddress;
+      case GENERICInst::LoadImm:
+        return _instinfoLoadImm;
       case GENERICInst::LoadStackObjectAddr:
         return _instinfoLoadStackObjectAddr;
-      case GENERICInst::CopyFromReg: return _instinfoCopyFromReg;
-      case GENERICInst::CopyToReg: return _instinfoCopyToReg;
-      case GENERICInst::LoadImmToReg: return _instinfoLoadImmToReg;
-      case GENERICInst::LoadRegFromStack: return _instinfoLoadRegFromStack;
-      case GENERICInst::StoreRegToStack: return _instinfoStoreRegToStack;
-      case GENERICInst::Return: return _instinfoReturn;
-      default: return TargetInstInfo::get_instinfo(opcode);
+      case GENERICInst::CopyFromReg:
+        return _instinfoCopyFromReg;
+      case GENERICInst::CopyToReg:
+        return _instinfoCopyToReg;
+      case GENERICInst::LoadImmToReg:
+        return _instinfoLoadImmToReg;
+      case GENERICInst::LoadRegFromStack:
+        return _instinfoLoadRegFromStack;
+      case GENERICInst::StoreRegToStack:
+        return _instinfoStoreRegToStack;
+      case GENERICInst::Return:
+        return _instinfoReturn;
+      default:
+        return TargetInstInfo::getInstInfo(opcode);
     }
   }
-  bool matchBranch(MIRInst* inst, MIRBlock*& target, double& prob) override {
-    auto& instInfo = get_instinfo(inst->opcode());
+  bool matchBranch(MIRInst* inst,
+                   MIRBlock*& target,
+                   double& prob) const override {
+    auto& instInfo = getInstInfo(inst->opcode());
     if (requireFlag(instInfo.inst_flag(), InstFlagBranch)) {
       if (inst->opcode() < ISASpecificBegin) {
         return TargetInstInfo::matchBranch(inst, target, prob);
       }
       switch (inst->opcode()) {
         case Jump:
-          target = dynamic_cast<MIRBlock*>(inst->operand(0)->reloc());
+          target = dynamic_cast<MIRBlock*>(inst->operand(0).reloc());
           prob = 1.0;
           break;
         case Branch:
-          target = dynamic_cast<MIRBlock*>(inst->operand(1)->reloc());
-          prob = inst->operand(2)->prob();
+          target = dynamic_cast<MIRBlock*>(inst->operand(1).reloc());
+          prob = inst->operand(2).prob();
           break;
         default:
           std::cerr << "Error: unknown branch instruction: " << instInfo.name()

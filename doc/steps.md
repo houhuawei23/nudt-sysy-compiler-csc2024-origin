@@ -1,3 +1,51 @@
+
+global array init optimization
+
+```ASM
+
+arr:
+	.4byte	1
+	.4byte	2
+	.4byte	3
+	.4byte	0
+	.4byte	0
+	.4byte	0
+	.4byte	0
+	.4byte	0
+	.4byte	0
+	.4byte	0
+	.4byte	0
+	.4byte	0
+	.4byte	0
+	.4byte	0
+	.4byte	0
+	.4byte	0
+	.4byte	0
+	.4byte	0
+	.4byte	0
+	.4byte	0
+	.4byte	5
+	.4byte	6
+
+->
+
+	.globl	arr
+	.align	3
+	.type	arr, @object
+	.size	arr, 400
+arr:
+	.word	1
+	.word	2
+	.word	3
+	.zero	28
+	.zero	40
+	.word	5
+	.word	6
+	.word	7
+	.zero	28
+	.zero	280
+```
+
 ```C
 int g = 5;
 

@@ -3,8 +3,6 @@
 import os
 import sys
 
-prefixes = ["cmmc", "Spl", "SysY", "Generic", "RISCV", "TAC", "MIPS", "ARM"]
-
 
 def is_owned_header(line: str):
     if line.find("antlr4-runtime.h") != -1:
@@ -24,7 +22,7 @@ for root, dirs, files in os.walk(submit_root):
                 if is_owned_header(stripped):
                     line = stripped
                     header = line[10 : line[10:].find('"') + 10]
-                    print(header)
+                    # print(header)
                     newline = (
                         '#include "'
                         + os.path.relpath(

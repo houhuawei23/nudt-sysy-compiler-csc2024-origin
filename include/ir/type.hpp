@@ -23,7 +23,7 @@ typedef enum : size_t {
   FUNCTION,
   ARRAY,
   UNDEFINE
-} BType;
+} BType; // FIXME: BType -> BasicTypeRank
 
 /* Type */
 class Type {
@@ -99,7 +99,8 @@ class PointerType : public Type {
   Type* mBaseType;
 
  public:
-  PointerType(Type* baseType) : Type(POINTER, 4), mBaseType(baseType) {}
+  // fix: pointer size is 8 bytes
+  PointerType(Type* baseType) : Type(POINTER, 8), mBaseType(baseType) {}
   static PointerType* gen(Type* baseType);
 
   auto baseType() const { return mBaseType; }

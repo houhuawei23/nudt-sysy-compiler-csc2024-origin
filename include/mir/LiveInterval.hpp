@@ -67,7 +67,7 @@ struct LiveVariablesInfo final {
 
 /* utils function */
 inline RegNum regNum(MIROperand& operand) {
-    assert(isOperandVRegORISAReg(&operand));
+    assert(isOperandVRegORISAReg(operand));
     return static_cast<RegNum>(operand.reg());
 }
 LiveVariablesInfo calcLiveIntervals(MIRFunction& mfunc, CodeGenContext& ctx);

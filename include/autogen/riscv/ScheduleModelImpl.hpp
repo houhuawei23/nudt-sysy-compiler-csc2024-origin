@@ -18,7 +18,7 @@ class RISCVScheduleModel_sifive_u74 final : public TargetScheduleModel {
 
   RISCVScheduleClassDivRem mScheduleClass_DivRem;
 
-  public:
+public:
   ScheduleClass& getInstScheClass(uint32_t opcode) override {
     switch (opcode) {
       case ADDI:
@@ -49,11 +49,13 @@ class RISCVScheduleModel_sifive_u74 final : public TargetScheduleModel {
       case InstLoadStackObjectAddr:
       case InstCopy:
       case InstCopyFromReg:
-      case InstCopyToReg: return mScheduleClass_IntegerArithmetic;
+      case InstCopyToReg:
+        return mScheduleClass_IntegerArithmetic;
 
       case InstLoadImm:
       case LoadImm32:
-      case LoadImm64: return mScheduleClass_SlowLoadImm;
+      case LoadImm64:
+        return mScheduleClass_SlowLoadImm;
 
       case JAL:
       case RET:
@@ -67,7 +69,8 @@ class RISCVScheduleModel_sifive_u74 final : public TargetScheduleModel {
       case BLEU:
       case BGTU:
       case BGEU:
-      case J: return mScheduleClass_Branch;
+      case J:
+        return mScheduleClass_Branch;
 
       case LB:
       case LH:
@@ -79,16 +82,19 @@ class RISCVScheduleModel_sifive_u74 final : public TargetScheduleModel {
       case SW:
       case LD:
       case SD:
-      case InstStoreRegToStack: return mScheduleClass_LoadStore;
+      case InstStoreRegToStack:
+        return mScheduleClass_LoadStore;
 
       case MUL:
       case MULH:
       case MULHSU:
       case MULHU:
-      case MULW: return mScheduleClass_Multi;
+      case MULW:
+        return mScheduleClass_Multi;
 
       case DIVW:
-      case REMW: return mScheduleClass_DivRem;
+      case REMW:
+        return mScheduleClass_DivRem;
 
       default:
         std::cerr << "getInstScheClass() failed: op: " << opcode << std::endl;

@@ -7,7 +7,7 @@
 
 namespace mir {
 /* dump assembly code for a module */
-void dump_assembly(std::ostream& os, MIRModule& module, CodeGenContext& ctx);
+void dumpAssembly(std::ostream& os, MIRModule& module, CodeGenContext& ctx);
 
 /* allocate stack space for local variables */
 void allocateStackObjects(MIRFunction* func, CodeGenContext& ctx);
@@ -15,12 +15,12 @@ void allocateStackObjects(MIRFunction* func, CodeGenContext& ctx);
 /* for each def operand in a block, apply functor */
 void forEachDefOperand(MIRBlock& block,
                        CodeGenContext& ctx,
-                       const std::function<void(MIROperand* op)>& functor);
+                       const std::function<void(MIROperand op)>& functor);
 
 /* for each def operand in a function, apply functor */
 void forEachDefOperand(MIRFunction& func,
                        CodeGenContext& ctx,
-                       const std::function<void(MIROperand* op)>& functor);
+                       const std::function<void(MIROperand op)>& functor);
 
 bool genericPeepholeOpt(MIRFunction& func, CodeGenContext& ctx);
 
@@ -32,14 +32,19 @@ void postRASchedule(MIRFunction& func, const CodeGenContext& ctx);
 
 /* some utils function */
 struct CodeLocation final {
-    const char* const file;
-    const char* const func;
-    int line;
+  const char* const file;
+  const char* const func;
+  int line;
 };
-#define NUDT_LOCATION() CodeLocation { __FILE__, __func__, __LINE__ }
+#define NUDT_LOCATION()          \
+  CodeLocation {                 \
+    __FILE__, __func__, __LINE__ \
+  }
 
 static void DumpForDebug(const CodeLocation& location);
 
 void ReportNotImplemented(const CodeLocation& location);
 void ReportUnreachable(const CodeLocation& location);
-}
+
+
+}  // namespace mir
