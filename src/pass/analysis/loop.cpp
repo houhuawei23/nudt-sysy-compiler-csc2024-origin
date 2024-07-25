@@ -6,9 +6,11 @@ static std::unordered_map<ir::BasicBlock*,int>stLoopLevel;
 namespace pass{
     void loopAnalysis::run(ir::Function* func,topAnalysisInfoManager* tp){
         if(func->isOnlyDeclare())return;
+        stLoopLevel.clear();
         domctx=tp->getDomTree(func);
         domctx->refresh();
         lpctx=tp->getLoopInfo(func);
+        lpctx->clearAll();
         for(auto bb:func->blocks())lpctx->set_looplevel(bb,0);
         for(auto bb:func->blocks()){
             if(bb->pre_blocks().empty())continue;
@@ -60,7 +62,13 @@ namespace pass{
     }
 
     void loopAnalysis::loopGetExits(ir::Loop* plp){
+        plp->blocks().insert(plp->header());
         for(auto bb:plp->blocks()){
+            if(lpctx->isHeader(bb) and bb!=plp->header()){
+                auto sblp=lpctx->head2loop(bb);
+                sblp->setParent(plp);
+                plp->subLoops().insert(sblp);
+            }
             for(auto bbNext:bb->next_blocks()){
                 if(plp->blocks().count(bbNext)==0){
                     plp->exits().insert(bbNext);

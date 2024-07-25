@@ -85,7 +85,13 @@ void BasicBlock::emplace_first_inst(Instruction* inst) {
   auto pos = mInsts.begin();
   mInsts.emplace(pos, inst);
   inst->setBlock(this);
-  if (auto phiInst = dyn_cast<PhiInst>(inst)) mPhiInsts.emplace_front(phiInst);
+  if (auto phiInst = dyn_cast<PhiInst>(inst)) {
+
+    auto phi = inst->dynCast<PhiInst>();
+    assert(inst->isa<PhiInst>() and "a phi can not be inserted at the front of a bb");
+    // mPhiInsts.emplace_front(phiInst);
+    mPhiInsts.push_front(inst);
+  }
 }
 
 void BasicBlock::emplace_back_inst(Instruction* i) {

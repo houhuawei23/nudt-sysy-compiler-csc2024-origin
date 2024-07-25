@@ -30,6 +30,9 @@ bool ArithmeticReduce::runOnBlock(ir::IRBuilder& builder,
           //           << std::endl;
           auto& operands = biInst->operands();
           std::swap(operands[0], operands[1]);
+          /* remember to maintain the index of operands */
+          operands[0]->set_index(0);
+          operands[1]->set_index(1);
           modified = true;
         }
       }

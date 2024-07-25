@@ -11,6 +11,7 @@ namespace pass{
     class pdomTree;
     class loopInfo;
     class callGraph;
+    class indVarInfo;
     class topAnalysisInfoManager;
     
     template<typename PassUnit>
@@ -148,6 +149,7 @@ public:
                 _loops.clear();
                 _head2loop.clear();
             }
+            bool isHeader(ir::BasicBlock* bb){return _head2loop.count(bb);}
             void refresh() override;
     };
 
@@ -155,12 +157,14 @@ public:
     class callGraph:public ModuleACtx{
         protected:
             std::unordered_map<ir::Function*,std::set<ir::Function*>>_callees;
+            std::unordered_map<ir::Function*,std::set<ir::Function*>>_callers;
             std::unordered_map<ir::Function*,bool>_is_called;
             std::unordered_map<ir::Function*,bool>_is_inline;
             std::unordered_map<ir::Function*,bool>_is_lib;
         public:
             callGraph(ir::Module* md,topAnalysisInfoManager* tp):ModuleACtx(md,tp){}
             std::set<ir::Function*>&callees(ir::Function*func){return _callees[func];}
+            std::set<ir::Function*>&callers(ir::Function*func){return _callers[func];}
             bool isCalled(ir::Function*func){return _is_called[func];}
             bool isInline(ir::Function*func){return _is_inline[func];}
             bool isLib(ir::Function*func){return _is_lib[func];}
@@ -169,6 +173,7 @@ public:
             void set_isLib(ir::Function*func,bool b){_is_lib[func]=b;}
             void clearAll(){
                 _callees.clear();
+                _callers.clear();
                 _is_called.clear();
                 _is_inline.clear();
                 _is_lib.clear();
@@ -176,11 +181,27 @@ public:
             void initialize(){
                 for(auto func:_pu->funcs()){
                     _callees[func]=std::set<ir::Function*>();
+                    _callers[func]=std::set<ir::Function*>();
                 }
             }
             bool isNoCallee(ir::Function* func){
                 return _callees[func].empty();
             }
             void refresh() override;
+    };
+
+
+    class indVarInfo:public FunctionACtx{
+        private:
+            std::unordered_map<ir::Loop*,ir::indVar*>_loopToIndvar;
+        public:
+            indVarInfo(ir::Function* fp,topAnalysisInfoManager* tp):FunctionACtx(fp,tp){}
+            ir::indVar* getIndvar(ir::Loop* loop){
+                if(_loopToIndvar.count(loop)==0)return nullptr;
+                return _loopToIndvar[loop];
+            }
+            void clearAll(){_loopToIndvar.clear();}
+            void refresh() override;
+            void addIndVar(ir::Loop* lp,ir::indVar* idv){_loopToIndvar[lp]=idv;}
     };
 };

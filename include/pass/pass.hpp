@@ -54,6 +54,7 @@ class topAnalysisInfoManager {
   std::unordered_map<ir::Function*, domTree*> mDomTree;
   std::unordered_map<ir::Function*, pdomTree*> mPDomTree;
   std::unordered_map<ir::Function*, loopInfo*> mLoopInfo;
+  std::unordered_map<ir::Function*, indVarInfo*> mIndVarInfo;
   // bb info
   public:
   topAnalysisInfoManager(ir::Module* pm) : mModule(pm), mCallGraph(nullptr) {}
@@ -69,6 +70,11 @@ class topAnalysisInfoManager {
     if (func->isOnlyDeclare()) return nullptr;
     return mLoopInfo[func];
   }
+  indVarInfo* getIndVarInfo(ir::Function* func) { 
+    if (func->isOnlyDeclare()) return nullptr;
+    return mIndVarInfo[func]; 
+  }
+
   callGraph* getCallGraph() { return mCallGraph; }
   void initialize();
   void CFGChange(ir::Function* func) {
@@ -78,6 +84,10 @@ class topAnalysisInfoManager {
     mLoopInfo[func]->setOff();
   }
   void CallChange() { mCallGraph->setOff(); }
+  void IndVarChange(ir::Function* func) { 
+    if (func->isOnlyDeclare()) return;
+    mIndVarInfo[func]->setOff(); 
+  }
 };
 
 }  // namespace pass
