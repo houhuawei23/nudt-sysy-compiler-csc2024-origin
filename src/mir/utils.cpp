@@ -59,8 +59,7 @@ void dumpAssembly(std::ostream& os, MIRModule& module, CodeGenContext& ctx) {
       if (bb == func->blocks().front()) {
         os << func->name() << ":\n";
         /* dump stack usage comment */
-        size_t argument = 0, calleeArgument = 0, loacl = 0, reSpill = 0,
-               calleeSaved = 0;
+        size_t argument = 0, calleeArgument = 0, loacl = 0, reSpill = 0, calleeSaved = 0;
         for (auto& [operand, stackobj] : func->stackObjs()) {
           switch (stackobj.usage) {
             case StackObjectUsage::Argument:

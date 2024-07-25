@@ -3,29 +3,6 @@
 #include "mir/target.hpp"
 #include "support/StaticReflection.hpp"
 namespace mir {
-/* utils function */
-void find_consecutive_zeros(std::vector<uint32_t> data) {
-    int start = -1;  // 初始时未找到连续0的起始位置
-
-    for (int i = 0; i < data.size(); i++) {
-        if (data[i] == 0) {
-            if (start == -1) {
-                start = i;  // 记录连续0的起始位置
-            }
-        } else {
-            if (start != -1) {
-                int end = i - 1; // 记录连续0的结束位置
-                start = -1; // 重置起始位置
-            }
-        }
-    }
-
-    // 检查最后一个元素是否是0，如果是，需要记录最后一个序列
-    if (start != -1) {
-        int end = data.size() - 1;
-    }
-}
-
 /* Information of MIRBlock */
 void MIRBlock::print(std::ostream& os, CodeGenContext& ctx) {
     os << " ";
@@ -54,19 +31,29 @@ void MIRFunction::print(std::ostream& os, CodeGenContext& ctx) {
 /* Information of MIRRelocable */
 void MIRZeroStorage::print(std::ostream& os, CodeGenContext& ctx) {}
 void MIRDataStorage::print(std::ostream& os, CodeGenContext& ctx) {
-    // if (mData.size() > 100) {
-    //     for (auto& val : mData) {
-    //         os << "\t.4byte\t";
-    //         if (is_float()) os << val << std::endl;
-    //         else os << val << std::endl;
-    //     }
-    // } else {
-    //     find_consecutive_zeros(mData);
-    // }
-    for (auto& val : mData) {
-        os << "\t.4byte\t";
-        if (is_float()) os << val << std::endl;
-        else os << val << std::endl;
+    int start = -1;  // 初始时未找到连续0的起始位置
+
+    for (int i = 0; i < mData.size(); i++) {
+        if (mData[i] == 0) {
+            if (start == -1) {
+                start = i;  // 记录连续0的起始位置
+            }
+        } else {
+            if (start != -1) {
+                int end = i - 1; // 记录连续0的结束位置
+                os << "\t.zero\t" << (end - start + 1) * 4 << std::endl;
+                start = -1; // 重置起始位置
+            }
+            os << "\t.word\t";
+            if (is_float()) os << mData[i] << std::endl;
+            else os << mData[i] << std::endl;
+        }
+    }
+
+    // 检查最后一个元素是否是0，如果是，需要记录最后一个序列
+    if (start != -1) {
+        int end = mData.size() - 1;
+        os << "\t.zero\t" << (end - start + 1) * 4 << std::endl;
     }
 }
 
