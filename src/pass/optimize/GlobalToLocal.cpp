@@ -16,12 +16,12 @@ void global2local::run(ir::Module* md,topAnalysisInfoManager* tp){
     funcToMem2Reg.clear();
     for(auto gvIter=md->globalVars().begin();gvIter!=md->globalVars().end();){
         auto gv=*gvIter;
-        std::cerr<<gv->name()<<std::endl;
+        // std::cerr<<gv->name()<<std::endl;
         bool tmpBool= processGlobalVariables(gv,md,tp);
         isChange=isChange or tmpBool;
         if(tmpBool)continue;
         gvIter++;
-        std::cerr<<"del."<<std::endl;
+        // std::cerr<<"del."<<std::endl;
     }
     std::cerr<<"Here"<<std::endl;
     if(funcToMem2Reg.size()){
