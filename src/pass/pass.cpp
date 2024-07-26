@@ -108,6 +108,12 @@ void PassManager::runPasses(std::vector<std::string> passes) {
     }
   }
 
+
+  if (config.logLevel >= sysy::LogLevel::DEBUG) {
+    auto fileName = utils::preName(config.infile) + "_after_passes.ll";
+    dumpModule(_irModule, fileName);
+  }
+  
   _irModule->rename();
 }
 
