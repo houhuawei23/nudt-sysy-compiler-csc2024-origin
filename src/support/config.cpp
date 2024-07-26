@@ -93,27 +93,32 @@ void Config::parseTestArgs(int argc, char* argv[]) {
 }
 
 // clang-format off
+static const auto PassesList = std::vector<std::string>{
+  // "simplifycfg", //error in backend CFGAnalysis.successors
+  "mem2reg",  //
+  // "simplifycfg", //error in backend CFGAnalysis.successors
+  // "instcombine",  //
+  "adce",     // passed all functional
+  "inline",   // segfault on 60_sort_test6/69_expr_eval/...
+  "tco",      // tail call optimization
+  "inline",   //
+  // "g2l",      // global to local
+  "adce",     // passed all functional
+  "sccp",     //
+  "gcm",  // global code motion
+  "gvn",          // global value numbering: passed, slow
+  "instcombine",  //
+  "adce",         //
+  // "simplifycfg",
+  "reg2mem"
+};
+
+
 // static const auto PassesList = std::vector<std::string>{
 //   "mem2reg",  //
-//   "adce",     // passed all functional
-//   "inline",   // segfault on 60_sort_test6/69_expr_eval/...
-//   "tco",      // tail call optimization
-//   "inline",   //
-//   "g2l",      // global to local
-//   "adce",     // passed all functional
-//   "sccp",     //
-//   // "simplifycfg", error in backend CFGAnalysis.successors
-//   "gcm",  // global code motion
-//   "gvn",          // global value numbering: passed, slow
-//   "instcombine",  //
-//   "adce",         //
+//   "simplifycfg", //  error in backend CFGAnalysis.successors
 //   "reg2mem"
 // };
-
-
-static const auto PassesList = std::vector<std::string>{
-  "simplifycfg", //  error in backend CFGAnalysis.successors
-};
 // clang-format on
 /*
 5
