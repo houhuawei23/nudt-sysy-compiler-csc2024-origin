@@ -313,15 +313,14 @@ struct MIROperandHasher final {
 #include <initializer_list>
 /* MIRInst */
 class MIRInst {
-  static const int max_operand_num = 7;
-
+public:
+  static constexpr int max_operand_num = 7;
 protected:
   uint32_t mOpcode;  // 标明指令的类型
   MIRBlock* mBlock;  // 标明指令所在的块
   std::array<MIROperand, max_operand_num> mOperands;  // 指令操作数
 public:
   static constexpr auto arenaSource = utils::Arena::Source::MIR;
-
   MIRInst(uint32_t opcode) : mOpcode(opcode) {}
   MIRInst(uint32_t opcode, std::initializer_list<MIROperand> operands) {
     mOpcode = opcode;
@@ -330,7 +329,10 @@ public:
       mOperands[it - operands.begin()] = *it;
     }
   }
-
+public:  // operator
+  bool operator==(const MIRInst& rhs) const {
+    return mOpcode == rhs.mOpcode && mOperands == rhs.mOperands;
+  }
 public:  // get function
   uint32_t opcode() const { return mOpcode; }
   auto operand(int idx) const {
@@ -347,10 +349,10 @@ public:  // set function
     mOpcode = opcode;
     return this;
   }
-  MIRInst* set_operand(int idx, MIROperand opeand) {
+  MIRInst* set_operand(int idx, MIROperand operand) {
     // assert(idx < max_operand_num && opeand != nullptr);
-    assert(idx < max_operand_num && opeand.isInit());
-    mOperands[idx] = opeand;
+    assert(idx < max_operand_num && operand.isInit());
+    mOperands[idx] = operand;
     return this;
   }
   auto resetOperands(std::initializer_list<MIROperand> operands) {
