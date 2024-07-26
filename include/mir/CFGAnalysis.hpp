@@ -21,10 +21,12 @@ class CFGAnalysis final {
     std::unordered_map<MIRBlock*, MIRBlockCFGInfo> _block2CFGInfo;
 public:  // get function
     std::unordered_map<MIRBlock*, MIRBlockCFGInfo>& block2CFGInfo() { return _block2CFGInfo; }
-    const std::vector<MIRBlockEdge>& predecessors(MIRBlock* block) const {
+    const std::vector<MIRBlockEdge> predecessors(MIRBlock* block) const {
+        if (!_block2CFGInfo.count(block)) return {};
         return _block2CFGInfo.at(block).predecessors;
     }
-    const std::vector<MIRBlockEdge>& successors(MIRBlock* block) const {
+    const std::vector<MIRBlockEdge> successors(MIRBlock* block) const {
+        if (!_block2CFGInfo.count(block)) return {};
         return _block2CFGInfo.at(block).successors;
     }
 public:  // Just for Debug

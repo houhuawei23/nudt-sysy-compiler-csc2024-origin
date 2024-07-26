@@ -102,7 +102,10 @@ LiveVariablesInfo calcLiveIntervals(MIRFunction& mfunc, CodeGenContext& ctx) {
     constexpr bool Debug = false;
     LiveVariablesInfo info;
     auto cfg = calcCFG(mfunc, ctx);
-    if (Debug) cfg.dump(std::cerr);
+    if (Debug) {
+        std::cerr << "begin debug calcLiveIntervals function. \n";
+        cfg.dump(std::cerr);
+    }
 
     // stage 1: collect use/def link
     for (auto& block : mfunc.blocks()) {
