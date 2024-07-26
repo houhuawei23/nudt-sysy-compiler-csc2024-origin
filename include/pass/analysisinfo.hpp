@@ -31,7 +31,7 @@ namespace pass{
 
 // add new analysis info of ir here!
 // dom Tree
-class domTree:public FunctionACtx{//also used as pdom
+class domTree:public FunctionACtx{
 protected:
     std::unordered_map<ir::BasicBlock*, ir::BasicBlock*> _idom;
     std::unordered_map<ir::BasicBlock*, ir::BasicBlock*> _sdom;

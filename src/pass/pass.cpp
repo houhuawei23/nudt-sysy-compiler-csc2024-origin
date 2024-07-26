@@ -5,7 +5,7 @@
 #include "pass/optimize/mem2reg.hpp"
 #include "pass/optimize/DCE.hpp"
 #include "pass/optimize/SCP.hpp"
-#include "pass/optimize/mySCCP.hpp"
+#include "pass/optimize/SCCP.hpp"
 #include "pass/optimize/simplifyCFG.hpp"
 #include "pass/analysis/loop.hpp"
 #include "pass/optimize/GCM.hpp"
@@ -41,7 +41,7 @@ void PassManager::runPasses(std::vector<std::string> passes) {
       } else if (pass_name.compare("scp") == 0) {
         run(new pass::SCP());
       } else if (pass_name.compare("sccp") == 0) {
-        run(new pass::mySCCP());
+        run(new pass::SCCP());
       } else if (pass_name.compare("simplifycfg") == 0) {
         run(new pass::simplifyCFG());
       } else if (pass_name.compare("loopanalysis") == 0) {
@@ -67,7 +67,7 @@ void PassManager::runPasses(std::vector<std::string> passes) {
       } else if (pass_name.compare("indvar") == 0) {
         run(new pass::indVarAnalysis());
         // run(new pass::indVarInfoCheck());
-      } else if (pass_name.compare("global2loc") == 0){
+      } else if (pass_name.compare("g2l") == 0){
         run(new pass::global2local());
       } else if (pass_name.compare("tco") == 0){
         run(new pass::tailCallOpt());
