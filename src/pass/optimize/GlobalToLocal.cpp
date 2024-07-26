@@ -6,13 +6,40 @@ static std::unordered_map<ir::GlobalVariable*,std::set<ir::Function*>>globalDire
 static std::unordered_map<ir::Function*,std::set<ir::GlobalVariable*>>funcDirectUseGlobal;//该函数直接使用的全局变量
 static std::unordered_map<ir::Function*,std::set<ir::GlobalVariable*>>funcIndirectUseGlobal;//该函数间接使用的全局变量
 static std::unordered_map<ir::GlobalVariable*,bool>globalHasStore;
+static std::set<ir::Function*>funcToMem2Reg;
 
 void global2local::run(ir::Module* md,topAnalysisInfoManager* tp){
     cgctx=tp->getCallGraph();
     cgctx->refresh();
     globalCallAnalysis(md);
-    for(auto gv:md->globalVars()){
-        processGlobalVariables(gv,md,tp);
+    funcToMem2Reg.clear();
+    for(auto gvIter=md->globalVars().begin();gvIter!=md->globalVars().end();){
+        auto gv=*gvIter;
+        std::cerr<<gv->name()<<std::endl;
+        if(processGlobalVariables(gv,md,tp))continue;
+        gvIter++;
+        std::cerr<<"del."<<std::endl;
+    }
+    std::cerr<<"Here"<<std::endl;
+    if(funcToMem2Reg.size()){
+        // Mem2Reg m2r;
+        // for(auto func:funcToMem2Reg){\
+        //     m2r.run(func,tp);
+        // }
+        // for(auto func:funcToMem2Reg){
+        //     auto newEntry=func->entry();
+        //     auto oldEntry=newEntry->next_blocks().front();
+        //     for(auto instIter=newEntry->insts().begin();instIter!=newEntry->insts().end();){
+        //         auto inst=*instIter;
+        //         instIter++;
+        //         if(inst->dynCast<ir::AllocaInst>()){
+        //             newEntry->move_inst(inst);
+        //             oldEntry->emplace_first_inst(inst);
+        //         }
+        //     }
+        //     func->forceDelBlock(newEntry);
+        //     func->setEntry(oldEntry);
+        // }
     }
 }
 
@@ -70,9 +97,9 @@ void global2local::addIndirectGlobalUseFunc(ir::GlobalVariable* gv, ir::Function
 2. 只在一个函数中被使用的global
 3. 在多个函数中被使用的global
 */
-void global2local::processGlobalVariables(ir::GlobalVariable* gv,ir::Module* md,topAnalysisInfoManager* tp){
+bool global2local::processGlobalVariables(ir::GlobalVariable* gv,ir::Module* md,topAnalysisInfoManager* tp){
     auto gvUseFuncSize=globalDirectUsedFunc[gv].size();
-    if(gv->isArray())return;
+    if(gv->isArray())return false;
     if(not globalHasStore[gv]){
         //如果一个gv没有store,那么所有的值都可以被初始值直接替换！
         for(auto puseIter=gv->uses().begin();puseIter!=gv->uses().end();){
@@ -83,23 +110,48 @@ void global2local::processGlobalVariables(ir::GlobalVariable* gv,ir::Module* md,
             userLdInst->replaceAllUseWith(gv->init(0));
             userLdInst->block()->delete_inst(userLdInst);
         }
-        return;
+        md->delGlobalVariable(gv);
+        return true;
     }
     //如果对应的gv没有被使用过一次，那么就直接删除了
     if(gvUseFuncSize==0){
         md->delGlobalVariable(gv);
+        return true;
     }
-    else if(gvUseFuncSize==1){
+    if(gvUseFuncSize==1){
         auto func=*globalDirectUsedFunc[gv].begin();
-        if(cgctx->callees(func).count(func))return;//is recursive
-        auto gvType=gv->type();
+        if(cgctx->callees(func).count(func))return false;//is recursive
+        if(funcToMem2Reg.count(func)==0){//为有需要的mem2reg的函数提供alloca条件,每一个函数只需要运行一遍
+            auto newEntry=new ir::BasicBlock("newbb",func);
+            auto oldEntry=func->entry();
+            for(auto instIter=oldEntry->insts().begin();instIter!=oldEntry->insts().end();){
+                auto inst=*instIter;
+                instIter++;
+                if(inst->dynCast<ir::AllocaInst>()){
+                    oldEntry->move_inst(inst);
+                    newEntry->emplace_first_inst(inst);
+                }
+            }
+            func->setEntry(newEntry);
+            func->blocks().push_front(newEntry);
+            ir::BasicBlock::block_link(newEntry,oldEntry);
+            auto newBrInst=new ir::BranchInst(oldEntry,newEntry);
+            newEntry->emplace_back_inst(newBrInst);
+            funcToMem2Reg.insert(func);
+        }
+        auto gvType=gv->baseType();
         auto funcEntry=func->entry();
         auto newAlloca=new ir::AllocaInst(gvType,funcEntry);
         funcEntry->emplace_lastbutone_inst(newAlloca);
         gv->replaceAllUseWith(newAlloca);
+        if(gv->isInit()){//如果有对于gv的初始值就在oldEntry中进行添加即可
+            auto oldEntry=func->entry()->next_blocks().front();//这里已经经过之前的针对mem2reg的条件的转换,所以这里直接取出
+            auto newStoreInst=new ir::StoreInst(gv->init(0),newAlloca,oldEntry);
+            oldEntry->emplace_first_inst(newStoreInst);
+        }
         md->delGlobalVariable(gv);
-        Mem2Reg m2r;
-        m2r.run(func,tp);
+        return true;
     }
+    return false;
     
 }
