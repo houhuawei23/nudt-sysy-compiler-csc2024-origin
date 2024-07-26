@@ -22,6 +22,7 @@
 #include "pass/optimize/TCO.hpp"
 #include "pass/optimize/InstCombine/ArithmeticReduce.hpp"
 #include "pass/analysis/CFGPrinter.hpp"
+#include "pass/optimize/LICM.hpp"
 namespace pass {
 void PassManager::runPasses(std::vector<std::string> passes) {
   run(new pass::CFGAnalysisHHW());
@@ -72,6 +73,8 @@ void PassManager::runPasses(std::vector<std::string> passes) {
         run(new pass::tailCallOpt());
       } else if (pass_name.compare("cfgprint") == 0){
         run(new pass::CFGPrinter());
+      } else if (pass_name.compare("licm") == 0){
+        run(new pass::LICM());
       }
       else {
         assert(false && "Invalid pass name");

@@ -220,6 +220,12 @@ class CallInst : public Instruction {
   }
   bool istail(){return mIsTail;}
   void setIsTail(bool b){mIsTail=b;}
+  bool isgetarrayorfarray(){
+    return (mCallee->name() == "getarray") || (mCallee->name() == "getfarray");
+  }
+  bool isputarrayorfarray(){
+    return (mCallee->name() == "putarray") || (mCallee->name() == "putfarray");
+  }
   Function* callee() const { return mCallee; }
   /* real arguments */
   auto& rargs() const { return mOperands; }
