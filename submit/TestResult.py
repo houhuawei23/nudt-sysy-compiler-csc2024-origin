@@ -28,8 +28,10 @@ colorMap = {
 
 
 class TestResult:
-    # list of (src, completed_process)
+    # type -> list of (src, completed_process)
     cases_result = {key: [] for key in ResultType}
+    # src -> (compiler_time, gcc_o3_time)
+    qemu_run_time = {}
 
     def __init__(self, test_name):
         self.test_name = test_name
@@ -84,3 +86,36 @@ class TestResult:
                     f.write("stderr:\n")
                     f.write(repr(process.stderr[:100]))
                     f.write("\n")
+
+    def print_perf_overview(self):
+        print(Fore.YELLOW + f"Test {self.test_name}:")
+        print(f"QEMU run time:")
+        speedups = [gcc/my for my, gcc in self.qemu_run_time.values()]
+        average_score = (sum(speedups)/len(speedups))*100
+        for src, (compiler_time, gcc_o3_time) in self.qemu_run_time.items():
+            print(Fore.YELLOW + f"test: {src}")
+            print(f"compiler time: {compiler_time:.2f}s")
+            print(f"gcc -O3 time: {gcc_o3_time:.2f}s")
+            sppedup = gcc_o3_time / compiler_time
+            print(f"speedup: {sppedup:.2f}x")
+            print()
+        # average score = sum(speedup) * 100 / len(speedup)
+        print(Fore.RED + f"averge score: {(sum(speedups)/len(speedups))*100:.2f}")
+
+    def save_perf_result(self, filename: str):
+        with open(filename, "w", encoding="utf-8") as f:
+            f.write(f"Test {self.test_name}\n")
+            f.write(f"QEMU run time compare:\n\n")
+            # calc before for
+            speedups = [gcc/my for my, gcc in self.qemu_run_time.values()]
+            # average score = sum(speedup) * 100 / len(speedup)
+            average_score = (sum(speedups)/len(speedups))*100
+            f.write(f"averge score: {average_score:.2f}\n\n")
+
+            for src, (compiler_time, gcc_o3_time) in self.qemu_run_time.items():
+                f.write(f"test: {src}\n")
+                f.write(f"compiler time: {compiler_time:.2f}s\n")
+                f.write(f"gcc -O3 time: {gcc_o3_time:.2f}s\n")
+                sppedup = gcc_o3_time / compiler_time
+                f.write(f"speedup: {sppedup:.2f}x\n")
+                f.write("\n")

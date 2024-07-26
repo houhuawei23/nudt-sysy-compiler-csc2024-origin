@@ -17,7 +17,7 @@ git checkout riscv
 cd ..
 rm -rf $submit_dir/*
 cp -r ../build/submit/* $submit_dir/
-rm -rf $submit_dir/compiler $submit_dir/build
+rm -rf $submit_dir/compiler $submit_dir/build $submit_dir/__pycache__
 
 date > $submit_dir/timestamp
 cd $submit_dir
