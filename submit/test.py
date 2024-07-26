@@ -1,44 +1,35 @@
+# python test.py compiler_path tests_path output_asm_path output_exe_path output_c_path
+# python ./submit/test.py ./compiler ./test/ ./.tmp/asm ./.tmp/exe ./.tmp/c
+
+
 import os
 import sys
 import subprocess
-import shutil
+
+from utils import (
+    removePathSuffix,
+    check_args,
+    compare_output_with_standard_file,
+    compare_and_parse_perf,
+)
+from TestResult import TestResult, ResultType, colorMap
+
+import colorama
+from colorama import Fore, Style
 
 
-# python test.py compiler_path tests_path output_asm_path output_exe_path
-# python ./submit/test.py ./compiler ./test/ ./.tmp/asm ./.tmp/exe
+colorama.init(autoreset=True)  # Initializes colorama and autoresets color
+
 
 compiler_path = sys.argv[1]
 tests_path = sys.argv[2]  #
 output_asm_path = sys.argv[3]
 output_exe_path = sys.argv[4]
+output_c_path = sys.argv[5]
 
-
-def overwritten_or_create_dir(path):
-    if os.path.exists(path):
-        print(f"Warning: {path} found, will be overwritten")
-        # os.rmdir(path)
-        # os.removedirs(path)
-        shutil.rmtree(path)
-        os.mkdir(path)
-    else:
-        print(f"{path} not found, will be created")
-        os.mkdir(path)
-
-
-def check_args():
-    if not os.path.exists(compiler_path):
-        print(f"Compiler not found: {compiler_path}")
-        print("Please run: `python compile.py ./ compiler` first")
-        return False
-    if not os.path.exists(tests_path):
-        print(f"Tests path not found: {tests_path}")
-        return False
-    overwritten_or_create_dir(output_asm_path)
-    overwritten_or_create_dir(output_exe_path)
-    return True
-
-
-if not check_args():
+if not check_args(
+    compiler_path, tests_path, output_asm_path, output_exe_path, output_c_path
+):
     sys.exit(1)
 
 
@@ -52,9 +43,12 @@ clang_ref_command = "clang -Qn -O3 -DNDEBUG -emit-llvm -fno-slp-vectorize -fno-v
 
 qemu_gcc_ref_command = "riscv64-linux-gnu-gcc-12 -O2 -DNDEBUG -march=rv64gc -mabi=lp64d -mcmodel=medlow -ffp-contract=on -w ".split()
 
+qemu_gpp_ref_command = "riscv64-linux-gnu-g++-12 -O2 -DNDEBUG -march=rv64gc -mabi=lp64d -mcmodel=medlow -ffp-contract=on -w ".split()
 
-sysy_runtime = tests_path + "/sysy/sylib.c"
-sysy_header = tests_path + "/sysy/sylib.h"
+sysy_runtime = os.path.join(tests_path, "sysy/sylib.c")
+sysy_header = os.path.join(tests_path, "sysy/sylib.h")
+
+sysy_link_for_riscv_gpp = os.path.join(tests_path, "link/link.c")
 
 
 def test(testname: str, path: str, suffix: str, tester):
@@ -88,93 +82,6 @@ def test(testname: str, path: str, suffix: str, tester):
     return len(test_list), len(failed_list)
 
 
-def test_sysy_groups(groupname, target, test_func: callable):
-    """
-    test_func: callable(path: str, target: str) -> bool
-    """
-    testnum, failednum = test(
-        f"SysY compiler functional {groupname}-{target}",
-        os.path.join(tests_path, "2023/functional"),
-        ".sy",
-        lambda x: test_func(x, target),
-    )
-    print(f"Total {testnum} tests, {failednum} failed")
-
-
-# test("SysY compiler functional", tests_path + "2021/functional", ".sy", )
-
-from enum import Enum
-
-
-class ResultType(Enum):
-    PASSED = 0
-    RUN_COMPILER_FAILED = 1
-    LINK_EXECUTABLE_FAILED = 2
-    RUN_EXECUTABLE_FAILED = 3
-    OUTPUT_MISMATCH = 4
-
-
-# for key in ResultType:
-#     print(key)
-# exit(0)
-
-
-class TestResult:
-    # list of (src, completed_process)
-    cases_result = {key: [] for key in ResultType}
-
-    def __init__(self, test_name):
-        self.test_name = test_name
-
-    def print_result_overview(self):
-        print(f"Test {self.test_name}:")
-        all = self.all_cases()
-        passed = self.cases_result[ResultType.PASSED]
-
-        print(
-            f"Total: {len(all)}, Passed: {len(passed)}, Failed: {len(all)-len(passed)}"
-        )
-        for type in ResultType:
-            print(f"{type.name}: {len(self.cases_result[type])}")
-
-    def all_cases(self):
-        all = []
-        for key in ResultType:
-            all.extend(self.cases_result[key])
-        return all
-
-    def print_result(self, type: ResultType):
-        print(f"Test {self.test_name} {type.name}:")
-        for src, process in result.cases_result[type]:
-            print(f"test: {src}")
-            print(f"returncode: {process.returncode}")
-            print("stdout:")
-            print(repr(process.stdout))
-            print("stderr:")
-            print(repr(process.stderr))
-    
-    def save_result(self, filename: str):
-        with open(filename, "w", encoding="utf-8") as f:
-            f.write(f"Test {self.test_name}")
-            for type in ResultType:
-                if type == ResultType.PASSED:
-                    continue
-                f.write(f"\n{type.name}:\n")
-                for src, process in self.cases_result[type]:
-                    f.write(f"test: {src}\n")
-                    f.write(f"returncode: {process.returncode}\n")
-                    f.write("stdout:\n")
-                    f.write(repr(process.stdout))
-                    f.write("\n")
-                    f.write("stderr:\n")
-                    f.write(repr(process.stderr))
-                    f.write("\n")
-
-
-
-result = TestResult("SysY compiler functional")
-
-
 def run_compiler(
     src, target, output, opt_level=0, debug_level=0, emit_ir=False, timeout=1
 ):
@@ -182,87 +89,44 @@ def run_compiler(
     ./compiler -S -o output src
     ./compiler -S -o output src -O1
     """
-    command = [compiler_path, "-S", "-o", output, src, "-O1"]
+    command = [compiler_path, "-S", "-o", output, src, f"-O{opt_level}"]
+    # print(*command, sep=" ")
     process = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
     return process
 
 
-def basename(filename: str):
+def run_riscv_gcc(src, target, output, opt_level=0, debug_level=0, timeout=1):
     """
-    basename("a/b/c.txt") => "a/b/c"
+    riscv64-linux-gnu-gcc-12 -S -o output src
     """
-    return os.path.splitext(filename)[0]
+    command = qemu_gpp_ref_command + ["-S", "-o", output, src, f"-O{opt_level}"]
+    # print(*command, sep=" ")
+    print(*command, sep=" ")
+    process = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
+    return process
 
 
-def link_executable(
-    src: str, target: str, output: str, runtime=sysy_runtime, timeout=1
-):
+def link_executable(src: str, target: str, output: str, runtime=sysy_runtime, timeout=1):
     """
     riscv64-linux-gnu-gcc-12
     """
     command = qemu_gcc_ref_command + ["-o", output, runtime, src]
+    # print(*command, sep=" ")
     process = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
     return process
 
-
-def compare_output_with_standard_file(
-    standard_filename: str, output: str, returncode: int
-):
-    if len(output) != 0 and not output.endswith("\n"):
-        output += "\n"
-    output += str(returncode) + "\n"
-
-    with open(standard_filename, encoding="utf-8", newline="\n") as f:
-        standard_answer = f.read()
-    if not standard_answer.endswith("\n"):
-        standard_answer += "\n"
-
-    if output != standard_answer:
-        print(" Output mismatch")
-        print("--------")
-        print("output:")
-        print(output[:10], end="")
-        print("--------")
-        print("stdans:")
-        print(standard_answer[:10], end="")
-        print("--------")
-        return False
-    return True
-
-
-def compare_and_parse_perf(src: str, out: subprocess.CompletedProcess):
+def link_ricvgpp_executable(src: str, target: str, output: str, timeout=1):
     """
-    compare and parse perf output
+    riscv64-linux-gnu-gcc-12
     """
-    output_file = basename(src) + ".out"
-    if not compare_output_with_standard_file(output_file, out.stdout, out.returncode):
-        raise RuntimeError("Output mismatch")
-
-    for line in out.stderr.splitlines():
-        if line.startswith("insns:"):
-            used = int(line.removeprefix("insns:").strip())
-            if "performance" in src:
-                print(f" {used}", end="")
-            return used
-
-    for line in out.stderr.splitlines():
-        if line.startswith("TOTAL:"):
-            perf = line.removeprefix("TOTAL: ").split("-")
-            used = (
-                float(perf[0][:-1]) * 3600
-                + float(perf[1][:-1]) * 60
-                + float(perf[2][:-1])
-                + float(perf[3][:-2]) * 1e-6
-            )
-            if "performance" in src:
-                print(f" {used:.6f}", end="")
-            return max(1e-6, used)
-
-    raise RuntimeError("No performance data")
-
+    command = qemu_gpp_ref_command + ["-o", output, src]
+    # print(*command, sep=" ")
+    process = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
+    return process
 
 def run_executable(command, src, timeout=1):
-    input_file = basename(src) + ".in"
+    input_file = removePathSuffix(src) + ".in"
+    # print(*command, sep=" ")
     if os.path.exists(input_file):
         with open(input_file, "r", encoding="utf-8") as f:
             out = subprocess.run(
@@ -271,82 +135,14 @@ def run_executable(command, src, timeout=1):
     else:
         out = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
 
-    # time_used = compare_and_parse_perf(src, out)
-    # return time_used
+    output_file = removePathSuffix(src) + ".out"
+    res = compare_output_with_standard_file(output_file, out.stdout, out.returncode)
 
-    res = compare_output_with_standard_file(
-        basename(src) + ".out", out.stdout, out.returncode
-    )
     return res, out
 
 
-# test_func: callable(src: str, target: str) -> bool
-def sysy_compiler_qemu(src: str, target: str):
-    if os.path.exists(src) is False:
-        print(f"Test file not found: {src}")
-        return False
-    filename = os.path.basename(src)
-    raw_name = os.path.splitext(filename)[0]
-    output_exe = os.path.join(output_exe_path, raw_name)
-    output_asm = os.path.join(output_asm_path, raw_name + ".s")
+# def
 
-    run_compiler_process = run_compiler(src, target, output_asm)
-    if run_compiler_process.returncode != 0:
-        result.cases_result[ResultType.RUN_COMPILER_FAILED].append(
-            (src, run_compiler_process)
-        )
-        return False
-
-    link_executable_process = link_executable(output_asm, target, output_exe)
-    if link_executable_process.returncode != 0:
-        result.cases_result[ResultType.LINK_EXECUTABLE_FAILED].append(
-            (src, link_executable_process)
-        )
-        return False
-
-    res, process = run_executable(qemu_command + [output_exe], src)
-
-    if not res:
-        result.cases_result[ResultType.OUTPUT_MISMATCH].append((src, process))
-        return False
-
-    result.cases_result[ResultType.PASSED].append((src, process))
-    return res
-
-
-# test_sysy_groups("qemu", "riscv", sysy_compiler_qemu)
-
-
-def test_year_cases(
-    year: str = "2023", target: str = "riscv", test_kind: str = "functional"
-):
-    year_kind_path = os.path.join(tests_path, year, test_kind)
-    testnum, failednum = test(
-        f"SysY compiler {year} {test_kind}",
-        year_kind_path,
-        ".sy",
-        lambda x: sysy_compiler_qemu(x, target),
-    )
-    result.print_result_overview()
-    # for type in ResultType:
-    #     if len(result.cases_result[type]) > 0:
-    #         result.print_result(type)
-
-
-def test_single_case(test_case_rel_path: str, target: str):
-    """
-    test_single_case("2023/functional/04_arr_defn3.sy", "riscv")
-    """
-    test_case_path = os.path.join(tests_path, test_case_rel_path)
-    sysy_compiler_qemu(test_case_path, target)
-    result.print_result_overview()
-    for type in ResultType:
-        if len(result.cases_result[type]) > 0:
-            result.print_result(type)
-
-
-# test_year_cases("2023", "riscv", "functional")
-# test_single_case("2023/functional/04_arr_defn3.sy", "riscv")
 
 # import time
 from datetime import datetime
@@ -354,65 +150,17 @@ from datetime import datetime
 now = datetime.now()
 
 dt_string = now.strftime("%Y_%m_%d_%H:%M")
+
+
 class Test:
-    def __init__(self, target: str, year: str, test_kind: str):
+    def __init__(self, target: str, year: str, test_kind: str, timeout=5):
         self.target = target
         self.year = year
         self.test_kind = test_kind
         self.result = TestResult(f"SysY compiler {year} {test_kind}")
+        self.timeout = timeout
 
-    def run(self):
-        print(f"Testing {self.year} {self.test_kind}...")
-        year_kind_path = os.path.join(tests_path, self.year, self.test_kind)
-        testnum, failednum = self.test_beta(
-            year_kind_path,
-            ".sy",
-            lambda x: self.sysy_compiler_qemu(x, self.target),
-        )
-        self.result.print_result_overview()
-        self.result.save_result(f"./{self.year}_{self.test_kind}_{dt_string}.md")
-
-    def run_single_case(self, test_case_rel_path: str):
-        test_case_path = os.path.join(tests_path, test_case_rel_path)
-        self.sysy_compiler_qemu(test_case_path, self.target)
-        # self.result.print_result_overview()
-        for type in ResultType:
-            if len(self.result.cases_result[type]) > 0:
-                self.result.print_result(type)
-
-    def sysy_compiler_qemu(self, src: str, target: str):
-        if os.path.exists(src) is False:
-            print(f"Test file not found: {src}")
-            return False
-        filename = os.path.basename(src)
-        raw_name = os.path.splitext(filename)[0]
-        output_exe = os.path.join(output_exe_path, raw_name)
-        output_asm = os.path.join(output_asm_path, raw_name + ".s")
-
-        run_compiler_process = run_compiler(src, target, output_asm)
-        if run_compiler_process.returncode != 0:
-            self.result.cases_result[ResultType.RUN_COMPILER_FAILED].append(
-                (src, run_compiler_process)
-            )
-            return False
-
-        link_executable_process = link_executable(output_asm, target, output_exe)
-        if link_executable_process.returncode != 0:
-            self.result.cases_result[ResultType.LINK_EXECUTABLE_FAILED].append(
-                (src, link_executable_process)
-            )
-            return False
-
-        res, process = run_executable(qemu_command + [output_exe], src)
-
-        if not res:
-            self.result.cases_result[ResultType.OUTPUT_MISMATCH].append((src, process))
-            return False
-
-        self.result.cases_result[ResultType.PASSED].append((src, process))
-        return res
-
-    def test_beta(self, path: str, suffix: str, tester):
+    def test(self, path: str, suffix: str, tester):
         """
         test files with suffix in path with tester.
         for f in all files in path with suffix:
@@ -429,20 +177,208 @@ class Test:
         test_list.sort()
         for src in test_list:
             cnt += 1
-            print(f"Test {cnt}/{len(test_list)}: {src}")
+            print(Fore.YELLOW + f"Test {cnt}/{len(test_list)}: {src}")
             try:
                 if tester(src) is not False:
-                    print("Test passed")
+                    print(Fore.GREEN + "Test passed")
                     continue
             except Exception as e:
-                print(f"Test failed: {e}")
-            print("Test failed")
+                print(Fore.RED + f"Test failed: {e}")
             failed_list.append(src)
 
         return len(test_list), len(failed_list)
 
+    def run(self):
+        print(Fore.RED + f"Testing {self.year} {self.test_kind}...")
+        year_kind_path = os.path.join(tests_path, self.year, self.test_kind)
+        testnum, failednum = self.test(
+            year_kind_path,
+            ".sy",
+            lambda x: self.sysy_compiler_qemu(x, self.target),
+        )
+        self.result.print_result_overview()
+        self.result.save_result(f"./{self.year}_{self.test_kind}_{dt_string}.md")
 
-test_instance = Test("riscv", "2023", "functional")
-test_instance.run()
+    def run_perf(self):
+        print(Fore.RED + f"Testing {self.year} {self.test_kind}...")
+        year_kind_path = os.path.join(tests_path, self.year, self.test_kind)
+        testnum, failednum = self.test(
+            year_kind_path,
+            ".sy",
+            lambda x: self.sysy_qemu_perf(x, self.target),
+        )
+        self.result.print_perf_overview()
+        self.result.save_perf_result(f"./{self.year}_{self.test_kind}_{dt_string}.md")
+
+    def run_single_case(self, test_case_rel_path: str):
+        """
+        test.run_single_case("2023/functional/04_arr_defn3.sy")
+        """
+        test_case_path = os.path.join(tests_path, test_case_rel_path)
+        compiler_time = self.sysy_compiler_qemu(test_case_path, self.target)
+        gcc_o3_time = self.sysy_gcc_qemu(test_case_path, self.target)
+        # self.result.qemu_run_time[test_case_path] = (compiler_time, gcc_o3_time)
+        # self.result.print_result_overview()
+        for type in ResultType:
+            if len(self.result.cases_result[type]) > 0:
+                self.result.print_result(type)
+
+    def sysy_compiler_qemu(self, src: str, target: str = "riscv"):
+        if os.path.exists(src) is False:
+            print(f"Test file not found: {src}")
+            return False
+        filename = os.path.basename(src)
+        raw_name = os.path.splitext(filename)[0]  # abc.sy -> abc
+        output_exe = os.path.join(output_exe_path, raw_name)
+        output_asm = os.path.join(output_asm_path, raw_name + ".s")
+
+        try:
+            run_compiler_process = run_compiler(
+                src, target, output_asm, timeout=self.timeout
+            )
+        except subprocess.TimeoutExpired:
+            print(Fore.RED + f"Test {src} run_compiler timeout")
+            self.result.cases_result[ResultType.RUN_COMPILER_FAILED].append(
+                (
+                    src,
+                    subprocess.CompletedProcess(
+                        [compiler_path, "-S", "-o", output_asm, src, "-O1"], 124, "", ""
+                    ),
+                )
+            )
+            return False
+
+        if run_compiler_process.returncode != 0:
+            self.result.cases_result[ResultType.RUN_COMPILER_FAILED].append(
+                (src, run_compiler_process)
+            )
+            return False
+
+        try:
+            link_executable_process = link_executable(
+                output_asm, target, output_exe, timeout=self.timeout
+            )
+        except subprocess.TimeoutExpired:
+            print(Fore.RED + f"Test {src} link_executable timeout")
+            self.result.cases_result[ResultType.LINK_EXECUTABLE_FAILED].append(
+                (src, subprocess.CompletedProcess(["gcc link"], 124, "", ""))
+            )
+            return False
+
+        if link_executable_process.returncode != 0:
+            self.result.cases_result[ResultType.LINK_EXECUTABLE_FAILED].append(
+                (src, link_executable_process)
+            )
+            return False
+
+        try:
+            res, process = run_executable(
+                qemu_command + [output_exe], src, timeout=self.timeout
+            )
+        except subprocess.TimeoutExpired:
+            print(Fore.RED + f"Test {src} run_executable timeout")
+            self.result.cases_result[ResultType.RUN_EXECUTABLE_FAILED].append(
+                (src, subprocess.CompletedProcess(["qemu"], 124, "", ""))
+            )
+            return False
+
+        if not res:
+            self.result.cases_result[ResultType.OUTPUT_MISMATCH].append((src, process))
+            return False
+
+        time_used = compare_and_parse_perf(src, process)
+        if src in self.result.qemu_run_time:
+            self.result.qemu_run_time[src] = (
+                time_used,
+                self.result.qemu_run_time[src][1],
+            )
+        else:
+            self.result.qemu_run_time[src] = (time_used, 0)
+            
+        self.result.cases_result[ResultType.PASSED].append((src, process))
+        return res
+
+    def sysy_gcc_qemu(self, src_path: str, target: str = "riscv"):
+        if os.path.exists(src_path) is False:
+            print(f"Test file not found: {src_path}")
+            return False
+        # src_cpath = removePathSuffix(src_path) + ".c"
+        src_filename = os.path.basename(src_path)  # path/to/abc.sy -> abc.sy
+        src_cpath = os.path.join(
+            output_c_path, removePathSuffix(os.path.basename(src_path)) + ".c"
+        )
+        src_raw_name = os.path.splitext(src_filename)[0]  # abc.sy -> abc
+        # path/to/output/abc
+        output_exe = os.path.join(output_exe_path, src_raw_name + "_gcc")
+        # path/to/output/abc.s
+        output_asm = os.path.join(output_asm_path, src_raw_name + "_gcc" ".s")
+
+        # prepare src_cpath
+        with open(sysy_link_for_riscv_gpp, "r", encoding="utf-8") as f:
+            link_code = f.read()
+        with open(src_path, "r", encoding="utf-8") as f:
+            sy_code = f.read()
+        with open(src_cpath, "w", encoding="utf-8") as f:
+            f.write(link_code + "\n\n" + sy_code)
+
+        process = run_riscv_gcc(
+            src_cpath, target, output_asm, opt_level=3, timeout=self.timeout
+        )
+
+        process = link_ricvgpp_executable(src_cpath, target, output_exe, timeout=self.timeout)
+
+        res, process = run_executable(
+            qemu_command + [output_exe], src_path, timeout=self.timeout
+        )
+        time_used = compare_and_parse_perf(src_path, process)
+        if src_path in self.result.qemu_run_time:
+            self.result.qemu_run_time[src_path] = (
+                self.result.qemu_run_time[src_path][0],
+                time_used,
+            )
+        else:
+            self.result.qemu_run_time[src_path] = (0, time_used)
+
+        return res
+
+    def sysy_qemu_perf(self, src_path: str, target: str = "riscv"):
+        if os.path.exists(src_path) is False:
+            print(f"Test file not found: {src_path}")
+            return False
+        
+        compiler_res = self.sysy_compiler_qemu(src_path, target)
+        gcc_res = self.sysy_gcc_qemu(src_path, target)
+        if not (compiler_res and gcc_res):
+            raise Exception("Compiler or gcc failed")
+        return compiler_res and gcc_res
+# test_instance = Test("riscv", "2023", "functional")
+# test_instance.run()
 # test_instance.run_single_case("2023/functional/75_max_flow.sy")
 # test_instance.run_single_case("2023/functional/00_main.sy")
+# test_instance.run_single_case("2023/functional/68_brainfk.sy")
+
+
+# test_instance = Test("riscv", "2023", "hidden_functional")
+# test_instance.run()
+# test_instance.run_single_case("2023/hidden_functional/23_json.sy")
+
+import time
+
+
+def submitTest():
+    # timeout = 5
+    test = Test("riscv", "2023", "functional")
+    test.run()
+    # test.run_single_case("2023/functional/00_main.sy")
+    # time.sleep(2)
+    Test("riscv", "2023", "hidden_functional").run()
+
+def perfTest():
+    perf_timeout = 20
+    test = Test("riscv", "2025", "performance", perf_timeout)
+    # test.run()
+    test.run_perf()
+    # test.run_single_case("2023/performance/00_bitset1.sy")
+if __name__ == "__main__":
+    # submitTest()
+    perfTest()

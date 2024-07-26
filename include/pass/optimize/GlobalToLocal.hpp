@@ -12,7 +12,7 @@ namespace pass{
             callGraph* cgctx;
             void globalCallAnalysis(ir::Module* md);
             void addIndirectGlobalUseFunc(ir::GlobalVariable* gv, ir::Function* func);
-            void processGlobalVariables(ir::GlobalVariable* gv,ir::Module* md);
+            void processGlobalVariables(ir::GlobalVariable* gv,ir::Module* md,topAnalysisInfoManager* tp);
         public:
             void run(ir::Module* md,topAnalysisInfoManager* tp)override;
     };

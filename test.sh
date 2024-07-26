@@ -4,6 +4,7 @@
 
 set -u # dont ignore unset variables
 # set -x # print all executed commands
+# set -e
 
 compiler_path="./compiler"
 
@@ -156,6 +157,7 @@ function run_llvm_test() {
 
     local llvm_c="${output_dir}/llvm_test.c"
     local llvm_ll="${output_dir}/llvm.ll"
+    local llvm_ll_opt="${output_dir}/llvmopt.ll"
     local llvm_llinked="${output_dir}/llvm_linked.ll"
 
     llvm_out="${output_dir}/llvm.out"
@@ -168,7 +170,11 @@ function run_llvm_test() {
     cat "${sy_h}" >"${llvm_c}"
     cat "${single_file}" >>"${llvm_c}"
 
-    clang --no-warnings -emit-llvm -S "${llvm_c}" -o "${llvm_ll}" -O3 -std=c90
+    clang --no-warnings -emit-llvm -S "${llvm_c}" -o "${llvm_ll}"  -O3 -std=c90 
+    # # ./compiler -f "${llvm_c}" -i -o "${llvm_ll}"
+    # opt -O3 -debug-pass-manager "${llvm_ll}" -o "${llvm_ll}"
+    # ./compiler -f "${single_file}" -i  -o "${llvm_ll}" "${OPT_LEVEL}" "${LOG_LEVEL}"
+    # opt -S "${llvm_ll}" -o "${llvm_ll_opt}" -p mem2reg -p adce -p inline -p tailcallelim -p inline -p adce -p simplifycfg -p licm -p gvn -p instcombine -p adce -p sccp -p simplifycfg 
     # -Wimplicit-function-declaration
     $llvm_link_cmd --suppress-warnings "${llvm_ll}" "${link_ll}" -S -o "${llvm_llinked}"
 

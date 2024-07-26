@@ -95,31 +95,43 @@ void Config::parseTestArgs(int argc, char* argv[]) {
 // clang-format off
 static const auto PassesList = std::vector<std::string>{
   "mem2reg",  //
-  // "inline",   //
-  // "tco",      //
-  // "inline",   //
-  // "g2l",      //
   "adce",     // passed all functional
-  // "sccp",     //
-  // "simplifycfg",
+  "inline",   // segfault on 60_sort_test6/69_expr_eval/...
+  "tco",      // tail call optimization
+  "inline",   //
+  "g2l",      // global to local
+  "adce",     // passed all functional
+  "sccp",     //
+  // "simplifycfg", error in backend CFGAnalysis.successors
   "gcm",  // global code motion
-  "gvn",          // global value numbering: passed
+  "gvn",          // global value numbering: passed, slow
   "instcombine",  //
   "adce",         //
   "reg2mem"
 };
+
+
+// static const auto PassesList = std::vector<std::string>{
+//   "simplifycfg", //  error in backend CFGAnalysis.successors
+
+// };
 // clang-format on
 /*
+5
 功能测试：compiler -S -o testcase.s testcase.sy
+6
 性能测试：compiler -S -o testcase.s testcase.sy -O1
 */
 void Config::parseSubmitArgs(int argc, char* argv[]) {
   genASM = true;
   outfile = argv[3];
   infile = argv[4];
-  if (argc == 5) {
-    optLevel = OptLevel::O1;
-  }
+  optLevel = OptLevel::O1;
+  /* 性能测试 */
+  // if (argc == 6) {
+  //   optLevel = OptLevel::O1;
+  //   // std::cerr << "using default opt level -O1" << std::endl;
+  // }
 }
 
 void Config::parseCmdArgs(int argc, char* argv[]) {

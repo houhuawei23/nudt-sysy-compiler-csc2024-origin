@@ -95,9 +95,14 @@ set(SUBMIT_DIR ${CMAKE_CURRENT_BINARY_DIR}/submit)
 # COMMAND cd ${SUBMIT_DIR}
 # COMMAND ${Python3_EXECUTABLE} ${SUBMIT_DIR}/compile.py ${SUBMIT_DIR} compiler
 # # COMMAND make
+# COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/submit/.gitignore ${SUBMIT_DIR}/.gitignore
+
 # # run test
 # COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/submit/test.py ${SUBMIT_DIR}/test.py
+# COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/submit/utils.py ${SUBMIT_DIR}/utils.py
+# COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/submit/TestResult.py ${SUBMIT_DIR}/TestResult.py
 # COMMAND ${Python3_EXECUTABLE} ${SUBMIT_DIR}/test.py ${SUBMIT_DIR}/compiler ${CMAKE_SOURCE_DIR}/test ${CMAKE_SOURCE_DIR}/.tmp/asm ${CMAKE_SOURCE_DIR}/.tmp/exe
+
 
 # DEPENDS compiler
 # )
