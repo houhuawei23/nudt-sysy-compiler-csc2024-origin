@@ -12,7 +12,6 @@ void tailCallOpt::run(ir::Function* func,topAnalysisInfoManager* tp){
                     tail_call_vec.push_back(callInstPtr);
                 else if(is_tail_call(inst,func)){ // for backend
                     callInstPtr->setIsTail(true);
-
                 }
             }
         }
@@ -27,8 +26,14 @@ void tailCallOpt::run(ir::Function* func,topAnalysisInfoManager* tp){
     auto oldEntry=func->entry();
     ir::BasicBlock::block_link(newEntry,oldEntry);
     auto newBrInst=new ir::BranchInst(oldEntry,newEntry);
-    newEntry->emplace_first_inst(newBrInst);
     func->setEntry(newEntry);
+    for(auto inst:oldEntry->insts()){
+        if(inst->valueId()==ir::vALLOCA){
+            oldEntry->move_inst(inst);
+            newEntry->emplace_back_inst(inst);
+        }
+    }
+    newEntry->emplace_first_inst(newBrInst);
     //在oldEntry添加关于参数的phi
     for(auto argIter=func->args().rbegin();argIter!=func->args().rend();argIter++){
         auto arg=*argIter;
