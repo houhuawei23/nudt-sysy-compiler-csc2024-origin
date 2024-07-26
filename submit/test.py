@@ -375,9 +375,10 @@ def submitTest():
 
 def perfTest():
     perf_timeout = 20
-    test = Test("riscv", "2023", "performance", perf_timeout)
+    test = Test("riscv", "2025", "performance", perf_timeout)
     # test.run()
     test.run_perf()
     # test.run_single_case("2023/performance/00_bitset1.sy")
 if __name__ == "__main__":
-    submitTest()
+    # submitTest()
+    perfTest()

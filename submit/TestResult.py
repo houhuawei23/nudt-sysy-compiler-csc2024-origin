@@ -1,13 +1,12 @@
-
 from enum import Enum
-
 
 import colorama
 from colorama import Fore, Style
 
 # Initializes colorama and autoresets color
-colorama.init(autoreset=True)  
+colorama.init(autoreset=True)
 
+from utils import isZero
 
 
 class ResultType(Enum):
@@ -87,11 +86,21 @@ class TestResult:
                     f.write(repr(process.stderr[:100]))
                     f.write("\n")
 
+    def cal_average_score(self):
+        speedups = []
+        for my, gcc in self.qemu_run_time.values():
+            if isZero(my) or isZero(gcc):
+                speedup = 0
+            else:
+                speedup = gcc / my
+            speedups.append(speedup)
+        average_score = (sum(speedups) / len(speedups)) * 100
+        return average_score
+
     def print_perf_overview(self):
         print(Fore.YELLOW + f"Test {self.test_name}:")
         print(f"QEMU run time:")
-        speedups = [gcc/my for my, gcc in self.qemu_run_time.values()]
-        average_score = (sum(speedups)/len(speedups))*100
+
         for src, (compiler_time, gcc_o3_time) in self.qemu_run_time.items():
             print(Fore.YELLOW + f"test: {src}")
             print(f"compiler time: {compiler_time:.2f}s")
@@ -100,16 +109,14 @@ class TestResult:
             print(f"speedup: {sppedup:.2f}x")
             print()
         # average score = sum(speedup) * 100 / len(speedup)
-        print(Fore.RED + f"averge score: {(sum(speedups)/len(speedups))*100:.2f}")
+        average_score = self.cal_average_score()
+        print(Fore.RED + f"averge score: {average_score:.2f}")
 
     def save_perf_result(self, filename: str):
         with open(filename, "w", encoding="utf-8") as f:
             f.write(f"Test {self.test_name}\n")
             f.write(f"QEMU run time compare:\n\n")
-            # calc before for
-            speedups = [gcc/my for my, gcc in self.qemu_run_time.values()]
-            # average score = sum(speedup) * 100 / len(speedup)
-            average_score = (sum(speedups)/len(speedups))*100
+            average_score = self.cal_average_score()
             f.write(f"averge score: {average_score:.2f}\n\n")
 
             for src, (compiler_time, gcc_o3_time) in self.qemu_run_time.items():
