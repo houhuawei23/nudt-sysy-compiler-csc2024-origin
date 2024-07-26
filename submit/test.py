@@ -3,6 +3,14 @@ import sys
 import subprocess
 import shutil
 
+from utils import check_args
+
+import colorama
+from colorama import Fore, Style
+
+
+colorama.init(autoreset=True)  # Initializes colorama and autoresets color
+
 
 # python test.py compiler_path tests_path output_asm_path output_exe_path
 # python ./submit/test.py ./compiler ./test/ ./.tmp/asm ./.tmp/exe
@@ -11,31 +19,6 @@ compiler_path = sys.argv[1]
 tests_path = sys.argv[2]  #
 output_asm_path = sys.argv[3]
 output_exe_path = sys.argv[4]
-
-
-def overwritten_or_create_dir(path):
-    if os.path.exists(path):
-        print(f"Warning: {path} found, will be overwritten")
-        # os.rmdir(path)
-        # os.removedirs(path)
-        shutil.rmtree(path)
-        os.mkdir(path)
-    else:
-        print(f"{path} not found, will be created")
-        os.mkdir(path)
-
-
-def check_args():
-    if not os.path.exists(compiler_path):
-        print(f"Compiler not found: {compiler_path}")
-        print("Please run: `python compile.py ./ compiler` first")
-        return False
-    if not os.path.exists(tests_path):
-        print(f"Tests path not found: {tests_path}")
-        return False
-    overwritten_or_create_dir(output_asm_path)
-    overwritten_or_create_dir(output_exe_path)
-    return True
 
 
 if not check_args():
@@ -88,20 +71,6 @@ def test(testname: str, path: str, suffix: str, tester):
     return len(test_list), len(failed_list)
 
 
-def test_sysy_groups(groupname, target, test_func: callable):
-    """
-    test_func: callable(path: str, target: str) -> bool
-    """
-    testnum, failednum = test(
-        f"SysY compiler functional {groupname}-{target}",
-        os.path.join(tests_path, "2023/functional"),
-        ".sy",
-        lambda x: test_func(x, target),
-    )
-    print(f"Total {testnum} tests, {failednum} failed")
-
-
-# test("SysY compiler functional", tests_path + "2021/functional", ".sy", )
 
 from enum import Enum
 
@@ -114,9 +83,14 @@ class ResultType(Enum):
     OUTPUT_MISMATCH = 4
 
 
-# for key in ResultType:
-#     print(key)
-# exit(0)
+colorMap = {
+    ResultType.PASSED: Fore.GREEN,
+    ResultType.RUN_COMPILER_FAILED: Fore.RED,
+    ResultType.LINK_EXECUTABLE_FAILED: Fore.RED,
+    ResultType.RUN_EXECUTABLE_FAILED: Fore.RED,
+    ResultType.OUTPUT_MISMATCH: Fore.RED,
+}
+
 
 
 class TestResult:
@@ -127,7 +101,7 @@ class TestResult:
         self.test_name = test_name
 
     def print_result_overview(self):
-        print(f"Test {self.test_name}:")
+        print(Fore.YELLOW + f"Test {self.test_name}:")
         all = self.all_cases()
         passed = self.cases_result[ResultType.PASSED]
 
@@ -135,7 +109,14 @@ class TestResult:
             f"Total: {len(all)}, Passed: {len(passed)}, Failed: {len(all)-len(passed)}"
         )
         for type in ResultType:
-            print(f"{type.name}: {len(self.cases_result[type])}")
+            print(colorMap[type] + f"{type.name}: {len(self.cases_result[type])}")
+        print()
+        for type in ResultType:
+            if type == ResultType.PASSED:
+                continue
+            if len(self.cases_result[type]) == 0:
+                continue
+            self.print_result(type)
 
     def all_cases(self):
         all = []
@@ -144,15 +125,15 @@ class TestResult:
         return all
 
     def print_result(self, type: ResultType):
-        print(f"Test {self.test_name} {type.name}:")
+        print(f"Test {self.test_name}" + colorMap[type] + f" {type.name}:")
         for src, process in result.cases_result[type]:
-            print(f"test: {src}")
+            print(Fore.YELLOW + f"test: {src}")
             print(f"returncode: {process.returncode}")
             print("stdout:")
-            print(repr(process.stdout))
+            print(repr(process.stdout[:100]))
             print("stderr:")
-            print(repr(process.stderr))
-    
+            print(repr(process.stderr[:100]))
+
     def save_result(self, filename: str):
         with open(filename, "w", encoding="utf-8") as f:
             f.write(f"Test {self.test_name}")
@@ -164,12 +145,11 @@ class TestResult:
                     f.write(f"test: {src}\n")
                     f.write(f"returncode: {process.returncode}\n")
                     f.write("stdout:\n")
-                    f.write(repr(process.stdout))
+                    f.write(repr(process.stdout[:100]))
                     f.write("\n")
                     f.write("stderr:\n")
-                    f.write(repr(process.stderr))
+                    f.write(repr(process.stderr[:100]))
                     f.write("\n")
-
 
 
 result = TestResult("SysY compiler functional")
@@ -217,14 +197,16 @@ def compare_output_with_standard_file(
     if not standard_answer.endswith("\n"):
         standard_answer += "\n"
 
+    standard_answer = standard_answer.replace("\r\n", "\n")
+
     if output != standard_answer:
-        print(" Output mismatch")
+        print(Fore.RED + " Output mismatch")
         print("--------")
         print("output:")
-        print(output[:10], end="")
+        print(repr(output[:100]))
         print("--------")
         print("stdans:")
-        print(standard_answer[:10], end="")
+        print(repr(standard_answer[:100]))
         print("--------")
         return False
     return True
@@ -280,89 +262,24 @@ def run_executable(command, src, timeout=1):
     return res, out
 
 
-# test_func: callable(src: str, target: str) -> bool
-def sysy_compiler_qemu(src: str, target: str):
-    if os.path.exists(src) is False:
-        print(f"Test file not found: {src}")
-        return False
-    filename = os.path.basename(src)
-    raw_name = os.path.splitext(filename)[0]
-    output_exe = os.path.join(output_exe_path, raw_name)
-    output_asm = os.path.join(output_asm_path, raw_name + ".s")
-
-    run_compiler_process = run_compiler(src, target, output_asm)
-    if run_compiler_process.returncode != 0:
-        result.cases_result[ResultType.RUN_COMPILER_FAILED].append(
-            (src, run_compiler_process)
-        )
-        return False
-
-    link_executable_process = link_executable(output_asm, target, output_exe)
-    if link_executable_process.returncode != 0:
-        result.cases_result[ResultType.LINK_EXECUTABLE_FAILED].append(
-            (src, link_executable_process)
-        )
-        return False
-
-    res, process = run_executable(qemu_command + [output_exe], src)
-
-    if not res:
-        result.cases_result[ResultType.OUTPUT_MISMATCH].append((src, process))
-        return False
-
-    result.cases_result[ResultType.PASSED].append((src, process))
-    return res
-
-
-# test_sysy_groups("qemu", "riscv", sysy_compiler_qemu)
-
-
-def test_year_cases(
-    year: str = "2023", target: str = "riscv", test_kind: str = "functional"
-):
-    year_kind_path = os.path.join(tests_path, year, test_kind)
-    testnum, failednum = test(
-        f"SysY compiler {year} {test_kind}",
-        year_kind_path,
-        ".sy",
-        lambda x: sysy_compiler_qemu(x, target),
-    )
-    result.print_result_overview()
-    # for type in ResultType:
-    #     if len(result.cases_result[type]) > 0:
-    #         result.print_result(type)
-
-
-def test_single_case(test_case_rel_path: str, target: str):
-    """
-    test_single_case("2023/functional/04_arr_defn3.sy", "riscv")
-    """
-    test_case_path = os.path.join(tests_path, test_case_rel_path)
-    sysy_compiler_qemu(test_case_path, target)
-    result.print_result_overview()
-    for type in ResultType:
-        if len(result.cases_result[type]) > 0:
-            result.print_result(type)
-
-
-# test_year_cases("2023", "riscv", "functional")
-# test_single_case("2023/functional/04_arr_defn3.sy", "riscv")
-
 # import time
 from datetime import datetime
 
 now = datetime.now()
 
 dt_string = now.strftime("%Y_%m_%d_%H:%M")
+
+
 class Test:
-    def __init__(self, target: str, year: str, test_kind: str):
+    def __init__(self, target: str, year: str, test_kind: str, timeout=5):
         self.target = target
         self.year = year
         self.test_kind = test_kind
         self.result = TestResult(f"SysY compiler {year} {test_kind}")
+        self.timeout = timeout
 
     def run(self):
-        print(f"Testing {self.year} {self.test_kind}...")
+        print(Fore.RED + f"Testing {self.year} {self.test_kind}...")
         year_kind_path = os.path.join(tests_path, self.year, self.test_kind)
         testnum, failednum = self.test_beta(
             year_kind_path,
@@ -373,6 +290,9 @@ class Test:
         self.result.save_result(f"./{self.year}_{self.test_kind}_{dt_string}.md")
 
     def run_single_case(self, test_case_rel_path: str):
+        """
+        test.run_single_case("2023/functional/04_arr_defn3.sy")
+        """
         test_case_path = os.path.join(tests_path, test_case_rel_path)
         self.sysy_compiler_qemu(test_case_path, self.target)
         # self.result.print_result_overview()
@@ -389,21 +309,55 @@ class Test:
         output_exe = os.path.join(output_exe_path, raw_name)
         output_asm = os.path.join(output_asm_path, raw_name + ".s")
 
-        run_compiler_process = run_compiler(src, target, output_asm)
+        try:
+            run_compiler_process = run_compiler(
+                src, target, output_asm, timeout=self.timeout
+            )
+        except subprocess.TimeoutExpired:
+            print(Fore.RED + f"Test {src} run_compiler timeout")
+            self.result.cases_result[ResultType.RUN_COMPILER_FAILED].append(
+                (
+                    src,
+                    subprocess.CompletedProcess(
+                        [compiler_path, "-S", "-o", output_asm, src, "-O1"], 124, "", ""
+                    ),
+                )
+            )
+            return False
+
         if run_compiler_process.returncode != 0:
             self.result.cases_result[ResultType.RUN_COMPILER_FAILED].append(
                 (src, run_compiler_process)
             )
             return False
 
-        link_executable_process = link_executable(output_asm, target, output_exe)
+        try:
+            link_executable_process = link_executable(
+                output_asm, target, output_exe, timeout=self.timeout
+            )
+        except subprocess.TimeoutExpired:
+            print(Fore.RED + f"Test {src} link_executable timeout")
+            self.result.cases_result[ResultType.LINK_EXECUTABLE_FAILED].append(
+                (src, subprocess.CompletedProcess(["gcc link"], 124, "", ""))
+            )
+            return False
+
         if link_executable_process.returncode != 0:
             self.result.cases_result[ResultType.LINK_EXECUTABLE_FAILED].append(
                 (src, link_executable_process)
             )
             return False
 
-        res, process = run_executable(qemu_command + [output_exe], src)
+        try:
+            res, process = run_executable(
+                qemu_command + [output_exe], src, timeout=self.timeout
+            )
+        except subprocess.TimeoutExpired:
+            print(Fore.RED + f"Test {src} run_executable timeout")
+            self.result.cases_result[ResultType.RUN_EXECUTABLE_FAILED].append(
+                (src, subprocess.CompletedProcess(["qemu"], 124, "", ""))
+            )
+            return False
 
         if not res:
             self.result.cases_result[ResultType.OUTPUT_MISMATCH].append((src, process))
@@ -429,20 +383,35 @@ class Test:
         test_list.sort()
         for src in test_list:
             cnt += 1
-            print(f"Test {cnt}/{len(test_list)}: {src}")
+            print(Fore.YELLOW + f"Test {cnt}/{len(test_list)}: {src}")
             try:
                 if tester(src) is not False:
-                    print("Test passed")
+                    print(Fore.GREEN + "Test passed")
                     continue
             except Exception as e:
-                print(f"Test failed: {e}")
-            print("Test failed")
+                print(Fore.RED + f"Test failed: {e}")
             failed_list.append(src)
 
         return len(test_list), len(failed_list)
 
 
-test_instance = Test("riscv", "2023", "functional")
-test_instance.run()
+# test_instance = Test("riscv", "2023", "functional")
+# test_instance.run()
 # test_instance.run_single_case("2023/functional/75_max_flow.sy")
 # test_instance.run_single_case("2023/functional/00_main.sy")
+# test_instance.run_single_case("2023/functional/68_brainfk.sy")
+
+
+# test_instance = Test("riscv", "2023", "hidden_functional")
+# test_instance.run()
+# test_instance.run_single_case("2023/hidden_functional/23_json.sy")
+
+import time
+
+if __name__ == "__main__":
+    # timeout = 5
+    test = Test("riscv", "2023", "functional")
+    # test.run()
+    test.run_single_case("2023/functional/00_main.sy")
+    # time.sleep(2)
+    # Test("riscv", "2023", "hidden_functional").run()

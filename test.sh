@@ -4,6 +4,7 @@
 
 set -u # dont ignore unset variables
 # set -x # print all executed commands
+# set -e
 
 compiler_path="./compiler"
 
@@ -175,7 +176,7 @@ function run_llvm_test() {
     # ./compiler -f "${single_file}" -i  -o "${llvm_ll}" "${OPT_LEVEL}" "${LOG_LEVEL}"
     # opt -S "${llvm_ll}" -o "${llvm_ll_opt}" -p mem2reg -p adce -p inline -p tailcallelim -p inline -p adce -p simplifycfg -p licm -p gvn -p instcombine -p adce -p sccp -p simplifycfg 
     # -Wimplicit-function-declaration
-    $llvm_link_cmd --suppress-warnings "${llvm_ll_opt}" "${link_ll}" -S -o "${llvm_llinked}"
+    $llvm_link_cmd --suppress-warnings "${llvm_ll}" "${link_ll}" -S -o "${llvm_llinked}"
 
     if [ -f "$in_file" ]; then
         $lli_cmd "${llvm_llinked}" >"${llvm_out}" <"${in_file}"

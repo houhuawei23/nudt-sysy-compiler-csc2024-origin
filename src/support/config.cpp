@@ -95,8 +95,9 @@ void Config::parseTestArgs(int argc, char* argv[]) {
 // clang-format off
 static const auto PassesList = std::vector<std::string>{
   "mem2reg",  //
+  // "adce",     // passed all functional
   // "inline",   // segfault on 60_sort_test6/69_expr_eval/...
-  "tco",      // tail call optimization
+  // "tco",      // tail call optimization
   // "inline",   //
   "g2l",      // global to local
   "adce",     // passed all functional
@@ -117,8 +118,9 @@ void Config::parseSubmitArgs(int argc, char* argv[]) {
   genASM = true;
   outfile = argv[3];
   infile = argv[4];
-  if (argc == 5) {
+  if (argc == 6) {
     optLevel = OptLevel::O1;
+    std::cerr << "using default opt level -O1" << std::endl;
   }
 }
 
