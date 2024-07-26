@@ -454,6 +454,10 @@ void createMIRFunction(ir::Function* ir_func,
     const auto ir_alloca = dyn_cast<ir::AllocaInst>(ir_inst);
 
     auto pointee_type = ir_alloca->baseType();
+    // std::cerr << ir_alloca->name() << std::endl;
+    // std::cerr << "type: " << *pointee_type << std::endl;
+    // std::cerr << "size: " << pointee_type->size() << std::endl;
+
     uint32_t align = 4;  // TODO: align, need bind to ir object
     auto storage = mir_func->newStackObject(
       codegen_ctx.nextId(),                         // id
