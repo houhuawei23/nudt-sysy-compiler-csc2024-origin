@@ -4,6 +4,7 @@
 
 set -u # dont ignore unset variables
 # set -x # print all executed commands
+# set -e
 
 compiler_path="./compiler"
 
