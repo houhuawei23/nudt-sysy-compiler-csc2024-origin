@@ -82,15 +82,14 @@ void BasicBlock::emplace_first_inst(Instruction* inst) {
   if (inst->isTerminator() and isTerminal()) {
     std::cerr << "[ERROR] insert a terminal inst to a terminal bb" << std::endl;
   }
-  
+
   if (auto phiInst = dyn_cast<PhiInst>(inst)) {
     mPhiInsts.push_front(inst);
     auto pos = mInsts.begin();
     mInsts.emplace(pos, inst);
-  }
-  else{
+  } else {
     auto pos = mInsts.begin();
-    for (size_t i = 0; i < mPhiInsts.size(); i++){
+    for (size_t i = 0; i < mPhiInsts.size(); i++) {
       pos++;
     }
     mInsts.emplace(pos, inst);
@@ -112,11 +111,10 @@ void BasicBlock::emplace_back_inst(Instruction* i) {
     mPhiInsts.emplace_back(phiInst);
 }
 
-void BasicBlock::emplace_lastbutone_inst(Instruction* i){
-  if (mInsts.size() == 1){
+void BasicBlock::emplace_lastbutone_inst(Instruction* i) {
+  if (mInsts.size() == 1) {
     emplace_first_inst(i);
-  }
-  else{
+  } else {
     auto iter = mInsts.end();
     iter--;
     emplace_inst(iter, i);
@@ -204,10 +202,16 @@ bool Instruction::isAggressiveAlive() {
 Instruction* Instruction::copy_inst(std::function<Value*(Value*)> getValue) {
   if (auto allocainst = dyn_cast<AllocaInst>(this)) {
     if (allocainst->isScalar()) {
-      return utils::make<AllocaInst>(allocainst->baseType());
-    } else { 
+      auto inst = utils::make<AllocaInst>(allocainst->baseType());
+      inst->setComment(allocainst->comment());
+      return inst;
+    } else {
       auto basetype = dyn_cast<ArrayType>(allocainst->baseType());
-      return utils::make<AllocaInst>(basetype->baseType(), basetype->dims());
+      auto capacity = basetype->size();
+      auto inst = utils::make<AllocaInst>(
+        basetype->baseType(), basetype->dims(), nullptr, "", false, capacity);
+      inst->setComment(allocainst->comment());
+      return inst;
     }
   } else if (auto storeinst = dyn_cast<StoreInst>(this)) {
     auto value = getValue(storeinst->operand(0));

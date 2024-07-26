@@ -22,20 +22,17 @@ enum OperandFlag : uint32_t {
  */
 enum InstFlag : uint32_t {
   InstFlagNone = 0,
-
-  InstFlagLoad = 1 << 0,
-  InstFlagStore = 1 << 1,
-
-  InstFlagTerminator = 1 << 2,
-
-  InstFlagBranch = 1 << 3,
-  InstFlagCall = 1 << 4,           // call instruction
-  InstFlagNoFallThrough = 1 << 5,  // unconditional jump - j/jr/return
+  InstFlagLoad = 1 << 0,            // Load Instruction
+  InstFlagStore = 1 << 1,           // Store Instruction
+  InstFlagTerminator = 1 << 2,      // Terminator Instruction
+  InstFlagBranch = 1 << 3,          // Conditional Jump Instruction 
+  InstFlagCall = 1 << 4,            // Call Instruction
+  InstFlagNoFallThrough = 1 << 5,   // Unconditional Jump Instruction - j/jr/return
   InstFlagPush = 1 << 6,
   InstFlagLoadConstant = 1 << 7,
-  InstFlagRegDef = 1 << 8,       // def ISA register
-  InstFlagCommutative = 1 << 9,  // exchangable - add/sub/...
-  InstFlagReturn = 1 << 10,
+  InstFlagRegDef = 1 << 8,          // Def ISA Register Instruction
+  InstFlagCommutative = 1 << 9,     // Exchangable Instruction - add/sub/...
+  InstFlagReturn = 1 << 10,         // Return Instruction
   InstFlagLegalizePreRA = 1 << 11,
   InstFlagWithDelaySlot = 1 << 12,
   InstFlagRegCopy = 1 << 13,
@@ -44,7 +41,7 @@ enum InstFlag : uint32_t {
   InstFlagMultiDef = 1 << 16,
   InstFlagInOrder = 1 << 17,
   InstFlagPadding = 1 << 18,
-  InstFlagIndirectJump = 1 << 19,  // jump register - jr
+  InstFlagIndirectJump = 1 << 19,   // Jump Register Instruction - jr
   InstFlagSideEffect = InstFlagLoad | InstFlagStore | InstFlagTerminator |
                        InstFlagBranch | InstFlagCall | InstFlagPush |
                        InstFlagRegDef | InstFlagReturn | InstFlagWithDelaySlot |

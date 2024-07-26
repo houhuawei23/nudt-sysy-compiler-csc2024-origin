@@ -1,23 +1,17 @@
 #pragma once
-
 #include <cstddef>
 #include <cstdint>
-
 #include <vector>
 #include <list>
 #include <deque>
 #include <map>
 #include <unordered_set>
-
 #include <iostream>
-
 #include <typeinfo>
 #include <type_traits>
-
 #include <cassert>
 
 namespace utils {
-
 class Arena final {
   std::vector<void*> mBlocks;
   std::unordered_set<void*> mLargeBlocks;

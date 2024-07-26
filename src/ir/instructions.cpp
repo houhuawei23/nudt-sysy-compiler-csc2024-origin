@@ -76,34 +76,23 @@ void ReturnInst::print(std::ostream& os) const {
 
 /*
  * @brief Binary Instruction Output
- *      <result> = add <ty> <op1>, <op2>
+ * @note: <result> = add <ty> <op1>, <op2>
  */
 void BinaryInst::print(std::ostream& os) const {
   os << name() << " = ";
   auto opstr = [scid = valueId()] {
     switch (scid) {
-      case vADD:
-        return "add";
-      case vFADD:
-        return "fadd";
-      case vSUB:
-        return "sub";
-      case vFSUB:
-        return "fsub";
-      case vMUL:
-        return "mul";
-      case vFMUL:
-        return "fmul";
-      case vSDIV:
-        return "sdiv";
-      case vFDIV:
-        return "fdiv";
-      case vSREM:
-        return "srem";
-      case vFREM:
-        return "frem";
-      default:
-        return "unknown";
+      case vADD: return "add";
+      case vFADD: return "fadd";
+      case vSUB: return "sub";
+      case vFSUB: return "fsub";
+      case vMUL: return "mul";
+      case vFMUL: return "fmul";
+      case vSDIV: return "sdiv";
+      case vFDIV: return "fdiv";
+      case vSREM: return "srem";
+      case vFREM: return "frem";
+      default: return "unknown";
     }
   }();
   os << opstr << " ";
@@ -115,10 +104,11 @@ void BinaryInst::print(std::ostream& os) const {
   else
     os << lValue()->name() << ", ";
   // <op2>
-  if (ir::isa<ir::Constant>(rValue()))
+  if (ir::isa<ir::Constant>(rValue())) {
     os << *(rValue());
-  else
+  } else {
     os << rValue()->name();
+  }
 
   /* comment */
   if (not lValue()->comment().empty() && not rValue()->comment().empty()) {
@@ -136,17 +126,17 @@ Value* BinaryInst::getConstantRepl() {
   if (lval->isInt32() and rval->isInt32()) {
     switch (valueId()) {
       case vADD:
-        if (clval and crval)
+        if (clval && crval)
           return Constant::gen_i32(clval->i32() + crval->i32());
-        if (clval and clval->i32() == 0)
+        if (clval && clval->i32() == 0)
           return rval;
-        if (crval and crval->i32() == 0)
+        if (crval && crval->i32() == 0)
           return lval;
         break;
       case vSUB:
-        if (clval and crval)
+        if (clval && crval)
           return Constant::gen_i32(clval->i32() - crval->i32());
-        if (crval and crval->i32() == 0)
+        if (crval && crval->i32() == 0)
           return lval;
         if (lval == rval)
           return Constant::gen_i32(0);
@@ -235,10 +225,10 @@ Value* BinaryInst::getConstantRepl() {
 }
 
 /*
- * @brief Unary Instruction Output
+ * @brief: Unary Instruction Output
+ * @note: 
  *      <result> = sitofp <ty> <value> to <ty2>
  *      <result> = fptosi <ty> <value> to <ty2>
- *
  *      <result> = fneg [fast-math flags]* <ty> <op1>
  */
 void UnaryInst::print(std::ostream& os) const {
@@ -247,27 +237,19 @@ void UnaryInst::print(std::ostream& os) const {
     os << "fneg " << *type() << " " << value()->name();
   } else {
     switch (valueId()) {
-      case vSITOFP:
-        os << "sitofp ";
+      case vSITOFP: os << "sitofp ";
         break;
-      case vFPTOSI:
-        os << "fptosi ";
+      case vFPTOSI: os << "fptosi ";
         break;
-      case vTRUNC:  // not used
-        os << "trunc ";
+      case vTRUNC: os << "trunc ";
         break;
-      case vZEXT:
-        os << "zext ";
+      case vZEXT: os << "zext ";
         break;
-      case vSEXT:  // not used
-        os << "sext ";
+      case vSEXT: os << "sext ";
         break;
-      case vFPTRUNC:
-        os << "fptrunc ";  // not used
+      case vFPTRUNC: os << "fptrunc ";
         break;
-      default:
-        assert(false && "not valid scid");
-        break;
+      default: assert(false && "not valid scid");
     }
     os << *(value()->type()) << " ";
     os << value()->name();

@@ -27,7 +27,6 @@ bool TargetInstInfo::matchBranch(MIRInst* inst,
 bool TargetInstInfo::matchCopy(MIRInst* inst,
                                MIROperand& dst,
                                MIROperand& src) const {
-  //
   const auto& info = getInstInfo(inst);
   if (requireFlag(info.inst_flag(), InstFlagRegCopy)) {
     if (info.operand_num() != 2) {

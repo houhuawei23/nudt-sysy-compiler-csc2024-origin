@@ -342,8 +342,10 @@ void createMIRModule(ir::Module& ir_module,
     /* Optimize: register coalescing */
 
     /* Optimize: peephole optimization (窥孔优化) */
-    while (genericPeepholeOpt(*mir_func, codegen_ctx))
-      ;
+    {
+      while (genericPeepholeOpt(*mir_func, codegen_ctx)) ;
+      dumpStageResult("AfterPeephole", mir_func, codegen_ctx);
+    }
 
     /* pre-RA legalization */
 
@@ -454,6 +456,10 @@ void createMIRFunction(ir::Function* ir_func,
     const auto ir_alloca = dyn_cast<ir::AllocaInst>(ir_inst);
 
     auto pointee_type = ir_alloca->baseType();
+    // std::cerr << ir_alloca->name() << std::endl;
+    // std::cerr << "type: " << *pointee_type << std::endl;
+    // std::cerr << "size: " << pointee_type->size() << std::endl;
+
     uint32_t align = 4;  // TODO: align, need bind to ir object
     auto storage = mir_func->newStackObject(
       codegen_ctx.nextId(),                         // id
@@ -610,22 +616,14 @@ void createMIRInst(ir::Instruction* ir_inst, LoweringContext& ctx) {
 void lower(ir::UnaryInst* ir_inst, LoweringContext& ctx) {
   auto gc_instid = [scid = ir_inst->valueId()] {
     switch (scid) {
-      case ir::ValueId::vFNEG:
-        return InstFNeg;
-      case ir::ValueId::vTRUNC:
-        return InstTrunc;
-      case ir::ValueId::vZEXT:
-        return InstZExt;
-      case ir::ValueId::vSEXT:
-        return InstSExt;
-      case ir::ValueId::vFPTRUNC:
-        assert(false && "not supported unary inst");
-      case ir::ValueId::vFPTOSI:
-        return InstF2S;
-      case ir::ValueId::vSITOFP:
-        return InstS2F;
-      default:
-        assert(false && "not supported unary inst");
+      case ir::ValueId::vFNEG: return InstFNeg;
+      case ir::ValueId::vTRUNC: return InstTrunc;
+      case ir::ValueId::vZEXT: return InstZExt;
+      case ir::ValueId::vSEXT: return InstSExt;
+      case ir::ValueId::vFPTRUNC: assert(false && "not supported unary inst");
+      case ir::ValueId::vFPTOSI: return InstF2S;
+      case ir::ValueId::vSITOFP: return InstS2F;
+      default: assert(false && "not supported unary inst");
     }
   }();
 
