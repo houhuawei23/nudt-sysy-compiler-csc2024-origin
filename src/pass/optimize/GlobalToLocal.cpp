@@ -1,4 +1,5 @@
 #include "pass/optimize/GlobalToLocal.hpp"
+#include "pass/optimize/mem2reg.hpp"
 
 using namespace pass;
 static std::unordered_map<ir::GlobalVariable*,std::set<ir::Function*>>globalDirectUsedFunc;//对该全局变量直接使用的函数
@@ -11,7 +12,7 @@ void global2local::run(ir::Module* md,topAnalysisInfoManager* tp){
     cgctx->refresh();
     globalCallAnalysis(md);
     for(auto gv:md->globalVars()){
-        processGlobalVariables(gv,md);
+        processGlobalVariables(gv,md,tp);
     }
 }
 
@@ -69,7 +70,7 @@ void global2local::addIndirectGlobalUseFunc(ir::GlobalVariable* gv, ir::Function
 2. 只在一个函数中被使用的global
 3. 在多个函数中被使用的global
 */
-void global2local::processGlobalVariables(ir::GlobalVariable* gv,ir::Module* md){
+void global2local::processGlobalVariables(ir::GlobalVariable* gv,ir::Module* md,topAnalysisInfoManager* tp){
     auto gvUseFuncSize=globalDirectUsedFunc[gv].size();
     if(gv->isArray())return;
     if(not globalHasStore[gv]){
@@ -87,6 +88,18 @@ void global2local::processGlobalVariables(ir::GlobalVariable* gv,ir::Module* md)
     //如果对应的gv没有被使用过一次，那么就直接删除了
     if(gvUseFuncSize==0){
         md->delGlobalVariable(gv);
+    }
+    else if(gvUseFuncSize==1){
+        auto func=*globalDirectUsedFunc[gv].begin();
+        if(cgctx->callees(func).count(func))return;//is recursive
+        auto gvType=gv->type();
+        auto funcEntry=func->entry();
+        auto newAlloca=new ir::AllocaInst(gvType,funcEntry);
+        funcEntry->emplace_lastbutone_inst(newAlloca);
+        gv->replaceAllUseWith(newAlloca);
+        md->delGlobalVariable(gv);
+        Mem2Reg m2r;
+        m2r.run(func,tp);
     }
     
 }

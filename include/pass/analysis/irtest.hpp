@@ -11,5 +11,6 @@ namespace pass{
             bool runCFGTest(ir::Function* func);
             bool checkDefUse(ir::Value* val);
             bool checkPhi(ir::PhiInst* phi);
+            bool checkFuncInfo(ir::Function* func);
     };
 }

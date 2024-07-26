@@ -10,6 +10,7 @@ namespace pass{
             isPass=isPass and runDefUseTest(func);
             isPass=isPass and runCFGTest(func);
             isPass=isPass and runPhiTest(func);
+            isPass=isPass and checkFuncInfo(func);
         }
         if(not isPass)
             assert(false && "didn't pass irCheck!");
@@ -68,6 +69,14 @@ namespace pass{
             bool bbOK=checkDefUse(bb);
             for(auto inst:bb->insts()){
                 bbOK=bbOK and checkDefUse(inst);
+                if(inst->valueId()==ir::vALLOCA and bb!=func->entry()){
+                    isPass=false;
+                    cerr<<"AllocaInst occur in BB:\""<<bb->name()<<"\" but it's not entry block!"<<endl;
+                }
+                if(inst->block()!=bb){
+                    isPass=false;
+                    cerr<<"Inst in BB:\""<<bb->name()<<"\" and can't match its parent block!"<<endl;
+                }
             }
             if(not bbOK){
                 isPass=false;
@@ -161,5 +170,18 @@ namespace pass{
         }
         return isPass;
     }
+
+    bool irCheck::checkFuncInfo(ir::Function* func){
+        bool isPass=true;
+        if(func->entry()->pre_blocks().size()!=0){
+            isPass=false;
+            cerr<<"Entry block got predecessors!"<<endl;
+        }
+        if(func->exit()->next_blocks().size()!=0){
+            isPass=false;
+            cerr<<"Exit block got successors!"<<endl;
+        }
+        return isPass;
+    }   
     
 }
