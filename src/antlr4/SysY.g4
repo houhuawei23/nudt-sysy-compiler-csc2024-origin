@@ -66,7 +66,7 @@ fragment HexFractional: HexDigit* '.' HexDigit+ | HexDigit+ '.';
 fragment BinExponent: [pP] Sign? DecDigit+;
 fragment HexFloat:
 	HexPrefix HexFractional BinExponent
-	| HexDigit+ BinExponent;
+	| HexPrefix HexDigit+ BinExponent;
 
 ILITERAL:
 	NonZeroDecDigit DecDigit*
