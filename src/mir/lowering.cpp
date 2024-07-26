@@ -979,7 +979,6 @@ void lower_GetElementPtr_beta(ir::inst_iterator begin,
     auto newPtr = ctx.newVReg(OperandType::Int64);
     ctx.emitInstBeta(InstMul, {newPtr, mir_offset,
                                MIROperand::asImm(dims[i], OperandType::Int64)});
-    ctx.addValueMap(ir_inst, newPtr);
     mir_offset = newPtr;
   }
   /* 1. 偏移量 */
@@ -1009,18 +1008,9 @@ void lower_GetElementPtr_beta(ir::inst_iterator begin,
       auto newPtr = ctx.newVReg(OperandType::Int64);
       ctx.emitInstBeta(
         InstMul,
-        {newPtr, mir_cur_idx, MIROperand::asImm(dims[i], OperandType::Int64)});
-      mir_cur_idx = newPtr;
+        {newPtr, mir_offset, MIROperand::asImm(dims[i], OperandType::Int64)});
+      mir_offset = newPtr;
     }
-
-    /* 加法运算 */
-    auto newPtr = ctx.newVReg(OperandType::Int64);
-    ctx.emitInstBeta(InstAdd, {newPtr, mir_offset, mir_cur_idx});
-    mir_offset = newPtr;
-
-    iter++;
-    if (iter != end) ctx.addValueMap(ir_inst, newPtr);
-  }
 
     /* 偏移量 */
     {
