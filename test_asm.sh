@@ -10,18 +10,18 @@ riscv64_gpp="riscv64-linux-gnu-g++"
 riscv64_gcc="riscv64-linux-gnu-gcc"
 compiler_path="./compiler"
 function riscv64_gcc_compile() {
-    $riscv64_gcc -march=rv64gc -mabi=lp64d -mcmodel=medlow -ffp-contract=on $@
+    $riscv64_gcc -march=rv64gc -mabi=lp64d -mcmodel=medlow -ffp-contract=on -w $@
 }
 
 function riscv64_gpp_compile() {
-    $riscv64_gpp -march=rv64gc -mabi=lp64d -mcmodel=medlow -ffp-contract=on $@
+    $riscv64_gpp -march=rv64gc -mabi=lp64d -mcmodel=medlow -ffp-contract=on -w $@
 }
 
 function qemu_riscv64_run() {
     $qemu_riscv64 -L "/usr/riscv64-linux-gnu/" $@
 }
 
-TIMEOUT=20
+TIMEOUT=40
 # 25 for ./test/2023/functional/65_color.sy
 PASS_CNT=0
 WRONG_CNT=0

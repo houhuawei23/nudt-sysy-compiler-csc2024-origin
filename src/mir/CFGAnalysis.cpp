@@ -11,23 +11,22 @@ void CFGAnalysis::dump(std::ostream& out) {
         for (auto pre : info.predecessors) {
             out << "\tblock: " << pre.block->name() << ", prob: " << pre.prob << "\n";
         }
-        out << "\n";
 
         out << "the successors are as follows: \n";
         for (auto suc : info.successors) {
             out << "\tblock: " << suc.block->name() << ", prob: " << suc.prob << "\n";
         }
-        out << "\n";
     }
 }
 
 CFGAnalysis calcCFG(MIRFunction& mfunc, CodeGenContext& ctx) {
-    assert(ctx.flags.endsWithTerminator);  // 确保该函数以终止指令结束
+    /* 确保该函数以终止指令结束 */
+    assert(ctx.flags.endsWithTerminator);
     constexpr bool DebugCFG = false;
+
     CFGAnalysis res;
     auto& CFGInfo = res.block2CFGInfo();
     auto& blocks = mfunc.blocks();
-
     auto connect = [&](MIRBlock* src, MIRBlock* dst, double prob) {
         CFGInfo[src].successors.push_back({dst, prob});
         CFGInfo[dst].predecessors.push_back({src, prob});
@@ -40,9 +39,11 @@ CFGAnalysis calcCFG(MIRFunction& mfunc, CodeGenContext& ctx) {
         
         MIRBlock* targetBlock; double prob;
         if (ctx.instInfo.matchBranch(terminator, targetBlock, prob)) {  // Match Jump Branch
-            if (requireFlag(ctx.instInfo.getInstInfo(terminator).inst_flag(), InstFlagNoFallThrough)) {  // unconditional branch
+            if (requireFlag(ctx.instInfo.getInstInfo(terminator).inst_flag(), InstFlagNoFallThrough)) {
+                /* unconditional branch */
                 connect(block.get(), targetBlock, 1.0);
-            } else {  // conditional
+            } else {
+                /* conditional branch */
                 if (next != blocks.end()) {  // 非exit块 
                     if (next->get() == targetBlock) {
                         connect(block.get(),  targetBlock, 1.0);
@@ -61,8 +62,10 @@ CFGAnalysis calcCFG(MIRFunction& mfunc, CodeGenContext& ctx) {
             for (auto item : table) connect(block.get(), dynamic_cast<MIRBlock*>(item), prob);
         }
     }
-
-    if (DebugCFG) res.dump(std::cerr);
+    if (DebugCFG) {
+        std::cerr << "function " << mfunc.name() << "\n";
+        res.dump(std::cerr);
+    }
 
     return res;
 }
@@ -71,16 +74,21 @@ double BlockTripCountResult::query(MIRBlock* block) const {
     if (auto it = _freq.find(block); it != _freq.end()) return it->second;
     return 1.0;
 }
+void BlockTripCountResult::dump(std::ostream& out) {
+    out << "begin dump the frequency of blocks. \n";
+    for (auto [block, freq] : _freq) {
+        out << "block " << block->name() << " prob: " << freq << "\n";
+    }
+}
 /*
  * @brief: LUP分解
  * @note: 将一个矩阵分解成一个下三角矩阵, 一个上三角矩阵以及一个置换矩阵的乘积
  * @param: 
  *      size_t n: 矩阵的大小 (n * n)
- *      std::vector<double>& a: 矩阵
+ *      std::vector<double>& a: 矩阵, 基本块之间的跳转关系
  */
 static std::vector<double> LUP(size_t n, std::vector<double>& a) {
     const auto mat = [&](uint32_t i, uint32_t j) -> double& { return a[i * n + j]; };
-    
     constexpr double eps = 1e-8;  // 常量 --> 判断浮点数常值的零
     std::vector<uint32_t> p(n);   // 置换向量 --> 记录行交换的信息
     for (uint32_t i = 0; i < n; i++) p[i] = i;
@@ -132,23 +140,25 @@ static std::vector<double> LUP(size_t n, std::vector<double>& a) {
     }
     return d;
 }
+/* calcFreq: 计算基本块的执行频率 */
 BlockTripCountResult calcFreq(MIRFunction& mfunc, CFGAnalysis& cfg) {
+    constexpr bool DebugFreq = false;
     BlockTripCountResult res;
     auto& storage = res.storage();
 
-    constexpr size_t maxSupportedBlockSize = 1000;
+    constexpr size_t maxSupportedBlockSize = 1000;  // 函数最大支持块数
     if (mfunc.blocks().size() > maxSupportedBlockSize) return res;
 
+    /* 1. 块编号 */
     uint32_t allocateID = 0;
     std::unordered_map<MIRBlock*, uint32_t> nodeMap;
     for (auto& block : mfunc.blocks()) nodeMap.emplace(block.get(), allocateID++);
 
+    /* 2. 构造求解问题 */
     const auto n = mfunc.blocks().size();    
-    std::vector<double> a(n * n);
+    std::vector<double> a(n * n);  // a表示基本块之间的跳转关系
     const auto mat = [&](uint32_t i, uint32_t j) -> double& { return a[i * n + j]; };
-
-    // Construct Problem
-    for (uint32_t i = 0; i < n; i++) mat(i, i) = 1.0;
+    for (uint32_t i = 0; i < n; i++) mat(i, i) = 1.0;  // 初始化为1表示每个基本块至少被执行一次
 
     const auto addEdge = [&](uint32_t u, MIRBlock* v, double prob) { mat(nodeMap.at(v), u) -= prob; };
     for (auto& block : mfunc.blocks()) {
@@ -158,10 +168,12 @@ BlockTripCountResult calcFreq(MIRFunction& mfunc, CFGAnalysis& cfg) {
         }
     }
 
+    /* 3. 计算基本块的执行频率 */
     auto d = LUP(n, a);
     for (auto& block : mfunc.blocks()) {
         storage.emplace(block.get(), d[nodeMap.at(block.get())]);
     }
+    if (DebugFreq) res.dump(std::cerr);
     return res;
 }
 }

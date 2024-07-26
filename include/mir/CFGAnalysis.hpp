@@ -37,6 +37,8 @@ struct BlockTripCountResult final {
 public:
     auto& storage() { return _freq; }
     double query(MIRBlock* block) const;
+public:  // Just for Debug
+    void dump(std::ostream& out);
 };
 BlockTripCountResult calcFreq(MIRFunction& mfunc, CFGAnalysis& cfg);
 }
