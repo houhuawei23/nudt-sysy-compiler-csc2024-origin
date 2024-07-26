@@ -27,15 +27,15 @@ void tailCallOpt::run(ir::Function* func,topAnalysisInfoManager* tp){
     ir::BasicBlock::block_link(newEntry,oldEntry);
     auto newBrInst=new ir::BranchInst(oldEntry,newEntry);
     func->setEntry(newEntry);
-    for(auto instIter=oldEntry->insts().end();instIter!=oldEntry->insts().end();){
+    for(auto instIter=oldEntry->insts().begin();instIter!=oldEntry->insts().end();){
         auto inst=*instIter;
         instIter++;
-        if(inst->valueId()==ir::vALLOCA){
+        if(inst->dynCast<ir::AllocaInst>()){
             oldEntry->move_inst(inst);
             newEntry->emplace_back_inst(inst);
         }
     }
-    newEntry->emplace_first_inst(newBrInst);
+    newEntry->emplace_back_inst(newBrInst);
     //在oldEntry添加关于参数的phi
     for(auto argIter=func->args().rbegin();argIter!=func->args().rend();argIter++){
         auto arg=*argIter;
