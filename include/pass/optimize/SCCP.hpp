@@ -10,14 +10,11 @@
 namespace pass{
     class SCCP:public FunctionPass{
         public:
-            void run(ir::Function* func, topAnalysisInfoManager* tp)override;
-            
+            void run(ir::Function* func, topAnalysisInfoManager* tp)override;      
         private:
-            using FlowEdge=std::pair<ir::BasicBlock*,ir::BasicBlock*>;
-            using SSAEdge=std::pair<ir::Instruction*,ir::Instruction*>;
-            static std::queue<FlowEdge>FlowWorkList;
-            static std::queue<SSAEdge>SSAWorkList;
-            using valueEdge=std::pair<ir::Value*,ir::Value*>;
-            valueEdge getEdge();
+            bool cleanCFG(ir::Function* func);
+            bool addConstFlod(ir::Instruction* inst);
+            bool SCPrun(ir::Function* func, topAnalysisInfoManager* tp);
+            void searchCFG(ir::BasicBlock* bb);
     };
 }
