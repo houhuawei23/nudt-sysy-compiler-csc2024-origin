@@ -96,7 +96,6 @@ class Function : public User {
   BasicBlock* mExit = nullptr;     // exit block
   size_t mVarCnt = 0;              // for local variables count
   size_t argCnt = 0;               // formal arguments count
-
  public:
   Function(Type* TypeFunction, const_str_ref name="",
            Module* parent=nullptr)
@@ -154,6 +153,8 @@ class Function : public User {
   void setVarCnt(size_t x) { mVarCnt = x; }
 
   bool isOnlyDeclare(){return mBlocks.empty();}
+
+  
 
 
  public:

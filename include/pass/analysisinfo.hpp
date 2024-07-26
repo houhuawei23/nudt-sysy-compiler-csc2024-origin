@@ -150,7 +150,7 @@ public:
                 _head2loop.clear();
             }
             bool isHeader(ir::BasicBlock* bb){return _head2loop.count(bb);}
-            ir::Loop* getinnermostLoop(ir::BasicBlock* bb) {
+            ir::Loop* getinnermostLoop(ir::BasicBlock* bb) {//返回最内层的循环
                 ir::Loop* innermost = nullptr;
                 for (auto L : _loops){
                     if (L->contains(bb)){

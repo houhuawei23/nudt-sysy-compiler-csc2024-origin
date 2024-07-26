@@ -30,6 +30,7 @@
 #include <iostream>
 #include <cassert>
 
+#include "pass/optimize/LICM.hpp"
 namespace pass {
 void PassManager::runPasses(std::vector<std::string> passes) {
   const auto& config = sysy::Config::getInstance();
@@ -101,6 +102,8 @@ void PassManager::runPasses(std::vector<std::string> passes) {
         run(new pass::tailCallOpt());
       } else if (pass_name.compare("cfgprint") == 0){
         run(new pass::CFGPrinter());
+      } else if (pass_name.compare("licm") == 0){
+        run(new pass::LICM());
       }
       else {
         assert(false && "Invalid pass name");
