@@ -27,7 +27,9 @@ void tailCallOpt::run(ir::Function* func,topAnalysisInfoManager* tp){
     ir::BasicBlock::block_link(newEntry,oldEntry);
     auto newBrInst=new ir::BranchInst(oldEntry,newEntry);
     func->setEntry(newEntry);
-    for(auto inst:oldEntry->insts()){
+    for(auto instIter=oldEntry->insts().end();instIter!=oldEntry->insts().end();){
+        auto inst=*instIter;
+        instIter++;
         if(inst->valueId()==ir::vALLOCA){
             oldEntry->move_inst(inst);
             newEntry->emplace_back_inst(inst);
