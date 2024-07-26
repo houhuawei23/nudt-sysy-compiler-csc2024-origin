@@ -53,8 +53,7 @@ bool Mem2Reg::is_promoted(ir::AllocaInst* alloca) {
             }
         } else if (auto store = dynamic_cast<ir::StoreInst*>(use->user())) {
             // 这里type的比较要比较其指针的basetype而不是本身
-            if (store->value() == alloca ||
-                store->value()->type() != allocapt) {
+            if (store->value() == alloca || store->value()->type() != allocapt) {
                 return false;
             }
         } else {
@@ -193,7 +192,7 @@ void Mem2Reg::insertphi() {
     // 遍历所有alloca，对于每个alloca，在所有定义块的支配边界中插入phi指令
     std::set<ir::BasicBlock*> Phiset;
     std::vector<ir::BasicBlock*> W;
-    
+
     ir::BasicBlock* x;
     for (ir::AllocaInst* alloca : Allocas) {
         Phiset.clear();
@@ -205,18 +204,15 @@ void Mem2Reg::insertphi() {
         while (!W.empty()) {
             x = W.back();
             W.pop_back();
-            for (ir::BasicBlock* Y : domctx->domfrontier(x)) {//x->domFrontier
+            for (ir::BasicBlock* Y : domctx->domfrontier(x)) {  // x->domFrontier
                 if (Phiset.find(Y) == Phiset.end()) {
-                    auto allocabaseType =
-                        dyn_cast<ir::PointerType>(alloca->type())->baseType();
+                    auto allocabaseType = dyn_cast<ir::PointerType>(alloca->type())->baseType();
                     ir::PhiInst* phi = new ir::PhiInst(Y, allocabaseType);
                     allphi.push_back(phi);
                     Y->emplace_first_inst(phi);
                     Phiset.insert(Y);
                     PhiMap[Y].insert({phi, alloca});
-                    if (find(DefsBlock[alloca].begin(), DefsBlock[alloca].end(),
-                             Y) == DefsBlock[alloca].end())
-                        W.push_back(Y);
+                    if (find(DefsBlock[alloca].begin(), DefsBlock[alloca].end(), Y) == DefsBlock[alloca].end()) W.push_back(Y);
                 }
             }
         }
@@ -226,9 +222,7 @@ void Mem2Reg::insertphi() {
 void Mem2Reg::rename(ir::Function* F) {
     // rename:填充phi指令内容
     std::vector<ir::Instruction*> instRemovelist;
-    std::stack<
-        std::pair<ir::BasicBlock*, std::map<ir::AllocaInst*, ir::Value*>>>
-        Worklist;
+    std::stack<std::pair<ir::BasicBlock*, std::map<ir::AllocaInst*, ir::Value*>>> Worklist;
     std::set<ir::BasicBlock*> VisitedSet;
     ir::BasicBlock *SuccBB, *BB;
     std::map<ir::AllocaInst*, ir::Value*> Incommings;
@@ -248,17 +242,14 @@ void Mem2Reg::rename(ir::Function* F) {
 
         for (auto inst : BB->insts()) {
             if (ir::AllocaInst* AI = dyn_cast<ir::AllocaInst>(inst)) {
-                if (find(Allocas.begin(), Allocas.end(), AI) ==
-                    Allocas
-                        .end())  // 如果不是可提升的alloca就不管，否则把这条alloca放入待删除列表
+                if (find(Allocas.begin(), Allocas.end(), AI) == Allocas.end())  // 如果不是可提升的alloca就不管，否则把这条alloca放入待删除列表
                     continue;
                 instRemovelist.push_back(inst);
             }
 
             else if (ir::LoadInst* LD = dyn_cast<ir::LoadInst>(inst)) {
                 ir::AllocaInst* AI = dyn_cast<ir::AllocaInst>(LD->operand(0));
-                if (!AI)
-                    continue;
+                if (!AI) continue;
                 if (find(Allocas.begin(), Allocas.end(), AI) != Allocas.end()) {
                     if (Incommings.find(AI) == Incommings.end())  // 如果这条alloca没有到达定义
                     {
@@ -271,28 +262,24 @@ void Mem2Reg::rename(ir::Function* F) {
 
             else if (ir::StoreInst* ST = dyn_cast<ir::StoreInst>(inst)) {
                 ir::AllocaInst* AI = dyn_cast<ir::AllocaInst>(ST->ptr());
-                if (!AI)
-                    continue;
-                if (find(Allocas.begin(), Allocas.end(), AI) == Allocas.end())
-                    continue;
+                if (!AI) continue;
+                if (find(Allocas.begin(), Allocas.end(), AI) == Allocas.end()) continue;
                 Incommings[AI] = ST->value();
                 instRemovelist.push_back(inst);
             }
 
             else if (ir::PhiInst* PHI = dyn_cast<ir::PhiInst>(inst)) {
-                if (PhiMap[BB].find(PHI) == PhiMap[BB].end())
-                    continue;
+                if (PhiMap[BB].find(PHI) == PhiMap[BB].end()) continue;
                 Incommings[PhiMap[BB][PHI]] = PHI;
             }
         }
 
         for (auto& sBB : BB->next_blocks()) {
             SuccBB = dyn_cast<ir::BasicBlock>(sBB);
-            
+
             for (auto inst : SuccBB->insts()) {
                 if (ir::PhiInst* PHI = dyn_cast<ir::PhiInst>(inst)) {
-                    if (PhiMap[SuccBB].find(PHI) == PhiMap[SuccBB].end())
-                        continue;
+                    if (PhiMap[SuccBB].find(PHI) == PhiMap[SuccBB].end()) continue;
                     if (Incommings[PhiMap[SuccBB][PHI]] != nullptr) {
                         PHI->addIncoming(Incommings[PhiMap[SuccBB][PHI]], BB);
                     }
@@ -300,10 +287,9 @@ void Mem2Reg::rename(ir::Function* F) {
             }
         }
 
-        for (auto dombb : domctx->domson(BB)){
+        for (auto dombb : domctx->domson(BB)) {
             Worklist.push({dombb, Incommings});
         }
-
     }
     while (!instRemovelist.empty()) {
         Inst = instRemovelist.back();
@@ -312,26 +298,23 @@ void Mem2Reg::rename(ir::Function* F) {
     }
     for (auto& item : PhiMap)
         for (auto& pa : item.second) {
-            if (pa.first->uses().empty())
-                pa.first->block()->delete_inst(pa.first);
+            if (pa.first->uses().empty()) pa.first->block()->delete_inst(pa.first);
         }
 
-    for (ir::PhiInst *phiinst : allphi){
+    for (ir::PhiInst* phiinst : allphi) {
         simplifyphi(phiinst);
     }
 }
 
-void Mem2Reg::simplifyphi(ir::PhiInst *phi){
+void Mem2Reg::simplifyphi(ir::PhiInst* phi) {
     ir::Value* preval = nullptr;
     ir::BasicBlock* bb = phi->block();
-    for (size_t i = 0; i < phi->getsize(); i++){
+    for (size_t i = 0; i < phi->getsize(); i++) {
         if (preval == nullptr)
             preval = phi->getValue(i);
-        else{
-            if (preval != phi->getValue(i))
-                return;
+        else {
+            if (preval != phi->getValue(i)) return;
         }
-            
     }
     phi->replaceAllUseWith(preval);
     bb->delete_inst(phi);
@@ -347,17 +330,15 @@ void Mem2Reg::promotememToreg(ir::Function* F) {
             if (aitype && aitype->isPointer()) {
                 auto pttype = dyn_cast<ir::PointerType>(aitype);
                 auto aibasetype = pttype->baseType();
-                if (aibasetype->isFloat32() || aibasetype->isInt32() ||
-                    aibasetype->isBool()) {
+                if (aibasetype->isFloat32() || aibasetype->isInt32() || aibasetype->isBool()) {
                     auto use = *(ai->uses().begin());
                     ir::Instruction* useinst = use->user()->dynCast<ir::Instruction>();
                     useinst->block()->delete_inst(useinst);
                     ai->block()->delete_inst(ai);
                 }
             }
-            
-        }
-        else if (ai->uses().empty())  // 没有use的变量
+
+        } else if (ai->uses().empty())  // 没有use的变量
         {
             ai->block()->delete_inst(ai);
             RemoveFromAllocasList(AllocaNum);
@@ -371,7 +352,6 @@ void Mem2Reg::promotememToreg(ir::Function* F) {
     // F->print(std::cout);
     rename(F);
     // F->print(std::cout);
-
 }
 
 // 主函数
@@ -397,17 +377,15 @@ bool Mem2Reg::promotemem2reg(ir::Function* F) {
                 //     }
                 // }
                 if (ai->isScalar()) {
-                    
                     // if (is_promoted(ai)) {
-                        // ai->print(std::cerr); std::cerr << "\n";
-                        Allocas.push_back(ai);
+                    // ai->print(std::cerr); std::cerr << "\n";
+                    Allocas.push_back(ai);
                     // }
                 }
             }
         }
 
-        if (Allocas.empty())
-            break;
+        if (Allocas.empty()) break;
         promotememToreg(F);
         changed = true;
     }
@@ -415,9 +393,8 @@ bool Mem2Reg::promotemem2reg(ir::Function* F) {
 }
 
 void Mem2Reg::run(ir::Function* F, topAnalysisInfoManager* tp) {
-    if (not F->entry())
-        return;
-    domctx=tp->getDomTree(F);
+    if (not F->entry()) return;
+    domctx = tp->getDomTree(F);
     domctx->refresh();
     Allocas.clear();
     DefsBlock.clear();

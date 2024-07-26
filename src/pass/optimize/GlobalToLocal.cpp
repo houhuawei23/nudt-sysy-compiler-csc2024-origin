@@ -9,6 +9,7 @@ static std::unordered_map<ir::GlobalVariable*,bool>globalHasStore;
 static std::set<ir::Function*>funcToMem2Reg;
 
 void global2local::run(ir::Module* md,topAnalysisInfoManager* tp){
+    bool isChange=false;
     cgctx=tp->getCallGraph();
     cgctx->refresh();
     globalCallAnalysis(md);
@@ -16,30 +17,33 @@ void global2local::run(ir::Module* md,topAnalysisInfoManager* tp){
     for(auto gvIter=md->globalVars().begin();gvIter!=md->globalVars().end();){
         auto gv=*gvIter;
         std::cerr<<gv->name()<<std::endl;
-        if(processGlobalVariables(gv,md,tp))continue;
+        bool tmpBool= processGlobalVariables(gv,md,tp);
+        isChange=isChange or tmpBool;
+        if(tmpBool)continue;
         gvIter++;
         std::cerr<<"del."<<std::endl;
     }
     std::cerr<<"Here"<<std::endl;
     if(funcToMem2Reg.size()){
-        // Mem2Reg m2r;
-        // for(auto func:funcToMem2Reg){\
-        //     m2r.run(func,tp);
-        // }
-        // for(auto func:funcToMem2Reg){
-        //     auto newEntry=func->entry();
-        //     auto oldEntry=newEntry->next_blocks().front();
-        //     for(auto instIter=newEntry->insts().begin();instIter!=newEntry->insts().end();){
-        //         auto inst=*instIter;
-        //         instIter++;
-        //         if(inst->dynCast<ir::AllocaInst>()){
-        //             newEntry->move_inst(inst);
-        //             oldEntry->emplace_first_inst(inst);
-        //         }
-        //     }
-        //     func->forceDelBlock(newEntry);
-        //     func->setEntry(oldEntry);
-        // }
+        Mem2Reg m2r;
+        for(auto func:funcToMem2Reg){
+            tp->CFGChange(func);
+            m2r.run(func,tp);
+        }
+        for(auto func:funcToMem2Reg){
+            auto newEntry=func->entry();
+            auto oldEntry=newEntry->next_blocks().front();
+            for(auto instIter=newEntry->insts().begin();instIter!=newEntry->insts().end();){
+                auto inst=*instIter;
+                instIter++;
+                if(inst->dynCast<ir::AllocaInst>()){
+                    newEntry->move_inst(inst);
+                    oldEntry->emplace_first_inst(inst);
+                }
+            }
+            func->forceDelBlock(newEntry);
+            func->setEntry(oldEntry);
+        }
     }
 }
 
