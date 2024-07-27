@@ -379,7 +379,7 @@ bool Mem2Reg::promotemem2reg(ir::Function* F) {
     return changed;
 }
 
-void Mem2Reg::run(ir::Function* F, topAnalysisInfoManager* tp) {
+void Mem2Reg::run(ir::Function* F, TopAnalysisInfoManager* tp) {
     if (not F->entry()) return;
     domctx = tp->getDomTree(F);
     domctx->refresh();

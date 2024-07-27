@@ -10,12 +10,12 @@
 namespace pass {
 class SCCP : public FunctionPass {
   public:
-    void run(ir::Function* func, topAnalysisInfoManager* tp) override;
+    void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
 
   private:
     bool cleanCFG(ir::Function* func);
     bool addConstFlod(ir::Instruction* inst);
-    bool SCPrun(ir::Function* func, topAnalysisInfoManager* tp);
+    bool SCPrun(ir::Function* func, TopAnalysisInfoManager* tp);
     void searchCFG(ir::BasicBlock* bb);
 };
 }  // namespace pass

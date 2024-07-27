@@ -283,7 +283,7 @@ void GVN::visitinst(ir::Instruction* inst) {
     return;
 }
 
-void GVN::run(ir::Function* F, topAnalysisInfoManager* tp) {
+void GVN::run(ir::Function* F, TopAnalysisInfoManager* tp) {
     if (F->blocks().empty()) return;
 
     RPOblocks.clear();

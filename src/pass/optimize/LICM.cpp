@@ -344,7 +344,7 @@ std::vector<ir::Value*> LICM::keyset(std::unordered_map<ir::Value*, std::set<ir:
     return keys;
 }
 
-void LICM::run(ir::Module* module, topAnalysisInfoManager* tp) {
+void LICM::run(ir::Module* module, TopAnalysisInfoManager* tp) {
     cgctx = tp->getCallGraph();
     cgctx->refresh();
     for (auto func : module->funcs()) {

@@ -1,7 +1,7 @@
 #include "pass/optimize/TCO.hpp"
 using namespace pass;
 
-void tailCallOpt::run(ir::Function* func,topAnalysisInfoManager* tp){
+void tailCallOpt::run(ir::Function* func,TopAnalysisInfoManager* tp){
     if(func->isOnlyDeclare())return;
     bool isChange=false;
     std::vector<ir::CallInst*>tail_call_vec;

@@ -82,7 +82,7 @@ void GCM::scheduleEarly(ir::Instruction* instruction, ir::BasicBlock* entry) {
     }
 }
 
-void GCM::run(ir::Function* F, topAnalysisInfoManager* tp) {
+void GCM::run(ir::Function* F, TopAnalysisInfoManager* tp) {
     domctx = tp->getDomTree(F);
     domctx->refresh();
     lpctx = tp->getLoopInfo(F);

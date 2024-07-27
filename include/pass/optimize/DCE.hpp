@@ -6,7 +6,7 @@
 namespace pass {
 class DCE : public FunctionPass {
   public:
-    void run(ir::Function* func, topAnalysisInfoManager* tp) override;
+    void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
 
   private:
     bool isAlive(ir::Instruction* inst);

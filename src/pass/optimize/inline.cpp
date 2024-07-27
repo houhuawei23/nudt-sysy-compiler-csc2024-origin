@@ -176,7 +176,7 @@ std::vector<ir::Function*> Inline::getinlineFunc(ir::Module* module) {
     }
     return functiontoremove;
 }
-void Inline::run(ir::Module* module, topAnalysisInfoManager* tp) {
+void Inline::run(ir::Module* module, TopAnalysisInfoManager* tp) {
     cgctx = tp->getCallGraph();
     cgctx->refresh();
 

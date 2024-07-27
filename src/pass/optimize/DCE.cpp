@@ -4,7 +4,7 @@ static std::set<ir::Instruction*> alive;
 
 namespace pass {
 
-void DCE::run(ir::Function* func, topAnalysisInfoManager* tp) {
+void DCE::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     alive.clear();
     if (func->isOnlyDeclare()) return;
     // func->rename();

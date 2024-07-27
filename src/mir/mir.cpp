@@ -62,7 +62,10 @@ bool MIRInst::verify(std::ostream& os, CodeGenContext& ctx) const {
     return true;
 }
 bool MIRBlock::verify(std::ostream& os, CodeGenContext& ctx) const {
-    if(mInsts.empty()) return false;
+    if(mInsts.empty()) {
+        os << "Error: block " << name() << " is empty" << std::endl;
+        return false;
+    }
 
     for(auto& inst : mInsts) {
         if(not inst->verify(os, ctx)) {

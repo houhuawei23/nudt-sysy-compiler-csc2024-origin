@@ -12,7 +12,7 @@ class GCM : public FunctionPass {
     std::set<ir::Instruction*> insts_visited;
 
   public:
-    void run(ir::Function* func, topAnalysisInfoManager* tp) override;
+    void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
     domTree* domctx;
     loopInfo* lpctx;
     void scheduleEarly(ir::Instruction* instruction, ir::BasicBlock* entry);

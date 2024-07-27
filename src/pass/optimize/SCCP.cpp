@@ -4,7 +4,7 @@ static std::set<ir::Instruction*> worklist;
 static std::set<ir::BasicBlock*> liveBB;
 static std::set<ir::BasicBlock*> visBB;
 namespace pass {
-void SCCP::run(ir::Function* func, topAnalysisInfoManager* tp) {
+void SCCP::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     bool isChange = false;
     bool isCFGChange = false;
     do {
@@ -83,7 +83,7 @@ void SCCP::searchCFG(ir::BasicBlock* bb) {
     }
 }
 
-bool SCCP::SCPrun(ir::Function* func, topAnalysisInfoManager* tp) {
+bool SCCP::SCPrun(ir::Function* func, TopAnalysisInfoManager* tp) {
     bool isChange = false;
     if (func->isOnlyDeclare()) return false;
     // func->print(std::cout);

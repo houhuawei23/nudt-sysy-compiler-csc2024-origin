@@ -7,7 +7,7 @@
 namespace pass {
 class ADCE : public FunctionPass {
   public:
-    void run(ir::Function* func, topAnalysisInfoManager* tp) override;
+    void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
 
   private:
     pdomTree* pdctx;

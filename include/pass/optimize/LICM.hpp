@@ -35,6 +35,6 @@ class LICM : public ModulePass {
     void dfs(ir::AllocaInst* alloca, ir::Instruction* inst);
     void globaldfs(ir::Value* val, ir::Instruction* inst);
     std::vector<ir::Value*> keyset(std::unordered_map<ir::Value*, std::set<ir::Instruction*>> map);
-    void run(ir::Module* module, topAnalysisInfoManager* tp) override;
+    void run(ir::Module* module, TopAnalysisInfoManager* tp) override;
 };
 }  // namespace pass

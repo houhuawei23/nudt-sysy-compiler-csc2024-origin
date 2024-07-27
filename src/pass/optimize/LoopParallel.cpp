@@ -9,7 +9,7 @@
 
 namespace pass {
 
-void LoopParallel::run(ir::Function* func,topAnalysisInfoManager* tp) {
+void LoopParallel::run(ir::Function* func,TopAnalysisInfoManager* tp) {
   runImpl(func);
 }
 void LoopParallel::runImpl(ir::Function* func) {}

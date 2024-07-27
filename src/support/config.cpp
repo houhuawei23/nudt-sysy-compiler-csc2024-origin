@@ -93,9 +93,9 @@ void Config::parseTestArgs(int argc, char* argv[]) {
 }
 
 // clang-format off
-static const auto PassesList = std::vector<std::string>{
+static const auto perfPassesList = std::vector<std::string>{
   "mem2reg",  //
-  "simplifycfg", //error in backend CFGAnalysis.successors
+  // "simplifycfg", //error in backend CFGAnalysis.successors
   // "instcombine",  //
   "adce",     // passed all functional
   "inline",   // segfault on 60_sort_test6/69_expr_eval/...
@@ -113,15 +113,57 @@ static const auto PassesList = std::vector<std::string>{
   "reg2mem"
 };
 
-
-// static const auto PassesList = std::vector<std::string>{
-//   "mem2reg",  //
-//   "simplifycfg", //  error in backend CFGAnalysis.successors
-//   // "test",
-//   "reg2mem"
-//   // "inline"
-// };
 // clang-format on
+
+static const auto testPassesList = std::vector<std::string>{
+  "mem2reg",  //
+  "test",
+
+  "simplifycfg",  // error in backend CFGAnalysis.successors
+  "test",
+
+  "adce",  // passed all functional
+  "test",
+
+  "inline",  // segfault on 60_sort_test6/69_expr_eval/...
+  "test",
+
+  "tco",  // tail call optimization
+  "test",
+
+  "inline",  //
+  "test",
+
+  "g2l",  // global to local
+  "test",
+
+  "instcombine",  //
+  "test",
+
+  "adce",  // passed all functional
+  "test",
+
+  "sccp",  //
+  "test",
+
+  "gcm",  // global code motion
+  "test",
+
+  "gvn",  // global value numbering: passed, slow
+  "test",
+
+  "instcombine",  //
+  "test",
+
+  "adce",  //
+  "test",
+
+  "simplifycfg",
+  "test",
+
+  "reg2mem"
+  "test",
+};
 /*
 5
 功能测试：compiler -S -o testcase.s testcase.sy
@@ -159,7 +201,7 @@ void Config::parseCmdArgs(int argc, char* argv[]) {
     exit(EXIT_FAILURE);
   }
   if (optLevel == OptLevel::O1) {
-    passes = PassesList;
+    passes = perfPassesList;
   }
 }
 
