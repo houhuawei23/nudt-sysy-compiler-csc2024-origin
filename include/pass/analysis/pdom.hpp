@@ -5,14 +5,14 @@ namespace pass{
 
 class postDomInfoPass:public FunctionPass{
     public:
-        void run(ir::Function* func, topAnalysisInfoManager* tp) override;
+        void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
     private:
         pdomTree* pdctx;
 };
 
 class preProcPostDom:public FunctionPass{
     public:
-        void run(ir::Function* func, topAnalysisInfoManager* tp) override;
+        void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
     private:
         pdomTree* pdctx;
         
@@ -25,7 +25,7 @@ class ipostDomGen:public FunctionPass{
         void link(ir::BasicBlock* v,ir::BasicBlock* w);
         void compress(ir::BasicBlock* bb);
     public:
-        void run(ir::Function* func, topAnalysisInfoManager* tp) override;
+        void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
     private:
         pdomTree* pdctx;
         
@@ -37,7 +37,7 @@ class postDomFrontierGen:public FunctionPass{
         void getDomFrontier(ir::Function* func);
         void getDomInfo(ir::BasicBlock* bb, int level);
     public:
-        void run(ir::Function* func, topAnalysisInfoManager* tp) override;
+        void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
     private:
         pdomTree* pdctx;
         
@@ -45,7 +45,7 @@ class postDomFrontierGen:public FunctionPass{
 
 class postDomInfoCheck:public FunctionPass{
     public:
-        void run(ir::Function* func,topAnalysisInfoManager* tp)override;
+        void run(ir::Function* func,TopAnalysisInfoManager* tp)override;
     private:
         pdomTree* pdctx;
         

@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.19)
+cmake_minimum_required(VERSION 3.19)
 
 # cmake_policy(SET CMP0135 OLD)
 
@@ -24,12 +24,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # written by TXS
 set(PROJECT_BINARY_DIR ${PROJECT_SOURCE_DIR}/bin)
-# end
 
+# end
 if(NOT CMAKE_BUILD_TYPE)
   message(STATUS "Build type not set, falling back to Debug mode.")
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING
-      "Choose the type of build, options are: Debug Release." FORCE)
+    "Choose the type of build, options are: Debug Release." FORCE)
 endif(NOT CMAKE_BUILD_TYPE)
 
 # Set output directories
@@ -37,6 +37,7 @@ endif(NOT CMAKE_BUILD_TYPE)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
+
 # end of change
 
 # ANTLR
@@ -53,16 +54,15 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/include/
 )
 
-
 # Project source files
 add_subdirectory(src)
 
 # Add Src Files
-file(GLOB_RECURSE ALL_SRC_FILES 
-      "${CMAKE_SOURCE_DIR}/src/*.[ch]"
-      "${CMAKE_SOURCE_DIR}/src/*.[ch]pp" 
-      "${CMAKE_SOURCE_DIR}/include/*.[ch]"
-      "${CMAKE_SOURCE_DIR}/include/*.[ch]pp")
+file(GLOB_RECURSE ALL_SRC_FILES
+  "${CMAKE_SOURCE_DIR}/src/*.[ch]"
+  "${CMAKE_SOURCE_DIR}/src/*.[ch]pp"
+  "${CMAKE_SOURCE_DIR}/include/*.[ch]"
+  "${CMAKE_SOURCE_DIR}/include/*.[ch]pp")
 
 # Format Check
 project(formatting)
@@ -76,34 +76,36 @@ find_package(Python3 REQUIRED)
 set(SUBMIT_DIR ${CMAKE_CURRENT_BINARY_DIR}/submit)
 
 # add_custom_target(submit ALL
-# COMMAND ${CMAKE_COMMAND} -E rm -rf ${SUBMIT_DIR}
-# COMMAND ${CMAKE_COMMAND} -E make_directory ${SUBMIT_DIR}
-# COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/submit/Makefile ${SUBMIT_DIR}/Makefile
-# COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src ${SUBMIT_DIR}/src
-# COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/include ${SUBMIT_DIR}/include
-# COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/src/antlr4/*.cpp ${SUBMIT_DIR}/src/
-# COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/src/antlr4/*.h ${SUBMIT_DIR}/include/
-# COMMAND ${CMAKE_COMMAND} -E rm -rf ${SUBMIT_DIR}/src/runtime
-# # file_filter: delete unnecessary files 
-# COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/submit/file_filter.py ${SUBMIT_DIR}
-# # header_fix: fix include path
-# COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/submit/header_fix.py ${SUBMIT_DIR}
-# # compile: compile runtime
-# COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/src/runtime/compile.py RISCV ${SUBMIT_DIR}/include/autogen/riscv/Runtime.hpp
-# # comile: compile compiler
-# COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/submit/compile.py ${SUBMIT_DIR}/compile.py
-# COMMAND cd ${SUBMIT_DIR}
-# COMMAND ${Python3_EXECUTABLE} ${SUBMIT_DIR}/compile.py ${SUBMIT_DIR} compiler
-# # COMMAND make
-# COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/submit/.gitignore ${SUBMIT_DIR}/.gitignore
+#   COMMAND ${CMAKE_COMMAND} -E rm -rf ${SUBMIT_DIR}
+#   COMMAND ${CMAKE_COMMAND} -E make_directory ${SUBMIT_DIR}
+#   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/submit/Makefile ${SUBMIT_DIR}/Makefile
+#   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src ${SUBMIT_DIR}/src
+#   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/include ${SUBMIT_DIR}/include
+#   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/src/antlr4/*.cpp ${SUBMIT_DIR}/src/
+#   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/src/antlr4/*.h ${SUBMIT_DIR}/include/
+#   COMMAND ${CMAKE_COMMAND} -E rm -rf ${SUBMIT_DIR}/src/runtime
 
-# # run test
-# COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/submit/test.py ${SUBMIT_DIR}/test.py
-# COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/submit/utils.py ${SUBMIT_DIR}/utils.py
-# COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/submit/TestResult.py ${SUBMIT_DIR}/TestResult.py
-# COMMAND ${Python3_EXECUTABLE} ${SUBMIT_DIR}/test.py ${SUBMIT_DIR}/compiler ${CMAKE_SOURCE_DIR}/test ${CMAKE_SOURCE_DIR}/.tmp/asm ${CMAKE_SOURCE_DIR}/.tmp/exe ${CMAKE_SOURCE_DIR}/.tmp/c
+#   # file_filter: delete unnecessary files
+#   COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/submit/file_filter.py ${SUBMIT_DIR}
 
+#   # header_fix: fix include path
+#   COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/submit/header_fix.py ${SUBMIT_DIR}
 
-# DEPENDS compiler
+#   # compile: compile runtime
+#   COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/src/runtime/compile.py RISCV ${SUBMIT_DIR}/include/autogen/riscv/Runtime.hpp
+
+#   # copy *.py
+#   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/submit/*.py ${SUBMIT_DIR}/
+
+#   # comile: compile compiler
+#   COMMAND cd ${SUBMIT_DIR}
+
+#   COMMAND ${Python3_EXECUTABLE} ${SUBMIT_DIR}/compile.py ${SUBMIT_DIR} compiler
+#   # COMMAND make
+#   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/submit/.gitignore ${SUBMIT_DIR}/.gitignore
+
+#   # run test
+#   COMMAND ${Python3_EXECUTABLE} ${SUBMIT_DIR}/runtest.py ${SUBMIT_DIR}/compiler ${CMAKE_SOURCE_DIR}/test ${CMAKE_SOURCE_DIR}/.tmp/asm ${CMAKE_SOURCE_DIR}/.tmp/exe ${CMAKE_SOURCE_DIR}/.tmp/c
+
+#   DEPENDS compiler
 # )
-

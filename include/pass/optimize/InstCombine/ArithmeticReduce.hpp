@@ -8,7 +8,7 @@ class ArithmeticReduce final : public FunctionPass {
   bool runOnBlock(ir::IRBuilder& builder, ir::BasicBlock& block);
 
  public:
-  void run(ir::Function* func, topAnalysisInfoManager* tp) override {
+  void run(ir::Function* func, TopAnalysisInfoManager* tp) override {
     ir::IRBuilder builder;
 
     for (auto block : func->blocks()) {

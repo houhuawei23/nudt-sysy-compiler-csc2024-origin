@@ -1,13 +1,13 @@
 #pragma once
-#include "../../../include/ir/ir.hpp"
-#include "../../../include/pass/pass.hpp"
+#include "ir/ir.hpp"
+#include "pass/pass.hpp"
 #include <set>
 #include <queue>
 
 namespace pass {
 class ADCE : public FunctionPass {
   public:
-    void run(ir::Function* func, topAnalysisInfoManager* tp) override;
+    void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
 
   private:
     pdomTree* pdctx;

@@ -18,7 +18,7 @@ class Reg2Mem : public FunctionPass {
     std::unordered_map<ir::BasicBlock*,std::vector<ir::PhiInst*>> bbphismap;
     std::vector<ir::BasicBlock*> phiblocks;
    public:
-    void run(ir::Function* func, topAnalysisInfoManager* tp) override;
+    void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
     void clear(){
         allphi.clear();
         parent.clear();

@@ -93,8 +93,7 @@ void Config::parseTestArgs(int argc, char* argv[]) {
 }
 
 // clang-format off
-static const auto PassesList = std::vector<std::string>{
-  // "simplifycfg", //error in backend CFGAnalysis.successors
+static const auto perfPassesList = std::vector<std::string>{
   "mem2reg",  //
   // "simplifycfg", //error in backend CFGAnalysis.successors
   // "instcombine",  //
@@ -103,34 +102,88 @@ static const auto PassesList = std::vector<std::string>{
   "tco",      // tail call optimization
   "inline",   //
   "g2l",      // global to local
+  "instcombine",  //
   "adce",     // passed all functional
   "sccp",     //
   "gcm",  // global code motion
   "gvn",          // global value numbering: passed, slow
   "instcombine",  //
   "adce",         //
-  // "simplifycfg",
+  "simplifycfg",
   "reg2mem"
 };
 
-
-// static const auto PassesList = std::vector<std::string>{
-//   "mem2reg",  //
-//   "simplifycfg", //  error in backend CFGAnalysis.successors
-//   "reg2mem"
-// };
 // clang-format on
+
+static const auto testPassesList = std::vector<std::string>{
+  "mem2reg",  //
+  "test",
+
+  "simplifycfg",  // error in backend CFGAnalysis.successors
+  "test",
+
+  "adce",  // passed all functional
+  "test",
+
+  "inline",  // segfault on 60_sort_test6/69_expr_eval/...
+  "test",
+
+  "tco",  // tail call optimization
+  "test",
+
+  "inline",  //
+  "test",
+
+  "g2l",  // global to local
+  "test",
+
+  "instcombine",  //
+  "test",
+
+  "adce",  // passed all functional
+  "test",
+
+  "sccp",  //
+  "test",
+
+  "gcm",  // global code motion
+  "test",
+
+  "gvn",  // global value numbering: passed, slow
+  "test",
+
+  "instcombine",  //
+  "test",
+
+  "adce",  //
+  "test",
+
+  "simplifycfg",
+  "test",
+
+  "reg2mem"
+  "test",
+};
 /*
 5
 功能测试：compiler -S -o testcase.s testcase.sy
 6
 性能测试：compiler -S -o testcase.s testcase.sy -O1
+7
+debug: compiler -S -o testcase.s testcase.sy -O1 -L2
 */
 void Config::parseSubmitArgs(int argc, char* argv[]) {
   genASM = true;
   outfile = argv[3];
   infile = argv[4];
   optLevel = OptLevel::O1;
+
+  if (argc == 7) {
+    if (argv[6] == "-L2"sv) {
+      logLevel = LogLevel::DEBUG;
+    }
+  }
+
   /* 性能测试 */
   // if (argc == 6) {
   //   optLevel = OptLevel::O1;
@@ -148,7 +201,7 @@ void Config::parseCmdArgs(int argc, char* argv[]) {
     exit(EXIT_FAILURE);
   }
   if (optLevel == OptLevel::O1) {
-    passes = PassesList;
+    passes = perfPassesList;
   }
 }
 

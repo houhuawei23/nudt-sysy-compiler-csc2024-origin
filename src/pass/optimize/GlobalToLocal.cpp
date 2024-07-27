@@ -8,7 +8,7 @@ static std::unordered_map<ir::Function*,std::set<ir::GlobalVariable*>>funcIndire
 static std::unordered_map<ir::GlobalVariable*,bool>globalHasStore;
 static std::set<ir::Function*>funcToMem2Reg;
 
-void global2local::run(ir::Module* md,topAnalysisInfoManager* tp){
+void global2local::run(ir::Module* md,TopAnalysisInfoManager* tp){
     bool isChange=false;
     cgctx=tp->getCallGraph();
     cgctx->refresh();
@@ -101,7 +101,7 @@ void global2local::addIndirectGlobalUseFunc(ir::GlobalVariable* gv, ir::Function
 2. 只在一个函数中被使用的global
 3. 在多个函数中被使用的global
 */
-bool global2local::processGlobalVariables(ir::GlobalVariable* gv,ir::Module* md,topAnalysisInfoManager* tp){
+bool global2local::processGlobalVariables(ir::GlobalVariable* gv,ir::Module* md,TopAnalysisInfoManager* tp){
     auto gvUseFuncSize=globalDirectUsedFunc[gv].size();
     if(gv->isArray())return false;
     if(not globalHasStore[gv]){

@@ -3,8 +3,8 @@
 #include <cassert>
 #include <map>
 #include <vector>
-#include "../../../include/ir/ir.hpp"
-#include "../../../include/pass/pass.hpp"
+#include "ir/ir.hpp"
+#include "pass/pass.hpp"
 
 namespace pass {
 class Mem2Reg : public FunctionPass {
@@ -19,7 +19,7 @@ class Mem2Reg : public FunctionPass {
     std::vector<ir::PhiInst*> allphi;
 
   public:
-    void run(ir::Function* func, topAnalysisInfoManager* tp) override;
+    void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
 
     void promotememToreg(ir::Function* F);
     void RemoveFromAllocasList(unsigned& AllocaIdx);

@@ -6,7 +6,7 @@ static std::map<ir::Instruction*, bool> liveInst;
 
 namespace pass {
 
-void ADCE::run(ir::Function* func, topAnalysisInfoManager* tp) {
+void ADCE::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     bool isCFGChange = false;
     bool isCallGraphChange = false;
 

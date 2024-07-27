@@ -22,7 +22,7 @@ void Reg2Mem::getallphi(ir::Function* func) {
     }
 }
 
-void Reg2Mem::run(ir::Function* func, topAnalysisInfoManager* tp) {
+void Reg2Mem::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     clear();
     getallphi(func);
     for (ir::PhiInst* phiinst : allphi) {

@@ -11,7 +11,7 @@ Performs dead code elimination and basic block merging. Specifically
 
 namespace pass {
 
-void simplifyCFG::run(ir::Function* func, topAnalysisInfoManager* tp) {
+void simplifyCFG::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     if (func->isOnlyDeclare()) return;
     // func->print(std::cout);
     bool isChange = false;

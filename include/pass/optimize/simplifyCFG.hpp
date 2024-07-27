@@ -11,7 +11,7 @@
 namespace pass {
 class simplifyCFG : public FunctionPass {
   public:
-    void run(ir::Function* func, topAnalysisInfoManager* tp) override;
+    void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
 
   private:
     bool getSingleDest(ir::BasicBlock* bb);

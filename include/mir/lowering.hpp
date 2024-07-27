@@ -65,5 +65,5 @@ public:  // emit function
 
 std::unique_ptr<MIRModule> createMIRModule(ir::Module& ir_module,
                                            Target& target,
-                                           pass::topAnalysisInfoManager* tAIM);
+                                           pass::TopAnalysisInfoManager* tAIM);
 }  // namespace mir

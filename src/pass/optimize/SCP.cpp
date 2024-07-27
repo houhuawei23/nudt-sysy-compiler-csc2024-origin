@@ -5,7 +5,7 @@
 static std::set<ir::Instruction*> worklist;
 
 namespace pass {
-void SCP::run(ir::Function* func, topAnalysisInfoManager* tp) {
+void SCP::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     if (func->isOnlyDeclare()) return;
     // func->print(std::cout);
     worklist.clear();
