@@ -132,9 +132,8 @@ void Inline::callinline(ir::CallInst* call) {
     for (auto it = calleeAllocaBBinst.begin();it != calleeAllocaBBinst.end();) {
         ir::Instruction* inst = *it;
         if (auto allocainst = dyn_cast<ir::AllocaInst>(inst)) {
-            allocainst->setBlock(callerAllocaBB);
-            // callerAllocaBB->emplace_first_inst(allocainst);
-            callerAllocaBB->emplace_lastbutone_inst(allocainst);
+            callerAllocaBB->emplace_first_inst(allocainst);
+            // callerAllocaBB->emplace_lastbutone_inst(allocainst);
             it = calleeAllocaBBinst.erase(it);
         }
         else{

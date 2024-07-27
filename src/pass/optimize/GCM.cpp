@@ -38,11 +38,10 @@ bool GCM::ispinned(ir::Instruction* instruction) {
         if (instruction->valueId() == ir::vSDIV || instruction->valueId() == ir::vSREM) return true;
         return false;
     }
-
     else if (dyn_cast<ir::UnaryInst>(instruction))  // 一元运算指令不固定
         return false;
-    // else if (dyn_cast<ir::CallInst>(instruction)) // call指令不固定
-    //     return false;
+    else if (dyn_cast<ir::GetElementPtrInst>(instruction))
+        return false;  // GEP指令不固定
     else  // 其他指令固定在自己的BB上
         return true;
 }
@@ -58,7 +57,8 @@ void GCM::scheduleEarly(ir::Instruction* instruction, ir::BasicBlock* entry) {
         auto op = *opiter;
         opiter++;
         if (auto opInst = dyn_cast<ir::Instruction>(op->value())) {
-            scheduleEarly(opInst, entry);
+            if (opInst->block() != entry)
+                scheduleEarly(opInst, entry);
             opBB = opInst->block();
             if (domctx->domlevel(opBB) > domctx->domlevel(destBB)) {
                 destBB = opBB;
@@ -75,7 +75,6 @@ void GCM::scheduleEarly(ir::Instruction* instruction, ir::BasicBlock* entry) {
             if (lpctx->looplevel(curBB) < lpctx->looplevel(bestBB)) bestBB = curBB;
             curBB = domctx->idom(curBB);
         }
-
         if (bestBB == instbb) return;
         instbb->move_inst(instruction);                // 将指令从bb中移除
         bestBB->emplace_lastbutone_inst(instruction);  // 将指令移入destBB
