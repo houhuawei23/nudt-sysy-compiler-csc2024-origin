@@ -106,7 +106,9 @@ def run_riscv_gcc(src, target, output, opt_level=0, debug_level=0, timeout=1):
     return process
 
 
-def link_executable(src: str, target: str, output: str, runtime=sysy_runtime, timeout=1):
+def link_executable(
+    src: str, target: str, output: str, runtime=sysy_runtime, timeout=1
+):
     """
     riscv64-linux-gnu-gcc-12
     """
@@ -114,6 +116,7 @@ def link_executable(src: str, target: str, output: str, runtime=sysy_runtime, ti
     # print(*command, sep=" ")
     process = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
     return process
+
 
 def link_ricvgpp_executable(src: str, target: str, output: str, timeout=1):
     """
@@ -123,6 +126,7 @@ def link_ricvgpp_executable(src: str, target: str, output: str, timeout=1):
     # print(*command, sep=" ")
     process = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
     return process
+
 
 def run_executable(command, src, timeout=1):
     input_file = removePathSuffix(src) + ".in"
@@ -153,11 +157,10 @@ dt_string = now.strftime("%Y_%m_%d_%H:%M")
 
 
 class Test:
-    def __init__(self, target: str, year: str, test_kind: str, timeout=5):
+    def __init__(self, target: str, year: str, timeout=5):
         self.target = target
         self.year = year
-        self.test_kind = test_kind
-        self.result = TestResult(f"SysY compiler {year} {test_kind}")
+        self.result = TestResult(f"SysY compiler {year}")
         self.timeout = timeout
 
     def test(self, path: str, suffix: str, tester):
@@ -188,40 +191,40 @@ class Test:
 
         return len(test_list), len(failed_list)
 
-    def run(self):
-        print(Fore.RED + f"Testing {self.year} {self.test_kind}...")
-        year_kind_path = os.path.join(tests_path, self.year, self.test_kind)
+    def run(self, test_kind: str):
+        print(Fore.RED + f"Testing {self.year} {test_kind}...")
+        year_kind_path = os.path.join(tests_path, self.year, test_kind)
         testnum, failednum = self.test(
             year_kind_path,
             ".sy",
             lambda x: self.sysy_compiler_qemu(x, self.target),
         )
         self.result.print_result_overview()
-        self.result.save_result(f"./{self.year}_{self.test_kind}_{dt_string}.md")
+        self.result.save_result(f"./{self.year}_{test_kind}_{dt_string}.md")
 
-    def run_perf(self):
-        print(Fore.RED + f"Testing {self.year} {self.test_kind}...")
-        year_kind_path = os.path.join(tests_path, self.year, self.test_kind)
+    def run_perf(self, test_kind: str):
+        print(Fore.RED + f"Testing {self.year} {test_kind}...")
+        year_kind_path = os.path.join(tests_path, self.year, test_kind)
         testnum, failednum = self.test(
             year_kind_path,
             ".sy",
             lambda x: self.sysy_qemu_perf(x, self.target),
         )
         self.result.print_perf_overview()
-        self.result.save_perf_result(f"./{self.year}_{self.test_kind}_{dt_string}.md")
+        self.result.save_perf_result(f"./{self.year}_{test_kind}_{dt_string}.md")
 
-    def run_single_case(self, test_case_rel_path: str):
+    def run_single_case(self, test_kind: str, filename: str):
         """
-        test.run_single_case("2023/functional/04_arr_defn3.sy")
+        test.run_single_case("functional", "04_arr_defn3.sy")
         """
-        test_case_path = os.path.join(tests_path, test_case_rel_path)
-        compiler_time = self.sysy_compiler_qemu(test_case_path, self.target)
-        gcc_o3_time = self.sysy_gcc_qemu(test_case_path, self.target)
-        # self.result.qemu_run_time[test_case_path] = (compiler_time, gcc_o3_time)
+        test_case_path = os.path.join(tests_path, self.year, test_kind, filename)
+        self.sysy_compiler_qemu(test_case_path, self.target)
+        self.sysy_gcc_qemu(test_case_path, self.target)
         # self.result.print_result_overview()
         for type in ResultType:
             if len(self.result.cases_result[type]) > 0:
                 self.result.print_result(type)
+        pass
 
     def sysy_compiler_qemu(self, src: str, target: str = "riscv"):
         if os.path.exists(src) is False:
@@ -294,7 +297,7 @@ class Test:
             )
         else:
             self.result.qemu_run_time[src] = (time_used, 0)
-            
+
         self.result.cases_result[ResultType.PASSED].append((src, process))
         return res
 
@@ -325,7 +328,9 @@ class Test:
             src_cpath, target, output_asm, opt_level=3, timeout=self.timeout
         )
 
-        process = link_ricvgpp_executable(src_cpath, target, output_exe, timeout=self.timeout)
+        process = link_ricvgpp_executable(
+            src_cpath, target, output_exe, timeout=self.timeout
+        )
 
         res, process = run_executable(
             qemu_command + [output_exe], src_path, timeout=self.timeout
@@ -345,12 +350,14 @@ class Test:
         if os.path.exists(src_path) is False:
             print(f"Test file not found: {src_path}")
             return False
-        
+
         compiler_res = self.sysy_compiler_qemu(src_path, target)
         gcc_res = self.sysy_gcc_qemu(src_path, target)
         if not (compiler_res and gcc_res):
             raise Exception("Compiler or gcc failed")
         return compiler_res and gcc_res
+
+
 # test_instance = Test("riscv", "2023", "functional")
 # test_instance.run()
 # test_instance.run_single_case("2023/functional/75_max_flow.sy")
@@ -367,18 +374,20 @@ import time
 
 def submitTest():
     # timeout = 5
-    test = Test("riscv", "2023", "functional")
-    test.run()
-    # test.run_single_case("2023/functional/00_main.sy")
+    test = Test("riscv", "2023")
+    # test.run()
+    test.run_single_case("functional", "04_arr_defn3.sy")
     # time.sleep(2)
-    Test("riscv", "2023", "hidden_functional").run()
+
 
 def perfTest():
-    perf_timeout = 20
-    test = Test("riscv", "2025", "performance", perf_timeout)
-    # test.run()
-    test.run_perf()
-    # test.run_single_case("2023/performance/00_bitset1.sy")
+    perf_timeout = 50
+    test = Test("riscv", "2023", perf_timeout)
+    test.run("functional")
+    test.run_perf("performance")
+    test.run_single_case("performance", "00_bitset1.sy")
+
+
 if __name__ == "__main__":
     # submitTest()
     perfTest()

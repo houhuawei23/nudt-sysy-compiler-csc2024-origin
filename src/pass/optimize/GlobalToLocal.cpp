@@ -23,7 +23,7 @@ void global2local::run(ir::Module* md,topAnalysisInfoManager* tp){
         gvIter++;
         // std::cerr<<"del."<<std::endl;
     }
-    std::cerr<<"Here"<<std::endl;
+    // std::cerr<<"Here"<<std::endl;
     if(funcToMem2Reg.size()){
         Mem2Reg m2r;
         for(auto func:funcToMem2Reg){

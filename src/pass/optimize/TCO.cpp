@@ -18,7 +18,7 @@ void tailCallOpt::run(ir::Function* func,topAnalysisInfoManager* tp){
     }
     if(tail_call_vec.empty())
         return;
-    std::cerr<<"Function \""<<func->name()<<"\" is tail-recursive, have "<<tail_call_vec.size()<<" tail calls."<<std::endl;
+    // std::cerr<<"Function \""<<func->name()<<"\" is tail-recursive, have "<<tail_call_vec.size()<<" tail calls."<<std::endl;
     isChange=true;
     //首先要在func的entry前再添加一个entry,以及对应的无条件跳转指令
     auto newEntry=new ir::BasicBlock("newbb",func);

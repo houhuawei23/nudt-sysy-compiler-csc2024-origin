@@ -6,7 +6,7 @@ from colorama import Fore, Style
 # Initializes colorama and autoresets color
 colorama.init(autoreset=True)
 
-from utils import isZero
+from utils import isZero, safeDivide
 
 
 class ResultType(Enum):
@@ -89,10 +89,7 @@ class TestResult:
     def cal_average_score(self):
         speedups = []
         for my, gcc in self.qemu_run_time.values():
-            if isZero(my) or isZero(gcc):
-                speedup = 0
-            else:
-                speedup = gcc / my
+            speedup = safeDivide(gcc, my)
             speedups.append(speedup)
         average_score = (sum(speedups) / len(speedups)) * 100
         return average_score
@@ -105,8 +102,12 @@ class TestResult:
             print(Fore.YELLOW + f"test: {src}")
             print(f"compiler time: {compiler_time:.2f}s")
             print(f"gcc -O3 time: {gcc_o3_time:.2f}s")
-            sppedup = gcc_o3_time / compiler_time
-            print(f"speedup: {sppedup:.2f}x")
+            speedup = safeDivide(gcc_o3_time, compiler_time)
+            # if not isZero(compiler_time):
+            #     speedup = gcc_o3_time / compiler_time
+            # else:
+            #     speedup = 0
+            print(f"speedup: {speedup:.2f}x")
             print()
         # average score = sum(speedup) * 100 / len(speedup)
         average_score = self.cal_average_score()
@@ -123,6 +124,9 @@ class TestResult:
                 f.write(f"test: {src}\n")
                 f.write(f"compiler time: {compiler_time:.2f}s\n")
                 f.write(f"gcc -O3 time: {gcc_o3_time:.2f}s\n")
-                sppedup = gcc_o3_time / compiler_time
-                f.write(f"speedup: {sppedup:.2f}x\n")
+                if not isZero(compiler_time):
+                    speedup = gcc_o3_time / compiler_time
+                else:
+                    speedup = 0
+                f.write(f"speedup: {speedup:.2f}x\n")
                 f.write("\n")

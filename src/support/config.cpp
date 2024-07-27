@@ -102,7 +102,7 @@ static const auto PassesList = std::vector<std::string>{
   "inline",   // segfault on 60_sort_test6/69_expr_eval/...
   "tco",      // tail call optimization
   "inline",   //
-  // "g2l",      // global to local
+  "g2l",      // global to local
   "adce",     // passed all functional
   "sccp",     //
   "gcm",  // global code motion
