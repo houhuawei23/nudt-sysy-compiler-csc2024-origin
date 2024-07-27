@@ -103,6 +103,7 @@ static const auto PassesList = std::vector<std::string>{
   "tco",      // tail call optimization
   "inline",   //
   "g2l",      // global to local
+  "instcombine",  //
   "adce",     // passed all functional
   "sccp",     //
   "gcm",  // global code motion

@@ -8,6 +8,8 @@ colorama.init(autoreset=True)
 
 from utils import isZero, safeDivide
 
+from datetime import datetime
+
 
 class ResultType(Enum):
     PASSED = 0
@@ -71,6 +73,8 @@ class TestResult:
 
     def save_result(self, filename: str):
         with open(filename, "w", encoding="utf-8") as f:
+            f.write(datetime.now().strftime("%Y_%m_%d_%H:%M"))
+            f.write(f"\n\n")
             f.write(f"Test {self.test_name}")
             for type in ResultType:
                 if type == ResultType.PASSED:
@@ -115,6 +119,8 @@ class TestResult:
 
     def save_perf_result(self, filename: str):
         with open(filename, "w", encoding="utf-8") as f:
+            f.write(datetime.now().strftime("%Y_%m_%d_%H:%M"))
+            f.write(f"\n\n")
             f.write(f"Test {self.test_name}\n")
             f.write(f"QEMU run time compare:\n\n")
             average_score = self.cal_average_score()
