@@ -15,6 +15,8 @@ class Reg2Mem : public FunctionPass {
     std::map<ir::PhiInst*, ir::AllocaInst*> phiweb;
     std::vector<ir::AllocaInst*> allocasToinsert;
     std::map<ir::PhiInst*, ir::LoadInst*> philoadmap;
+    std::unordered_map<ir::BasicBlock*,std::vector<ir::PhiInst*>> bbphismap;
+    std::vector<ir::BasicBlock*> phiblocks;
    public:
     void run(ir::Function* func, topAnalysisInfoManager* tp) override;
     void clear(){
@@ -24,6 +26,8 @@ class Reg2Mem : public FunctionPass {
         phiweb.clear();
         allocasToinsert.clear();
         philoadmap.clear();
+        bbphismap.clear();
+        phiblocks.clear();
     };
     void getallphi(ir::Function* func);
     // 并查集算法
