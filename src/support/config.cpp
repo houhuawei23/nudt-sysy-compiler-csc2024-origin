@@ -94,9 +94,8 @@ void Config::parseTestArgs(int argc, char* argv[]) {
 
 // clang-format off
 static const auto PassesList = std::vector<std::string>{
-  // "simplifycfg", //error in backend CFGAnalysis.successors
   "mem2reg",  //
-  // "simplifycfg", //error in backend CFGAnalysis.successors
+  "simplifycfg", //error in backend CFGAnalysis.successors
   // "instcombine",  //
   "adce",     // passed all functional
   "inline",   // segfault on 60_sort_test6/69_expr_eval/...
@@ -110,7 +109,7 @@ static const auto PassesList = std::vector<std::string>{
   "gvn",          // global value numbering: passed, slow
   "instcombine",  //
   "adce",         //
-  // "simplifycfg",
+  "simplifycfg",
   "reg2mem"
 };
 
@@ -118,7 +117,9 @@ static const auto PassesList = std::vector<std::string>{
 // static const auto PassesList = std::vector<std::string>{
 //   "mem2reg",  //
 //   "simplifycfg", //  error in backend CFGAnalysis.successors
+//   // "test",
 //   "reg2mem"
+//   // "inline"
 // };
 // clang-format on
 /*
@@ -126,12 +127,21 @@ static const auto PassesList = std::vector<std::string>{
 功能测试：compiler -S -o testcase.s testcase.sy
 6
 性能测试：compiler -S -o testcase.s testcase.sy -O1
+7
+debug: compiler -S -o testcase.s testcase.sy -O1 -L2
 */
 void Config::parseSubmitArgs(int argc, char* argv[]) {
   genASM = true;
   outfile = argv[3];
   infile = argv[4];
   optLevel = OptLevel::O1;
+
+  if (argc == 7) {
+    if (argv[6] == "-L2"sv) {
+      logLevel = LogLevel::DEBUG;
+    }
+  }
+
   /* 性能测试 */
   // if (argc == 6) {
   //   optLevel = OptLevel::O1;

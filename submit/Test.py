@@ -73,7 +73,7 @@ def run_compiler(
     target,
     output,
     opt_level=0,
-    debug_level=0,
+    log_level=0,
     emit_ir=False,
     timeout=1,
 ):
@@ -84,12 +84,12 @@ def run_compiler(
     command = [compiler_path, "-S", "-o", output, src, f"-O{opt_level}"]
     # print(*command, sep=" ")
     process = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
-    
+
     # os.sched_setaffinity(process.pid, {core})
     return process
 
 
-def run_riscv_gcc(src, target, output, opt_level=0, debug_level=0, timeout=1):
+def run_riscv_gcc(src, target, output, opt_level=0, log_level=0, timeout=1):
     """
     riscv64-linux-gnu-gcc-12 -S -o output src
     """
@@ -187,10 +187,15 @@ class Test:
         self.runtime = runtime
         self.sysy_link_for_riscv_gpp = sysy_link_for_riscv_gpp
 
-    def set(self, target, year, timeout=5):
+        self.opt_level = 1
+        self.log_level = 0
+
+    def set(self, target, year, timeout=5, opt_level=1, log_level=0):
         self.target = target
         self.year = year
         self.timeout = timeout
+        self.opt_level = opt_level
+        self.log_level = log_level
         self.result = TestResult(f"SysY compiler {year}")
 
     def run_single_test(self, src: str, tester):
@@ -280,7 +285,13 @@ class Test:
 
         try:
             run_compiler_process = run_compiler(
-                self.compiler_path, src, target, output_asm, timeout=self.timeout
+                self.compiler_path,
+                src,
+                target,
+                output_asm,
+                opt_level=self.opt_level,
+                log_level=self.log_level,
+                timeout=self.timeout,
             )
         except subprocess.TimeoutExpired:
             print(Fore.RED + f"Test {src} run_compiler timeout")

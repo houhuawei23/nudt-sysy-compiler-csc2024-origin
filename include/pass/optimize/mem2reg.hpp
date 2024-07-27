@@ -3,8 +3,8 @@
 #include <cassert>
 #include <map>
 #include <vector>
-#include "../../../include/ir/ir.hpp"
-#include "../../../include/pass/pass.hpp"
+#include "ir/ir.hpp"
+#include "pass/pass.hpp"
 
 namespace pass {
 class Mem2Reg : public FunctionPass {

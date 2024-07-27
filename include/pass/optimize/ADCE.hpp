@@ -1,6 +1,6 @@
 #pragma once
-#include "../../../include/ir/ir.hpp"
-#include "../../../include/pass/pass.hpp"
+#include "ir/ir.hpp"
+#include "pass/pass.hpp"
 #include <set>
 #include <queue>
 

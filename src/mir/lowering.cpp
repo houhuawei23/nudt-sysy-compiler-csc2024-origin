@@ -421,6 +421,10 @@ void createMIRFunction(ir::Function* ir_func,
       irBlocks.push_back(block);
     }
   }
+  // std::cerr << "irBlocks size: " << irBlocks.size() << std::endl;
+  // for (auto block : irBlocks) {
+  //   std::cerr << "block: " << block->name() << std::endl;
+  // }
 
   //! 1. map from ir to mir
   auto& block_map = lowering_ctx.blockMap;

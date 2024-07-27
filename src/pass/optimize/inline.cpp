@@ -8,19 +8,28 @@
 #include <algorithm>
 namespace pass {
 void Inline::callinline(ir::CallInst* call) {
-    ir::Function* callee = call->callee();//被调用的需要被展开的函数
-    ir::Function* copyfunc = callee->copy_func(); //callee的复制，展开的是这个函数而不是callee
-    ir::BasicBlock* nowBB = call->block();
-    ir::Function* caller = nowBB->function();
-    ir::BasicBlock* retBB = caller->newBlock();
-    ir::BasicBlock* calleeAllocaBB = copyfunc->entry();
-    ir::BasicBlock* callerAllocaBB = caller->entry();
+    auto callee = call->callee();         // 被调用的需要被展开的函数
+    auto copyfunc = callee->copy_func();  // callee的复制，展开的是这个函数而不是callee
+    auto nowBB = call->block();
+    auto caller = nowBB->function();
+    auto retBB = caller->newBlock();
+    auto calleeAllocaBB = copyfunc->entry();
+    auto callerAllocaBB = caller->entry();
+
+    // std::cerr << "caller: " << caller->name() << std::endl;
+    // std::cerr << "callerAllocaBB: " << callerAllocaBB->name() << ", size: " << callerAllocaBB->insts().size()
+    //           << std::endl;
+
+    // std::cerr << "callee: " << callee->name() << std::endl;
+    // std::cerr << "calleeAllocaBB: " << calleeAllocaBB->name() << ", size: " << calleeAllocaBB->insts().size()
+    //           << std::endl;
+
     if (nowBB == caller->exit()) {
         caller->setExit(retBB);
     }
     // 将call之后的指令移动到retBB中
     auto it = std::find(nowBB->insts().begin(), nowBB->insts().end(), call);
-    if (it != nowBB->insts().end()){
+    if (it != nowBB->insts().end()) {
         ++it;
         while (it != nowBB->insts().end()) {
             ir::Instruction* inst = *it;
@@ -32,7 +41,7 @@ void Inline::callinline(ir::CallInst* call) {
 
     // 将nowBB的后继变为retBB的后继
     auto succList = nowBB->next_blocks();
-    for (auto it = succList.begin(); it != succList.end();){
+    for (auto it = succList.begin(); it != succList.end();) {
         ir::BasicBlock* succBB = *it;
         ir::BasicBlock::delete_block_link(nowBB, succBB);
         ir::BasicBlock::block_link(retBB, succBB);
@@ -51,7 +60,7 @@ void Inline::callinline(ir::CallInst* call) {
     // 被调用函数的返回块无条件跳转到retBB
     std::vector<std::pair<ir::ReturnInst*, ir::BasicBlock*>> retmap;
     auto blocklist = copyfunc->blocks();
-    for (auto it = blocklist.begin(); it != blocklist.end();){
+    for (auto it = blocklist.begin(); it != blocklist.end();) {
         ir::BasicBlock* bb = *it;
         bb->set_parent(caller);
         caller->blocks().emplace_back(bb);
@@ -91,10 +100,9 @@ void Inline::callinline(ir::CallInst* call) {
             formalArg->replaceAllUseWith(realArg);
         } else {  // 如果传递参数是数组等指针
             auto baseType = formalArg->type()->dynCast<ir::PointerType>()->baseType();
-            if (!baseType->isPointer()){
+            if (!baseType->isPointer()) {
                 formalArg->replaceAllUseWith(realArg);
-            }
-            else{
+            } else {
                 std::vector<ir::StoreInst*> storetomove;
                 for (auto use : formalArg->uses()) {
                     if (ir::StoreInst* storeinst = dyn_cast<ir::StoreInst>(use->user())) {
@@ -118,7 +126,6 @@ void Inline::callinline(ir::CallInst* call) {
                     storeBB->delete_inst(rmstoreinst);
                 }
             }
-            
         }
     }
     // 删除caller中调用copyfunc的call指令
@@ -129,22 +136,20 @@ void Inline::callinline(ir::CallInst* call) {
     nowBB->emplace_back_inst(jmpnowtoentry);
     // 将callee的alloca提到caller
     auto& calleeAllocaBBinst = calleeAllocaBB->insts();
-    for (auto it = calleeAllocaBBinst.begin();it != calleeAllocaBBinst.end();) {
+    for (auto it = calleeAllocaBBinst.begin(); it != calleeAllocaBBinst.end();) {
         ir::Instruction* inst = *it;
         if (auto allocainst = dyn_cast<ir::AllocaInst>(inst)) {
             allocainst->setBlock(callerAllocaBB);
-            // callerAllocaBB->emplace_first_inst(allocainst);
-            callerAllocaBB->emplace_lastbutone_inst(allocainst);
+            callerAllocaBB->emplace_first_inst(allocainst);
+            // callerAllocaBB->emplace_lastbutone_inst(allocainst);
             it = calleeAllocaBBinst.erase(it);
-        }
-        else{
+        } else {
             ++it;
         }
     }
 }
 
-std::vector<ir::CallInst*> Inline::getcall(ir::Module* module,
-                                           ir::Function* function) {
+std::vector<ir::CallInst*> Inline::getcall(ir::Module* module, ir::Function* function) {
     std::vector<ir::CallInst*> calllist;
     for (auto func : module->funcs()) {
         for (auto bb : func->blocks()) {
@@ -164,24 +169,25 @@ std::vector<ir::CallInst*> Inline::getcall(ir::Module* module,
 std::vector<ir::Function*> Inline::getinlineFunc(ir::Module* module) {
     std::vector<ir::Function*> functiontoremove;
     for (auto func : module->funcs()) {
-        if (func->name() != "main" && !cgctx->isLib(func) && cgctx->isNoCallee(func)) {  //&& !func->get_is_inline() TODO 分析哪些函数可以被内联优化展开
+        if (func->name() != "main" && !cgctx->isLib(func) &&
+            cgctx->isNoCallee(func)) {  //&& !func->get_is_inline() TODO 分析哪些函数可以被内联优化展开
             functiontoremove.push_back(func);
         }
     }
     return functiontoremove;
 }
 void Inline::run(ir::Module* module, topAnalysisInfoManager* tp) {
-    cgctx=tp->getCallGraph();
+    cgctx = tp->getCallGraph();
     cgctx->refresh();
 
     std::vector<ir::Function*> functiontoremove = getinlineFunc(module);
-    bool isFuncInline=false;
+    bool isFuncInline = false;
     while (!functiontoremove.empty()) {  // 找到所有调用了可以被内联优化展开的函数的call指令
         auto func = functiontoremove.back();
         std::vector<ir::CallInst*> callList = getcall(module, func);
         for (auto call : callList) {
             callinline(call);
-            isFuncInline=true;
+            isFuncInline = true;
             tp->CFGChange(call->block()->function());
         }
         module->delFunction(func);
