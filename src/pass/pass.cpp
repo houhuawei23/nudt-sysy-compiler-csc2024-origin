@@ -51,7 +51,7 @@ void PassManager::runPasses(std::vector<std::string> passes) {
     }
     std::cerr << std::endl;
     auto fileName = utils::preName(config.infile) + "_before_passes.ll";
-    dumpModule(_irModule, fileName);
+    dumpModule(irModule, fileName);
   }
 
   run(new pass::CFGAnalysisHHW());
@@ -114,10 +114,10 @@ void PassManager::runPasses(std::vector<std::string> passes) {
 
   if (config.logLevel >= sysy::LogLevel::DEBUG) {
     auto fileName = utils::preName(config.infile) + "_after_passes.ll";
-    dumpModule(_irModule, fileName);
+    dumpModule(irModule, fileName);
   }
   
-  _irModule->rename();
+  irModule->rename();
 }
 
 }  // namespace pass

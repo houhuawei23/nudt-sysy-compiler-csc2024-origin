@@ -4,7 +4,7 @@
 namespace pass{
     class loopAnalysis:public FunctionPass{
         public:
-            void run(ir::Function* func,topAnalysisInfoManager *tp)override;
+            void run(ir::Function* func,TopAnalysisInfoManager *tp)override;
         private:
             void addLoopBlocks(ir::Function*func,ir::BasicBlock* header,ir::BasicBlock* tail);
             void loopGetExits(ir::Loop* plp);
@@ -14,7 +14,7 @@ namespace pass{
 
     class loopInfoCheck:public FunctionPass{
         public:   
-            void run(ir::Function* func,topAnalysisInfoManager* tp)override;
+            void run(ir::Function* func,TopAnalysisInfoManager* tp)override;
         private:
             loopInfo* lpctx;
     };

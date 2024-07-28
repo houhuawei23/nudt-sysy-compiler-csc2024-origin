@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
   }
 
   //! 2. Optimization Passes
-  auto tAIM = new pass::topAnalysisInfoManager(module_ir);
+  auto tAIM = new pass::TopAnalysisInfoManager(module_ir);
   tAIM->initialize();
   auto pm = new pass::PassManager(module_ir, tAIM);
 

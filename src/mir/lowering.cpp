@@ -171,13 +171,13 @@ void LoweringContext::emitCopy(MIROperand dst, MIROperand src) {
 void createMIRModule(ir::Module& ir_module,
                      MIRModule& mir_module,
                      Target& target,
-                     pass::topAnalysisInfoManager* tAIM);
+                     pass::TopAnalysisInfoManager* tAIM);
 
 void createMIRFunction(ir::Function* ir_func,
                        MIRFunction* mir_func,
                        CodeGenContext& codegen_ctx,
                        LoweringContext& lowering_ctx,
-                       pass::topAnalysisInfoManager* tAIM);
+                       pass::TopAnalysisInfoManager* tAIM);
 
 void createMIRInst(ir::Instruction* ir_inst, LoweringContext& ctx);
 
@@ -187,7 +187,7 @@ void lower_GetElementPtr_beta(ir::inst_iterator begin,
 
 std::unique_ptr<MIRModule> createMIRModule(ir::Module& ir_module,
                                            Target& target,
-                                           pass::topAnalysisInfoManager* tAIM) {
+                                           pass::TopAnalysisInfoManager* tAIM) {
   auto mir_module_uptr = std::make_unique<MIRModule>(&ir_module, target);
   createMIRModule(ir_module, *mir_module_uptr, target, tAIM);
   return mir_module_uptr;
@@ -195,14 +195,14 @@ std::unique_ptr<MIRModule> createMIRModule(ir::Module& ir_module,
 void createMIRModuleBeta(ir::Module& ir_module,
                          MIRModule& mir_module,
                          Target& target,
-                         pass::topAnalysisInfoManager* tAIM) {
+                         pass::TopAnalysisInfoManager* tAIM) {
   createMIRModule(ir_module, mir_module, target, tAIM);
 }
 
 void createMIRModule(ir::Module& ir_module,
                      MIRModule& mir_module,
                      Target& target,
-                     pass::topAnalysisInfoManager* tAIM) {
+                     pass::TopAnalysisInfoManager* tAIM) {
   auto& config = sysy::Config::getInstance();
 
   bool debugLowering = config.logLevel >= sysy::LogLevel::DEBUG;
@@ -343,7 +343,8 @@ void createMIRModule(ir::Module& ir_module,
 
     /* Optimize: peephole optimization (窥孔优化) */
     {
-      while (genericPeepholeOpt(*mir_func, codegen_ctx)) ;
+      while (genericPeepholeOpt(*mir_func, codegen_ctx))
+        ;
       dumpStageResult("AfterPeephole", mir_func, codegen_ctx);
     }
 
@@ -402,25 +403,50 @@ void createMIRFunction(ir::Function* ir_func,
                        MIRFunction* mir_func,
                        CodeGenContext& codegen_ctx,
                        LoweringContext& lowering_ctx,
-                       pass::topAnalysisInfoManager* tAIM) {
+                       pass::TopAnalysisInfoManager* tAIM) {
   if (ir_func->blocks().empty()) return;
   const auto& config = sysy::Config::getInstance();
   lowering_ctx.setCurrFunc(mir_func);
   /* Some Debug Information */
   constexpr bool DebugCreateMirFunction = false;
-  
+
   // TODO: before lowering, get some analysis pass result
 
   auto domCtx = tAIM->getDomTree(ir_func);
   domCtx->refresh();
   domCtx->BFSDomTreeInfoRefresh();
   auto irBlocks = domCtx->BFSDomTreeVector();
+
+  // std::cerr << "000" << std::endl;
+  // for (auto block : ir_func->blocks()) {
+  //   std::cerr << "block: " << block->name()
+  //             << ", size: " << block->insts().size() << "addr: " << block
+  //             << std::endl;
+  // }
+
+  // std::cerr << "111" << std::endl;
+  // for (auto block : irBlocks) {
+  //   std::cerr << "block: " << block->name()
+  //             << ", size: " << block->insts().size() << "addr: " << block
+  //             << std::endl;
+  // }
+  // std::cerr << "222" << std::endl;
+
   for (auto block : ir_func->blocks()) {
     if (std::find(irBlocks.begin(), irBlocks.end(), block) == irBlocks.end()) {
       // std::cerr << "Some Blocks are not in dom tree" << std::endl;
+      // std::cerr << block->name() << "size: " << block->insts().size()
+      //           << "addr: " << block << std::endl;
       irBlocks.push_back(block);
     }
   }
+  // std::cerr << "333" << std::endl;
+  // std::cerr << "irBlocks size: " << irBlocks.size() << std::endl;
+  // for (auto block : irBlocks) {
+  //   std::cerr << "block: " << block->name()
+  //             << ", size: " << block->insts().size() << "addr: " << block
+  //             << std::endl;
+  // }
 
   //! 1. map from ir to mir
   auto& block_map = lowering_ctx.blockMap;
@@ -616,14 +642,22 @@ void createMIRInst(ir::Instruction* ir_inst, LoweringContext& ctx) {
 void lower(ir::UnaryInst* ir_inst, LoweringContext& ctx) {
   auto gc_instid = [scid = ir_inst->valueId()] {
     switch (scid) {
-      case ir::ValueId::vFNEG: return InstFNeg;
-      case ir::ValueId::vTRUNC: return InstTrunc;
-      case ir::ValueId::vZEXT: return InstZExt;
-      case ir::ValueId::vSEXT: return InstSExt;
-      case ir::ValueId::vFPTRUNC: assert(false && "not supported unary inst");
-      case ir::ValueId::vFPTOSI: return InstF2S;
-      case ir::ValueId::vSITOFP: return InstS2F;
-      default: assert(false && "not supported unary inst");
+      case ir::ValueId::vFNEG:
+        return InstFNeg;
+      case ir::ValueId::vTRUNC:
+        return InstTrunc;
+      case ir::ValueId::vZEXT:
+        return InstZExt;
+      case ir::ValueId::vSEXT:
+        return InstSExt;
+      case ir::ValueId::vFPTRUNC:
+        assert(false && "not supported unary inst");
+      case ir::ValueId::vFPTOSI:
+        return InstF2S;
+      case ir::ValueId::vSITOFP:
+        return InstS2F;
+      default:
+        assert(false && "not supported unary inst");
     }
   }();
 
@@ -982,10 +1016,11 @@ void lower_GetElementPtr_beta(ir::inst_iterator begin,
   /* 1. 偏移量 */
   {
     auto newPtr = ctx.newVReg(OperandType::Int64);
-    ctx.emitInstBeta(InstMul, {newPtr, mir_offset, MIROperand::asImm(4, OperandType::Int64)});
+    ctx.emitInstBeta(
+      InstMul, {newPtr, mir_offset, MIROperand::asImm(4, OperandType::Int64)});
     mir_offset = newPtr;
   }
-  
+
   /* 2. 指针运算 */
   {
     auto newPtr = ctx.newVReg(OperandType::Int64);
@@ -1013,10 +1048,11 @@ void lower_GetElementPtr_beta(ir::inst_iterator begin,
     /* 偏移量 */
     {
       auto newPtr = ctx.newVReg(OperandType::Int64);
-      ctx.emitInstBeta(InstMul, {newPtr, mir_offset, MIROperand::asImm(4, OperandType::Int64)});
+      ctx.emitInstBeta(InstMul, {newPtr, mir_offset,
+                                 MIROperand::asImm(4, OperandType::Int64)});
       mir_offset = newPtr;
     }
-    
+
     /* 指针运算 */
     {
       auto newPtr = ctx.newVReg(OperandType::Int64);

@@ -456,8 +456,10 @@ void BranchInst::replaceDest(ir::BasicBlock* olddest, ir::BasicBlock* newdest) {
   if (mIsCond) {
     if (iftrue() == olddest) {
       setOperand(1, newdest);
-    } else {
+    } else if (iffalse() == olddest){
       setOperand(2, newdest);
+    } else{
+      assert(false and "branch inst replaceDest error");
     }
   } else {
     setOperand(0, newdest);

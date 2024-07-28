@@ -10,7 +10,7 @@ template <typename PassUnit>
 class Pass {
   public:
   // pure virtual function, define the api
-  virtual void run(PassUnit* pass_unit, topAnalysisInfoManager* tp) = 0;
+  virtual void run(PassUnit* pass_unit, TopAnalysisInfoManager* tp) = 0;
 };
 
 // Instantiate Pass Class for Module, Function and BB
@@ -19,23 +19,23 @@ using FunctionPass = Pass<ir::Function>;
 using BasicBlockPass = Pass<ir::BasicBlock>;
 
 class PassManager {
-  ir::Module* _irModule;
-  pass::topAnalysisInfoManager* tAIM;
+  ir::Module* irModule;
+  pass::TopAnalysisInfoManager* tAIM;
 
   public:
-  PassManager(ir::Module* pm, topAnalysisInfoManager* tp) {
-    _irModule = pm;
+  PassManager(ir::Module* pm, TopAnalysisInfoManager* tp) {
+    irModule = pm;
     tAIM = tp;
   }
-  void run(ModulePass* mp) { mp->run(_irModule, tAIM); }
+  void run(ModulePass* mp) { mp->run(irModule, tAIM); }
   void run(FunctionPass* fp) {
-    for (auto func : _irModule->funcs()) {
+    for (auto func : irModule->funcs()) {
       if (func->isOnlyDeclare()) continue;
       fp->run(func, tAIM);
     }
   }
   void run(BasicBlockPass* bp) {
-    for (auto func : _irModule->funcs()) {
+    for (auto func : irModule->funcs()) {
       for (auto bb : func->blocks()) {
         bp->run(bb, tAIM);
       }
@@ -45,7 +45,7 @@ class PassManager {
 
 };
 
-class topAnalysisInfoManager {
+class TopAnalysisInfoManager {
   private:
   ir::Module* mModule;
   // ir::Module info
@@ -57,7 +57,7 @@ class topAnalysisInfoManager {
   std::unordered_map<ir::Function*, indVarInfo*> mIndVarInfo;
   // bb info
   public:
-  topAnalysisInfoManager(ir::Module* pm) : mModule(pm), mCallGraph(nullptr) {}
+  TopAnalysisInfoManager(ir::Module* pm) : mModule(pm), mCallGraph(nullptr) {}
   domTree* getDomTree(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
     return mDomTree[func];

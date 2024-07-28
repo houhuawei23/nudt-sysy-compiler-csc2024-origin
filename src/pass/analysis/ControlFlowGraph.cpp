@@ -4,7 +4,7 @@
 #include <algorithm>
 
 namespace pass {
-void CFGAnalysisHHW::run(ir::Function* func, topAnalysisInfoManager* tp) {
+void CFGAnalysisHHW::run(ir::Function* func, TopAnalysisInfoManager* tp) {
   // TODO: Implement CFG analysis
   /* clear the CFG: clear pres/nexts of all blocks */
   for (auto block : func->blocks()) {

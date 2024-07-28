@@ -16,31 +16,15 @@ void Mem2Reg::RemoveFromAllocasList(unsigned& AllocaIdx) {
 
 // 分析一个变量，遍历其使用，是store就把store的BB插入到定义块集合，是load就把load的BB插入到定义块集合
 void Mem2Reg::allocaAnalysis(ir::AllocaInst* alloca) {
-    // clear
-    // OnlyStore = nullptr;
-    // OnlyUsedInOneBlock = true;
-    // OnlyBlock = nullptr;
-
     for (auto use : alloca->uses()) {
         ir::Instruction* User = dyn_cast<ir::Instruction>(use->user());
         if (auto store = dynamic_cast<ir::StoreInst*>(User)) {
             DefsBlock[alloca].insert(store->block());
-            // DefsBlockvector[alloca].push_back(store->block());
-            // OnlyStore = store;
         }
 
         else if (auto load = dynamic_cast<ir::StoreInst*>(User)) {
             UsesBlock[alloca].insert(load->block());
-            // UsesBlockvector[alloca].push_back(load->block());
         }
-
-        // if (OnlyUsedInOneBlock)
-        // {
-        //     if (!OnlyBlock)
-        //         OnlyBlock = User->block();
-        //     else if (OnlyBlock != User->block())
-        //         OnlyUsedInOneBlock = false;
-        // }
     }
 }
 // 判断变量能否被mem2reg，主要是判断类型是否符合
@@ -212,7 +196,8 @@ void Mem2Reg::insertphi() {
                     Y->emplace_first_inst(phi);
                     Phiset.insert(Y);
                     PhiMap[Y].insert({phi, alloca});
-                    if (find(DefsBlock[alloca].begin(), DefsBlock[alloca].end(), Y) == DefsBlock[alloca].end()) W.push_back(Y);
+                    if (find(DefsBlock[alloca].begin(), DefsBlock[alloca].end(), Y) == DefsBlock[alloca].end())
+                        W.push_back(Y);
                 }
             }
         }
@@ -242,8 +227,10 @@ void Mem2Reg::rename(ir::Function* F) {
 
         for (auto inst : BB->insts()) {
             if (ir::AllocaInst* AI = dyn_cast<ir::AllocaInst>(inst)) {
-                if (find(Allocas.begin(), Allocas.end(), AI) == Allocas.end())  // 如果不是可提升的alloca就不管，否则把这条alloca放入待删除列表
+                if (find(Allocas.begin(), Allocas.end(), AI) == Allocas.end()) {
+                    // 如果不是可提升的alloca就不管，否则把这条alloca放入待删除列表
                     continue;
+                }
                 instRemovelist.push_back(inst);
             }
 
@@ -392,7 +379,7 @@ bool Mem2Reg::promotemem2reg(ir::Function* F) {
     return changed;
 }
 
-void Mem2Reg::run(ir::Function* F, topAnalysisInfoManager* tp) {
+void Mem2Reg::run(ir::Function* F, TopAnalysisInfoManager* tp) {
     if (not F->entry()) return;
     domctx = tp->getDomTree(F);
     domctx->refresh();

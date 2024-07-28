@@ -5,10 +5,12 @@
 import os
 import sys
 import subprocess
+import time
+from datetime import datetime
+
 
 from utils import (
     removePathSuffix,
-    check_args,
     compare_output_with_standard_file,
     compare_and_parse_perf,
 )
@@ -17,21 +19,10 @@ from TestResult import TestResult, ResultType, colorMap
 import colorama
 from colorama import Fore, Style
 
+# Initializes colorama and autoresets color
+colorama.init(autoreset=True)
 
-colorama.init(autoreset=True)  # Initializes colorama and autoresets color
-
-
-compiler_path = sys.argv[1]
-tests_path = sys.argv[2]  #
-output_asm_path = sys.argv[3]
-output_exe_path = sys.argv[4]
-output_c_path = sys.argv[5]
-
-if not check_args(
-    compiler_path, tests_path, output_asm_path, output_exe_path, output_c_path
-):
-    sys.exit(1)
-
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 stack_size = 128 << 20  # 128M
 
@@ -45,19 +36,13 @@ qemu_gcc_ref_command = "riscv64-linux-gnu-gcc-12 -O2 -DNDEBUG -march=rv64gc -mab
 
 qemu_gpp_ref_command = "riscv64-linux-gnu-g++-12 -O2 -DNDEBUG -march=rv64gc -mabi=lp64d -mcmodel=medlow -ffp-contract=on -w ".split()
 
-sysy_runtime = os.path.join(tests_path, "sysy/sylib.c")
-sysy_header = os.path.join(tests_path, "sysy/sylib.h")
 
-sysy_link_for_riscv_gpp = os.path.join(tests_path, "link/link.c")
-
-
-def test(testname: str, path: str, suffix: str, tester):
+def test(path: str, suffix: str, tester):
     """
     test files with suffix in path with tester.
     for f in all files in path with suffix:
-      tester(f)
+    tester(f)
     """
-    print(f"Testing {testname}...")
     print(f"Test files with suffix {suffix} in {path}")
     test_list = []
     for dirpath, dirnames, filenames in os.walk(path):
@@ -67,23 +52,30 @@ def test(testname: str, path: str, suffix: str, tester):
     cnt = 0
     failed_list = []
     test_list.sort()
+
     for src in test_list:
         cnt += 1
-        print(f"Test {cnt}/{len(test_list)}: {src}")
+        print(Fore.YELLOW + f"Test {cnt}/{len(test_list)}: {src}")
         try:
             if tester(src) is not False:
-                print("Test passed")
+                print(Fore.GREEN + "Test passed")
                 continue
         except Exception as e:
-            print(f"Test failed: {e}")
-        print("Test failed")
+            print(Fore.RED + f"Test failed: {e}")
         failed_list.append(src)
 
     return len(test_list), len(failed_list)
 
 
 def run_compiler(
-    src, target, output, opt_level=0, debug_level=0, emit_ir=False, timeout=1
+    compiler_path,
+    src,
+    target,
+    output,
+    opt_level=0,
+    log_level=0,
+    emit_ir=False,
+    timeout=1,
 ):
     """
     ./compiler -S -o output src
@@ -92,10 +84,12 @@ def run_compiler(
     command = [compiler_path, "-S", "-o", output, src, f"-O{opt_level}"]
     # print(*command, sep=" ")
     process = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
+
+    # os.sched_setaffinity(process.pid, {core})
     return process
 
 
-def run_riscv_gcc(src, target, output, opt_level=0, debug_level=0, timeout=1):
+def run_riscv_gcc(src, target, output, opt_level=0, log_level=0, timeout=1):
     """
     riscv64-linux-gnu-gcc-12 -S -o output src
     """
@@ -106,7 +100,7 @@ def run_riscv_gcc(src, target, output, opt_level=0, debug_level=0, timeout=1):
     return process
 
 
-def link_executable(src: str, target: str, output: str, runtime=sysy_runtime, timeout=1):
+def link_executable(src: str, target: str, output: str, runtime, timeout=1):
     """
     riscv64-linux-gnu-gcc-12
     """
@@ -114,6 +108,7 @@ def link_executable(src: str, target: str, output: str, runtime=sysy_runtime, ti
     # print(*command, sep=" ")
     process = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
     return process
+
 
 def link_ricvgpp_executable(src: str, target: str, output: str, timeout=1):
     """
@@ -123,6 +118,7 @@ def link_ricvgpp_executable(src: str, target: str, output: str, timeout=1):
     # print(*command, sep=" ")
     process = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
     return process
+
 
 def run_executable(command, src, timeout=1):
     input_file = removePathSuffix(src) + ".in"
@@ -141,26 +137,77 @@ def run_executable(command, src, timeout=1):
     return res, out
 
 
-# def
+def test(path: str, suffix: str, tester):
+    """
+    test files with suffix in path with tester.
+    for f in all files in path with suffix:
+    tester(f)
+    """
+    print(f"Test files with suffix {suffix} in {path}")
+    test_list = []
+    for dirpath, dirnames, filenames in os.walk(path):
+        for f in filenames:
+            if f.endswith(suffix):
+                test_list.append(os.path.join(dirpath, f))
+    cnt = 0
+    failed_list = []
+    test_list.sort()
 
+    for src in test_list:
+        cnt += 1
+        print(Fore.YELLOW + f"Test {cnt}/{len(test_list)}: {src}")
+        try:
+            if tester(src) is not False:
+                print(Fore.GREEN + "Test passed")
+                continue
+        except Exception as e:
+            print(Fore.RED + f"Test failed: {e}")
+        failed_list.append(src)
 
-# import time
-from datetime import datetime
-
-now = datetime.now()
-
-dt_string = now.strftime("%Y_%m_%d_%H:%M")
+    return len(test_list), len(failed_list)
 
 
 class Test:
-    def __init__(self, target: str, year: str, test_kind: str, timeout=5):
+
+    def __init__(
+        self,
+        compiler_path="./compiler",
+        tests_path="./test",
+        output_asm_path="./.tmp/asm",
+        output_exe_path="./.tmp/exe",
+        output_c_path="./.tmp/c",
+        runtime="./test/sysy/sylib.c",
+        sysy_link_for_riscv_gpp="./test/link/link.c",
+    ):
+        self.compiler_path = compiler_path
+        self.tests_path = tests_path
+        self.output_asm_path = output_asm_path
+        self.output_exe_path = output_exe_path
+        self.output_c_path = output_c_path
+        self.runtime = runtime
+        self.sysy_link_for_riscv_gpp = sysy_link_for_riscv_gpp
+
+        self.opt_level = 1
+        self.log_level = 0
+
+    def set(self, target, year, timeout=5, opt_level=1, log_level=0):
         self.target = target
         self.year = year
-        self.test_kind = test_kind
-        self.result = TestResult(f"SysY compiler {year} {test_kind}")
         self.timeout = timeout
+        self.opt_level = opt_level
+        self.log_level = log_level
+        self.result = TestResult(f"SysY compiler {year}")
 
-    def test(self, path: str, suffix: str, tester):
+    def run_single_test(self, src: str, tester):
+        try:
+            if tester(src) is not False:
+                print(Fore.GREEN + "Test passed")
+                return src, True
+        except Exception as e:
+            print(Fore.RED + f"Test failed: {e}")
+        return src, False
+
+    def test_beta(self, path: str, suffix: str, tester):
         """
         test files with suffix in path with tester.
         for f in all files in path with suffix:
@@ -175,53 +222,57 @@ class Test:
         cnt = 0
         failed_list = []
         test_list.sort()
-        for src in test_list:
-            cnt += 1
-            print(Fore.YELLOW + f"Test {cnt}/{len(test_list)}: {src}")
-            try:
-                if tester(src) is not False:
-                    print(Fore.GREEN + "Test passed")
-                    continue
-            except Exception as e:
-                print(Fore.RED + f"Test failed: {e}")
-            failed_list.append(src)
+        with ThreadPoolExecutor() as executor:
+            futures = {
+                executor.submit(self.run_single_test, src, tester): src
+                for src in test_list
+            }
+            for future in as_completed(futures):
+                cnt += 1
+                src = futures[future]
+                print(Fore.YELLOW + f"Test {cnt}/{len(test_list)}: {src}")
+                result = future.result()
+                if not result[1]:
+                    failed_list.append(src)
 
         return len(test_list), len(failed_list)
 
-    def run(self):
-        print(Fore.RED + f"Testing {self.year} {self.test_kind}...")
-        year_kind_path = os.path.join(tests_path, self.year, self.test_kind)
-        testnum, failednum = self.test(
+    def run(self, test_kind: str):
+        print(Fore.RED + f"Testing {self.year} {test_kind}...")
+        year_kind_path = os.path.join(self.tests_path, self.year, test_kind)
+        testnum, failednum = self.test_beta(
             year_kind_path,
             ".sy",
             lambda x: self.sysy_compiler_qemu(x, self.target),
         )
         self.result.print_result_overview()
-        self.result.save_result(f"./{self.year}_{self.test_kind}_{dt_string}.md")
+        dt_string = datetime.now().strftime("%Y_%m_%d_%H:%M")
+        self.result.save_result(f"./.{self.year}_{test_kind}_{dt_string}.md")
 
-    def run_perf(self):
-        print(Fore.RED + f"Testing {self.year} {self.test_kind}...")
-        year_kind_path = os.path.join(tests_path, self.year, self.test_kind)
-        testnum, failednum = self.test(
+    def run_perf(self, test_kind: str):
+        print(Fore.RED + f"Testing {self.year} {test_kind}...")
+        year_kind_path = os.path.join(self.tests_path, self.year, test_kind)
+        testnum, failednum = self.test_beta(
             year_kind_path,
             ".sy",
             lambda x: self.sysy_qemu_perf(x, self.target),
         )
         self.result.print_perf_overview()
-        self.result.save_perf_result(f"./{self.year}_{self.test_kind}_{dt_string}.md")
+        dt_string = datetime.now().strftime("%Y_%m_%d_%H:%M")
+        self.result.save_perf_result(f"./.{self.year}_{test_kind}_{dt_string}.md")
 
-    def run_single_case(self, test_case_rel_path: str):
+    def run_single_case(self, test_kind: str, filename: str):
         """
-        test.run_single_case("2023/functional/04_arr_defn3.sy")
+        test.run_single_case("functional", "04_arr_defn3.sy")
         """
-        test_case_path = os.path.join(tests_path, test_case_rel_path)
-        compiler_time = self.sysy_compiler_qemu(test_case_path, self.target)
-        gcc_o3_time = self.sysy_gcc_qemu(test_case_path, self.target)
-        # self.result.qemu_run_time[test_case_path] = (compiler_time, gcc_o3_time)
+        test_case_path = os.path.join(self.tests_path, self.year, test_kind, filename)
+        self.sysy_compiler_qemu(test_case_path, self.target)
+        self.sysy_gcc_qemu(test_case_path, self.target)
         # self.result.print_result_overview()
         for type in ResultType:
             if len(self.result.cases_result[type]) > 0:
                 self.result.print_result(type)
+        pass
 
     def sysy_compiler_qemu(self, src: str, target: str = "riscv"):
         if os.path.exists(src) is False:
@@ -229,12 +280,18 @@ class Test:
             return False
         filename = os.path.basename(src)
         raw_name = os.path.splitext(filename)[0]  # abc.sy -> abc
-        output_exe = os.path.join(output_exe_path, raw_name)
-        output_asm = os.path.join(output_asm_path, raw_name + ".s")
+        output_exe = os.path.join(self.output_exe_path, raw_name)
+        output_asm = os.path.join(self.output_asm_path, raw_name + ".s")
 
         try:
             run_compiler_process = run_compiler(
-                src, target, output_asm, timeout=self.timeout
+                self.compiler_path,
+                src,
+                target,
+                output_asm,
+                opt_level=self.opt_level,
+                log_level=self.log_level,
+                timeout=self.timeout,
             )
         except subprocess.TimeoutExpired:
             print(Fore.RED + f"Test {src} run_compiler timeout")
@@ -242,7 +299,10 @@ class Test:
                 (
                     src,
                     subprocess.CompletedProcess(
-                        [compiler_path, "-S", "-o", output_asm, src, "-O1"], 124, "", ""
+                        [self.compiler_path, "-S", "-o", output_asm, src, "-O1"],
+                        124,
+                        "",
+                        "",
                     ),
                 )
             )
@@ -256,7 +316,7 @@ class Test:
 
         try:
             link_executable_process = link_executable(
-                output_asm, target, output_exe, timeout=self.timeout
+                output_asm, target, output_exe, self.runtime, timeout=self.timeout
             )
         except subprocess.TimeoutExpired:
             print(Fore.RED + f"Test {src} link_executable timeout")
@@ -294,7 +354,7 @@ class Test:
             )
         else:
             self.result.qemu_run_time[src] = (time_used, 0)
-            
+
         self.result.cases_result[ResultType.PASSED].append((src, process))
         return res
 
@@ -305,16 +365,16 @@ class Test:
         # src_cpath = removePathSuffix(src_path) + ".c"
         src_filename = os.path.basename(src_path)  # path/to/abc.sy -> abc.sy
         src_cpath = os.path.join(
-            output_c_path, removePathSuffix(os.path.basename(src_path)) + ".c"
+            self.output_c_path, removePathSuffix(os.path.basename(src_path)) + ".c"
         )
         src_raw_name = os.path.splitext(src_filename)[0]  # abc.sy -> abc
         # path/to/output/abc
-        output_exe = os.path.join(output_exe_path, src_raw_name + "_gcc")
+        output_exe = os.path.join(self.output_exe_path, src_raw_name + "_gcc")
         # path/to/output/abc.s
-        output_asm = os.path.join(output_asm_path, src_raw_name + "_gcc" ".s")
+        output_asm = os.path.join(self.output_asm_path, src_raw_name + "_gcc" ".s")
 
         # prepare src_cpath
-        with open(sysy_link_for_riscv_gpp, "r", encoding="utf-8") as f:
+        with open(self.sysy_link_for_riscv_gpp, "r", encoding="utf-8") as f:
             link_code = f.read()
         with open(src_path, "r", encoding="utf-8") as f:
             sy_code = f.read()
@@ -325,7 +385,9 @@ class Test:
             src_cpath, target, output_asm, opt_level=3, timeout=self.timeout
         )
 
-        process = link_ricvgpp_executable(src_cpath, target, output_exe, timeout=self.timeout)
+        process = link_ricvgpp_executable(
+            src_cpath, target, output_exe, timeout=self.timeout
+        )
 
         res, process = run_executable(
             qemu_command + [output_exe], src_path, timeout=self.timeout
@@ -345,40 +407,9 @@ class Test:
         if os.path.exists(src_path) is False:
             print(f"Test file not found: {src_path}")
             return False
-        
+
         compiler_res = self.sysy_compiler_qemu(src_path, target)
         gcc_res = self.sysy_gcc_qemu(src_path, target)
         if not (compiler_res and gcc_res):
             raise Exception("Compiler or gcc failed")
         return compiler_res and gcc_res
-# test_instance = Test("riscv", "2023", "functional")
-# test_instance.run()
-# test_instance.run_single_case("2023/functional/75_max_flow.sy")
-# test_instance.run_single_case("2023/functional/00_main.sy")
-# test_instance.run_single_case("2023/functional/68_brainfk.sy")
-
-
-# test_instance = Test("riscv", "2023", "hidden_functional")
-# test_instance.run()
-# test_instance.run_single_case("2023/hidden_functional/23_json.sy")
-
-import time
-
-
-def submitTest():
-    # timeout = 5
-    test = Test("riscv", "2023", "functional")
-    test.run()
-    # test.run_single_case("2023/functional/00_main.sy")
-    # time.sleep(2)
-    Test("riscv", "2023", "hidden_functional").run()
-
-def perfTest():
-    perf_timeout = 20
-    test = Test("riscv", "2025", "performance", perf_timeout)
-    # test.run()
-    test.run_perf()
-    # test.run_single_case("2023/performance/00_bitset1.sy")
-if __name__ == "__main__":
-    # submitTest()
-    perfTest()

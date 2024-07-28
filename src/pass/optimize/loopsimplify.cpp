@@ -11,7 +11,7 @@ namespace pass {
 ir::BasicBlock* loopsimplify::insertUniqueBackedgeBlock(
     ir::Loop* L,
     ir::BasicBlock* preheader,
-    topAnalysisInfoManager* tp) {
+    TopAnalysisInfoManager* tp) {
   ir::BasicBlock* header = L->header();
   ir::Function* F = header->function();
 
@@ -70,7 +70,7 @@ ir::BasicBlock* loopsimplify::insertUniqueBackedgeBlock(
 
 ir::BasicBlock* loopsimplify::insertUniquePreheader(
     ir::Loop* L,
-    topAnalysisInfoManager* tp) {
+    TopAnalysisInfoManager* tp) {
   ir::BasicBlock* header = L->header();
   ir::Function* F = header->function();
   ir::BasicBlock* preheader = L->getlooppPredecessor();
@@ -141,7 +141,7 @@ ir::BasicBlock* loopsimplify::insertUniquePreheader(
 }
 
 void loopsimplify::insertUniqueExitBlock(ir::Loop* L,
-                                         topAnalysisInfoManager* tp) {
+                                         TopAnalysisInfoManager* tp) {
   ir::Function* F = L->header()->function();
   std::vector<ir::BasicBlock*> InLoopPred;
   for (ir::BasicBlock* exit : L->exits()) {
@@ -174,13 +174,15 @@ void loopsimplify::insertUniqueExitBlock(ir::Loop* L,
   return;
 }
 
-bool loopsimplify::simplifyOneLoop(ir::Loop* L, topAnalysisInfoManager* tp) {
+bool loopsimplify::simplifyOneLoop(ir::Loop* L, TopAnalysisInfoManager* tp) {
   bool changed = false;
-  if (L->isLoopSimplifyForm()) return false;
+  // if (L->isLoopSimplifyForm()) return false;
   // 如果有多条回边
+  //preheader不能为F的entry
+  ir::BasicBlock* entry = L->header()->function()->entry();
   ir::BasicBlock* preheader = L->getLoopPreheader();
   ir::BasicBlock* LoopLatch = L->getLoopLatch();
-  if (!preheader) {
+  if (!preheader || preheader == entry) {
     preheader = insertUniquePreheader(L, tp);
     if (preheader) changed = true;
   }
@@ -190,7 +192,7 @@ bool loopsimplify::simplifyOneLoop(ir::Loop* L, topAnalysisInfoManager* tp) {
     if (LoopLatch) changed = true;
   }
 
-  if (L->hasDedicatedExits()) {
+  if (!L->hasDedicatedExits()) {
     insertUniqueExitBlock(L, tp);
     changed = true;
   }
@@ -198,7 +200,7 @@ bool loopsimplify::simplifyOneLoop(ir::Loop* L, topAnalysisInfoManager* tp) {
   return changed;
 }
 
-void loopsimplify::run(ir::Function* func, topAnalysisInfoManager* tp) {
+void loopsimplify::run(ir::Function* func, TopAnalysisInfoManager* tp) {
   if (func->isOnlyDeclare()) return;
   loopInfo* LI = tp->getLoopInfo(func);
   LI->refresh();

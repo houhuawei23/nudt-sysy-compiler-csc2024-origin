@@ -1,7 +1,7 @@
 #include "pass/analysis/CFGAnalysis.hpp"
 
 namespace pass {
-void CFGAnalysis::run(ir::Module* ctx, topAnalysisInfoManager* tp) {
+void CFGAnalysis::run(ir::Module* ctx, TopAnalysisInfoManager* tp) {
     constexpr bool DebugCFG = false;
     for (auto func : ctx->funcs()) {
         for (auto bb : func->blocks()) {
@@ -15,7 +15,8 @@ void CFGAnalysis::run(ir::Module* ctx, topAnalysisInfoManager* tp) {
                 if (brInst->is_cond()) {
                     auto trueDst = brInst->iftrue();
                     auto falseDst = brInst->iffalse();
-                    bb->block_link(bb, trueDst); bb->block_link(bb, falseDst);
+                    bb->block_link(bb, trueDst);
+                    bb->block_link(bb, falseDst);
                 } else {
                     auto dst = brInst->dest();
                     bb->block_link(bb, dst);
@@ -36,7 +37,7 @@ void CFGAnalysis::dump(std::ostream& out, ir::Module* ctx) {
         out << "function " << func->name() << ": \n";
         for (auto bb : func->blocks()) {
             out << "\tblock " << bb->name() << ": \n";
-            
+
             out << "\t\tpre: ";
             for (auto pre : bb->pre_blocks()) {
                 out << pre->name() << " ";
@@ -54,4 +55,4 @@ void CFGAnalysis::dump(std::ostream& out, ir::Module* ctx) {
         out << "==============\n";
     }
 }
-}
+}  // namespace pass
