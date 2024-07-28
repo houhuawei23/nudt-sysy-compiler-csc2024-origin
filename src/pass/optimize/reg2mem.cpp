@@ -25,13 +25,14 @@ void Reg2Mem::getallphi(ir::Function* func) {
 void Reg2Mem::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     clear();
     getallphi(func);
+    ir::BasicBlock* entry = func->entry();
     for (ir::PhiInst* phiinst : allphi) {
         ir::AllocaInst* var = new ir::AllocaInst(phiinst->type());
         allocasToinsert.push_back(var);
         phiweb[phiinst] = var;
     }
     for (auto alloca : allocasToinsert) {
-        ir::BasicBlock* entry = func->entry();
+        
         entry->emplace_lastbutone_inst(alloca);
     }
     for (auto BB : phiblocks) {
@@ -53,11 +54,10 @@ void Reg2Mem::run(ir::Function* func, TopAnalysisInfoManager* tp) {
                     prebb = repalceBBmap[prebb];
                 }
                 ir::StoreInst* phistore = new ir::StoreInst(phival, variable);
-                if (prebb->next_blocks().size() == 1) {  // 如果前驱块只有一个后继，直接在前驱块末尾插入store
+                if ((prebb->next_blocks().size() == 1) && (prebb != entry)) {  // 如果前驱块只有一个后继，直接在前驱块末尾插入store
                     prebb->emplace_lastbutone_inst(phistore);
                     phistore->setBlock(prebb);
                 } else {  // 有多个后继则需要在前驱块与当前块中插入一个新的块，在新块中插入store与br指令
-
                     ir::BasicBlock* newbb = func->newBlock();
                     repalceBBmap[prebb] = newbb;
                     ir::BranchInst* br = new ir::BranchInst(BB);
