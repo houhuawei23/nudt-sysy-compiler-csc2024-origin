@@ -50,6 +50,7 @@ class TopAnalysisInfoManager {
   ir::Module* mModule;
   // ir::Module info
   callGraph* mCallGraph;
+  sideEffectInfo* mSideEffectInfo;
   // ir::Function info
   std::unordered_map<ir::Function*, domTree*> mDomTree;
   std::unordered_map<ir::Function*, pdomTree*> mPDomTree;
@@ -75,7 +76,10 @@ class TopAnalysisInfoManager {
     return mIndVarInfo[func]; 
   }
 
+
   callGraph* getCallGraph() { return mCallGraph; }
+  sideEffectInfo* getSideEffectInfo(){ return mSideEffectInfo;}
+  
   void initialize();
   void CFGChange(ir::Function* func) {
     if (func->isOnlyDeclare()) return;
