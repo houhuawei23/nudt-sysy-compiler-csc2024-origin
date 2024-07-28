@@ -149,6 +149,7 @@ public:  // check function
   bool isMemory();
   bool isNoName();
   bool isAggressiveAlive();
+  bool hasSideEffect();
   static bool classof(const Value* v) { return v->valueId() >= vINSTRUCTION; }
 public:
   void virtual print(std::ostream& os) const = 0;

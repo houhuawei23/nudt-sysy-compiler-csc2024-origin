@@ -1,16 +1,24 @@
 #include "pass/optimize/DLE.hpp"
 using namespace pass;
 
-static::std::unordered_map<ir::Value*,ir::LoadInst*>loadedPtrSet;
+static std::unordered_map<ir::Value*,ir::LoadInst*>loadedPtrSet;
+static std::set<ir::LoadInst*>removeInsts;
+static std::unordered_map<ir::Value*,ir::Value*>ptrToValue;
 
 void simpleDLE::run(ir::BasicBlock* bb,TopAnalysisInfoManager* tp){
     loadedPtrSet.clear();
+    removeInsts.clear();
+    ptrToValue.clear();
     for(auto inst:bb->insts()){
         if(auto loadInst=dyn_cast<ir::LoadInst>(inst)){
-            if(loadedPtrSet.count(loadInst->ptr())){
+            if(ptrToValue.count(loadInst->ptr())){
+                loadInst->replaceAllUseWith(ptrToValue[loadInst->ptr()]);
+                removeInsts.insert(loadInst);
+            }
+            else if(loadedPtrSet.count(loadInst->ptr())){
                 auto oldLoadInst=loadedPtrSet[loadInst->ptr()];
                 loadInst->replaceAllUseWith(oldLoadInst);
-                bb->delete_inst(loadInst);
+                removeInsts.insert(loadInst);
             }
             else{
                 loadedPtrSet[loadInst->ptr()]=loadInst;
@@ -18,6 +26,12 @@ void simpleDLE::run(ir::BasicBlock* bb,TopAnalysisInfoManager* tp){
         }
         else if(auto storeInst=dyn_cast<ir::StoreInst>(inst)){
             loadedPtrSet.erase(storeInst->ptr());
+            ptrToValue[storeInst->ptr()]=storeInst->value();
         }
+    }
+    if(removeInsts.size()==0)return;
+    std::cerr<<"Delete "<<removeInsts.size()<<" load insts."<<std::endl;
+    for(auto inst:removeInsts){
+        bb->delete_inst(inst);
     }
 }

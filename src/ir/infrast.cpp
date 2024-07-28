@@ -197,6 +197,11 @@ bool Instruction::isAggressiveAlive() {
   return mValueId == vSTORE or mValueId == vCALL or mValueId == vMEMSET or
          mValueId == vRETURN;
 }
+bool Instruction::hasSideEffect() {
+  if(mValueId == vSTORE or mValueId == vMEMSET or mValueId == vRETURN)return true;
+  return false;// 默认call没有
+  
+}
 
 // TODO: need modify, use builder to create inst
 Instruction* Instruction::copy_inst(std::function<Value*(Value*)> getValue) {

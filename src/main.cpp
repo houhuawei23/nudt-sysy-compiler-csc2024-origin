@@ -84,17 +84,26 @@ int main(int argc, char* argv[]) {
   for (auto fun : module_ir->funcs()) {
     if (fun->isOnlyDeclare()) continue;
     auto dom_ctx = tAIM->getDomTree(fun);
+    // dom_ctx->setOff();
     dom_ctx->refresh();
     dom_ctx->BFSDomTreeInfoRefresh();
     auto dom_vec = dom_ctx->BFSDomTreeVector();
 
     if (DebugDomBFS) {
       for (auto bb : dom_ctx->BFSDomTreeVector()) {
-        std::cerr << bb->name() << " ";
+        std::cerr << bb->name() << " "<< bb->insts().size() <<std::endl;
+        for(auto bbdomson : dom_ctx->domson(bb)){
+          std::cerr << bbdomson->name() << " " << bbdomson->insts().size() << " ";
+        }
+        std::cerr<<std::endl;
+      }
+      for (auto bb : fun->blocks()) {
+        std::cerr << bb->name() << " "<<bb->insts().size()<<std::endl;
       }
       std::cerr << "\n";
     }
   }
+
   if (config.genASM) {
     auto target = mir::RISCVTarget();
     auto mir_module = mir::createMIRModule(*module_ir, target, tAIM);
