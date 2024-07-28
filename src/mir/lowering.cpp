@@ -404,31 +404,32 @@ void createMIRFunction(ir::Function* ir_func,
   // std::cerr << "000" << std::endl;
   // for (auto block : ir_func->blocks()) {
   //   std::cerr << "block: " << block->name()
-  //             << ", size: " << block->insts().size() << "addr: " << block
+  //             << ", size: " << block->insts().size() << ", addr: " << block
   //             << std::endl;
   // }
 
   // std::cerr << "111" << std::endl;
   // for (auto block : irBlocks) {
+  //   // assert(block->insts().size() > 0);
   //   std::cerr << "block: " << block->name()
-  //             << ", size: " << block->insts().size() << "addr: " << block
+  //             << ", size: " << block->insts().size() << ", addr: " << block
   //             << std::endl;
   // }
   // std::cerr << "222" << std::endl;
 
-  for (auto block : ir_func->blocks()) {
-    if (std::find(irBlocks.begin(), irBlocks.end(), block) == irBlocks.end()) {
-      // std::cerr << "Some Blocks are not in dom tree" << std::endl;
-      // std::cerr << block->name() << "size: " << block->insts().size()
-      //           << "addr: " << block << std::endl;
-      irBlocks.push_back(block);
-    }
-  }
+  // for (auto block : ir_func->blocks()) {
+  //   if (std::find(irBlocks.begin(), irBlocks.end(), block) == irBlocks.end()) {
+  //     std::cerr << "Some Blocks are not in dom tree" << std::endl;
+  //     std::cerr << block->name() << "size: " << block->insts().size()
+  //               << ", addr: " << block << std::endl;
+  //     irBlocks.push_back(block);
+  //   }
+  // }
   // std::cerr << "333" << std::endl;
   // std::cerr << "irBlocks size: " << irBlocks.size() << std::endl;
   // for (auto block : irBlocks) {
   //   std::cerr << "block: " << block->name()
-  //             << ", size: " << block->insts().size() << "addr: " << block
+  //             << ", size: " << block->insts().size() << ", addr: " << block
   //             << std::endl;
   // }
 

@@ -245,6 +245,7 @@ class Test:
             ".sy",
             lambda x: self.sysy_compiler_qemu(x, self.target),
         )
+        print(f"\nTest {self.year} {test_kind} {self.target} -O{self.opt_level} -L{self.log_level}")
         self.result.print_result_overview()
         dt_string = datetime.now().strftime("%Y_%m_%d_%H:%M")
         self.result.save_result(f"./{self.year}_{test_kind}_{dt_string}.md")

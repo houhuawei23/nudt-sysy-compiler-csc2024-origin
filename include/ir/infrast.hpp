@@ -12,16 +12,16 @@ namespace ir {
  * 当在所述函数体中使用时，参数当然代表调用该函数的实际参数的值。
  */
 class Argument : public Value {
- protected:
+protected:
   Function* mFunction;
   size_t mIndex;
 
- public:
+public:
   Argument(Type* type,
            size_t index,
            Function* parent = nullptr,
            const_str_ref name = "")
-      : Value(type, vARGUMENT, name), mIndex(index), mFunction(parent) {}
+    : Value(type, vARGUMENT, name), mIndex(index), mFunction(parent) {}
 
   auto function() const { return mFunction; }
 
@@ -41,7 +41,6 @@ class Argument : public Value {
 class BasicBlock : public Value {
   // mType: TypeLabel()
 
-
 protected:
   Function* mFunction;
   inst_list mInsts;
@@ -56,9 +55,9 @@ protected:
 
   size_t mIdx = 0;
 
- public:
+public:
   BasicBlock(const_str_ref name = "", Function* parent = nullptr)
-      : Value(Type::TypeLabel(), vBASIC_BLOCK, name), mFunction(parent){};
+    : Value(Type::TypeLabel(), vBASIC_BLOCK, name), mFunction(parent) {};
   auto idx() const { return mIdx; }
   void set_idx(uint32_t idx) { mIdx = idx; }
   /* must override */
@@ -98,8 +97,7 @@ protected:
   auto terminator() { return mInsts.back(); }
   static void BasicBlockDfs(BasicBlock* bb,
                             std::function<bool(BasicBlock*)> func) {
-    if (func(bb))
-      return;
+    if (func(bb)) return;
     for (auto succ : bb->next_blocks())
       BasicBlockDfs(succ, func);
   }
@@ -131,16 +129,22 @@ public:  // for CFG
 class Instruction : public User {
 protected:
   BasicBlock* mBlock;
+
 public:
   // Construct a new Instruction object
-  Instruction(ValueId itype=vINSTRUCTION, Type* ret_type=Type::void_type(),
-              BasicBlock* pblock=nullptr, const_str_ref name="")
-      : User(ret_type, itype, name), mBlock(pblock) {}
+  Instruction(ValueId itype = vINSTRUCTION,
+              Type* ret_type = Type::void_type(),
+              BasicBlock* pblock = nullptr,
+              const_str_ref name = "")
+    : User(ret_type, itype, name), mBlock(pblock) {}
+
 public:  // get function
   auto block() const { return mBlock; }
+
 public:  // set function
   void setBlock(BasicBlock* parent) { mBlock = parent; }
   void setvarname();
+
 public:  // check function
   bool isTerminator();
   bool isUnary();
@@ -151,10 +155,11 @@ public:  // check function
   bool isAggressiveAlive();
   bool hasSideEffect();
   static bool classof(const Value* v) { return v->valueId() >= vINSTRUCTION; }
+
 public:
   void virtual print(std::ostream& os) const = 0;
   virtual Value* getConstantRepl() { return nullptr; };
-  Instruction* copy_inst(std::function<Value*(Value*)> getValue);
+  virtual Instruction* copy(std::function<Value*(Value*)> getValue) const = 0;
 };
 
 }  // namespace ir
