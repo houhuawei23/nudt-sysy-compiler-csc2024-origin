@@ -69,6 +69,10 @@ namespace pass{
             bool bbOK=checkDefUse(bb);
             for(auto inst:bb->insts()){
                 bbOK=bbOK and checkDefUse(inst);
+                if(bb==func->entry() and (inst->valueId()!=ir::vALLOCA or inst->valueId()!=ir::vBR)){
+                    isPass=false;
+                    cerr<<"Entry block has non-alloca inst!"<<endl;
+                }
                 if(inst->valueId()==ir::vALLOCA and bb!=func->entry()){
                     isPass=false;
                     cerr<<"AllocaInst occur in BB:\""<<bb->name()<<"\" but it's not entry block!"<<endl;

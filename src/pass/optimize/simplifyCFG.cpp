@@ -104,6 +104,7 @@ namespace pass{
         bool ischanged=false;
         for(auto bb:func->blocks()){
             // func->print(std::cout);
+            if(bb==func->entry())continue;
             auto mergeBlock=getMergeBlock(bb);
             while(mergeBlock){
                 if(mergeBlock==func->exit())func->setExit(bb);
