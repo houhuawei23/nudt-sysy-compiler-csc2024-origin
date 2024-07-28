@@ -95,8 +95,8 @@ void Config::parseTestArgs(int argc, char* argv[]) {
 // clang-format off
 static const auto perfPassesList = std::vector<std::string>{
   "mem2reg",  //
-  // "simplifycfg", //error in backend CFGAnalysis.successors
-  // "instcombine",  //
+  // // "simplifycfg", //error in backend CFGAnalysis.successors
+  "instcombine",  //
   "adce",     // passed all functional
   "inline",   // segfault on 60_sort_test6/69_expr_eval/...
   "tco",      // tail call optimization

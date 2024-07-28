@@ -173,7 +173,7 @@ Function* Function::copy_func() {
     vis.insert(bb);
     auto bbCpy = dyn_cast<BasicBlock>(ValueCopy[bb]);
     for (auto inst : bb->insts()) {
-      auto copyinst = inst->copy_inst(getValue);
+      auto copyinst = inst->copy(getValue);
       copyinst->setBlock(bbCpy);
       ValueCopy[inst] = copyinst;
       bbCpy->emplace_back_inst(copyinst);

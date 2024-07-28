@@ -48,12 +48,12 @@ class TestResult:
         for type in ResultType:
             print(colorMap[type] + f"{type.name}: {len(self.cases_result[type])}")
         print()
-        for type in ResultType:
-            if type == ResultType.PASSED:
-                continue
-            if len(self.cases_result[type]) == 0:
-                continue
-            self.print_result(type)
+        # for type in ResultType:
+        #     if type == ResultType.PASSED:
+        #         continue
+        #     if len(self.cases_result[type]) == 0:
+        #         continue
+        #     self.print_result(type)
 
     def all_cases(self):
         all = []
