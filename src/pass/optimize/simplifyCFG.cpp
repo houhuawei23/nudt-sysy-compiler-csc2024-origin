@@ -18,18 +18,21 @@ void simplifyCFG::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     bool isWhile = true;
     while (isWhile) {
         isWhile = false;
-        isWhile |= removeNoPreBlock(func);
-        isWhile |= MergeBlock(func);
-        isWhile |= removeSingleIncomingPhi(func);
+        isWhile = isWhile or removeNoPreBlock(func);
+        isWhile = isWhile or MergeBlock(func);
+        isWhile = isWhile or removeSingleIncomingPhi(func);
         // func->rename();
         // func->print(std::cerr);
-        isWhile |= removeSingleBrBlock(func);
+        isWhile = isWhile or removeSingleBrBlock(func);
         // func->rename();
         // func->print(std::cerr);
         isChange = isWhile or isChange;
     }
 
-    if (isChange) tp->CFGChange(func);
+    if (isChange){
+        tp->CFGChange(func);
+        tp->CallChange();
+    } 
 }
 // condition 1
 // 移除所有没有从前驱和从末尾不可达的块
@@ -181,8 +184,8 @@ bool simplifyCFG::removeSingleBrBlock(ir::Function* func) {
     for (auto bb : func->blocks()) {  // 找出所有的单br块
         if (getSingleDest(bb)) worklist.push_back(bb);
     }
-
     while (not worklist.empty()) {
+        ischanged=true;
         auto curBB = worklist.back();
         worklist.pop_back();
         auto destBB = curBB->next_blocks().front();

@@ -76,6 +76,7 @@ class domTree : public FunctionACtx {
         _domson.clear();
         _domfrontier.clear();
         _domlevel.clear();
+        _BFSDomTreeVector.clear();
     }
     void initialize() {
         clearAll();
