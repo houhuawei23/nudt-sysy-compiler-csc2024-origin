@@ -49,7 +49,9 @@ std::unordered_map<MIROperand, uint32_t, MIROperandHasher> collectDefCount(MIRFu
  */
 bool EliminateStackLoads(MIRFunction& mfunc, CodeGenContext& ctx) {
     /* Eliminate Stack Loads: 需要在寄存器分配之前进行优化处理  */
+    std::cerr << "111\n";
     if (!ctx.registerInfo || ctx.flags.preRA) return false;
+    std::cerr << "begin eliminating stack loads\n";
     bool modified = false;
     for (auto& block : mfunc.blocks()) {
         auto& instructions = block->insts();
@@ -284,8 +286,67 @@ bool EliminateUnusedInst(MIRFunction& mfunc, CodeGenContext& ctx) {
     }
     return !remove.empty();
 }
-bool applySSAPropagation(MIRFunction& func, CodeGenContext& ctx) {
-    return false;
+
+/*
+ * @brief: ApplySSAPropagation
+ * @note: 
+ *    注意, 这是针对于MIR级别的优化
+ *    对于加载常数的虚拟寄存器, 在后续指令中, 可能会有多个copy指令, 我们以此消除中间商
+ * @details: 
+ *    SSA是一种常见的中间表示形式, 它使得变量在每个函数中只被赋值一次
+ *    这有助于进行更有效的优化, 比如常量传播和死代码消除等等
+ */
+bool ApplySSAPropagation(MIRFunction& mfunc, CodeGenContext& ctx) {
+    if (!ctx.flags.inSSAForm) return false;
+    bool modified = false;
+    auto DefCount = collectDefCount(mfunc, ctx);
+    
+    /* LoadConstant Instruction */
+    std::unordered_set<MIROperand, MIROperandHasher> constants;
+    for (auto& block : mfunc.blocks()) {
+        for (auto inst : block->insts()) {
+            auto& instInfo = ctx.instInfo.getInstInfo(inst);
+            if (requireFlag(instInfo.inst_flag(), InstFlagLoadConstant)) {
+                auto& dst = inst->operand(0);
+                if (isOperandVReg(dst) && DefCount[dst] <= 1) {
+                    constants.insert(dst);
+                }
+            }
+        }
+    }
+
+    /* Copy Instruction */
+    std::unordered_map<MIROperand, MIROperand, MIROperandHasher> copy;  /* dst -> src (加载常数的虚拟寄存器) */
+    for (auto& block : mfunc.blocks()) {
+        for (auto inst : block->insts()) {
+            MIROperand dst, src;
+            if (ctx.instInfo.matchCopy(inst, dst, src) && isOperandVReg(dst) && isOperandVReg(src) && constants.count(src)) {
+                if (DefCount[dst] <= 1 && DefCount[src] <= 1) {
+                    copy[dst] = src;
+                }
+            }
+        }
+    }
+
+    /* 消除指令中的中间商 */
+    if (copy.empty()) return false;
+    for (auto& block : mfunc.blocks()) {
+        auto& instructions = block->insts();
+        for (auto inst : instructions) {
+            auto& instInfo = ctx.instInfo.getInstInfo(inst);
+            for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
+                if (instInfo.operand_flag(idx) & OperandFlagUse) {
+                    auto& op = inst->operand(idx);
+                    if (auto iter = copy.find(op); iter != copy.cend()) {
+                        op = iter->second;
+                        modified = true;
+                    }
+                }
+            }
+        }
+    }
+
+    return modified;
 }
 
 /*
@@ -662,12 +723,12 @@ bool genericPeepholeOpt(MIRFunction& func, CodeGenContext& ctx) {
     // modified |= EliminateIndirectCopy(func, ctx);
     // modified |= EliminateUnusedCopy(func, ctx);
     // modified |= removeUnusedInsts(func, ctx);
-    // modified |= applySSAPropagation(func, ctx);
+    // modified |= ApplySSAPropagation(func, ctx);
     // modified |= EliminateConstantLoads(func, ctx);
     // modified |= ConstantHoist(func, ctx);
     // modified |= EliminateRedundantInst(func, ctx);
-    modified |= DeadInstElimination(func, ctx);
-    modified |= EliminateInvisibleInsts(func, ctx);
+    // modified |= DeadInstElimination(func, ctx);
+    // modified |= EliminateInvisibleInsts(func, ctx);
     // modified |= ctx.scheduleModel->peepholeOpt(func, ctx);
     return modified;
 }

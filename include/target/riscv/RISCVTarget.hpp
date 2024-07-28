@@ -103,7 +103,7 @@ public:  // get function
   }
   std::vector<uint32_t>& get_allocation_list(uint32_t classId);
   OperandType getCanonicalizedRegisterTypeForClass(uint32_t classId) {
-    return classId == 0 ? OperandType::Int32 : OperandType::Float32;
+    return classId == 0 ? OperandType::Int64 : OperandType::Float32;
   }
   OperandType getCanonicalizedRegisterType(OperandType type) {
     switch (type) {
@@ -130,7 +130,6 @@ public:  // get function
   }
   MIROperand get_return_address_register() { return RISCV::ra; }
   MIROperand get_stack_pointer_register() { return RISCV::sp; }
-
 public:  // check function
   bool is_legal_isa_reg_operand(MIROperand& op) {
     std::cerr << "Not Impl is_legal_isa_reg_operand" << std::endl;
