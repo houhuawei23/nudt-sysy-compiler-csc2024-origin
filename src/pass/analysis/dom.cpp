@@ -221,6 +221,7 @@ void domFrontierGen::run(ir::Function* func, TopAnalysisInfoManager* tp) {
 // debug info print pass
 void domInfoCheck::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     if (func->isOnlyDeclare()) return;
+    func->rename();
     domctx = tp->getDomTree(func);
     using namespace std;
     cout << "In Function \"" << func->name() << "\"" << endl;
@@ -277,9 +278,15 @@ void domInfoCheck::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     domctx->BFSDomTreeInfoRefresh();
     cout << "BFSDomTreeVector:" << endl;
     for (auto bb : domctx->BFSDomTreeVector()) {
-        cout << bb->name() << "\t";
+        cout << bb->name() << ":" << bb->insts().size() << "\t";
     }
     cout << endl << endl;
+
+    cout << "BBs:" << endl;
+    for (auto bb : func->blocks()) {
+        cout << bb->name() << ":" << bb->insts().size() << "\t";
+    }
+    cout << endl << endl;    
 }
 
 void domInfoPass::run(ir::Function* func, TopAnalysisInfoManager* tp) {
