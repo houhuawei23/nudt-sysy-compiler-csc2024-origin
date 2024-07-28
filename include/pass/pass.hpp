@@ -3,14 +3,16 @@
 #include "ir/ir.hpp"
 #include "pass/analysisinfo.hpp"
 
+#include <chrono>
 namespace pass {
 
 //! Pass Template
 template <typename PassUnit>
 class Pass {
-  public:
+public:
   // pure virtual function, define the api
   virtual void run(PassUnit* pass_unit, TopAnalysisInfoManager* tp) = 0;
+  virtual std::string name() const = 0;
 };
 
 // Instantiate Pass Class for Module, Function and BB
@@ -22,31 +24,19 @@ class PassManager {
   ir::Module* irModule;
   pass::TopAnalysisInfoManager* tAIM;
 
-  public:
+public:
   PassManager(ir::Module* pm, TopAnalysisInfoManager* tp) {
     irModule = pm;
     tAIM = tp;
   }
-  void run(ModulePass* mp) { mp->run(irModule, tAIM); }
-  void run(FunctionPass* fp) {
-    for (auto func : irModule->funcs()) {
-      if (func->isOnlyDeclare()) continue;
-      fp->run(func, tAIM);
-    }
-  }
-  void run(BasicBlockPass* bp) {
-    for (auto func : irModule->funcs()) {
-      for (auto bb : func->blocks()) {
-        bp->run(bb, tAIM);
-      }
-    }
-  }
+  void run(ModulePass* mp);
+  void run(FunctionPass* fp);
+  void run(BasicBlockPass* bp);
   void runPasses(std::vector<std::string> passes);
-
 };
 
 class TopAnalysisInfoManager {
-  private:
+private:
   ir::Module* mModule;
   // ir::Module info
   callGraph* mCallGraph;
@@ -56,7 +46,7 @@ class TopAnalysisInfoManager {
   std::unordered_map<ir::Function*, loopInfo*> mLoopInfo;
   std::unordered_map<ir::Function*, indVarInfo*> mIndVarInfo;
   // bb info
-  public:
+public:
   TopAnalysisInfoManager(ir::Module* pm) : mModule(pm), mCallGraph(nullptr) {}
   domTree* getDomTree(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
@@ -70,9 +60,9 @@ class TopAnalysisInfoManager {
     if (func->isOnlyDeclare()) return nullptr;
     return mLoopInfo[func];
   }
-  indVarInfo* getIndVarInfo(ir::Function* func) { 
+  indVarInfo* getIndVarInfo(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
-    return mIndVarInfo[func]; 
+    return mIndVarInfo[func];
   }
 
   callGraph* getCallGraph() { return mCallGraph; }
@@ -84,9 +74,9 @@ class TopAnalysisInfoManager {
     mLoopInfo[func]->setOff();
   }
   void CallChange() { mCallGraph->setOff(); }
-  void IndVarChange(ir::Function* func) { 
+  void IndVarChange(ir::Function* func) {
     if (func->isOnlyDeclare()) return;
-    mIndVarInfo[func]->setOff(); 
+    mIndVarInfo[func]->setOff();
   }
 };
 

@@ -97,6 +97,16 @@ cmake --build build
 ## useful commands
 
 ```bash
+sudo apt-get install -y graphviz
+
+opt-14 -dot-cfg -disable-output -enable-new-pm=0 simplifycfg.ll
+
+dot -Tpng -o without.png .main.dot
+
+```
+
+
+```bash
 # clang
 ## gen llvm ir
 clang -S -emit-llvm test.c 

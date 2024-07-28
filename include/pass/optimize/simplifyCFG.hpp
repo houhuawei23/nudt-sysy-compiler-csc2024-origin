@@ -10,15 +10,16 @@
 
 namespace pass {
 class simplifyCFG : public FunctionPass {
-  public:
-    void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
+public:
+  void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
+  std::string name() const override { return "simplifyCFG"; }
 
-  private:
-    bool getSingleDest(ir::BasicBlock* bb);
-    ir::BasicBlock* getMergeBlock(ir::BasicBlock* bb);
-    bool MergeBlock(ir::Function* func);
-    bool removeNoPreBlock(ir::Function* func);
-    bool removeSingleBrBlock(ir::Function* func);
-    bool removeSingleIncomingPhi(ir::Function* func);
+private:
+  bool getSingleDest(ir::BasicBlock* bb);
+  ir::BasicBlock* getMergeBlock(ir::BasicBlock* bb);
+  bool MergeBlock(ir::Function* func);
+  bool removeNoPreBlock(ir::Function* func);
+  bool removeSingleBrBlock(ir::Function* func);
+  bool removeSingleIncomingPhi(ir::Function* func);
 };
 }  // namespace pass
