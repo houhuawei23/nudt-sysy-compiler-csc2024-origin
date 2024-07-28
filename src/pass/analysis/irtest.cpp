@@ -71,7 +71,7 @@ bool irCheck::checkDefUse(ir::Value* val) {
             bool bbOK=checkDefUse(bb);
             for(auto inst:bb->insts()){
                 bbOK=bbOK and checkDefUse(inst);
-                if(bb==func->entry() and (inst->valueId()!=ir::vALLOCA or inst->valueId()!=ir::vBR)){
+                if(bb==func->entry() and (inst->valueId()!=ir::vALLOCA and inst->valueId()!=ir::vBR)){
                     isPass=false;
                     cerr<<"Entry block has non-alloca inst!"<<endl;
                 }
@@ -83,15 +83,15 @@ bool irCheck::checkDefUse(ir::Value* val) {
                     isPass=false;
                     cerr<<"Inst in BB:\""<<bb->name()<<"\" and can't match its parent block!"<<endl;
                 }
+                if (not bbOK) {
+                    isPass = false;
+                    cerr << "Error occur in BB:\"" << bb->name() << "\"!" << endl;
+                }
+            
             }
         }
-        if (not bbOK) {
-            isPass = false;
-            cerr << "Error occur in BB:\"" << bb->name() << "\"!" << endl;
-        }
+        return isPass;
     }
-    return isPass;
-}
 
 bool irCheck::checkPhi(ir::PhiInst* phi) {
     bool isPass = true;
