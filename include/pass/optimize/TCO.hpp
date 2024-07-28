@@ -11,7 +11,7 @@
 namespace pass{
     class tailCallOpt : public FunctionPass{
         public:
-            void run(ir::Function* func, topAnalysisInfoManager* tp)override;
+            void run(ir::Function* func, TopAnalysisInfoManager* tp)override;
         private:
             bool is_tail_rec(ir::Instruction* inst,ir::Function* func);
             bool is_tail_call(ir::Instruction* inst,ir::Function* func);

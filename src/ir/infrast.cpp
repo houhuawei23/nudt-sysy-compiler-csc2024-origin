@@ -197,93 +197,10 @@ bool Instruction::isAggressiveAlive() {
   return mValueId == vSTORE or mValueId == vCALL or mValueId == vMEMSET or
          mValueId == vRETURN;
 }
-
-// TODO: need modify, use builder to create inst
-Instruction* Instruction::copy_inst(std::function<Value*(Value*)> getValue) {
-  if (auto allocainst = dyn_cast<AllocaInst>(this)) {
-    if (allocainst->isScalar()) {
-      auto inst = utils::make<AllocaInst>(allocainst->baseType());
-      inst->setComment(allocainst->comment());
-      return inst;
-    } else {
-      auto basetype = dyn_cast<ArrayType>(allocainst->baseType());
-      auto capacity = basetype->size();
-      auto inst = utils::make<AllocaInst>(
-        basetype->baseType(), basetype->dims(), nullptr, "", false, capacity);
-      inst->setComment(allocainst->comment());
-      return inst;
-    }
-  } else if (auto storeinst = dyn_cast<StoreInst>(this)) {
-    auto value = getValue(storeinst->operand(0));
-    auto addr = getValue(storeinst->operand(1));
-    return utils::make<StoreInst>(value, addr);
-  } else if (auto loadinst = dyn_cast<LoadInst>(this)) {
-    auto ptr = getValue(loadinst->ptr());
-    return utils::make<LoadInst>(ptr, loadinst->type(), nullptr);
-  } else if (auto returninst = dyn_cast<ReturnInst>(this)) {
-    return utils::make<ReturnInst>(getValue(returninst->returnValue()));
-  } else if (auto unaryinst = dyn_cast<UnaryInst>(this)) {
-    auto value = getValue(unaryinst->value());
-    return utils::make<UnaryInst>(unaryinst->valueId(), unaryinst->type(),
-                                  value);
-  } else if (auto binaryinst = dyn_cast<BinaryInst>(this)) {
-    auto lhs = getValue(binaryinst->lValue());
-    auto rhs = getValue(binaryinst->rValue());
-    return utils::make<BinaryInst>(binaryinst->valueId(), binaryinst->type(),
-                                   lhs, rhs, nullptr);
-  } else if (auto callinst = dyn_cast<CallInst>(this)) {
-    auto callee = callinst->callee();
-    std::vector<Value*> args;
-    for (auto arg : callinst->rargs()) {
-      args.push_back(getValue(arg->value()));
-    }
-    return utils::make<CallInst>(callee, args);
-  } else if (auto branchinst = dyn_cast<BranchInst>(this)) {
-    if (branchinst->is_cond()) {
-      auto cond = getValue(branchinst->cond());
-      auto true_bb = dyn_cast<BasicBlock>(getValue(branchinst->iftrue()));
-      auto false_bb = dyn_cast<BasicBlock>(getValue(branchinst->iffalse()));
-      return utils::make<BranchInst>(cond, true_bb, false_bb);
-    } else {
-      auto dest_bb = dyn_cast<BasicBlock>(getValue(branchinst->dest()));
-      return utils::make<BranchInst>(dest_bb);
-    }
-  } else if (auto icmpinst = dyn_cast<ICmpInst>(this)) {
-    auto lhs = getValue(icmpinst->lhs());
-    auto rhs = getValue(icmpinst->rhs());
-    return utils::make<ICmpInst>(icmpinst->valueId(), lhs, rhs, nullptr);
-  } else if (auto fcmpinst = dyn_cast<FCmpInst>(this)) {
-    auto lhs = getValue(fcmpinst->lhs());
-    auto rhs = getValue(fcmpinst->rhs());
-    return utils::make<FCmpInst>(fcmpinst->valueId(), lhs, rhs, nullptr);
-  } else if (auto bitcastinst = dyn_cast<BitCastInst>(this)) {
-    auto value = getValue(bitcastinst->value());
-    return utils::make<BitCastInst>(bitcastinst->type(), value, nullptr);
-  } else if (auto memsetinst = dyn_cast<MemsetInst>(this)) {
-    auto value = getValue(memsetinst->value());
-    return utils::make<MemsetInst>(memsetinst->type(), value, nullptr);
-  } else if (auto getelemenptrinst = dyn_cast<GetElementPtrInst>(this)) {
-    auto value = getValue(getelemenptrinst->value());
-    auto idx = getValue(getelemenptrinst->index());
-    if (getelemenptrinst->getid() == 0) {
-      auto basetype = getelemenptrinst->baseType();
-      return utils::make<GetElementPtrInst>(basetype, value, idx);
-    } else if (getelemenptrinst->getid() == 1) {
-      auto basetype = dyn_cast<ArrayType>(getelemenptrinst->baseType());
-      std::vector<size_t> dims = basetype->dims();
-      auto curdims = getelemenptrinst->cur_dims();
-      return utils::make<GetElementPtrInst>(basetype->baseType(), value, idx,
-                                            dims, curdims);
-    } else {
-      auto basetype = getelemenptrinst->baseType();
-      auto curdims = getelemenptrinst->cur_dims();
-      return utils::make<GetElementPtrInst>(basetype, value, idx, curdims);
-    }
-  } else if (auto phiinst = dyn_cast<PhiInst>(this)) {
-    return utils::make<PhiInst>(nullptr, phiinst->type());
-  } else {
-    assert(false and "not support inst type");
-    return nullptr;
-  }
+bool Instruction::hasSideEffect() {
+  if(mValueId == vSTORE or mValueId == vMEMSET or mValueId == vRETURN)return true;
+  return false;// 默认call没有
+  
 }
+
 }  // namespace ir

@@ -9,6 +9,14 @@ from colorama import Fore, Style
 def isZero(x):
     return abs(x) < 1e-5
 
+
+def safeDivide(x, y):
+    if isZero(y):
+        return 0
+    else:
+        return x / y
+
+
 def removePathSuffix(filename: str):
     """
     basename("a/b/c.txt") => "a/b/c"

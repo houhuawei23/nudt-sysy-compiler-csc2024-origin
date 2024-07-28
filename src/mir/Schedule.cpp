@@ -35,7 +35,7 @@ static void topDownScheduling(
   MIRInstList scheduledInsts; /* scheduled Insts */
 
   ScheduleState state{renameMap};
-  std::list<MIRInst*> schedulePlane; /* ready to schedule insts */
+  MIRInstList schedulePlane; /* ready to schedule insts */
 
   for (auto& inst : block.insts()) {
     if (degrees[inst] == 0) {
@@ -69,7 +69,7 @@ static void topDownScheduling(
       });
 
       while (failedCnt < schedulePlane.size()) {
-        auto& inst = schedulePlane.front();
+        auto inst = schedulePlane.front();
         schedulePlane.pop_front();
         auto& scheClass = model->getInstScheClass(inst->opcode());
 

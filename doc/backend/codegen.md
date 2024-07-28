@@ -1,3 +1,14 @@
+code gen optimization (maybe):
+- createMIRFunction: lowering getelementptr inst
+- 
+
+
+InstSelection template:
+
+parse_ise_item
+
+
+
 mir:
 MIRRelocable: class
     MIRFunction

@@ -27,7 +27,7 @@ void LICM::getallallocas(ir::Function* func) {  // 得到函数内所有数组�
 
 void LICM::storeLiftfunc(ir::Function* func) {
     getallallocas(func);
-    bool change = false;
+    bool change = true;
     for (auto allocainst : Allallocas) {  // 对于每个alloca，通过dfs所有user得到所有的定义与使用
         for (auto puse = allocainst->uses().begin(); puse != allocainst->uses().end();) {
             auto use = *puse;
@@ -53,6 +53,7 @@ void LICM::storeLift(ir::Module* module) {
 }
 
 void LICM::dfs(ir::AllocaInst* alloca, ir::Instruction* inst) {
+    // std::cerr<<"dfs"<<std::endl;
     if (inst->dynCast<ir::GetElementPtrInst>()) {  // gep也视作alloca
         for (auto puse = inst->uses().begin(); puse != inst->uses().end();) {
             auto use = *puse;
@@ -121,7 +122,9 @@ void LICM::globaldfs(ir::Value* val, ir::Instruction* inst) {
 bool LICM::storemove(ir::AllocaInst* alloca) {
     std::set<ir::Instruction*> DefsforAlloca = allocaDefs[alloca];
     std::set<ir::Instruction*> UsesforAlloca = allocaUses[alloca];
-    assert(!DefsforAlloca.empty() && "DefsforAlloca is empty");
+    // assert(!DefsforAlloca.empty() && "DefsforAlloca is empty");
+    if (DefsforAlloca.empty())
+        return false;
     ir::BasicBlock* bb = nullptr;
     for (auto def : DefsforAlloca) {
         if (!bb) {
@@ -187,6 +190,7 @@ bool LICM::storemove(ir::AllocaInst* alloca) {
 
 void LICM::loadLift(ir::Module* module) {
     for (auto func : module->funcs()) {//每个func的allocas
+        if (func->isOnlyDeclare()) continue;
         Allallocas.clear();
         getallallocas(func);
         for (auto allocainst : Allallocas) {
@@ -268,12 +272,12 @@ void LICM::loadLift(ir::Module* module) {
     for (auto defval : keyset(gDefs)) {  // 计算每个alloca和gloval的每个def所在的最内层循环
         for (auto inst : gDefs[defval]) {
             loopctx = flmap[inst->block()->function()];
-            defLoops[defval].insert(loopctx->getinnermostLoop(inst->block()));
+            defLoops[defval].insert(loopctx->getinnermostLoop(inst->block()));//?use不在循环内？
         }
     }
 
     for (auto array : keyset(gUses)) {
-        change = false;
+        change = true;
         while (change)
             change = loadmove(array);
     }
@@ -286,13 +290,16 @@ bool LICM::loadmove(ir::Value* array) {
             continue;
         auto userbb = user->block();
         loopctx = flmap[userbb->function()];
-        ir::Loop* innerLoop = useLoops[array][user];
+        
         if (loopctx->looplevel(userbb) == 0)  // 循环深度为0不需要移动
             continue;
-
+        ir::Loop* innerLoop = useLoops[array][user];
         auto preheader = innerLoop->getLoopPreheader();
         bool flag = false;
         for (auto defloop : defLoops[array]) {
+            if (!defloop){
+                continue;
+            }
             if (check(innerLoop, defloop)){
                 flag = true; 
                 break;
@@ -302,7 +309,8 @@ bool LICM::loadmove(ir::Value* array) {
 
         if (defLoops[array].count(innerLoop) == 0) {//如果定义已经被lift
             if (auto gep = (user->dynCast<ir::LoadInst>()->ptr())->dynCast<ir::GetElementPtrInst>()) {
-                if (loopctx->getinnermostLoop(gep->block()) == innerLoop) continue;
+                if (!gep->index()->dynCast<ir::Constant>()) continue;
+                if (loopctx->getinnermostLoop(gep->block()) == innerLoop) continue;//如果gep还在也不能提
             }
 
             auto userinst = user->dynCast<ir::Instruction>();
@@ -344,7 +352,7 @@ std::vector<ir::Value*> LICM::keyset(std::unordered_map<ir::Value*, std::set<ir:
     return keys;
 }
 
-void LICM::run(ir::Module* module, topAnalysisInfoManager* tp) {
+void LICM::run(ir::Module* module, TopAnalysisInfoManager* tp) {
     cgctx = tp->getCallGraph();
     cgctx->refresh();
     for (auto func : module->funcs()) {

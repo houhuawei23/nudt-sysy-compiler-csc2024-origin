@@ -1,7 +1,7 @@
 #include "pass/analysis/CFGPrinter.hpp"
 using namespace pass;
 
-void CFGPrinter::run(ir::Function* func, topAnalysisInfoManager* tp){
+void CFGPrinter::run(ir::Function* func, TopAnalysisInfoManager* tp){
     using namespace std;
     func->rename();
     for(auto bb:func->blocks()){

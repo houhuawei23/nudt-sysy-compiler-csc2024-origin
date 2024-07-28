@@ -6,7 +6,7 @@ static std::unordered_map<ir::BasicBlock*, bool>vis;
 static std::unordered_map<ir::Value*, int>rankMap;
 
 
-void reassociatePass::run(ir::Function* func, topAnalysisInfoManager* tp){
+void reassociatePass::run(ir::Function* func, TopAnalysisInfoManager* tp){
     if(func->isOnlyDeclare())return;
     //initialize
     RPOVector.clear();

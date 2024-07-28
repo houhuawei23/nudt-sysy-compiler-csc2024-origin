@@ -102,15 +102,30 @@ def parse_isel_match(
     operand_map: dict,  # $xx -> id in select_item
     genmir_insts_dict: dict,  # MIR Generic Inst Info Dict: InstXXX -> info
 ):
-    """Append one match_item to match_item_list
+    """
+    Append one match_item to match_item_list
     operand_map: $x -> global_id
     In one inst, opearnd_name -> $xxx (global_name),
     local_map: operand_name -> $xxx -> id in select_item
     """
     res = True
-    capture_list = list()  # 捕获列表, 用于匹配 pattern inst 后捕获其操作数
-    lookup_list = list()  # 递归匹配前，需要 lookup 的操作数列表
-    local_map = dict()  # just for this pattern, opearnd_name -> global_id
+    # 捕获列表, 用于匹配 pattern inst 后捕获其操作数
+    # capture_list = [1, 2, 3]
+    # MIROperand op1, op2, op3;
+    # then match, get the pattern inst operands in op1, op2, op3
+    capture_list = list()  # operand global id list
+
+    # 递归匹配前，需要 lookup 的操作数列表
+    # if op in pattern inst is another inst(dict), it should be lookuped and then matched
+    # the global operand idxs that should be captured
+    # lookup_list = list()
+    lookup_list = dict()  # operand global id -> inst_idx
+
+    # just for this pattern, local opearnd_name -> global operand id
+    # eg. InstAdd dst, src1, src2
+    # dst -> 1, src1 -> 2, src2 -> 3
+    # 1, 2, 3 is operand global idx
+    local_map = dict()
     # match_item = dict()
 
     pinst_name = pattern["name"]
@@ -155,13 +170,14 @@ def parse_isel_match(
             elif isinstance(v, dict):
                 # v is a sub-pattern
                 # append to lookup_list, same to the before!
-                lookup_list.append(local_map[k])
+                # lookup_list.append(local_map[k])
+                lookup_list[local_map[k]] = iselindex.get_inst_idx()
                 # 递归地处理
                 res = parse_isel_match(
                     v,
-                    iselindex.get_inst_idx(),
-                    match_item_list,
-                    operand_map,
+                    lookup_list[local_map[k]],
+                    match_item_list,  # return
+                    operand_map,  # return
                     genmir_insts_dict,
                 )
             else:
@@ -218,7 +234,7 @@ def parse_isel_select(
                 operand_map,
                 target_insts_dict,
                 used_as_operand=True,
-                generic_insts_dict=generic_insts_dict
+                generic_insts_dict=generic_insts_dict,
             )
             if not res:
                 return False
@@ -265,31 +281,39 @@ def parse_isel_item(isel_item: dict, mirgen_insts_dict: dict, target_insts_dict:
         replace:
     要为每个 isel_item 解析出 match_list, select_list
     """
+    iselindex.reset_inst_idx()
+    iselindex.reset_operand_idx()
     # 维护操作数信息
-    operand_map = dict()
+    operand_map = dict()  #
     match_item_list = list()
     select_item_list = list()
+
     pattern_id = iselindex.get_inst_idx()  # 根节点 id
+
     res = parse_isel_match(
         isel_item["pattern"],
         pattern_id,
-        match_item_list,
-        operand_map,
+        match_item_list,  # return
+        operand_map,  # return
         mirgen_insts_dict,
     )
+
     if not res:
         return False
+
     res = parse_isel_select(
         isel_item["replace"],
         iselindex.get_operand_idx(),
-        select_item_list,
-        operand_map,
+        select_item_list,  # return list
+        operand_map,  # args
         target_insts_dict,
         False,
-        mirgen_insts_dict
+        mirgen_insts_dict,
     )
+
     if not res:
         return False
+
     repalce_id = select_item_list[-1]["idx"]
     match_inst_name = match_item_list[0]["inst_name"]
 
@@ -299,7 +323,9 @@ def parse_isel_item(isel_item: dict, mirgen_insts_dict: dict, target_insts_dict:
     elif replace_inst_name in mirgen_insts_dict:
         replace_inst_info = mirgen_insts_dict[replace_inst_name]
     else:
-        print(f"Error: {replace_inst_name} not in target_insts_dict or mirgen_insts_dict")
+        print(
+            f"Error: {replace_inst_name} not in target_insts_dict or mirgen_insts_dict"
+        )
         return False
     replace_operand = has_reg_def(mirgen_insts_dict[match_inst_name]) and has_reg_def(
         replace_inst_info
@@ -319,7 +345,6 @@ def parse_isel_item(isel_item: dict, mirgen_insts_dict: dict, target_insts_dict:
     isel_item["replace_id"] = repalce_id
     isel_item["select_list"] = select_item_list
     isel_item["replace_operand"] = replace_operand
-    iselindex.reset_inst_idx()
-    iselindex.reset_operand_idx()
+
     return True
     # return isel_item

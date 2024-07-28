@@ -16,7 +16,7 @@ class GVN : public FunctionPass {
     std::unordered_map<ir::Value*, ir::Value*> _Hashtable;
 
   public:
-    void run(ir::Function* func, topAnalysisInfoManager* tp) override;
+    void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
     void RPO(ir::Function* F);  // 逆后序遍历
     void dfs(ir::BasicBlock* bb);
     ir::Value* checkHashtable(ir::Value* v);

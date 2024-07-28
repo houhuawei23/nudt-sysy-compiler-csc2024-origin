@@ -28,12 +28,14 @@ public:
   void runInstSelect(MIRFunction* func);
   bool runInstSelectImpl(MIRFunction* func);
   bool hasOneUse(MIROperand op);
-  MIRInst* lookupDef(const MIROperand& op) const;
+
+  /* lookup the inst that defines the operand */
+  MIRInst* lookupDefInst(const MIROperand& op) const;
 
   void remove_inst(MIRInst* inst);
   void replace_operand(MIROperand src, MIROperand dst);
 
-  MIROperand& get_inst_def(MIRInst* inst);
+  MIROperand& getInstDefOperand(MIRInst* inst);
 
   void insert_inst(MIRInst* inst) {
     assert(inst != nullptr);

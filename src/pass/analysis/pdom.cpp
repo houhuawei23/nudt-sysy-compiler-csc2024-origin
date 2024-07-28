@@ -24,7 +24,7 @@ static int dfc;
 namespace pass
 {
     //pre process for dom calc
-    void preProcPostDom::run(ir::Function* func,topAnalysisInfoManager* tp){
+    void preProcPostDom::run(ir::Function* func,TopAnalysisInfoManager* tp){
         if(func->isOnlyDeclare())return;
         auto blocklist=func->blocks();
         for(auto bbiter=blocklist.begin();bbiter!=blocklist.end();){
@@ -93,7 +93,7 @@ namespace pass
         }
     }
 
-    void ipostDomGen::run(ir::Function* func, topAnalysisInfoManager* tp){
+    void ipostDomGen::run(ir::Function* func, TopAnalysisInfoManager* tp){
         if(func->isOnlyDeclare())return;
         pdctx=tp->getPDomTree(func);
         pdctx->clearAll();
@@ -210,7 +210,7 @@ namespace pass
     }
 
     //generate dom tree
-    void postDomFrontierGen::run(ir::Function* func, topAnalysisInfoManager* tp){
+    void postDomFrontierGen::run(ir::Function* func, TopAnalysisInfoManager* tp){
         if(func->isOnlyDeclare())return;
         pdctx=tp->getPDomTree(func);
         getDomTree(func);
@@ -222,7 +222,7 @@ namespace pass
 
 
     //debug info print pass
-    void postDomInfoCheck::run(ir::Function* func,topAnalysisInfoManager* tp){
+    void postDomInfoCheck::run(ir::Function* func,TopAnalysisInfoManager* tp){
         if(func->isOnlyDeclare())return;
         pdctx=tp->getPDomTree(func);
         using namespace std;
@@ -278,7 +278,7 @@ namespace pass
         }
     }
 
-    void postDomInfoPass::run(ir::Function* func, topAnalysisInfoManager* tp){
+    void postDomInfoPass::run(ir::Function* func, TopAnalysisInfoManager* tp){
         preProcPostDom ppd=preProcPostDom();
         ipostDomGen idg=ipostDomGen();
         postDomFrontierGen dfg=postDomFrontierGen();

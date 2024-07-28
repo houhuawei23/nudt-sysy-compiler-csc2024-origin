@@ -33,16 +33,15 @@ ir::BasicBlock* GCM::LCA(ir::BasicBlock* lhs, ir::BasicBlock* rhs) {
 
 // 通过指令的类型判断该指令是否固定在bb上
 bool GCM::ispinned(ir::Instruction* instruction) {
-    if (dyn_cast<ir::BinaryInst>(instruction))  // 二元运算指令不固定(除法固定，因为除法指令可能产生除零错误)
-    {
+    if (dyn_cast<ir::BinaryInst>(instruction)) {
+        // 二元运算指令不固定(除法固定，因为除法指令可能产生除零错误)
         if (instruction->valueId() == ir::vSDIV || instruction->valueId() == ir::vSREM) return true;
         return false;
     }
-
     else if (dyn_cast<ir::UnaryInst>(instruction))  // 一元运算指令不固定
         return false;
-    // else if (dyn_cast<ir::CallInst>(instruction)) // call指令不固定
-    //     return false;
+    else if (dyn_cast<ir::GetElementPtrInst>(instruction))
+        return false;  // GEP指令不固定
     else  // 其他指令固定在自己的BB上
         return true;
 }
@@ -52,13 +51,14 @@ void GCM::scheduleEarly(ir::Instruction* instruction, ir::BasicBlock* entry) {
         return;
 
     insts_visited.insert(instruction);
-    ir::BasicBlock* destBB = entry;  // 初始化放置块为entry块,整棵树的root
-    ir::BasicBlock* opBB;
+    auto destBB = entry;  // 初始化放置块为entry块,整棵树的root
+    ir::BasicBlock* opBB = nullptr;
     for (auto opiter = instruction->operands().begin(); opiter != instruction->operands().end();) {
         auto op = *opiter;
         opiter++;
         if (auto opInst = dyn_cast<ir::Instruction>(op->value())) {
-            scheduleEarly(opInst, entry);
+            if (opInst->block() != entry)
+                scheduleEarly(opInst, entry);
             opBB = opInst->block();
             if (domctx->domlevel(opBB) > domctx->domlevel(destBB)) {
                 destBB = opBB;
@@ -69,20 +69,19 @@ void GCM::scheduleEarly(ir::Instruction* instruction, ir::BasicBlock* entry) {
         auto instbb = instruction->block();
         if (destBB == instbb) return;
 
-        ir::BasicBlock* bestBB = instbb;
-        ir::BasicBlock* curBB = instbb;
+        auto bestBB = instbb;
+        auto curBB = instbb;
         while (domctx->domlevel(curBB) > domctx->domlevel(destBB)) {
             if (lpctx->looplevel(curBB) < lpctx->looplevel(bestBB)) bestBB = curBB;
             curBB = domctx->idom(curBB);
         }
-
         if (bestBB == instbb) return;
         instbb->move_inst(instruction);                // 将指令从bb中移除
         bestBB->emplace_lastbutone_inst(instruction);  // 将指令移入destBB
     }
 }
 
-void GCM::run(ir::Function* F, topAnalysisInfoManager* tp) {
+void GCM::run(ir::Function* F, TopAnalysisInfoManager* tp) {
     domctx = tp->getDomTree(F);
     domctx->refresh();
     lpctx = tp->getLoopInfo(F);
@@ -90,7 +89,7 @@ void GCM::run(ir::Function* F, topAnalysisInfoManager* tp) {
     std::vector<ir::Instruction*> pininsts;
     insts_visited.clear();
 
-    for (ir::BasicBlock* bb : F->blocks()) {
+    for (auto bb : F->blocks()) {
         for (auto institer = bb->insts().begin(); institer != bb->insts().end();) {
             auto inst = *institer;
             institer++;

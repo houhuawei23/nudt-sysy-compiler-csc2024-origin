@@ -8,54 +8,52 @@
 
 using namespace pass;
 
-void topAnalysisInfoManager::initialize(){
-    mCallGraph=new callGraph(mModule,this);
-    for(auto func:mModule->funcs()){
-        if(func->blocks().empty())continue;
-        mDomTree[func]=new domTree(func,this);
-        mPDomTree[func]=new pdomTree(func,this);
-        mLoopInfo[func]=new loopInfo(func,this);
-        mIndVarInfo[func]=new indVarInfo(func,this);
+void TopAnalysisInfoManager::initialize() {
+    mCallGraph = new callGraph(mModule, this);
+    for (auto func : mModule->funcs()) {
+        if (func->blocks().empty()) continue;
+        mDomTree[func] = new domTree(func, this);
+        mPDomTree[func] = new pdomTree(func, this);
+        mLoopInfo[func] = new loopInfo(func, this);
+        mIndVarInfo[func] = new indVarInfo(func, this);
     }
 }
 
-void domTree::refresh(){
-    if(not _isvalid){
+void domTree::refresh() {
+    if (not isValid) {
         using namespace pass;
-        PassManager pm=PassManager(_pu->module(),_tp);
-        domInfoPass dip=domInfoPass();
+        PassManager pm = PassManager(passUnit->module(), topManager);
+        domInfoPass dip = domInfoPass();
         pm.run(&dip);
         setOn();
     }
 }
 
-void pdomTree::refresh(){
-    if(not _isvalid){
+void pdomTree::refresh() {
+    if (not isValid) {
         using namespace pass;
-        PassManager pm=PassManager(_pu->module(),_tp);
-        postDomInfoPass pdi=postDomInfoPass();
+        PassManager pm = PassManager(passUnit->module(), topManager);
+        postDomInfoPass pdi = postDomInfoPass();
         pm.run(&pdi);
         setOn();
     }
 }
 
-
-void loopInfo::refresh(){
-    if(not _isvalid){
+void loopInfo::refresh() {
+    if (not isValid) {
         using namespace pass;
-        PassManager pm=PassManager(_pu->module(),_tp);
-        loopAnalysis la=loopAnalysis();
+        PassManager pm = PassManager(passUnit->module(), topManager);
+        loopAnalysis la = loopAnalysis();
         pm.run(&la);
         setOn();
     }
 }
 
-
-void callGraph::refresh(){
-    if(not _isvalid){
+void callGraph::refresh() {
+    if (not isValid) {
         using namespace pass;
-        PassManager pm=PassManager(_pu,_tp);
-        callGraphBuild cgb=callGraphBuild();
+        PassManager pm = PassManager(passUnit, topManager);
+        callGraphBuild cgb = callGraphBuild();
         pm.run(&cgb);
         // callGraphCheck cgc=callGraphCheck();
         // pm.run(&cgc);
@@ -63,14 +61,12 @@ void callGraph::refresh(){
     }
 }
 
-void indVarInfo::refresh(){
-    if(not _isvalid){
+void indVarInfo::refresh() {
+    if (not isValid) {
         using namespace pass;
-        PassManager pm=PassManager(_pu->module(),_tp);
-        indVarAnalysis iva=indVarAnalysis();
+        PassManager pm = PassManager(passUnit->module(), topManager);
+        indVarAnalysis iva = indVarAnalysis();
         pm.run(&iva);
         setOn();
     }
 }
-
-
