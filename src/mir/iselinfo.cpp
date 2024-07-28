@@ -67,8 +67,7 @@ MIROperand& ISelContext::get_inst_def(MIRInst* inst) {
       return inst->operand(idx);
     }
   }
-  // assert(false && "no def operand found");
-  std::cerr << "no def operand found" << std::endl;
+  std::cerr << "no def operand found\n";
 }
 
 MIRInst* ISelContext::lookupDef(const MIROperand& op) const {

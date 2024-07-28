@@ -271,15 +271,17 @@ void createMIRModule(ir::Module& ir_module,
   // TODO: transformModuleBeforeCodeGen
 
   //! 3. codegen
-  CodeGenContext codegen_ctx{target, target.getDataLayout(),
+  CodeGenContext codegen_ctx{target,
+                             target.getDataLayout(),
                              target.getTargetInstInfo(),
-                             target.getTargetFrameInfo(), MIRFlags{}};
+                             target.getTargetFrameInfo(),
+                             MIRFlags{}};
   codegen_ctx.iselInfo = &target.getTargetIselInfo();
   codegen_ctx.scheduleModel = &target.getScheduleModel();
+  codegen_ctx.registerInfo = new RISCVRegisterInfo();
   lowering_ctx.codeGenctx = &codegen_ctx;
 
-  /* 缓存各个函数所用到的Caller-Saved Registers */
-  IPRAUsageCache infoIPRA;
+  IPRAUsageCache infoIPRA;  /* 缓存各个函数所用到的Caller-Saved Registers */
 
   auto dumpStageWithMsg = [&](std::ostream& os, std::string_view stage,
                               std::string_view msg) {
@@ -323,7 +325,7 @@ void createMIRModule(ir::Module& ir_module,
     }
 
     const auto mir_func = func_map[ir_func];
-    /* lower function body to generic MIR */
+    /* stage1: lower function body to generic MIR */
     {
       createMIRFunction(ir_func, mir_func, codegen_ctx, lowering_ctx, tAIM);
       dumpStageResult("AfterLowering", mir_func, codegen_ctx);
@@ -333,21 +335,36 @@ void createMIRModule(ir::Module& ir_module,
       }
     }
 
-    /* instruction selection */
+    /* stage2: instruction selection */
     {
       ISelContext isel_ctx(codegen_ctx);
       isel_ctx.runInstSelect(mir_func);
       dumpStageResult("AfterIsel", mir_func, codegen_ctx);
     }
-    /* Optimize: register coalescing */
+    /* stage3: register coalescing */
+    {
+
+    }
 
     /* Optimize: peephole optimization (窥孔优化) */
     {
-      while (genericPeepholeOpt(*mir_func, codegen_ctx)) ;
-      dumpStageResult("AfterPeephole", mir_func, codegen_ctx);
+      if (debugLowering) {
+        // std::cerr << "before peephole optimization. \n";
+        // std::cerr << "\tendsWithTerminator: " << codegen_ctx.flags.endsWithTerminator << "\n";
+        // std::cerr << "\tinSSAForm: " << codegen_ctx.flags.inSSAForm << "\n";
+        // std::cerr << "\tpreRA: " << codegen_ctx.flags.preRA << "\n";
+        // std::cerr << "\tpostSA: " << codegen_ctx.flags.postSA << "\n";
+        // std::cerr << "\tdontForward: " << codegen_ctx.flags.dontForward << "\n";
+        // std::cerr << "\tpostLegal: " << codegen_ctx.flags.postLegal << "\n";
+      }
+      // while (genericPeepholeOpt(*mir_func, codegen_ctx)) ;
+      // dumpStageResult("AfterPeephole", mir_func, codegen_ctx);
     }
 
     /* pre-RA legalization */
+    {
+      // codegen_ctx.flags.inSSAForm = false;
+    }
 
     /* Optimize: pre-RA scheduling, minimize register usage */
     {
@@ -357,11 +374,11 @@ void createMIRModule(ir::Module& ir_module,
 
     /* register allocation */
     {
-      codegen_ctx.registerInfo = new RISCVRegisterInfo();
+      codegen_ctx.flags.preRA = false;
       if (codegen_ctx.registerInfo) {
-        // GraphColoringAllocate(*mir_func, codegen_ctx, infoIPRA);
+        GraphColoringAllocate(*mir_func, codegen_ctx, infoIPRA);
         // fastAllocator(*mir_func, codegen_ctx, infoIPRA);
-        fastAllocatorBeta(*mir_func, codegen_ctx, infoIPRA);
+        // fastAllocatorBeta(*mir_func, codegen_ctx, infoIPRA);
         dumpStageResult("AfterGraphColoring", mir_func, codegen_ctx);
       }
     }
@@ -390,11 +407,11 @@ void createMIRModule(ir::Module& ir_module,
 
     dumpStageResult("AfterCodeGen", mir_func, codegen_ctx);
 
-    if (not target.verify(*mir_func)) {
+    if (!target.verify(*mir_func)) {
       std::cerr << "Lowering Error: " << mir_func->name()
                 << " failed to verify." << std::endl;
     }
-  }  // end of for (auto& ir_func : ir_module.funcs())
+  }
   /* module verify */
 }
 
@@ -412,6 +429,7 @@ void createMIRFunction(ir::Function* ir_func,
   // TODO: before lowering, get some analysis pass result
 
   auto domCtx = tAIM->getDomTree(ir_func);
+  domCtx->setOff();
   domCtx->refresh();
   domCtx->BFSDomTreeInfoRefresh();
   auto irBlocks = domCtx->BFSDomTreeVector();

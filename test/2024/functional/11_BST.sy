@@ -45,10 +45,10 @@ int insert(int root, int x) {
   return root;
 }
 
-int delete(int root, int x) {
+int Mydelete(int root, int x) {
   if (root == -1) return -1;
-  if (x > value[root]) right_child[root] = delete(right_child[root], x);
-  else if (x < value[root]) left_child[root] = delete(left_child[root], x);
+  if (x > value[root]) right_child[root] = Mydelete(right_child[root], x);
+  else if (x < value[root]) left_child[root] = Mydelete(left_child[root], x);
   else
     if (left_child[root] == -1 && right_child[root] == -1) return -1;
     else if (left_child[root] == -1 || right_child[root] == -1)
@@ -59,7 +59,7 @@ int delete(int root, int x) {
     else {
       int tmp = find_minimum(right_child[root]);
       value[root] = value[tmp];
-      right_child[root] = delete(right_child[root], value[tmp]);
+      right_child[root] = Mydelete(right_child[root], value[tmp]);
     }
   return root;
 }
@@ -86,7 +86,7 @@ int main() {
   putch(LF);
   n = getint(); i = 0;
   while (i < n) {
-    root = delete(root, getint());
+    root = Mydelete(root, getint());
     i = i + 1;
   }
   inorder(root);

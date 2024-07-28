@@ -6,10 +6,9 @@
 #include "support/StaticReflection.hpp"
 #include "support/arena.hpp"
 namespace mir {
-
 constexpr int32_t passingByRegBase = 0x100000;
 
-/**
+/*
  * insert_prologue_epilogue: insert prologue and epilogue for a function
  * - using for allocateStackObjects, after register allocation, we know the
  * register to spill, so save callee-saved registers after jump to function, and
@@ -29,11 +28,9 @@ constexpr int32_t passingByRegBase = 0x100000;
  *
  * return: 0?
  */
-int32_t RISCVFrameInfo::insertPrologueEpilogue(
-  MIRFunction* func,
-  std::unordered_set<MIROperand, MIROperandHasher>& callee_saved_regs,
-  CodeGenContext& ctx,
-  MIROperand return_addr_reg) {
+int32_t RISCVFrameInfo::insertPrologueEpilogue(MIRFunction* func,
+                                               std::unordered_set<MIROperand, MIROperandHasher>& callee_saved_regs,
+                                               CodeGenContext& ctx, MIROperand return_addr_reg) {
   // op -> stack
   std::vector<std::pair<MIROperand, MIROperand>> saved;
 
@@ -85,7 +82,7 @@ int32_t RISCVFrameInfo::insertPrologueEpilogue(
   return 0;
 }
 
-/**
+/*
  * emit_call: emit instructions for a call instruction
  * using when lowering a ir call instruction to riscv
  *
@@ -102,8 +99,7 @@ int32_t RISCVFrameInfo::insertPrologueEpilogue(
  * - generate instructions to call the callee function
  * - generate instructions to handle return value
  */
-void RISCVFrameInfo::emitCall(ir::CallInst* inst,
-                              LoweringContext& lowering_ctx) {
+void RISCVFrameInfo::emitCall(ir::CallInst* inst, LoweringContext& lowering_ctx) {
   constexpr bool Debug = false;
   /* 1. 相关被调用函数 */
   auto irCalleeFunc = inst->callee();
@@ -216,7 +212,7 @@ void RISCVFrameInfo::emitCall(ir::CallInst* inst,
   lowering_ctx.addValueMap(inst, retReg);
 }
 
-/**
+/*
  * FrameInfo::emit_prologue: emit instructions for function prologue
  * - using for lowering from ir to mir funtion, after ir args are mapped to
  * vreg, these args(vregs) is passed by isa register or stack, we need to
@@ -226,8 +222,7 @@ void RISCVFrameInfo::emitCall(ir::CallInst* inst,
  * - by isa regs: copy isa reg to corresponding vreg
  * - by stack: load vreg from stack
  */
-void RISCVFrameInfo::emitPrologue(MIRFunction* func,
-                                  LoweringContext& lowering_ctx) {
+void RISCVFrameInfo::emitPrologue(MIRFunction* func, LoweringContext& lowering_ctx) {
   const auto& args = func->args();
   int32_t curOffset = 0;
   /* off >= passingByGPR: passing by reg[off - passingByRegBase] */
@@ -295,15 +290,14 @@ void RISCVFrameInfo::emitPrologue(MIRFunction* func,
   }
 }
 
-/**
+/*
  * FrameInfo::emit_epilogue: emit instructions for function epilogue
  * using for lowering ir return inst to riscv return inst.
  * gen riscv return inst:
  * - return void: ret
  * - return int: move $a0/$f0, retval; ret
  */
-void RISCVFrameInfo::emitReturn(ir::ReturnInst* ir_inst,
-                                LoweringContext& lowering_ctx) {
+void RISCVFrameInfo::emitReturn(ir::ReturnInst* ir_inst, LoweringContext& lowering_ctx) {
   if (not ir_inst->operands().empty()) {
     // has return value
     auto retval = ir_inst->returnValue();

@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <unordered_map>
 #include <unordered_set>
+#include <optional>
 
 namespace mir {
 struct RegNumComparator final {
@@ -148,241 +149,210 @@ public:  /* just for debug */
  *      4. uint32_t allocationClass (决定此次分配是分配整数寄存器还是浮点寄存器)
  *      5. std::unordered_map<uint32_t, uint32_t>& regMap (answer, 存储虚拟寄存器到物理寄存器之间的映射)
  */
-static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAUsageCache& infoIPRA, 
-                                  uint32_t allocationClass, std::unordered_map<uint32_t, uint32_t>& regMap) {
-    /* Prepare for Graph Coloring Allocation */
+static void graphColoringAllocateImpl(MIRFunction& mfunc, CodeGenContext& ctx, IPRAUsageCache& infoIPRA, uint32_t allocationClass,
+                                      std::unordered_map<uint32_t, uint32_t>& regMap) {
     const auto canonicalizedType = ctx.registerInfo->getCanonicalizedRegisterTypeForClass(allocationClass);
     const auto& list = ctx.registerInfo->get_allocation_list(allocationClass);
     const std::unordered_set<uint32_t> allocableISARegs{ list.cbegin(), list.cend() };
-    std::unordered_set<RegNum> blockList;  // 存储spill到内存的寄存器
+    std::unordered_set<uint32_t> blockList;
+    bool fixHazard = true;
 
-    constexpr auto DebugRA = false;
-    if (DebugRA) {
-        std::cerr << "allocate register for class ";
-        if (allocationClass == 0) std::cerr << "INT\n";
-        else std::cerr << "FLOAT\n";
+    constexpr auto debugRA = false;
+    if(debugRA) {
+        std::cerr << "allocate for class " << allocationClass << std::endl;
     }
 
-    /*
-     NOTE: 处理[函数参数的传递] (当函数参数过多时, 只能通过栈来进行传递)
-        将其对应的虚拟寄存器的编号与栈中的位置对应起来
-        后续如果考虑将该虚拟寄存器spill到内存时, 此时无须继续开辟栈空间
-     */
-    std::unordered_map<RegNum, MIROperand> inStackArguments;
-    for (auto inst : mfunc.blocks().front()->insts()) {
-        if (inst->opcode() == InstLoadRegFromStack) {
-            auto dst = inst->operand(0).reg();
-            auto src = inst->operand(1);
-            auto& obj = mfunc.stackObjs().at(src);
-            if (obj.usage == StackObjectUsage::Argument) {
+    std::unordered_map<uint32_t, MIROperand> inStackArguments;
+    std::unordered_map<uint32_t, MIRInst*> constants;
+    for(auto& inst : mfunc.blocks().front()->insts()) {
+        if(inst->opcode() == InstLoadRegFromStack) {
+            const auto dst = inst->operand(0).reg();
+            const auto src = inst->operand(1);
+            const auto& obj = mfunc.stackObjs().at(src);
+            if(obj.usage == StackObjectUsage::Argument) {
                 inStackArguments.emplace(dst, src);
             }
         }
     }
+    for(auto& block : mfunc.blocks()) {
+        for(auto& inst : block->insts()) {
+            const auto& instInfo = ctx.instInfo.getInstInfo(inst);
 
-    /*
-     NOTE: 处理[常数]
-        当存储立即数的寄存器需要spill到内存时此时无需插入load和store指令
-        此时只需要重新插入li加载立即数的指令即可
-    
-     constants: RegNum -> MIRInst*
-        - nullptr: 该虚拟寄存器已被多条指令定义            (删除)
-        - inst: 该虚拟寄存器仅仅被InstFlagLoadConstant定义 (保存)
-     */
-    std::unordered_map<RegNum, MIRInst*> constants;
-    for (auto& block : mfunc.blocks()) {
-        for (auto inst : block->insts()) {
-            auto& instInfo = ctx.instInfo.getInstInfo(inst);
-            
-            if (requireFlag(instInfo.inst_flag(), InstFlagLoadConstant)) {
-                auto reg = inst->operand(0).reg();
-                if (isVirtualReg(reg)) {
-                    if (!constants.count(reg)) constants[reg] = inst;
-                    else constants[reg] = nullptr;
+            if(requireFlag(instInfo.inst_flag(), InstFlagLoadConstant)) {
+                const auto reg = inst->operand(0).reg();
+                if(isVirtualReg(reg)) {
+                    if(!constants.count(reg))
+                        constants[reg] = inst;
+                    else
+                        constants[reg] = nullptr;
                 }
-            } else {  /* 考虑其他指令 */
-                for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
-                    auto flag = instInfo.operand_flag(idx);
-                    if (!(flag & OperandFlagDef)) continue;
-                    auto op = inst->operand(idx);
-                    if (isOperandVReg(op)) constants[op.reg()] = nullptr;
+            } else {
+                for(uint32_t idx = 0; idx < instInfo.operand_num(); ++idx) {
+                    const auto flag = instInfo.operand_flag(idx);
+                    if(!(flag & OperandFlagDef)) continue;
+                    auto& op = inst->operand(idx);
+                    if(isOperandVReg(op)) {
+                        constants[op.reg()] = nullptr;
+                    }
                 }
             }
         }
     }
     {
         std::vector<uint32_t> eraseKey;
-        for (auto [k, v] : constants) {
-            if (!v) eraseKey.push_back(k);
+        for(auto [k, v] : constants) {
+            if(!v) eraseKey.push_back(k);
         }
-        for (auto k : eraseKey) constants.erase(k);
+        for(auto k : eraseKey) constants.erase(k);
     }
 
-    /* 不断迭代, 开始进行图着色寄存器分配算法 */
-    while (true) {
+    while(true) {
         auto liveInterval = calcLiveIntervals(mfunc, ctx);
-        if (DebugRA) mfunc.print(std::cerr, ctx);
+        if(debugRA) mfunc.print(std::cerr, ctx);
 
         const auto isAllocatableType = [&](OperandType type) {
             return (type <= OperandType::Float32) && (ctx.registerInfo->getAllocationClass(type) == allocationClass);
         };
-        const auto isLockedOrUnderRenamedType = [&](OperandType type) { return type <= OperandType::Float32; };
-        
-        /* 统计当前所有指令中虚拟寄存器的个数 */
+        const auto isLockedOrUnderRenamedType = [&](OperandType type) { return (type <= OperandType::Float32); };
         std::unordered_set<RegNum> vregSet;
-        for (auto& block : mfunc.blocks()) {
-            for (auto inst : block->insts()) {
+        for(auto& block : mfunc.blocks()) {
+            for(auto& inst : block->insts()) {
                 auto& instInfo = ctx.instInfo.getInstInfo(inst);
-                for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
-                    auto flag = instInfo.operand_flag(idx);
-                    if (!((flag & OperandFlagUse) || (flag & OperandFlagDef))) continue;
-                    auto op = inst->operand(idx);
-                    if (!(isOperandVReg(op) && isAllocatableType(op.type()))) continue;
+                for(uint32_t idx = 0; idx < instInfo.operand_num(); ++idx) {
+                    const auto flag = instInfo.operand_flag(idx);
+                    if(!((flag & OperandFlagUse) || (flag & OperandFlagDef))) continue;
+                    auto& op = inst->operand(idx);
+                    if(!(isOperandVReg(op) && isAllocatableType(op.type()))) continue;
                     vregSet.insert(op.reg());
                 }
             }
         }
-        if (DebugRA) {
-            std::cerr << "the virtual registers' size is " << vregSet.size() << "\n";
-        }
 
-        // TODO: ???
-        std::unordered_map<RegNum, std::set<InstNum>> def_use_time;
+        std::unordered_map<RegNum, std::set<InstNum>> defUseTime;
         auto colorDefUse = [&](RegNum src, RegNum dst) {
             assert(isVirtualReg(src) && isISAReg(dst));
-            if (!def_use_time.count(src)) return;
-            auto& dstInfo = def_use_time[dst];
-            auto& srcInfo = def_use_time[src];
+            if(!fixHazard || !defUseTime.count(src)) return;
+            auto& dstInfo = defUseTime[dst];
+            auto& srcInfo = defUseTime[src];
             dstInfo.insert(srcInfo.begin(), srcInfo.end());
         };
 
-        // TODO: copy_hint
-        std::unordered_map<RegNum, std::unordered_map<RegNum, double>> copy_hint;
+        std::unordered_map<RegNum, std::unordered_map<RegNum, double>> copyHint;
         auto updateCopyHint = [&](RegNum dst, RegNum src, double weight) {
             assert(isVirtualReg(dst));
-            copy_hint[dst][src] += weight;
+            copyHint[dst][src] += weight;
         };
-
-        /* 构造干涉图 */
+        // Construct interference graph
         InterferenceGraph graph;
-        auto cfg = calcCFG(mfunc, ctx);  // 控制流图
-        auto blockFreq = calcFreq(mfunc, cfg);  // 基本块的执行频率
-
-        /* ISA Specific Reg */
-        for (auto& block : mfunc.blocks()) {
+        auto cfg = calcCFG(mfunc, ctx);
+        auto blockFreq = calcFreq(mfunc, cfg);
+        // ISA specific reg
+        for(auto& block : mfunc.blocks()) {
             auto& instructions = block->insts();
+            std::unordered_set<uint32_t> underRenamedISAReg;
+            std::unordered_set<uint32_t> lockedISAReg;
 
-            // TODO: collectUnderRenamedISARegs
-            std::unordered_set<uint32_t> underRenamedISAReg;  // 寄存器重命名
-            std::unordered_set<uint32_t> lockedISAReg;  // 被锁住的ISA寄存器
             const auto collectUnderRenamedISARegs = [&](MIRInstList::iterator it) {
-                while (it != instructions.end()) {
-                    auto inst = *it;
+                while(it != instructions.end()) {
+                    const auto& inst = *it;
                     auto& instInfo = ctx.instInfo.getInstInfo(inst);
                     bool hasReg = false;
-                    for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
-                        auto op = inst->operand(idx);
-                        if (isOperandISAReg(op) && !ctx.registerInfo->is_zero_reg(op.reg()) && 
-                            isLockedOrUnderRenamedType(op.type()) && (instInfo.operand_flag(idx) & OperandFlagUse)) {
-                            if (isAllocatableType(op.type())) underRenamedISAReg.insert(op.reg());
+                    for(uint32_t idx = 0; idx < instInfo.operand_num(); ++idx) {
+                        const auto& op = inst->operand(idx);
+                        if(isOperandISAReg(op) && !ctx.registerInfo->is_zero_reg(op.reg()) &&
+                           isLockedOrUnderRenamedType(op.type()) && (instInfo.operand_flag(idx) & OperandFlagUse)) {
+                            if(isAllocatableType(op.type()))
+                                underRenamedISAReg.insert(op.reg());
                             hasReg = true;
                         }
                     }
-                    if (hasReg) it++;
+                    if(hasReg) ++it;
                     else break;
                 }
             };
-            collectUnderRenamedISARegs(instructions.begin());
-            
-            // TODO: liveVRegs
-            std::unordered_set<uint32_t> liveVRegs;
-            for (auto vreg : liveInterval.block2Info.at(block.get()).ins) {
-                assert(isVirtualReg(vreg));
-                if (vregSet.count(vreg)) {
-                    liveVRegs.insert(vreg);
-                }
-            }
-            
-            const auto tripCount = blockFreq.query(block.get());
-            for (auto iter = instructions.begin(); iter != instructions.end();) {
-                auto next = std::next(iter);
-                auto inst = *iter;
-                auto& instInfo = ctx.instInfo.getInstInfo(inst);
 
-                if (inst->opcode() == InstCopyFromReg && allocableISARegs.count(inst->operand(1).reg())) {
+            collectUnderRenamedISARegs(instructions.begin());
+            std::unordered_set<uint32_t> liveVRegs;
+            for(auto vreg : liveInterval.block2Info.at(block.get()).ins) {
+                assert(isVirtualReg(vreg));
+                if(vregSet.count(vreg))
+                    liveVRegs.insert(vreg);
+            }
+            const auto tripCount = blockFreq.query(block.get());
+            for(auto iter = instructions.begin(); iter != instructions.end();) {
+                const auto next = std::next(iter);
+                auto& inst = *iter;
+                auto& instInfo = ctx.instInfo.getInstInfo(inst);
+                if(inst->opcode() == InstCopyFromReg && allocableISARegs.count(inst->operand(1).reg())) {
                     updateCopyHint(inst->operand(0).reg(), inst->operand(1).reg(), tripCount);
-                } else if (inst->opcode() == InstCopyToReg && allocableISARegs.count(inst->operand(0).reg())) {
+                } else if(inst->opcode() == InstCopyToReg && allocableISARegs.count(inst->operand(0).reg())) {
                     updateCopyHint(inst->operand(1).reg(), inst->operand(0).reg(), tripCount);
-                } else if (inst->opcode() == InstCopy) {
-                    auto u = inst->operand(0).reg();
-                    auto v = inst->operand(1).reg();
-                    if (u != v) {
-                        if (isVirtualReg(u)) updateCopyHint(u, v, tripCount);
-                        if (isVirtualReg(v)) updateCopyHint(v, u, tripCount);
+                } else if(inst->opcode() == InstCopy) {
+                    const auto u = inst->operand(0).reg();
+                    const auto v = inst->operand(1).reg();
+                    if(u != v) {
+                        if(isVirtualReg(u))
+                            updateCopyHint(u, v, tripCount);
+                        if(isVirtualReg(v))
+                            updateCopyHint(v, u, tripCount);
                     }
                 }
 
-                for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
-                    if (instInfo.operand_flag(idx) & OperandFlagUse) {
-                        auto op = inst->operand(idx);
-                        if (!isAllocatableType(op.type()) || !isOperandVRegORISAReg(op)) continue;
-
-                        def_use_time[op.reg()].insert(liveInterval.inst2Num.at(inst));
-
-                        // TODO: ???
-                        if (isOperandISAReg(op) && !ctx.registerInfo->is_zero_reg(op.reg())) {
+                for(uint32_t idx = 0; idx < instInfo.operand_num(); ++idx) {
+                    if(instInfo.operand_flag(idx) & OperandFlagUse) {
+                        auto& op = inst->operand(idx);
+                        if(!isAllocatableType(op.type())) continue;
+                        if(!isOperandVRegORISAReg(op)) continue;
+                        defUseTime[op.reg()].insert(liveInterval.inst2Num.at(inst));
+                        if(isOperandISAReg(op) && !ctx.registerInfo->is_zero_reg(op.reg())) {
                             underRenamedISAReg.erase(op.reg());
-                        } else if (isOperandVReg(op)) {
+                        } else if(isOperandVReg(op)) {
                             graph.create(op.reg());
-                            if (op.reg_flag() & RegisterFlagDead) liveVRegs.erase(op.reg());
+                            if(op.reg_flag() & RegisterFlagDead)
+                                liveVRegs.erase(op.reg());
                         }
                     }
                 }
-
-                /* Call Instruction */
-                if (requireFlag(instInfo.inst_flag(), InstFlagCall)) {
+                if(requireFlag(instInfo.inst_flag(), InstFlagCall)) {
                     const IPRAInfo* calleeUsage = nullptr;
-                    if (auto symbol = inst->operand(0).reloc()) {
+                    if(auto symbol = inst->operand(0).reloc()) {
                         calleeUsage = infoIPRA.query(symbol->name());
                     }
-                
-                    if (calleeUsage) {
-                        for (auto isaReg : *calleeUsage) {
-                            if (isAllocatableType(ctx.registerInfo->getCanonicalizedRegisterType(isaReg))) {
-                                for (auto vreg : liveVRegs) {
+
+                    if(calleeUsage) {
+                        for(auto isaReg : *calleeUsage)
+                            if(isAllocatableType(ctx.registerInfo->getCanonicalizedRegisterType(isaReg))) {
+                                for(auto vreg : liveVRegs)
                                     graph.add_edge(vreg, isaReg);
-                                }
                             }
-                        }
                     } else {
-                        for (auto isaReg : ctx.registerInfo->get_allocation_list(allocationClass)) {
-                            if (ctx.frameInfo.isCallerSaved(MIROperand::asISAReg(isaReg, OperandType::Special))) {
-                                for (auto vreg : liveVRegs) {
+                        for(auto isaReg : ctx.registerInfo->get_allocation_list(allocationClass))
+                            if(ctx.frameInfo.isCallerSaved(MIROperand::asISAReg(isaReg, OperandType::Special))) {
+                                for(auto vreg : liveVRegs)
                                     graph.add_edge(isaReg, vreg);
-                                }
                             }
-                        }
                     }
 
                     collectUnderRenamedISARegs(next);
                     lockedISAReg.clear();
                 }
-                for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
-                    if (instInfo.operand_flag(idx) & OperandFlagDef) {
-                        auto op = inst->operand(idx);
-                        if (!isAllocatableType(op.type())) continue;
-
-                        def_use_time[op.reg()].insert(liveInterval.inst2Num.at(inst));
-
-                        // TODO: ???
-                        if (isOperandISAReg(op) && !ctx.registerInfo->is_zero_reg(op.reg())) {
-                            lockedISAReg.insert(op.reg());  // op被锁定
-                            for (auto vreg : liveVRegs) graph.add_edge(vreg, op.reg());
-                        } else if (isOperandVReg(op)) {
+                for(uint32_t idx = 0; idx < instInfo.operand_num(); ++idx) {
+                    if(instInfo.operand_flag(idx) & OperandFlagDef) {
+                        auto& op = inst->operand(idx);
+                        if(!isAllocatableType(op.type()))
+                            continue;
+                        defUseTime[op.reg()].insert(liveInterval.inst2Num.at(inst));
+                        if(isOperandISAReg(op) && !ctx.registerInfo->is_zero_reg(op.reg())) {
+                            lockedISAReg.insert(op.reg());
+                            for(auto vreg : liveVRegs)
+                                graph.add_edge(vreg, op.reg());
+                        } else if(isOperandVReg(op)) {
                             liveVRegs.insert(op.reg());
                             graph.create(op.reg());
-                            for (auto isaReg : underRenamedISAReg) graph.add_edge(op.reg(), isaReg);
-                            for (auto isaReg : lockedISAReg) graph.add_edge(op.reg(), isaReg);
+                            for(auto isaReg : underRenamedISAReg)
+                                graph.add_edge(op.reg(), isaReg);
+                            for(auto isaReg : lockedISAReg)
+                                graph.add_edge(op.reg(), isaReg);
                         }
                     }
                 }
@@ -393,127 +363,116 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
 
         auto vregs = graph.collect_nodes();
         assert(vregs.size() == vregSet.size());
-        if (DebugRA) {
-            std::cerr << "vregs size is " << vregs.size() << std::endl;
+        if(debugRA) {
+            std::cerr << vregs.size() << std::endl;
         }
-        for (size_t i = 0; i < vregs.size(); i++) {
+        for(size_t i = 0; i < vregs.size(); ++i) {
             auto u = vregs[i];
-            auto& liveIntervalU = liveInterval.reg2Interval.at(u);
-
-            for (size_t j = i + 1; j < vregs.size(); j++) {
+            auto& intervalU = liveInterval.reg2Interval.at(u);
+            for(size_t j = i + 1; j < vregs.size(); ++j) {
                 auto& v = vregs[j];
-                auto& liveIntervalV = liveInterval.reg2Interval.at(v);
-                if (liveIntervalU.intersectWith(liveIntervalV)) {
-                    if (DebugRA) {
-                        std::cerr << (u ^ virtualRegBegin) << "<->" << (v ^ virtualRegBegin) << std::endl;
-                        liveIntervalU.dump(std::cerr);
-                        std::cerr << "\n";
-                        liveIntervalV.dump(std::cerr);
-                        std::cerr << "\n";
-                    }
+                auto& intervalV = liveInterval.reg2Interval.at(v);
+                if(intervalU.intersectWith(intervalV)) {
                     graph.add_edge(u, v);
                 }
             }
         }
 
-        if (graph.empty()) return;
-        assert(graph.size() == vregs.size());
-        if (DebugRA) graph.dump(std::cerr);
+        if(graph.empty()) return;
+        assert(vregs.size() == graph.size());
 
+        // Calculate weights for virtual registers
+        // Weight = \sum (number of use/def) * Freq
         std::vector<std::pair<InstNum, double>> freq;
-        for (auto& block : mfunc.blocks()) {
+        for(auto& block : mfunc.blocks()) {
             auto endInst = liveInterval.inst2Num.at(block->insts().back());
             freq.emplace_back(endInst + 2, blockFreq.query(block.get()));
         }
-    
-        /* Calculate the weights for virtual register */
-        std::unordered_map<RegNum, double> weights;  // Weight = \sum (number of use/def) * Freq
+        std::unordered_map<RegNum, double> weights;
         auto getBlockFreq = [&](InstNum inst) {
-            auto it = std::lower_bound(freq.begin(), freq.end(), inst, [](const auto& a, const auto& b) { return a.first < b; });
+            const auto it =
+                std::lower_bound(freq.begin(), freq.end(), inst, [](const auto& a, const auto& b) { return a.first < b; });
             assert(it != freq.end());
             return it->second;
         };
-        for (auto vreg : vregs) {
+        for(auto vreg : vregs) {
             auto& liveRange = liveInterval.reg2Interval.at(vreg);
             double weight = 0;
-            for (auto& [begin, end] : liveRange.segments) {
-                weight += static_cast<double>(end - begin) * getBlockFreq(end);
+            for(auto& [beg, end] : liveRange.segments) {
+                weight += static_cast<double>(end - beg) * getBlockFreq(end);
             }
-            if (auto iter = copy_hint.find(vreg); iter != copy_hint.end()) {
+            if(auto iter = copyHint.find(vreg); iter != copyHint.end())
                 weight += 100.0 * static_cast<double>(iter->second.size());
-            }
-            if (constants.count(vreg)) weight -= 1.0;
+            if(constants.count(vreg))
+                weight -= 1.0;
             weights.emplace(vreg, weight);
         }
-        for (auto& block : mfunc.blocks()) {
-            auto w = blockFreq.query(block.get());
-            for (auto inst : block->insts()) {
+        for(auto& block : mfunc.blocks()) {
+            const auto w = blockFreq.query(block.get());
+            for(auto& inst : block->insts()) {
                 auto& instInfo = ctx.instInfo.getInstInfo(inst);
-                for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
-                    auto flag = instInfo.operand_flag(idx);
-                    if (!((flag & OperandFlagUse) || (flag & OperandFlagDef))) continue;
-                    auto op = inst->operand(idx);
-                    if (!(isOperandVReg(op) && isAllocatableType(op.type()))) continue;
+                for(uint32_t idx = 0; idx < instInfo.operand_num(); ++idx) {
+                    const auto flag = instInfo.operand_flag(idx);
+                    if(!((flag & OperandFlagUse) || (flag & OperandFlagDef))) continue;
+                    auto& op = inst->operand(idx);
+                    if(!(isOperandVReg(op) && isAllocatableType(op.type()))) continue;
                     weights[op.reg()] += w;
                 }
             }
         }
 
-        /* Assign Registers */
+        // Assign registers
         const auto k = static_cast<uint32_t>(list.size());
         std::stack<uint32_t> assignStack;
         bool spillRegister = false;
         auto dynamicGraph = graph;
         dynamicGraph.prepare_for_assign(weights, k);
-        while (!dynamicGraph.empty()) {
+        while(!dynamicGraph.empty()) {
             auto u = dynamicGraph.pick_to_assign(k);
-            if (u == invalidReg) {
+            if(u == invalidReg) {
                 spillRegister = true;
                 break;
             }
-            if (DebugRA) {
+            if(debugRA)
                 std::cerr << "push " << (u ^ virtualRegBegin) << std::endl;
-            }
             assignStack.push(u);
         }
 
-        /* 所有虚拟寄存器均可以被指派为相对应的物理寄存器 */
-        if (!spillRegister) {
+        if(!spillRegister) {
             const auto calcCopyFreeProposal = [&](RegNum u, std::unordered_set<uint32_t>& exclude) -> std::optional<RegNum> {
-                auto iter = copy_hint.find(u);
-                if (iter == copy_hint.cend()) return std::nullopt;
+                auto iter = copyHint.find(u);
+                if (iter == copyHint.cend()) return std::nullopt;
                 std::unordered_map<RegNum, double> map;
                 for (auto [reg, v] : iter->second) {
-                    if (isVirtualReg(reg)) {
-                        if (auto it = regMap.find(reg); it != regMap.end() && !exclude.count(it->second)) {
+                    if(isVirtualReg(reg)) {
+                        if(auto it = regMap.find(reg); it != regMap.cend() && !exclude.count(it->second))
                             map[it->second] += v;
-                        } else if (!exclude.count(reg)) {
-                            map[reg] += v;
-                        }
-                    }
+                    } else if(!exclude.count(reg))
+                        map[reg] += v;
                 }
-                if (map.empty()) return std::nullopt;
+                if (map.empty())
+                    return std::nullopt;
                 double maxWeight = -1e10;
                 RegNum best = invalidReg;
                 for (auto [reg, v] : map) {
-                    if (v > maxWeight) {
+                    if(v > maxWeight) {
                         maxWeight = v;
                         best = reg;
                     }
                 }
-                if (best == invalidReg) assert(false);
+                if (best == invalidReg) assert(false && "invalidReg");
                 return best;
             };
 
             assert(assignStack.size() == vregs.size());
-            while (!assignStack.empty()) {
-                auto u = assignStack.top(); assignStack.pop();
+            while(!assignStack.empty()) {
+                const auto u = assignStack.top();
+                assignStack.pop();
 
-                /* 存储d */
                 std::unordered_set<uint32_t> exclude;
-                for (auto v : graph.adj(u)) {
-                    if (isVirtualReg(v)) {
-                        if (auto iter = regMap.find(v); iter != regMap.end()) {
+                for(auto v : graph.adj(u)) {
+                    if(isVirtualReg(v)) {
+                        if(auto iter = regMap.find(v); iter != regMap.cend()) {
                             exclude.insert(iter->second);
                         }
                     } else {
@@ -522,94 +481,107 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
                 }
 
                 bool assigned = false;
-                if (auto isaReg = calcCopyFreeProposal(u, exclude)) {
+                if(auto isaReg = calcCopyFreeProposal(u, exclude)) {
                     assert(allocableISARegs.count(*isaReg));
                     regMap[u] = *isaReg;
                     colorDefUse(u, *isaReg);
                     assigned = true;
                 } else {
-                    RegNum bestReg = invalidReg;
-                    double cost = 1e20;
-                    auto evalCost = [&](RegNum reg) {
-                        assert(isISAReg(reg));
-                        constexpr double calleeSavedCost = 5.0;
+                    if(!fixHazard) {
+                        for(auto reg : list) {
+                            if(!exclude.count(reg)) {
+                                regMap[u] = reg;
+                                assigned = true;
+                                break;
+                            }
+                        }
+                    } else {
+                        RegNum bestReg = invalidReg;
+                        double cost = 1e20;
+                        auto evalCost = [&](RegNum reg) {
+                            assert(isISAReg(reg));
+                            constexpr double calleeSavedCost = 5.0;
 
-                        double maxFreq = -1.0;
-                        constexpr InstNum infDist = 10;
-                        InstNum minDist = infDist;
+                            double maxFreq = -1.0;
+                            constexpr InstNum infDist = 10;
+                            InstNum minDist = infDist;
 
-                        auto& defTimeOfColored = def_use_time[reg];
-                        auto evalDist = [&](InstNum curDefTime) {
-                            if (defTimeOfColored.empty()) return infDist;
-                            auto it = defTimeOfColored.lower_bound(curDefTime);
-                            if (it == defTimeOfColored.begin()) return std::min(infDist, *it - curDefTime);
-                            if (it == defTimeOfColored.end()) return std::min(infDist, curDefTime - *std::prev(it));
-                            return std::min(infDist, std::min(curDefTime - *std::prev(it), *it - curDefTime));
+                            auto& defTimeOfColored = defUseTime[reg];
+                            auto evalDist = [&](InstNum curDefTime) {
+                                if(defTimeOfColored.empty())
+                                    return infDist;
+                                const auto it = defTimeOfColored.lower_bound(curDefTime);
+                                if(it == defTimeOfColored.begin())
+                                    return std::min(infDist, *it - curDefTime);
+                                if(it == defTimeOfColored.end())
+                                    return std::min(infDist, curDefTime - *std::prev(it));
+                                return std::min(infDist, std::min(curDefTime - *std::prev(it), *it - curDefTime));
+                            };
+
+                            for(auto instNum : defUseTime[u]) {
+                                const auto f = getBlockFreq(instNum);
+                                if(f > maxFreq) {
+                                    minDist = evalDist(instNum);
+                                    maxFreq = f;
+                                } else if(f == maxFreq)
+                                    minDist = std::min(minDist, evalDist(instNum));
+                            }
+
+                            double curCost = -static_cast<double>(minDist);
+                            if(ctx.frameInfo.isCalleeSaved(MIROperand::asISAReg(reg, OperandType::Special))) {
+                                curCost += calleeSavedCost;
+                            }
+
+                            return curCost;
                         };
-
-                        for (auto instNum : def_use_time[u]) {
-                            auto f = getBlockFreq(instNum);
-                            if (f > maxFreq) {
-                                minDist = evalDist(instNum);
-                                maxFreq = f;
-                            } else if (f == maxFreq) {
-                                minDist = std::min(minDist, evalDist(instNum));
+                        for(auto reg : list) {
+                            if(!exclude.count(reg)) {
+                                const auto curCost = evalCost(reg);
+                                if(debugRA) {
+                                    std::cerr << reg << " cost " << curCost << std::endl;
+                                }
+                                if(curCost < cost) {
+                                    cost = curCost;
+                                    bestReg = reg;
+                                }
                             }
                         }
 
-                        double curCost = -static_cast<double>(minDist);
-                        if (ctx.frameInfo.isCalleeSaved(MIROperand::asISAReg(reg, OperandType::Special))) {
-                            curCost += calleeSavedCost;
-                        }
-                        return curCost;
-                    };
-
-                    for (auto reg : list) {
-                        if (!exclude.count(reg)) {
-                            const auto curCost = evalCost(reg);
-                            if (curCost < cost) {
-                                cost = curCost;
-                                bestReg = reg;
-                            }
-                        }
+                        regMap[u] = bestReg;
+                        colorDefUse(u, bestReg);
+                        assigned = true;
                     }
-
-                    regMap[u] = bestReg;
-                    colorDefUse(u, bestReg);
-                    assigned = true;
                 }
-                if (!assigned) assert(false && "the error occurs in the graph coloring register allocation");
-                
-                if (DebugRA) {
-                    std::cerr << (u ^ virtualRegBegin) << "->" << regMap.at(u) << std::endl;
+                if(!assigned) assert(false);
+                if(debugRA) {
+                    std::cerr << (u ^ virtualRegBegin) << " -> " << regMap.at(u) << std::endl;
                 }
             }
+
+            // mfunc.dump(std::cerr, ctx);
             return;
         }
 
-        /* 部分虚拟寄存器需要被spill到内存 */
+        // Spill register
         auto u = graph.pick_to_spill(blockList, weights, k);
-        
-        std::cerr << "spill register ";
-        if (isVirtualReg(u)) std::cerr << "v" << (u ^ virtualRegBegin) << "\n";
-
         blockList.insert(u);
-        if (DebugRA) {
-            std::cerr << "spill " << (u ^ virtualRegBegin) << "\n";
-            std::cerr << "block list " << blockList.size() << " " << graph.size() << "\n";
+        if(debugRA) {
+            std::cerr << "spill " << (u ^ virtualRegBegin) << std::endl;
+            std::cerr << "block list " << blockList.size() << ' ' << graph.size() << '\n';
         }
-        if (!isVirtualReg(u)) {
-            assert(false && "the error occurs in the graph coloring register allocation");
+        if(!isVirtualReg(u)) {
+            // std::cerr << mfunc.symbol() << std::endl;
+            assert(false);
         }
         const auto size = getOperandSize(canonicalizedType);
         bool alreadyInStack = inStackArguments.count(u);
         bool rematerializeConstant = constants.count(u);
         MIROperand stackStorage;
-        MIRInst* copy_inst = nullptr;
-        if (alreadyInStack) {
+        MIRInst* copyInst = nullptr;
+        if(alreadyInStack) {
             stackStorage = inStackArguments.at(u);
-        } else if (rematerializeConstant) {
-            copy_inst = constants.at(u);
+        } else if(rematerializeConstant) {
+            copyInst = constants.at(u);
         } else {
             stackStorage = mfunc.newStackObject(ctx.nextId(), size, size, 0, StackObjectUsage::RegSpill);
         }
@@ -618,99 +590,108 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
         const uint32_t minimizeIntervalThreshold = 8;
         const auto fallback = blockList.size() >= minimizeIntervalThreshold;
 
-        for (auto& block : mfunc.blocks()) {
+        for(auto& block : mfunc.blocks()) {
             auto& instructions = block->insts();
 
             bool loaded = false;
-            for (auto iter = instructions.begin(); iter != instructions.end();) {
-                auto next = std::next(iter);
-                auto inst = *iter;
-                if (newInsts.count(inst)) {
+            for(auto iter = instructions.begin(); iter != instructions.end();) {
+                const auto next = std::next(iter);
+                auto& inst = *iter;
+                if(newInsts.count(inst)) {
                     iter = next;
                     continue;
                 }
                 auto& instInfo = ctx.instInfo.getInstInfo(inst);
                 bool hasUse = false, hasDef = false;
-                for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
-                    auto op = inst->operand(idx);
-                    if (!isOperandVReg(op)) continue;
-                    if (op.reg() != u) continue;
+                for(uint32_t idx = 0; idx < instInfo.operand_num(); ++idx) {
+                    auto& op = inst->operand(idx);
+                    if(!isOperandVReg(op)) continue;
+                    if(op.reg() != u) continue;
 
-                    auto flag = instInfo.operand_flag(idx);
-                    if (flag & OperandFlagUse) hasUse = true;
-                    else if (flag & OperandFlagDef) hasDef = true;
+                    const auto flag = instInfo.operand_flag(idx);
+                    if(flag & OperandFlagUse) {
+                        hasUse = true;
+                    } else if(flag & OperandFlagDef) {
+                        hasDef = true;
+                    }
                 }
 
-                if (hasUse && !loaded) {  // should be placed before locked inst block
+                if(hasUse && !loaded) {
+                    // should be placed before locked inst block
                     auto it = iter;
-                    while (it != instructions.begin()) {
+                    while(it != instructions.begin()) {
                         auto& lockedInst = *std::prev(it);
                         auto& lockedInstInfo = ctx.instInfo.getInstInfo(lockedInst);
                         bool hasReg = false;
-                        for (uint32_t idx = 0; idx < lockedInstInfo.operand_num(); idx++) {
-                            auto op = lockedInst->operand(idx);
-                            if (isOperandISAReg(op) && !ctx.registerInfo->is_zero_reg(op.reg()) && 
-                                isLockedOrUnderRenamedType(op.type()) && (instInfo.operand_flag(idx) & OperandFlagDef)) {
+                        for(uint32_t idx = 0; idx < lockedInstInfo.operand_num(); ++idx) {
+                            const auto& op = lockedInst->operand(idx);
+                            if(isOperandISAReg(op) && !ctx.registerInfo->is_zero_reg(op.reg()) &&
+                               isLockedOrUnderRenamedType(op.type()) && (instInfo.operand_flag(idx) & OperandFlagDef)) {
                                 hasReg = true;
                                 break;
                             }
                         }
-
-                        if (!hasReg) break;
+                        if(!hasReg)
+                            break;
                         --it;
                     }
 
-                    if (rematerializeConstant) {
-                        instructions.insert(it, copy_inst);
+                    if(rematerializeConstant) {
+                        // auto& copyInstInfo = ctx.instInfo.getInstInfo(*copyInst);
+                        // copyInstInfo.print(std::cerr, *copyInst, true);
+                        // std::cerr << '\n';
+                        auto tmpInst = new MIRInst(*copyInst);
+                        instructions.insert(it, tmpInst);
                     } else {
-                        // auto tmp = new MIRInst{ InstLoadRegFromStack };
-                        // tmp->set_operand(0, MIROperand::asVReg(u - virtualRegBegin, canonicalizedType));
-                        // auto tmpStack = new MIROperand(stackStorage);
-                        // tmp->set_operand(1, tmpStack);
-                        auto tmp = utils::make<MIRInst>(InstLoadRegFromStack, {
-                            MIROperand::asVReg(u - virtualRegBegin, canonicalizedType),
-                            stackStorage
-                        });
-
-                        instructions.insert(it, tmp);
+                        auto tmpInst = new MIRInst(InstLoadRegFromStack);
+                        tmpInst->set_operand(0, MIROperand::asVReg(u - virtualRegBegin, canonicalizedType));
+                        tmpInst->set_operand(1, stackStorage);
+                        instructions.insert(it, tmpInst);
+                        // instructions.insert(it,
+                        //                     MIRInst{ InstLoadRegFromStack }
+                        //                         .setOperand<0>(MIROperand::asVReg(u - virtualRegBegin, canonicalizedType))
+                        //                         .setOperand<1>(stackStorage));
                     }
-
-                    if (!fallback) loaded = true;
+                    if(!fallback) loaded = true;
                 }
-                if (hasDef) {
-                    if (alreadyInStack || rematerializeConstant) {
+                if(hasDef) {
+                    if(alreadyInStack || rematerializeConstant) {
                         instructions.erase(iter);
                         loaded = false;
-                    } else {  // should be placed after rename inst block
+                    } else {
+                        // should be placed after rename inst block
                         auto it = next;
-                        while (it != instructions.end()) {
-                            auto renameInst = *it;
+                        while(it != instructions.end()) {
+                            auto& renameInst = *it;
                             auto& renameInstInfo = ctx.instInfo.getInstInfo(renameInst);
                             bool hasReg = false;
-                            for (uint32_t idx = 0; idx < renameInstInfo.operand_num(); idx++) {
-                                auto op = renameInst->operand(idx);
-                                if (isOperandISAReg(op) && !ctx.registerInfo->is_zero_reg(op.reg()) && 
-                                    isLockedOrUnderRenamedType(op.type()) && (renameInstInfo.operand_flag(idx) & OperandFlagUse)) {
+                            for(uint32_t idx = 0; idx < renameInstInfo.operand_num(); ++idx) {
+                                const auto& op = renameInst->operand(idx);
+                                if(isOperandISAReg(op) && !ctx.registerInfo->is_zero_reg(op.reg()) &&
+                                   isLockedOrUnderRenamedType(op.type()) && (instInfo.operand_flag(idx) & OperandFlagUse)) {
                                     hasReg = true;
                                     break;
                                 }
                             }
-
-                            if (!hasReg) break;
-                            it++;
+                            if(!hasReg)
+                                break;
+                            ++it;
                         }
-                        auto tmp = new MIRInst{ InstStoreRegToStack };
-                        tmp->set_operand(0, MIROperand::asVReg(u - virtualRegBegin, canonicalizedType));
-                        auto tmpStack = MIROperand(stackStorage);
-                        tmp->set_operand(1, tmpStack);
-                        auto newInst = instructions.insert(it, tmp);
+                        auto tmpInst = new MIRInst(InstStoreRegToStack);
+                        tmpInst->set_operand(1, MIROperand::asVReg(u - virtualRegBegin, canonicalizedType));
+                        tmpInst->set_operand(0, stackStorage);
+                        auto newInst = instructions.insert(it, tmpInst);
                         newInsts.insert(*newInst);
                         loaded = false;
                     }
                 }
+
                 iter = next;
             }
+
+            // TODO: update live interval instead of recomputation?
         }
+
         cleanupRegFlags(mfunc, ctx);
     }
 }
@@ -719,7 +700,7 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
     const auto classCount = ctx.registerInfo->get_alloca_class_cnt();
     std::unordered_map<uint32_t, uint32_t> regMap;  // --> 存储[虚拟寄存器]到[物理寄存器]之间的映射
     for (uint32_t idx = 0; idx < classCount; idx++) {
-        GraphColoringAllocate(mfunc, ctx, infoIPRA, idx, regMap);
+        graphColoringAllocateImpl(mfunc, ctx, infoIPRA, idx, regMap);
     }
 
     for (auto& block : mfunc.blocks()) {
@@ -727,7 +708,7 @@ static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAU
         for (auto inst : instructions) {
             auto& instInfo = ctx.instInfo.getInstInfo(inst);
             for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
-                auto op = inst->operand(idx);
+                auto& op = inst->operand(idx);
                 if (op.type() > OperandType::Float32) continue;
                 if (isOperandVReg(op)) {
                     const auto isaReg = regMap.at(op.reg());
