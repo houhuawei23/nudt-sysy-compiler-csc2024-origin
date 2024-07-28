@@ -176,11 +176,13 @@ void loopsimplify::insertUniqueExitBlock(ir::Loop* L,
 
 bool loopsimplify::simplifyOneLoop(ir::Loop* L, TopAnalysisInfoManager* tp) {
   bool changed = false;
-  if (L->isLoopSimplifyForm()) return false;
+  // if (L->isLoopSimplifyForm()) return false;
   // 如果有多条回边
+  //preheader不能为F的entry
+  ir::BasicBlock* entry = L->header()->function()->entry();
   ir::BasicBlock* preheader = L->getLoopPreheader();
   ir::BasicBlock* LoopLatch = L->getLoopLatch();
-  if (!preheader) {
+  if (!preheader || preheader == entry) {
     preheader = insertUniquePreheader(L, tp);
     if (preheader) changed = true;
   }
@@ -190,7 +192,7 @@ bool loopsimplify::simplifyOneLoop(ir::Loop* L, TopAnalysisInfoManager* tp) {
     if (LoopLatch) changed = true;
   }
 
-  if (L->hasDedicatedExits()) {
+  if (!L->hasDedicatedExits()) {
     insertUniqueExitBlock(L, tp);
     changed = true;
   }

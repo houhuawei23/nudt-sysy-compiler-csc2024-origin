@@ -97,69 +97,70 @@ ir::BasicBlock* simplifyCFG::getMergeBlock(ir::BasicBlock* bb) {  // condition 2
     return nullptr;
 }
 
-bool simplifyCFG::MergeBlock(ir::Function* func) {
-    bool ischanged = false;
-    for (auto bb : func->blocks()) {
-        // func->print(std::cout);
-        auto mergeBlock = getMergeBlock(bb);
-        while (mergeBlock) {
-            if (mergeBlock == func->exit()) func->setExit(bb);
-            if (not ischanged) ischanged = true;
-            // 去掉两个块的联系
-            ir::BasicBlock::delete_block_link(bb, mergeBlock);
-            // 删除最后一条跳转指令
-            bb->delete_inst(bb->insts().back());
-            // 将下一个bb的所有语句复制
-            for (auto inst : mergeBlock->insts()) {
-                inst->setBlock(bb);
-                bb->emplace_inst(bb->insts().end(), inst);
-            }
-            // 将下一个bb的所有后继与当前进行连接
-            for (auto mergeBBNextIter = mergeBlock->next_blocks().begin();
-                 mergeBBNextIter != mergeBlock->next_blocks().end();) {
-                auto mergeBBNext = *mergeBBNextIter;
-                mergeBBNextIter++;
-                ir::BasicBlock::delete_block_link(mergeBlock, mergeBBNext);
-                ir::BasicBlock::block_link(bb, mergeBBNext);
-            }
-            // 将所有的对mergeBB的使用进行替换
-            mergeBlock->replaceAllUseWith(bb);
-
-            // 将merge块删掉
-            // 因为这些语句没有消失,不能使用一般的delete接口直接删除use
-            mergeBlock->insts().clear();
-            func->blocks().remove(mergeBlock);
-            mergeBlock = getMergeBlock(bb);
-        }
-    }
-    return ischanged;
-}
-// condition 3 removing phiNodes with only one incoming
-bool simplifyCFG::removeSingleIncomingPhi(ir::Function* func) {
-    bool ischanged = false;
-    for (auto bb : func->blocks()) {
-        for (auto instIter = bb->phi_insts().begin(); instIter != bb->phi_insts().end();) {
-            auto inst = *instIter;
-            instIter++;
-            auto phiInst = dyn_cast<ir::PhiInst>(inst);
-            if (phiInst->getsize() == 1) {
-                phiInst->replaceAllUseWith(phiInst->getValue(0));
-                bb->delete_inst(phiInst);
-                ischanged = true;
+    bool simplifyCFG::MergeBlock(ir::Function *func)
+    {
+        bool ischanged=false;
+        for(auto bb:func->blocks()){
+            // func->print(std::cout);
+            if(bb==func->entry())continue;
+            auto mergeBlock=getMergeBlock(bb);
+            while(mergeBlock){
+                if(mergeBlock==func->exit())func->setExit(bb);
+                if(not ischanged)ischanged=true;
+                //去掉两个块的联系
+                ir::BasicBlock::delete_block_link(bb,mergeBlock);
+                //删除最后一条跳转指令
+                bb->delete_inst(bb->insts().back());
+                //将下一个bb的所有语句复制
+                for(auto inst:mergeBlock->insts()){
+                    inst->setBlock(bb);
+                    bb->emplace_inst(bb->insts().end(),inst);
+                }
+                //将下一个bb的所有后继与当前进行连接
+                for(auto mergeBBNextIter=mergeBlock->next_blocks().begin();mergeBBNextIter!=mergeBlock->next_blocks().end();){
+                    auto mergeBBNext=*mergeBBNextIter;
+                    mergeBBNextIter++;
+                    ir::BasicBlock::delete_block_link(mergeBlock,mergeBBNext);
+                    ir::BasicBlock::block_link(bb,mergeBBNext);
+                }
+                //将所有的对mergeBB的使用进行替换
+                mergeBlock->replaceAllUseWith(bb);
+                
+                //将merge块删掉
+                //因为这些语句没有消失,不能使用一般的delete接口直接删除use
+                mergeBlock->insts().clear();
+                func->blocks().remove(mergeBlock);
+                mergeBlock=getMergeBlock(bb);
             }
         }
+        return ischanged;
     }
-    return ischanged;
-}
-// condition 4 处理只含有一个br uncond 的块
-// 判断符合条件的块--只有一条指令, 是无条件跳转, 不是entry
-bool simplifyCFG::getSingleDest(ir::BasicBlock* bb) {  // condition 4
-    if (bb->insts().size() != 1) return false;
-    if (bb == bb->function()->entry()) return false;
-    auto brInst = dyn_cast<ir::BranchInst>(bb->terminator());
-    if (brInst == nullptr) return false;
-    return not brInst->is_cond();
-}
+    //condition 3 removing phiNodes with only one incoming
+    bool simplifyCFG::removeSingleIncomingPhi(ir::Function* func){
+        bool ischanged=false;
+        for(auto bb:func->blocks()){
+            for(auto instIter=bb->phi_insts().begin();instIter!=bb->phi_insts().end();){
+                auto inst=*instIter;
+                instIter++;
+                auto phiInst=dyn_cast<ir::PhiInst>(inst);
+                if(phiInst->getsize()==1){
+                    phiInst->replaceAllUseWith(phiInst->getValue(0));
+                    bb->delete_inst(phiInst);
+                    ischanged=true;
+                }
+            }
+        }
+        return ischanged;
+    }
+    //condition 4 处理只含有一个br uncond 的块
+    //判断符合条件的块--只有一条指令, 是无条件跳转, 不是entry
+    bool simplifyCFG::getSingleDest(ir::BasicBlock* bb){//condition 4
+        if(bb->insts().size()!=1)return false;
+        if(bb==bb->function()->entry())return false;
+        auto brInst=dyn_cast<ir::BranchInst>(bb->terminator());
+        if(brInst==nullptr)return false;
+        return not brInst->is_cond();
+    }
 
 bool simplifyCFG::removeSingleBrBlock(ir::Function* func) {
     // 这里移除只有一条跳转指令的block
