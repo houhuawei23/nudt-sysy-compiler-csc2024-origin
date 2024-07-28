@@ -7,6 +7,7 @@
 namespace pass {
 class ADCE : public FunctionPass {
   public:
+    std::string name() const override { return "ADCE"; }
     void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
 
   private:

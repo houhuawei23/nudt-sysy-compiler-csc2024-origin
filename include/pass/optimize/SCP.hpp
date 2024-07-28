@@ -8,10 +8,11 @@
 
 namespace pass {
 class SCP : public FunctionPass {
-  public:
-    void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
+public:
+  void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
+  std::string name() const override { return "SCP"; }
 
-  private:
-    void addConstFlod(ir::Instruction* inst);
+private:
+  void addConstFlod(ir::Instruction* inst);
 };
 }  // namespace pass

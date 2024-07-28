@@ -34,6 +34,49 @@
 
 #include "pass/optimize/LICM.hpp"
 namespace pass {
+
+template <typename PassType, typename Callable>
+void runPass(PassType* pass, Callable&& runFunc, const std::string& passName) {
+  const auto& config = sysy::Config::getInstance();
+  auto start = std::chrono::high_resolution_clock::now();
+  runFunc();
+  auto end = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> elapsed = end - start;
+  if (config.logLevel >= sysy::LogLevel::DEBUG) {
+    std::cout << passName << " " << pass->name() << " took " << elapsed.count()
+              << " seconds.\n";
+  }
+}
+
+void PassManager::run(ModulePass* mp) {
+  runPass(mp, [&]() { mp->run(irModule, tAIM); }, "ModulePass");
+}
+
+void PassManager::run(FunctionPass* fp) {
+  runPass(
+    fp,
+    [&]() {
+      for (auto func : irModule->funcs()) {
+        if (func->isOnlyDeclare()) continue;
+        fp->run(func, tAIM);
+      }
+    },
+    "FunctionPass");
+}
+
+void PassManager::run(BasicBlockPass* bp) {
+  runPass(
+    bp,
+    [&]() {
+      for (auto func : irModule->funcs()) {
+        for (auto bb : func->blocks()) {
+          bp->run(bb, tAIM);
+        }
+      }
+    },
+    "BasicBlockPass");
+}
+
 void PassManager::runPasses(std::vector<std::string> passes) {
   const auto& config = sysy::Config::getInstance();
 
@@ -98,31 +141,29 @@ void PassManager::runPasses(std::vector<std::string> passes) {
       } else if (pass_name.compare("indvar") == 0) {
         run(new pass::indVarAnalysis());
         // run(new pass::indVarInfoCheck());
-      } else if (pass_name.compare("g2l") == 0){
+      } else if (pass_name.compare("g2l") == 0) {
         run(new pass::global2local());
-      } else if (pass_name.compare("tco") == 0){
+      } else if (pass_name.compare("tco") == 0) {
         run(new pass::tailCallOpt());
-      } else if (pass_name.compare("cfgprint") == 0){
+      } else if (pass_name.compare("cfgprint") == 0) {
         run(new pass::CFGPrinter());
-      } else if (pass_name.compare("licm") == 0){
+      } else if (pass_name.compare("licm") == 0) {
         run(new pass::LICM());
-      } else if (pass_name.compare("dse") == 0){
+      } else if (pass_name.compare("dse") == 0) {
         run(new pass::simpleDSE());
-      } else if (pass_name.compare("dle") == 0){
+      } else if (pass_name.compare("dle") == 0) {
         run(new pass::simpleDLE());
-      }
-      else {
+      } else {
         assert(false && "Invalid pass name");
       }
     }
   }
 
-
   if (config.logLevel >= sysy::LogLevel::DEBUG) {
     auto fileName = utils::preName(config.infile) + "_after_passes.ll";
     dumpModule(irModule, fileName);
   }
-  
+
   irModule->rename();
 }
 

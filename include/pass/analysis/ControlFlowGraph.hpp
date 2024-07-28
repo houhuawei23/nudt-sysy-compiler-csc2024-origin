@@ -8,6 +8,7 @@ class CFGAnalysisHHW : public FunctionPass {
 
  public:
   void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
+  std::string name() const override { return "CFGAnalysisHHW"; }
 };
 
 }  // namespace pass

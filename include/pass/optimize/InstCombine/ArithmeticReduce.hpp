@@ -7,7 +7,7 @@ namespace pass {
 class ArithmeticReduce final : public FunctionPass {
   bool runOnBlock(ir::IRBuilder& builder, ir::BasicBlock& block);
 
- public:
+public:
   void run(ir::Function* func, TopAnalysisInfoManager* tp) override {
     ir::IRBuilder builder;
 
@@ -15,5 +15,6 @@ class ArithmeticReduce final : public FunctionPass {
       runOnBlock(builder, *block);
     }
   }
+  std::string name() const override { return "ArithmeticReduce"; }
 };
 };  // namespace pass
