@@ -37,7 +37,7 @@ public:  // lowering stage
   // 在函数调用前生成序言代码，用于设置栈帧和保存寄存器状态。
   void emitPrologue(MIRFunction* func, LoweringContext& lowering_ctx) override;
   void emitReturn(ir::ReturnInst* ir_inst,
-                   LoweringContext& lowering_ctx) override;
+                  LoweringContext& lowering_ctx) override;
 
 public:  // ra stage (register allocation stage)
   // 调用者保存寄存器
@@ -77,7 +77,6 @@ public:  // sa stage (stack allocation stage)
     std::unordered_set<MIROperand, MIROperandHasher>& callee_saved_regs,
     CodeGenContext& ctx,
     MIROperand return_addr_reg) override;
-
 };
 
 /*
@@ -94,9 +93,12 @@ public:  // get function
       case OperandType::Int8:
       case OperandType::Int16:
       case OperandType::Int32:
-      case OperandType::Int64: return 0;
-      case OperandType::Float32: return 1;
-      default: assert(false && "invalid alloca class");
+      case OperandType::Int64:
+        return 0;
+      case OperandType::Float32:
+        return 1;
+      default:
+        assert(false && "invalid alloca class");
     }
   }
   std::vector<uint32_t>& get_allocation_list(uint32_t classId);
@@ -109,9 +111,12 @@ public:  // get function
       case OperandType::Int8:
       case OperandType::Int16:
       case OperandType::Int32:
-      case OperandType::Int64: return OperandType::Int64;
-      case OperandType::Float32: return OperandType::Float32;
-      default: assert(false && "valid operand type");
+      case OperandType::Int64:
+        return OperandType::Int64;
+      case OperandType::Float32:
+        return OperandType::Float32;
+      default:
+        assert(false && "valid operand type");
     }
   }
   OperandType getCanonicalizedRegisterType(uint32_t reg) {
@@ -169,4 +174,6 @@ public:  // emit_assembly
   bool verify(MIRModule& module) override;
   bool verify(MIRFunction& func) override;
 };
+
+void addExternalIPRAInfo(class IPRAUsageCache& infoIPRA);
 }  // namespace mir

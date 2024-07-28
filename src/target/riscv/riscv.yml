@@ -13,6 +13,31 @@ InstInfo: {
                 1: { name: rs1, type: GPR, flag: Use },
                 2: { name: rs2, type: GPR, flag: Use },
               },
+            instances: [
+                ## Bitmanip Extension
+                # Zba
+                { name: ADD_UW, mnem: "add.uw" },
+                { name: SH1ADD, mnem: "sh1add" },
+                { name: SH1ADD_UW, mnem: "sh1add.uw" },
+                { name: SH2ADD, mnem: "sh2add" },
+                { name: SH2ADD_UW, mnem: "sh2add.uw" },
+                { name: SH3ADD, mnem: "sh3add" },
+                { name: SH3ADD_UW, mnem: "sh3add.uw" },
+                # Zbb
+                { name: ANDN, mnem: "andn" },
+                { name: ORN, mnem: "orn" },
+                { name: XNOR, mnem: "xnor" },
+                { name: MIN, mnem: "min" },
+                { name: MAX, mnem: "max" },
+                { name: MINU, mnem: "minu" },
+                { name: MAXU, mnem: "maxu" },
+
+                { name: DIVUW, mnem: "divuw" },
+                { name: REMUW, mnem: "remuw" },
+                { name: SLLW, mnem: "sllw" },
+                { name: SRLW, mnem: "srlw" },
+                { name: SRAW, mnem: "sraw" },
+              ],
           },
         Itype: {
             # format: "$mnem $rd, $rs1, $imm",
@@ -23,6 +48,13 @@ InstInfo: {
                 1: { name: rs1, type: GPR, flag: Use },
                 2: { name: imm, type: IMM12, flag: Metadata },
               },
+            instances: [
+                ## Bitmanip Extension
+                # Zba
+                { name: SLLI_UW, mnem: "slli.uw" },
+
+                { name: ADDIW, mnem: "addiw" },
+              ],
           },
         Stype: {
             # format: "$mnem $rs2, $offset($rs1)",
@@ -383,7 +415,8 @@ InstSelInfo: {
           # LoadGlobalAddress dst[INTREG], reloc[RELOC]
           pattern: { name: InstLoadGlobalAddress, dst: $dst, addr: $addr },
           replace: {
-              name: LLA, # lla rd, symbol
+              # lla rd, symbol
+              name: LLA,
               rd: "getVRegAs(ctx, $dst)",
               symbol: $addr,
             },
@@ -447,11 +480,6 @@ InstSelInfo: {
           replace: { name: J, target: $target },
         },
         {
-          # Return
-          pattern: { name: InstReturn },
-          replace: { name: RET },
-        },
-        {
           # name list
           pattern:
             {
@@ -483,30 +511,89 @@ InstSelInfo: {
           replace: { name: LoadImm32, rd: $dst, imm: $imm },
         },
         # InstAdd
+        # Fuse address generation
+        # imm = 1,2,3
         {
           pattern:
             {
               name: InstAdd,
               dst: $dst,
-              src1: { name: InstShl, src1: $src1, src2: $imm },
+              src1: { name: InstShl, dst: $tmp, src1: $src1, src2: $imm },
               src2: $src2,
               predicate: "isOperandIReg($dst) && isOperandIReg($src1) && isOperandIReg($src2) && ($imm).isImm() && ($imm).imm() == 1",
             },
           replace: { name: SH1ADD, rd: $dst, rs1: $src1, rs2: $src2 },
         },
         {
-          # imm = 1,2,3
           pattern:
             {
               name: InstAdd,
               dst: $dst,
               src1: $src1,
-              src2: { name: InstShl, dst: $dst, src1: $src1, src2: $imm },
+              src2: { name: InstShl, src1: $src2, src2: $imm },
               predicate: "isOperandIReg($dst) && isOperandIReg($src1) && isOperandIReg($src2) && ($imm).isImm() && ($imm).imm() == 1",
             },
           replace: { name: SH1ADD, rd: $src1, rs1: $src2, rs2: $src1 },
         },
         {
+          pattern:
+            {
+              name: InstAdd,
+              dst: $dst,
+              src1: { name: InstShl, dst: $tmp, src1: $src1, src2: $imm },
+              src2: $src2,
+              predicate: "isOperandIReg($dst) && isOperandIReg($src1) && isOperandIReg($src2) && ($imm).isImm() && ($imm).imm() == 2",
+            },
+          replace: { name: SH2ADD, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+        {
+          pattern:
+            {
+              name: InstAdd,
+              dst: $dst,
+              src1: $src1,
+              src2: { name: InstShl, src1: $src2, src2: $imm },
+              predicate: "isOperandIReg($dst) && isOperandIReg($src1) && isOperandIReg($src2) && ($imm).isImm() && ($imm).imm() == 2",
+            },
+          replace: { name: SH2ADD, rd: $src1, rs1: $src2, rs2: $src1 },
+        },
+        {
+          pattern:
+            {
+              name: InstAdd,
+              dst: $dst,
+              src1: { name: InstShl, dst: $tmp, src1: $src1, src2: $imm },
+              src2: $src2,
+              predicate: "isOperandIReg($dst) && isOperandIReg($src1) && isOperandIReg($src2) && ($imm).isImm() && ($imm).imm() == 3",
+            },
+          replace: { name: SH3ADD, rd: $dst, rs1: $src1, rs2: $src2 },
+        },
+        {
+          pattern:
+            {
+              name: InstAdd,
+              dst: $dst,
+              src1: $src1,
+              src2: { name: InstShl, src1: $src2, src2: $imm },
+              predicate: "isOperandIReg($dst) && isOperandIReg($src1) && isOperandIReg($src2) && ($imm).isImm() && ($imm).imm() == 3",
+            },
+          replace: { name: SH3ADD, rd: $src1, rs1: $src2, rs2: $src1 },
+        },
+        # InstAdd
+        {
+          # InstAdd $dst[I64], $src1, $src2[imm12] -> ADDI $dst, $src1, $src2
+          pattern:
+            {
+              name: InstAdd,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandI64($dst) && isOperandIReg($src1) && isOperandImm12($src2),
+            },
+          replace: { name: ADDI, rd: $dst, rs1: $src1, imm: $src2 },
+        },
+        {
+          # InstAdd $dst[I64], $src1, $src2 -> ADD $dst, $src1, $src2
           pattern:
             {
               name: InstAdd,
@@ -517,8 +604,20 @@ InstSelInfo: {
             },
           replace: { name: ADD, rd: $dst, rs1: $src1, rs2: $src2 },
         },
-
         {
+          # InstAdd $dst[I32], $src1, $src2[imm12] -> ADDIW $dst, $src1, $src2
+          pattern:
+            {
+              name: InstAdd,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandI64($dst) && isOperandIReg($src1) && isOperandImm12($src2),
+            },
+          replace: { name: ADDIW, rd: $dst, rs1: $src1, imm: $src2 },
+        },
+        {
+          # InstAdd $dst[I32], $src1, $src2 -> ADDW $dst, $src1, $src2
           pattern:
             {
               name: InstAdd,
@@ -531,6 +630,7 @@ InstSelInfo: {
         },
         # InstSub
         {
+          # InstSub $dst[I64], $src1, $src2 -> SUB $dst, $src1, $src2
           pattern:
             {
               name: InstSub,
@@ -542,6 +642,7 @@ InstSelInfo: {
           replace: { name: SUB, rd: $dst, rs1: $src1, rs2: $src2 },
         },
         {
+          # InstSub $dst[I32], $src1, $src2 -> SUBW $dst, $src1, $src2
           pattern:
             {
               name: InstSub,
@@ -554,6 +655,7 @@ InstSelInfo: {
         },
         # InstMul
         {
+          # InstMul $dst[I64], $src1, $src2 -> MUL $dst, $src1, $src2
           pattern:
             {
               name: InstMul,
@@ -565,6 +667,7 @@ InstSelInfo: {
           replace: { name: MUL, rd: $dst, rs1: $src1, rs2: $src2 },
         },
         {
+          # InstMul $dst[I32], $src1, $src2 -> MULW $dst, $src1, $src2
           pattern:
             {
               name: InstMul,
@@ -577,6 +680,7 @@ InstSelInfo: {
         },
         # InstUDiv
         {
+          # InstUDiv $dst[I64], $src1, $src2 -> DIVU $dst, $src1, $src2
           pattern:
             {
               name: InstUDiv,
@@ -588,6 +692,7 @@ InstSelInfo: {
           replace: { name: DIVU, rd: $dst, rs1: $src1, rs2: $src2 },
         },
         {
+          # InstUDiv $dst[I32], $src1, $src2 -> DIVUW $dst, $src1, $src2
           pattern:
             {
               name: InstUDiv,
@@ -600,6 +705,7 @@ InstSelInfo: {
         },
         # InstURem
         {
+          # InstURem $dst[I64], $src1, $src2 -> REMU $dst, $src1, $src2
           pattern:
             {
               name: InstURem,
@@ -611,6 +717,7 @@ InstSelInfo: {
           replace: { name: REMU, rd: $dst, rs1: $src1, rs2: $src2 },
         },
         {
+          # InstURem $dst[I32], $src1, $src2 -> REMUW $dst, $src1, $src2
           pattern:
             {
               name: InstURem,
@@ -822,6 +929,24 @@ InstSelInfo: {
               rs2: $src,
             },
         },
+        # {
+        #   # TODO
+        #   pattern:
+        #     {
+        #       name: SUBW,
+        #       rd: $dst,
+        #       rs1: $src1,
+        #       rs2:
+        #         {
+        #           name: SUBW,
+        #           rd: $rs2,
+        #           rs1: $SubSrc1,
+        #           rs2: $SubSrc2,
+        #           predicate: s,
+        #         },
+        #     },
+        # },
+
         #! InstICmp: SLT, SLTU, SLTI, SLTIU: TODO
         {
           # ICmpSignedLessThan dst, src1, src2 -> SLT dst, src1, src2

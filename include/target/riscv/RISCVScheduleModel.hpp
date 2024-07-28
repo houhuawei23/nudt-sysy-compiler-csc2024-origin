@@ -218,12 +218,14 @@ public:
     // consumes operands in the AG stage
     if (state.queryRegisterLatency(inst, 1) > 0) return false;
     if (state.queryRegisterLatency(inst, 2) > 0) return false;
-    const auto logDividend = inst.operand(3);
-    const auto logDivisor = inst.operand(4);
-    const auto hint = inst.operand(5);
+
+    // TODO: estimate latency based on operands
+    // const auto logDividend = inst.operand(3);
+    // const auto logDivisor = inst.operand(4);
+    // const auto hint = inst.operand(5);
     // const auto latency = estimateDivRemLatency(logDividend, logDivisor,
     // hint);
-    const auto latency = 20;
+    const auto latency = 30;
 
     state.resetPipeline(RISCVIDivPipeline, latency - 3);
     state.makeRegisterReady(inst, 0, latency);

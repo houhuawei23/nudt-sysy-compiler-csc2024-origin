@@ -5,6 +5,8 @@
 #include "autogen/riscv/InstInfoDecl.hpp"
 #include "autogen/riscv/ISelInfoDecl.hpp"
 #include "support/StaticReflection.hpp"
+#include "support/arena.hpp"
+
 #include <cstring>
 namespace mir::RISCV {
 
@@ -126,7 +128,7 @@ static bool selectAddrOffset(MIROperand addr,
     std::cerr << std::endl;
   };
 
-  const auto addrInst = ctx.lookupDef(addr);
+  const auto addrInst = ctx.lookupDefInst(addr);
   if (addrInst) {
     if (debug) dumpInst(addrInst);
     if (addrInst->opcode() == InstLoadStackObjectAddr) {
@@ -175,6 +177,7 @@ namespace mir::RISCV {
 bool RISCVISelInfo::isLegalInst(uint32_t opcode) const {
   return true;
 }
+
 static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
   bool modified = false;
 
@@ -184,7 +187,6 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
         operand = getZero(operand);
       } else {
         const auto reg = getVRegAs(ctx, operand);
-        // ctx.newInst(InstLoadImm).setOperand<0>(reg).setOperand<1>(operand);
         ctx.insertMIRInst(InstLoadImm, {reg, operand});
         operand = reg;
       }
@@ -243,6 +245,7 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
       break;
     }
     case InstICmp: {
+      // RODO: legalize icmp
       /* InstICmp dst, src1, src2, op */
       auto op = inst->operand(3);
       if (isICmpEqualityOp(op)) {
@@ -291,18 +294,17 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
         modified = true;
         break;
       }
-      // switch (op) {
-      //   case CompareOp::FCmpOrderedNotEqual:
-      //   {
-
-      //   }
-      // }
     }
     case InstStore: { /* InstStore addr, src, align*/
 
       imm2reg(inst->operand(1));
       break;
     }
+    case InstFAdd: {
+      break;
+    }
+    default:
+      break;
   }
   return modified;
 }

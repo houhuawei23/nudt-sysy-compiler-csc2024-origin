@@ -21,22 +21,6 @@
 
 namespace fs = std::filesystem;
 namespace mir {
-/* 保存Runtime相关的Caller-Saved Registers */
-void add_external(IPRAUsageCache& infoIPRA) {
-  const std::string runtime[] = {"_memset",  "putint",   "getint",    "getch",
-                                 "getfloat", "getarray", "getfarray", "putch",
-                                 "putarray", "putfloat", "putfarray", "putf"};
-  std::unordered_set<RegNum> caller_saved_reg = {
-    RISCV::X5,  RISCV::X6,  RISCV::X7,  RISCV::X10, RISCV::X11, RISCV::X12,
-    RISCV::X13, RISCV::X14, RISCV::X15, RISCV::X16, RISCV::X17, RISCV::X28,
-    RISCV::X29, RISCV::X30, RISCV::X31, RISCV::F10, RISCV::F11, RISCV::F12,
-    RISCV::F13, RISCV::F14, RISCV::F15, RISCV::F0,  RISCV::F1,  RISCV::F2,
-    RISCV::F3,  RISCV::F4,  RISCV::F5,  RISCV::F6,  RISCV::F7,  RISCV::F28,
-    RISCV::F29, RISCV::F30, RISCV::F31, RISCV::F16, RISCV::F17};
-  for (auto name : runtime) {
-    infoIPRA.add(name, caller_saved_reg);
-  }
-}
 
 MIROperand FloatPointConstantPool::getFloatConstant(class LoweringContext& ctx,
                                                     float val) {
@@ -298,7 +282,7 @@ void createMIRModule(ir::Module& ir_module,
   };
 
   //! 4. Lower all Functions
-  add_external(infoIPRA);
+  addExternalIPRAInfo(infoIPRA);
   for (auto& ir_func : ir_module.funcs()) {
     if (ir_func->blocks().empty()) continue;
     /* Just for Debug */
@@ -352,8 +336,8 @@ void createMIRModule(ir::Module& ir_module,
 
     /* Optimize: pre-RA scheduling, minimize register usage */
     {
-      // preRASchedule(*mir_func, codegen_ctx);
-      // dumpStageResult("AfterPreRASchedule", mir_func, codegen_ctx);
+      preRASchedule(*mir_func, codegen_ctx);
+      dumpStageResult("AfterPreRASchedule", mir_func, codegen_ctx);
     }
 
     /* register allocation */
@@ -854,8 +838,8 @@ void lower(ir::LoadInst* ir_inst, LoweringContext& ctx) {
 
   auto inst = ctx.emitInstBeta(
     InstLoad, {
-                ctx.newVReg(ir_inst->type()),                    // dst
-                ctx.map2operand(ir_inst->ptr()),                 // src
+                ctx.newVReg(ir_inst->type()) /* dst */,
+                ctx.map2operand(ir_inst->ptr()) /* src */,
                 MIROperand::asImm(align, OperandType::Alignment) /* align*/
               });
 

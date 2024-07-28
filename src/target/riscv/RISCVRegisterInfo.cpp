@@ -4,16 +4,18 @@
 #include "autogen/riscv/InstInfoDecl.hpp"
 #include "autogen/riscv/ISelInfoDecl.hpp"
 #include "support/StaticReflection.hpp"
+#include "mir/RegisterAllocator.hpp"
 
 namespace mir {
 /*
  * @brief: get_allocation_list
- * @note: 
+ * @note:
  *    当进行寄存器分配时, 我们首先考虑指派Caller-Saved Registers
  *    其次再考虑指派Callee-Saved Registers
  * @include:
  */
-std::vector<uint32_t>& RISCVRegisterInfo::get_allocation_list(uint32_t classId) {
+std::vector<uint32_t>& RISCVRegisterInfo::get_allocation_list(
+  uint32_t classId) {
   if (classId == 0) {  // General Purpose Registers
     static std::vector<uint32_t> list{
       // clang-format off
@@ -60,4 +62,55 @@ std::vector<uint32_t>& RISCVRegisterInfo::get_allocation_list(uint32_t classId) 
     assert(false && "invalid type registers");
   }
 }
+
+static const std::unordered_set<RegNum> callerSavedRISCVGPR = {
+  RISCV::X5,  RISCV::X6,  RISCV::X7,  RISCV::X10, RISCV::X11,
+  RISCV::X12, RISCV::X13, RISCV::X14, RISCV::X15, RISCV::X16,
+  RISCV::X17, RISCV::X28, RISCV::X29, RISCV::X30, RISCV::X31,  //
+};
+
+static const std::unordered_set<RegNum> callerSavedRISCVFPR = {
+  RISCV::F10, RISCV::F11, RISCV::F12, RISCV::F13, RISCV::F14,
+  RISCV::F15, RISCV::F0,  RISCV::F1,  RISCV::F2,  RISCV::F3,
+  RISCV::F4,  RISCV::F5,  RISCV::F6,  RISCV::F7,  RISCV::F28,
+  RISCV::F29, RISCV::F30, RISCV::F31, RISCV::F16, RISCV::F17};
+
+static const std::unordered_map<std::string, IPRAInfo> ExternalCallerSavedRegs =
+  {
+    // {
+    //   "_memset",
+    //  {RISCV::X11, RISCV::X12, RISCV::X13, RISCV::X14, RISCV::X15, RISCV::X16,
+    //   RISCV::X17}},
+
+    // {"putint", {RISCV::X5, RISCV::X10, RISCV::X11, RISCV::X15}},
+    // {"getch", {RISCV::X5,RISCV::X10, RISCV::X11, RISCV::X15}},
+    // {"getfloat", {RISCV::X5,RISCV::X10, RISCV::X11, RISCV::X15, RISCV::F10,
+    // RISCV::F15}}
+    // {}
+};
+
+static const auto externalOnlyGPR = std::vector<std::string>{
+  "_memset", "putint", "getch", "getint", "getarray", "putch", "putarray"};
+static const auto externalFloat = std::vector<std::string>{
+  "getfloat", "putfloat", "getfarray", "putfarray", "putf"};
+
+/* 保存Runtime相关的Caller-Saved Registers */
+void addExternalIPRAInfo(IPRAUsageCache& infoIPRA) {
+  for (auto name : externalOnlyGPR) {
+    infoIPRA.add(name, callerSavedRISCVGPR);
+  }
+
+  auto callerSavedRISCVRegs = callerSavedRISCVGPR;
+  callerSavedRISCVRegs.insert(callerSavedRISCVFPR.begin(),
+                              callerSavedRISCVFPR.end());
+
+  for (auto name : externalFloat) {
+    infoIPRA.add(name, callerSavedRISCVRegs);
+  }
+
+  for (auto& [name, regs] : ExternalCallerSavedRegs) {
+    infoIPRA.add(name, regs);
+  }
 }
+
+}  // namespace mir

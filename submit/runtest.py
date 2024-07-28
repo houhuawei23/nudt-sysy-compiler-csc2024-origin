@@ -45,14 +45,16 @@ def functionalTest():
         sysy_runtime,
         sysy_link_for_riscv_gpp,
     )
-    test.set("riscv", "2023", functional_timeout)
+    test.set("riscv", "2024", functional_timeout)
     test.run("functional")
-    test.run("hidden_functional")
+    # test.run("hidden_functional")
     # test.run_single_case("functional", "00_main.sy")
+    # test.run_single_case("functional", "11_BST.sy")
+
 
 
 def perfTest():
-    perf_timeout = 50
+    perf_timeout = 200
     test = Test(
         compiler_path,
         tests_path,
@@ -62,13 +64,13 @@ def perfTest():
         sysy_runtime,
         sysy_link_for_riscv_gpp,
     )
-    test.set("riscv", "2023", perf_timeout)
+    test.set("riscv", "2024", perf_timeout)
     test.run_perf("performance")
-    test.run_perf("final_performance")
+    # test.run_perf("final_performance")
     # test.run_single_case("performance", "00_bitset1.sy")
 
 
 if __name__ == "__main__":
     # submitTest()
-    perfTest()
-    # functionalTest()
+    # perfTest()
+    functionalTest()

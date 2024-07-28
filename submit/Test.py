@@ -95,7 +95,7 @@ def run_riscv_gcc(src, target, output, opt_level=0, log_level=0, timeout=1):
     """
     command = qemu_gpp_ref_command + ["-S", "-o", output, src, f"-O{opt_level}"]
     # print(*command, sep=" ")
-    print(*command, sep=" ")
+    # print(*command, sep=" ")
     process = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
     return process
 
@@ -247,7 +247,7 @@ class Test:
         )
         self.result.print_result_overview()
         dt_string = datetime.now().strftime("%Y_%m_%d_%H:%M")
-        self.result.save_result(f"./.{self.year}_{test_kind}_{dt_string}.md")
+        self.result.save_result(f"./{self.year}_{test_kind}_{dt_string}.md")
 
     def run_perf(self, test_kind: str):
         print(Fore.RED + f"Testing {self.year} {test_kind}...")
@@ -259,7 +259,7 @@ class Test:
         )
         self.result.print_perf_overview()
         dt_string = datetime.now().strftime("%Y_%m_%d_%H:%M")
-        self.result.save_perf_result(f"./.{self.year}_{test_kind}_{dt_string}.md")
+        self.result.save_perf_result(f"./{self.year}_{test_kind}_{dt_string}.md")
 
     def run_single_case(self, test_kind: str, filename: str):
         """
