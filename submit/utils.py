@@ -50,6 +50,26 @@ def check_args(
     return True
 
 
+def check_args_bera(compiler_path: str, tests_path: str, output_dir_path: str):
+    if not os.path.exists(compiler_path):
+        print(f"Compiler not found: {compiler_path}")
+        print("Please run: `python compile.py ./ compiler` first")
+        return False
+    if not os.path.exists(tests_path):
+        print(f"Tests path not found: {tests_path}")
+        return False
+    output_asm_path = os.path.join(output_dir_path, "asm")
+    output_exe_path = os.path.join(output_dir_path, "exe")
+    output_c_path = os.path.join(output_dir_path, "c")
+
+    paths = [output_dir_path, output_asm_path, output_exe_path, output_c_path]
+
+    for path in paths:
+        overwritten_or_create_dir(path)
+
+    return True
+
+
 def compare_output_with_standard_file(
     standard_filename: str, output: str, returncode: int
 ):

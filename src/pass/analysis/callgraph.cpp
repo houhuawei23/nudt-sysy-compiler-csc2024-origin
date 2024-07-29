@@ -10,6 +10,8 @@ void callGraphBuild::run(ir::Module* ctx, TopAnalysisInfoManager* tp) {
         if (func->isOnlyDeclare())
             // func->set_is_lib(true);
             cgctx->set_isLib(func, true);
+        else if(func->name()=="_sysy_starttime" or func->name()=="_sysy_stoptime")
+            cgctx->set_isLib(func, true);
         else
             // func->set_is_lib(false);
             cgctx->set_isLib(func, false);
@@ -28,7 +30,7 @@ void callGraphBuild::run(ir::Module* ctx, TopAnalysisInfoManager* tp) {
                 if (instCall) {
                     auto calleePtr = instCall->callee();
                     // if(calleePtr->get_is_lib())continue;// lib function don't need call info
-                    if (cgctx->isLib(calleePtr)) continue;
+                    // if (cgctx->isLib(calleePtr)) continue;
                     // func->callees().insert(calleePtr);
                     // func->set_is_called(true);
                     cgctx->callees(func).insert(calleePtr);

@@ -359,9 +359,9 @@ void createMIRModule(ir::Module& ir_module,
     {
       codegen_ctx.flags.preRA = false;
       if (codegen_ctx.registerInfo) {
-        GraphColoringAllocate(*mir_func, codegen_ctx, infoIPRA);
+        // GraphColoringAllocate(*mir_func, codegen_ctx, infoIPRA);
         // fastAllocator(*mir_func, codegen_ctx, infoIPRA);
-        // fastAllocatorBeta(*mir_func, codegen_ctx, infoIPRA);
+        fastAllocatorBeta(*mir_func, codegen_ctx, infoIPRA);
         dumpStageResult("AfterGraphColoring", mir_func, codegen_ctx);
       }
     }

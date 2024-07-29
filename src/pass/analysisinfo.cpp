@@ -5,11 +5,13 @@
 #include "pass/analysis/callgraph.hpp"
 #include "pass/analysis/loop.hpp"
 #include "pass/analysis/indvar.hpp"
+#include "pass/analysis/sideEffectAnalysis.hpp"
 
 using namespace pass;
 
 void TopAnalysisInfoManager::initialize() {
     mCallGraph = new callGraph(mModule, this);
+    mSideEffectInfo = new sideEffectInfo(mModule, this);
     for (auto func : mModule->funcs()) {
         if (func->blocks().empty()) continue;
         mDomTree[func] = new domTree(func, this);
@@ -67,6 +69,16 @@ void indVarInfo::refresh() {
         PassManager pm = PassManager(passUnit->module(), topManager);
         indVarAnalysis iva = indVarAnalysis();
         pm.run(&iva);
+        setOn();
+    }
+}
+
+void sideEffectInfo::refresh() {
+    if(not isValid){
+        using namespace pass;
+        PassManager pm = PassManager(passUnit, topManager);
+        sideEffectAnalysis sea = sideEffectAnalysis();
+        pm.run(&sea);
         setOn();
     }
 }

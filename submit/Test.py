@@ -37,7 +37,7 @@ qemu_gcc_ref_command = "riscv64-linux-gnu-gcc-12 -O2 -DNDEBUG -march=rv64gc -mab
 qemu_gpp_ref_command = "riscv64-linux-gnu-g++-12 -O2 -DNDEBUG -march=rv64gc -mabi=lp64d -mcmodel=medlow -ffp-contract=on -w ".split()
 
 
-def test(path: str, suffix: str, tester):
+def testsDriver(path: str, suffix: str, tester):
     """
     test files with suffix in path with tester.
     for f in all files in path with suffix:
@@ -137,7 +137,7 @@ def run_executable(command, src, timeout=1):
     return res, out
 
 
-def test(path: str, suffix: str, tester):
+def testsDriver(path: str, suffix: str, tester):
     """
     test files with suffix in path with tester.
     for f in all files in path with suffix:
@@ -163,6 +163,46 @@ def test(path: str, suffix: str, tester):
         except Exception as e:
             print(Fore.RED + f"Test failed: {e}")
         failed_list.append(src)
+
+    return len(test_list), len(failed_list)
+
+
+def singleTestDriver(src: str, tester: callable):
+    try:
+        if tester(src) is not False:
+            print(Fore.GREEN + "Test passed")
+            return src, True
+    except Exception as e:
+        print(Fore.RED + f"Test failed: {e}")
+    return src, False
+
+
+def multiThreadsTestsDriver(path: str, suffix: str, tester: callable):
+    """
+    test files with suffix in path with tester.
+    for f in all files in path with suffix:
+    tester(f)
+    """
+    print(f"Test files with suffix {suffix} in {path}")
+    test_list = []
+    for dirpath, dirnames, filenames in os.walk(path):
+        for f in filenames:
+            if f.endswith(suffix):
+                test_list.append(os.path.join(dirpath, f))
+    cnt = 0
+    failed_list = []
+    test_list.sort()
+    with ThreadPoolExecutor() as executor:
+        futures = {
+            executor.submit(singleTestDriver, src, tester): src for src in test_list
+        }
+        for future in as_completed(futures):
+            cnt += 1
+            src = futures[future]
+            print(Fore.YELLOW + f"Test {cnt}/{len(test_list)}: {src}")
+            result = future.result()
+            if not result[1]:
+                failed_list.append(src)
 
     return len(test_list), len(failed_list)
 
@@ -198,84 +238,13 @@ class Test:
         self.log_level = log_level
         self.result = TestResult(f"SysY compiler {year}")
 
-    def run_single_test(self, src: str, tester):
-        try:
-            if tester(src) is not False:
-                print(Fore.GREEN + "Test passed")
-                return src, True
-        except Exception as e:
-            print(Fore.RED + f"Test failed: {e}")
-        return src, False
-
-    def test_beta(self, path: str, suffix: str, tester):
+    def __ourcompiler_runon_qemu(self, src: str, target: str = "riscv"):
         """
-        test files with suffix in path with tester.
-        for f in all files in path with suffix:
-        tester(f)
+        use our compiler to generate assembly code and link it with runtime library
+        and run the executable in qemu.
+
+        return True if test passed, False otherwise.
         """
-        print(f"Test files with suffix {suffix} in {path}")
-        test_list = []
-        for dirpath, dirnames, filenames in os.walk(path):
-            for f in filenames:
-                if f.endswith(suffix):
-                    test_list.append(os.path.join(dirpath, f))
-        cnt = 0
-        failed_list = []
-        test_list.sort()
-        with ThreadPoolExecutor() as executor:
-            futures = {
-                executor.submit(self.run_single_test, src, tester): src
-                for src in test_list
-            }
-            for future in as_completed(futures):
-                cnt += 1
-                src = futures[future]
-                print(Fore.YELLOW + f"Test {cnt}/{len(test_list)}: {src}")
-                result = future.result()
-                if not result[1]:
-                    failed_list.append(src)
-
-        return len(test_list), len(failed_list)
-
-    def run(self, test_kind: str):
-        print(Fore.RED + f"Testing {self.year} {test_kind}...")
-        year_kind_path = os.path.join(self.tests_path, self.year, test_kind)
-        testnum, failednum = self.test_beta(
-            year_kind_path,
-            ".sy",
-            lambda x: self.sysy_compiler_qemu(x, self.target),
-        )
-        print(f"\nTest {self.year} {test_kind} {self.target} -O{self.opt_level} -L{self.log_level}")
-        self.result.print_result_overview()
-        dt_string = datetime.now().strftime("%Y_%m_%d_%H:%M")
-        self.result.save_result(f"./{self.year}_{test_kind}_{dt_string}.md")
-
-    def run_perf(self, test_kind: str):
-        print(Fore.RED + f"Testing {self.year} {test_kind}...")
-        year_kind_path = os.path.join(self.tests_path, self.year, test_kind)
-        testnum, failednum = self.test_beta(
-            year_kind_path,
-            ".sy",
-            lambda x: self.sysy_qemu_perf(x, self.target),
-        )
-        self.result.print_perf_overview()
-        dt_string = datetime.now().strftime("%Y_%m_%d_%H:%M")
-        self.result.save_perf_result(f"./{self.year}_{test_kind}_{dt_string}.md")
-
-    def run_single_case(self, test_kind: str, filename: str):
-        """
-        test.run_single_case("functional", "04_arr_defn3.sy")
-        """
-        test_case_path = os.path.join(self.tests_path, self.year, test_kind, filename)
-        self.sysy_compiler_qemu(test_case_path, self.target)
-        self.sysy_gcc_qemu(test_case_path, self.target)
-        # self.result.print_result_overview()
-        for type in ResultType:
-            if len(self.result.cases_result[type]) > 0:
-                self.result.print_result(type)
-        pass
-
-    def sysy_compiler_qemu(self, src: str, target: str = "riscv"):
         if os.path.exists(src) is False:
             print(f"Test file not found: {src}")
             return False
@@ -359,7 +328,13 @@ class Test:
         self.result.cases_result[ResultType.PASSED].append((src, process))
         return res
 
-    def sysy_gcc_qemu(self, src_path: str, target: str = "riscv"):
+    def __gcc_runon_qemu(self, src_path: str, target: str = "riscv"):
+        """
+        use gcc to generate assembly code and link it with runtime library
+        and run the executable in qemu.
+
+        return True if correct compile and run (in gcc), False otherwise.
+        """
         if os.path.exists(src_path) is False:
             print(f"Test file not found: {src_path}")
             return False
@@ -404,13 +379,164 @@ class Test:
 
         return res
 
-    def sysy_qemu_perf(self, src_path: str, target: str = "riscv"):
+    def __compare_our_with_gcc_perf(self, src_path: str, target: str = "riscv"):
         if os.path.exists(src_path) is False:
             print(f"Test file not found: {src_path}")
             return False
 
-        compiler_res = self.sysy_compiler_qemu(src_path, target)
-        gcc_res = self.sysy_gcc_qemu(src_path, target)
+        compiler_res = self.__ourcompiler_runon_qemu(src_path, target)
+        gcc_res = self.__gcc_runon_qemu(src_path, target)
         if not (compiler_res and gcc_res):
             raise Exception("Compiler or gcc failed")
         return compiler_res and gcc_res
+
+    def __ourcompiler_compile_only(self, src: str, target: str = "riscv"):
+        """
+        use our compiler to generate assemly code only.
+        return True if successfuly generated, False otherwise.
+        """
+        if os.path.exists(src) is False:
+            print(f"Test file not found: {src}")
+            return False
+
+        filename = os.path.basename(src)
+        raw_name = os.path.splitext(filename)[0]  # abc.sy -> abc
+        output_asm = os.path.join(self.output_asm_path, raw_name + ".s")
+
+        try:
+            run_compiler_process = run_compiler(
+                self.compiler_path,
+                src,
+                target,
+                output_asm,
+                opt_level=self.opt_level,
+                log_level=self.log_level,
+                timeout=self.timeout,
+            )
+        except subprocess.TimeoutExpired:
+            print(Fore.RED + f"Test {src} run_compiler timeout")
+            self.result.cases_result[ResultType.RUN_COMPILER_FAILED].append(
+                (
+                    src,
+                    subprocess.CompletedProcess(
+                        [self.compiler_path, "-S", "-o", output_asm, src, "-O1"],
+                        124,
+                        "",
+                        "",
+                    ),
+                )
+            )
+            return False
+
+        if run_compiler_process.returncode != 0:
+            self.result.cases_result[ResultType.RUN_COMPILER_FAILED].append(
+                (src, run_compiler_process)
+            )
+            return False
+
+    def __linkrun_on_visionfive(self, src: str, target: str = "riscv"):
+        """
+        on visionfive, link the pre-generated assembly code with runtime library.
+        then run and collect perf data.
+        return True if successfuly run, False otherwise.
+        src: path_to_test_case/test_case.sy
+        corresponding asm file:
+        self.output_asm_path/test_case.s
+        """
+
+        if os.path.exists(src) is False:
+            return False
+        filename = os.path.basename(src)
+        raw_name = os.path.splitext(filename)[0]  # abc.sy -> abc
+        asm_path = os.path.join(self.output_asm_path, raw_name + ".s")
+        exe_path = os.path.join(self.output_exe_path, raw_name)
+
+        # link
+        process = link_executable(
+            asm_path, target, exe_path, self.runtime, timeout=self.timeout
+        )
+
+        process = run_executable(
+            exe_path, src, timeout=self.timeout
+        )
+
+        
+        time_used = compare_and_parse_perf(src, process)
+
+        # run
+
+
+
+
+    def runSingleCase(self, test_kind: str, filename: str):
+        """
+        test.runSingleCase("functional", "04_arr_defn3.sy")
+        test.runSingleCase("performance", "01_mm1.sy")
+        """
+        test_case_path = os.path.join(self.tests_path, self.year, test_kind, filename)
+        self.__ourcompiler_runon_qemu(test_case_path, self.target)
+        self.__gcc_runon_qemu(test_case_path, self.target)
+        # self.result.print_result_overview()
+        for type in ResultType:
+            if len(self.result.cases_result[type]) > 0:
+                self.result.print_result(type)
+
+    def runFunctionalTest(self, test_kind: str):
+        """
+        run all tests in test/year/test_kind with target and opt_level
+        """
+        print(Fore.RED + f"Testing {self.year} {test_kind}...")
+        year_kind_path = os.path.join(self.tests_path, self.year, test_kind)
+        testnum, failednum = multiThreadsTestsDriver(
+            year_kind_path,
+            ".sy",
+            lambda x: self.__ourcompiler_runon_qemu(x, self.target),
+        )
+        print(
+            f"\nTest {self.year} {test_kind} {self.target} -O{self.opt_level} -L{self.log_level}"
+        )
+        self.result.print_result_overview()
+        dt_string = datetime.now().strftime("%Y_%m_%d_%H:%M")
+        self.result.save_result(f"./{self.year}_{test_kind}_{dt_string}.md")
+
+    def runPerformanceTest(self, test_kind: str):
+        """
+        run all tests in test/year/test_kind with target and opt_level (with perf)
+        """
+        print(Fore.RED + f"Testing {self.year} {test_kind}...")
+        year_kind_path = os.path.join(self.tests_path, self.year, test_kind)
+        testnum, failednum = multiThreadsTestsDriver(
+            year_kind_path,
+            ".sy",
+            lambda x: self.__compare_our_with_gcc_perf(x, self.target),
+        )
+        self.result.print_perf_overview()
+        dt_string = datetime.now().strftime("%Y_%m_%d_%H:%M")
+        self.result.save_perf_result(f"./{self.year}_{test_kind}_{dt_string}.md")
+
+    def runCompileOnly(self, test_kind: str):
+        """
+        run all tests in test/year/test_kind with target and opt_level (compile only)
+        """
+        print(Fore.RED + f"Compiling {self.year} {test_kind}...")
+        year_kind_path = os.path.join(self.tests_path, self.year, test_kind)
+        testnum, failednum = multiThreadsTestsDriver(
+            year_kind_path,
+            ".sy",
+            lambda x: self.__ourcompiler_compile_only(x, self.target),
+        )
+        print(
+            f"\nCompile {self.year} {test_kind} {self.target} -O{self.opt_level} -L{self.log_level}"
+        )
+        self.result.print_result_overview()
+        # dt_string = datetime.now().strftime("%Y_%m_%d_%H:%M")
+        # self.result.save_result(f"./{self.year}_{test_kind}_{dt_string}.md")
+
+    def runOnVisionFive(self):
+        """
+        link and run all tests in test/year/test_kind with target and opt_level on VisionFive
+        """
+        print(Fore.RED + f"Testing {self.year} on VisionFive...")
+        year_kind_path = os.path.join(self.tests_path, self.year)
+
+        testsDriver(year_kind_path, ".sy", lambda x: self.__linkrun_on_visionfive(x, self.target))

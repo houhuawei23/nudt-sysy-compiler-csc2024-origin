@@ -6,6 +6,9 @@ static std::set<ir::LoadInst*>removeInsts;
 static std::unordered_map<ir::Value*,ir::Value*>ptrToValue;
 
 void simpleDLE::run(ir::BasicBlock* bb,TopAnalysisInfoManager* tp){
+    auto sectx=tp->getSideEffectInfo();
+    sectx->setOff();
+    sectx->refresh();
     loadedPtrSet.clear();
     removeInsts.clear();
     ptrToValue.clear();
@@ -28,9 +31,14 @@ void simpleDLE::run(ir::BasicBlock* bb,TopAnalysisInfoManager* tp){
             loadedPtrSet.erase(storeInst->ptr());
             ptrToValue[storeInst->ptr()]=storeInst->value();
         }
+        else if(auto callInst=inst->dynCast<ir::CallInst>()){
+            if(not sectx->hasSideEffect(callInst->callee()))continue;
+            loadedPtrSet.clear();
+            ptrToValue.clear();
+        }
     }
     if(removeInsts.size()==0)return;
-    std::cerr<<"Delete "<<removeInsts.size()<<" load insts."<<std::endl;
+    // std::cerr<<"Delete "<<removeInsts.size()<<" load insts."<<std::endl;
     for(auto inst:removeInsts){
         bb->delete_inst(inst);
     }
