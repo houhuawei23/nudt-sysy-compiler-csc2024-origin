@@ -1,5 +1,5 @@
 # in submit_test dir
-# python3 run_visionfive.py 
+# python3 run_visionfive.py ./compiler ../test/ ./.output
 # link and run, collect perf data
 
 

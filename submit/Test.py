@@ -470,7 +470,7 @@ class Test:
 
         # run
         print(f"run {src} on visionfive")
-        process = run_executable([exe_path], src, timeout=self.timeout)
+        res, process = run_executable([exe_path], src, timeout=self.timeout)
 
         print(f"compare output and perf data for {src}")
         time_used = compare_and_parse_perf(src, process)
