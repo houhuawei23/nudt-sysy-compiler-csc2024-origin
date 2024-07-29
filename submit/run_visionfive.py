@@ -7,7 +7,7 @@ import os
 import sys
 from datetime import datetime
 
-from utils import check_args, check_args_bera
+from utils import check_args, check_args_beta
 
 from Test import Test
 
@@ -19,7 +19,7 @@ output_asm_path = os.path.join(output_dir, "asm")
 output_exe_path = os.path.join(output_dir, "exe")
 output_c_path = os.path.join(output_dir, "c")
 
-if not check_args_bera(compiler_path, tests_path, output_dir):
+if not check_args_beta(compiler_path, tests_path, output_dir):
     sys.exit(1)
 
 sysy_runtime = os.path.join(tests_path, "sysy/sylib.c")

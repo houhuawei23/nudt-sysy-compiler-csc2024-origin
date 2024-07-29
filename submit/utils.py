@@ -50,7 +50,7 @@ def check_args(
     return True
 
 
-def check_args_bera(compiler_path: str, tests_path: str, output_dir_path: str):
+def check_args_beta(compiler_path: str, tests_path: str, output_dir_path: str):
     if not os.path.exists(compiler_path):
         print(f"Compiler not found: {compiler_path}")
         print("Please run: `python compile.py ./ compiler` first")
@@ -65,7 +65,7 @@ def check_args_bera(compiler_path: str, tests_path: str, output_dir_path: str):
     paths = [output_dir_path, output_asm_path, output_exe_path, output_c_path]
 
     for path in paths:
-        overwritten_or_create_dir(path)
+        os.makedirs(path, exist_ok=True)
 
     return True
 
