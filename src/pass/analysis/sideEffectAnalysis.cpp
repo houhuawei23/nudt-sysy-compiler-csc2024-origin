@@ -25,17 +25,18 @@ void sideEffectAnalysis::run(ir::Module* md,TopAnalysisInfoManager* tp){
     sectx->clearAll();
 
     for(auto func:md->funcs()){
-        func->rename();
-        sectx->setFunc(func,false);
+        sectx->setFuncSideEffect(func,false);
+        sectx->setFuncGVUse(func,false);
         if(cgctx->isLib(func)){//cond 4
-            sectx->setFunc(func,true);
+            sectx->setFuncSideEffect(func,true);
+            sectx->setFuncGVUse(func,false);
             hasSideEffectFunctions.insert(func);
             worklist.insert(func);
         }
         else{
             for(auto arg:func->args()){//cond 2
                 if(arg->isPointer()){
-                    sectx->setFunc(func,true);
+                    sectx->setFuncSideEffect(func,true);
                     hasSideEffectFunctions.insert(func);
                     worklist.insert(func);
                     break;
@@ -49,19 +50,32 @@ void sideEffectAnalysis::run(ir::Module* md,TopAnalysisInfoManager* tp){
                         auto stptrName=stptr->name().substr(1);
                         if(auto gv=md->findGlobalVariable(stptrName)){
                             // std::cerr<<"In function \""<<func->name()<<"\", we got a store to gv\" "<<gv->name()<<"\""<<std::endl;
-                            sectx->setFunc(func,true);
+                            sectx->setFuncSideEffect(func,true);
                             hasSideEffectFunctions.insert(func);
                             worklist.insert(func);
                             break;
                         }
                         else if(auto gep=stptr->dynCast<ir::GetElementPtrInst>()){
                             if(isGlobal(gep)){
-                                sectx->setFunc(func,true);
+                                sectx->setFuncSideEffect(func,true);
                                 hasSideEffectFunctions.insert(func);
                                 worklist.insert(func);
                                 break;
                             }
                         }
+                    }
+                    else if(auto loadInst=inst->dynCast<ir::LoadInst>()){
+                        auto loadPtr=loadInst->ptr();
+                        auto ldptrName=loadPtr->name().substr(1);
+                        if(auto gv=md->findGlobalVariable(ldptrName)){
+                            sectx->setFuncGVUse(func,true);
+                        }
+                        else if(auto gep=loadPtr->dynCast<ir::GetElementPtrInst>()){
+                            if(isGlobal(gep)){
+                                sectx->setFuncGVUse(func,true);
+                            }
+                        }
+
                     }
                 }
                 if(sectx->hasSideEffect(func))break;
@@ -81,7 +95,7 @@ void sideEffectAnalysis::run(ir::Module* md,TopAnalysisInfoManager* tp){
         for(auto callerFunc:cgctx->callers(func)){
             // std::cerr<<"call "<<callerFunc->name()<<std::endl;
             if(not hasSideEffectFunctions.count(callerFunc)){
-                sectx->setFunc(callerFunc,true);
+                sectx->setFuncSideEffect(callerFunc,true);
                 hasSideEffectFunctions.insert(callerFunc);
                 worklist.insert(callerFunc);
                 // std::cerr<<"Side Effect "<<callerFunc->name()<<std::endl;

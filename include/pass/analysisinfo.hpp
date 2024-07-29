@@ -263,14 +263,21 @@ class indVarInfo : public FunctionACtx {
 class sideEffectInfo : public ModuleACtx {
   private:
     std::unordered_map<ir::Function*,bool> _hasSideEffect;
+    std::unordered_map<ir::Function*,bool> _hasGlobalVariableUse;
 
   public:
     sideEffectInfo(ir::Module* ctx, TopAnalysisInfoManager* tp)
       : ModuleACtx(ctx, tp) {}
-    void clearAll() { _hasSideEffect.clear();  }
+    void clearAll() {
+       _hasSideEffect.clear();  
+       _hasGlobalVariableUse.clear();
+    }
     void refresh() override;
-    void setFunc(ir::Function* func,bool b){_hasSideEffect[func]=b;}
+    void setFuncSideEffect(ir::Function* func,bool b){_hasSideEffect[func]=b;}
     bool hasSideEffect(ir::Function* func){return _hasSideEffect[func];}
+    void setFuncGVUse(ir::Function* func,bool b){_hasGlobalVariableUse[func]=b;}
+    bool isPureFunc(ir::Function* func){return not _hasGlobalVariableUse[func] and not _hasSideEffect[func];}
+
 
 };
 };  // namespace pass

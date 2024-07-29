@@ -34,10 +34,6 @@ void ADCE::run(ir::Function* func, TopAnalysisInfoManager* tp) {
                 if(sectx->hasSideEffect(callInst->callee())){
                     workList.push(inst);
                 }
-                // else{
-                //     std::cerr<<"DELETE "<<callInst->callee()->name()<<"!!!!!!!!!!!!!!!!!!"<<std::endl;
-                // }
-
             }
         }
     }
