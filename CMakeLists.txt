@@ -8,7 +8,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Compiler flags
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
-
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -21,7 +20,6 @@ project(sysy
 # set(CMAKE_BUILD_TYPE Debug)
 # set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
 # set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -g")
-
 set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ standard to conform to")
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -105,11 +103,15 @@ set(SUBMIT_DIR ${CMAKE_CURRENT_BINARY_DIR}/submit)
 #   COMMAND cd ${SUBMIT_DIR}
 
 #   COMMAND ${Python3_EXECUTABLE} ${SUBMIT_DIR}/compile.py ${SUBMIT_DIR} compiler
+
 #   # COMMAND make
 #   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/submit/.gitignore ${SUBMIT_DIR}/.gitignore
 
 #   # run test
-#   COMMAND ${Python3_EXECUTABLE} ${SUBMIT_DIR}/runtest.py ${SUBMIT_DIR}/compiler ${CMAKE_SOURCE_DIR}/test ${CMAKE_SOURCE_DIR}/.tmp/asm ${CMAKE_SOURCE_DIR}/.tmp/exe ${CMAKE_SOURCE_DIR}/.tmp/c
+#   # COMMAND ${Python3_EXECUTABLE} ${SUBMIT_DIR}/runtest.py ${SUBMIT_DIR}/compiler ${CMAKE_SOURCE_DIR}/test ${CMAKE_SOURCE_DIR}/.tmp/asm ${CMAKE_SOURCE_DIR}/.tmp/exe ${CMAKE_SOURCE_DIR}/.tmp/c
+  
+#   # compile all performance cases
+#   COMMAND ${Python3_EXECUTABLE} ${SUBMIT_DIR}/run.py ${SUBMIT_DIR}/compiler ${CMAKE_SOURCE_DIR}/test ${SUBMIT_DIR}/.output
 
 #   DEPENDS compiler
 # )
