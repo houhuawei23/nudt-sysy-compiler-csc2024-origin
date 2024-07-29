@@ -31,12 +31,12 @@ void ADCE::run(ir::Function* func, TopAnalysisInfoManager* tp) {
                 workList.push(inst);
             }
             if (auto callInst=inst->dynCast<ir::CallInst>()){
-                if(sectx->hasSideEffect(callInst->callee())){
+                // if(sectx->hasSideEffect(callInst->callee())){
                     workList.push(inst);
-                }
-                else{
-                    std::cerr<<callInst->callee()->name()<<"!!!!!!!!!!!!!!!!!!"<<std::endl;
-                }
+                // }
+                // else{
+                //     std::cerr<<callInst->callee()->name()<<"!!!!!!!!!!!!!!!!!!"<<std::endl;
+                // }
 
             }
         }
