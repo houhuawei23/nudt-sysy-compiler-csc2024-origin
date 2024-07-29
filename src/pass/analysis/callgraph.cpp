@@ -10,6 +10,8 @@ void callGraphBuild::run(ir::Module* ctx, TopAnalysisInfoManager* tp) {
         if (func->isOnlyDeclare())
             // func->set_is_lib(true);
             cgctx->set_isLib(func, true);
+        else if(func->name()=="_sysy_starttime" or func->name()=="_sysy_stoptime")
+            cgctx->set_isLib(func, true);
         else
             // func->set_is_lib(false);
             cgctx->set_isLib(func, false);
