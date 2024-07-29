@@ -6,28 +6,40 @@
 #include "mir/CFGAnalysis.hpp"
 
 namespace mir {
-/* 为每一条指令编号 */
+/* utils function: 为每一条指令编号 */
 static void assignInstNum(MIRFunction& mfunc, LiveVariablesInfo& info, CodeGenContext& ctx) {
     constexpr bool DebugAssign = false;
     auto& num = info.inst2Num;
-    InstNum current = 0;
+    InstNum current = 4;
+    if (DebugAssign) {
+        std::cout << "the function is " << mfunc.name() << "\n";
+    }
     for (auto& block : mfunc.blocks()) {
-        for (auto& inst : block.get()->insts()) {
+        for (auto& inst : block->insts()) {
+            if (DebugAssign) {
+                std::cout << current << ": ";
+                ctx.instInfo.getInstInfo(inst).print(std::cout, *inst, true);
+                std::cout << "\n";
+            }
             num[inst] = current;
             current += defaultIncrement;
         }
     }
-
-    if (DebugAssign) {
-        for (auto& block : mfunc.blocks()) {
-            std::cerr << block->name() << ": \n";
-            for (auto& inst : block.get()->insts()) {
-                std::cerr << num[inst] << ": ";
-                auto& instInfo = ctx.instInfo.getInstInfo(inst);
-                instInfo.print(std::cerr, *inst, false);
+    uint64_t pre = 0;
+    for (auto& block : mfunc.blocks()) {
+        for (auto& inst : block->insts()) {
+            if (num[inst] < pre) {
+                ctx.instInfo.getInstInfo(inst).print(std::cerr, *inst, true);
                 std::cerr << "\n";
+                std::cerr << "num: " << num[inst] << "\n";
+                std::cerr << "pre: " << pre << "\n";
             }
+            assert(num[inst] > pre);
+            pre = num[inst];
         }
+    }
+    if (DebugAssign) {
+        std::cout << "\n\n";
     }
 }
 
@@ -49,6 +61,11 @@ bool LiveInterval::verify() const {
     return true;
 }
 void LiveInterval::optimize() {
+    constexpr bool Debug = false;
+    if (Debug) {
+        dump(std::cerr);
+        std::cerr << std::endl;
+    }
     assert(verify());
     auto cur = segments.begin();
     for (auto it = segments.begin(); it != segments.end(); it++) {
@@ -103,62 +120,85 @@ LiveVariablesInfo calcLiveIntervals(MIRFunction& mfunc, CodeGenContext& ctx) {
     LiveVariablesInfo info;
     auto cfg = calcCFG(mfunc, ctx);
     if (Debug) {
-        std::cerr << "begin debug calcLiveIntervals function. \n";
-        cfg.dump(std::cerr);
+        std::cerr << "begin debuging calcLiveIntervals function. \n";
+        std::cerr << "the function " << mfunc.name() << std::endl;
+        cfg.dump(std::cerr); std::cerr << std::endl;
     }
 
-    // stage 1: collect use/def link
+    // stage 1: collect use/def link of virtual registers
     for (auto& block : mfunc.blocks()) {
         auto& blockInfo = info.block2Info[block.get()];
-        for (auto& inst : block.get()->insts()) {
+        for (auto& inst : block->insts()) {
             auto& instInfo = ctx.instInfo.getInstInfo(inst);
             for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
                 const auto flag = instInfo.operand_flag(idx);
-                auto operand = inst->operand(idx);
-                // 非虚拟寄存器 --> continue
+                auto& operand = inst->operand(idx);
                 if (!isOperandVReg(operand)) continue;
 
-                auto id = regNum(operand);
-                if (flag & OperandFlagDef) {  // 变量定义 --> defs insert the id
+                const auto id = regNum(operand);
+                if (flag & OperandFlagDef) {
+                    /* 变量定义 --> defined in this block */
                     blockInfo.defs.insert(id);
-                } else if (flag & OperandFlagUse) {  // 变量使用 --> defs in other blocks, uses insert the id
-                    if (!blockInfo.defs.count(id)) blockInfo.uses.insert(id);
+                } else if (flag & OperandFlagUse) {
+                    /* 变量使用 --> defined in other block, but used in the block */
+                    if (!blockInfo.defs.count(id)) {
+                        blockInfo.uses.insert(id);
+                    }
                 } else {  // 立即数
-                    continue;
+                    assert(false && "report unreachable");
                 }
             }
-        }
-    }
-    if (Debug) {
-        std::cout << "function: " << mfunc.name() << "\n";
-        for (auto& block : mfunc.blocks()) {
-            auto& blockInfo = info.block2Info[block.get()];
-            std::cout << "block " << block->name() << ": \n";
-
-            std::cout << "\ndef: \n";
-            for (auto def : blockInfo.defs) {
-                if (isVirtualReg(def)) std::cout << "v" << (def ^ virtualRegBegin) << ", ";
-                else std::cout << "i" << def << ", ";
-            }
-            std::cout << "\n";
-
-            std::cout << "\nuse: \n";
-            for (auto use : blockInfo.uses) {
-                if (isVirtualReg(use)) std::cout << "v" << (use ^ virtualRegBegin) << ", ";
-                else std::cout << "i" << use << ", ";
-            }
-            std::cout << "\n";
         }
     }
 
     // stage 2: calculate ins and outs for each block
     while (true) {
         bool modified = false;
+        if (Debug) {
+            for(auto& block : mfunc.blocks()) {
+                auto& blockInfo = info.block2Info[block.get()];
+                
+                block->print(std::cerr, ctx); std::cerr << "\n";
 
+                std::cerr << "uses: ";
+                for(auto use : blockInfo.uses) {
+                    if (isVirtualReg(use)) std::cerr << "v" << (use ^ virtualRegBegin);
+                    else if (isISAReg(use)) std::cerr << "i" << use;
+                    else assert(false);
+                    std::cerr << " ";
+                }
+                std::cerr << '\n';
+
+                std::cerr << "defs: ";
+                for(auto def : blockInfo.defs) {
+                    if (isVirtualReg(def)) std::cerr << "v" << (def ^ virtualRegBegin);
+                    else if (isISAReg(def)) std::cerr << "i" << def;
+                    else assert(false);
+                    std::cerr << ' ';
+                }
+                std::cerr << '\n';
+
+                std::cerr << "ins: ";
+                for(auto in : blockInfo.ins) {
+                    if (isVirtualReg(in)) std::cerr << "v" << (in ^ virtualRegBegin);
+                    else if (isISAReg(in)) std::cerr << "i" << in;
+                    else assert(false);
+                    std::cerr << ' ';
+                }
+                std::cerr << '\n';
+
+                std::cerr << "outs: ";
+                for(auto out : blockInfo.outs) {
+                    if (isVirtualReg(out)) std::cerr << "v" << (out ^ virtualRegBegin);
+                    else if (isISAReg(out)) std::cerr << "i" << out;
+                    std::cerr << ' ';
+                }
+                std::cerr << '\n';
+            }
+        }
         for (auto& block : mfunc.blocks()) {
             auto b = block.get();
             auto& blockInfo = info.block2Info[b];
-            
             std::unordered_set<RegNum> outs;
             for (auto [succ, prob] : cfg.successors(b)) {  // 计算当前块的输出集合
                 for (auto in : info.block2Info[succ].ins) {
@@ -166,10 +206,11 @@ LiveVariablesInfo calcLiveIntervals(MIRFunction& mfunc, CodeGenContext& ctx) {
                 }
             }
             std::swap(blockInfo.outs, outs);
-            
             auto ins = blockInfo.uses;  // other block pass the ins to the next block
             for (auto out : blockInfo.outs) {  // 计算当前块的输入集合
-                if (!blockInfo.defs.count(out)) ins.insert(out);
+                if (!blockInfo.defs.count(out)) {
+                    ins.insert(out);
+                }
             }
             if (ins != blockInfo.ins) {
                 std::swap(blockInfo.ins, ins);
@@ -181,14 +222,13 @@ LiveVariablesInfo calcLiveIntervals(MIRFunction& mfunc, CodeGenContext& ctx) {
     }
 
     // stage 3: calculate live intervals
-    assignInstNum(mfunc, info, ctx);  // 指令编号
+    assignInstNum(mfunc, info, ctx);
     for (auto& block : mfunc.blocks()) {
         auto& blockInfo = info.block2Info[block.get()];
         std::unordered_map<RegNum, LiveSegment> curSegment;  // 当前块内的活跃寄存器集合
-        std::unordered_map<RegNum, std::pair<MIRInst*, std::vector<MIRRegisterFlag*>>> lastUse;  // 当前块内寄存器最后一次被使用的指令
-        InstNum firstInstNum = 0, lastInstNum = 0;  // 存储当前块中第一条指令和最后一条指令的编号
-
-        for (auto inst : block.get()->insts()) {
+        std::unordered_map<RegNum, std::pair<MIRInst*, std::vector<MIRRegisterFlag*>>> lastUse;  // 当前块内寄存器最后一次被使用的指令及其指令标志
+        InstNum firstInstNum = 0, lastInstNum = 0;
+        for (auto inst : block->insts()) {
             auto& instInfo = ctx.instInfo.getInstInfo(inst);
             const auto instNum = info.inst2Num[inst];
 
@@ -199,17 +239,21 @@ LiveVariablesInfo calcLiveIntervals(MIRFunction& mfunc, CodeGenContext& ctx) {
             /* OperandFlagUse */
             for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
                 const auto flag = instInfo.operand_flag(idx);
-                auto operand = inst->operand(idx);
+                auto& operand = inst->operand(idx);
                 if (!isOperandVReg(operand)) continue;
                 const auto id = regNum(operand);
 
-                if (flag & OperandFlagUse) {  // update the curSegment and lastUse
+                if (flag & OperandFlagUse) {
+                    /* update the curSegment */
                     if (auto it = curSegment.find(id); it != curSegment.end()) {
                         it->second.end = instNum + 1;  // [begin, end)
+                        assert(it->second.begin < it->second.end); 
                     } else {
-                        curSegment[id] = {firstInstNum, instNum + 1};
+                        assert(firstInstNum < instNum + 1);
+                        curSegment[id] = {firstInstNum, instNum + 1};  // [begin, end)
                     }
 
+                    /* update the lastUse */
                     if (auto it = lastUse.find(id); it != lastUse.end()) {
                         if (it->second.first == inst) {
                             it->second.second.push_back(std::get<MIRRegister>(operand.storage()).flag_ptr());
@@ -221,19 +265,21 @@ LiveVariablesInfo calcLiveIntervals(MIRFunction& mfunc, CodeGenContext& ctx) {
                     }
                 }
             }
+            
             /* OperandFlagDef */
             for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
                 const auto flag = instInfo.operand_flag(idx);
-                auto operand = inst->operand(idx);
+                auto& operand = inst->operand(idx);
                 if (!isOperandVReg(operand)) continue;
                 const auto id = regNum(operand);
 
                 if (flag & OperandFlagDef) {  // defined
-                    if (curSegment.count(id)) {  // the register is defined and used in thr block
+                    if (curSegment.count(id)) {
                         auto& segment = curSegment[id];
 
                         if (segment.end == instNum + 1) {  // the register is defined and used in one instruction --> dead
                             segment.end = instNum + 2;
+                            assert(segment.begin < segment.end);
                         } else {  // the register is not defined and used in one instruction
                             info.reg2Interval[id].addSegment(segment);
                             segment = {instNum + 1, instNum + 2};
@@ -255,6 +301,7 @@ LiveVariablesInfo calcLiveIntervals(MIRFunction& mfunc, CodeGenContext& ctx) {
         for (auto& [id, segment] : curSegment) {
             if (blockInfo.outs.count(id)) {
                 segment.end = lastInstNum + 2;
+                assert(segment.begin < segment.end);
             }
             info.reg2Interval[id].addSegment(segment);
         }
@@ -269,12 +316,22 @@ LiveVariablesInfo calcLiveIntervals(MIRFunction& mfunc, CodeGenContext& ctx) {
         for (auto id : blockInfo.outs) {
             if (blockInfo.ins.count(id) && !curSegment.count(id)) {
                 info.reg2Interval[id].addSegment({firstInstNum, lastInstNum + 2});
+                assert(firstInstNum < lastInstNum + 2);
             }
         }
     }
 
     // stage 4: optimize
     for (auto& [regNum, liveInterval] : info.reg2Interval) {
+        if (Debug) {
+            if (isVirtualReg(regNum)) {
+                std::cerr << "v" << (regNum ^ virtualRegBegin) << ": ";
+            } else if (isISAReg(regNum)) {
+                std::cerr << "i" << regNum << ": ";
+            } else if (isStackObject(regNum)) {
+                std::cerr << "so" << (regNum ^ stackObjectBegin) << ": ";
+            }
+        }
         liveInterval.optimize();
         assert(liveInterval.verify());
     }

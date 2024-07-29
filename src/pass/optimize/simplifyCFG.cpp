@@ -23,7 +23,7 @@ void simplifyCFG::run(ir::Function* func, TopAnalysisInfoManager* tp) {
         isWhile = isWhile or removeSingleIncomingPhi(func);
         // func->rename();
         // func->print(std::cerr);
-        isWhile = isWhile or removeSingleBrBlock(func);
+        // isWhile = isWhile or removeSingleBrBlock(func);
         // func->rename();
         // func->print(std::cerr);
         isChange = isWhile or isChange;
@@ -185,7 +185,6 @@ bool simplifyCFG::removeSingleBrBlock(ir::Function* func) {
         if (getSingleDest(bb)) worklist.push_back(bb);
     }
     while (not worklist.empty()) {
-        ischanged=true;
         auto curBB = worklist.back();
         worklist.pop_back();
         auto destBB = curBB->next_blocks().front();
@@ -239,6 +238,7 @@ bool simplifyCFG::removeSingleBrBlock(ir::Function* func) {
             // 检查没有curBB的使用
             assert(curBB->uses().size() == 0);
             func->delBlock(curBB);
+            ischanged=true;
         } else {
             // 判断这样的块是否可以删除
             // 遍历curBB和preBB的destBB Incoming,查看对应value是不是一致, 如果能够一致就可以进一步
@@ -296,6 +296,7 @@ bool simplifyCFG::removeSingleBrBlock(ir::Function* func) {
                 phiinst->delBlock(curBB);
             }
             func->delBlock(curBB);
+            ischanged=true;
         }
     }
     return ischanged;

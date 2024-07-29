@@ -30,14 +30,15 @@ struct LiveSegment final {
 struct LiveInterval final {
     std::deque<LiveSegment> segments;
 
+    /* utils function */
     void addSegment(const LiveSegment& segment);
     InstNum nextUse(InstNum begin) const;
     bool intersectWith(const LiveInterval& rhs) const;
-
     void optimize();
-    bool verify() const;
 
-    void dump(std::ostream& out) const;  // Just for Debug
+    /* Just for Debug */
+    bool verify() const;
+    void dump(std::ostream& out) const;
 };
 
 /* LiveVariableInfo */

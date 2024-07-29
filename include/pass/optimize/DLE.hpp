@@ -12,6 +12,6 @@ namespace pass{
     class simpleDLE : public BasicBlockPass{
     public:
         void run(ir::BasicBlock* bb,TopAnalysisInfoManager* tp) override;
-        
+        std::string name() const override { return "simpleDLE"; }
     };
 }

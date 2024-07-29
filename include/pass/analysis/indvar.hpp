@@ -3,25 +3,26 @@
 
 namespace pass {
 class indVarAnalysis : public FunctionPass {
-  public:
-    void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
+public:
+  std::string name() const override { return "indVarAnalysis"; }
+  void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
 
-  private:
-    loopInfo* lpctx;
-    indVarInfo* ivctx;
-    void addIndVar(ir::Loop* lp,
-                   ir::Constant* mbegin,
-                   ir::Constant* mstep,
-                   ir::Value* mend,
-                   ir::BinaryInst* iterinst,
-                   ir::Instruction* cmpinst);
+private:
+  loopInfo* lpctx;
+  indVarInfo* ivctx;
+  void addIndVar(ir::Loop* lp,
+                 ir::Constant* mbegin,
+                 ir::Constant* mstep,
+                 ir::Value* mend,
+                 ir::BinaryInst* iterinst,
+                 ir::Instruction* cmpinst);
 };
 class indVarInfoCheck : public FunctionPass {
-  public:
-    void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
+public:
+  void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
 
-  private:
-    loopInfo* lpctx;
-    indVarInfo* ivctx;
+private:
+  loopInfo* lpctx;
+  indVarInfo* ivctx;
 };
 }  // namespace pass

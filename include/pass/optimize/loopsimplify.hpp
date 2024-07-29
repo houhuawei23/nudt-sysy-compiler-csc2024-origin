@@ -11,6 +11,7 @@ class loopsimplify : public FunctionPass {
    private:
     
    public:
+    std::string name() const override { return "Loopsimplify"; }
     ir::BasicBlock* insertUniqueBackedgeBlock(ir::Loop* L, ir::BasicBlock* preheader,TopAnalysisInfoManager* tp);
     ir::BasicBlock* insertUniquePreheader(ir::Loop* L,TopAnalysisInfoManager* tp);
     void insertUniqueExitBlock(ir::Loop* L,TopAnalysisInfoManager* tp);

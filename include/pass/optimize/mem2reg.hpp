@@ -30,5 +30,7 @@ class Mem2Reg : public FunctionPass {
     void rename(ir::Function* F);
     void simplifyphi(ir::PhiInst* phi);
     bool coulddelete(ir::AllocaInst* alloca);
+
+    std::string name() const override { return "Mem2Reg"; }
 };
 }  // namespace pass

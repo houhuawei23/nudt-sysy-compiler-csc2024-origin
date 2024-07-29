@@ -16,6 +16,9 @@ void ADCE::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     pdctx->refresh();
     liveBB.clear();
     liveInst.clear();
+    auto sectx=tp->getSideEffectInfo();
+    sectx->setOff();
+    sectx->refresh();
 
     assert(workList.empty() and "ADCE WorkList not empty before running!");
 
@@ -24,8 +27,17 @@ void ADCE::run(ir::Function* func, TopAnalysisInfoManager* tp) {
         liveBB[bb] = false;
         for (auto inst : bb->insts()) {
             liveInst[inst] = false;
-            if (inst->isAggressiveAlive()) {
+            if (inst->hasSideEffect()) {
                 workList.push(inst);
+            }
+            if (auto callInst=inst->dynCast<ir::CallInst>()){
+                if(sectx->hasSideEffect(callInst->callee())){
+                    workList.push(inst);
+                }
+                else{
+                    std::cerr<<callInst->callee()->name()<<"!!!!!!!!!!!!!!!!!!"<<std::endl;
+                }
+
             }
         }
     }

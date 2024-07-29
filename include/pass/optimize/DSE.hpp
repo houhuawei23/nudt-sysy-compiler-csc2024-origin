@@ -12,6 +12,7 @@ namespace pass{
     class simpleDSE : public BasicBlockPass{
     public:
         void run(ir::BasicBlock* bb,TopAnalysisInfoManager* tp) override;
+        std::string name() const override { return "simpleDSE"; }
         
     };
 }

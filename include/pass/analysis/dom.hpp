@@ -6,6 +6,7 @@ namespace pass {
 class domInfoPass : public FunctionPass {
   public:
     void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
+    std::string name() const override { return "DomInfoPass"; }
 };
 
 class preProcDom : public FunctionPass {
@@ -14,6 +15,7 @@ class preProcDom : public FunctionPass {
 
   public:
     void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
+    std::string name() const override { return "PreProcDom"; }
 };
 
 class idomGen : public FunctionPass {
@@ -28,6 +30,7 @@ class idomGen : public FunctionPass {
 
   public:
     void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
+    std::string name() const override { return "IdomGen"; }
 };
 
 class domFrontierGen : public FunctionPass {
@@ -41,6 +44,7 @@ class domFrontierGen : public FunctionPass {
 
   public:
     void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
+    std::string name() const override { return "DomFrontierGen"; }
 };
 
 class domInfoCheck : public FunctionPass {
@@ -49,6 +53,7 @@ class domInfoCheck : public FunctionPass {
 
   public:
     void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
+    std::string name() const override { return "DomInfoCheck"; }
 };
 
 }  // namespace pass
