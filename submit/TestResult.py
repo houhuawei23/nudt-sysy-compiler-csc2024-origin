@@ -34,6 +34,8 @@ class TestResult:
     # src -> (compiler_time, gcc_o3_time)
     qemu_run_time = {}
 
+    board_run_time = dict()
+
     def __init__(self, test_name):
         self.test_name = test_name
 
@@ -136,3 +138,15 @@ class TestResult:
                     speedup = 0
                 f.write(f"speedup: {speedup:.2f}x\n")
                 f.write("\n")
+
+    def print_board_overview(self):
+        print(Fore.RED + f"perf on board")
+        for filename, time in self.board_run_time.items():
+            print(f"{filename}: {time:.4f}s")
+
+    def save_board_result(self, filename: str):
+        with open("perf.txt", "a") as f:
+            for filename, time_used in self.board_run_time.items():
+                line = f"{filename},{time_used: 6f},"
+                f.write(line)
+                # print(f"{filename}: {time_used:.4f}s")

@@ -77,7 +77,7 @@ find_package(Python3 REQUIRED)
 
 set(SUBMIT_DIR ${CMAKE_CURRENT_BINARY_DIR}/submit)
 
-# add_custom_target(submit ALL
+# add_custom_target(submit
 #   COMMAND ${CMAKE_COMMAND} -E rm -rf ${SUBMIT_DIR}
 #   COMMAND ${CMAKE_COMMAND} -E make_directory ${SUBMIT_DIR}
 #   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/submit/Makefile ${SUBMIT_DIR}/Makefile
@@ -108,10 +108,9 @@ set(SUBMIT_DIR ${CMAKE_CURRENT_BINARY_DIR}/submit)
 #   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/submit/.gitignore ${SUBMIT_DIR}/.gitignore
 
 #   # run test
-#   # COMMAND ${Python3_EXECUTABLE} ${SUBMIT_DIR}/runtest.py ${SUBMIT_DIR}/compiler ${CMAKE_SOURCE_DIR}/test ${CMAKE_SOURCE_DIR}/.tmp/asm ${CMAKE_SOURCE_DIR}/.tmp/exe ${CMAKE_SOURCE_DIR}/.tmp/c
-  
-#   # compile all performance cases
-#   COMMAND ${Python3_EXECUTABLE} ${SUBMIT_DIR}/run.py ${SUBMIT_DIR}/compiler ${CMAKE_SOURCE_DIR}/test ${SUBMIT_DIR}/.output
+#   COMMAND ${Python3_EXECUTABLE} ${SUBMIT_DIR}/runtest.py ${SUBMIT_DIR}/compiler ${CMAKE_SOURCE_DIR}/test ${CMAKE_SOURCE_DIR}/.tmp/asm ${CMAKE_SOURCE_DIR}/.tmp/exe ${CMAKE_SOURCE_DIR}/.tmp/c
 
+#   # compile all performance cases
+#   # COMMAND ${Python3_EXECUTABLE} ${SUBMIT_DIR}/run.py ${SUBMIT_DIR}/compiler ${CMAKE_SOURCE_DIR}/test ${SUBMIT_DIR}/.output
 #   DEPENDS compiler
 # )
