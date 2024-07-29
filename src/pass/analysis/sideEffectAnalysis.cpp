@@ -5,7 +5,6 @@ static std::set<ir::Function*>worklist;
 static std::set<ir::Function*>hasSideEffectFunctions;
 static std::set<ir::Function*>vis;
 
-std::string sideEffectAnalysis::name() const {return "sideEffectAnalysis";}
 
 void sideEffectAnalysis::run(ir::Module* md,TopAnalysisInfoManager* tp){
     /*
@@ -91,7 +90,6 @@ void sideEffectAnalysis::run(ir::Module* md,TopAnalysisInfoManager* tp){
     }
     sectx->setOn();
     // infoCheck(md);
-
 }
 
 bool sideEffectAnalysis::isGlobal(ir::GetElementPtrInst* gep){

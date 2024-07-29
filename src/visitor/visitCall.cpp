@@ -10,6 +10,8 @@ namespace sysy {
  *      lValue: ID (LBRACKET exp RBRACKET)*;
  */
 std::any SysYIRGenerator::visitCall(SysYParser::CallContext* ctx) {
+  const auto lineNumber = ctx->start->getLine();
+
   auto func_name = ctx->ID()->getText();
   /* macro replace */
   if (func_name.compare("starttime") == 0) {
@@ -21,13 +23,19 @@ std::any SysYIRGenerator::visitCall(SysYParser::CallContext* ctx) {
   // function rargs 应该被作为 function 的 operands
   std::vector<ir::Value*> rargs;
   std::vector<ir::Value*> final_rargs;
-
-  if (ctx->funcRParams()) {
-    for (auto exp : ctx->funcRParams()->exp()) {
-      auto rarg = any_cast_Value(visit(exp));
-      rargs.push_back(rarg);
+  
+  if (func_name.compare("_sysy_starttime") == 0 or
+      func_name.compare("_sysy_stoptime") == 0) {
+      rargs.push_back(ir::Constant::gen_i32(lineNumber));
+  } else {
+    if (ctx->funcRParams()) {
+      for (auto exp : ctx->funcRParams()->exp()) {
+        auto rarg = any_cast_Value(visit(exp));
+        rargs.push_back(rarg);
+      }
     }
   }
+
   assert(callee->argTypes().size() == rargs.size() && "size not match!");
 
   int length = rargs.size();

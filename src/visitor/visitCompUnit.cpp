@@ -30,11 +30,11 @@ std::any SysYIRGenerator::visitCompUnit(SysYParser::CompUnitContext* ctx) {
 
     mModule->addFunction(ir::Type::TypeFunction(type_void, {}), "putf");
 
-    mModule->addFunction(ir::Type::TypeFunction(type_void, {}), "starttime");
-    mModule->addFunction(ir::Type::TypeFunction(type_void, {}), "stoptime");
+    mModule->addFunction(ir::Type::TypeFunction(type_void, {type_i32}), "starttime");
+    mModule->addFunction(ir::Type::TypeFunction(type_void, {type_i32}), "stoptime");
 
-    mModule->addFunction(ir::Type::TypeFunction(type_void, {}), "_sysy_starttime");
-    mModule->addFunction(ir::Type::TypeFunction(type_void, {}), "_sysy_stoptime");
+    mModule->addFunction(ir::Type::TypeFunction(type_void, {type_i32}), "_sysy_starttime");
+    mModule->addFunction(ir::Type::TypeFunction(type_void, {type_i32}), "_sysy_stoptime");
 
     visitChildren(ctx);
     return nullptr;

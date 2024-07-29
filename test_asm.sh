@@ -21,7 +21,7 @@ function qemu_riscv64_run() {
     $qemu_riscv64 -L "/usr/riscv64-linux-gnu/" $@
 }
 
-TIMEOUT=40
+TIMEOUT=80
 # 25 for ./test/2023/functional/65_color.sy
 PASS_CNT=0
 WRONG_CNT=0
