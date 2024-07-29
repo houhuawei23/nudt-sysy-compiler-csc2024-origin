@@ -24,4 +24,5 @@ cd $submit_dir
 git add .
 git commit -m "sync $(date)"
 git push -u origin riscv
-
+cd ..
+rm -rf $submit_dir/*

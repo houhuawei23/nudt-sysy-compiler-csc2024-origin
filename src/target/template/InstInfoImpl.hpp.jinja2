@@ -23,6 +23,7 @@ public:
                     return OperandFlag{{op.flag}};
             {%- endfor -%}
             default:
+                return OperandFlagNone;
                 assert(false && "Invalid operand index");
         }
     }
