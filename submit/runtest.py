@@ -46,12 +46,12 @@ def functionalTest():
         sysy_link_for_riscv_gpp,
     )
     test.set("riscv", "2024", functional_timeout)
-    # test.runFunctionalTest("functional")
+    test.runFunctionalTest("functional")
     # test.run("hidden_functional")
     # test.run_single_case("functional", "00_main.sy")
     # test.run_single_case("functional", "11_BST.sy")
     # test.runSingleCase("functional", "04_arr_defn3.sy")
-    test.runSingleCase("performance", "01_mm1.sy")
+    # test.runSingleCase("performance", "01_mm1.sy")
 
 
 
@@ -90,5 +90,5 @@ def compile_only():
 if __name__ == "__main__":
     # submitTest()
     # perfTest()
-    # functionalTest()
-    compile_only()
+    functionalTest()
+    # compile_only()

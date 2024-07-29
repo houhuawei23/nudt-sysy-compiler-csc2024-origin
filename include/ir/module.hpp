@@ -36,6 +36,7 @@ class Module {
   // readable ir print
   void print(std::ostream& os) const;
   bool verify(std::ostream& os) const;
+  GlobalVariable* findGlobalVariable(const_str_ref name);
 };
 
 SYSYC_ARENA_TRAIT(Module, IR);
