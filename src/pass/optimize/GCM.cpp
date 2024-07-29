@@ -66,6 +66,8 @@ void GCM::scheduleEarly(ir::Instruction* instruction, ir::BasicBlock* entry) {
         }
     }
     if (!ispinned(instruction)) {
+        if (lpctx->looplevel(instruction->block()) == 0)
+            return;
         auto instbb = instruction->block();
         if (destBB == instbb) return;
 
