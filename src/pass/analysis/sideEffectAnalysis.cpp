@@ -47,8 +47,7 @@ void sideEffectAnalysis::run(ir::Module* md,TopAnalysisInfoManager* tp){
                 for(auto inst:bb->insts()){
                     if(auto storeInst=inst->dynCast<ir::StoreInst>()){//cond 1
                         auto stptr=storeInst->ptr();
-                        auto stptrName=stptr->name().substr(1);
-                        if(auto gv=md->findGlobalVariable(stptrName)){
+                        if(auto gv=stptr->dynCast<ir::GlobalVariable>()){
                             // std::cerr<<"In function \""<<func->name()<<"\", we got a store to gv\" "<<gv->name()<<"\""<<std::endl;
                             sectx->setFuncSideEffect(func,true);
                             hasSideEffectFunctions.insert(func);
@@ -66,8 +65,7 @@ void sideEffectAnalysis::run(ir::Module* md,TopAnalysisInfoManager* tp){
                     }
                     else if(auto loadInst=inst->dynCast<ir::LoadInst>()){
                         auto loadPtr=loadInst->ptr();
-                        auto ldptrName=loadPtr->name().substr(1);
-                        if(auto gv=md->findGlobalVariable(ldptrName)){
+                        if(auto gv=loadPtr->dynCast<ir::GlobalVariable>()){
                             sectx->setFuncGVUse(func,true);
                         }
                         else if(auto gep=loadPtr->dynCast<ir::GetElementPtrInst>()){
