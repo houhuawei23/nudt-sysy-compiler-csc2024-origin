@@ -31,11 +31,11 @@ def submitTest():
     submit_timeout = 10
     test = Test("riscv", "2023", submit_timeout)
     # test.run()
-    test.run_single_case("functional", "04_arr_defn3.sy")
+    test.runSingleCase("functional", "04_arr_defn3.sy")
 
 
 def functionalTest():
-    functional_timeout = 20
+    functional_timeout = 50
     test = Test(
         compiler_path,
         tests_path,
@@ -46,10 +46,12 @@ def functionalTest():
         sysy_link_for_riscv_gpp,
     )
     test.set("riscv", "2024", functional_timeout)
-    test.run("functional")
+    # test.runFunctionalTest("functional")
     # test.run("hidden_functional")
     # test.run_single_case("functional", "00_main.sy")
     # test.run_single_case("functional", "11_BST.sy")
+    # test.runSingleCase("functional", "04_arr_defn3.sy")
+    test.runSingleCase("performance", "01_mm1.sy")
 
 
 
@@ -65,12 +67,28 @@ def perfTest():
         sysy_link_for_riscv_gpp,
     )
     test.set("riscv", "2024", perf_timeout)
-    test.run_perf("performance")
+    test.runPerformanceTest("performance")
     # test.run_perf("final_performance")
     # test.run_single_case("performance", "00_bitset1.sy")
 
 
+def compile_only():
+    our_compiler_timeout = 50
+    test = Test(
+        compiler_path,
+        tests_path,
+        output_asm_path,
+        output_exe_path,
+        output_c_path,
+        sysy_runtime,
+        sysy_link_for_riscv_gpp,
+    )
+
+    test.set("riscv", "2024", our_compiler_timeout)
+    test.runCompileOnly("performance")
+
 if __name__ == "__main__":
     # submitTest()
     # perfTest()
-    functionalTest()
+    # functionalTest()
+    compile_only()

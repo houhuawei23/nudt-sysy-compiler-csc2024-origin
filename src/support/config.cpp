@@ -95,21 +95,24 @@ void Config::parseTestArgs(int argc, char* argv[]) {
 // clang-format off
 static const auto perfPassesList = std::vector<std::string>{
   "mem2reg",  //
-  // // "simplifycfg", //error in backend CFGAnalysis.successors
+  "sccp",     //
+  "adce",     // passed all functional
+  "simplifycfg", //error in backend CFGAnalysis.successors
+  "gcm",  // global code motion
+  "gvn",          // global value numbering: passed, slow
   "instcombine",  //
   "adce",     // passed all functional
   "inline",   // segfault on 60_sort_test6/69_expr_eval/...
   "tco",      // tail call optimization
   "inline",   //
   "g2l",      // global to local
-  "instcombine",  //
-  "adce",     // passed all functional
   "sccp",     //
+  "adce",     // passed all functional
+  "simplifycfg",
   "gcm",  // global code motion
   "gvn",          // global value numbering: passed, slow
   "instcombine",  //
-  "adce",         //
-  "simplifycfg",
+  "adce",     // passed all functional
   "reg2mem"
 };
 
