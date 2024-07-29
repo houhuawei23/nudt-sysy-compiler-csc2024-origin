@@ -339,9 +339,9 @@ void createMIRModule(ir::Module& ir_module,
         // std::cerr << "\tdontForward: " << codegen_ctx.flags.dontForward << "\n";
         // std::cerr << "\tpostLegal: " << codegen_ctx.flags.postLegal << "\n";
       }
-      // while (genericPeepholeOpt(*mir_func, codegen_ctx))
+      while (genericPeepholeOpt(*mir_func, codegen_ctx))
         ;
-      // dumpStageResult("AfterPeephole", mir_func, codegen_ctx);
+      dumpStageResult("AfterPeephole", mir_func, codegen_ctx);
     }
 
     /* pre-RA legalization */

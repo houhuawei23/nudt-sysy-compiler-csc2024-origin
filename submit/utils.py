@@ -5,6 +5,15 @@ import subprocess
 import colorama
 from colorama import Fore, Style
 
+import platform
+
+
+def checkMachine(needed_machine: str):
+    if platform.machine() != needed_machine:
+        print(f"not correctly platform ({platform.machine()}), need run on {needed_machine}!")
+        return False
+    return True
+
 
 def isZero(x):
     return abs(x) < 1e-5
@@ -67,6 +76,16 @@ def check_args_beta(compiler_path: str, tests_path: str, output_dir_path: str):
     for path in paths:
         os.makedirs(path, exist_ok=True)
 
+    return True
+
+
+def check_args_alpha(must_exist_paths: list, must_create_paths: list):
+    for path in must_exist_paths:
+        if not os.path.exists(path):
+            print(f"Path not found: {path}")
+            return False
+    for path in must_create_paths:
+        os.makedirs(path, exist_ok=True)
     return True
 
 

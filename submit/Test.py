@@ -478,6 +478,10 @@ class Test:
         # run
         self.result.board_run_time[filename] = time_used
 
+    # def __gccrun
+
+
+
     def runSingleCase(self, test_kind: str, filename: str):
         """
         test.runSingleCase("functional", "04_arr_defn3.sy")
@@ -566,6 +570,13 @@ class Test:
         print(
             f"\nTest {self.year} {self.target} {test_kind} -O{self.opt_level} -L{self.log_level}"
         )
-        self.result.print_result_overview()
+        self.result.print_board_overview()
         dt_string = datetime.now().strftime("%Y_%m_%d_%H:%M")
-        self.result.save_result(f"./{self.year}_{dt_string}.md")
+        self.result.save_board_result(f"./{self.year}_{dt_string}.md")
+
+    def runGccOnVisionFive(self, test_kind: str):
+        """
+        run all cases in test/year/test_kind with gcc -O3 on VisionFive
+        """
+        pass
+

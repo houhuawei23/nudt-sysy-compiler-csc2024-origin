@@ -612,7 +612,7 @@ InstSelInfo: {
               dst: $dst,
               src1: $src1,
               src2: $src2,
-              predicate: isOperandI64($dst) && isOperandIReg($src1) && isOperandImm12($src2),
+              predicate: isOperandI32($dst) && isOperandIReg($src1) && isOperandImm12($src2),
             },
           replace: { name: ADDIW, rd: $dst, rs1: $src1, imm: $src2 },
         },

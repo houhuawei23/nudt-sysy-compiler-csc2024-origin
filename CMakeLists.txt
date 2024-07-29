@@ -77,40 +77,40 @@ find_package(Python3 REQUIRED)
 
 set(SUBMIT_DIR ${CMAKE_CURRENT_BINARY_DIR}/submit)
 
-# add_custom_target(submit
-#   COMMAND ${CMAKE_COMMAND} -E rm -rf ${SUBMIT_DIR}
-#   COMMAND ${CMAKE_COMMAND} -E make_directory ${SUBMIT_DIR}
-#   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/submit/Makefile ${SUBMIT_DIR}/Makefile
-#   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src ${SUBMIT_DIR}/src
-#   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/include ${SUBMIT_DIR}/include
-#   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/src/antlr4/*.cpp ${SUBMIT_DIR}/src/
-#   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/src/antlr4/*.h ${SUBMIT_DIR}/include/
-#   COMMAND ${CMAKE_COMMAND} -E rm -rf ${SUBMIT_DIR}/src/runtime
+add_custom_target(submit
+  COMMAND ${CMAKE_COMMAND} -E rm -rf ${SUBMIT_DIR}
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${SUBMIT_DIR}
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/submit/Makefile ${SUBMIT_DIR}/Makefile
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src ${SUBMIT_DIR}/src
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/include ${SUBMIT_DIR}/include
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/src/antlr4/*.cpp ${SUBMIT_DIR}/src/
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/src/antlr4/*.h ${SUBMIT_DIR}/include/
+  COMMAND ${CMAKE_COMMAND} -E rm -rf ${SUBMIT_DIR}/src/runtime
 
-#   # file_filter: delete unnecessary files
-#   COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/submit/file_filter.py ${SUBMIT_DIR}
+  # file_filter: delete unnecessary files
+  COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/submit/file_filter.py ${SUBMIT_DIR}
 
-#   # header_fix: fix include path
-#   COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/submit/header_fix.py ${SUBMIT_DIR}
+  # header_fix: fix include path
+  COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/submit/header_fix.py ${SUBMIT_DIR}
 
-#   # compile: compile runtime
-#   COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/src/runtime/compile.py RISCV ${SUBMIT_DIR}/include/autogen/riscv/Runtime.hpp
+  # compile: compile runtime
+  COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/src/runtime/compile.py RISCV ${SUBMIT_DIR}/include/autogen/riscv/Runtime.hpp
 
-#   # copy *.py
-#   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/submit/*.py ${SUBMIT_DIR}/
+  # copy *.py
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/submit/*.py ${SUBMIT_DIR}/
 
-#   # comile: compile compiler
-#   COMMAND cd ${SUBMIT_DIR}
+  # comile: compile compiler
+  COMMAND cd ${SUBMIT_DIR}
 
-#   COMMAND ${Python3_EXECUTABLE} ${SUBMIT_DIR}/compile.py ${SUBMIT_DIR} compiler
+  # COMMAND ${Python3_EXECUTABLE} ${SUBMIT_DIR}/compile.py ${SUBMIT_DIR} compiler
 
-#   # COMMAND make
-#   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/submit/.gitignore ${SUBMIT_DIR}/.gitignore
+  # COMMAND make
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/submit/.gitignore ${SUBMIT_DIR}/.gitignore
 
-#   # run test
-#   COMMAND ${Python3_EXECUTABLE} ${SUBMIT_DIR}/runtest.py ${SUBMIT_DIR}/compiler ${CMAKE_SOURCE_DIR}/test ${CMAKE_SOURCE_DIR}/.tmp/asm ${CMAKE_SOURCE_DIR}/.tmp/exe ${CMAKE_SOURCE_DIR}/.tmp/c
+  # run test
+  # COMMAND ${Python3_EXECUTABLE} ${SUBMIT_DIR}/runtest.py ${SUBMIT_DIR}/compiler ${CMAKE_SOURCE_DIR}/test ${CMAKE_SOURCE_DIR}/.tmp/asm ${CMAKE_SOURCE_DIR}/.tmp/exe ${CMAKE_SOURCE_DIR}/.tmp/c
 
-#   # compile all performance cases
-#   # COMMAND ${Python3_EXECUTABLE} ${SUBMIT_DIR}/run.py ${SUBMIT_DIR}/compiler ${CMAKE_SOURCE_DIR}/test ${SUBMIT_DIR}/.output
-#   DEPENDS compiler
-# )
+  # compile all performance cases
+  COMMAND ${Python3_EXECUTABLE} ${SUBMIT_DIR}/run.py ${CMAKE_SOURCE_DIR}/compiler ${CMAKE_SOURCE_DIR}/test ${SUBMIT_DIR}/.output
+  DEPENDS compiler
+)
