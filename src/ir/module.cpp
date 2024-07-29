@@ -82,7 +82,7 @@ bool Module::verify(std::ostream& os) const {
 }
 
 GlobalVariable* Module::findGlobalVariable(const_str_ref name){
-  if(mGlobalVariableTable.count(name))return nullptr;
+  if(mGlobalVariableTable.count(name)==0)return nullptr;
   return mGlobalVariableTable[name];
 }
 }  // namespace ir
