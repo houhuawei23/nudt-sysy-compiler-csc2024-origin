@@ -38,7 +38,7 @@ void simpleDLE::run(ir::BasicBlock* bb,TopAnalysisInfoManager* tp){
         }
     }
     if(removeInsts.size()==0)return;
-    std::cerr<<"Delete "<<removeInsts.size()<<" load insts."<<std::endl;
+    // std::cerr<<"Delete "<<removeInsts.size()<<" load insts."<<std::endl;
     for(auto inst:removeInsts){
         bb->delete_inst(inst);
     }

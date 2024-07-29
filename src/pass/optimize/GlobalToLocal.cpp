@@ -125,6 +125,7 @@ bool global2local::processGlobalVariables(ir::GlobalVariable* gv,ir::Module* md,
     if(gvUseFuncSize==1){
         auto func=*globalDirectUsedFunc[gv].begin();
         if(cgctx->callees(func).count(func))return false;//is recursive
+        if(func->name()!="@main")return false;//目前只支持对main使用的全局变量的tolocal
         if(funcToMem2Reg.count(func)==0){//为有需要的mem2reg的函数提供alloca条件,每一个函数只需要运行一遍
             auto newEntry=new ir::BasicBlock("newbb",func);
             auto oldEntry=func->entry();

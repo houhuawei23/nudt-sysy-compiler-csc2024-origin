@@ -30,7 +30,7 @@ void callGraphBuild::run(ir::Module* ctx, TopAnalysisInfoManager* tp) {
                 if (instCall) {
                     auto calleePtr = instCall->callee();
                     // if(calleePtr->get_is_lib())continue;// lib function don't need call info
-                    if (cgctx->isLib(calleePtr)) continue;
+                    // if (cgctx->isLib(calleePtr)) continue;
                     // func->callees().insert(calleePtr);
                     // func->set_is_called(true);
                     cgctx->callees(func).insert(calleePtr);

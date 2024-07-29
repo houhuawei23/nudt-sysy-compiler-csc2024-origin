@@ -165,9 +165,7 @@ void createMIRFunction(ir::Function* ir_func,
 
 void createMIRInst(ir::Instruction* ir_inst, LoweringContext& ctx);
 
-void lower_GetElementPtr_beta(ir::inst_iterator begin,
-                              ir::inst_iterator end,
-                              LoweringContext& ctx);
+void lower_GetElementPtr(ir::inst_iterator begin, ir::inst_iterator end, LoweringContext& ctx);
 
 std::unique_ptr<MIRModule> createMIRModule(ir::Module& ir_module,
                                            Target& target,
@@ -353,8 +351,8 @@ void createMIRModule(ir::Module& ir_module,
 
     /* Optimize: pre-RA scheduling, minimize register usage */
     {
-      preRASchedule(*mir_func, codegen_ctx);
-      dumpStageResult("AfterPreRASchedule", mir_func, codegen_ctx);
+      // preRASchedule(*mir_func, codegen_ctx);
+      // dumpStageResult("AfterPreRASchedule", mir_func, codegen_ctx);
     }
 
     /* register allocation */
@@ -534,7 +532,7 @@ void createMIRFunction(ir::Function* ir_func,
                 break;
               }
             }
-            lower_GetElementPtr_beta(iter, end, lowering_ctx);  // [iter, end)
+            lower_GetElementPtr(iter, end, lowering_ctx);  // [iter, end)
             iter = end;
           }
         } else {
@@ -974,9 +972,7 @@ void lower(ir::GetElementPtrInst* ir_inst, LoweringContext& ctx) {
  *    How to compute?
  *      我们遍历每一维度的下标索引, 直接在当前维度计算出当前维度的偏移量
  */
-void lower_GetElementPtr_beta(ir::inst_iterator begin,
-                              ir::inst_iterator end,
-                              LoweringContext& ctx) {
+void lower_GetElementPtr(ir::inst_iterator begin, ir::inst_iterator end, LoweringContext& ctx) {
   constexpr bool Debug = false;
   if (Debug) {
     std::cerr << "lower GetElementPtrInst for Array. \n";
@@ -998,30 +994,40 @@ void lower_GetElementPtr_beta(ir::inst_iterator begin,
       iter++;
     }
   }
-
-  auto base = ctx.map2operand(
-    dyn_cast<ir::GetElementPtrInst>(*begin)->value());  // 基地址
+  auto base = ctx.map2operand(dyn_cast<ir::GetElementPtrInst>(*begin)->value());  // 基地址
   auto iter = begin;
   MIROperand ptr = base;
 
   auto ir_inst = dyn_cast<ir::GetElementPtrInst>(*iter);
   ir::Value* instEnd = *iter;  // GetElementPtr指令末尾 (包含)
 
-  MIROperand mir_offset = ctx.map2operand(ir_inst->index());
+  ir::Value* ir_offset = ir_inst->index();
+  bool is_constant = ir::isa<ir::Constant>(ir_offset);
+  MIROperand mir_offset = ctx.map2operand(ir_offset);
   auto dims = ir_inst->cur_dims();
   /* 乘法运算 */
   for (int i = 1; i < dims.size(); i++) {
-    auto newPtr = ctx.newVReg(OperandType::Int64);
-    ctx.emitInstBeta(InstMul, {newPtr, mir_offset,
-                               MIROperand::asImm(dims[i], OperandType::Int64)});
-    mir_offset = newPtr;
+    if (is_constant) {
+      auto ir_offset_constant = dyn_cast<ir::Constant>(ir_offset);
+      ir_offset = ir::Constant::gen_i32(ir_offset_constant->i32() * dims[i]);
+      mir_offset = ctx.map2operand(ir_offset);
+    } else {
+      auto newPtr = ctx.newVReg(OperandType::Int64);
+      ctx.emitInstBeta(InstMul, {newPtr, mir_offset, MIROperand::asImm(dims[i], OperandType::Int64)});
+      mir_offset = newPtr;
+    }
   }
   /* 1. 偏移量 */
   {
-    auto newPtr = ctx.newVReg(OperandType::Int64);
-    ctx.emitInstBeta(
-      InstMul, {newPtr, mir_offset, MIROperand::asImm(4, OperandType::Int64)});
-    mir_offset = newPtr;
+    if (is_constant) {
+      auto ir_offset_constant = dyn_cast<ir::Constant>(ir_offset);
+      ir_offset = ir::Constant::gen_i32(ir_offset_constant->i32() * 4);
+      mir_offset = ctx.map2operand(ir_offset);
+    } else {
+      auto newPtr = ctx.newVReg(OperandType::Int64);
+      ctx.emitInstBeta(InstMul, {newPtr, mir_offset, MIROperand::asImm(4, OperandType::Int64)});
+      mir_offset = newPtr;
+    }
   }
 
   /* 2. 指针运算 */
@@ -1037,23 +1043,34 @@ void lower_GetElementPtr_beta(ir::inst_iterator begin,
     ir_inst = dyn_cast<ir::GetElementPtrInst>(*iter);
     dims = ir_inst->cur_dims();
     instEnd = *iter;
-    mir_offset = ctx.map2operand(ir_inst->index());
+    ir_offset = ir_inst->index();
+    is_constant = ir::isa<ir::Constant>(ir_offset);
+    mir_offset = ctx.map2operand(ir_offset);
 
     /* 乘法运算 */
     for (int i = 1; i < dims.size(); i++) {
-      auto newPtr = ctx.newVReg(OperandType::Int64);
-      ctx.emitInstBeta(
-        InstMul,
-        {newPtr, mir_offset, MIROperand::asImm(dims[i], OperandType::Int64)});
-      mir_offset = newPtr;
+      if (is_constant) {
+        auto ir_offset_constant = dyn_cast<ir::Constant>(ir_offset);
+        ir_offset = ir::Constant::gen_i32(ir_offset_constant->i32() * dims[i]);
+        mir_offset = ctx.map2operand(ir_offset);
+      } else {
+        auto newPtr = ctx.newVReg(OperandType::Int64);
+        ctx.emitInstBeta(InstMul, {newPtr, mir_offset, MIROperand::asImm(dims[i], OperandType::Int64)});
+        mir_offset = newPtr;
+      }
     }
 
     /* 偏移量 */
     {
-      auto newPtr = ctx.newVReg(OperandType::Int64);
-      ctx.emitInstBeta(InstMul, {newPtr, mir_offset,
-                                 MIROperand::asImm(4, OperandType::Int64)});
-      mir_offset = newPtr;
+      if (is_constant) {
+        auto ir_offset_constant = dyn_cast<ir::Constant>(ir_offset);
+        ir_offset = ir::Constant::gen_i32(ir_offset_constant->i32() * 4);
+        mir_offset = ctx.map2operand(ir_offset);
+      } else {
+        auto newPtr = ctx.newVReg(OperandType::Int64);
+        ctx.emitInstBeta(InstMul, {newPtr, mir_offset, MIROperand::asImm(4, OperandType::Int64)});
+        mir_offset = newPtr;
+      }
     }
 
     /* 指针运算 */
