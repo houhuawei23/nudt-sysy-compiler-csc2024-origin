@@ -17,6 +17,7 @@ git checkout riscv
 cd ..
 rm -rf $submit_dir/*
 cp -r ../build/submit/* $submit_dir/
+cp -r ../build/submit/.output $submit_dir/
 rm -rf $submit_dir/compiler $submit_dir/build $submit_dir/__pycache__
 
 date > $submit_dir/timestamp
@@ -24,4 +25,5 @@ cd $submit_dir
 git add .
 git commit -m "sync $(date)"
 git push -u origin riscv
-
+cd ..
+rm -rf $submit_dir/*

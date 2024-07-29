@@ -519,6 +519,7 @@ bool EliminateRedundantInst(MIRFunction& mfunc, CodeGenContext& ctx) {
             if (!isOperandVRegORISAReg(op)) return 0;
             if (auto it = version.find(op); it != version.end()) return it->second;
             version[op] = ++versionId;
+            return versionId;
         };
         using VersionArray = std::array<uint32_t, MIRInst::max_operand_num>;
         std::unordered_map<MIRInst*, VersionArray> verArray;
@@ -570,6 +571,7 @@ bool EliminateRedundantInst(MIRFunction& mfunc, CodeGenContext& ctx) {
             }
         }
     }
+    return modified;
 }
 
 /*

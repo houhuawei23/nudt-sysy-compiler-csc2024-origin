@@ -7,7 +7,7 @@ import sys
 import subprocess
 import time
 from datetime import datetime
-
+import pdb
 
 from utils import (
     removePathSuffix,
@@ -122,7 +122,7 @@ def link_ricvgpp_executable(src: str, target: str, output: str, timeout=1):
 
 def run_executable(command, src, timeout=1):
     input_file = removePathSuffix(src) + ".in"
-    # print(*command, sep=" ")
+    print(*command, sep=" ")
     if os.path.exists(input_file):
         with open(input_file, "r", encoding="utf-8") as f:
             out = subprocess.run(
@@ -452,21 +452,31 @@ class Test:
         exe_path = os.path.join(self.output_exe_path, raw_name)
 
         # link
-        process = link_executable(
-            asm_path, target, exe_path, self.runtime, timeout=self.timeout
+        link_command = "riscv64-linux-gnu-gcc-12 -march=rv64gc".split() + [
+            "-o",
+            exe_path,
+            self.runtime,
+            asm_path,
+        ]
+        print(*link_command, sep=" ")
+        process = subprocess.run(
+            link_command, capture_output=True, text=True, timeout=self.timeout
         )
+        if process.returncode == 0:
+            print(f"link successfull: {src}")
+        else:
+            print(f"link failed: {src}")
+            return False
 
-        process = run_executable(
-            exe_path, src, timeout=self.timeout
-        )
+        # run
+        print(f"run {src} on visionfive")
+        res, process = run_executable([exe_path], src, timeout=self.timeout)
 
-        
+        print(f"compare output and perf data for {src}")
         time_used = compare_and_parse_perf(src, process)
 
         # run
-
-
-
+        self.result.board_run_time[filename] = time_used
 
     def runSingleCase(self, test_kind: str, filename: str):
         """
@@ -532,11 +542,30 @@ class Test:
         # dt_string = datetime.now().strftime("%Y_%m_%d_%H:%M")
         # self.result.save_result(f"./{self.year}_{test_kind}_{dt_string}.md")
 
-    def runOnVisionFive(self):
+    def runOnVisionFive(self, test_kind: str):
         """
         link and run all tests in test/year/test_kind with target and opt_level on VisionFive
         """
-        print(Fore.RED + f"Testing {self.year} on VisionFive...")
-        year_kind_path = os.path.join(self.tests_path, self.year)
+        # pdb.set_trace()
+        import platform
 
-        testsDriver(year_kind_path, ".sy", lambda x: self.__linkrun_on_visionfive(x, self.target))
+        if platform.machine() != "riscv64":
+            print(
+                f"not correctly platform ({platform.machine()}), need run on riscv64!"
+            )
+            return False
+        print(Fore.RED + f"Testing {self.year} {test_kind} on VisionFive...")
+
+        year_kind_path = os.path.join(self.tests_path, self.year, test_kind)
+
+        testsDriver(
+            year_kind_path,
+            ".sy",
+            lambda x: self.__linkrun_on_visionfive(x, self.target),
+        )
+        print(
+            f"\nTest {self.year} {self.target} {test_kind} -O{self.opt_level} -L{self.log_level}"
+        )
+        self.result.print_result_overview()
+        dt_string = datetime.now().strftime("%Y_%m_%d_%H:%M")
+        self.result.save_result(f"./{self.year}_{dt_string}.md")

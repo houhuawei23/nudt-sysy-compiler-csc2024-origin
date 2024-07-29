@@ -21,6 +21,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -52,6 +53,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -83,6 +85,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -114,6 +117,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -145,6 +149,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -176,6 +181,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -207,6 +213,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -238,6 +245,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -269,6 +277,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -300,6 +309,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -331,6 +341,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -362,6 +373,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -393,6 +405,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -424,6 +437,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -455,6 +469,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -486,6 +501,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -517,6 +533,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -548,6 +565,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -579,6 +597,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -610,6 +629,7 @@ public:
       case 2:
         return OperandFlagMetadata;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -641,6 +661,7 @@ public:
       case 2:
         return OperandFlagMetadata;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -674,6 +695,7 @@ public:
       case 3:
         return OperandFlagMetadata;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -710,6 +732,7 @@ public:
       case 3:
         return OperandFlagMetadata;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -746,6 +769,7 @@ public:
       case 3:
         return OperandFlagMetadata;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -782,6 +806,7 @@ public:
       case 3:
         return OperandFlagMetadata;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -818,6 +843,7 @@ public:
       case 3:
         return OperandFlagMetadata;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -854,6 +880,7 @@ public:
       case 3:
         return OperandFlagMetadata;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -890,6 +917,7 @@ public:
       case 3:
         return OperandFlagMetadata;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -926,6 +954,7 @@ public:
       case 3:
         return OperandFlagMetadata;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -962,6 +991,7 @@ public:
       case 3:
         return OperandFlagMetadata;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -998,6 +1028,7 @@ public:
       case 3:
         return OperandFlagMetadata;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1032,6 +1063,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1063,6 +1095,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1094,6 +1127,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1125,6 +1159,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1156,6 +1191,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1187,6 +1223,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1220,6 +1257,7 @@ public:
       case 3:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1254,6 +1292,7 @@ public:
       case 3:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1288,6 +1327,7 @@ public:
       case 3:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1322,6 +1362,7 @@ public:
       case 3:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1352,6 +1393,7 @@ public:
       case 1:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1380,6 +1422,7 @@ public:
       case 1:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1408,6 +1451,7 @@ public:
       case 1:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1436,6 +1480,7 @@ public:
       case 1:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1464,6 +1509,7 @@ public:
       case 1:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1492,6 +1538,7 @@ public:
       case 1:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1520,6 +1567,7 @@ public:
       case 1:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1548,6 +1596,7 @@ public:
       case 1:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1576,6 +1625,7 @@ public:
       case 1:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1604,6 +1654,7 @@ public:
       case 1:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1632,6 +1683,7 @@ public:
       case 1:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1662,6 +1714,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1693,6 +1746,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1724,6 +1778,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1753,6 +1808,7 @@ public:
       case 1:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1783,6 +1839,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1814,6 +1871,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1845,6 +1903,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1876,6 +1935,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1907,6 +1967,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1938,6 +1999,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -1969,6 +2031,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2000,6 +2063,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2031,6 +2095,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2062,6 +2127,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2093,6 +2159,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2124,6 +2191,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2155,6 +2223,7 @@ public:
       case 2:
         return OperandFlagMetadata;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2186,6 +2255,7 @@ public:
       case 2:
         return OperandFlagMetadata;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2217,6 +2287,7 @@ public:
       case 2:
         return OperandFlagMetadata;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2248,6 +2319,7 @@ public:
       case 2:
         return OperandFlagMetadata;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2279,6 +2351,7 @@ public:
       case 2:
         return OperandFlagMetadata;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2310,6 +2383,7 @@ public:
       case 2:
         return OperandFlagMetadata;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2341,6 +2415,7 @@ public:
       case 2:
         return OperandFlagMetadata;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2372,6 +2447,7 @@ public:
       case 2:
         return OperandFlagMetadata;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2403,6 +2479,7 @@ public:
       case 2:
         return OperandFlagMetadata;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2434,6 +2511,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2465,6 +2543,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2496,6 +2575,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2527,6 +2607,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2558,6 +2639,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2589,6 +2671,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2620,6 +2703,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2651,6 +2735,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2682,6 +2767,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2713,6 +2799,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2740,6 +2827,7 @@ public:
       case 0:
         return OperandFlagMetadata;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2765,6 +2853,7 @@ public:
       case 0:
         return OperandFlagMetadata;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2791,6 +2880,7 @@ public:
   OperandFlag operand_flag(uint32_t idx) const override {
     switch (idx) {
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2820,6 +2910,7 @@ public:
       case 1:
         return OperandFlagMetadata;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2850,6 +2941,7 @@ public:
       case 1:
         return OperandFlagMetadata;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2880,6 +2972,7 @@ public:
       case 1:
         return OperandFlagMetadata;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2910,6 +3003,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2941,6 +3035,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -2972,6 +3067,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -3003,6 +3099,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -3034,6 +3131,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -3065,6 +3163,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -3096,6 +3195,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -3127,6 +3227,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -3158,6 +3259,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -3189,6 +3291,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -3220,6 +3323,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -3251,6 +3355,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -3282,6 +3387,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -3313,6 +3419,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -3344,6 +3451,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -3375,6 +3483,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -3406,6 +3515,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -3437,6 +3547,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -3468,6 +3579,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -3499,6 +3611,7 @@ public:
       case 2:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -3528,6 +3641,7 @@ public:
       case 1:
         return OperandFlagMetadata;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -3558,6 +3672,7 @@ public:
       case 1:
         return OperandFlagMetadata;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -3588,6 +3703,7 @@ public:
       case 1:
         return OperandFlagMetadata;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }
@@ -3618,6 +3734,7 @@ public:
       case 1:
         return OperandFlagUse;
       default:
+        return OperandFlagNone;
         assert(false && "Invalid operand index");
     }
   }

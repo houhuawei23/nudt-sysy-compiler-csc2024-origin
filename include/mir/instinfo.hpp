@@ -14,6 +14,7 @@ enum OperandFlag : uint32_t {
   OperandFlagUse = 1 << 0,
   OperandFlagDef = 1 << 1,
   OperandFlagMetadata = 1 << 2,
+  OperandFlagNone = 0,
 };
 
 /*
