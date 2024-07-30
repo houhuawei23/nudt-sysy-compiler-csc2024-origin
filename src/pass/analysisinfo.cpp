@@ -68,7 +68,9 @@ void indVarInfo::refresh() {
         using namespace pass;
         PassManager pm = PassManager(passUnit->module(), topManager);
         indVarAnalysis iva = indVarAnalysis();
+        indVarInfoCheck ivc = indVarInfoCheck();
         pm.run(&iva);
+        pm.run(&ivc);
         setOn();
     }
 }

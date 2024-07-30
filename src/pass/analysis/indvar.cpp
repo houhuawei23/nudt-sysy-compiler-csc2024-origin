@@ -2,45 +2,54 @@
 
 using namespace pass;
 
+
 void indVarAnalysis::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     if (func->isOnlyDeclare()) return;
     lpctx = tp->getLoopInfo(func);
+    // lpctx->setOff();
     lpctx->refresh();
     ivctx = tp->getIndVarInfo(func);
     ivctx->clearAll();
     func->rename();
     for (auto lp : lpctx->loops()) {
         auto lpHeader = lp->header();
+        std::cerr<<lp->header()->name()<<std::endl;
+        if(not lp->isLoopSimplifyForm())continue;
         auto lpPreHeader = lp->getLoopPreheader();
         auto lpHeaderTerminator = dyn_cast<ir::BranchInst>(lpHeader->terminator());
         if (lpHeaderTerminator == nullptr) continue;  // header's terminator must be brcond
+        if (not lpHeaderTerminator->is_cond()) continue;
+        if (lp->exits().size()>1) continue;
         auto lpCond = lpHeaderTerminator->cond();
         auto lpCondScid = lpCond->valueId();
         ir::PhiInst* keyPhiInst;
         ir::Value* mEndVar;
         if (lpCondScid >= ir::vICMP_BEGIN and lpCondScid <= ir::vICMP_END) {
             auto lpCondIcmp = dyn_cast<ir::ICmpInst>(lpCond);
-            if (lpCondIcmp->lhs()->valueId() == ir::vPHI) {
-                keyPhiInst = dyn_cast<ir::PhiInst>(lpCondIcmp->lhs());
-                mEndVar = lpCondIcmp->rhs();
-            } else if (lpCondIcmp->rhs()->valueId() == ir::vPHI) {
-                keyPhiInst = dyn_cast<ir::PhiInst>(lpCondIcmp->rhs());
-                mEndVar = lpCondIcmp->lhs();
+            auto lpCondIcmpLHSPhi=lpCondIcmp->lhs()->dynCast<ir::PhiInst>();
+            auto lpCondIcmpRHSPhi=lpCondIcmp->rhs()->dynCast<ir::PhiInst>();
+            if(lpCondIcmpLHSPhi!=nullptr and lpCondIcmpLHSPhi->block()==lpHeader){
+                keyPhiInst=lpCondIcmpLHSPhi;
+                mEndVar=lpCondIcmp->rhs();
             }
-        } else if (lpCondScid >= ir::vFCMP_BEGIN and lpCondScid <= ir::vFCMP_END) {
-            auto lpCondFcmp = dyn_cast<ir::FCmpInst>(lpCond);
-            if (lpCondFcmp->lhs()->valueId() == ir::vPHI) {
-                keyPhiInst = dyn_cast<ir::PhiInst>(lpCondFcmp->lhs());
-                mEndVar = lpCondFcmp->rhs();
-            } else if (lpCondFcmp->rhs()->valueId() == ir::vPHI) {
-                keyPhiInst = dyn_cast<ir::PhiInst>(lpCondFcmp->rhs());
-                mEndVar = lpCondFcmp->lhs();
+            else if(lpCondIcmpRHSPhi!=nullptr and lpCondIcmpRHSPhi->block()==lpHeader){
+                keyPhiInst=lpCondIcmpRHSPhi;
+                mEndVar=lpCondIcmp->lhs();
             }
-        } else
+            else 
+                continue;
+        } 
+        else
             continue;
         auto mBeginVar = dyn_cast<ir::Constant>(keyPhiInst->getvalfromBB(lpPreHeader));
-        auto iterInst =
-          keyPhiInst->getValue(0) == mBeginVar ? keyPhiInst->getValue(1) : keyPhiInst->getValue(0);
+        if(mBeginVar==nullptr){//考虑内层循环嵌套问题
+            if(lpctx->looplevel(lpHeader)==0)continue;//如果这时本来就是最外层循环，那么就不适合分析indvar
+            auto mBeginVarPhi=dyn_cast<ir::PhiInst>(keyPhiInst->getvalfromBB(lpPreHeader));
+            mBeginVar=getConstantBeginVarFromPhi(mBeginVarPhi,lp->parent());
+        }
+        if(mBeginVar==nullptr)continue;
+        auto iterInst=keyPhiInst->getValue(0)==keyPhiInst->getvalfromBB(lp->getlooppPredecessor())?
+            keyPhiInst->getValue(1):keyPhiInst->getValue(0);
         auto iterInstScid = iterInst->valueId();
         ir::Constant* mstepVar;
         if (not(iterInstScid == ir::vADD or iterInstScid == ir::vFADD or iterInstScid == ir::vSUB or
@@ -56,7 +65,7 @@ void indVarAnalysis::run(ir::Function* func, TopAnalysisInfoManager* tp) {
         } else
             continue;
         addIndVar(lp, mBeginVar, mstepVar, mEndVar, iterInstBinary,
-                  dyn_cast<ir::Instruction>(lpCond));
+                  dyn_cast<ir::Instruction>(lpCond),keyPhiInst);
     }
 }
 
@@ -65,8 +74,9 @@ void indVarAnalysis::addIndVar(ir::Loop* lp,
                                ir::Constant* mstep,
                                ir::Value* mend,
                                ir::BinaryInst* iterinst,
-                               ir::Instruction* cmpinst) {
-    auto pnewIdv = new ir::indVar(mbegin, mend, mstep, iterinst, cmpinst);
+                               ir::Instruction* cmpinst,
+                               ir::PhiInst* phiinst) {
+    auto pnewIdv = new ir::indVar(mbegin, mend, mstep, iterinst, cmpinst,phiinst);
     ivctx->addIndVar(lp, pnewIdv);
 }
 
@@ -83,7 +93,21 @@ void indVarInfoCheck::run(ir::Function* func, TopAnalysisInfoManager* tp) {
             cerr << "No indvar." << endl;
         } else {
             cerr << "BeginVar:\t" << idv->getBeginI32() << endl;
-            cerr << "StepVar:\t" << idv->getStepI32() << endl;
+            cerr << "StepVar :\t" << idv->getStepI32() << endl;
+            if(idv->isEndVarConst())
+            cerr << "EndVar  :\t" << idv->getEndVarI32() << endl;
         }
     }
+}
+
+ir::Constant* indVarAnalysis::getConstantBeginVarFromPhi(ir::PhiInst* phiinst,ir::Loop* lp){
+    if(not lp->isLoopSimplifyForm())return nullptr;
+    if(phiinst->block()!=lp->header())return nullptr;
+    auto constVal=phiinst->getvalfromBB(lp->getLoopPreheader())->dynCast<ir::Constant>();
+    if(constVal!=nullptr)return constVal;
+    auto phiVal=phiinst->getvalfromBB(lp->getLoopPreheader())->dynCast<ir::PhiInst>();
+    if(phiVal==nullptr)return nullptr;
+    auto outerLp=lp->parent();
+    if(outerLp==nullptr)return nullptr;
+    return getConstantBeginVarFromPhi(phiVal,outerLp);
 }

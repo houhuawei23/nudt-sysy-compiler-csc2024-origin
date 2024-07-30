@@ -14,11 +14,14 @@ namespace pass{
     class SCEV:public FunctionPass{
         public:
             void run(ir::Function* func,TopAnalysisInfoManager* tp)override;
+            std::string name() const {return "scev";}
         private:
             loopInfo* lpctx;
             indVarInfo* idvctx;
             sideEffectInfo* sectx;
             void runOnLoop(ir::Loop* lp);
+            int getIndVarIterCnt(ir::Loop* lp,ir::indVar* idv);
+            void normalizeIndVarIcmpAndBr(ir::Loop* lp,ir::indVar* idv);
 
     };
     enum SCEVOperator{
