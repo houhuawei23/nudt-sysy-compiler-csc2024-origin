@@ -362,10 +362,10 @@ void createMIRModule(ir::Module& ir_module,
     {
       codegen_ctx.flags.preRA = false;
       if (codegen_ctx.registerInfo) {
-        // GraphColoringAllocate(*mir_func, codegen_ctx, infoIPRA);
+        GraphColoringAllocate(*mir_func, codegen_ctx, infoIPRA);
         // graphColoringAllocateBeta(*mir_func, codegen_ctx, infoIPRA);
         // fastAllocator(*mir_func, codegen_ctx, infoIPRA);
-        fastAllocatorBeta(*mir_func, codegen_ctx, infoIPRA);
+        // fastAllocatorBeta(*mir_func, codegen_ctx, infoIPRA);
         dumpStageResult("AfterGraphColoring", mir_func, codegen_ctx);
       }
     }
@@ -383,7 +383,7 @@ void createMIRModule(ir::Module& ir_module,
     //     postRASchedule(*mir_func, codegen_ctx);
     //     dumpStageResult("AfterPostRASchedule", mir_func, codegen_ctx);
     // }
-
+    simplifyCFG(*mir_func, codegen_ctx);
     /* post legalization */
     postLegalizeFunc(*mir_func, codegen_ctx);
 

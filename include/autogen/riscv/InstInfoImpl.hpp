@@ -4172,6 +4172,54 @@ public:
     }
     return false;
   }
+
+  void redirectBranch(MIRInst* inst, MIRBlock* target) const override {
+    if (inst->opcode() < ISASpecificBegin) {
+      return TargetInstInfo::redirectBranch(inst, target);
+    }
+    assert(
+      requireFlag(getInstInfo(inst->opcode()).inst_flag(), InstFlagBranch));
+
+    switch (inst->opcode()) {
+      case BEQ:
+        inst->set_operand(2, MIROperand::asReloc(target));
+        break;
+      case BNE:
+        inst->set_operand(2, MIROperand::asReloc(target));
+        break;
+      case BLE:
+        inst->set_operand(2, MIROperand::asReloc(target));
+        break;
+      case BGT:
+        inst->set_operand(2, MIROperand::asReloc(target));
+        break;
+      case BLT:
+        inst->set_operand(2, MIROperand::asReloc(target));
+        break;
+      case BGE:
+        inst->set_operand(2, MIROperand::asReloc(target));
+        break;
+      case BLEU:
+        inst->set_operand(2, MIROperand::asReloc(target));
+        break;
+      case BGTU:
+        inst->set_operand(2, MIROperand::asReloc(target));
+        break;
+      case BLTU:
+        inst->set_operand(2, MIROperand::asReloc(target));
+        break;
+      case BGEU:
+        inst->set_operand(2, MIROperand::asReloc(target));
+        break;
+      case J:
+        inst->set_operand(0, MIROperand::asReloc(target));
+        break;
+      default:
+        std::cerr << "Error: unknown branch instruction: "
+                  << getInstInfo(inst->opcode()).name() << std::endl;
+        assert(false);
+    }
+  }
 };
 
 TargetInstInfo& getRISCVInstInfo() {
