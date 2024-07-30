@@ -17,6 +17,7 @@ private:
                  ir::BinaryInst* iterinst,
                  ir::Instruction* cmpinst,
                  ir::PhiInst* phiinst);
+  ir::Constant* getConstantBeginVarFromPhi(ir::PhiInst* phiinst,ir::Loop* lp);
 };
 
 class indVarInfoCheck : public FunctionPass {

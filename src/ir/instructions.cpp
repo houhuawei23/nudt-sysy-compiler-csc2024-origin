@@ -589,7 +589,7 @@ BasicBlock* PhiInst::getbbfromVal(Value* val) {
     if (getValue(i) == val)
       return getBlock(i);
   }
-  assert(false && "can't find match basic block!");
+  // assert(false && "can't find match basic block!");
   return nullptr;
 }
 
@@ -599,7 +599,7 @@ Value* PhiInst::getvalfromBB(BasicBlock* bb) {
   // }
   refreshMap();
   if(mbbToVal.count(bb))return mbbToVal[bb];
-  assert(false && "can't find match value!");
+  // assert(false && "can't find match value!");
   return nullptr;
 }
 
