@@ -11,8 +11,11 @@
 #include "mir/target.hpp"
 #include "mir/iselinfo.hpp"
 #include "mir/utils.hpp"
+
+#include "mir/RegisterAllocator.hpp"
+
 #include "mir/GraphColoringRegisterAllocation.hpp"
-#include "mir/fastAllocator.hpp"
+// #include "mir/fastAllocator.hpp"
 #include "mir/FastAllocator.hpp"
 #include "mir/linearAllocator.hpp"
 #include "mir/RegisterAllocator.hpp"
@@ -348,8 +351,8 @@ void createMIRModule(ir::Module& ir_module,
 
     /* stage6: Optimize: pre-RA scheduling, minimize register usage */
     {
-      // preRASchedule(*mir_func, codegen_ctx);
-      // dumpStageResult("AfterPreRASchedule", mir_func, codegen_ctx);
+      preRASchedule(*mir_func, codegen_ctx);
+      dumpStageResult("AfterPreRASchedule", mir_func, codegen_ctx);
     }
 
     /* stage7: register allocation */
@@ -380,7 +383,7 @@ void createMIRModule(ir::Module& ir_module,
     //     postRASchedule(*mir_func, codegen_ctx);
     //     dumpStageResult("AfterPostRASchedule", mir_func, codegen_ctx);
     // }
-
+    simplifyCFG(*mir_func, codegen_ctx);
     /* post legalization */
     postLegalizeFunc(*mir_func, codegen_ctx);
 

@@ -23,7 +23,7 @@ void simplifyCFG::run(ir::Function* func, TopAnalysisInfoManager* tp) {
         isWhile = isWhile or removeSingleIncomingPhi(func);
         // func->rename();
         // func->print(std::cerr);
-        // isWhile = isWhile or removeSingleBrBlock(func);
+        isWhile = isWhile or removeSingleBrBlock(func);
         // func->rename();
         // func->print(std::cerr);
         isChange = isWhile or isChange;

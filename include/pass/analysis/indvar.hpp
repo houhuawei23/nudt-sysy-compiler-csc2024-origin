@@ -15,11 +15,15 @@ private:
                  ir::Constant* mstep,
                  ir::Value* mend,
                  ir::BinaryInst* iterinst,
-                 ir::Instruction* cmpinst);
+                 ir::Instruction* cmpinst,
+                 ir::PhiInst* phiinst);
+  ir::Constant* getConstantBeginVarFromPhi(ir::PhiInst* phiinst,ir::Loop* lp);
 };
+
 class indVarInfoCheck : public FunctionPass {
 public:
   void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
+  std::string name() const override { return "indVarCheckInfo"; }
 
 private:
   loopInfo* lpctx;
