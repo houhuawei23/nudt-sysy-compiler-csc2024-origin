@@ -724,7 +724,7 @@ bool genericPeepholeOpt(MIRFunction& func, CodeGenContext& ctx) {
     // modified |= EliminateStackLoads(func, ctx);
     // modified |= EliminateIndirectCopy(func, ctx);
     // modified |= EliminateUnusedCopy(func, ctx);
-    // modified |= removeUnusedInsts(func, ctx);
+    modified |= EliminateUnusedInst(func, ctx);
     // modified |= ApplySSAPropagation(func, ctx);
     // modified |= EliminateConstantLoads(func, ctx);
     // modified |= ConstantHoist(func, ctx);

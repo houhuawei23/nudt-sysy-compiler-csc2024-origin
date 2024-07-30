@@ -1112,7 +1112,7 @@ static bool matchAndSelectPattern20(MIRInst* inst1, ISelContext& ctx) {
   }
 
   /* match predicate for operands  */
-  if (not(isOperandI64(op1) && isOperandIReg(op2) && isOperandImm12(op3))) {
+  if (not(isOperandI32(op1) && isOperandIReg(op2) && isOperandImm12(op3))) {
     return false;
   }
 

@@ -145,8 +145,14 @@ class TestResult:
             print(f"{filename}: {time:.4f}s")
 
     def save_board_result(self, filename: str):
-        with open("perf.txt", "a") as f:
-            for filename, time_used in self.board_run_time.items():
-                line = f"{filename},{time_used: 6f},"
+        with open("perf.csv", "a") as f:
+            for src, time_used in self.board_run_time.items():
+                line = f"{src},{time_used: 6f},\n"
                 f.write(line)
                 # print(f"{filename}: {time_used:.4f}s")
+        
+        with open(filename, "w") as f:
+            for src, time_used in self.board_run_time.items():
+                markdown_line = f"| {src} | {time_used:.4f}s |\n"
+                f.write(markdown_line)
+                

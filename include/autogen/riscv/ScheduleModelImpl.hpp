@@ -58,6 +58,7 @@ public:
       case SRL:
       case SUB:
       case SRA:
+      case ADDIW:
       case ADDW:
       case SUBW:
       case LoadImm12:
