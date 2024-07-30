@@ -616,18 +616,21 @@ private:  // only for constant beginvar and stepvar
   bool mendIsConst;
   BinaryInst* miterInst;
   Instruction* mcmpInst;
+  PhiInst* mphiinst;
 
 public:
   indVar(Constant* mbegin,
          Value* mend,
          Constant* mstep,
          BinaryInst* bininst,
-         Instruction* cmpinst)
+         Instruction* cmpinst,
+         PhiInst* phiinst)
     : mbeginVar(mbegin),
       mendVar(mend),
       mstepVar(mstep),
       miterInst(bininst),
-      mcmpInst(cmpinst) {
+      mcmpInst(cmpinst),
+      mphiinst(phiinst) {
     mendIsConst = dyn_cast<Constant>(mendVar) != nullptr;
   }
   int getBeginI32() {
@@ -639,13 +642,17 @@ public:
     return mstepVar->i32();
   }
   bool isEndVarConst() { return mendIsConst; }
-  int getEndVar() {
+  int getEndVarI32() {
     if (mendIsConst) {
       auto mendConst = dyn_cast<Constant>(mendVar);
       return mendConst->i32();
     } else
       assert(false && "endVar is not constant");
   }
+  ir::Value* endValue(){return mendVar;}
+  BinaryInst* iterInst(){return miterInst;}
+  Instruction* cmpInst(){return mcmpInst;}
+  PhiInst* phiinst(){return mphiinst;}
 };
 
 }  // namespace ir

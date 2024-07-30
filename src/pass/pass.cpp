@@ -24,6 +24,7 @@
 #include "pass/analysis/CFGPrinter.hpp"
 #include "pass/optimize/DSE.hpp"
 #include "pass/optimize/DLE.hpp"
+#include "pass/optimize/SCEV.hpp"
 
 #include "support/config.hpp"
 #include "support/FileSystem.hpp"
@@ -153,6 +154,8 @@ void PassManager::runPasses(std::vector<std::string> passes) {
         run(new pass::simpleDSE());
       } else if (pass_name.compare("dle") == 0) {
         run(new pass::simpleDLE());
+      } else if (pass_name.compare("scev") == 0) {
+        run(new pass::SCEV());
       } else {
         assert(false && "Invalid pass name");
       }

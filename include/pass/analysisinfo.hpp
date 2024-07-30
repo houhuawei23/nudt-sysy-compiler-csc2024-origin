@@ -44,6 +44,7 @@ class domTree : public FunctionACtx {
     std::unordered_map<ir::BasicBlock*, std::vector<ir::BasicBlock*>>
       _domfrontier;
     std::vector<ir::BasicBlock*> _BFSDomTreeVector;
+    std::vector<ir::BasicBlock*> _DFSDomTreeVector;
 
   public:
     domTree(ir::Function* func, TopAnalysisInfoManager* tp)
@@ -70,6 +71,11 @@ class domTree : public FunctionACtx {
     std::vector<ir::BasicBlock*>& BFSDomTreeVector() {
         return _BFSDomTreeVector;
     }
+
+    std::vector<ir::BasicBlock*>& DFSDomTreeVector() {
+        return _DFSDomTreeVector;
+    }
+
     void clearAll() {
         _idom.clear();
         _sdom.clear();
@@ -77,6 +83,7 @@ class domTree : public FunctionACtx {
         _domfrontier.clear();
         _domlevel.clear();
         _BFSDomTreeVector.clear();
+        _DFSDomTreeVector.clear();
     }
     void initialize() {
         clearAll();
@@ -114,6 +121,26 @@ class domTree : public FunctionACtx {
                     bbqueue.push(bbDomSon);
             }
         }
+    }
+    void DFSDomTreeInfoRefresh() {
+      std::stack<ir::BasicBlock*> bbstack;
+      std::unordered_map<ir::BasicBlock*, bool> vis;
+      for (auto bb : passUnit->blocks())
+          vis[bb] = false;
+
+      _DFSDomTreeVector.clear();
+      bbstack.push(passUnit->entry());
+
+      while (!bbstack.empty()) {
+          auto bb = bbstack.top();
+          bbstack.pop();
+          if (!vis[bb]) {
+              _DFSDomTreeVector.push_back(bb);
+              vis[bb] = true;
+              for (auto bbDomSon : _domson[bb])
+                  bbstack.push(bbDomSon);
+          }
+      }
     }
 };
 
@@ -240,7 +267,13 @@ class callGraph : public ModuleACtx {
             _callers[func] = std::set<ir::Function*>();
         }
     }
-    bool isNoCallee(ir::Function* func) { return _callees[func].empty(); }
+    bool isNoCallee(ir::Function* func) { 
+      if(_callees[func].size()==0)return true;
+      for(auto f:_callees[func]){
+        if(not isLib(f))return false;
+      }
+      return true;
+    }
     void refresh() override;
 };
 
