@@ -11,8 +11,11 @@
 #include "mir/target.hpp"
 #include "mir/iselinfo.hpp"
 #include "mir/utils.hpp"
+
+#include "mir/RegisterAllocator.hpp"
+
 #include "mir/GraphColoringRegisterAllocation.hpp"
-#include "mir/fastAllocator.hpp"
+// #include "mir/fastAllocator.hpp"
 #include "mir/FastAllocator.hpp"
 #include "mir/linearAllocator.hpp"
 #include "target/riscv/RISCVTarget.hpp"
@@ -351,17 +354,18 @@ void createMIRModule(ir::Module& ir_module,
 
     /* Optimize: pre-RA scheduling, minimize register usage */
     {
-      // preRASchedule(*mir_func, codegen_ctx);
-      // dumpStageResult("AfterPreRASchedule", mir_func, codegen_ctx);
+      preRASchedule(*mir_func, codegen_ctx);
+      dumpStageResult("AfterPreRASchedule", mir_func, codegen_ctx);
     }
 
     /* register allocation */
     {
       codegen_ctx.flags.preRA = false;
       if (codegen_ctx.registerInfo) {
-        GraphColoringAllocate(*mir_func, codegen_ctx, infoIPRA);
+        // GraphColoringAllocate(*mir_func, codegen_ctx, infoIPRA);
+        // graphColoringAllocateBeta(*mir_func, codegen_ctx, infoIPRA);
         // fastAllocator(*mir_func, codegen_ctx, infoIPRA);
-        // fastAllocatorBeta(*mir_func, codegen_ctx, infoIPRA);
+        fastAllocatorBeta(*mir_func, codegen_ctx, infoIPRA);
         dumpStageResult("AfterGraphColoring", mir_func, codegen_ctx);
       }
     }

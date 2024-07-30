@@ -511,7 +511,7 @@ InstSelInfo: {
           replace: { name: LoadImm32, rd: $dst, imm: $imm },
         },
         # InstAdd
-        # Fuse address generation
+        # Fuse address generation: TOOD: lowering not generate these patterns
         # imm = 1,2,3
         {
           pattern:
@@ -1197,7 +1197,7 @@ ScheduleModel:
                 SRL,
                 SUB,
                 SRA,
-                # ADDIW,
+                ADDIW,
                 # SLLIW,
                 # SRLIW,
                 # SRAIW,
