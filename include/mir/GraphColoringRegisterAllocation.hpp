@@ -239,8 +239,9 @@ static void graphColoringAllocateImpl(MIRFunction& mfunc, CodeGenContext& ctx, I
 
         std::unordered_map<RegNum, std::unordered_map<RegNum, double>> copyHint;
         auto updateCopyHint = [&](RegNum dst, RegNum src, double weight) {
-            assert(isVirtualReg(dst));
-            copyHint[dst][src] += weight;
+            if (isVirtualReg(dst)) {
+                copyHint[dst][src] += weight;
+            }
         };
         // Construct interference graph
         InterferenceGraph graph;

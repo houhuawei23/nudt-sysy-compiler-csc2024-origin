@@ -227,10 +227,10 @@ class Test:
         self.runtime = runtime
         self.sysy_link_for_riscv_gpp = sysy_link_for_riscv_gpp
 
-        self.opt_level = 1
+        self.opt_level = 0
         self.log_level = 0
 
-    def set(self, target, year, timeout=5, opt_level=1, log_level=0):
+    def set(self, target, year, timeout=5, opt_level=0, log_level=0):
         self.target = target
         self.year = year
         self.timeout = timeout
