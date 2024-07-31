@@ -25,6 +25,9 @@ def safeDivide(x, y):
     else:
         return x / y
 
+def getRawName(filepath: str):
+    return os.path.basename(os.path.splitext(filepath)[0])
+
 
 def removePathSuffix(filename: str):
     """

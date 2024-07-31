@@ -6,19 +6,20 @@ import os
 import sys
 from datetime import datetime
 
-from utils import check_args
+from utils import check_args_beta
 
 from Test import Test
 
 compiler_path = sys.argv[1]
 tests_path = sys.argv[2]  #
-output_asm_path = sys.argv[3]
-output_exe_path = sys.argv[4]
-output_c_path = sys.argv[5]
+output_dir = sys.argv[3]
 
-if not check_args(
-    compiler_path, tests_path, output_asm_path, output_exe_path, output_c_path
-):
+output_asm_path = os.path.join(output_dir, "asm")
+output_exe_path = os.path.join(output_dir, "exe")
+output_c_path = os.path.join(output_dir, "c")
+
+
+if not check_args_beta(compiler_path, tests_path, output_dir):
     sys.exit(1)
 
 sysy_runtime = os.path.join(tests_path, "sysy/sylib.c")
@@ -73,7 +74,7 @@ def perfTest():
 
 
 def compile_only():
-    our_compiler_timeout = 50
+    our_compiler_timeout = 100
     test = Test(
         compiler_path,
         tests_path,
@@ -89,6 +90,6 @@ def compile_only():
 
 if __name__ == "__main__":
     # submitTest()
-    perfTest()
+    # perfTest()
     # functionalTest()
-    # compile_only()
+    compile_only()

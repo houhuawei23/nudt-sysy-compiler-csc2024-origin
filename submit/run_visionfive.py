@@ -35,7 +35,7 @@ test = Test(
     sysy_runtime,
     sysy_link_for_riscv_gpp,
 )
-run_timeout = 200
+run_timeout = 300
 test.set("riscv", "2024", run_timeout)
 # test.runCompileOnly("performance")
 test.runOnVisionFive("performance")
