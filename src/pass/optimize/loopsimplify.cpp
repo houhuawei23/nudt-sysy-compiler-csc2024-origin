@@ -92,22 +92,22 @@ ir::BasicBlock* loopsimplify::insertUniquePreheader(
         for (ir::BasicBlock* BB : preBBs) {
           ir::Value* val = phiinst->getvalfromBB(BB);
           BEphi->addIncoming(val, BB);
-          if (hasuniqueval) {
-            if (!uniqueval) {
-              uniqueval = val;
-            } else if (uniqueval != val) {
-              hasuniqueval = false;
-            }
-          }
+          // if (hasuniqueval) {
+          //   if (!uniqueval) {
+          //     uniqueval = val;
+          //   } else if (uniqueval != val) {
+          //     hasuniqueval = false;
+          //   }
+          // }
         }
         for (ir::BasicBlock* BB : preBBs) {
           phiinst->delBlock(BB);
         }
         phiinst->addIncoming(BEphi, BEBB);
-        if (hasuniqueval) {
-          BEphi->replaceAllUseWith(uniqueval);
-          BEBB->delete_inst(BEphi);
-        }
+        // if (hasuniqueval) {
+        //   BEphi->replaceAllUseWith(uniqueval);
+        //   BEBB->delete_inst(BEphi);
+        // }
       }
     }
     for (ir::BasicBlock* BB : preBBs) {

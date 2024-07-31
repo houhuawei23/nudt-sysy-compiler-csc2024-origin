@@ -126,14 +126,18 @@ bool LICM::storemove(ir::AllocaInst* alloca) {
     if (DefsforAlloca.empty())
         return false;
     ir::BasicBlock* bb = nullptr;
-    for (auto def : DefsforAlloca) {
-        if (!bb) {
-            bb = def->block();
-        } else {
-            if (bb != def->block())  // 只处理所有定义在同一个块的情况
-                return false;
-        }
-    }
+    // for (auto def : DefsforAlloca) {
+    //     if (!bb) {
+    //         bb = def->block();
+    //     } else {
+    //         if (bb != def->block())  // 只处理所有定义在同一个块的情况
+    //             return false;
+    //     }
+    // }
+
+    // for (auto def : DefsforAlloca){
+    //     ;
+    // }
     assert(bb && "bb is null");
     loopctx = flmap[bb->function()];
 
