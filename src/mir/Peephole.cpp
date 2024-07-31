@@ -694,7 +694,7 @@ bool EliminateInvisibleInsts(MIRFunction& mfunc, CodeGenContext& ctx) {
 bool genericPeepholeOpt(MIRFunction& mfunc, CodeGenContext& ctx) {
     bool modified = false;
     modified |= EliminateStackLoads(mfunc, ctx);
-    modified |= EliminateIndirectCopy(mfunc, ctx);
+    // modified |= EliminateIndirectCopy(mfunc, ctx);
     modified |= EliminateUnusedCopy(mfunc, ctx);
     modified |= EliminateUnusedInst(mfunc, ctx);
     modified |= ApplySSAPropagation(mfunc, ctx);
@@ -703,7 +703,7 @@ bool genericPeepholeOpt(MIRFunction& mfunc, CodeGenContext& ctx) {
     modified |= EliminateRedundantInst(mfunc, ctx);
     modified |= DeadInstElimination(mfunc, ctx);
     modified |= EliminateInvisibleInsts(mfunc, ctx);
-    // modified |= ctx.scheduleModel->peepholeOpt(mfunc, ctx);
+    modified |= ctx.scheduleModel->peepholeOpt(mfunc, ctx);
     return modified;
 }
 }

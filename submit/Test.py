@@ -413,6 +413,7 @@ class Test:
                 log_level=self.log_level,
                 timeout=self.timeout,
             )
+            print(run_compiler_process.stderr)
         except subprocess.TimeoutExpired:
             print(Fore.RED + f"Test {src} run_compiler timeout")
             self.result.cases_result[ResultType.RUN_COMPILER_FAILED].append(

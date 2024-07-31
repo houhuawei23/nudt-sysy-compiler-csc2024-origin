@@ -13,13 +13,8 @@
 #include "mir/utils.hpp"
 
 #include "mir/RegisterAllocator.hpp"
-
-#include "mir/GraphColoringRegisterAllocation.hpp"
-// #include "mir/fastAllocator.hpp"
-#include "mir/FastAllocator.hpp"
-#include "mir/linearAllocator.hpp"
-#include "mir/RegisterAllocator.hpp"
 #include "mir/RegisterCoalescing.hpp"
+
 #include "target/riscv/RISCVTarget.hpp"
 #include "support/StaticReflection.hpp"
 #include "support/config.hpp"
@@ -347,30 +342,17 @@ void createMIRModule(ir::Module& ir_module,
     { codegen_ctx.flags.inSSAForm = false; }
 
     /* stage6: Optimize: pre-RA scheduling, minimize register usage */
-    // {
-    //   preRASchedule(*mir_func, codegen_ctx);
-    //   dumpStageResult("AfterPreRASchedule", mir_func, codegen_ctx);
-    // }
+    {
+      preRASchedule(*mir_func, codegen_ctx);
+      dumpStageResult("AfterPreRASchedule", mir_func, codegen_ctx);
+    }
 
     /* stage7: register allocation */
     {
       utils::Stage stage{"registerAllocation"sv};
       codegen_ctx.flags.preRA = false;
       if (codegen_ctx.registerInfo) {
-        // fastAllocatorBeta(*mir_func, codegen_ctx, infoIPRA);
-        // graphColoringAllocateBeta(*mir_func, codegen_ctx, infoIPRA);
-        GraphColoringAllocate(*mir_func, codegen_ctx, infoIPRA);
-        // if (config.optLevel == sysy::OptLevel::O0) {
-        //   // std::cerr << "O0: use fast allocator\n";
-        //   std::cerr << "O1: use graph coloring allocator\n";
-        //   GraphColoringAllocate(*mir_func, codegen_ctx, infoIPRA);
-        //   // fastAllocatorBeta(*mir_func, codegen_ctx, infoIPRA);
-        // } else if (config.optLevel == sysy::OptLevel::O1) {
-        //   std::cerr << "O1: use graph coloring allocator\n";
-        //   GraphColoringAllocate(*mir_func, codegen_ctx, infoIPRA);
-        //   // graphColoringAllocateBeta(*mir_func, codegen_ctx, infoIPRA);
-        // }
-        // fastAllocator(*mir_func, codegen_ctx, infoIPRA);
+        mixedRegisterAllocate(*mir_func, codegen_ctx, infoIPRA);
         dumpStageWithMsg(std::cerr, "AfterRegisterAlloc", "Register Allocation " + ir_func->name());
 
         dumpStageResult("AfterGraphColoring", mir_func, codegen_ctx);

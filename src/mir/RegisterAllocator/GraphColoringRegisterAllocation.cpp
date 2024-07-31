@@ -1,4 +1,3 @@
-#pragma once
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
 #include "mir/CFGAnalysis.hpp"
@@ -699,7 +698,7 @@ static void graphColoringAllocateImpl(MIRFunction& mfunc, CodeGenContext& ctx, I
     }
 }
 
-static void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAUsageCache& infoIPRA) {
+void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAUsageCache& infoIPRA) {
     const auto classCount = ctx.registerInfo->get_alloca_class_cnt();
     std::unordered_map<uint32_t, uint32_t> regMap;  // --> 存储[虚拟寄存器]到[物理寄存器]之间的映射
     for (uint32_t idx = 0; idx < classCount; idx++) {

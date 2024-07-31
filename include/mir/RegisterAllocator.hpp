@@ -26,8 +26,15 @@ public:  // Just for Debug
   void dump(std::ostream& out, std::string calleeFunc) const;
 };
 
-void graphColoringAllocateBeta(MIRFunction& mfunc,
-                               CodeGenContext& ctx,
-                               IPRAUsageCache& infoIPRA);
+
+void fastAllocator(MIRFunction& mfunc, CodeGenContext& ctx, IPRAUsageCache& infoIPRA);
+void fastAllocatorBeta(MIRFunction& mfunc, CodeGenContext& ctx, IPRAUsageCache& infoIPRA);
+
+void graphColoringAllocateBeta(MIRFunction& mfunc, CodeGenContext& ctx, IPRAUsageCache& infoIPRA);
+void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAUsageCache& infoIPRA);
+
+void linearAllocator(MIRFunction& mfunc, CodeGenContext& ctx);
+
+void mixedRegisterAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAUsageCache& infoIPRA);
 
 };  // namespace mir
