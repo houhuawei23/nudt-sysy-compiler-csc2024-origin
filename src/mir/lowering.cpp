@@ -18,6 +18,8 @@
 // #include "mir/fastAllocator.hpp"
 #include "mir/FastAllocator.hpp"
 #include "mir/linearAllocator.hpp"
+#include "mir/RegisterAllocator.hpp"
+#include "mir/RegisterCoalescing.hpp"
 #include "target/riscv/RISCVTarget.hpp"
 #include "support/StaticReflection.hpp"
 #include "support/config.hpp"
@@ -254,7 +256,6 @@ void createMIRModule(ir::Module& ir_module,
 
   auto dumpStageWithMsg = [&](std::ostream& os, std::string_view stage, std::string_view msg) {
     enum class Style { RED, BOLD, RESET };
-
     static std::unordered_map<Style, std::string_view> styleMap = {
       {Style::RED, "\033[0;31m"}, {Style::BOLD, "\033[1m"}, {Style::RESET, "\033[0m"}};
 
@@ -305,36 +306,38 @@ void createMIRModule(ir::Module& ir_module,
       dumpStageResult("AfterIsel", mir_func, codegen_ctx);
     }
     /* stage3: register coalescing */
-    {}
+    {
+      RegisterCoalescing(*mir_func, codegen_ctx);
+      dumpStageResult("AfterRegisterCoalescing", mir_func, codegen_ctx);
+    }
 
-    /* Optimize: peephole optimization (窥孔优化) */
+    /* stage4: Optimize: peephole optimization (窥孔优化) */
     {
       if (debugLowering) {
-        // std::cerr << "before peephole optimization. \n";
-        // std::cerr << "\tendsWithTerminator: " << codegen_ctx.flags.endsWithTerminator << "\n";
-        // std::cerr << "\tinSSAForm: " << codegen_ctx.flags.inSSAForm << "\n";
-        // std::cerr << "\tpreRA: " << codegen_ctx.flags.preRA << "\n";
-        // std::cerr << "\tpostSA: " << codegen_ctx.flags.postSA << "\n";
-        // std::cerr << "\tdontForward: " << codegen_ctx.flags.dontForward << "\n";
-        // std::cerr << "\tpostLegal: " << codegen_ctx.flags.postLegal << "\n";
+        std::cerr << "begin peephole optimization. \n";
+        std::cerr << "\tendsWithTerminator: " << codegen_ctx.flags.endsWithTerminator << "\n";
+        std::cerr << "\tinSSAForm: " << codegen_ctx.flags.inSSAForm << "\n";
+        std::cerr << "\tpreRA: " << codegen_ctx.flags.preRA << "\n";
+        std::cerr << "\tpostSA: " << codegen_ctx.flags.postSA << "\n";
+        std::cerr << "\tdontForward: " << codegen_ctx.flags.dontForward << "\n";
+        std::cerr << "\tpostLegal: " << codegen_ctx.flags.postLegal << "\n";
       }
-      while (genericPeepholeOpt(*mir_func, codegen_ctx))
-        ;
+      while (genericPeepholeOpt(*mir_func, codegen_ctx)) ;
       dumpStageResult("AfterPeephole", mir_func, codegen_ctx);
     }
 
-    /* pre-RA legalization */
+    /* stage5: pre-RA legalization */
     {
-      // codegen_ctx.flags.inSSAForm = false;
+      codegen_ctx.flags.inSSAForm = false;
     }
 
-    /* Optimize: pre-RA scheduling, minimize register usage */
-    {
-      preRASchedule(*mir_func, codegen_ctx);
-      dumpStageResult("AfterPreRASchedule", mir_func, codegen_ctx);
-    }
+    /* stage6: Optimize: pre-RA scheduling, minimize register usage */
+    // {
+    //   preRASchedule(*mir_func, codegen_ctx);
+    //   dumpStageResult("AfterPreRASchedule", mir_func, codegen_ctx);
+    // }
 
-    /* register allocation */
+    /* stage7: register allocation */
     {
       codegen_ctx.flags.preRA = false;
       if (codegen_ctx.registerInfo) {
@@ -349,13 +352,17 @@ void createMIRModule(ir::Module& ir_module,
       }
     }
 
-    /* stack allocation */
+    /* stage8: stack allocation */
     if (codegen_ctx.registerInfo) {
       /* after sa, all stack objects are allocated with .offset */
       allocateStackObjects(mir_func, codegen_ctx);
       codegen_ctx.flags.postSA = true;
       dumpStageResult("AfterStackAlloc", mir_func, codegen_ctx);
     }
+
+    // {
+    //   while (genericPeepholeOpt(*mir_func, codegen_ctx)) ;
+    // }
 
     // {
     //     /* post-RA scheduling, minimize cycles */

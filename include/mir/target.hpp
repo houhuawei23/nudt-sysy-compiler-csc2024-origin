@@ -34,6 +34,7 @@ public:  // assembly
   virtual bool verify(MIRFunction& func) = 0;
 };
 
+/* MIRFlags */
 struct MIRFlags final {
   bool endsWithTerminator = true;
   bool inSSAForm = true;
@@ -43,9 +44,7 @@ struct MIRFlags final {
   bool postLegal = false;
 };
 
-/*
- * @brief: CodeGenContext Struct
- */
+/* CodeGenContext */
 struct CodeGenContext final {
   Target& target;
   DataLayout& dataLayout;
