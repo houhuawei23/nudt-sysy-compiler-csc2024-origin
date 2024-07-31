@@ -46,5 +46,6 @@ static void DumpForDebug(const CodeLocation& location);
 void ReportNotImplemented(const CodeLocation& location);
 void ReportUnreachable(const CodeLocation& location);
 
+void simplifyCFG(MIRFunction& func, CodeGenContext& ctx);
 
 }  // namespace mir

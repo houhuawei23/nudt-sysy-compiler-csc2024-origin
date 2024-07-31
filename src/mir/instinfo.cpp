@@ -24,6 +24,20 @@ bool TargetInstInfo::matchBranch(MIRInst* inst,
   return res;
 }
 
+bool TargetInstInfo::matchUnconditionalBranch(MIRInst* inst,
+                                              MIRBlock*& Target) const {
+  double prob = 0.0;
+  return matchBranch(inst, Target, prob) &&
+         requireFlag(getInstInfo(inst).inst_flag(), InstFlagNoFallThrough);
+}
+
+void TargetInstInfo::redirectBranch(MIRInst* inst, MIRBlock* target) const {
+  auto oldOpcode = inst->opcode();
+  inst->set_opcode(oldOpcode + offset);
+  GENERIC::getGENERICInstInfo().redirectBranch(inst, target);
+  inst->set_opcode(oldOpcode);
+}
+
 bool TargetInstInfo::matchCopy(MIRInst* inst,
                                MIROperand& dst,
                                MIROperand& src) const {

@@ -122,7 +122,7 @@ def link_ricvgpp_executable(src: str, target: str, output: str, timeout=1):
 
 def run_executable(command, src, timeout=1):
     input_file = removePathSuffix(src) + ".in"
-    print(*command, sep=" ")
+    # print(*command, sep=" ")
     if os.path.exists(input_file):
         with open(input_file, "r", encoding="utf-8") as f:
             out = subprocess.run(
@@ -227,10 +227,10 @@ class Test:
         self.runtime = runtime
         self.sysy_link_for_riscv_gpp = sysy_link_for_riscv_gpp
 
-        self.opt_level = 1
+        self.opt_level = 0
         self.log_level = 0
 
-    def set(self, target, year, timeout=5, opt_level=1, log_level=0):
+    def set(self, target, year, timeout=5, opt_level=0, log_level=0):
         self.target = target
         self.year = year
         self.timeout = timeout
@@ -458,7 +458,7 @@ class Test:
             self.runtime,
             asm_path,
         ]
-        print(*link_command, sep=" ")
+        # print(*link_command, sep=" ")
         process = subprocess.run(
             link_command, capture_output=True, text=True, timeout=self.timeout
         )

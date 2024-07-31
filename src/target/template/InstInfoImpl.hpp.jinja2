@@ -113,6 +113,24 @@ public:
         }
         return false;
     }
+    
+    void redirectBranch(MIRInst* inst, MIRBlock* target) const override {
+        if(inst->opcode() < ISASpecificBegin) {
+            return TargetInstInfo::redirectBranch(inst, target);
+        }
+        assert(requireFlag(getInstInfo(inst->opcode()).inst_flag(), InstFlagBranch));
+
+        switch (inst->opcode()) {
+            {% for branch in branch_list -%}
+                case {{branch.name}}: inst->set_operand({{branch.target}}, MIROperand::asReloc(target)); break;
+            {%- endfor %}
+            default:    
+                std::cerr << "Error: unknown branch instruction: " << getInstInfo(inst->opcode()).name() << std::endl;
+                assert(false);
+        }        
+
+    
+    }
 };
 
 TargetInstInfo& get{{target_name}}InstInfo() {

@@ -43,22 +43,20 @@ std::unordered_map<MIROperand, uint32_t, MIROperandHasher> collectDefCount(MIRFu
 /*
  * @brief: EliminateStackLoads
  * @note: 
- *     功能: 消除无用的Load Register from Stack指令
- *           使用前面已经load之后的虚拟寄存器Copy指令来代替   
- *     NOTE: 后端属于SSA形式, 某一个虚拟寄存器不会被重复定义
+ *    消除无用的Load Register from Stack指令
+ *    我们可以使用前面已经load之后的虚拟寄存器来增加Copy指令来代替Load指令   
  */
 bool EliminateStackLoads(MIRFunction& mfunc, CodeGenContext& ctx) {
-    /* Eliminate Stack Loads: 需要在寄存器分配之前进行优化处理  */
-    std::cerr << "111\n";
     if (!ctx.registerInfo || ctx.flags.preRA) return false;
-    std::cerr << "begin eliminating stack loads\n";
     bool modified = false;
     for (auto& block : mfunc.blocks()) {
         auto& instructions = block->insts();
 
         uint32_t versionId = 0;
+        /* reg2Version: reg -> version */
         std::unordered_map<MIROperand, uint32_t, MIROperandHasher> reg2Version;
-        std::unordered_map<MIROperand, std::pair<MIROperand, uint32_t>, MIROperandHasher> stack2Reg;  // stack -> (reg, version)
+        /* stack2Reg: stack -> (reg, version) */
+        std::unordered_map<MIROperand, std::pair<MIROperand, uint32_t>, MIROperandHasher> stack2Reg;
         auto defReg = [&](MIROperand reg) { reg2Version[reg] = ++versionId; };
 
         for (auto inst : instructions) {
@@ -92,7 +90,7 @@ bool EliminateStackLoads(MIRFunction& mfunc, CodeGenContext& ctx) {
                 }
             }
 
-            /* NOTE: 但是物理寄存器可能会被重复定义, 此时需要更新物理寄存器相关的versionId */
+            /* NOTE: 物理寄存器可能会被重复定义, 此时需要更新物理寄存器相关的versionId */
             if (requireFlag(instInfo.inst_flag(), InstFlagCall)) {
                 std::vector<MIROperand> nonVReg;
                 for (auto [reg, ver] : reg2Version) {
@@ -116,16 +114,20 @@ bool EliminateStackLoads(MIRFunction& mfunc, CodeGenContext& ctx) {
 /*
  * @brief: EliminateIndirectCopy
  * @note: 
- *    功能: 消除间接的Copy指令
+ *    消除间接的Copy指令
+ *    我们将使用到Copy指令dst的指令直接替换为src
  */
 bool EliminateIndirectCopy(MIRFunction& mfunc, CodeGenContext& ctx) {
-    if (ctx.flags.dontForward) return false;
+    if (ctx.flags.dontForward) return false;  // TODO: ???
+    
     bool modified = false;
     for (auto& block : mfunc.blocks()) {
         auto& instructions = block->insts();
 
         uint32_t versionId = 0;
-        std::unordered_map<uint32_t, std::pair<uint32_t, uint32_t>> regValue;  // dst -> (src, src version)
+        /* regValue: copy指令中dst -> (src, src version) */
+        std::unordered_map<uint32_t, std::pair<uint32_t, uint32_t>> regValue;
+        /* version: reg -> version */
         std::unordered_map<uint32_t, uint32_t> version;
         const auto getVersion = [&](const uint32_t reg) {
             assert(isVirtualReg(reg) || isISAReg(reg));
@@ -146,12 +148,10 @@ bool EliminateIndirectCopy(MIRFunction& mfunc, CodeGenContext& ctx) {
                 auto backup = reg;
                 reg = MIROperand{ MIRRegister{ it->second.first }, backup.type() };
                 if (reg == backup) return;
-
-                auto backupInstOpcode = inst->opcode();
                 if (inst->opcode() == InstCopy) {
                     inst->set_opcode(select_copy_opcode(inst->operand(0), reg));
                 }
-                auto& instInfo = ctx.instInfo.getInstInfo(inst);
+                modified = true;
             }
         };
 
@@ -226,7 +226,7 @@ bool EliminateUnusedCopy(MIRFunction& mfunc, CodeGenContext& ctx) {
 /*
  * @brief: EliminateUnusedInst
  * @note: 
- *     删除未被使用的指令 (???)
+ *     删除未被使用的指令
  */
 bool EliminateUnusedInst(MIRFunction& mfunc, CodeGenContext& ctx) {
     /* writers - def -> vec<inst> */
@@ -238,7 +238,6 @@ bool EliminateUnusedInst(MIRFunction& mfunc, CodeGenContext& ctx) {
         for (auto& inst : block->insts()) {
             auto& instInfo = ctx.instInfo.getInstInfo(inst);
             bool special = false;
-
             if (requireOneFlag(instInfo.inst_flag(), InstFlagSideEffect)) special = true;
             for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
                 if (instInfo.operand_flag(idx) & OperandFlagDef) {
@@ -316,7 +315,8 @@ bool ApplySSAPropagation(MIRFunction& mfunc, CodeGenContext& ctx) {
     }
 
     /* Copy Instruction */
-    std::unordered_map<MIROperand, MIROperand, MIROperandHasher> copy;  /* dst -> src (加载常数的虚拟寄存器) */
+    /* copy: dst -> src (加载常数的虚拟寄存器) */
+    std::unordered_map<MIROperand, MIROperand, MIROperandHasher> copy;
     for (auto& block : mfunc.blocks()) {
         for (auto inst : block->insts()) {
             MIROperand dst, src;
@@ -358,7 +358,6 @@ bool ApplySSAPropagation(MIRFunction& mfunc, CodeGenContext& ctx) {
 bool EliminateConstantLoads(MIRFunction& mfunc, CodeGenContext& ctx) {
     if (!ctx.flags.inSSAForm) return false;
     constexpr bool Debug = false;
-    if (Debug) std::cerr << "begin debug machineConstantCSE\n";
     bool modified = false;
     
     auto defCount = collectDefCount(mfunc, ctx);
@@ -368,11 +367,6 @@ bool EliminateConstantLoads(MIRFunction& mfunc, CodeGenContext& ctx) {
     for (auto inst : entryBlockInst) {
         auto& instInfo = ctx.instInfo.getInstInfo(inst);
         if (requireFlag(instInfo.inst_flag(), InstFlagLoadConstant)) {
-            if (Debug) {
-                std::cerr << "instruction: ";
-                instInfo.print(std::cerr, *inst, true);
-                std::cerr << "\n";
-            }
             auto& dst = inst->operand(0);
             if (isOperandVReg(dst) && defCount[dst] <= 1) {
                 auto& src = inst->operand(1);
@@ -394,29 +388,13 @@ bool EliminateConstantLoads(MIRFunction& mfunc, CodeGenContext& ctx) {
                 auto& map = constants[inst->opcode()];
                 if (auto it = beginMap.find(src); it != beginMap.end() && &block != &mfunc.blocks().front()) {
                     auto& lastDef = it->second;
-                    if (Debug) {
-                        std::cerr << "before: ";
-                        instInfo.print(std::cerr, *inst, true); std::cerr << "\n";
-                    }
                     inst = new MIRInst{ select_copy_opcode(dst, lastDef)};
                     inst->set_operand(0, dst); inst->set_operand(1, lastDef);
-                    if (Debug) {
-                        std::cerr << "after: ";
-                        ctx.instInfo.getInstInfo(inst).print(std::cerr, *inst, true); std::cerr << "\n";
-                    }
                     modified = true;
                 } else if (auto iter = map.find(src); iter != map.end()) {
                     auto& lastDef = iter->second;
-                    if (Debug) {
-                        std::cerr << "before: ";
-                        instInfo.print(std::cerr, *inst, true); std::cerr << "\n";
-                    }
                     inst = new MIRInst{ select_copy_opcode(dst, lastDef) };
                     inst->set_operand(0, dst); inst->set_operand(1, lastDef);
-                    if (Debug) {
-                        std::cerr << "after: ";
-                        ctx.instInfo.getInstInfo(inst).print(std::cerr, *inst, true); std::cerr << "\n";
-                    }
                     modified = true;
                 } else if (!isISAReg(dst.reg())) {
                     map.emplace(src, dst);
@@ -719,19 +697,19 @@ bool EliminateInvisibleInsts(MIRFunction& mfunc, CodeGenContext& ctx) {
 }
 
 /* 窥孔优化 */
-bool genericPeepholeOpt(MIRFunction& func, CodeGenContext& ctx) {
+bool genericPeepholeOpt(MIRFunction& mfunc, CodeGenContext& ctx) {
     bool modified = false;
-    // modified |= EliminateStackLoads(func, ctx);
-    // modified |= EliminateIndirectCopy(func, ctx);
-    // modified |= EliminateUnusedCopy(func, ctx);
-    modified |= EliminateUnusedInst(func, ctx);
-    // modified |= ApplySSAPropagation(func, ctx);
-    // modified |= EliminateConstantLoads(func, ctx);
-    // modified |= ConstantHoist(func, ctx);
-    // modified |= EliminateRedundantInst(func, ctx);
-    // modified |= DeadInstElimination(func, ctx);
-    // modified |= EliminateInvisibleInsts(func, ctx);
-    // modified |= ctx.scheduleModel->peepholeOpt(func, ctx);
+    modified |= EliminateStackLoads(mfunc, ctx);
+    modified |= EliminateIndirectCopy(mfunc, ctx);
+    // modified |= EliminateUnusedCopy(mfunc, ctx);
+    modified |= EliminateUnusedInst(mfunc, ctx);
+    modified |= ApplySSAPropagation(mfunc, ctx);
+    modified |= EliminateConstantLoads(mfunc, ctx);
+    modified |= ConstantHoist(mfunc, ctx);
+    modified |= EliminateRedundantInst(mfunc, ctx);
+    modified |= DeadInstElimination(mfunc, ctx);
+    // modified |= EliminateInvisibleInsts(mfunc, ctx);
+    // modified |= ctx.scheduleModel->peepholeOpt(mfunc, ctx);
     return modified;
 }
 }
