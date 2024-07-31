@@ -274,6 +274,7 @@ void createMIRModule(ir::Module& ir_module,
   addExternalIPRAInfo(infoIPRA);
   // TODO: in call graph scc order
   for (auto& ir_func : ir_module.funcs()) {
+    codegen_ctx.flags = MIRFlags{};
     if (ir_func->blocks().empty()) continue;
     /* Just for Debug */
     size_t stageIdx = 0;
@@ -374,6 +375,7 @@ void createMIRModule(ir::Module& ir_module,
 
         dumpStageResult("AfterGraphColoring", mir_func, codegen_ctx);
       }
+      codegen_ctx.flags.preRA = false;
     }
 
     /* stage8: stack allocation */
