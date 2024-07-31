@@ -206,7 +206,9 @@ static void graphColoringAllocateImpl(MIRFunction& mfunc, CodeGenContext& ctx, I
         for(auto k : eraseKey) constants.erase(k);
     }
 
+    size_t iterantion = 0;
     while(true) {
+        if (debugRA) std::cerr << "iteration " << iterantion++ << std::endl;
         auto liveInterval = calcLiveIntervals(mfunc, ctx);
         if(debugRA) mfunc.print(std::cerr, ctx);
 
@@ -679,8 +681,8 @@ static void graphColoringAllocateImpl(MIRFunction& mfunc, CodeGenContext& ctx, I
                             ++it;
                         }
                         auto tmpInst = new MIRInst(InstStoreRegToStack);
-                        tmpInst->set_operand(1, MIROperand::asVReg(u - virtualRegBegin, canonicalizedType));
                         tmpInst->set_operand(0, stackStorage);
+                        tmpInst->set_operand(1, MIROperand::asVReg(u - virtualRegBegin, canonicalizedType));
                         auto newInst = instructions.insert(it, tmpInst);
                         newInsts.insert(*newInst);
                         loaded = false;

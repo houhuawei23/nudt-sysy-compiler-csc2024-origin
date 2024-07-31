@@ -57,74 +57,12 @@ bool TargetInstInfo::matchCopy(MIRInst* inst,
   return false;
 }
 
-static std::string_view getType(OperandType type) {
-  switch (type) {
-    case OperandType::Bool:
-      return "i1 ";
-    case OperandType::Int8:
-      return "i8 ";
-    case OperandType::Int16:
-      return "i16 ";
-    case OperandType::Int32:
-      return "i32 ";
-    case OperandType::Int64:
-      return "i64 ";
-    case OperandType::Float32:
-      return "f32 ";
-    case OperandType::Special:
-      return "special ";
-    case OperandType::HighBits:
-      return "hi ";
-    case OperandType::LowBits:
-      return "lo ";
-    case OperandType::Alignment:
-      return "align ";
-    default:
-      assert(false && "Invalid operand type");
-  }
-};
-void dumpVirtualReg(std::ostream& os, const MIROperand& operand) {
-  // assert(operand != nullptr);
-  assert(isVirtualReg(operand.reg()));
-  os << getType(operand.type()) << "v";
-  os << (operand.reg() ^ virtualRegBegin);
-}
+
 }  // namespace mir
 
 namespace mir::GENERIC {
-struct OperandDumper {
-  MIROperand operand;
-};
 
-static std::ostream& operator<<(std::ostream& os, OperandDumper opdp) {
-  auto operand = opdp.operand;
-  os << "[";
-  if (operand.isReg()) {
-    if (isVirtualReg(operand.reg())) {
-      dumpVirtualReg(os, operand);
-    } else if (isStackObject(operand.reg())) {
-      os << "so" << (operand.reg() ^ stackObjectBegin);
-    } else {
-      os << "isa " << operand.reg();
-    }
-  } else if (operand.isImm()) {
-    os << getType(operand.type()) << operand.imm();
-    if (operand.type() == OperandType::Special) {
-      os << " (" << utils::enumName(static_cast<CompareOp>(operand.imm()))
-         << ")";
-    }
 
-  } else if (operand.isProb()) {
-    os << "prob " << operand.prob();
-  } else if (operand.isReloc()) {
-    os << "reloc ";
-    os << operand.reloc()->name();
-  } else {
-    os << "unknown";
-  }
-  os << "]";
-  return os;
-}
 
 }  // namespace mir::GENERIC
 

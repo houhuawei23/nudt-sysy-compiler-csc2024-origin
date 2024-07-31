@@ -144,7 +144,10 @@ LiveVariablesInfo calcLiveIntervals(MIRFunction& mfunc, CodeGenContext& ctx) {
                     if (!blockInfo.defs.count(id)) {
                         blockInfo.uses.insert(id);
                     }
-                } else {  // 立即数
+                } else {  
+                    std::cerr <<"operand idx: " << idx <<  "unknown operand flag: " << flag << std::endl;
+                    instInfo.print(std::cerr, *inst, false);
+                    std::cerr << std::endl;
                     assert(false && "report unreachable");
                 }
             }

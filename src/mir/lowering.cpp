@@ -24,6 +24,9 @@
 #include "support/StaticReflection.hpp"
 #include "support/config.hpp"
 
+#include "support/Profiler.hpp"
+
+#include "support/Graph.hpp"
 namespace fs = std::filesystem;
 namespace mir {
 
@@ -255,6 +258,7 @@ void createMIRModule(ir::Module& ir_module,
   IPRAUsageCache infoIPRA; /* 缓存各个函数所用到的Caller-Saved Registers */
 
   auto dumpStageWithMsg = [&](std::ostream& os, std::string_view stage, std::string_view msg) {
+    if (!debugLowering) return;
     enum class Style { RED, BOLD, RESET };
     static std::unordered_map<Style, std::string_view> styleMap = {
       {Style::RED, "\033[0;31m"}, {Style::BOLD, "\033[1m"}, {Style::RESET, "\033[0m"}};
@@ -268,6 +272,7 @@ void createMIRModule(ir::Module& ir_module,
 
   //! 4. Lower all Functions
   addExternalIPRAInfo(infoIPRA);
+  // TODO: in call graph scc order
   for (auto& ir_func : ir_module.funcs()) {
     if (ir_func->blocks().empty()) continue;
     /* Just for Debug */
@@ -287,12 +292,16 @@ void createMIRModule(ir::Module& ir_module,
       std::ofstream fout(path);
       ir_func->print(fout);
       stageIdx++;
+      dumpStageWithMsg(std::cerr, "BeforeLowering", "Lowering " + ir_func->name());
     }
 
     const auto mir_func = func_map[ir_func];
     /* stage1: lower function body to generic MIR */
     {
+      utils::Stage stage{"createMIRFunction"sv};
       createMIRFunction(ir_func, mir_func, codegen_ctx, lowering_ctx, tAIM);
+      dumpStageWithMsg(std::cerr, "AfterCreateMIRFunction",
+                       "Create MIR Function " + ir_func->name());
       dumpStageResult("AfterLowering", mir_func, codegen_ctx);
       if (!mir_func->verify(std::cerr, codegen_ctx)) {
         std::cerr << "Lowering Error: " << mir_func->name() << " failed to verify.\n";
@@ -301,18 +310,22 @@ void createMIRModule(ir::Module& ir_module,
 
     /* stage2: instruction selection */
     {
+      utils::Stage stage{"instructionSelection"sv};
       ISelContext isel_ctx(codegen_ctx);
       isel_ctx.runInstSelect(mir_func);
+      dumpStageWithMsg(std::cerr, "AfterIsel", "Instruction Selection " + ir_func->name());
       dumpStageResult("AfterIsel", mir_func, codegen_ctx);
     }
     /* stage3: register coalescing */
     {
+      utils::Stage stage{"registerCoalescing"sv};
       RegisterCoalescing(*mir_func, codegen_ctx);
       dumpStageResult("AfterRegisterCoalescing", mir_func, codegen_ctx);
     }
 
     /* stage4: Optimize: peephole optimization (窥孔优化) */
     {
+      utils::Stage stage{"peepholeOptimization"sv};
       if (debugLowering) {
         std::cerr << "begin peephole optimization. \n";
         std::cerr << "\tendsWithTerminator: " << codegen_ctx.flags.endsWithTerminator << "\n";
@@ -324,6 +337,8 @@ void createMIRModule(ir::Module& ir_module,
       }
       while (genericPeepholeOpt(*mir_func, codegen_ctx))
         ;
+      dumpStageWithMsg(std::cerr, "AfterPeephole", "Peephole Optimization " + ir_func->name());
+
       dumpStageResult("AfterPeephole", mir_func, codegen_ctx);
     }
 
@@ -338,24 +353,36 @@ void createMIRModule(ir::Module& ir_module,
 
     /* stage7: register allocation */
     {
+      utils::Stage stage{"registerAllocation"sv};
       codegen_ctx.flags.preRA = false;
       if (codegen_ctx.registerInfo) {
-        if (config.optLevel == sysy::OptLevel::O0) {
-          fastAllocatorBeta(*mir_func, codegen_ctx, infoIPRA);
-        } else if (config.optLevel == sysy::OptLevel::O1) {
-          GraphColoringAllocate(*mir_func, codegen_ctx, infoIPRA);
-        }
+        // fastAllocatorBeta(*mir_func, codegen_ctx, infoIPRA);
         // graphColoringAllocateBeta(*mir_func, codegen_ctx, infoIPRA);
+        GraphColoringAllocate(*mir_func, codegen_ctx, infoIPRA);
+        // if (config.optLevel == sysy::OptLevel::O0) {
+        //   // std::cerr << "O0: use fast allocator\n";
+        //   std::cerr << "O1: use graph coloring allocator\n";
+        //   GraphColoringAllocate(*mir_func, codegen_ctx, infoIPRA);
+        //   // fastAllocatorBeta(*mir_func, codegen_ctx, infoIPRA);
+        // } else if (config.optLevel == sysy::OptLevel::O1) {
+        //   std::cerr << "O1: use graph coloring allocator\n";
+        //   GraphColoringAllocate(*mir_func, codegen_ctx, infoIPRA);
+        //   // graphColoringAllocateBeta(*mir_func, codegen_ctx, infoIPRA);
+        // }
         // fastAllocator(*mir_func, codegen_ctx, infoIPRA);
+        dumpStageWithMsg(std::cerr, "AfterRegisterAlloc", "Register Allocation " + ir_func->name());
+
         dumpStageResult("AfterGraphColoring", mir_func, codegen_ctx);
       }
     }
 
     /* stage8: stack allocation */
     if (codegen_ctx.registerInfo) {
+      utils::Stage stage{"stackAllocation"sv};
       /* after sa, all stack objects are allocated with .offset */
       allocateStackObjects(mir_func, codegen_ctx);
       codegen_ctx.flags.postSA = true;
+      dumpStageWithMsg(std::cerr, "AfterStackAlloc", "Stack Allocation " + ir_func->name());
       dumpStageResult("AfterStackAlloc", mir_func, codegen_ctx);
     }
 
@@ -368,9 +395,13 @@ void createMIRModule(ir::Module& ir_module,
     //     postRASchedule(*mir_func, codegen_ctx);
     //     dumpStageResult("AfterPostRASchedule", mir_func, codegen_ctx);
     // }
-    // simplifyCFG(*mir_func, codegen_ctx);
+    simplifyCFG(*mir_func, codegen_ctx);
     /* post legalization */
-    postLegalizeFunc(*mir_func, codegen_ctx);
+    {
+      utils::Stage stage{"postLegalization"sv};
+      postLegalizeFunc(*mir_func, codegen_ctx);
+      dumpStageWithMsg(std::cerr, "AfterPostLegalize", "Post Legalization " + ir_func->name());
+    }
 
     /* Add Function to IPRA cache */
     if (codegen_ctx.registerInfo) {
@@ -403,10 +434,10 @@ void createMIRFunction(ir::Function* ir_func,
   domCtx->setOff();
   domCtx->refresh();
   // TODO: DFS or BFS?
-  // domCtx->BFSDomTreeInfoRefresh();
-  // auto irBlocks = domCtx->BFSDomTreeVector();
-  domCtx->DFSDomTreeInfoRefresh();
-  auto irBlocks = domCtx->DFSDomTreeVector();
+  domCtx->BFSDomTreeInfoRefresh();
+  auto irBlocks = domCtx->BFSDomTreeVector();
+  // domCtx->DFSDomTreeInfoRefresh();
+  // auto irBlocks = domCtx->DFSDomTreeVector();
 
   //! 1. map from ir to mir
   auto& block_map = lowering_ctx.blockMap;
@@ -416,6 +447,8 @@ void createMIRFunction(ir::Function* ir_func,
   for (auto ir_block : irBlocks) {
     mir_func->blocks().push_back(
       std::make_unique<MIRBlock>(mir_func, "label" + std::to_string(codegen_ctx.nextLabelId())));
+    // mir_func->blocks().push_back(
+    //   std::make_unique<MIRBlock>(mir_func, ir_block->name()));
     block_map.emplace(ir_block, mir_func->blocks().back().get());
     for (auto ir_inst : ir_block->insts()) {
       if (ir_inst->isa<ir::PhiInst>()) {
@@ -597,7 +630,7 @@ void createMIRInst(ir::Instruction* ir_inst, LoweringContext& ctx) {
       lower(dyn_cast<ir::BitCastInst>(ir_inst), ctx);
       break;
     case ir::ValueId::vPHI:
-      std::cerr << "dont lowering phi" << std::endl;
+      // std::cerr << "dont lowering phi" << std::endl;
       break;
     default:
       const auto valueIdEnumName = utils::enumName(static_cast<ir::ValueId>(ir_inst->valueId()));
@@ -746,41 +779,6 @@ void lower(ir::BinaryInst* ir_inst, LoweringContext& ctx) {
 /* BranchInst */
 void emitJump(ir::BasicBlock* srcblock, ir::BasicBlock* dstblock, LoweringContext& lctx);
 
-void emitBranch(ir::Value* cond,
-                ir::BasicBlock* srcblock,
-                ir::BasicBlock* dstblock,
-                LoweringContext& lctx) {
-  //
-
-  std::vector<MIROperand> srcOperands;
-  std::vector<MIROperand> dstOperands;
-
-  for (auto inst : dstblock->insts()) {
-    if (const auto phi = inst->dynCast<ir::PhiInst>()) {
-      const auto val = phi->getvalfromBB(srcblock);
-      std::cerr << "srcBlock: " << srcblock->name() << ", " << "val: " << val->name() << std::endl;
-      std::cerr << "dstBlock: " << dstblock->name() << ", " << "phi: " << phi->name() << std::endl;
-      if (val->isUndef()) break;
-      srcOperands.push_back(lctx.map2operand(val));
-      dstOperands.push_back(lctx.map2operand(phi));
-    }
-  }
-
-  // if(not srcOperands.empty()) {
-
-  // }
-  for (size_t idx = 0; idx < srcOperands.size(); idx++) {
-    lctx.emitCopy(dstOperands[idx], srcOperands[idx]);
-  }
-
-  // lctx.emitInstBeta(InstJump, {MIROperand::asReloc(lctx.map2block(dstblock))});
-  lctx.emitInstBeta(InstBranch, {
-                                  lctx.map2operand(cond) /* cond */,
-                                  MIROperand::asReloc(lctx.map2block(dstblock)) /* iftrue */,
-                                  MIROperand::asProb(0.5) /* prob*/
-                                });
-}
-
 void lower(ir::BranchInst* ir_inst, LoweringContext& ctx) {
   /** mid end can guarantee that phi block can only be the reached by unconditional jump,
    * so conditional branch dont need to process phi insts.
@@ -840,28 +838,77 @@ void lower(ir::BranchInst* ir_inst, LoweringContext& ctx) {
 }
 void emitJump(ir::BasicBlock* srcblock, ir::BasicBlock* dstblock, LoweringContext& lctx) {
   // TODO: need to process phi insts
-
+  // std::cerr << "emitJump: " << srcblock->name() << " -> " << dstblock->name() << std::endl;
   std::vector<MIROperand> srcOperands;
   std::vector<MIROperand> dstOperands;
 
   for (auto inst : dstblock->insts()) {
     if (const auto phi = inst->dynCast<ir::PhiInst>()) {
       const auto val = phi->getvalfromBB(srcblock);
-      std::cerr << "srcBlock: " << srcblock->name() << ", " << "val: " << val->name() << std::endl;
-      std::cerr << "dstBlock: " << dstblock->name() << ", " << "phi: " << phi->name() << std::endl;
-      if (val->isUndef()) break;
+
+      if (val->isUndef()) continue;
+      ;
+      auto dumpOperand = [&](MIROperand op) {
+        std::cerr << mir::GENERIC::OperandDumper{op} << std::endl;
+      };
+
       srcOperands.push_back(lctx.map2operand(val));
       dstOperands.push_back(lctx.map2operand(phi));
     }
   }
 
-  // if(not srcOperands.empty()) {
+  if (not srcOperands.empty()) {
+    std::unordered_set<MIROperand, MIROperandHasher> needStagingRegister;
+    std::unordered_set<MIROperand, MIROperandHasher> dstSet(dstOperands.begin(), dstOperands.end());
+    for (auto op : srcOperands)
+      if (dstSet.count(op)) needStagingRegister.insert(op);
 
-  // }
-  for (size_t idx = 0; idx < srcOperands.size(); idx++) {
-    lctx.emitCopy(dstOperands[idx], srcOperands[idx]);
+    // setup phi values
+    // calcuates the best order and create temporary variables for args
+    // nodeMap: dstOperand -> idx
+    std::unordered_map<MIROperand, uint32_t, MIROperandHasher> nodeMap;
+    for (size_t idx = 0; idx < dstOperands.size(); ++idx)
+      nodeMap.emplace(dstOperands[idx], idx);
+
+    utils::Graph graph(dstOperands.size());  // direct copy graph
+
+    for (size_t idx = 0; idx < dstOperands.size(); ++idx) {
+      const auto arg = srcOperands[idx];  // corresponding srcOperand
+      if (auto iter = nodeMap.find(arg); iter != nodeMap.cend()) {
+        // copy b to a -> a should be resetted before b
+        graph[idx].push_back(iter->second);
+      }
+    }
+
+    const auto [ccnt, col] = utils::calcSCC(graph); 
+    auto order = utils::topologicalSort(graph, ccnt, col);
+
+    assert(order.size() == dstOperands.size());
+    std::unordered_map<MIROperand, MIROperand, MIROperandHasher> dirtyRegRemapping;
+
+    for (size_t i = 0; i < dstOperands.size(); ++i) {
+      const auto idx = order[i];
+      MIROperand arg;
+      if (auto iter = dirtyRegRemapping.find(srcOperands[idx]); iter != dirtyRegRemapping.cend()) {
+        arg = iter->second;  // use copy
+      } else
+        arg = srcOperands[idx];
+
+      const auto dstArg = dstOperands[idx];
+
+      if (arg == dstArg) continue;  // identical copy
+
+      // create copy
+      if (needStagingRegister.count(dstOperands[idx])) {
+        const auto intermediate = lctx.newVReg(srcOperands[idx].type());
+        lctx.emitCopy(intermediate, dstArg);  // NOLINT
+        dirtyRegRemapping.emplace(dstOperands[idx], intermediate);
+      }
+
+      // apply reset
+      lctx.emitCopy(dstArg, arg);
+    }
   }
-
   lctx.emitInstBeta(InstJump, {MIROperand::asReloc(lctx.map2block(dstblock))});
 }
 

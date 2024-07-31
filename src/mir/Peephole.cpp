@@ -29,14 +29,6 @@ std::unordered_map<MIROperand, uint32_t, MIROperandHasher> collectDefCount(MIRFu
             }
         }
     }
-
-    if (verify) {
-        /* check whether is SSA form */
-        for (auto [def, cnt] : defCount) {
-            if (cnt != 1) assert(false && "not SSA"); 
-        }
-    }
-
     return defCount;
 }
 

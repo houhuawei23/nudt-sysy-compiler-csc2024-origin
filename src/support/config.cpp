@@ -102,9 +102,9 @@ static const auto perfPassesList = std::vector<std::string>{
   "gvn",          // global value numbering: passed, slow
   "instcombine",  //
   "adce",     // passed all functional
-  // "inline",   // segfault on 60_sort_test6/69_expr_eval/...
+  "inline",   // segfault on 60_sort_test6/69_expr_eval/...
   "tco",      // tail call optimization
-  // "inline",   //
+  "inline",   //
   "g2l",      // global to local
   "dle",
   "dse",
