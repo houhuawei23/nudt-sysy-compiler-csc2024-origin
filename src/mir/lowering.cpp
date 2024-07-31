@@ -322,14 +322,13 @@ void createMIRModule(ir::Module& ir_module,
         std::cerr << "\tdontForward: " << codegen_ctx.flags.dontForward << "\n";
         std::cerr << "\tpostLegal: " << codegen_ctx.flags.postLegal << "\n";
       }
-      while (genericPeepholeOpt(*mir_func, codegen_ctx)) ;
+      while (genericPeepholeOpt(*mir_func, codegen_ctx))
+        ;
       dumpStageResult("AfterPeephole", mir_func, codegen_ctx);
     }
 
     /* stage5: pre-RA legalization */
-    {
-      codegen_ctx.flags.inSSAForm = false;
-    }
+    { codegen_ctx.flags.inSSAForm = false; }
 
     /* stage6: Optimize: pre-RA scheduling, minimize register usage */
     // {
@@ -369,7 +368,7 @@ void createMIRModule(ir::Module& ir_module,
     //     postRASchedule(*mir_func, codegen_ctx);
     //     dumpStageResult("AfterPostRASchedule", mir_func, codegen_ctx);
     // }
-    simplifyCFG(*mir_func, codegen_ctx);
+    // simplifyCFG(*mir_func, codegen_ctx);
     /* post legalization */
     postLegalizeFunc(*mir_func, codegen_ctx);
 
@@ -409,38 +408,6 @@ void createMIRFunction(ir::Function* ir_func,
   domCtx->DFSDomTreeInfoRefresh();
   auto irBlocks = domCtx->DFSDomTreeVector();
 
-  // std::cerr << "000" << std::endl;
-  // for (auto block : ir_func->blocks()) {
-  //   std::cerr << "block: " << block->name()
-  //             << ", size: " << block->insts().size() << ", addr: " << block
-  //             << std::endl;
-  // }
-
-  // std::cerr << "111" << std::endl;
-  // for (auto block : irBlocks) {
-  //   // assert(block->insts().size() > 0);
-  //   std::cerr << "block: " << block->name()
-  //             << ", size: " << block->insts().size() << ", addr: " << block
-  //             << std::endl;
-  // }
-  // std::cerr << "222" << std::endl;
-
-  // for (auto block : ir_func->blocks()) {
-  //   if (std::find(irBlocks.begin(), irBlocks.end(), block) == irBlocks.end()) {
-  //     std::cerr << "Some Blocks are not in dom tree" << std::endl;
-  //     std::cerr << block->name() << "size: " << block->insts().size()
-  //               << ", addr: " << block << std::endl;
-  //     irBlocks.push_back(block);
-  //   }
-  // }
-  // std::cerr << "333" << std::endl;
-  // std::cerr << "irBlocks size: " << irBlocks.size() << std::endl;
-  // for (auto block : irBlocks) {
-  //   std::cerr << "block: " << block->name()
-  //             << ", size: " << block->insts().size() << ", addr: " << block
-  //             << std::endl;
-  // }
-
   //! 1. map from ir to mir
   auto& block_map = lowering_ctx.blockMap;
   auto& target = codegen_ctx.target;
@@ -450,6 +417,12 @@ void createMIRFunction(ir::Function* ir_func,
     mir_func->blocks().push_back(
       std::make_unique<MIRBlock>(mir_func, "label" + std::to_string(codegen_ctx.nextLabelId())));
     block_map.emplace(ir_block, mir_func->blocks().back().get());
+    for (auto ir_inst : ir_block->insts()) {
+      if (ir_inst->isa<ir::PhiInst>()) {
+        auto vreg = lowering_ctx.newVReg(ir_inst->type());
+        lowering_ctx.addValueMap(ir_inst, vreg);
+      }
+    }
   }
 
   //! 2. emitPrologue for function
@@ -623,6 +596,9 @@ void createMIRInst(ir::Instruction* ir_inst, LoweringContext& ctx) {
     case ir::ValueId::vBITCAST:
       lower(dyn_cast<ir::BitCastInst>(ir_inst), ctx);
       break;
+    case ir::ValueId::vPHI:
+      std::cerr << "dont lowering phi" << std::endl;
+      break;
     default:
       const auto valueIdEnumName = utils::enumName(static_cast<ir::ValueId>(ir_inst->valueId()));
       std::cerr << valueIdEnumName << ": not supported inst" << std::endl;
@@ -768,9 +744,48 @@ void lower(ir::BinaryInst* ir_inst, LoweringContext& ctx) {
 }
 
 /* BranchInst */
-void emit_branch(ir::BasicBlock* srcblock, ir::BasicBlock* dstblock, LoweringContext& lctx);
+void emitJump(ir::BasicBlock* srcblock, ir::BasicBlock* dstblock, LoweringContext& lctx);
+
+void emitBranch(ir::Value* cond,
+                ir::BasicBlock* srcblock,
+                ir::BasicBlock* dstblock,
+                LoweringContext& lctx) {
+  //
+
+  std::vector<MIROperand> srcOperands;
+  std::vector<MIROperand> dstOperands;
+
+  for (auto inst : dstblock->insts()) {
+    if (const auto phi = inst->dynCast<ir::PhiInst>()) {
+      const auto val = phi->getvalfromBB(srcblock);
+      std::cerr << "srcBlock: " << srcblock->name() << ", " << "val: " << val->name() << std::endl;
+      std::cerr << "dstBlock: " << dstblock->name() << ", " << "phi: " << phi->name() << std::endl;
+      if (val->isUndef()) break;
+      srcOperands.push_back(lctx.map2operand(val));
+      dstOperands.push_back(lctx.map2operand(phi));
+    }
+  }
+
+  // if(not srcOperands.empty()) {
+
+  // }
+  for (size_t idx = 0; idx < srcOperands.size(); idx++) {
+    lctx.emitCopy(dstOperands[idx], srcOperands[idx]);
+  }
+
+  // lctx.emitInstBeta(InstJump, {MIROperand::asReloc(lctx.map2block(dstblock))});
+  lctx.emitInstBeta(InstBranch, {
+                                  lctx.map2operand(cond) /* cond */,
+                                  MIROperand::asReloc(lctx.map2block(dstblock)) /* iftrue */,
+                                  MIROperand::asProb(0.5) /* prob*/
+                                });
+}
 
 void lower(ir::BranchInst* ir_inst, LoweringContext& ctx) {
+  /** mid end can guarantee that phi block can only be the reached by unconditional jump,
+   * so conditional branch dont need to process phi insts.
+   * unconditional branch use emitJum to process phi insts.
+   */
   auto src_block = ir_inst->block();
   auto mir_func = ctx.currFunc();
   const auto codegen_ctx = ctx.codeGenctx;
@@ -788,13 +803,14 @@ void lower(ir::BranchInst* ir_inst, LoweringContext& ctx) {
         ...
     */
     /* branch cond, iftrue */
+
     ctx.emitInstBeta(InstBranch,
                      {
                        ctx.map2operand(ir_inst->cond()) /* cond */,
                        MIROperand::asReloc(ctx.map2block(ir_inst->iftrue())) /* iftrue */,
                        MIROperand::asProb(0.5) /* prob*/
                      });
-
+    // emitBranch(ir_inst->cond(), src_block, ir_inst->iftrue(), ctx);
     /* nextblock: jump iffalse */
     auto findBlockIter = [mir_func](const MIRBlock* block) {
       return std::find_if(
@@ -815,12 +831,37 @@ void lower(ir::BranchInst* ir_inst, LoweringContext& ctx) {
     }
     /* emit jump to iffalse */
     ctx.emitInstBeta(InstJump, {MIROperand::asReloc(ctx.map2block(ir_inst->iffalse()))});
+    // emitJump(src_block, ir_inst->iffalse(), ctx);
+    // emitJump(src_block, ir_inst->iffalse(), ctx);
   } else {  // unconditional branch
     auto dst_block = ir_inst->dest();
-    emit_branch(src_block, dst_block, ctx);
+    emitJump(src_block, dst_block, ctx);
   }
 }
-void emit_branch(ir::BasicBlock* srcblock, ir::BasicBlock* dstblock, LoweringContext& lctx) {
+void emitJump(ir::BasicBlock* srcblock, ir::BasicBlock* dstblock, LoweringContext& lctx) {
+  // TODO: need to process phi insts
+
+  std::vector<MIROperand> srcOperands;
+  std::vector<MIROperand> dstOperands;
+
+  for (auto inst : dstblock->insts()) {
+    if (const auto phi = inst->dynCast<ir::PhiInst>()) {
+      const auto val = phi->getvalfromBB(srcblock);
+      std::cerr << "srcBlock: " << srcblock->name() << ", " << "val: " << val->name() << std::endl;
+      std::cerr << "dstBlock: " << dstblock->name() << ", " << "phi: " << phi->name() << std::endl;
+      if (val->isUndef()) break;
+      srcOperands.push_back(lctx.map2operand(val));
+      dstOperands.push_back(lctx.map2operand(phi));
+    }
+  }
+
+  // if(not srcOperands.empty()) {
+
+  // }
+  for (size_t idx = 0; idx < srcOperands.size(); idx++) {
+    lctx.emitCopy(dstOperands[idx], srcOperands[idx]);
+  }
+
   lctx.emitInstBeta(InstJump, {MIROperand::asReloc(lctx.map2block(dstblock))});
 }
 
