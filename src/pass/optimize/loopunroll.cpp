@@ -135,11 +135,35 @@ void loopUnroll::doconstunroll(ir::Loop* loop, ir::indVar* iv, int times) {
     ir::BasicBlock* oldlatchnext = latchnext;
     for (int i = 0; i < unrolltimes; i++) {
         copyloop(bbexcepthead, oldbegin, loop, func);
+        ir::BranchInst* oldlatchnextbr = oldlatchnext->insts().back()->dynCast<ir::BranchInst>();
+        oldlatchnextbr->replaceDest(head, copymap[oldbegin]->dynCast<ir::BasicBlock>());
         ir::BasicBlock::delete_block_link(oldlatchnext,head);//考虑到headnext不可能有phi，不必考虑修改前驱导致的对phi的影响
         ir::BasicBlock::block_link(oldlatchnext, copymap[headnext]->dynCast<ir::BasicBlock>());
         ir::BasicBlock::block_link(copymap[oldlatchnext]->dynCast<ir::BasicBlock>(), head);
+
         auto newbegin = copymap[oldbegin]->dynCast<ir::BasicBlock>();
         auto newlatchnext = copymap[oldlatchnext]->dynCast<ir::BasicBlock>();
+
+        oldbegin = newbegin;
+        oldlatchnext = newlatchnext;
+        std::vector<ir::BasicBlock*> newbbexcepthead;
+        for (auto bb : bbexcepthead){
+            newbbexcepthead.push_back(copymap[bb]->dynCast<ir::BasicBlock>());
+        }
+        bbexcepthead = newbbexcepthead;
+        // std::set<ir::Value*> keys;
+        // for (auto val :keyset(reachDefAfterLatch)) 
+        //     keys.insert(val);//getallphi？
+        // for (auto val : keys) {
+        //     reachDefAfterLatch[copymap[val]] = reachDefAfterLatch[val];
+        //     if (!copymap[val]){
+        //         reachDefAfterLatch.erase(val);
+        //     }
+        // }
+        // //更新bbexcepthead
+        // for (auto bb : bbexcepthead) {
+            
+        // }
     }
 }
 
@@ -231,7 +255,10 @@ bool loopUnroll::isconstant(ir::indVar* iv) {  // 判断迭代的end是否为常
 }
 void loopUnroll::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     lpctx = tp->getLoopInfo(func);
+    lpctx->refresh();
     ivctx = tp->getIndVarInfo(func);
+    ivctx->setOff();
+    ivctx->refresh();
     for (auto& loop : lpctx->loops()) {
         ir::indVar* iv = ivctx->getIndvar(loop);
         if (iv && isconstant(iv))
@@ -239,5 +266,12 @@ void loopUnroll::run(ir::Function* func, TopAnalysisInfoManager* tp) {
         else
             dynamicunroll(loop, iv);
     }
+}
+std::vector<ir::Value*> keyset(std::unordered_map<ir::Value*, ir::Value*> map) {
+    std::vector<ir::Value*> keys;
+    for (auto it = map.begin(); it != map.end(); ++it) {
+        keys.push_back(it->first);
+    }
+    return keys;
 }
 }  // namespace pass
