@@ -629,16 +629,17 @@ bool DeadInstElimination(MIRFunction& mfunc, CodeGenContext& ctx) {
 /*
  * @brief: EliminateInvisibleInsts
  * @note: 
- *    功能: 删除无用赋值
+ *    功能: 删除无用赋值 (基于基本块内的优化)
  *    NOTE: 需要按照BFS dom tree的顺序来遍历基本块
  *    优化范围: 针对于postRA的代码优化
  */
 bool EliminateInvisibleInsts(MIRFunction& mfunc, CodeGenContext& ctx) {
     if (ctx.flags.preRA || !ctx.registerInfo) return false;
+
     bool modified = false;
     for (auto& block : mfunc.blocks()) {
         std::unordered_set<MIRInst*> UnusedInsts;
-        /* writer: operand: 指令中被定义的操作数 -> inst: 指令 */
+        /* writer: operand (指令中被定义的操作数) -> inst (指令) */
         std::unordered_map<MIROperand, MIRInst*, MIROperandHasher> writer;
 
         auto use = [&](MIROperand& op) {
@@ -653,10 +654,11 @@ bool EliminateInvisibleInsts(MIRFunction& mfunc, CodeGenContext& ctx) {
                 UnusedInsts.erase(v);
             }
         };
-        for (auto& inst : block->insts()) {
+        
+        for (auto inst : block->insts()) {
             auto& instInfo = ctx.instInfo.getInstInfo(inst);
             
-            /* 更新被使用操作数 */
+            /* OperandFlagUse */
             for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
                 if (instInfo.operand_flag(idx) & OperandFlagUse) {
                     use(inst->operand(idx));
@@ -668,7 +670,7 @@ bool EliminateInvisibleInsts(MIRFunction& mfunc, CodeGenContext& ctx) {
                 release();
             }
 
-            /* 定义操作数 */
+            /* OperandFlagDef */
             for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
                 if (instInfo.operand_flag(idx) & OperandFlagDef) {
                     auto& op = inst->operand(idx);
@@ -701,14 +703,14 @@ bool genericPeepholeOpt(MIRFunction& mfunc, CodeGenContext& ctx) {
     bool modified = false;
     modified |= EliminateStackLoads(mfunc, ctx);
     modified |= EliminateIndirectCopy(mfunc, ctx);
-    // modified |= EliminateUnusedCopy(mfunc, ctx);
+    modified |= EliminateUnusedCopy(mfunc, ctx);
     modified |= EliminateUnusedInst(mfunc, ctx);
     modified |= ApplySSAPropagation(mfunc, ctx);
     modified |= EliminateConstantLoads(mfunc, ctx);
     modified |= ConstantHoist(mfunc, ctx);
     modified |= EliminateRedundantInst(mfunc, ctx);
     modified |= DeadInstElimination(mfunc, ctx);
-    // modified |= EliminateInvisibleInsts(mfunc, ctx);
+    modified |= EliminateInvisibleInsts(mfunc, ctx);
     // modified |= ctx.scheduleModel->peepholeOpt(mfunc, ctx);
     return modified;
 }

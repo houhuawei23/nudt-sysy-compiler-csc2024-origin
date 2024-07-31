@@ -286,6 +286,7 @@ void createMIRModule(ir::Module& ir_module,
   //! 4. Lower all Functions
   addExternalIPRAInfo(infoIPRA);
   for (auto& ir_func : ir_module.funcs()) {
+    codegen_ctx.flags = MIRFlags{};
     if (ir_func->blocks().empty()) continue;
     /* Just for Debug */
     size_t stageIdx = 0;
@@ -357,13 +358,13 @@ void createMIRModule(ir::Module& ir_module,
 
     /* stage7: register allocation */
     {
-      codegen_ctx.flags.preRA = false;
       if (codegen_ctx.registerInfo) {
         GraphColoringAllocate(*mir_func, codegen_ctx, infoIPRA);
         // fastAllocator(*mir_func, codegen_ctx, infoIPRA);
         // fastAllocatorBeta(*mir_func, codegen_ctx, infoIPRA);
         dumpStageResult("AfterGraphColoring", mir_func, codegen_ctx);
       }
+      codegen_ctx.flags.preRA = false;
     }
 
     /* stage8: stack allocation */
@@ -383,7 +384,7 @@ void createMIRModule(ir::Module& ir_module,
     //     postRASchedule(*mir_func, codegen_ctx);
     //     dumpStageResult("AfterPostRASchedule", mir_func, codegen_ctx);
     // }
-    simplifyCFG(*mir_func, codegen_ctx);
+    // simplifyCFG(*mir_func, codegen_ctx);
     /* post legalization */
     postLegalizeFunc(*mir_func, codegen_ctx);
 
