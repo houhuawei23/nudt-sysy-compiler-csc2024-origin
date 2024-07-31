@@ -43,8 +43,9 @@ void indVarAnalysis::run(ir::Function* func, TopAnalysisInfoManager* tp) {
             continue;
         auto mBeginVar = dyn_cast<ir::Constant>(keyPhiInst->getvalfromBB(lpPreHeader));
         if(mBeginVar==nullptr){//考虑内层循环嵌套问题
-            if(lpctx->looplevel(lpHeader)==0)continue;//如果这时本来就是最外层循环，那么就不适合分析indvar
+            if(lpctx->looplevel(lpHeader)==1 or lpctx->looplevel(lpHeader)==0)continue;//如果这时本来就是最外层循环，那么就不适合分析indvar
             auto mBeginVarPhi=dyn_cast<ir::PhiInst>(keyPhiInst->getvalfromBB(lpPreHeader));
+            if(mBeginVarPhi==nullptr)continue;
             mBeginVar=getConstantBeginVarFromPhi(mBeginVarPhi,lp->parent());
         }
         if(mBeginVar==nullptr)continue;
