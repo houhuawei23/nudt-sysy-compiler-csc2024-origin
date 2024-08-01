@@ -19,25 +19,17 @@ class SCEV:public FunctionPass{
         loopInfo* lpctx;
         indVarInfo* idvctx;
         sideEffectInfo* sectx;
+        domTree* domctx;
         void runOnLoop(ir::Loop* lp);
-        int getIndVarIterCnt(ir::Loop* lp,ir::indVar* idv);
-        void normalizeIndVarIcmpAndBr(ir::Loop* lp,ir::indVar* idv);
+        bool isSimplyLoopInvariant(ir::Loop* lp,ir::Value* val);
 
-};
-enum SCEVOperator{
-    addi,
-    subi,
-    muli,
-    addf,
-    subf,
-    mulf
 };
 class SCEVValue{
 private:    
-    SCEVOperator scevOp;
-    ir::Value* mBegin;
-    ir::Value* mEnd;
-    ir::Value* mStep;
-
+    ir::Loop* parent;
+    ir::Value* beginVar;
+    std::vector<ir::Value*>stepVars;
+    std::unordered_map<ir::Value*,ir::ValueId>stepVarOps;
+public:
 };
 }

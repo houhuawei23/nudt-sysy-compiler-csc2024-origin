@@ -111,13 +111,20 @@ static const auto perfPassesList = std::vector<std::string>{
   "dle",
   "dse",
   "sccp",     //
-  "adce",     // passed all functional
+  "adce", 
+  "dae",    
   "simplifycfg",
   "gcm",  // global code motion
   "gvn",          // global value numbering: passed, slow
-  "instcombine",  //
-  "adce",     // passed all functional
-  "reg2mem"
+  "instcombine",
+  "sccp",
+  "adce",
+  "simplifycfg",     // passed all functional
+  // "loopsimplify",
+  // "scev",
+  // "cfgprint",
+  // "reg2mem"
+  "test",
 };
 
 // clang-format on

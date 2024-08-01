@@ -154,6 +154,11 @@ class Function : public User {
 
   bool isOnlyDeclare(){return mBlocks.empty();}
 
+  void delArgumant(size_t idx){
+    assert(idx < argCnt && "idx out of args vector");
+    mArguments.erase(mArguments.begin()+idx);
+  }
+
   
 
 

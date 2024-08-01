@@ -26,6 +26,7 @@
 #include "pass/optimize/DLE.hpp"
 #include "pass/optimize/SCEV.hpp"
 #include "pass/optimize/loopunroll.hpp"
+#include "pass/optimize/DAE.hpp"
 
 #include "support/config.hpp"
 #include "support/FileSystem.hpp"
@@ -157,8 +158,10 @@ void PassManager::runPasses(std::vector<std::string> passes) {
               run(new pass::simpleDLE());
           } else if (pass_name.compare("scev") == 0) {
               run(new pass::SCEV());
-            } else if (pass_name.compare("unroll") == 0) {
-                run(new pass::loopUnroll());
+          } else if (pass_name.compare("unroll") == 0) {
+              run(new pass::loopUnroll());
+          } else if (pass_name.compare("dae") == 0) {
+              run(new pass::DAE());
           } else {
               assert(false && "Invalid pass name");
               }
