@@ -37,7 +37,7 @@ public:  // assembly
 /* MIRFlags */
 struct MIRFlags final {
   bool endsWithTerminator = true;
-  bool inSSAForm = true;
+  bool inSSAForm = false;
   bool preRA = true;
   bool postSA = false;
   bool dontForward = false;

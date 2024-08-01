@@ -1,10 +1,10 @@
-#pragma once
+
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
 #include "mir/LiveInterval.hpp"
-
+#include "mir/RegisterAllocator.hpp"
 namespace mir {
-static void linearAllocator(MIRFunction& mfunc, CodeGenContext& ctx) {
+void linearAllocator(MIRFunction& mfunc, CodeGenContext& ctx) {
     MultiClassRegisterSelector selector { *ctx.registerInfo };  // 寄存器选择
 
     for (auto& block : mfunc.blocks()) {

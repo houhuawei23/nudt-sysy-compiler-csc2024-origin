@@ -29,14 +29,6 @@ std::unordered_map<MIROperand, uint32_t, MIROperandHasher> collectDefCount(MIRFu
             }
         }
     }
-
-    if (verify) {
-        /* check whether is SSA form */
-        for (auto [def, cnt] : defCount) {
-            if (cnt != 1) assert(false && "not SSA"); 
-        }
-    }
-
     return defCount;
 }
 
@@ -232,16 +224,17 @@ bool EliminateUnusedInst(MIRFunction& mfunc, CodeGenContext& ctx) {
     /* writers - def -> vec<inst> */
     std::unordered_map<MIROperand, std::vector<MIRInst*>, MIROperandHasher> writers;
     std::queue<MIRInst*> q;
+
     auto isAllocableType = [](OperandType type) { return type <= OperandType::Float32; };
-    
+
     for (auto& block : mfunc.blocks()) {
-        for (auto& inst : block->insts()) {
-            auto& instInfo = ctx.instInfo.getInstInfo(inst);
+        for (auto inst : block->insts()) {
+            const auto& instInfo = ctx.instInfo.getInstInfo(inst);
             bool special = false;
             if (requireOneFlag(instInfo.inst_flag(), InstFlagSideEffect)) special = true;
             for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
                 if (instInfo.operand_flag(idx) & OperandFlagDef) {
-                    auto& op = inst->operand(idx);
+                    auto op = inst->operand(idx);
                     writers[op].push_back(inst);
                     if (op.isReg() && isISAReg(op.reg()) && isAllocableType(op.type())) {
                         special = true;
@@ -251,15 +244,15 @@ bool EliminateUnusedInst(MIRFunction& mfunc, CodeGenContext& ctx) {
             if (special) q.push(inst);
         }
     }
-
     while (!q.empty()) {
-        auto& inst = q.front(); q.pop();
-        auto& instInfo = ctx.instInfo.getInstInfo(inst);
+        auto inst = q.front(); 
+        q.pop();
+        const auto& instInfo = ctx.instInfo.getInstInfo(inst);
         for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
             if (instInfo.operand_flag(idx) & OperandFlagUse) {
-                auto& op = inst->operand(idx);
+                auto op = inst->operand(idx);
                 if (auto iter = writers.find(op); iter != writers.end()) {
-                    for (auto& writer : iter->second) {
+                    for (auto writer : iter->second) {
                         q.push(writer);
                     }
                     writers.erase(iter);
@@ -267,18 +260,16 @@ bool EliminateUnusedInst(MIRFunction& mfunc, CodeGenContext& ctx) {
             }
         }
     }
-
     /* 移除候选集 */
     std::unordered_set<MIRInst*> remove;  // 存储需要移除的指令
-    for (auto& [op, writerList] : writers) {
+    for (auto [op, writerList] : writers) {
         if (isISAReg(op.reg()) && isAllocableType(op.type())) continue;
-        for (auto& writer : writerList) {
-            auto& instInfo = ctx.instInfo.getInstInfo(writer);
+        for (auto writer : writerList) {
+            const auto& instInfo = ctx.instInfo.getInstInfo(writer);
             if (requireOneFlag(instInfo.inst_flag(), InstFlagSideEffect | InstFlagMultiDef)) continue;
             remove.insert(writer);
         }
     }
-
     /* 执行移除操作 */
     for (auto& block : mfunc.blocks()) {
         block->insts().remove_if([&](MIRInst* inst) { return remove.count(inst); });
@@ -350,7 +341,7 @@ bool ApplySSAPropagation(MIRFunction& mfunc, CodeGenContext& ctx) {
 }
 
 /*
- * @brief: EliminateConstantLoads
+ * @brief: EliminateConstantLoads / machineConstantCSE
  * @note: 
  *      在MIR级别上进行常量传播和消除冗余的常量加载
  *      NOTE: 在SSA形式上的后端代码进行相关优化
@@ -629,16 +620,17 @@ bool DeadInstElimination(MIRFunction& mfunc, CodeGenContext& ctx) {
 /*
  * @brief: EliminateInvisibleInsts
  * @note: 
- *    功能: 删除无用赋值
+ *    功能: 删除无用赋值 (基于基本块内的优化)
  *    NOTE: 需要按照BFS dom tree的顺序来遍历基本块
  *    优化范围: 针对于postRA的代码优化
  */
 bool EliminateInvisibleInsts(MIRFunction& mfunc, CodeGenContext& ctx) {
     if (ctx.flags.preRA || !ctx.registerInfo) return false;
+
     bool modified = false;
     for (auto& block : mfunc.blocks()) {
         std::unordered_set<MIRInst*> UnusedInsts;
-        /* writer: operand: 指令中被定义的操作数 -> inst: 指令 */
+        /* writer: operand (指令中被定义的操作数) -> inst (指令) */
         std::unordered_map<MIROperand, MIRInst*, MIROperandHasher> writer;
 
         auto use = [&](MIROperand& op) {
@@ -653,10 +645,11 @@ bool EliminateInvisibleInsts(MIRFunction& mfunc, CodeGenContext& ctx) {
                 UnusedInsts.erase(v);
             }
         };
-        for (auto& inst : block->insts()) {
+        
+        for (auto inst : block->insts()) {
             auto& instInfo = ctx.instInfo.getInstInfo(inst);
             
-            /* 更新被使用操作数 */
+            /* OperandFlagUse */
             for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
                 if (instInfo.operand_flag(idx) & OperandFlagUse) {
                     use(inst->operand(idx));
@@ -668,7 +661,7 @@ bool EliminateInvisibleInsts(MIRFunction& mfunc, CodeGenContext& ctx) {
                 release();
             }
 
-            /* 定义操作数 */
+            /* OperandFlagDef */
             for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
                 if (instInfo.operand_flag(idx) & OperandFlagDef) {
                     auto& op = inst->operand(idx);
@@ -698,19 +691,28 @@ bool EliminateInvisibleInsts(MIRFunction& mfunc, CodeGenContext& ctx) {
 
 /* 窥孔优化 */
 bool genericPeepholeOpt(MIRFunction& mfunc, CodeGenContext& ctx) {
-    return false;
     bool modified = false;
     modified |= EliminateStackLoads(mfunc, ctx);
-    modified |= EliminateIndirectCopy(mfunc, ctx);
-    // modified |= EliminateUnusedCopy(mfunc, ctx);
+    std::cerr << "EliminateStackLoads: " << modified << "\n";
+    // modified |= EliminateIndirectCopy(mfunc, ctx);
+    modified |= EliminateUnusedCopy(mfunc, ctx);
+    std::cerr << "EliminateUnusedCopy: " << modified << "\n";
     modified |= EliminateUnusedInst(mfunc, ctx);
+    std::cerr << "EliminateUnusedInst: " << modified << "\n";
     modified |= ApplySSAPropagation(mfunc, ctx);
+    std::cerr << "ApplySSAPropagation: " << modified << "\n";
     modified |= EliminateConstantLoads(mfunc, ctx);
+    std::cerr << "EliminateConstantLoads: " << modified << "\n";
     modified |= ConstantHoist(mfunc, ctx);
+    std::cerr << "ConstantHoist: " << modified << "\n";
     modified |= EliminateRedundantInst(mfunc, ctx);
+    std::cerr << "EliminateRedundantInst: " << modified << "\n";
     modified |= DeadInstElimination(mfunc, ctx);
-    // modified |= EliminateInvisibleInsts(mfunc, ctx);
-    // modified |= ctx.scheduleModel->peepholeOpt(mfunc, ctx);
+    std::cerr << "DeadInstElimination: " << modified << "\n";
+    modified |= EliminateInvisibleInsts(mfunc, ctx);
+    std::cerr << "EliminateInvisibleInsts: " << modified << "\n";
+    modified |= ctx.scheduleModel->peepholeOpt(mfunc, ctx);
+    std::cerr << "scheduleModel->peepholeOpt: " << modified << "\n";
     return modified;
 }
 }

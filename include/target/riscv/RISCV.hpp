@@ -122,6 +122,20 @@ constexpr bool isOperandNonZeroImm32(const MIROperand& operand) {
   return isOperandImm32(operand) && operand.imm() != 0;
 }
 
+constexpr bool isOperandUImm5(const MIROperand& operand) {
+    return operand.isImm() && isUnsignedImm<5>(operand.imm());
+}
+
+constexpr bool isOperandUImm6(const MIROperand& operand) {
+    return operand.isImm() && isUnsignedImm<6>(operand.imm());
+}
+
+constexpr bool isOperandUImm20(const MIROperand& operand) {
+    if(operand.isReloc() && operand.type() == OperandType::HighBits)
+        return true;
+    return operand.isImm() && isUnsignedImm<20>(operand.imm());
+}
+
 static auto scratch = MIROperand::asISAReg(RISCV::X5, OperandType::Int64);
 
 static void legalizeAddrBaseOffsetPostRA(MIRInstList& instructions,

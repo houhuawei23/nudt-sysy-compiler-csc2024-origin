@@ -201,8 +201,7 @@ static uint32_t estimateDivRemLatency(const MIROperand& logDividend,
   const auto mayHaveNagativeResult = !signRes;
   const auto sdivLatency =
     2U +
-    static_cast<uint32_t>(
-      std::max(4, static_cast<int32_t>(logDividend.imm() - logDivisor.imm()))) +
+    static_cast<uint32_t>(std::max(4, static_cast<int32_t>(logDividend.imm() - logDivisor.imm()))) +
     (mayHaveNegativeInput ? 1 : 0) + (mayHaveNagativeResult ? 1 : 0);
   return sdivLatency;
 }
@@ -312,8 +311,7 @@ public:
   bool schedule(ScheduleState& state,
                 const MIRInst& inst,
                 const InstInfo& instInfo) const override {
-    if (isOperandGR(inst.operand(0)))
-      return mLoad.schedule(state, inst, instInfo);
+    if (isOperandGR(inst.operand(0))) return mLoad.schedule(state, inst, instInfo);
     return mFPLoad.schedule(state, inst, instInfo);
   }
 };

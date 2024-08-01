@@ -10,7 +10,7 @@ from utils import isZero, safeDivide
 
 from datetime import datetime
 
-
+import os
 class ResultType(Enum):
     PASSED = 0
     RUN_COMPILER_FAILED = 1
@@ -145,14 +145,14 @@ class TestResult:
             print(f"{filename}: {time:.4f}s")
 
     def save_board_result(self, filename: str):
-        with open("perf.csv", "a") as f:
+        ds = datetime.now().strftime("%Y_%m_%d_%H:%M")
+        with open(os.path.join("./record", f"{ds}.csv"), "w") as f:
             for src, time_used in self.board_run_time.items():
                 line = f"{src},{time_used: 6f},\n"
                 f.write(line)
                 # print(f"{filename}: {time_used:.4f}s")
         
-        with open(filename, "w") as f:
+        with open(os.path.join("./record", filename), "w") as f:
             for src, time_used in self.board_run_time.items():
                 markdown_line = f"| {src} | {time_used:.4f}s |\n"
                 f.write(markdown_line)
-                

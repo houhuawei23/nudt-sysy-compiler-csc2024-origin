@@ -6,6 +6,7 @@
 #include "autogen/riscv/ISelInfoDecl.hpp"
 #include "support/StaticReflection.hpp"
 #include "support/arena.hpp"
+#include "support/Bits.hpp"
 
 #include <cstring>
 namespace mir::RISCV {
@@ -218,7 +219,7 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
         imm2reg(src1);
         /* make sure src1 is not imm */
       }
-      largeImm2reg(src2); // if large then to reg
+      largeImm2reg(src2);  // if large then to reg
       break;
     }
     case InstSub: { /* InstSub dst, src1, src2 */
@@ -254,7 +255,37 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
       break;
     }
     case InstMul:
-    case InstSDiv:
+    case InstSDiv: {
+      {
+        auto selectCode = [code = inst->opcode()] {
+          switch (code) {
+            case InstMul:
+              return InstShl;
+            case InstSDiv:
+              return InstAShr;
+            default:
+              break;
+          }
+        }();
+        auto& src1 = inst->operand(1);
+        auto& src2 = inst->operand(2);
+        imm2reg(src1);
+        if (src2.isImm() and isOperandUImm6(src2) and utils::isPowerOf2(src2.imm())) {
+          /** InstMul dst, src1, imm[2^k]
+           * ->
+           * InstShl dst, src1, log2(imm)
+           */
+          auto shamt = utils::log2(src2.imm());
+          inst->set_opcode(selectCode);
+          inst->set_operand(2, MIROperand::asImm(shamt, OperandType::Int32));
+          modified = true;
+        } else {
+          imm2reg(src2);
+        }
+
+        break;
+      }
+    }
     case InstSRem:
     case InstUDiv:
     case InstURem: {
@@ -279,8 +310,7 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
          */
         auto newDst = getVRegAs(ctx, inst->operand(0));
 
-        ctx.insertMIRInst(InstXor,
-                          {newDst, inst->operand(1), inst->operand(2)});
+        ctx.insertMIRInst(InstXor, {newDst, inst->operand(1), inst->operand(2)});
 
         inst->set_operand(1, newDst); /* icmp */
         inst->set_operand(2, getZero(inst->operand(2)));
@@ -308,11 +338,9 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
 
         auto dst = inst->operand(0);
         inst->set_operand(0, newDst);
-        inst->set_operand(3, MIROperand::asImm(CompareOp::FCmpOrderedEqual,
-                                               OperandType::Special));
+        inst->set_operand(3, MIROperand::asImm(CompareOp::FCmpOrderedEqual, OperandType::Special));
 
-        ctx.insertMIRInst(++ctx.insertPoint(), InstXor,
-                          {dst, newDst, getOne(newDst)});
+        ctx.insertMIRInst(++ctx.insertPoint(), InstXor, {dst, newDst, getOne(newDst)});
         modified = true;
         break;
       }
@@ -340,7 +368,6 @@ bool RISCVISelInfo::match_select(MIRInst* inst, ISelContext& ctx) const {
 static MIROperand getAlign(int64_t immVal) {
   return MIROperand::asImm(immVal, OperandType::Special);
 }
-
 
 /**
  * sw rs2, offset(rs1)
@@ -430,11 +457,10 @@ void RISCVISelInfo::legalizeInstWithStackOperand(const InstLegalizeContext& ctx,
       if (debugLISO) std::cout << "sw rs2, offset(rs1)" << std::endl;
       inst->set_opcode(isOperandGR(inst->operand(1)) ? SD : FSW);
       auto oldSrc = inst->operand(1);
-      inst->set_operand(0, oldSrc); /* src2 := src */
-      inst->set_operand(1, offset); /* offset */
-      inst->set_operand(2, base);   /* base = sp */
-      inst->set_operand(
-        3, getAlign(isOperandGR(inst->operand(0)) ? 8 : 4)); /* align */
+      inst->set_operand(0, oldSrc);                                          /* src2 := src */
+      inst->set_operand(1, offset);                                          /* offset */
+      inst->set_operand(2, base);                                            /* base = sp */
+      inst->set_operand(3, getAlign(isOperandGR(inst->operand(0)) ? 8 : 4)); /* align */
 
       break;
     }
@@ -496,8 +522,7 @@ void RISCVISelInfo::legalizeInstWithStackOperand(const InstLegalizeContext& ctx,
       break;
     }
     default:
-      std::cerr << "Unsupported instruction for legalizeInstWithStackOperand"
-                << std::endl;
+      std::cerr << "Unsupported instruction for legalizeInstWithStackOperand" << std::endl;
   }
 
   // lw rd, offset(rs1) or sw rs2, offset(rs1)
@@ -518,8 +543,7 @@ void RISCVISelInfo::postLegalizeInst(const InstLegalizeContext& ctx) const {
       } else if (isOperandFPR(dst) && isOperandFPR(src)) {
         inst->set_opcode(FMV_S);
       } else {
-        std::cerr << "Unsupported InstCopyToReg for postLegalizeInst"
-                  << std::endl;
+        std::cerr << "Unsupported InstCopyToReg for postLegalizeInst" << std::endl;
         assert(false);
       }
       break;
@@ -539,8 +563,7 @@ void RISCVISelInfo::postLegalizeInst(const InstLegalizeContext& ctx) const {
           inst->set_opcode(LoadImm32);
           return;
         }
-        std::cerr << "Unsupported InstLoadImm for postLegalizeInst"
-                  << std::endl;
+        std::cerr << "Unsupported InstLoadImm for postLegalizeInst" << std::endl;
         assert(false);
       }
     }
@@ -549,9 +572,7 @@ void RISCVISelInfo::postLegalizeInst(const InstLegalizeContext& ctx) const {
   }
 }
 
-MIROperand RISCVISelInfo::materializeFPConstant(
-  float fpVal,
-  LoweringContext& loweringCtx) const {
+MIROperand RISCVISelInfo::materializeFPConstant(float fpVal, LoweringContext& loweringCtx) const {
   const auto val = fpVal;
   uint32_t rep;
   memcpy(&rep, &val, sizeof(float));
@@ -559,8 +580,7 @@ MIROperand RISCVISelInfo::materializeFPConstant(
     // fmv.w.x
     const auto dst = loweringCtx.newVReg(OperandType::Float32);
 
-    loweringCtx.emitInstBeta(
-      FMV_W_X, {dst, MIROperand::asISAReg(RISCV::X0, OperandType::Int32)});
+    loweringCtx.emitInstBeta(FMV_W_X, {dst, MIROperand::asISAReg(RISCV::X0, OperandType::Int32)});
     return dst;
   }
   if ((rep & 0xfff) == 0) {
@@ -569,8 +589,7 @@ MIROperand RISCVISelInfo::materializeFPConstant(
     const auto gpr = loweringCtx.newVReg(OperandType::Int32);
     const auto fpr = loweringCtx.newVReg(OperandType::Float32);
 
-    loweringCtx.emitInstBeta(
-      LUI, {gpr, MIROperand::asImm(high, OperandType::Int32)});
+    loweringCtx.emitInstBeta(LUI, {gpr, MIROperand::asImm(high, OperandType::Int32)});
 
     loweringCtx.emitInstBeta(FMV_W_X, {fpr, gpr});
     return fpr;

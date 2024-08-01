@@ -12,6 +12,7 @@
 #include "target/riscv/RISCVTarget.hpp"
 
 #include "support/FileSystem.hpp"
+#include "support/Profiler.hpp"
 
 namespace fs = std::filesystem;
 
@@ -115,10 +116,15 @@ int main(int argc, char* argv[]) {
       target.emit_assembly(fout, *mir_module);
     }
     {
-      ofstream fout("./.debug/" + utils::preName(config.infile) + ".s");
+      auto filename = utils::preName(config.infile) + ".s";
+      auto path= config.debugDir() / filename;
+      ofstream fout(path);
       target.emit_assembly(fout, *mir_module);
     }
   }
 
+  if(config.logLevel >= sysy::LogLevel::DEBUG) {
+    utils::Profiler::get().printStatistics();
+  }
   return EXIT_SUCCESS;
 }

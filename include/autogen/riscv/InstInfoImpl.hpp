@@ -700,9 +700,7 @@ public:
     }
   }
 
-  uint32_t inst_flag() const override {
-    return InstFlagNone | InstFlagBranch | InstFlagTerminator;
-  }
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagBranch | InstFlagTerminator; }
 
   std::string_view name() const override { return "RISCV.BEQ"; }
 
@@ -737,9 +735,7 @@ public:
     }
   }
 
-  uint32_t inst_flag() const override {
-    return InstFlagNone | InstFlagBranch | InstFlagTerminator;
-  }
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagBranch | InstFlagTerminator; }
 
   std::string_view name() const override { return "RISCV.BNE"; }
 
@@ -774,9 +770,7 @@ public:
     }
   }
 
-  uint32_t inst_flag() const override {
-    return InstFlagNone | InstFlagBranch | InstFlagTerminator;
-  }
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagBranch | InstFlagTerminator; }
 
   std::string_view name() const override { return "RISCV.BLE"; }
 
@@ -811,9 +805,7 @@ public:
     }
   }
 
-  uint32_t inst_flag() const override {
-    return InstFlagNone | InstFlagBranch | InstFlagTerminator;
-  }
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagBranch | InstFlagTerminator; }
 
   std::string_view name() const override { return "RISCV.BGT"; }
 
@@ -848,9 +840,7 @@ public:
     }
   }
 
-  uint32_t inst_flag() const override {
-    return InstFlagNone | InstFlagBranch | InstFlagTerminator;
-  }
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagBranch | InstFlagTerminator; }
 
   std::string_view name() const override { return "RISCV.BLT"; }
 
@@ -885,9 +875,7 @@ public:
     }
   }
 
-  uint32_t inst_flag() const override {
-    return InstFlagNone | InstFlagBranch | InstFlagTerminator;
-  }
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagBranch | InstFlagTerminator; }
 
   std::string_view name() const override { return "RISCV.BGE"; }
 
@@ -922,9 +910,7 @@ public:
     }
   }
 
-  uint32_t inst_flag() const override {
-    return InstFlagNone | InstFlagBranch | InstFlagTerminator;
-  }
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagBranch | InstFlagTerminator; }
 
   std::string_view name() const override { return "RISCV.BLEU"; }
 
@@ -959,9 +945,7 @@ public:
     }
   }
 
-  uint32_t inst_flag() const override {
-    return InstFlagNone | InstFlagBranch | InstFlagTerminator;
-  }
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagBranch | InstFlagTerminator; }
 
   std::string_view name() const override { return "RISCV.BGTU"; }
 
@@ -996,9 +980,7 @@ public:
     }
   }
 
-  uint32_t inst_flag() const override {
-    return InstFlagNone | InstFlagBranch | InstFlagTerminator;
-  }
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagBranch | InstFlagTerminator; }
 
   std::string_view name() const override { return "RISCV.BLTU"; }
 
@@ -1033,9 +1015,7 @@ public:
     }
   }
 
-  uint32_t inst_flag() const override {
-    return InstFlagNone | InstFlagBranch | InstFlagTerminator;
-  }
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagBranch | InstFlagTerminator; }
 
   std::string_view name() const override { return "RISCV.BGEU"; }
 
@@ -2496,6 +2476,102 @@ public:
   }
 };
 
+class RISCVInstInfoSLLIW final : public InstInfo {
+public:
+  RISCVInstInfoSLLIW() = default;
+
+  uint32_t operand_num() const override { return 3; }
+
+  OperandFlag operand_flag(uint32_t idx) const override {
+    switch (idx) {
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagMetadata;
+      default:
+        return OperandFlagNone;
+        assert(false && "Invalid operand index");
+    }
+  }
+
+  uint32_t inst_flag() const override { return InstFlagNone; }
+
+  std::string_view name() const override { return "RISCV.SLLIW"; }
+
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
+    out << "slliw"
+        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+        << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
+        << mir::RISCV::OperandDumper{inst.operand(2)};
+  }
+};
+
+class RISCVInstInfoSRLIW final : public InstInfo {
+public:
+  RISCVInstInfoSRLIW() = default;
+
+  uint32_t operand_num() const override { return 3; }
+
+  OperandFlag operand_flag(uint32_t idx) const override {
+    switch (idx) {
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagMetadata;
+      default:
+        return OperandFlagNone;
+        assert(false && "Invalid operand index");
+    }
+  }
+
+  uint32_t inst_flag() const override { return InstFlagNone; }
+
+  std::string_view name() const override { return "RISCV.SRLIW"; }
+
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
+    out << "srliw"
+        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+        << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
+        << mir::RISCV::OperandDumper{inst.operand(2)};
+  }
+};
+
+class RISCVInstInfoSRAIW final : public InstInfo {
+public:
+  RISCVInstInfoSRAIW() = default;
+
+  uint32_t operand_num() const override { return 3; }
+
+  OperandFlag operand_flag(uint32_t idx) const override {
+    switch (idx) {
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagMetadata;
+      default:
+        return OperandFlagNone;
+        assert(false && "Invalid operand index");
+    }
+  }
+
+  uint32_t inst_flag() const override { return InstFlagNone; }
+
+  std::string_view name() const override { return "RISCV.SRAIW"; }
+
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
+    out << "sraiw"
+        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+        << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
+        << mir::RISCV::OperandDumper{inst.operand(2)};
+  }
+};
+
 class RISCVInstInfoLB final : public InstInfo {
 public:
   RISCVInstInfoLB() = default;
@@ -2859,8 +2935,7 @@ public:
   }
 
   uint32_t inst_flag() const override {
-    return InstFlagNone | InstFlagBranch | InstFlagTerminator |
-           InstFlagNoFallThrough;
+    return InstFlagNone | InstFlagBranch | InstFlagTerminator | InstFlagNoFallThrough;
   }
 
   std::string_view name() const override { return "RISCV.J"; }
@@ -2886,15 +2961,12 @@ public:
   }
 
   uint32_t inst_flag() const override {
-    return InstFlagNone | InstFlagReturn | InstFlagTerminator |
-           InstFlagNoFallThrough;
+    return InstFlagNone | InstFlagReturn | InstFlagTerminator | InstFlagNoFallThrough;
   }
 
   std::string_view name() const override { return "RISCV.RET"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "ret";
-  }
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override { out << "ret"; }
 };
 
 class RISCVInstInfoLUI final : public InstInfo {
@@ -2915,9 +2987,7 @@ public:
     }
   }
 
-  uint32_t inst_flag() const override {
-    return InstFlagNone | InstFlagLoadConstant;
-  }
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagLoadConstant; }
 
   std::string_view name() const override { return "RISCV.LUI"; }
 
@@ -3646,9 +3716,7 @@ public:
     }
   }
 
-  uint32_t inst_flag() const override {
-    return InstFlagNone | InstFlagLoadConstant;
-  }
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagLoadConstant; }
 
   std::string_view name() const override { return "RISCV.LoadImm12"; }
 
@@ -3677,9 +3745,7 @@ public:
     }
   }
 
-  uint32_t inst_flag() const override {
-    return InstFlagNone | InstFlagLoadConstant;
-  }
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagLoadConstant; }
 
   std::string_view name() const override { return "RISCV.LoadImm32"; }
 
@@ -3708,9 +3774,7 @@ public:
     }
   }
 
-  uint32_t inst_flag() const override {
-    return InstFlagNone | InstFlagLoadConstant;
-  }
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagLoadConstant; }
 
   std::string_view name() const override { return "RISCV.LoadImm64"; }
 
@@ -3828,6 +3892,9 @@ class RISCVInstInfo final : public TargetInstInfo {
   RISCVInstInfoSLLI _instinfoSLLI;
   RISCVInstInfoSRLI _instinfoSRLI;
   RISCVInstInfoSRAI _instinfoSRAI;
+  RISCVInstInfoSLLIW _instinfoSLLIW;
+  RISCVInstInfoSRLIW _instinfoSRLIW;
+  RISCVInstInfoSRAIW _instinfoSRAIW;
   RISCVInstInfoLB _instinfoLB;
   RISCVInstInfoLH _instinfoLH;
   RISCVInstInfoLW _instinfoLW;
@@ -4027,6 +4094,12 @@ public:
         return _instinfoSRLI;
       case RISCVInst::SRAI:
         return _instinfoSRAI;
+      case RISCVInst::SLLIW:
+        return _instinfoSLLIW;
+      case RISCVInst::SRLIW:
+        return _instinfoSRLIW;
+      case RISCVInst::SRAIW:
+        return _instinfoSRAIW;
       case RISCVInst::LB:
         return _instinfoLB;
       case RISCVInst::LH:
@@ -4111,9 +4184,7 @@ public:
         return TargetInstInfo::getInstInfo(opcode);
     }
   }
-  bool matchBranch(MIRInst* inst,
-                   MIRBlock*& target,
-                   double& prob) const override {
+  bool matchBranch(MIRInst* inst, MIRBlock*& target, double& prob) const override {
     auto& instInfo = getInstInfo(inst->opcode());
     if (requireFlag(instInfo.inst_flag(), InstFlagBranch)) {
       if (inst->opcode() < ISASpecificBegin) {
@@ -4165,8 +4236,7 @@ public:
           prob = 1.0;
           break;
         default:
-          std::cerr << "Error: unknown branch instruction: " << instInfo.name()
-                    << std::endl;
+          std::cerr << "Error: unknown branch instruction: " << instInfo.name() << std::endl;
       }
       return true;
     }
@@ -4177,8 +4247,7 @@ public:
     if (inst->opcode() < ISASpecificBegin) {
       return TargetInstInfo::redirectBranch(inst, target);
     }
-    assert(
-      requireFlag(getInstInfo(inst->opcode()).inst_flag(), InstFlagBranch));
+    assert(requireFlag(getInstInfo(inst->opcode()).inst_flag(), InstFlagBranch));
 
     switch (inst->opcode()) {
       case BEQ:
@@ -4215,8 +4284,8 @@ public:
         inst->set_operand(0, MIROperand::asReloc(target));
         break;
       default:
-        std::cerr << "Error: unknown branch instruction: "
-                  << getInstInfo(inst->opcode()).name() << std::endl;
+        std::cerr << "Error: unknown branch instruction: " << getInstInfo(inst->opcode()).name()
+                  << std::endl;
         assert(false);
     }
   }

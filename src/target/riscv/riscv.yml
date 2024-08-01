@@ -247,23 +247,41 @@ InstInfo: {
         SLTI: { mnem: "slti", template: Itype },
         SLTIU: { mnem: "sltiu", template: Itype },
         # RII-shift
-        SLLI:
+        SLLI: # Shift Left Logical Immediate
           {
             mnem: "slli",
             template: Itype,
             operands: { imm: { type: UIMM6, flag: Metadata } },
           },
-        SRLI:
+        SRLI: # Shift Right Logical Immediate
           {
             mnem: "srli",
             template: Itype,
             operands: { imm: { type: UIMM6, flag: Metadata } },
           },
-        SRAI:
+        SRAI: # Shift Right Arithmetic Immediate
           {
             mnem: "srai",
             template: Itype,
             operands: { imm: { type: UIMM6, flag: Metadata } },
+          },
+        SLLIW: # Shift Left Logical Immediate Word[32]
+          {
+            mnem: "slliw",
+            template: Itype,
+            operands: { imm: { type: UIMM5, flag: Metadata } },
+          },
+        SRLIW: # Shift Right Logical Immediate Word[32]
+          {
+            mnem: "srliw",
+            template: Itype,
+            operands: { imm: { type: UIMM5, flag: Metadata } },
+          },
+        SRAIW: # Shift Right Arithmetic Immediate Word[32]
+          {
+            mnem: "sraiw",
+            template: Itype,
+            operands: { imm: { type: UIMM5, flag: Metadata } },
           },
         # Load
         LB: { mnem: "lb", template: Ltype, flag: [Load] },
@@ -768,6 +786,19 @@ InstSelInfo: {
         },
         # InstShl
         {
+          # InstShl $dst[I64], $src1, $src2[imm6] -> SLLI $dst, $src1, $src2
+          pattern:
+            {
+              name: InstShl,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandI64($dst) && isOperandIReg($src1) && isOperandUImm6($src2),
+            },
+          replace: { name: SLLI, rd: $dst, rs1: $src1, imm: $src2 },
+        },
+        {
+          # InstShl $dst[I64], $src1, $src2 -> SLL $dst, $src1, $src2
           pattern:
             {
               name: InstShl,
@@ -779,6 +810,19 @@ InstSelInfo: {
           replace: { name: SLL, rd: $dst, rs1: $src1, rs2: $src2 },
         },
         {
+          # InstShl $dst[I32], $src1, $src2[imm6] -> SLLIW $dst, $src1, $src2
+          pattern:
+            {
+              name: InstShl,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandI32($dst) && isOperandIReg($src1) && isOperandUImm6($src2),
+            },
+          replace: { name: SLLIW, rd: $dst, rs1: $src1, imm: $src2 },
+        },
+        {
+          # InstShl $dst[I32], $src1, $src2 -> SLLW $dst, $src1, $src2
           pattern:
             {
               name: InstShl,
@@ -789,6 +833,7 @@ InstSelInfo: {
             },
           replace: { name: SLLW, rd: $dst, rs1: $src1, rs2: $src2 },
         },
+
         # InstLShr
         {
           pattern:
@@ -814,6 +859,19 @@ InstSelInfo: {
         },
         # InstAShr
         {
+          # InstAShr $dst[I64], $src1, $src2[imm6] -> SRAI $dst, $src1, $src2
+          pattern:
+            {
+              name: InstAShr,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandI64($dst) && isOperandIReg($src1) && isOperandUImm6($src2),
+            },
+          replace: { name: SRAI, rd: $dst, rs1: $src1, imm: $src2 },
+        },
+        {
+          # InstAShr $dst[I64], $src1, $src2 -> SRA $dst, $src1, $src2
           pattern:
             {
               name: InstAShr,
@@ -825,6 +883,19 @@ InstSelInfo: {
           replace: { name: SRA, rd: $dst, rs1: $src1, rs2: $src2 },
         },
         {
+          # InstAShr $dst[I32], $src1, $src2[imm6] -> SRAIW $dst, $src1, $src2
+          pattern:
+            {
+              name: InstAShr,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: isOperandI32($dst) && isOperandIReg($src1) && isOperandUImm6($src2),
+            },
+          replace: { name: SRAIW, rd: $dst, rs1: $src1, imm: $src2 },
+        },
+        {
+          # InstAShr $dst[I32], $src1, $src2 -> SRA $dst, $src1, $src2
           pattern:
             {
               name: InstAShr,
@@ -1198,16 +1269,16 @@ ScheduleModel:
                 SUB,
                 SRA,
                 ADDIW,
-                # SLLIW,
-                # SRLIW,
-                # SRAIW,
+                SLLIW,
+                SRLIW,
+                SRAIW,
                 ADDW,
                 SUBW,
-                # SLLW,
-                # SRLW,
-                # SRAW,
-                # ADD_UW,
-                # SLLI_UW,
+                SLLW,
+                SRLW,
+                SRAW,
+                ADD_UW,
+                SLLI_UW,
                 # ANDN,
                 # ORN,
                 # XNOR,
@@ -1221,8 +1292,7 @@ ScheduleModel:
                 # ZEXT_H,
                 # ZEXT_W,
                 LoadImm12,
-                # MoveGPR,
-                MV,
+                MV, # MoveGPR
                 InstLoadStackObjectAddr,
                 InstCopy,
                 InstCopyFromReg,

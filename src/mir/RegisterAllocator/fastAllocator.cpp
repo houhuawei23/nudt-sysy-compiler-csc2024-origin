@@ -1,4 +1,3 @@
-#pragma once
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
 #include "mir/LiveInterval.hpp"
@@ -9,7 +8,7 @@
 #include <iostream>
 
 namespace mir {
-static void fastAllocator(MIRFunction& mfunc, CodeGenContext& ctx, IPRAUsageCache& infoIPRA) {
+void fastAllocator(MIRFunction& mfunc, CodeGenContext& ctx, IPRAUsageCache& infoIPRA) {
     // 计算变量的活跃区间
     auto liveInterval = calcLiveIntervals(mfunc, ctx);
 

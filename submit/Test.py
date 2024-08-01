@@ -13,16 +13,20 @@ from utils import (
     removePathSuffix,
     compare_output_with_standard_file,
     compare_and_parse_perf,
+    checkMachine,
 )
 from TestResult import TestResult, ResultType, colorMap
 
 import colorama
 from colorama import Fore, Style
 
+
 # Initializes colorama and autoresets color
 colorama.init(autoreset=True)
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
+from typing import List
 
 stack_size = 128 << 20  # 128M
 
@@ -390,7 +394,9 @@ class Test:
             raise Exception("Compiler or gcc failed")
         return compiler_res and gcc_res
 
-    def __ourcompiler_compile_only(self, src: str, target: str = "riscv"):
+    def __ourcompiler_compile_only(
+        self, src: str, target: str = "riscv", output_asm=None
+    ):
         """
         use our compiler to generate assemly code only.
         return True if successfuly generated, False otherwise.
@@ -401,7 +407,8 @@ class Test:
 
         filename = os.path.basename(src)
         raw_name = os.path.splitext(filename)[0]  # abc.sy -> abc
-        output_asm = os.path.join(self.output_asm_path, raw_name + ".s")
+        if output_asm is None:
+            output_asm = os.path.join(self.output_asm_path, raw_name + ".s")
 
         try:
             run_compiler_process = run_compiler(
@@ -413,6 +420,7 @@ class Test:
                 log_level=self.log_level,
                 timeout=self.timeout,
             )
+            print(run_compiler_process.stderr)
         except subprocess.TimeoutExpired:
             print(Fore.RED + f"Test {src} run_compiler timeout")
             self.result.cases_result[ResultType.RUN_COMPILER_FAILED].append(
@@ -466,6 +474,7 @@ class Test:
             print(f"link successfull: {src}")
         else:
             print(f"link failed: {src}")
+            self.result.board_run_time[filename] = 0
             return False
 
         # run
@@ -479,8 +488,6 @@ class Test:
         self.result.board_run_time[filename] = time_used
 
     # def __gccrun
-
-
 
     def runSingleCase(self, test_kind: str, filename: str):
         """
@@ -528,6 +535,12 @@ class Test:
         dt_string = datetime.now().strftime("%Y_%m_%d_%H:%M")
         self.result.save_perf_result(f"./{self.year}_{test_kind}_{dt_string}.md")
 
+    def compileOnly(self, test_kind: str, filename: str, output: str):
+        print(Fore.RED + f"Compiling {self.year} {test_kind} {filename}...")
+        test_case_path = os.path.join(self.tests_path, self.year, test_kind, filename)
+        self.__ourcompiler_compile_only(test_case_path, self.target, output)
+        print(f"compile {filename} ok, save to {output}")
+
     def runCompileOnly(self, test_kind: str):
         """
         run all tests in test/year/test_kind with target and opt_level (compile only)
@@ -558,6 +571,10 @@ class Test:
                 f"not correctly platform ({platform.machine()}), need run on riscv64!"
             )
             return False
+        if not checkMachine("riscv64"):
+            print(f"not correctly machine, need run on riscv64!")
+            return False
+
         print(Fore.RED + f"Testing {self.year} {test_kind} on VisionFive...")
 
         year_kind_path = os.path.join(self.tests_path, self.year, test_kind)
@@ -580,3 +597,6 @@ class Test:
         """
         pass
 
+    def runOnVisionFive(self, test_kind: str, cases_list: List[str]):
+        print(Fore.RED + f"Testing {self.year} {test_kind} on VisionFive...")
+        year_kind_path = os.path.join(self.tests_path, self.year, test_kind)

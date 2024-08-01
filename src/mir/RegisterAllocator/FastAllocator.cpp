@@ -1,4 +1,3 @@
-#pragma once
 
 #include "mir/mir.hpp"
 #include "mir/target.hpp"
@@ -9,7 +8,7 @@
 #include <iostream>
 
 namespace mir {
-static void fastAllocatorBeta(MIRFunction& mfunc,
+void fastAllocatorBeta(MIRFunction& mfunc,
                               CodeGenContext& ctx,
                               IPRAUsageCache& infoIPRA) {
   auto liveInterval = calcLiveIntervals(mfunc, ctx);
@@ -378,4 +377,5 @@ static void fastAllocatorBeta(MIRFunction& mfunc,
 
   // mfunc.print(std::cerr, ctx);
 }
+
 }  // namespace mir

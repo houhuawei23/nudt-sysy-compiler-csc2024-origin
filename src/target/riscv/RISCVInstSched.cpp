@@ -24,12 +24,36 @@ MicroArchInfo& RISCVScheduleModel_sifive_u74::getMicroArchInfo() {
   };
   return info;
 }
-bool RISCVScheduleModel_sifive_u74::peepholeOpt(MIRFunction& func,
-                                                CodeGenContext& context) {
+
+// TODO: Implement the following peephole optimizations.
+
+static bool branch2jump(MIRFunction& func, const CodeGenContext& ctx) {
   return false;
 }
-bool RISCVScheduleModel_sifive_u74::isExpensiveInst(MIRInst* inst,
-                                                    CodeGenContext& context) {
+static bool removeDeadBranch(MIRFunction& func, const CodeGenContext& ctx) {
+  return false;
+}
+
+static bool largeImmMaterialize(MIRBlock& block) {
+  return false;
+}
+
+static bool foldStoreZero(MIRFunction& func, MIRBlock& block, const CodeGenContext& ctx) {
+  return false;
+}
+
+static bool simplifyOpWithZero(MIRFunction& func, const CodeGenContext&) {
+  return false;
+}
+
+static bool relaxWInst(MIRFunction& func, const CodeGenContext& ctx) {
+  return false;
+}
+
+bool RISCVScheduleModel_sifive_u74::peepholeOpt(MIRFunction& func, CodeGenContext& context) {
+  return false;
+}
+bool RISCVScheduleModel_sifive_u74::isExpensiveInst(MIRInst* inst, CodeGenContext& context) {
   return false;
 }
 

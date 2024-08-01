@@ -40,6 +40,8 @@ def compile_only():
     )
 
     test.set("riscv", "2024", our_compiler_timeout)
+    test.runCompileOnly("functional")
+
     test.runCompileOnly("performance")
 
 if __name__ == "__main__":

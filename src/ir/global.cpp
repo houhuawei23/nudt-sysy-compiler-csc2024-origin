@@ -39,7 +39,7 @@ void GlobalVariable::print_ArrayInit(std::ostream& os,
     is_zero = true;
     for (size_t i = 0; i < num; i++) {
       auto cinit = dyn_cast<ir::Constant>(init(*idx + i));
-      if (!cinit->is_zero()) {
+      if (!cinit->isZero()) {
         is_zero = false;
         break;
       }
@@ -66,7 +66,7 @@ void GlobalVariable::print_ArrayInit(std::ostream& os,
       is_zero = true;
       for (size_t j = 0; j < num2; j++) {
         auto cinit = dyn_cast<ir::Constant>(init(*idx + i * num2 + j));
-        if (!cinit->is_zero()) {
+        if (!cinit->isZero()) {
           is_zero = false;
           break;
         }
@@ -87,7 +87,7 @@ void GlobalVariable::print_ArrayInit(std::ostream& os,
     is_zero = true;
     for (size_t j = 0; j < num2; j++) {
       auto cinit = dyn_cast<ir::Constant>(init(*idx + (num1 - 1) * num2 + j));
-      if (!cinit->is_zero()) {
+      if (!cinit->isZero()) {
         is_zero = false;
         break;
       }

@@ -48,4 +48,6 @@ void ReportUnreachable(const CodeLocation& location);
 
 void simplifyCFG(MIRFunction& func, CodeGenContext& ctx);
 
+bool expandMulWithConstant(MIRFunction& func, CodeGenContext& codeGenCtx, uint32_t maxCost);
+
 }  // namespace mir
