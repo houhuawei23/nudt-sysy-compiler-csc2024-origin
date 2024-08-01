@@ -9,10 +9,7 @@ namespace ir {
 class Constant : public User {
   static std::map<std::string, Constant*> cache;
 
- private:
-  bool _is_zero = false;
-
- protected:
+protected:
   union {
     bool mInt1;
     int64_t mInt32;
@@ -21,35 +18,25 @@ class Constant : public User {
     double mDouble;
   };
 
- public:
-  Constant(bool val, const_str_ref name)
-      : User(Type::TypeBool(), vCONSTANT, name), mInt1(val) {}
+public:
+  Constant(bool val, const_str_ref name) : User(Type::TypeBool(), vCONSTANT, name), mInt1(val) {}
 
   Constant(int32_t i32, const_str_ref name)
-      : User(Type::TypeInt32(), vCONSTANT, name),
-        mInt32(i32),
-        _is_zero(i32 == 0) {}
+    : User(Type::TypeInt32(), vCONSTANT, name), mInt32(i32) {}
 
   Constant(int64_t i64, const_str_ref name)
-      : User(Type::TypeInt32(), vCONSTANT, name),
-        mInt32(i64),
-        _is_zero(i64 == 0) {}
+    : User(Type::TypeInt32(), vCONSTANT, name), mInt32(i64) {}
 
   Constant(float f32, const_str_ref name)
-      : User(Type::TypeFloat32(), vCONSTANT, name),
-        mFloat32(f32),
-        _is_zero(f32 == 0.0) {}
+    : User(Type::TypeFloat32(), vCONSTANT, name), mFloat32(f32) {}
 
   Constant(double f64, const_str_ref name)
-      : User(Type::TypeDouble(), vCONSTANT, name),
-        mDouble(f64),
-        _is_zero(f64 == 0.0) {}
+    : User(Type::TypeDouble(), vCONSTANT, name), mDouble(f64) {}
 
   Constant() : User(Type::void_type(), vCONSTANT, "VOID") {}
-  Constant(const_str_ref name)
-      : User(Type::TypeUndefine(), vCONSTANT, "undef") {}
+  Constant(const_str_ref name) : User(Type::TypeUndefine(), vCONSTANT, "undef") {}
 
- public:
+public:
   //* add constant to cache
   template <typename T>
   static Constant* cache_add(T val, const std::string& name) {
@@ -63,11 +50,10 @@ class Constant : public User {
     return c;
   }
 
- public:  // generate function
+public:  // generate function
   template <typename T>
   static Constant* gen_i1(T v) {
-    assert(std::is_integral_v<T> ||
-           std::is_floating_point_v<T> && "not int or float!");
+    assert(std::is_integral_v<T> || std::is_floating_point_v<T> && "not int or float!");
 
     bool num = (bool)v;
     std::string name;
@@ -81,8 +67,7 @@ class Constant : public User {
 
   template <typename T>
   static Constant* gen_i32(T v) {
-    assert(std::is_integral_v<T> ||
-           std::is_floating_point_v<T> && "not int or float!");
+    assert(std::is_integral_v<T> || std::is_floating_point_v<T> && "not int or float!");
 
     int64_t num = (int64_t)v;
     std::string name = std::to_string(num);
@@ -90,8 +75,7 @@ class Constant : public User {
   }
   template <typename T>
   static Constant* gen_i32(T v, std::string name) {
-    assert(std::is_integral_v<T> ||
-           std::is_floating_point_v<T> && "not int or float!");
+    assert(std::is_integral_v<T> || std::is_floating_point_v<T> && "not int or float!");
 
     int64_t num = (int64_t)v;
     return cache_add(num, name);
@@ -99,8 +83,7 @@ class Constant : public User {
 
   template <typename T>
   static Constant* gen_f32(T val) {
-    assert(std::is_integral_v<T> ||
-           std::is_floating_point_v<T> && "not int or float!");
+    assert(std::is_integral_v<T> || std::is_floating_point_v<T> && "not int or float!");
 
     auto f32 = (float)val;
     auto f64 = (double)val;
@@ -109,8 +92,7 @@ class Constant : public User {
   }
   template <typename T>
   static Constant* gen_f32(T val, std::string name) {
-    assert(std::is_integral_v<T> ||
-           std::is_floating_point_v<T> && "not int or float!");
+    assert(std::is_integral_v<T> || std::is_floating_point_v<T> && "not int or float!");
 
     auto f32 = (float)val;
     auto f64 = (double)val;
@@ -118,8 +100,7 @@ class Constant : public User {
   }
   template <typename T>
   static Constant* gen_f64(T val) {
-    assert(std::is_integral_v<T> ||
-           std::is_floating_point_v<T> && "not int or float!");
+    assert(std::is_integral_v<T> || std::is_floating_point_v<T> && "not int or float!");
 
     auto f64 = (double)val;
     auto name = getMC(f64);
@@ -127,8 +108,7 @@ class Constant : public User {
   }
   template <typename T>
   static Constant* gen_f64(T val, std::string name) {
-    assert(std::is_integral_v<T> ||
-           std::is_floating_point_v<T> && "not int or float!");
+    assert(std::is_integral_v<T> || std::is_floating_point_v<T> && "not int or float!");
 
     auto f64 = (double)val;
     return cache_add(f64, name);
@@ -157,7 +137,7 @@ class Constant : public User {
     return c;
   }
 
- public:
+public:
   std::string comment() const override { return name(); }
   // get
   bool i1() const {
@@ -195,21 +175,35 @@ class Constant : public User {
       return mDouble;
     }
   }
+  bool isZero() const {
+    if (isInt32()) {
+      return mInt32 == 0;
+    } else if (isFloat32()) {
+      return mFloat32 == 0.0;
+    } else if (isDouble()) {
+      return mDouble == 0.0;
+    }
+    return false;
+  }
+  bool isOne() const {
+    if (isInt32()) {
+      return mInt32 == 1;
+    } else if (isFloat32()) {
+      return mFloat32 == 1.0;
+    } else if (isDouble()) {
+      return mDouble == 1.0;
+    }
+    return false;
+  }
 
-  //    public:  // check
-  bool is_zero() const { return _is_zero; }
-
- public:
+public:
   static bool classof(const Value* v) { return v->valueId() == vCONSTANT; }
   void print(std::ostream& os) const override;
 
   bool isequal(Constant* c) {
-    if (c->valueId() != valueId())
-      return false;
-    if (c->i32())
-      return c->i32() == i32();
-    if (c->f32())
-      return c->f32() == f32();
+    if (c->valueId() != valueId()) return false;
+    if (c->i32()) return c->i32() == i32();
+    if (c->f32()) return c->f32() == f32();
     return false;
   }
 };

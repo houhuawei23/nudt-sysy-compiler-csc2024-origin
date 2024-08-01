@@ -23,8 +23,7 @@ public:
   }
 
   uint32_t inst_flag() const override {
-    return InstFlagNone | InstFlagTerminator | InstFlagBranch |
-           InstFlagNoFallThrough;
+    return InstFlagNone | InstFlagTerminator | InstFlagBranch | InstFlagNoFallThrough;
   }
 
   std::string_view name() const override { return "GENERIC.Jump"; }
@@ -55,9 +54,7 @@ public:
     }
   }
 
-  uint32_t inst_flag() const override {
-    return InstFlagNone | InstFlagTerminator | InstFlagBranch;
-  }
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagTerminator | InstFlagBranch; }
 
   std::string_view name() const override { return "GENERIC.Branch"; }
 
@@ -178,9 +175,7 @@ public:
     }
   }
 
-  uint32_t inst_flag() const override {
-    return InstFlagNone | InstFlagCommutative;
-  }
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagCommutative; }
 
   std::string_view name() const override { return "GENERIC.Add"; }
 
@@ -244,9 +239,7 @@ public:
     }
   }
 
-  uint32_t inst_flag() const override {
-    return InstFlagNone | InstFlagCommutative;
-  }
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagCommutative; }
 
   std::string_view name() const override { return "GENERIC.Mul"; }
 
@@ -342,9 +335,7 @@ public:
     }
   }
 
-  uint32_t inst_flag() const override {
-    return InstFlagNone | InstFlagCommutative;
-  }
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagCommutative; }
 
   std::string_view name() const override { return "GENERIC.And"; }
 
@@ -376,9 +367,7 @@ public:
     }
   }
 
-  uint32_t inst_flag() const override {
-    return InstFlagNone | InstFlagCommutative;
-  }
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagCommutative; }
 
   std::string_view name() const override { return "GENERIC.Or"; }
 
@@ -410,9 +399,7 @@ public:
     }
   }
 
-  uint32_t inst_flag() const override {
-    return InstFlagNone | InstFlagCommutative;
-  }
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagCommutative; }
 
   std::string_view name() const override { return "GENERIC.Xor"; }
 
@@ -604,9 +591,7 @@ public:
     }
   }
 
-  uint32_t inst_flag() const override {
-    return InstFlagNone | InstFlagCommutative;
-  }
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagCommutative; }
 
   std::string_view name() const override { return "GENERIC.SMin"; }
 
@@ -638,9 +623,7 @@ public:
     }
   }
 
-  uint32_t inst_flag() const override {
-    return InstFlagNone | InstFlagCommutative;
-  }
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagCommutative; }
 
   std::string_view name() const override { return "GENERIC.SMax"; }
 
@@ -730,9 +713,7 @@ public:
     }
   }
 
-  uint32_t inst_flag() const override {
-    return InstFlagNone | InstFlagCommutative;
-  }
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagCommutative; }
 
   std::string_view name() const override { return "GENERIC.FAdd"; }
 
@@ -796,9 +777,7 @@ public:
     }
   }
 
-  uint32_t inst_flag() const override {
-    return InstFlagNone | InstFlagCommutative;
-  }
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagCommutative; }
 
   std::string_view name() const override { return "GENERIC.FMul"; }
 
@@ -1317,9 +1296,7 @@ public:
     }
   }
 
-  uint32_t inst_flag() const override {
-    return InstFlagNone | InstFlagLoadConstant;
-  }
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagLoadConstant; }
 
   std::string_view name() const override { return "GENERIC.LoadGlobalAddress"; }
 
@@ -1377,13 +1354,9 @@ public:
     }
   }
 
-  uint32_t inst_flag() const override {
-    return InstFlagNone | InstFlagLoadConstant;
-  }
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagLoadConstant; }
 
-  std::string_view name() const override {
-    return "GENERIC.LoadStackObjectAddr";
-  }
+  std::string_view name() const override { return "GENERIC.LoadStackObjectAddr"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "LoadStackObjectAddr"
@@ -1439,9 +1412,7 @@ public:
     }
   }
 
-  uint32_t inst_flag() const override {
-    return InstFlagNone | InstFlagRegCopy | InstFlagRegDef;
-  }
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagRegCopy | InstFlagRegDef; }
 
   std::string_view name() const override { return "GENERIC.CopyToReg"; }
 
@@ -1557,9 +1528,7 @@ public:
 
   std::string_view name() const override { return "GENERIC.Return"; }
 
-  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "Return";
-  }
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override { out << "Return"; }
 };
 
 class GENERICInstInfo final : public TargetInstInfo {
@@ -1722,9 +1691,7 @@ public:
         return TargetInstInfo::getInstInfo(opcode);
     }
   }
-  bool matchBranch(MIRInst* inst,
-                   MIRBlock*& target,
-                   double& prob) const override {
+  bool matchBranch(MIRInst* inst, MIRBlock*& target, double& prob) const override {
     auto& instInfo = getInstInfo(inst->opcode());
     if (requireFlag(instInfo.inst_flag(), InstFlagBranch)) {
       if (inst->opcode() < ISASpecificBegin) {
@@ -1740,8 +1707,7 @@ public:
           prob = inst->operand(2).prob();
           break;
         default:
-          std::cerr << "Error: unknown branch instruction: " << instInfo.name()
-                    << std::endl;
+          std::cerr << "Error: unknown branch instruction: " << instInfo.name() << std::endl;
       }
       return true;
     }
@@ -1752,8 +1718,7 @@ public:
     if (inst->opcode() < ISASpecificBegin) {
       return TargetInstInfo::redirectBranch(inst, target);
     }
-    assert(
-      requireFlag(getInstInfo(inst->opcode()).inst_flag(), InstFlagBranch));
+    assert(requireFlag(getInstInfo(inst->opcode()).inst_flag(), InstFlagBranch));
 
     switch (inst->opcode()) {
       case Jump:
@@ -1763,8 +1728,8 @@ public:
         inst->set_operand(1, MIROperand::asReloc(target));
         break;
       default:
-        std::cerr << "Error: unknown branch instruction: "
-                  << getInstInfo(inst->opcode()).name() << std::endl;
+        std::cerr << "Error: unknown branch instruction: " << getInstInfo(inst->opcode()).name()
+                  << std::endl;
         assert(false);
     }
   }

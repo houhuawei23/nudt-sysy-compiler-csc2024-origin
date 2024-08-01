@@ -184,9 +184,9 @@ void Config::parseSubmitArgs(int argc, char* argv[]) {
   outfile = argv[3];
   infile = argv[4];
   
-  if (argc == 6) {
-    optLevel = OptLevel::O1;
-  }
+  // if (argc == 6) {
+  optLevel = OptLevel::O1;
+  // }
 
   if (argc == 7) {
     if (argv[6] == "-L2"sv) {

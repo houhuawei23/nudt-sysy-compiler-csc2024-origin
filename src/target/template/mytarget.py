@@ -43,7 +43,11 @@ class Target:
         self.generic_insts_dict, self.generic_insts_list = get_mirgen_insts(
             self.gen_data_yml
         )
-
+        if self.target_name.lower() == "generic":
+            self.isel_item_list = []
+            self.isel_dict = {}
+            self.models = {}
+            return 
         # 2.2 Load ISA Inst Selection Info and Parse ISel Items
         self.isel_item_list = load_isel_info(isa_data_yml)
 

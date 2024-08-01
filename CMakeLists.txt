@@ -80,7 +80,7 @@ set(SUBMIT_DIR ${CMAKE_CURRENT_BINARY_DIR}/submit)
 add_custom_target(submit
   COMMAND ${CMAKE_COMMAND} -E rm -rf ${SUBMIT_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${SUBMIT_DIR}
-  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/submit/Makefile ${SUBMIT_DIR}/Makefile
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/submit/CMakeLists.txt ${SUBMIT_DIR}/CMakeLists.txt
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src ${SUBMIT_DIR}/src
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/include ${SUBMIT_DIR}/include
   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/src/antlr4/*.cpp ${SUBMIT_DIR}/src/
@@ -111,6 +111,6 @@ add_custom_target(submit
   # COMMAND ${Python3_EXECUTABLE} ${SUBMIT_DIR}/runtest.py ${SUBMIT_DIR}/compiler ${CMAKE_SOURCE_DIR}/test ${CMAKE_SOURCE_DIR}/.tmp/asm ${CMAKE_SOURCE_DIR}/.tmp/exe ${CMAKE_SOURCE_DIR}/.tmp/c
 
   # compile all performance cases
-  COMMAND ${Python3_EXECUTABLE} ${SUBMIT_DIR}/run.py ${CMAKE_SOURCE_DIR}/compiler ${CMAKE_SOURCE_DIR}/test ${SUBMIT_DIR}/.output
+  # COMMAND ${Python3_EXECUTABLE} ${SUBMIT_DIR}/run.py ${CMAKE_SOURCE_DIR}/compiler ${CMAKE_SOURCE_DIR}/test ${SUBMIT_DIR}/.output
   DEPENDS compiler
 )

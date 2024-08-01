@@ -72,14 +72,13 @@ using str_fun_map = std::map<std::string, Function*>;
  *
  */
 class Use {
- protected:
+protected:
   size_t mIndex;
   User* mUser;
   Value* mValue;
 
- public:
-  Use(size_t index, User* user, Value* value)
-      : mIndex(index), mUser(user), mValue(value){};
+public:
+  Use(size_t index, User* user, Value* value) : mIndex(index), mUser(user), mValue(value) {};
 
   // get
   size_t index() const;
@@ -198,7 +197,7 @@ enum ValueId {
   vInvalid,
 };
 class Value {
- protected:
+protected:
   Type* mType;       // type of the value
   ValueId mValueId;  // subclass id of Value
   std::string mName;
@@ -207,11 +206,11 @@ class Value {
 
   std::string mComment;
 
- public:
+public:
   static constexpr auto arenaSource = utils::Arena::Source::IR;
 
   Value(Type* type, ValueId scid = vValue, const_str_ref name = "")
-      : mType(type), mValueId(scid), mName(name), mUses() {}
+    : mType(type), mValueId(scid), mName(name), mUses() {}
   virtual ~Value() = default;
   // Value is all base, return true
   static bool classof(const Value* v) { return true; }
@@ -234,7 +233,7 @@ class Value {
 
   void addComment(const_str_ref comment);
 
- public:  // check
+public:  // check
   bool isBool() const { return mType->isBool(); }
   bool isInt32() const { return mType->isInt32(); }
   bool isFloat32() const { return mType->isFloat32(); }
@@ -244,7 +243,7 @@ class Value {
   bool isPointer() const { return mType->isPointer(); }
   bool isVoid() const { return mType->isVoid(); }
 
- public:
+public:
   ValueId valueId() const { return mValueId; }
   virtual void print(std::ostream& os) const = 0;
 
@@ -261,6 +260,11 @@ class Value {
     return dynamic_cast<const T*>(this);
   }
 
+  // template <typename T>
+  // const T* const dynCast() {
+  //   static_assert(std::is_base_of_v<Value, T>);
+  //   return dynamic_cast<const T*>(this);
+  // }
   template <typename T>
   T* dynCast() {
     static_assert(std::is_base_of_v<Value, T>);
@@ -280,14 +284,13 @@ class Value {
  */
 class User : public Value {
   // mType, mName, mUses
- protected:
+protected:
   use_ptr_vector mOperands;  // 操作数
 
- public:
-  User(Type* type, ValueId scid, const_str_ref name = "")
-      : Value(type, scid, name) {}
+public:
+  User(Type* type, ValueId scid, const_str_ref name = "") : Value(type, scid, name) {}
 
- public:
+public:
   // get function
 
   auto& operands() { return mOperands; }  //! return uses vector

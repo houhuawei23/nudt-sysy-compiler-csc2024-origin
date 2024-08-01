@@ -722,7 +722,7 @@ void lower(ir::CallInst* ir_inst, LoweringContext& ctx) {
 
 /* BinaryInst */
 void lower(ir::BinaryInst* ir_inst, LoweringContext& ctx) {
-  auto gc_instid = [scid = ir_inst->valueId()] {
+  auto code = [scid = ir_inst->valueId()] {
     switch (scid) {
       case ir::ValueId::vADD:
         return InstAdd;
@@ -755,7 +755,52 @@ void lower(ir::BinaryInst* ir_inst, LoweringContext& ctx) {
    */
   auto dst = ctx.newVReg(ir_inst->type());
 
-  ctx.emitInstBeta(gc_instid,
+  auto lhs = ir_inst->lValue();
+  auto rhs = ir_inst->rValue();
+
+  if (ir_inst->isCommutative() and lhs->isa<ir::Constant>() and !rhs->isa<ir::Constant>()) {
+    std::swap(lhs, rhs);
+  }
+  // and (code == InstAdd || code == InstSub || code == InstFAdd || code == InstFSub )
+  /** isCommutative: cc, xc, xx */
+  if (const auto crhs = rhs->dynCast<ir::Constant>()) {
+    if (crhs->isZero()) {
+      switch (code) {
+        case InstAdd:
+        case InstSub:
+        case InstFAdd:
+        case InstFSub: {
+          /* x + 0 = x */
+          auto lhsOpernd = ctx.map2operand(lhs);
+          ctx.addValueMap(ir_inst, lhsOpernd);
+          return;
+        }
+        case InstMul:
+        case InstFMul: {
+          /* x * 0 = 0 */
+          auto zeroOperand = MIROperand::asImm(0, OperandType::Int32);
+          ctx.addValueMap(ir_inst, zeroOperand);
+          return;
+        }
+        default:
+          break;
+      }
+    } else if (crhs->isOne()) {
+      switch (code) {
+        case InstMul:
+        case InstFMul: {
+          /* x * 1 = x */
+          auto lhsOpernd = ctx.map2operand(lhs);
+          ctx.addValueMap(ir_inst, lhsOpernd);
+          return;
+        }
+        default:
+          break;
+      }
+    }
+  }
+
+  ctx.emitInstBeta(code,
                    {dst, ctx.map2operand(ir_inst->lValue()), ctx.map2operand(ir_inst->rValue())});
   ctx.addValueMap(ir_inst, dst);
 }
@@ -864,7 +909,7 @@ void emitJump(ir::BasicBlock* srcblock, ir::BasicBlock* dstblock, LoweringContex
       }
     }
 
-    const auto [ccnt, col] = utils::calcSCC(graph); 
+    const auto [ccnt, col] = utils::calcSCC(graph);
     auto order = utils::topologicalSort(graph, ccnt, col);
 
     assert(order.size() == dstOperands.size());

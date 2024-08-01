@@ -39,8 +39,7 @@ public:  // 构造函数
              BasicBlock* parent = nullptr,
              const_str_ref name = "",
              bool is_const = false)
-    : Instruction(vALLOCA, ir::Type::TypePointer(base_type), parent, name),
-      mIsConst(is_const) {}
+    : Instruction(vALLOCA, ir::Type::TypePointer(base_type), parent, name), mIsConst(is_const) {}
 
   //! 2. Alloca Array
   AllocaInst(Type* base_type,
@@ -49,11 +48,10 @@ public:  // 构造函数
              const_str_ref name = "",
              bool is_const = false,
              size_t capacity = 1)
-    : Instruction(
-        vALLOCA,
-        ir::Type::TypePointer(ir::Type::TypeArray(base_type, dims, capacity)),
-        parent,
-        name),
+    : Instruction(vALLOCA,
+                  ir::Type::TypePointer(ir::Type::TypeArray(base_type, dims, capacity)),
+                  parent,
+                  name),
       mIsConst(is_const) {}
 
 public:  // get function
@@ -84,8 +82,8 @@ public:
     } else {
       auto basetype = baseType()->dynCast<ArrayType>();
       auto capacity = basetype->size();
-      auto inst = utils::make<AllocaInst>(
-        basetype->baseType(), basetype->dims(), nullptr, "", false, capacity);
+      auto inst = utils::make<AllocaInst>(basetype->baseType(), basetype->dims(), nullptr, "",
+                                          false, capacity);
       inst->setComment(mComment);
       return inst;
     }
@@ -108,8 +106,7 @@ public:
   static bool classof(const Value* v) { return v->valueId() == vSTORE; }
   void print(std::ostream& os) const override;
   Instruction* copy(std::function<Value*(Value*)> getValue) const override {
-    auto inst =
-      utils::make<StoreInst>(getValue(operand(0)), getValue(operand(1)));
+    auto inst = utils::make<StoreInst>(getValue(operand(0)), getValue(operand(1)));
     inst->setComment(mComment);
     return inst;
   }
@@ -145,9 +142,7 @@ public:
  */
 class ReturnInst : public Instruction {
 public:
-  ReturnInst(Value* value = nullptr,
-             BasicBlock* parent = nullptr,
-             const_str_ref name = "")
+  ReturnInst(Value* value = nullptr, BasicBlock* parent = nullptr, const_str_ref name = "")
     : Instruction(vRETURN, Type::void_type(), parent, name) {
     if (value) {
       addOperand(value);
@@ -225,20 +220,21 @@ public:
     return v->valueId() >= vBINARY_BEGIN && v->valueId() <= vBINARY_END;
   }
   bool isCommutative() const {
-    return valueId() == vADD || valueId() == vFADD || valueId() == vMUL ||
-           valueId() == vFMUL;
+    return valueId() == vADD || valueId() == vFADD || valueId() == vMUL || valueId() == vFMUL;
   }
 
 public:
-  Value* lValue() const { return operand(0); }
-  Value* rValue() const { return operand(1); }
+  auto lValue() const { return operand(0); }
+  auto rValue() const { return operand(1); }
+
+  // auto lValue() { return operand(0); }
+  // auto rValue() { return operand(1); }
 
 public:
   void print(std::ostream& os) const override;
   Value* getConstantRepl() override;
   Instruction* copy(std::function<Value*(Value*)> getValue) const override {
-    return utils::make<BinaryInst>(mValueId, mType, getValue(operand(0)),
-                                   getValue(operand(1)));
+    return utils::make<BinaryInst>(mValueId, mType, getValue(operand(0)), getValue(operand(1)));
   }
 };
 /* CallInst */
@@ -251,9 +247,7 @@ public:
            const_value_ptr_vector rargs = {},
            BasicBlock* parent = nullptr,
            const_str_ref name = "")
-    : Instruction(vCALL, callee->retType(), parent, name),
-      mCallee(callee),
-      mIsTail(false) {
+    : Instruction(vCALL, callee->retType(), parent, name), mCallee(callee), mIsTail(false) {
     addOperands(rargs);
   }
   bool istail() { return mIsTail; }
@@ -301,9 +295,7 @@ public:
     addOperand(iffalse);
   }
   /* UnCondition Branch */
-  BranchInst(BasicBlock* dest,
-             BasicBlock* parent = nullptr,
-             const_str_ref name = "")
+  BranchInst(BasicBlock* dest, BasicBlock* parent = nullptr, const_str_ref name = "")
     : Instruction(vBR, Type::void_type(), parent, name), mIsCond(false) {
     addOperand(dest);
   }
@@ -345,8 +337,7 @@ public:
   void print(std::ostream& os) const override;
   Instruction* copy(std::function<Value*(Value*)> getValue) const override {
     if (is_cond()) {
-      return utils::make<BranchInst>(getValue(operand(0)),
-                                     getValue(iftrue())->as<BasicBlock>(),
+      return utils::make<BranchInst>(getValue(operand(0)), getValue(iftrue())->as<BasicBlock>(),
                                      getValue(iffalse())->as<BasicBlock>());
 
     } else {
@@ -383,8 +374,7 @@ public:
   void print(std::ostream& os) const override;
   Value* getConstantRepl() override;
   Instruction* copy(std::function<Value*(Value*)> getValue) const override {
-    return utils::make<ICmpInst>(mValueId, getValue(operand(0)),
-                                 getValue(operand(1)));
+    return utils::make<ICmpInst>(mValueId, getValue(operand(0)), getValue(operand(1)));
   }
 };
 
@@ -416,8 +406,7 @@ public:
   void print(std::ostream& os) const override;
   Value* getConstantRepl() override;
   Instruction* copy(std::function<Value*(Value*)> getValue) const override {
-    return utils::make<FCmpInst>(mValueId, getValue(operand(0)),
-                                 getValue(operand(1)));
+    return utils::make<FCmpInst>(mValueId, getValue(operand(0)), getValue(operand(1)));
   }
 };
 
@@ -482,10 +471,7 @@ protected:
 
 public:
   //! 1. Pointer <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
-  GetElementPtrInst(Type* base_type,
-                    Value* value,
-                    Value* idx,
-                    BasicBlock* parent = nullptr)
+  GetElementPtrInst(Type* base_type, Value* value, Value* idx, BasicBlock* parent = nullptr)
     : Instruction(vGETELEMENTPTR, ir::Type::TypePointer(base_type), parent) {
     _id = 0;
     addOperand(value);
@@ -516,8 +502,7 @@ public:
                     Value* idx,
                     std::vector<size_t> cur_dims,
                     BasicBlock* parent = nullptr)
-    : Instruction(vGETELEMENTPTR, ir::Type::TypePointer(base_type), parent),
-      _cur_dims(cur_dims) {
+    : Instruction(vGETELEMENTPTR, ir::Type::TypePointer(base_type), parent), _cur_dims(cur_dims) {
     _id = 2;
     addOperand(value);
     addOperand(idx);
@@ -549,11 +534,9 @@ public:
       auto basetype = baseType()->dynCast<ArrayType>();
       auto dims = basetype->dims();
       auto curdims = cur_dims();
-      return utils::make<GetElementPtrInst>(basetype->baseType(), newvalue,
-                                            newidx, dims, curdims);
+      return utils::make<GetElementPtrInst>(basetype->baseType(), newvalue, newidx, dims, curdims);
     } else {
-      return utils::make<GetElementPtrInst>(baseType(), newvalue, newidx,
-                                            cur_dims());
+      return utils::make<GetElementPtrInst>(baseType(), newvalue, newidx, cur_dims());
     }
   }
 };
@@ -569,8 +552,7 @@ public:
           const std::vector<Value*>& vals = {},
           const std::vector<BasicBlock*>& bbs = {})
     : Instruction(vPHI, type, parent), mSize(vals.size()) {
-    assert(vals.size() == bbs.size() and
-           "number of vals and bbs in phi must be equal!");
+    assert(vals.size() == bbs.size() and "number of vals and bbs in phi must be equal!");
     for (size_t i = 0; i < mSize; i++) {
       addOperand(vals[i]);
       addOperand(bbs[i]);
@@ -578,9 +560,7 @@ public:
     }
   }
   auto getValue(size_t k) const { return operand(2 * k); }
-  auto getBlock(size_t k) const {
-    return operand(2 * k + 1)->dynCast<BasicBlock>();
-  }
+  auto getBlock(size_t k) const { return operand(2 * k + 1)->dynCast<BasicBlock>(); }
   Value* getvalfromBB(BasicBlock* bb);
   BasicBlock* getbbfromVal(Value* val);
 
@@ -649,10 +629,10 @@ public:
     } else
       assert(false && "endVar is not constant");
   }
-  ir::Value* endValue(){return mendVar;}
-  BinaryInst* iterInst(){return miterInst;}
-  Instruction* cmpInst(){return mcmpInst;}
-  PhiInst* phiinst(){return mphiinst;}
+  ir::Value* endValue() { return mendVar; }
+  BinaryInst* iterInst() { return miterInst; }
+  Instruction* cmpInst() { return mcmpInst; }
+  PhiInst* phiinst() { return mphiinst; }
 };
 
 }  // namespace ir

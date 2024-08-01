@@ -91,6 +91,20 @@ public:  // match function
   virtual void redirectBranch(MIRInst* inst, MIRBlock* target) const;
 };
 
+template <uint32_t N>
+constexpr bool isSignedImm(intmax_t imm) {
+  static_assert(N < 64);
+  constexpr auto x = static_cast<intmax_t>(1) << (N - 1);
+  return -x <= imm && imm < x;
+}
+
+template <uint32_t N>
+constexpr bool isUnsignedImm(intmax_t imm) {
+    static_assert(N < 63);
+    constexpr auto x = static_cast<intmax_t>(1) << N;
+    return 0 <= imm && imm < x;
+}
+
 // utils function
 constexpr bool isOperandVRegORISAReg(const MIROperand& operand) {
   return operand.isReg() && (isVirtualReg(operand.reg()) || isISAReg(operand.reg()));
@@ -124,12 +138,7 @@ constexpr bool isOperandReloc(const MIROperand& operand) {
 constexpr bool isOperandStackObject(const MIROperand& operand) {
   return operand.isReg() && isStackObject(operand.reg());
 }
-template <uint32_t N>
-constexpr bool isSignedImm(intmax_t imm) {
-  static_assert(N < 64);
-  constexpr auto x = static_cast<intmax_t>(1) << (N - 1);
-  return -x <= imm && imm < x;
-}
+
 static std::string_view getType(OperandType type) {
   switch (type) {
     case OperandType::Bool:

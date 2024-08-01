@@ -91,5 +91,5 @@ def compile_only():
 if __name__ == "__main__":
     # submitTest()
     # perfTest()
-    # functionalTest()
-    compile_only()
+    functionalTest()
+    # compile_only()

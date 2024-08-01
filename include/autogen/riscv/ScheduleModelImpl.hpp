@@ -59,8 +59,16 @@ public:
       case SUB:
       case SRA:
       case ADDIW:
+      case SLLIW:
+      case SRLIW:
+      case SRAIW:
       case ADDW:
       case SUBW:
+      case SLLW:
+      case SRLW:
+      case SRAW:
+      case ADD_UW:
+      case SLLI_UW:
       case LoadImm12:
       case MV:
       case InstLoadStackObjectAddr:
