@@ -28,7 +28,7 @@ void indVarAnalysis::run(ir::Function* func, TopAnalysisInfoManager* tp) {
             auto lpCondIcmp = dyn_cast<ir::ICmpInst>(lpCond);
             auto lpCondIcmpLHSPhi=lpCondIcmp->lhs()->dynCast<ir::PhiInst>();
             auto lpCondIcmpRHSPhi=lpCondIcmp->rhs()->dynCast<ir::PhiInst>();
-            assert(not (lpCondIcmpLHSPhi!=nullptr and lpCondIcmpRHSPhi!=nullptr));
+            if(not (lpCondIcmpLHSPhi!=nullptr and lpCondIcmpRHSPhi!=nullptr))continue;
             if(lpCondIcmpLHSPhi!=nullptr and lpCondIcmpLHSPhi->block()==lpHeader){
                 keyPhiInst=lpCondIcmpLHSPhi;
                 mEndVar=lpCondIcmp->rhs();
