@@ -59,8 +59,21 @@ int SCEV::getConstantEndvarIndVarIterCnt(ir::Loop* lp,ir::indVar* idv){
     auto endVar=idv->getEndVarI32();
     auto stepVar=idv->getStepI32();
     auto icmpinst=idv->cmpInst();
+    if(stepVar==0)return -1;
     //对icmp进行标准化
     normalizeIcmpAndBr(lp,idv);
+    switch (icmpinst->valueId())
+    {
+    case ir::vIEQ:
+        if(beginVar==endVar)return 1;
+        else return 0;
+        break;
+    case ir::vINE:
+        
+    
+    default:
+        break;
+    }
     
     
 }
