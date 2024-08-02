@@ -490,7 +490,7 @@ public:
                     Value* idx,
                     std::vector<size_t> dims,
                     std::vector<size_t> cur_dims,
-                    BasicBlock* parent = nullptr)
+                    BasicBlock* parent=nullptr)
     : Instruction(vGETELEMENTPTR,
                   ir::Type::TypePointer(ir::Type::TypeArray(base_type, dims)),
                   parent),
