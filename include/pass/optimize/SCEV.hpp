@@ -24,11 +24,12 @@ class SCEV:public FunctionPass{
         bool isSimplyLoopInvariant(ir::Loop* lp,ir::Value* val);
         bool isUsedOutsideLoop(ir::Loop* lp,ir::Value* val);
         int getConstantEndvarIndVarIterCnt(ir::Loop* lp,ir::indVar* idv);
-        void addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv);
+        ir::Value* addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv);
         void normalizeIcmpAndBr(ir::Loop* lp,ir::indVar* idv);
         void exchangeIcmpOp(ir::ICmpInst* icmpInst);
         void reverseIcmpOp(ir::ICmpInst* icmpInst);
         void exchangeBrDest(ir::BranchInst* brInst);
+        void visitPhi(ir::Loop* lp,ir::PhiInst* phiinst);
 
 };
 }

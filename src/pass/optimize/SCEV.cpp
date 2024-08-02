@@ -1,6 +1,8 @@
 #include "pass/optimize/SCEV.hpp"
 using namespace pass;
 
+static std::vector<ir::PhiInst*>phiworklist;
+
 void SCEV::run(ir::Function* func,TopAnalysisInfoManager* tp){
     if(func->isOnlyDeclare())return;
     lpctx=tp->getLoopInfo(func);
@@ -13,6 +15,7 @@ void SCEV::run(ir::Function* func,TopAnalysisInfoManager* tp){
     idvctx->refresh();
     sectx->setOff();
     sectx->refresh();
+    phiworklist.clear();
     
     for(auto lp:lpctx->loops()){
         if(lp->parent()!=nullptr)continue;//只处理顶层循环，底层循环通过顶层循环向下分析
@@ -30,6 +33,16 @@ void SCEV::runOnLoop(ir::Loop* lp){
     }
     if(defaultIdv==nullptr)return;
     normalizeIcmpAndBr(lp,defaultIdv);
+    auto lpHeader=lp->header();
+    for(auto pinst:lpHeader->phi_insts()){
+        if(pinst->uses().empty())continue;
+        phiworklist.push_back(pinst->dynCast<ir::PhiInst>());
+    }
+
+}
+
+void SCEV::visitPhi(ir::Loop* lp,ir::PhiInst* phiinst){
+
 }
 
 //简单的判断一下对应的value是不是循环不变量,其定值如果支配循环头自然就是
@@ -56,12 +69,12 @@ bool SCEV::isUsedOutsideLoop(ir::Loop* lp,ir::Value* val){
 //如果endvar是常数，就直接计算出对应的迭代次数
 int SCEV::getConstantEndvarIndVarIterCnt(ir::Loop* lp,ir::indVar* idv){
     //-1 不能计算
-    //-2 死循环
     assert(idv->isEndVarConst());
     auto beginVar=idv->getBeginI32();
     auto endVar=idv->getEndVarI32();
     auto stepVar=idv->getStepI32();
     auto icmpinst=idv->cmpInst();
+    auto iterinst=idv->iterInst();
     if(stepVar==0)return -1;
     //对icmp进行标准化
     normalizeIcmpAndBr(lp,idv);
@@ -72,8 +85,106 @@ int SCEV::getConstantEndvarIndVarIterCnt(ir::Loop* lp,ir::indVar* idv){
         else return 0;
         break;
     case ir::vINE:
-        
-    
+        if(iterinst->valueId()==ir::vADD){
+            if((endVar-beginVar)%stepVar!=0)return -1;
+            auto cnt=(endVar-beginVar)/stepVar;
+            if(cnt<0)return -1;
+            return cnt;
+        }
+        else if(iterinst->valueId()==ir::vSUB){
+            if((beginVar-endVar)%stepVar!=0)return -1;
+            auto cnt=-(endVar-beginVar)/stepVar;
+            if(cnt<0)return -1;
+            return cnt;
+        }
+        else{//MUL
+            return -1;//TODO: do not support != with MUL
+        }
+        break;
+    case ir::vISGT:
+        if(iterinst->valueId()==ir::vADD){
+            if(stepVar>0)return -1;
+            if(endVar>=beginVar)return -1;
+            auto cnt=(endVar-beginVar)/stepVar;
+            if((endVar-beginVar)%stepVar==0)return cnt;
+            else return cnt+1;
+        }
+        else if(iterinst->valueId()==ir::vSUB){
+            if(stepVar<0)return -1;
+            if(beginVar<=endVar)return -1;
+            auto cnt=(beginVar-endVar)/stepVar;
+            if((beginVar-endVar)%stepVar==0)return cnt;
+            else return cnt+1;
+        }
+        else if(iterinst->valueId()==ir::vMUL){
+            return -1;//TODO: do not support != with MUL
+        }
+        else{
+            assert(false and "invalid operator in IndVar!");
+        }
+        break;
+    case ir::vISGE:
+        if(iterinst->valueId()==ir::vADD){
+            if(stepVar>0)return -1;
+            if(endVar>=beginVar)return -1;
+            auto cnt=(endVar-beginVar)/stepVar;
+            return cnt+1;
+        }
+        else if(iterinst->valueId()==ir::vSUB){
+            if(stepVar<0)return -1;
+            if(beginVar<=endVar)return -1;
+            auto cnt=(beginVar-endVar)/stepVar;
+            return cnt+1;
+        }
+        else if(iterinst->valueId()==ir::vMUL){
+            return -1;//TODO: do not support != with MUL
+        }
+        else{
+            assert(false and "invalid operator in IndVar!");
+        }
+        break;
+    case ir::vISLT:
+        if(iterinst->valueId()==ir::vADD){
+            if(stepVar<0)return -1;
+            if(endVar<=beginVar)return -1;
+            auto cnt=(endVar-beginVar)/stepVar;
+            if((endVar-beginVar)%stepVar==0)return cnt;
+            else return cnt+1;
+        }
+        else if(iterinst->valueId()==ir::vSUB){
+            if(stepVar>0)return -1;
+            if(beginVar<=endVar)return -1;
+            auto cnt=(beginVar-endVar)/stepVar;
+            if((beginVar-endVar)%stepVar==0)return cnt;
+            else return cnt+1;
+        }
+        else if(iterinst->valueId()==ir::vMUL){
+            return -1;//TODO: do not support != with MUL
+        }
+        else{
+            assert(false and "invalid operator in IndVar!");
+        }
+        break;
+    case ir::vISLE:
+        if(iterinst->valueId()==ir::vADD){
+            if(stepVar<0)return -1;
+            if(endVar<=beginVar)return -1;
+            auto cnt=(endVar-beginVar)/stepVar;
+            return cnt+1;
+        }
+        else if(iterinst->valueId()==ir::vSUB){
+            if(stepVar>0)return -1;
+            if(beginVar<=endVar)return -1;
+            auto cnt=(beginVar-endVar)/stepVar;
+            return cnt+1;
+        }
+        else if(iterinst->valueId()==ir::vMUL){
+            return -1;//TODO: do not support != with MUL
+        }
+        else{
+            assert(false and "invalid operator in IndVar!");
+        }
+        break;
     default:
         break;
     }
@@ -82,8 +193,149 @@ int SCEV::getConstantEndvarIndVarIterCnt(ir::Loop* lp,ir::indVar* idv){
 }
 
 //如果不是常数，就要在必要的时候生成计算迭代次数的指令
-void SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv){
+//return nullptr if cannot calcuate
+ir::Value* SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv){//-1 for cannot calc
+    assert(not idv->isEndVarConst());
+    auto beginVar=idv->getBeginI32();
+    auto stepVar=idv->getStepI32();
+    auto icmpinst=idv->cmpInst();
+    auto iterinst=idv->iterInst();
+    if(stepVar==0)return nullptr;
+    if(lp->exits().size()!=1)return nullptr;
+    auto lpExit=*lp->exits().begin();
+    auto endVal=idv->endValue();
+    auto beginVal=idv->getBegin();
+    auto stepVal=idv->getStep();
+    //对icmp进行标准化
+    normalizeIcmpAndBr(lp,idv);
+    //对于不能确定具体cnt的，只生成stepVar==1的情况，否则可以生成所有的情况
+    switch (icmpinst->valueId())
+    {
+    case ir::vIEQ:
+        return nullptr;
+        break;
+    case ir::vINE:
+        return nullptr;
+        break;
+    case ir::vISGT:
+        if(iterinst->valueId()==ir::vADD){
+            // if(stepVar>0)return -1;
+            // if(endVar>=beginVar)return -1;
+            // auto cnt=(endVar-beginVar)/stepVar;
+            // if((endVar-beginVar)%stepVar==0)return cnt;
+            // else return cnt+1;
+            if(stepVar!=-1)return nullptr;
+            
+            //TODO: makeInst here: sub i32 %beginVal, i32 %endVal;
 
+        }
+        else if(iterinst->valueId()==ir::vSUB){
+            // if(stepVar<0)return -1;
+            // if(beginVar<=endVar)return -1;
+            // auto cnt=(beginVar-endVar)/stepVar;
+            // if((beginVar-endVar)%stepVar==0)return cnt;
+            // else return cnt+1;
+            if(stepVar!=1)return nullptr;
+
+            //TODO: makeInst here: sub i32 %beginVal, i32 %endVal;
+
+        }
+        else if(iterinst->valueId()==ir::vMUL){
+            return nullptr;//TODO: do not support != with MUL
+        }
+        else{
+            assert(false and "invalid operator in IndVar!");
+        }
+        break;
+    case ir::vISGE:
+        if(iterinst->valueId()==ir::vADD){
+            if(stepVar>0)return nullptr;
+            // if(endVar>=beginVar)return -1;
+            // auto cnt=(endVar-beginVar)/stepVar;
+            // return cnt+1;
+
+
+            //TODO: makeInst here: %newVal = sub i32 %beginVal, i32 %endVal;
+            //TODO: makeInst here: %newVal2 = sdiv i32 %newVal, i32 %stepVal;
+            //TODO: makeInst here: %newVal2 = add i32 %newVal2, 1
+        }
+        else if(iterinst->valueId()==ir::vSUB){
+            if(stepVar<0)return nullptr;
+            // if(beginVar<=endVar)return -1;
+            // auto cnt=(beginVar-endVar)/stepVar;
+            // return cnt+1;
+
+            //TODO: makeInst here: %newVal = sub i32 %beginVal, i32 %endVal;
+            //TODO: makeInst here: %newVal2 = sdiv i32 %newVal, i32 %stepVal;
+            //TODO: makeInst here: %newVal2 = add i32 %newVal2, 1
+
+        }
+        else if(iterinst->valueId()==ir::vMUL){
+            return nullptr;//TODO: do not support != with MUL
+        }
+        else{
+            assert(false and "invalid operator in IndVar!");
+        }
+        break;
+    case ir::vISLT:
+        if(iterinst->valueId()==ir::vADD){
+            // if(stepVar<0)return -1;
+            // if(endVar<=beginVar)return -1;
+            // auto cnt=(endVar-beginVar)/stepVar;
+            // if((endVar-beginVar)%stepVar==0)return cnt;
+            // else return cnt+1;
+            if(stepVar!=1)return nullptr;
+            
+            //TODO: makeInst here: sub i32 %endVal, i32 %beginVal;
+        }
+        else if(iterinst->valueId()==ir::vSUB){
+            // if(stepVar>0)return -1;
+            // if(beginVar<=endVar)return -1;
+            // auto cnt=(beginVar-endVar)/stepVar;
+            // if((beginVar-endVar)%stepVar==0)return cnt;
+            // else return cnt+1;
+            if(stepVar!=-1)return nullptr;
+            
+            //TODO: makeInst here: sub i32 %endVal, i32 %beginVal;
+        }
+        else if(iterinst->valueId()==ir::vMUL){
+            return nullptr;//TODO: do not support != with MUL
+        }
+        else{
+            assert(false and "invalid operator in IndVar!");
+        }
+        break;
+    case ir::vISLE:
+        if(iterinst->valueId()==ir::vADD){
+            if(stepVar<0)return nullptr;
+            // if(endVar<=beginVar)return -1;
+            // auto cnt=(endVar-beginVar)/stepVar;
+            // return cnt+1;
+
+            //TODO: makeInst here: %newVal = sub i32 %endVal, i32 %beginVal;
+            //TODO: makeInst here: %newVal2 = sdiv i32 %newVal, i32 %stepVal;
+            //TODO: makeInst here: %newVal2 = add i32 %newVal2, 1
+        }
+        else if(iterinst->valueId()==ir::vSUB){
+            if(stepVar>0)return nullptr;
+            // if(beginVar<=endVar)return -1;
+            // auto cnt=(beginVar-endVar)/stepVar;
+            // return cnt+1;
+
+            //TODO: makeInst here: %newVal = sub i32 %beginVal, i32 %endVal;
+            //TODO: makeInst here: %newVal2 = sdiv i32 %newVal, i32 %stepVal;
+            //TODO: makeInst here: %newVal2 = add i32 %newVal2, 1
+        }
+        else if(iterinst->valueId()==ir::vMUL){
+            return nullptr;//TODO: do not support != with MUL
+        }
+        else{
+            assert(false and "invalid operator in IndVar!");
+        }
+        break;
+    default:
+        break;
+    }
 }
 
 //标准化:把idv放在op1 把endvar放在op2,icmp true就保持循环,false就跳出

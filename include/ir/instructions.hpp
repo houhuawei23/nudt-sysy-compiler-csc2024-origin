@@ -634,10 +634,12 @@ public:
     } else
       assert(false && "endVar is not constant");
   }
-  ir::Value* endValue() { return mendVar; }
+  Value* endValue() { return mendVar; }
   BinaryInst* iterInst() { return miterInst; }
   Instruction* cmpInst() { return mcmpInst; }
   PhiInst* phiinst() { return mphiinst; }
+  Constant* getBegin(){ return mbeginVar; }
+  Constant* getStep(){ return mstepVar; }
 };
 
 }  // namespace ir
