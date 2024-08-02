@@ -42,6 +42,7 @@ namespace pass{
         if(findLoop==nullptr){
             curLoop=new ir::Loop(header,func);
             curLoop->latchs().insert(tail);
+            
             // func->Loops().push_back(curLoop);
             lpctx->loops().push_back(curLoop);
             // headerToLoop[header]=curLoop;
@@ -99,6 +100,14 @@ namespace pass{
             cout<<"Header: "<<loop->header()->name()<<endl;
             cout<<"Loop Blocks: "<<endl;
             for(auto bb:loop->blocks()){
+                cout<<bb->name()<<"\t";
+            }
+             cout<<"Loop latchs: "<<endl;
+            for(auto bb:loop->latchs()){
+                cout<<bb->name()<<"\t";
+            }
+            cout<<"Loop exits: "<<endl;
+            for(auto bb:loop->exits()){
                 cout<<bb->name()<<"\t";
             }
             cout<<endl<<endl;

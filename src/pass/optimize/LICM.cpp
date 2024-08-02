@@ -366,6 +366,6 @@ void LICM::run(ir::Module* module, TopAnalysisInfoManager* tp) {
         flmap[func] = loopctx;
     }
     storeLift(module);
-    loadLift(module);
+    // loadLift(module);
 }
 }  // namespace pass

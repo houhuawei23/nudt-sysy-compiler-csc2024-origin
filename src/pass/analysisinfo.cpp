@@ -46,7 +46,7 @@ void loopInfo::refresh() {
         using namespace pass;
         PassManager pm = PassManager(passUnit->module(), topManager);
         loopAnalysis la = loopAnalysis();
-        loopInfoCheck lvc= loopInfoCheck();
+        loopInfoCheck lic = loopInfoCheck();
         pm.run(&la);
         // pm.run(&lvc);
         setOn();
@@ -70,9 +70,9 @@ void indVarInfo::refresh() {
         using namespace pass;
         PassManager pm = PassManager(passUnit->module(), topManager);
         indVarAnalysis iva = indVarAnalysis();
-        indVarInfoCheck ivc = indVarInfoCheck();
+        // indVarInfoCheck ivc = indVarInfoCheck();
         pm.run(&iva);
-        pm.run(&ivc);
+        // pm.run(&ivc);
         setOn();
     }
 }
