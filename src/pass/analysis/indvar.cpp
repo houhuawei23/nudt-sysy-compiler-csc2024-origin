@@ -12,6 +12,7 @@ void indVarAnalysis::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     ivctx->clearAll();
     func->rename();
     for (auto lp : lpctx->loops()) {
+        // std::cerr<<lp<<std::endl;
         auto lpHeader = lp->header();
         // std::cerr<<lp->header()->name()<<std::endl;
         if(not lp->isLoopSimplifyForm())continue;
@@ -68,6 +69,16 @@ void indVarAnalysis::run(ir::Function* func, TopAnalysisInfoManager* tp) {
             continue;
         addIndVar(lp, mBeginVar, mstepVar, mEndVar, iterInstBinary,
                   dyn_cast<ir::Instruction>(lpCond),keyPhiInst);
+        // using namespace std;
+        // auto idv = ivctx->getIndvar(lp);
+        // if (idv == nullptr) {
+        //     cerr << "No indvar." << endl;
+        // } else {
+        //     cerr << "BeginVar:\t" << idv->getBeginI32() << endl;
+        //     cerr << "StepVar :\t" << idv->getStepI32() << endl;
+        //     if(idv->isEndVarConst())
+        //     cerr << "EndVar  :\t" << idv->getEndVarI32() << endl;
+        // }
     }
 }
 
@@ -85,11 +96,15 @@ void indVarAnalysis::addIndVar(ir::Loop* lp,
 void indVarInfoCheck::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     if (func->isOnlyDeclare()) return;
     lpctx = tp->getLoopInfo(func);
-    lpctx->refresh();
+    // lpctx->refresh();
     ivctx = tp->getIndVarInfo(func);
+    // ivctx->setOff();
+    // ivctx->refresh();
     using namespace std;
+    cerr<<"In Function \""<<func->name()<<"\":"<<endl;
     for (auto lp : lpctx->loops()) {
         cerr << "In loop whose header is " << lp->header()->name() << ":" << endl;
+        // cerr<<lp<<endl;
         auto idv = ivctx->getIndvar(lp);
         if (idv == nullptr) {
             cerr << "No indvar." << endl;

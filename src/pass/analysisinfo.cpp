@@ -24,9 +24,8 @@ void TopAnalysisInfoManager::initialize() {
 void domTree::refresh() {
     if (not isValid) {
         using namespace pass;
-        PassManager pm = PassManager(passUnit->module(), topManager);
         domInfoPass dip = domInfoPass();
-        pm.run(&dip);
+        dip.run(passUnit,topManager);
         setOn();
     }
 }
@@ -34,9 +33,8 @@ void domTree::refresh() {
 void pdomTree::refresh() {
     if (not isValid) {
         using namespace pass;
-        PassManager pm = PassManager(passUnit->module(), topManager);
         postDomInfoPass pdi = postDomInfoPass();
-        pm.run(&pdi);
+        pdi.run(passUnit,topManager);
         setOn();
     }
 }
@@ -44,11 +42,10 @@ void pdomTree::refresh() {
 void loopInfo::refresh() {
     if (not isValid) {
         using namespace pass;
-        PassManager pm = PassManager(passUnit->module(), topManager);
         loopAnalysis la = loopAnalysis();
         loopInfoCheck lic = loopInfoCheck();
-        pm.run(&la);
-        // pm.run(&lvc);
+        la.run(passUnit,topManager);
+        // lic.run(passUnit,topManager);
         setOn();
     }
 }
@@ -56,11 +53,9 @@ void loopInfo::refresh() {
 void callGraph::refresh() {
     if (not isValid) {
         using namespace pass;
-        PassManager pm = PassManager(passUnit, topManager);
         callGraphBuild cgb = callGraphBuild();
-        pm.run(&cgb);
-        // callGraphCheck cgc=callGraphCheck();
-        // pm.run(&cgc);
+        cgb.run(passUnit,topManager);
+
         setOn();
     }
 }
@@ -68,11 +63,11 @@ void callGraph::refresh() {
 void indVarInfo::refresh() {
     if (not isValid) {
         using namespace pass;
-        PassManager pm = PassManager(passUnit->module(), topManager);
+        // PassManager pm = PassManager(passUnit->module(), topManager);
         indVarAnalysis iva = indVarAnalysis();
-        // indVarInfoCheck ivc = indVarInfoCheck();
-        pm.run(&iva);
-        // pm.run(&ivc);
+        indVarInfoCheck ivc = indVarInfoCheck();
+        iva.run(passUnit,topManager);
+        // ivc.run(passUnit,topManager);
         setOn();
     }
 }
@@ -80,9 +75,9 @@ void indVarInfo::refresh() {
 void sideEffectInfo::refresh() {
     if(not isValid){
         using namespace pass;
-        PassManager pm = PassManager(passUnit, topManager);
+        // PassManager pm = PassManager(passUnit, topManager);
         sideEffectAnalysis sea = sideEffectAnalysis();
-        pm.run(&sea);
+        sea.run(passUnit,topManager);
         setOn();
     }
 }
