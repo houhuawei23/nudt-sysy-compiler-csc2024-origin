@@ -7,12 +7,13 @@ void SCEV::run(ir::Function* func,TopAnalysisInfoManager* tp){
     idvctx=tp->getIndVarInfo(func);
     sectx=tp->getSideEffectInfo();
     domctx=tp->getDomTree(func);
+    domctx->refresh();
     lpctx->refresh();
     idvctx->setOff();
     idvctx->refresh();
     sectx->setOff();
     sectx->refresh();
-    domctx->refresh();
+    
     for(auto lp:lpctx->loops()){
         if(lp->parent()!=nullptr)continue;//只处理顶层循环，底层循环通过顶层循环向下分析
         runOnLoop(lp);
@@ -54,6 +55,8 @@ bool SCEV::isUsedOutsideLoop(ir::Loop* lp,ir::Value* val){
 
 //如果endvar是常数，就直接计算出对应的迭代次数
 int SCEV::getConstantEndvarIndVarIterCnt(ir::Loop* lp,ir::indVar* idv){
+    //-1 不能计算
+    //-2 死循环
     assert(idv->isEndVarConst());
     auto beginVar=idv->getBeginI32();
     auto endVar=idv->getEndVarI32();
