@@ -13,7 +13,7 @@ void indVarAnalysis::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     func->rename();
     for (auto lp : lpctx->loops()) {
         auto lpHeader = lp->header();
-        std::cerr<<lp->header()->name()<<std::endl;
+        // std::cerr<<lp->header()->name()<<std::endl;
         if(not lp->isLoopSimplifyForm())continue;
         auto lpPreHeader = lp->getLoopPreheader();
         auto lpHeaderTerminator = dyn_cast<ir::BranchInst>(lpHeader->terminator());

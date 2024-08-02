@@ -40,8 +40,14 @@ ir::Value* GVN::getValueNumber(ir::Instruction* inst) {
         return getValueNumber(load);
     // else if (auto phi = dynamic_cast<ir::PhiInst *>(inst))
     //     return getValueNumber(phi);
-    // else if (auto call = dynamic_cast<ir::CallInst *>(inst))
-    //     return getValueNumber(call);
+    else if (auto call = dynamic_cast<ir::CallInst *>(inst)){
+        auto callee = call->callee();
+        if (sectx->isPureFunc(callee)){
+            return getValueNumber(call);
+        }
+        return nullptr;
+    }
+        
     // else if (auto alloca = dynamic_cast<ir::AllocaInst *>(inst))
     //     return getValueNumber(alloca);
     // else if (auto icmp = dynamic_cast<ir::ICmpInst *>(inst))
@@ -142,10 +148,28 @@ ir::Value* GVN::getValueNumber(ir::LoadInst* inst) {
 //     return static_cast<ir::Value*>(inst);
 // }
 
-// ir::Value *GVN::getValueNumber(ir::CallInst *inst)
-// {
-//     return static_cast<ir::Value*>(inst);
-// }
+ir::Value *GVN::getValueNumber(ir::CallInst *inst)
+{
+    for (auto [Key, Value] : _Hashtable) {
+        if (auto call = Key->dynCast<ir::CallInst>()) {
+            bool flag = true;
+            if (call->callee() == inst->callee()){
+                for (auto arg : inst->rargs()){
+                    auto instarg = checkHashtable(arg->value());
+                    auto callarg = checkHashtable(call->operand(arg->index()));
+                    if (instarg != callarg){
+                        flag  = false;
+                        break;
+                    }
+
+                }
+                if (flag)
+                    return Value;
+            }
+        }
+    }
+    return static_cast<ir::Value*>(inst);
+}
 
 // ir::Value *GVN::getValueNumber(ir::AllocaInst *inst)
 // {
@@ -293,7 +317,8 @@ void GVN::run(ir::Function* F, TopAnalysisInfoManager* tp) {
 
     domctx = tp->getDomTree(F);
     domctx->refresh();
-
+    sectx = tp->getSideEffectInfo();
+    sectx->refresh();
     RPO(F);
     visited.clear();
     // F->print(std::cout);
