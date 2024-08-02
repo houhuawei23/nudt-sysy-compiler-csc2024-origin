@@ -202,8 +202,12 @@ bool loopsimplify::simplifyOneLoop(ir::Loop* L, TopAnalysisInfoManager* tp) {
 
 void loopsimplify::run(ir::Function* func, TopAnalysisInfoManager* tp) {
   if (func->isOnlyDeclare()) return;
+    // func->rename();
+  // func->print(std::cerr);
   loopInfo* LI = tp->getLoopInfo(func);
   LI->refresh();
+      // func->rename();
+  // func->print(std::cerr);
   auto loops = LI->loops();
   bool changed = false;
   for (auto L : loops) {
@@ -216,6 +220,8 @@ void loopsimplify::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     // update loopinfo
     tp->CFGChange(func);
   }
+  // func->rename();
+  // func->print(std::cerr);
 
   return;
 }

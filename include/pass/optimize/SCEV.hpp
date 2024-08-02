@@ -22,14 +22,13 @@ class SCEV:public FunctionPass{
         domTree* domctx;
         void runOnLoop(ir::Loop* lp);
         bool isSimplyLoopInvariant(ir::Loop* lp,ir::Value* val);
+        bool isUsedOutsideLoop(ir::Loop* lp,ir::Value* val);
+        int getConstantEndvarIndVarIterCnt(ir::Loop* lp,ir::indVar* idv);
+        void addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv);
+        void normalizeIcmpAndBr(ir::Loop* lp,ir::indVar* idv);
+        void exchangeIcmpOp(ir::ICmpInst* icmpInst);
+        void reverseIcmpOp(ir::ICmpInst* icmpInst);
+        void exchangeBrDest(ir::BranchInst* brInst);
 
-};
-class SCEVValue{
-private:    
-    ir::Loop* parent;
-    ir::Value* beginVar;
-    std::vector<ir::Value*>stepVars;
-    std::unordered_map<ir::Value*,ir::ValueId>stepVarOps;
-public:
 };
 }

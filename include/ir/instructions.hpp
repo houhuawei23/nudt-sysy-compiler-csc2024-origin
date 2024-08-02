@@ -368,6 +368,11 @@ public:
 
   bool isReverse(ICmpInst* y);
 
+  void setCmpOp(ValueId newv){
+    assert(newv>=vICMP_BEGIN and newv<=vICMP_END);
+    mValueId=newv;
+  }
+
   static bool classof(const Value* v) {
     return v->valueId() >= vICMP_BEGIN && v->valueId() <= vICMP_END;
   }

@@ -46,7 +46,9 @@ void loopInfo::refresh() {
         using namespace pass;
         PassManager pm = PassManager(passUnit->module(), topManager);
         loopAnalysis la = loopAnalysis();
+        loopInfoCheck lvc= loopInfoCheck();
         pm.run(&la);
+        // pm.run(&lvc);
         setOn();
     }
 }

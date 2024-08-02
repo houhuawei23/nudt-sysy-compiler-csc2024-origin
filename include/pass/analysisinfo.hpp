@@ -211,6 +211,7 @@ class loopInfo : public FunctionACtx {
     void clearAll() {
         _loops.clear();
         _head2loop.clear();
+        _looplevel.clear();
     }
     bool isHeader(ir::BasicBlock* bb) { return _head2loop.count(bb); }
     ir::Loop* getinnermostLoop(ir::BasicBlock* bb) {  // 返回最内层的循环

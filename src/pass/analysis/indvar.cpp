@@ -6,7 +6,7 @@ using namespace pass;
 void indVarAnalysis::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     if (func->isOnlyDeclare()) return;
     lpctx = tp->getLoopInfo(func);
-    // lpctx->setOff();
+    lpctx->setOff();
     lpctx->refresh();
     ivctx = tp->getIndVarInfo(func);
     ivctx->clearAll();
@@ -28,6 +28,7 @@ void indVarAnalysis::run(ir::Function* func, TopAnalysisInfoManager* tp) {
             auto lpCondIcmp = dyn_cast<ir::ICmpInst>(lpCond);
             auto lpCondIcmpLHSPhi=lpCondIcmp->lhs()->dynCast<ir::PhiInst>();
             auto lpCondIcmpRHSPhi=lpCondIcmp->rhs()->dynCast<ir::PhiInst>();
+            assert(not (lpCondIcmpLHSPhi!=nullptr and lpCondIcmpRHSPhi!=nullptr));
             if(lpCondIcmpLHSPhi!=nullptr and lpCondIcmpLHSPhi->block()==lpHeader){
                 keyPhiInst=lpCondIcmpLHSPhi;
                 mEndVar=lpCondIcmp->rhs();
@@ -49,7 +50,7 @@ void indVarAnalysis::run(ir::Function* func, TopAnalysisInfoManager* tp) {
             mBeginVar=getConstantBeginVarFromPhi(mBeginVarPhi,lp->parent());
         }
         if(mBeginVar==nullptr)continue;
-        auto iterInst=keyPhiInst->getValue(0)==keyPhiInst->getvalfromBB(lp->getlooppPredecessor())?
+        auto iterInst=keyPhiInst->getValue(0)==keyPhiInst->getvalfromBB(lpPreHeader)?
             keyPhiInst->getValue(1):keyPhiInst->getValue(0);
         auto iterInstScid = iterInst->valueId();
         ir::Constant* mstepVar;
