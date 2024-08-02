@@ -11,20 +11,15 @@
 #include "mir/target.hpp"
 #include "mir/iselinfo.hpp"
 #include "mir/utils.hpp"
-
 #include "mir/RegisterAllocator.hpp"
 #include "mir/RegisterCoalescing.hpp"
-
 #include "target/riscv/RISCVTarget.hpp"
 #include "support/StaticReflection.hpp"
 #include "support/config.hpp"
-
 #include "support/Profiler.hpp"
-
 #include "support/Graph.hpp"
 namespace fs = std::filesystem;
 namespace mir {
-
 MIROperand FloatPointConstantPool::getFloatConstant(class LoweringContext& ctx, float val) {
   uint32_t rep;
   memcpy(&rep, &val, sizeof(float));
@@ -61,19 +56,14 @@ MIROperand FloatPointConstantPool::getFloatConstant(class LoweringContext& ctx, 
 static OperandType get_optype(ir::Type* type) {
   if (type->isInt()) {
     switch (type->btype()) {
-      case ir::INT1:
-        return OperandType::Bool;
-      case ir::INT32:
-        return OperandType::Int32;
-      default:
-        assert(false && "unsupported int type");
+      case ir::INT1: return OperandType::Bool;
+      case ir::INT32: return OperandType::Int32;
+      default: assert(false && "unsupported int type");
     }
   } else if (type->isFloatPoint()) {
     switch (type->btype()) {
-      case ir::FLOAT:
-        return OperandType::Float32;
-      default:
-        assert(false && "unsupported float type");
+      case ir::FLOAT: return OperandType::Float32;
+      default: assert(false && "unsupported float type");
     }
   } else if (type->isPointer()) {
     /* NOTE: rv64 */
@@ -341,11 +331,11 @@ void createMIRModule(ir::Module& ir_module,
     /* stage5: pre-RA legalization */
     { codegen_ctx.flags.inSSAForm = false; }
 
-    /* stage6: Optimize: pre-RA scheduling, minimize register usage */
-    {
-      preRASchedule(*mir_func, codegen_ctx);
-      dumpStageResult("AfterPreRASchedule", mir_func, codegen_ctx);
-    }
+    // /* stage6: Optimize: pre-RA scheduling, minimize register usage */
+    // {
+    //   preRASchedule(*mir_func, codegen_ctx);
+    //   dumpStageResult("AfterPreRASchedule", mir_func, codegen_ctx);
+    // }
 
     /* stage7: register allocation */
     {
@@ -1033,7 +1023,6 @@ void lower(ir::GetElementPtrInst* ir_inst, LoweringContext& ctx) {
     for (int i = 0; i < dims.size(); i++) {
       stride *= dims[i];
     }
-    // stride = dyn_cast<ir::ArrayType>(btype)->dims()[0];
   }
   auto ir_index = ir_inst->index();
 
@@ -1104,8 +1093,7 @@ void lower_GetElementPtr(ir::inst_iterator begin, ir::inst_iterator end, Lowerin
       mir_offset = ctx.map2operand(ir_offset);
     } else {
       auto newPtr = ctx.newVReg(OperandType::Int64);
-      ctx.emitInstBeta(InstMul,
-                       {newPtr, mir_offset, MIROperand::asImm(dims[i], OperandType::Int64)});
+      ctx.emitInstBeta(InstMul, {newPtr, mir_offset, MIROperand::asImm(dims[i], OperandType::Int64)});
       mir_offset = newPtr;
     }
   }
@@ -1117,7 +1105,7 @@ void lower_GetElementPtr(ir::inst_iterator begin, ir::inst_iterator end, Lowerin
       mir_offset = ctx.map2operand(ir_offset);
     } else {
       auto newPtr = ctx.newVReg(OperandType::Int64);
-      ctx.emitInstBeta(InstMul, {newPtr, mir_offset, MIROperand::asImm(4, OperandType::Int64)});
+      ctx.emitInstBeta(InstShl, {newPtr, mir_offset, MIROperand::asImm(2, OperandType::Int64)});
       mir_offset = newPtr;
     }
   }
@@ -1147,8 +1135,7 @@ void lower_GetElementPtr(ir::inst_iterator begin, ir::inst_iterator end, Lowerin
         mir_offset = ctx.map2operand(ir_offset);
       } else {
         auto newPtr = ctx.newVReg(OperandType::Int64);
-        ctx.emitInstBeta(InstMul,
-                         {newPtr, mir_offset, MIROperand::asImm(dims[i], OperandType::Int64)});
+        ctx.emitInstBeta(InstMul, {newPtr, mir_offset, MIROperand::asImm(dims[i], OperandType::Int64)});
         mir_offset = newPtr;
       }
     }
@@ -1161,7 +1148,7 @@ void lower_GetElementPtr(ir::inst_iterator begin, ir::inst_iterator end, Lowerin
         mir_offset = ctx.map2operand(ir_offset);
       } else {
         auto newPtr = ctx.newVReg(OperandType::Int64);
-        ctx.emitInstBeta(InstMul, {newPtr, mir_offset, MIROperand::asImm(4, OperandType::Int64)});
+        ctx.emitInstBeta(InstShl, {newPtr, mir_offset, MIROperand::asImm(2, OperandType::Int64)});
         mir_offset = newPtr;
       }
     }

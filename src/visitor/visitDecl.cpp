@@ -167,8 +167,7 @@ ir::Value* SysYIRGenerator::visitScalar_global(SysYParser::VarDefContext* ctx,
   }
 
   //! generate global variable and assign
-  auto global_var =
-      ir::GlobalVariable::gen(btype, {init}, mModule, name, is_const);
+  auto global_var = ir::GlobalVariable::gen(btype, {init}, mModule, name, is_const);
   mTables.insert(name, global_var);
   mModule->addGlobalVar(name, global_var);
 
@@ -199,10 +198,11 @@ ir::Value* SysYIRGenerator::visitVarDef_local(SysYParser::VarDefContext* ctx,
   }
   bool isArray = dims.size() > 0;
 
-  if (isArray)
+  if (isArray) {
     return visitArray_local(ctx, btype, is_const, dims, capacity);
-  else
+  } else {
     return visitScalar_local(ctx, btype, is_const);
+  }
 }
 /*
  * @brief: visit local array
@@ -246,6 +246,15 @@ ir::Value* SysYIRGenerator::visitArray_local(SysYParser::VarDefContext* ctx, ir:
   }
 
   //! assign
+  bool isAssign = false;
+  for (int i = 0; i < Arrayinit.size(); i++) {
+    if (Arrayinit[i] != nullptr) {
+      isAssign = true;
+      break;
+    }
+  }
+
+  if (!isAssign) return dyn_cast_Value(alloca_ptr);
   ir::Value* element_ptr = dyn_cast<ir::Value>(alloca_ptr);
   for (int cur = 1; cur <= dimensions; cur++) {
     dims.erase(dims.begin());
@@ -256,9 +265,7 @@ ir::Value* SysYIRGenerator::visitArray_local(SysYParser::VarDefContext* ctx, ir:
   int cnt = 0;
   for (int i = 0; i < Arrayinit.size(); i++) {
     if (Arrayinit[i] != nullptr) {
-      element_ptr = mBuilder.makeGetElementPtr(btype, element_ptr,
-                                               ir::Constant::gen_i32(cnt));
-      // mBuilder.create_store(Arrayinit[i], element_ptr);
+      element_ptr = mBuilder.makeGetElementPtr(btype, element_ptr, ir::Constant::gen_i32(cnt));
       mBuilder.makeInst<ir::StoreInst>(Arrayinit[i], element_ptr);
       cnt = 0;
     }
