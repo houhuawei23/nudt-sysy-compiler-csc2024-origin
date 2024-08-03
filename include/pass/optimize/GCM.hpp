@@ -15,6 +15,7 @@ public:
   void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
   domTree* domctx;
   loopInfo* lpctx;
+  sideEffectInfo* sectx;
   void scheduleEarly(ir::Instruction* instruction, ir::BasicBlock* entry);
   // void scheduleLate(ir::Instruction *instruction, ir::BasicBlock* exit);
   ir::BasicBlock* LCA(ir::BasicBlock* lhs, ir::BasicBlock* rhs);

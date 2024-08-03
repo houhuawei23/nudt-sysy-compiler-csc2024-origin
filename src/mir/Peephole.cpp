@@ -693,26 +693,26 @@ bool EliminateInvisibleInsts(MIRFunction& mfunc, CodeGenContext& ctx) {
 bool genericPeepholeOpt(MIRFunction& mfunc, CodeGenContext& ctx) {
     bool modified = false;
     modified |= EliminateStackLoads(mfunc, ctx);
-    std::cerr << "EliminateStackLoads: " << modified << "\n";
+    // std::cerr << "EliminateStackLoads: " << modified << "\n";
     // modified |= EliminateIndirectCopy(mfunc, ctx);
     modified |= EliminateUnusedCopy(mfunc, ctx);
-    std::cerr << "EliminateUnusedCopy: " << modified << "\n";
+    // std::cerr << "EliminateUnusedCopy: " << modified << "\n";
     modified |= EliminateUnusedInst(mfunc, ctx);
-    std::cerr << "EliminateUnusedInst: " << modified << "\n";
+    // std::cerr << "EliminateUnusedInst: " << modified << "\n";
     modified |= ApplySSAPropagation(mfunc, ctx);
-    std::cerr << "ApplySSAPropagation: " << modified << "\n";
+    // std::cerr << "ApplySSAPropagation: " << modified << "\n";
     modified |= EliminateConstantLoads(mfunc, ctx);
-    std::cerr << "EliminateConstantLoads: " << modified << "\n";
+    // std::cerr << "EliminateConstantLoads: " << modified << "\n";
     modified |= ConstantHoist(mfunc, ctx);
-    std::cerr << "ConstantHoist: " << modified << "\n";
+    // std::cerr << "ConstantHoist: " << modified << "\n";
     modified |= EliminateRedundantInst(mfunc, ctx);
-    std::cerr << "EliminateRedundantInst: " << modified << "\n";
+    // std::cerr << "EliminateRedundantInst: " << modified << "\n";
     modified |= DeadInstElimination(mfunc, ctx);
-    std::cerr << "DeadInstElimination: " << modified << "\n";
+    // std::cerr << "DeadInstElimination: " << modified << "\n";
     modified |= EliminateInvisibleInsts(mfunc, ctx);
-    std::cerr << "EliminateInvisibleInsts: " << modified << "\n";
+    // std::cerr << "EliminateInvisibleInsts: " << modified << "\n";
     modified |= ctx.scheduleModel->peepholeOpt(mfunc, ctx);
-    std::cerr << "scheduleModel->peepholeOpt: " << modified << "\n";
+    // std::cerr << "scheduleModel->peepholeOpt: " << modified << "\n";
     return modified;
 }
 }

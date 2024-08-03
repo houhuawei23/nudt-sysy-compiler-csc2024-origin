@@ -368,6 +368,11 @@ public:
 
   bool isReverse(ICmpInst* y);
 
+  void setCmpOp(ValueId newv){
+    assert(newv>=vICMP_BEGIN and newv<=vICMP_END);
+    mValueId=newv;
+  }
+
   static bool classof(const Value* v) {
     return v->valueId() >= vICMP_BEGIN && v->valueId() <= vICMP_END;
   }
@@ -485,7 +490,7 @@ public:
                     Value* idx,
                     std::vector<size_t> dims,
                     std::vector<size_t> cur_dims,
-                    BasicBlock* parent = nullptr)
+                    BasicBlock* parent=nullptr)
     : Instruction(vGETELEMENTPTR,
                   ir::Type::TypePointer(ir::Type::TypeArray(base_type, dims)),
                   parent),
@@ -629,10 +634,12 @@ public:
     } else
       assert(false && "endVar is not constant");
   }
-  ir::Value* endValue() { return mendVar; }
+  Value* endValue() { return mendVar; }
   BinaryInst* iterInst() { return miterInst; }
   Instruction* cmpInst() { return mcmpInst; }
   PhiInst* phiinst() { return mphiinst; }
+  Constant* getBegin(){ return mbeginVar; }
+  Constant* getStep(){ return mstepVar; }
 };
 
 }  // namespace ir

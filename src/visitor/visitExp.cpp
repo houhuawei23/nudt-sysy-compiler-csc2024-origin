@@ -81,11 +81,9 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
 
       if (delta == 0)
         ptr = mBuilder.makeLoad(ptr);
-      // ptr = mBuilder.makeInst<ir::LoadInst>(ptr);
     } else if (type->isPointer()) {  // 一级及指针 (eg. int a[] OR int
                                       // a[][5]) -> 函数参数
       ptr = mBuilder.makeLoad(ptr);
-      // ptr = mBuilder.makeInst<ir::LoadInst>(ptr);
       type = dyn_cast<ir::PointerType>(type)->baseType();
       if (type->isArray()) {  // 二级及以上指针 (eg. int a[][5])
                                // Pointer<Array>
@@ -229,8 +227,7 @@ std::any SysYIRGenerator::visitUnaryExp(SysYParser::UnaryExpContext* ctx) {
     } else if (ir::isa<ir::LoadInst>(exp) || ir::isa<ir::BinaryInst>(exp)) {
       switch (exp->type()->btype()) {
         case ir::INT32:
-          res = mBuilder.makeBinary(ir::BinaryOp::SUB, ir::Constant::gen_i32(0),
-                                    exp);
+          res = mBuilder.makeBinary(ir::BinaryOp::SUB, ir::Constant::gen_i32(0), exp);
           break;
         case ir::FLOAT:
           res = mBuilder.makeUnary(ir::ValueId::vFNEG, exp);
@@ -275,8 +272,7 @@ std::any SysYIRGenerator::visitMultiplicativeExp(
     //! both constant (常数折叠)
     const auto cop1 = dyn_cast<ir::Constant>(op1);
     const auto cop2 = dyn_cast<ir::Constant>(op2);
-    const auto higher_Btype =
-        std::max(cop1->type()->btype(), cop2->type()->btype());
+    const auto higher_Btype = std::max(cop1->type()->btype(), cop2->type()->btype());
 
     int32_t ans_i32;
     float ans_f32;

@@ -6,14 +6,15 @@ using namespace pass;
 void indVarAnalysis::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     if (func->isOnlyDeclare()) return;
     lpctx = tp->getLoopInfo(func);
-    // lpctx->setOff();
+    lpctx->setOff();
     lpctx->refresh();
     ivctx = tp->getIndVarInfo(func);
     ivctx->clearAll();
     func->rename();
     for (auto lp : lpctx->loops()) {
+        // std::cerr<<lp<<std::endl;
         auto lpHeader = lp->header();
-        std::cerr<<lp->header()->name()<<std::endl;
+        // std::cerr<<lp->header()->name()<<std::endl;
         if(not lp->isLoopSimplifyForm())continue;
         auto lpPreHeader = lp->getLoopPreheader();
         auto lpHeaderTerminator = dyn_cast<ir::BranchInst>(lpHeader->terminator());
@@ -28,6 +29,7 @@ void indVarAnalysis::run(ir::Function* func, TopAnalysisInfoManager* tp) {
             auto lpCondIcmp = dyn_cast<ir::ICmpInst>(lpCond);
             auto lpCondIcmpLHSPhi=lpCondIcmp->lhs()->dynCast<ir::PhiInst>();
             auto lpCondIcmpRHSPhi=lpCondIcmp->rhs()->dynCast<ir::PhiInst>();
+            // if(not (lpCondIcmpLHSPhi!=nullptr and lpCondIcmpRHSPhi!=nullptr))continue;
             if(lpCondIcmpLHSPhi!=nullptr and lpCondIcmpLHSPhi->block()==lpHeader){
                 keyPhiInst=lpCondIcmpLHSPhi;
                 mEndVar=lpCondIcmp->rhs();
@@ -46,10 +48,10 @@ void indVarAnalysis::run(ir::Function* func, TopAnalysisInfoManager* tp) {
             if(lpctx->looplevel(lpHeader)==1 or lpctx->looplevel(lpHeader)==0)continue;//如果这时本来就是最外层循环，那么就不适合分析indvar
             auto mBeginVarPhi=dyn_cast<ir::PhiInst>(keyPhiInst->getvalfromBB(lpPreHeader));
             if(mBeginVarPhi==nullptr)continue;
-            mBeginVar=getConstantBeginVarFromPhi(mBeginVarPhi,lp->parent());
+            mBeginVar=getConstantBeginVarFromPhi(mBeginVarPhi,keyPhiInst,lp->parent());
         }
         if(mBeginVar==nullptr)continue;
-        auto iterInst=keyPhiInst->getValue(0)==keyPhiInst->getvalfromBB(lp->getloopPredecessor())?
+        auto iterInst=keyPhiInst->getValue(0)==keyPhiInst->getvalfromBB(lpPreHeader)?
             keyPhiInst->getValue(1):keyPhiInst->getValue(0);
         auto iterInstScid = iterInst->valueId();
         ir::Constant* mstepVar;
@@ -67,6 +69,16 @@ void indVarAnalysis::run(ir::Function* func, TopAnalysisInfoManager* tp) {
             continue;
         addIndVar(lp, mBeginVar, mstepVar, mEndVar, iterInstBinary,
                   dyn_cast<ir::Instruction>(lpCond),keyPhiInst);
+        // using namespace std;
+        // auto idv = ivctx->getIndvar(lp);
+        // if (idv == nullptr) {
+        //     cerr << "No indvar." << endl;
+        // } else {
+        //     cerr << "BeginVar:\t" << idv->getBeginI32() << endl;
+        //     cerr << "StepVar :\t" << idv->getStepI32() << endl;
+        //     if(idv->isEndVarConst())
+        //     cerr << "EndVar  :\t" << idv->getEndVarI32() << endl;
+        // }
     }
 }
 
@@ -84,11 +96,15 @@ void indVarAnalysis::addIndVar(ir::Loop* lp,
 void indVarInfoCheck::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     if (func->isOnlyDeclare()) return;
     lpctx = tp->getLoopInfo(func);
-    lpctx->refresh();
+    // lpctx->refresh();
     ivctx = tp->getIndVarInfo(func);
+    // ivctx->setOff();
+    // ivctx->refresh();
     using namespace std;
+    cerr<<"In Function \""<<func->name()<<"\":"<<endl;
     for (auto lp : lpctx->loops()) {
         cerr << "In loop whose header is " << lp->header()->name() << ":" << endl;
+        // cerr<<lp<<endl;
         auto idv = ivctx->getIndvar(lp);
         if (idv == nullptr) {
             cerr << "No indvar." << endl;
@@ -101,14 +117,20 @@ void indVarInfoCheck::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     }
 }
 
-ir::Constant* indVarAnalysis::getConstantBeginVarFromPhi(ir::PhiInst* phiinst,ir::Loop* lp){
+ir::Constant* indVarAnalysis::getConstantBeginVarFromPhi(ir::PhiInst* phiinst,ir::PhiInst* oldPhiinst,ir::Loop* lp){
     if(not lp->isLoopSimplifyForm())return nullptr;
     if(phiinst->block()!=lp->header())return nullptr;
-    auto constVal=phiinst->getvalfromBB(lp->getLoopPreheader())->dynCast<ir::Constant>();
+    auto lpPreHeader=lp->getLoopPreheader();
+    if(phiinst->getsize()!=2)return nullptr;
+    auto phivalfromlpPreHeader=phiinst->getvalfromBB(lpPreHeader);
+    auto phivalfromLatch=phiinst->getvalfromBB(*lp->latchs().begin());
+    if(lp->latchs().size()!=1)return nullptr;
+    if(phivalfromLatch!=oldPhiinst)return nullptr;
+    auto constVal=phivalfromlpPreHeader->dynCast<ir::Constant>();
     if(constVal!=nullptr)return constVal;
-    auto phiVal=phiinst->getvalfromBB(lp->getLoopPreheader())->dynCast<ir::PhiInst>();
+    auto phiVal=phivalfromlpPreHeader->dynCast<ir::PhiInst>();
     if(phiVal==nullptr)return nullptr;
     auto outerLp=lp->parent();
     if(outerLp==nullptr)return nullptr;
-    return getConstantBeginVarFromPhi(phiVal,outerLp);
+    return getConstantBeginVarFromPhi(phiVal,phiinst,outerLp);
 }

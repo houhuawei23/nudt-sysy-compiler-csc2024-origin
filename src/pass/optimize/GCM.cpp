@@ -34,7 +34,7 @@ ir::BasicBlock* GCM::LCA(ir::BasicBlock* lhs, ir::BasicBlock* rhs) {
 // 通过指令的类型判断该指令是否固定在bb上
 bool GCM::ispinned(ir::Instruction* instruction) {
     if (dyn_cast<ir::BinaryInst>(instruction)) {
-        // 二元运算指令不固定(除法固定，因为除法指令可能产生除零错误)
+        // 二元运算指令不固定(除法取余固定，因为除法取余指令可能产生除零错误)
         if (instruction->valueId() == ir::vSDIV || instruction->valueId() == ir::vSREM) return true;
         return false;
     }
@@ -42,6 +42,13 @@ bool GCM::ispinned(ir::Instruction* instruction) {
         return false;
     else if (dyn_cast<ir::GetElementPtrInst>(instruction))
         return false;  // GEP指令不固定
+    else if (dyn_cast<ir::CallInst>(instruction)){
+        auto callinst = instruction->dynCast<ir::CallInst>();
+        auto callee = callinst->callee();
+        if (sectx->isPureFunc(callee))
+            return false;
+        return true;
+    }
     else  // 其他指令固定在自己的BB上
         return true;
 }
@@ -88,6 +95,8 @@ void GCM::run(ir::Function* F, TopAnalysisInfoManager* tp) {
     domctx->refresh();
     lpctx = tp->getLoopInfo(F);
     lpctx->refresh();
+    sectx = tp->getSideEffectInfo();
+    sectx->refresh();
     std::vector<ir::Instruction*> pininsts;
     insts_visited.clear();
 

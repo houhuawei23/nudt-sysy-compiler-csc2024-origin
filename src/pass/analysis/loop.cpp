@@ -7,16 +7,26 @@ namespace pass{
     void loopAnalysis::run(ir::Function* func,TopAnalysisInfoManager* tp){
         if(func->isOnlyDeclare())return;
         stLoopLevel.clear();
+        func->rename();
+        // func->print(std::cerr);
         domctx=tp->getDomTree(func);
         domctx->refresh();
+        // func->rename();
+        // func->print(std::cerr);
         lpctx=tp->getLoopInfo(func);
         lpctx->clearAll();
-        for(auto bb:func->blocks())lpctx->set_looplevel(bb,0);
+        for(auto bb:func->blocks()) lpctx->set_looplevel(bb,0);
+        // func->rename();
+        // func->print(std::cerr);
         for(auto bb:func->blocks()){
             if(bb->pre_blocks().empty())continue;
             for(auto bbPre:bb->pre_blocks()){
                 if(domctx->dominate(bb,bbPre)){//bb->dominate(bbPre)
+                    // func->rename();
+                    // func->print(std::cerr);
                     addLoopBlocks(func,bb,bbPre);
+                    // func->rename();
+                    // func->print(std::cerr);
                 }
             }
         }
@@ -32,6 +42,7 @@ namespace pass{
         if(findLoop==nullptr){
             curLoop=new ir::Loop(header,func);
             curLoop->latchs().insert(tail);
+            
             // func->Loops().push_back(curLoop);
             lpctx->loops().push_back(curLoop);
             // headerToLoop[header]=curLoop;
@@ -46,6 +57,7 @@ namespace pass{
         }
         ir::block_ptr_stack bbStack;
         bbStack.push(tail);
+        if(tail==header)return;
         while(not bbStack.empty()){
             auto curBB=bbStack.top();
             bbStack.pop();
@@ -88,6 +100,24 @@ namespace pass{
             cout<<"Header: "<<loop->header()->name()<<endl;
             cout<<"Loop Blocks: "<<endl;
             for(auto bb:loop->blocks()){
+                cout<<bb->name()<<"\t";
+            }
+             cout<<"Loop latchs: "<<endl;
+            for(auto bb:loop->latchs()){
+                cout<<bb->name()<<"\t";
+            }
+            cout<<"Loop exits: "<<endl;
+            for(auto bb:loop->exits()){
+                cout<<bb->name()<<"\t";
+            }
+            cout<<endl<<endl;
+            cout<<"Loop Latchs: "<<endl;
+            for(auto bb:loop->latchs()){
+                cout<<bb->name()<<"\t";
+            }
+            cout<<endl<<endl;
+            cout<<"Loop exits: "<<endl;
+            for(auto bb:loop->exits()){
                 cout<<bb->name()<<"\t";
             }
             cout<<endl<<endl;

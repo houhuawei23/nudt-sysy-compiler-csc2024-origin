@@ -8,12 +8,14 @@
 #include <algorithm>
 #include <cmath>
 namespace pass {
+std::unordered_map<ir::Value*, ir::Value*> loopUnroll::copymap;
+
 int loopUnroll::calunrolltime(ir::Loop* loop, int times) {
     int codecnt = 0;
     for (auto bb : loop->blocks()) {
         codecnt += bb->insts().size();
     }
-    int unrolltimes = 1;
+    int unrolltimes = 2;
     for (int i = 2; i <= (int)sqrt(times); i++) {
         if (i * codecnt > 1000) break;
         if (times % i == 0) unrolltimes = i;
@@ -60,7 +62,7 @@ void loopUnroll::constunroll(ir::Loop* loop, ir::indVar* iv) {
         } else if (ivcmp->valueId() == ir::vINE) {
             times = ((ivbegin - ivend) % ivstep) ? ((ivbegin - ivend) / ivstep) : -1;
         } else if (ivcmp->valueId() == ir::vISGE) {
-            times = (ivbegin - ivend) / ivstep + 1;
+            times = (ivbegin - ivend ) / ivstep + 1;
         } else if (ivcmp->valueId() == ir::vISLE) {
             times = -1;
         } else if (ivcmp->valueId() == ir::vISGT) {
@@ -71,16 +73,55 @@ void loopUnroll::constunroll(ir::Loop* loop, ir::indVar* iv) {
             times = -1;
         }
     }
-    if (times < 0) {
+    if (times <= 0) {
         return;
     }
 
     doconstunroll(loop, iv, times);
 }
 
+void loopUnroll::insertremainderloop(ir::Loop* loop, ir::Function* func) {
+    copymap.clear();
+    ir::BasicBlock* head = loop->header();
+    ir::BasicBlock* preheader = loop->getLoopPreheader();
+    ir::BasicBlock* exit;
+    for (auto bb : loop->exits())
+        exit = bb;
+
+    std::vector<ir::BasicBlock*> bbs;
+    for (auto bb : loop->blocks()) {
+        bbs.push_back(bb);
+    }
+    copyloopremainder(bbs, head, loop, func);
+    auto copyhead = getValue(head)->dynCast<ir::BasicBlock>();
+    copyhead->pre_blocks().remove(preheader);
+    copyhead->next_blocks().remove(exit);
+    ir::BranchInst* headbr = head->insts().back()->dynCast<ir::BranchInst>();
+    headbr->replaceDest(exit, copyhead);
+    ir::BasicBlock::delete_block_link(head, exit);
+    ir::BasicBlock::block_link(head, copyhead);
+    ir::BasicBlock::block_link(copyhead, exit);
+    // 替换remainderloop的headphi
+    for (auto inst : head->insts()) {
+        if (auto phiinst = inst->dynCast<ir::PhiInst>()) {
+            auto copyphiinst = getValue(phiinst)->dynCast<ir::PhiInst>();
+            copyphiinst->delBlock(preheader);
+            copyphiinst->addIncoming(phiinst, head);
+        } else {
+            break;
+        }
+    }
+}
+
 void loopUnroll::doconstunroll(ir::Loop* loop, ir::indVar* iv, int times) {
     ir::Function* func = loop->header()->function();
     int unrolltimes = calunrolltime(loop, times);
+    // unrolltimes = 2;//debug
+    int remainder = times % unrolltimes;
+    std::cerr << "times: " << times << std::endl;
+    std::cerr << "unrolltimes: " << unrolltimes << std::endl;
+    std::cerr << "remainder: " << remainder << std::endl;
+
     ir::BasicBlock* head = loop->header();
     ir::BasicBlock* latch = loop->getLoopLatch();
     ir::BasicBlock* preheader = loop->getLoopPreheader();
@@ -92,28 +133,48 @@ void loopUnroll::doconstunroll(ir::Loop* loop, ir::indVar* iv, int times) {
         if (loop->contains(bb)) headnext = bb;
     }
 
-    std::unordered_map<ir::Value*, ir::Value*> reachDefBeforeHead;
-    std::unordered_map<ir::Value*, ir::Value*> reachDefAfterLatch;
-    std::unordered_map<ir::Value*, ir::Value*> beginToEnd;
-    std::unordered_map<ir::Value*, ir::Value*> endToBegin;
-    for (auto inst : head->insts()) {
-        if (auto phiinst = inst->dynCast<ir::PhiInst>()) {
-            reachDefBeforeHead[phiinst] = phiinst->getvalfromBB(preheader);
-        } else
-            break;
+    if (remainder != 0) {
+        insertremainderloop(loop, func);
+        // return ;
+        // 修改迭代上限
+        int ivbegin = iv->getBeginI32();
+        ir::Value* ivend = iv->endValue();  // 常数
+        int ivstep = iv->getStepI32();
+        ir::BinaryInst* ivbinary = iv->iterInst();
+        ir::Instruction* ivcmp = iv->cmpInst();
+        if (ivbinary->valueId() == ir::vADD) {
+            auto isub = utils::make<ir::BinaryInst>(ir::vSUB, ir::Type::TypeInt32(), ivend, ir::Constant::gen_i32(remainder));
+            preheader->emplace_lastbutone_inst(isub);
+            for (auto op : ivcmp->operands()) {
+                if (op->value() == ivend) {
+                    ivcmp->setOperand(op->index(), isub);
+                    break;
+                }
+            }
+        } else if (ivbinary->valueId() == ir::vSUB) {
+            auto iadd = utils::make<ir::BinaryInst>(ir::vADD, ir::Type::TypeInt32(), ivend, ir::Constant::gen_i32(remainder));
+            preheader->emplace_lastbutone_inst(iadd);
+            for (auto op : ivcmp->operands()) {
+                if (op->value() == ivend) {
+                    ivcmp->setOperand(op->index(), iadd);
+                    break;
+                }
+            }
+        }
     }
 
+    std::vector<std::vector<ir::Value*>> phireplacevec;
     ir::BasicBlock* latchnext = func->newBlock();
+
     loop->blocks().insert(latchnext);
+    int cnt = 0;
     for (auto inst : head->insts()) {
         if (auto phiinst = inst->dynCast<ir::PhiInst>()) {
             ir::PhiInst* newphiinst = utils::make<ir::PhiInst>(nullptr, phiinst->type());
-            latchnext->emplace_first_inst(newphiinst);
+            latchnext->emplace_back_inst(newphiinst);//保证映射正确
             auto val = phiinst->getvalfromBB(latch);
             newphiinst->addIncoming(val, latch);
-            reachDefAfterLatch[phiinst] = newphiinst;
-            beginToEnd[val] = newphiinst;
-            endToBegin[newphiinst] = val;
+            phireplacevec.push_back({phiinst, newphiinst});
         } else
             break;
     }
@@ -124,7 +185,7 @@ void loopUnroll::doconstunroll(ir::Loop* loop, ir::indVar* iv, int times) {
     ir::BasicBlock::block_link(latch, latchnext);
     ir::BasicBlock::block_link(latchnext, head);
     ir::BranchInst* latchbr = latch->insts().back()->dynCast<ir::BranchInst>();
-    latchbr->replaceDest(head, latchnext);// head的phi未更新
+    latchbr->replaceDest(head, latchnext);  // head的phi未更新
 
     std::vector<ir::BasicBlock*> bbexcepthead;
     for (auto bb : loop->blocks()) {
@@ -133,47 +194,79 @@ void loopUnroll::doconstunroll(ir::Loop* loop, ir::indVar* iv, int times) {
 
     ir::BasicBlock* oldbegin = headnext;
     ir::BasicBlock* oldlatchnext = latchnext;
-    for (int i = 0; i < unrolltimes; i++) {
+
+    for (int i = 0; i < unrolltimes - 1; i++) {
+        copymap.clear();
         copyloop(bbexcepthead, oldbegin, loop, func);
-        ir::BranchInst* oldlatchnextbr = oldlatchnext->insts().back()->dynCast<ir::BranchInst>();
-        oldlatchnextbr->replaceDest(head, copymap[oldbegin]->dynCast<ir::BasicBlock>());
-        ir::BasicBlock::delete_block_link(oldlatchnext,head);//考虑到headnext不可能有phi，不必考虑修改前驱导致的对phi的影响
-        ir::BasicBlock::block_link(oldlatchnext, copymap[headnext]->dynCast<ir::BasicBlock>());
-        ir::BasicBlock::block_link(copymap[oldlatchnext]->dynCast<ir::BasicBlock>(), head);
 
         auto newbegin = copymap[oldbegin]->dynCast<ir::BasicBlock>();
         auto newlatchnext = copymap[oldlatchnext]->dynCast<ir::BasicBlock>();
 
+        ir::BranchInst* oldlatchnextbr = oldlatchnext->insts().back()->dynCast<ir::BranchInst>();
+        oldlatchnextbr->replaceDest(head, newbegin);
+        ir::BasicBlock::delete_block_link(oldlatchnext, head);  // 考虑到headnext不可能有phi，不必考虑修改前驱导致的对phi的影响
+        ir::BasicBlock::block_link(oldlatchnext, newbegin);
+        ir::BasicBlock::block_link(newlatchnext, head);
+
         oldbegin = newbegin;
         oldlatchnext = newlatchnext;
+
+        // //更新bbexcepthead
+        for (auto bb : bbexcepthead) {
+            auto copybb = copymap[bb]->dynCast<ir::BasicBlock>();
+            for (auto inst : copybb->insts()) {
+                for (auto op : inst->operands()) {
+                    for (auto vec : phireplacevec) {
+                        if (std::find(vec.begin(), vec.end(), op->value()) != vec.end()) {
+                            auto newval = vec.back();
+                            inst->setOperand(op->index(), newval);
+                        }
+                    }
+                }
+            }
+        }
+
+        cnt = 0;
+        for (auto inst : oldlatchnext->insts()) {
+            if (auto oldphiinst = inst->dynCast<ir::PhiInst>()) {
+                phireplacevec[cnt].push_back(oldphiinst);
+                cnt++;
+            } else
+                break;
+        }
+
         std::vector<ir::BasicBlock*> newbbexcepthead;
-        for (auto bb : bbexcepthead){
+        for (auto bb : bbexcepthead) {
             newbbexcepthead.push_back(copymap[bb]->dynCast<ir::BasicBlock>());
         }
         bbexcepthead = newbbexcepthead;
-        // std::set<ir::Value*> keys;
-        // for (auto val :keyset(reachDefAfterLatch)) 
-        //     keys.insert(val);//getallphi？
-        // for (auto val : keys) {
-        //     reachDefAfterLatch[copymap[val]] = reachDefAfterLatch[val];
-        //     if (!copymap[val]){
-        //         reachDefAfterLatch.erase(val);
-        //     }
-        // }
-        // //更新bbexcepthead
-        // for (auto bb : bbexcepthead) {
-            
-        // }
+    }
+    // 修改head的phi
+    cnt = 0;
+    for (auto inst : head->insts()) {
+        if (auto phiinst = inst->dynCast<ir::PhiInst>()) {
+            auto newval = phireplacevec[cnt].back();
+            cnt++;
+            for (size_t i = 0; i < phiinst->getsize(); i++) {
+                auto phibb = phiinst->getBlock(i);
+                if (phibb == latch) {
+                    phiinst->delBlock(phibb);
+                    phiinst->addIncoming(newval, oldlatchnext);
+                }
+            }
+        } else
+            break;
     }
 }
 
-void loopUnroll::copyloop(std::vector<ir::BasicBlock*> bbs, ir::BasicBlock* begin, ir::Loop* L, ir::Function* func) {//复制
+void loopUnroll::copyloop(std::vector<ir::BasicBlock*> bbs, ir::BasicBlock* begin, ir::Loop* L, ir::Function* func) {  // 复制
+    std::vector<ir::BasicBlock*> copybbs;
     auto Module = func->module();
-    auto getValue = [&](ir::Value* val) -> ir::Value* {
-        if (auto c = dyn_cast<ir::Constant>(val)) return c;
-        if (copymap.count(val)) return copymap[val];
-        return val;
-    };
+    // auto getValue = [&](ir::Value* val) -> ir::Value* {
+    //     if (auto c = dyn_cast<ir::Constant>(val)) return c;
+    //     if (copymap.count(val)) return copymap[val];
+    //     return val;
+    // };
     for (auto gvlaue : Module->globalVars()) {
         copymap[gvlaue] = gvlaue;
     }
@@ -183,22 +276,24 @@ void loopUnroll::copyloop(std::vector<ir::BasicBlock*> bbs, ir::BasicBlock* begi
     for (auto bb : bbs) {
         auto copybb = func->newBlock();
         copymap[bb] = copybb;
+        copybbs.push_back(copybb);
     }
     for (auto bb : bbs) {
         auto copybb = copymap[bb]->dynCast<ir::BasicBlock>();
         for (auto pred : bb->pre_blocks()) {
-            copybb->pre_blocks().emplace_back(copymap[pred]->dynCast<ir::BasicBlock>());
+            if (pred != getValue(pred)) copybb->pre_blocks().emplace_back(getValue(pred)->dynCast<ir::BasicBlock>());
         }
         for (auto succ : bb->next_blocks()) {
-            copybb->next_blocks().emplace_back(copymap[succ]->dynCast<ir::BasicBlock>());
+            if (succ != getValue(succ)) copybb->next_blocks().emplace_back(getValue(succ)->dynCast<ir::BasicBlock>());
         }
     }
 
     std::set<ir::BasicBlock*> vis;
     std::vector<ir::PhiInst*> phis;
     ir::BasicBlock::BasicBlockDfs(begin, [&](ir::BasicBlock* bb) -> bool {
-        if (vis.count(bb)) return true;
+        if (vis.count(bb) || (std::count(bbs.begin(), bbs.end(), bb) == 0)) return true;
         vis.insert(bb);
+        // std::cerr<<"1"<<std::endl;
         auto copybb = copymap[bb]->dynCast<ir::BasicBlock>();
         for (auto inst : bb->insts()) {
             auto copyinst = inst->copy(getValue);
@@ -208,11 +303,67 @@ void loopUnroll::copyloop(std::vector<ir::BasicBlock*> bbs, ir::BasicBlock* begi
                 phis.push_back(phiinst);
             }
         }
-        return true;
+        return false;
     });
     for (auto phi : phis) {
         auto copyphi = copymap[phi]->dynCast<ir::PhiInst>();
-        for (size_t i = 0; i < phi->getsize(); i++){
+        for (size_t i = 0; i < phi->getsize(); i++) {
+            auto phival = getValue(phi->getValue(i));
+            auto phibb = getValue(phi->getBlock(i))->dynCast<ir::BasicBlock>();
+            copyphi->addIncoming(phival, phibb);
+        }
+    }
+}
+
+void loopUnroll::copyloopremainder(std::vector<ir::BasicBlock*> bbs, ir::BasicBlock* begin, ir::Loop* L, ir::Function* func) {  // 复制
+    std::vector<ir::BasicBlock*> copybbs;
+    auto Module = func->module();
+    // auto getValue = [&](ir::Value* val) -> ir::Value* {
+    //     if (auto c = dyn_cast<ir::Constant>(val)) return c;
+    //     if (copymap.count(val)) return copymap[val];
+    //     return val;
+    // };
+    for (auto gvlaue : Module->globalVars()) {
+        copymap[gvlaue] = gvlaue;
+    }
+    for (auto arg : func->args()) {
+        copymap[arg] = arg;
+    }
+    for (auto bb : bbs) {
+        auto copybb = func->newBlock();
+        copymap[bb] = copybb;
+        copybbs.push_back(copybb);
+    }
+    for (auto bb : bbs) {
+        auto copybb = copymap[bb]->dynCast<ir::BasicBlock>();
+        for (auto pred : bb->pre_blocks()) {
+            copybb->pre_blocks().emplace_back(getValue(pred)->dynCast<ir::BasicBlock>());
+        }
+        for (auto succ : bb->next_blocks()) {
+            copybb->next_blocks().emplace_back(getValue(succ)->dynCast<ir::BasicBlock>());
+        }
+    }
+
+    std::set<ir::BasicBlock*> vis;
+    std::vector<ir::PhiInst*> phis;
+    ir::BasicBlock::BasicBlockDfs(begin, [&](ir::BasicBlock* bb) -> bool {
+        if (vis.count(bb) || (std::count(bbs.begin(), bbs.end(), bb) == 0)) return true;
+        vis.insert(bb);
+        // std::cerr<<"1"<<std::endl;
+        auto copybb = copymap[bb]->dynCast<ir::BasicBlock>();
+        for (auto inst : bb->insts()) {
+            auto copyinst = inst->copy(getValue);
+            copymap[inst] = copyinst;
+            copybb->emplace_back_inst(copyinst);
+            if (auto phiinst = inst->dynCast<ir::PhiInst>()) {
+                phis.push_back(phiinst);
+            }
+        }
+        return false;
+    });
+    for (auto phi : phis) {
+        auto copyphi = copymap[phi]->dynCast<ir::PhiInst>();
+        for (size_t i = 0; i < phi->getsize(); i++) {
             auto phival = getValue(phi->getValue(i));
             auto phibb = getValue(phi->getBlock(i))->dynCast<ir::BasicBlock>();
             copyphi->addIncoming(phival, phibb);
@@ -240,15 +391,6 @@ bool loopUnroll::definuseout(ir::Instruction* inst, ir::Loop* L) {
     return false;
 }
 
-bool loopUnroll::defoutusein(ir::Use* op, ir::Loop* L) {
-    if (auto opinst = op->value()->dynCast<ir::Instruction>()) {
-        auto opinstbb = opinst->block();
-        if (!L->contains(opinstbb))  // 考虑head?
-            return true;
-    }
-    return false;
-}
-
 bool loopUnroll::isconstant(ir::indVar* iv) {  // 判断迭代的end是否为常数
     if (auto constiv = iv->endValue()->dynCast<ir::Constant>()) return true;
     return false;
@@ -261,17 +403,12 @@ void loopUnroll::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     ivctx->refresh();
     for (auto& loop : lpctx->loops()) {
         ir::indVar* iv = ivctx->getIndvar(loop);
-        if (iv && isconstant(iv))
-            constunroll(loop, iv);
-        else
-            dynamicunroll(loop, iv);
+        if (loop->subLoops().empty()) {
+            if (iv && isconstant(iv))
+                constunroll(loop, iv);
+            else
+                dynamicunroll(loop, iv);
+        }
     }
-}
-std::vector<ir::Value*> keyset(std::unordered_map<ir::Value*, ir::Value*> map) {
-    std::vector<ir::Value*> keys;
-    for (auto it = map.begin(); it != map.end(); ++it) {
-        keys.push_back(it->first);
-    }
-    return keys;
 }
 }  // namespace pass
