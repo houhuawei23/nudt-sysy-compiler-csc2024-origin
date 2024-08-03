@@ -397,10 +397,7 @@ bool loopUnroll::isconstant(ir::indVar* iv) {  // 判断迭代的end是否为常
 }
 void loopUnroll::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     lpctx = tp->getLoopInfo(func);
-    lpctx->refresh();
     ivctx = tp->getIndVarInfo(func);
-    ivctx->setOff();
-    ivctx->refresh();
     for (auto& loop : lpctx->loops()) {
         ir::indVar* iv = ivctx->getIndvar(loop);
         if (loop->subLoops().empty()) {

@@ -13,12 +13,9 @@ void ADCE::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     if (func->isOnlyDeclare()) return;
 
     pdctx = tp->getPDomTree(func);
-    pdctx->refresh();
     liveBB.clear();
     liveInst.clear();
     auto sectx=tp->getSideEffectInfo();
-    sectx->setOff();
-    sectx->refresh();
 
     assert(workList.empty() and "ADCE WorkList not empty before running!");
 

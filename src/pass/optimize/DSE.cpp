@@ -7,9 +7,6 @@ static std::set<ir::StoreInst*>removeInsts;
 
 void simpleDSE::run(ir::BasicBlock* bb,TopAnalysisInfoManager* tp){
     auto sectx=tp->getSideEffectInfo();
-    sectx->setOff();
-    sectx->clearAll();
-    sectx->refresh();
     ptrMap.clear();
     removeInsts.clear();
     for(auto inst:bb->insts()){

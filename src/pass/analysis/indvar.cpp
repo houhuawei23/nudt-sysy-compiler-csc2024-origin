@@ -6,9 +6,7 @@ using namespace pass;
 void indVarAnalysis::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     if (func->isOnlyDeclare()) return;
     lpctx = tp->getLoopInfo(func);
-    lpctx->setOff();
-    lpctx->refresh();
-    ivctx = tp->getIndVarInfo(func);
+    ivctx = tp->getIndVarInfoWithoutRefresh(func);
     ivctx->clearAll();
     func->rename();
     for (auto lp : lpctx->loops()) {
@@ -96,10 +94,7 @@ void indVarAnalysis::addIndVar(ir::Loop* lp,
 void indVarInfoCheck::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     if (func->isOnlyDeclare()) return;
     lpctx = tp->getLoopInfo(func);
-    // lpctx->refresh();
     ivctx = tp->getIndVarInfo(func);
-    // ivctx->setOff();
-    // ivctx->refresh();
     using namespace std;
     cerr<<"In Function \""<<func->name()<<"\":"<<endl;
     for (auto lp : lpctx->loops()) {

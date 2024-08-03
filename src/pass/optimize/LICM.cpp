@@ -358,11 +358,9 @@ std::vector<ir::Value*> LICM::keyset(std::unordered_map<ir::Value*, std::set<ir:
 
 void LICM::run(ir::Module* module, TopAnalysisInfoManager* tp) {
     cgctx = tp->getCallGraph();
-    cgctx->refresh();
     for (auto func : module->funcs()) {
         if (func->isOnlyDeclare()) continue;
         loopctx = tp->getLoopInfo(func);
-        loopctx->refresh();
         flmap[func] = loopctx;
     }
     storeLift(module);

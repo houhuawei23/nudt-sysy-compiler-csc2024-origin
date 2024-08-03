@@ -316,9 +316,7 @@ void GVN::run(ir::Function* F, TopAnalysisInfoManager* tp) {
     _Hashtable.clear();
 
     domctx = tp->getDomTree(F);
-    domctx->refresh();
     sectx = tp->getSideEffectInfo();
-    sectx->refresh();
     RPO(F);
     visited.clear();
     // F->print(std::cout);

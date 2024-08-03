@@ -5,16 +5,11 @@ static std::vector<ir::PhiInst*>phiworklist;
 
 void SCEV::run(ir::Function* func,TopAnalysisInfoManager* tp){
     if(func->isOnlyDeclare())return;
+    domctx=tp->getDomTree(func);
     lpctx=tp->getLoopInfo(func);
     idvctx=tp->getIndVarInfo(func);
     sectx=tp->getSideEffectInfo();
-    domctx=tp->getDomTree(func);
-    domctx->refresh();
-    lpctx->refresh();
-    idvctx->setOff();
-    idvctx->refresh();
-    sectx->setOff();
-    sectx->refresh();
+    
     phiworklist.clear();
     
     for(auto lp:lpctx->loops()){
@@ -34,9 +29,16 @@ void SCEV::runOnLoop(ir::Loop* lp){
     if(defaultIdv==nullptr)return;
     normalizeIcmpAndBr(lp,defaultIdv);
     auto lpHeader=lp->header();
+    phiworklist.clear();
     for(auto pinst:lpHeader->phi_insts()){
         if(pinst->uses().empty())continue;
         phiworklist.push_back(pinst->dynCast<ir::PhiInst>());
+    }
+    while(phiworklist.empty()){
+        auto newPhi=phiworklist.back();
+        phiworklist.pop_back();
+        visitPhi(lp,newPhi);
+
     }
 
 }
@@ -209,6 +211,8 @@ ir::Value* SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv){//-1 f
     //对icmp进行标准化
     normalizeIcmpAndBr(lp,idv);
     //对于不能确定具体cnt的，只生成stepVar==1的情况，否则可以生成所有的情况
+    ir::IRBuilder builder;
+    builder.set_pos(lpExit,lpExit->insts().begin());
     switch (icmpinst->valueId())
     {
     case ir::vIEQ:
@@ -227,7 +231,7 @@ ir::Value* SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv){//-1 f
             if(stepVar!=-1)return nullptr;
             
             //TODO: makeInst here: sub i32 %beginVal, i32 %endVal;
-
+            return builder.makeBinary(ir::SUB,beginVal,endVal);
         }
         else if(iterinst->valueId()==ir::vSUB){
             // if(stepVar<0)return -1;
@@ -238,6 +242,7 @@ ir::Value* SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv){//-1 f
             if(stepVar!=1)return nullptr;
 
             //TODO: makeInst here: sub i32 %beginVal, i32 %endVal;
+            return builder.makeBinary(ir::SUB,beginVal,endVal);
 
         }
         else if(iterinst->valueId()==ir::vMUL){
@@ -258,6 +263,14 @@ ir::Value* SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv){//-1 f
             //TODO: makeInst here: %newVal = sub i32 %beginVal, i32 %endVal;
             //TODO: makeInst here: %newVal2 = sdiv i32 %newVal, i32 %stepVal;
             //TODO: makeInst here: %newVal2 = add i32 %newVal2, 1
+            auto newVal1=builder.makeBinary(ir::SUB,beginVal,endVal);
+            ir::Value* newVal2;
+            if(stepVar!=1)
+                newVal2=builder.makeBinary(ir::DIV,newVal1,stepVal);
+            else 
+                newVal2=newVal1;
+            auto const1=ir::Constant::gen_i32(1);
+            return builder.makeBinary(ir::ADD,newVal2,const1);
         }
         else if(iterinst->valueId()==ir::vSUB){
             if(stepVar<0)return nullptr;
@@ -268,7 +281,16 @@ ir::Value* SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv){//-1 f
             //TODO: makeInst here: %newVal = sub i32 %beginVal, i32 %endVal;
             //TODO: makeInst here: %newVal2 = sdiv i32 %newVal, i32 %stepVal;
             //TODO: makeInst here: %newVal2 = add i32 %newVal2, 1
-
+            ir::Value* newVal2;
+            if(stepVar==-1){
+                newVal2=builder.makeBinary(ir::SUB,endVal,beginVal);
+            }
+            else{
+                auto newVal1=builder.makeBinary(ir::SUB,beginVal,endVal);
+                newVal2=builder.makeBinary(ir::DIV,newVal1,stepVal);
+            }
+            auto const1=ir::Constant::gen_i32(1);
+            return builder.makeBinary(ir::ADD,newVal2,const1);
         }
         else if(iterinst->valueId()==ir::vMUL){
             return nullptr;//TODO: do not support != with MUL
@@ -287,6 +309,7 @@ ir::Value* SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv){//-1 f
             if(stepVar!=1)return nullptr;
             
             //TODO: makeInst here: sub i32 %endVal, i32 %beginVal;
+            return builder.makeBinary(ir::SUB,endVal,beginVal);
         }
         else if(iterinst->valueId()==ir::vSUB){
             // if(stepVar>0)return -1;
@@ -297,6 +320,7 @@ ir::Value* SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv){//-1 f
             if(stepVar!=-1)return nullptr;
             
             //TODO: makeInst here: sub i32 %endVal, i32 %beginVal;
+            return builder.makeBinary(ir::SUB,endVal,beginVal);
         }
         else if(iterinst->valueId()==ir::vMUL){
             return nullptr;//TODO: do not support != with MUL
@@ -315,6 +339,15 @@ ir::Value* SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv){//-1 f
             //TODO: makeInst here: %newVal = sub i32 %endVal, i32 %beginVal;
             //TODO: makeInst here: %newVal2 = sdiv i32 %newVal, i32 %stepVal;
             //TODO: makeInst here: %newVal2 = add i32 %newVal2, 1
+            ir::Value* newVal2;
+            auto newVal1=builder.makeBinary(ir::SUB,endVal,beginVal);
+            if(stepVar==1)
+                newVal2=newVal1;
+            else
+                newVal2=builder.makeBinary(ir::DIV,newVal1,stepVal);
+            auto const1=ir::Constant::gen_i32(1);
+            return builder.makeBinary(ir::ADD,newVal2,const1);
+
         }
         else if(iterinst->valueId()==ir::vSUB){
             if(stepVar>0)return nullptr;
@@ -325,6 +358,17 @@ ir::Value* SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv){//-1 f
             //TODO: makeInst here: %newVal = sub i32 %beginVal, i32 %endVal;
             //TODO: makeInst here: %newVal2 = sdiv i32 %newVal, i32 %stepVal;
             //TODO: makeInst here: %newVal2 = add i32 %newVal2, 1
+            ir::Value* newVal2;
+            if(stepVar==-1){
+                newVal2=builder.makeBinary(ir::SUB,endVal,beginVal);
+            }
+            else{
+                auto newVal1=builder.makeBinary(ir::SUB,beginVal,endVal);
+                newVal2=builder.makeBinary(ir::DIV,newVal1,stepVal);
+            }
+            auto const1=ir::Constant::gen_i32(1);
+            return builder.makeBinary(ir::ADD,newVal2,const1);
+
         }
         else if(iterinst->valueId()==ir::vMUL){
             return nullptr;//TODO: do not support != with MUL
@@ -336,6 +380,8 @@ ir::Value* SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv){//-1 f
     default:
         break;
     }
+    assert(false and "something error happened in func\" addCalCntInstuctions \"");
+    return nullptr;
 }
 
 //标准化:把idv放在op1 把endvar放在op2,icmp true就保持循环,false就跳出
