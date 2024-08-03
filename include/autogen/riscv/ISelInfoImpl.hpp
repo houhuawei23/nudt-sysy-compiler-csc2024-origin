@@ -710,6 +710,252 @@ static bool matchAndSelectPattern12(MIRInst* inst1, ISelContext& ctx) {
   MIROperand op3;
   if (not matchInstAdd(inst1, op1, op2, op3)) {
     return false;
+  } /* lookup inst that define the operand2 */
+  auto inst2 = ctx.lookupDefInst(op2);
+  if (not inst2) {
+    return false;
+  }
+
+  /* match inst InstShl */
+  MIROperand op4;
+  MIROperand op5;
+  MIROperand op6;
+  if (not matchInstShl(inst2, op4, op5, op6)) {
+    return false;
+  }
+
+  /* match predicate for operands  */
+  if (not(isOperandIReg(op1) && isOperandIReg(op5) && isOperandIReg(op3) && (op6).isImm() &&
+          (op6).imm() == 1)) {
+    return false;
+  }
+
+  /** Select Inst **/
+  auto op8 = (op1);
+  auto op9 = (op5);
+  auto op10 = (op3);
+  /* select inst SH1ADD */
+  auto inst3 = ctx.insertMIRInst(SH1ADD, {op8, op9, op10});
+
+  /* Replace Operand */
+  ctx.replace_operand(ctx.getInstDefOperand(inst1), ctx.getInstDefOperand(inst3));
+  ctx.remove_inst(inst1);
+  return true;
+}
+static bool matchAndSelectPattern13(MIRInst* inst1, ISelContext& ctx) {
+  uint32_t rootOpcode = InstAdd;
+  /** Match Inst **/
+  /* match inst InstAdd */
+  MIROperand op1;
+  MIROperand op2;
+  MIROperand op3;
+  if (not matchInstAdd(inst1, op1, op2, op3)) {
+    return false;
+  } /* lookup inst that define the operand3 */
+  auto inst2 = ctx.lookupDefInst(op3);
+  if (not inst2) {
+    return false;
+  }
+
+  /* match inst InstShl */
+  MIROperand op4;
+  MIROperand op5;
+  MIROperand op6;
+  if (not matchInstShl(inst2, op4, op5, op6)) {
+    return false;
+  }
+
+  /* match predicate for operands  */
+  if (not(isOperandIReg(op1) && isOperandIReg(op2) && isOperandIReg(op5) && (op6).isImm() &&
+          (op6).imm() == 1)) {
+    return false;
+  }
+
+  /** Select Inst **/
+  auto op8 = (op1);
+  auto op9 = (op5);
+  auto op10 = (op2);
+  /* select inst SH1ADD */
+  auto inst3 = ctx.insertMIRInst(SH1ADD, {op8, op9, op10});
+
+  /* Replace Operand */
+  ctx.replace_operand(ctx.getInstDefOperand(inst1), ctx.getInstDefOperand(inst3));
+  ctx.remove_inst(inst1);
+  return true;
+}
+static bool matchAndSelectPattern14(MIRInst* inst1, ISelContext& ctx) {
+  uint32_t rootOpcode = InstAdd;
+  /** Match Inst **/
+  /* match inst InstAdd */
+  MIROperand op1;
+  MIROperand op2;
+  MIROperand op3;
+  if (not matchInstAdd(inst1, op1, op2, op3)) {
+    return false;
+  } /* lookup inst that define the operand2 */
+  auto inst2 = ctx.lookupDefInst(op2);
+  if (not inst2) {
+    return false;
+  }
+
+  /* match inst InstShl */
+  MIROperand op4;
+  MIROperand op5;
+  MIROperand op6;
+  if (not matchInstShl(inst2, op4, op5, op6)) {
+    return false;
+  }
+
+  /* match predicate for operands  */
+  if (not(isOperandIReg(op1) && isOperandIReg(op5) && isOperandIReg(op3) && (op6).isImm() &&
+          (op6).imm() == 2)) {
+    return false;
+  }
+
+  /** Select Inst **/
+  auto op8 = (op1);
+  auto op9 = (op5);
+  auto op10 = (op3);
+  /* select inst SH2ADD */
+  auto inst3 = ctx.insertMIRInst(SH2ADD, {op8, op9, op10});
+
+  /* Replace Operand */
+  ctx.replace_operand(ctx.getInstDefOperand(inst1), ctx.getInstDefOperand(inst3));
+  ctx.remove_inst(inst1);
+  return true;
+}
+static bool matchAndSelectPattern15(MIRInst* inst1, ISelContext& ctx) {
+  uint32_t rootOpcode = InstAdd;
+  /** Match Inst **/
+  /* match inst InstAdd */
+  MIROperand op1;
+  MIROperand op2;
+  MIROperand op3;
+  if (not matchInstAdd(inst1, op1, op2, op3)) {
+    return false;
+  } /* lookup inst that define the operand3 */
+  auto inst2 = ctx.lookupDefInst(op3);
+  if (not inst2) {
+    return false;
+  }
+
+  /* match inst InstShl */
+  MIROperand op4;
+  MIROperand op5;
+  MIROperand op6;
+  if (not matchInstShl(inst2, op4, op5, op6)) {
+    return false;
+  }
+
+  /* match predicate for operands  */
+  if (not(isOperandIReg(op1) && isOperandIReg(op2) && isOperandIReg(op5) && (op6).isImm() &&
+          (op6).imm() == 2)) {
+    return false;
+  }
+
+  /** Select Inst **/
+  auto op8 = (op1);
+  auto op9 = (op5);
+  auto op10 = (op2);
+  /* select inst SH2ADD */
+  auto inst3 = ctx.insertMIRInst(SH2ADD, {op8, op9, op10});
+
+  /* Replace Operand */
+  ctx.replace_operand(ctx.getInstDefOperand(inst1), ctx.getInstDefOperand(inst3));
+  ctx.remove_inst(inst1);
+  return true;
+}
+static bool matchAndSelectPattern16(MIRInst* inst1, ISelContext& ctx) {
+  uint32_t rootOpcode = InstAdd;
+  /** Match Inst **/
+  /* match inst InstAdd */
+  MIROperand op1;
+  MIROperand op2;
+  MIROperand op3;
+  if (not matchInstAdd(inst1, op1, op2, op3)) {
+    return false;
+  } /* lookup inst that define the operand2 */
+  auto inst2 = ctx.lookupDefInst(op2);
+  if (not inst2) {
+    return false;
+  }
+
+  /* match inst InstShl */
+  MIROperand op4;
+  MIROperand op5;
+  MIROperand op6;
+  if (not matchInstShl(inst2, op4, op5, op6)) {
+    return false;
+  }
+
+  /* match predicate for operands  */
+  if (not(isOperandIReg(op1) && isOperandIReg(op5) && isOperandIReg(op3) && (op6).isImm() &&
+          (op6).imm() == 3)) {
+    return false;
+  }
+
+  /** Select Inst **/
+  auto op8 = (op1);
+  auto op9 = (op5);
+  auto op10 = (op3);
+  /* select inst SH3ADD */
+  auto inst3 = ctx.insertMIRInst(SH3ADD, {op8, op9, op10});
+
+  /* Replace Operand */
+  ctx.replace_operand(ctx.getInstDefOperand(inst1), ctx.getInstDefOperand(inst3));
+  ctx.remove_inst(inst1);
+  return true;
+}
+static bool matchAndSelectPattern17(MIRInst* inst1, ISelContext& ctx) {
+  uint32_t rootOpcode = InstAdd;
+  /** Match Inst **/
+  /* match inst InstAdd */
+  MIROperand op1;
+  MIROperand op2;
+  MIROperand op3;
+  if (not matchInstAdd(inst1, op1, op2, op3)) {
+    return false;
+  } /* lookup inst that define the operand3 */
+  auto inst2 = ctx.lookupDefInst(op3);
+  if (not inst2) {
+    return false;
+  }
+
+  /* match inst InstShl */
+  MIROperand op4;
+  MIROperand op5;
+  MIROperand op6;
+  if (not matchInstShl(inst2, op4, op5, op6)) {
+    return false;
+  }
+
+  /* match predicate for operands  */
+  if (not(isOperandIReg(op1) && isOperandIReg(op2) && isOperandIReg(op5) && (op6).isImm() &&
+          (op6).imm() == 3)) {
+    return false;
+  }
+
+  /** Select Inst **/
+  auto op8 = (op1);
+  auto op9 = (op5);
+  auto op10 = (op2);
+  /* select inst SH3ADD */
+  auto inst3 = ctx.insertMIRInst(SH3ADD, {op8, op9, op10});
+
+  /* Replace Operand */
+  ctx.replace_operand(ctx.getInstDefOperand(inst1), ctx.getInstDefOperand(inst3));
+  ctx.remove_inst(inst1);
+  return true;
+}
+static bool matchAndSelectPattern18(MIRInst* inst1, ISelContext& ctx) {
+  uint32_t rootOpcode = InstAdd;
+  /** Match Inst **/
+  /* match inst InstAdd */
+  MIROperand op1;
+  MIROperand op2;
+  MIROperand op3;
+  if (not matchInstAdd(inst1, op1, op2, op3)) {
+    return false;
   }
 
   /* match predicate for operands  */
@@ -729,7 +975,7 @@ static bool matchAndSelectPattern12(MIRInst* inst1, ISelContext& ctx) {
   ctx.remove_inst(inst1);
   return true;
 }
-static bool matchAndSelectPattern13(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern19(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstAdd;
   /** Match Inst **/
   /* match inst InstAdd */
@@ -757,7 +1003,7 @@ static bool matchAndSelectPattern13(MIRInst* inst1, ISelContext& ctx) {
   ctx.remove_inst(inst1);
   return true;
 }
-static bool matchAndSelectPattern14(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern20(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstAdd;
   /** Match Inst **/
   /* match inst InstAdd */
@@ -785,7 +1031,7 @@ static bool matchAndSelectPattern14(MIRInst* inst1, ISelContext& ctx) {
   ctx.remove_inst(inst1);
   return true;
 }
-static bool matchAndSelectPattern15(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern21(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstAdd;
   /** Match Inst **/
   /* match inst InstAdd */
@@ -817,7 +1063,7 @@ static bool matchAndSelectPattern15(MIRInst* inst1, ISelContext& ctx) {
 /* InstAdd matchAndSelectPatternInstAddend */
 
 /* InstSub matchAndSelectPatternInstSub begin */
-static bool matchAndSelectPattern16(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern22(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstSub;
   /** Match Inst **/
   /* match inst InstSub */
@@ -845,7 +1091,7 @@ static bool matchAndSelectPattern16(MIRInst* inst1, ISelContext& ctx) {
   ctx.remove_inst(inst1);
   return true;
 }
-static bool matchAndSelectPattern17(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern23(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstSub;
   /** Match Inst **/
   /* match inst InstSub */
@@ -877,7 +1123,7 @@ static bool matchAndSelectPattern17(MIRInst* inst1, ISelContext& ctx) {
 /* InstSub matchAndSelectPatternInstSubend */
 
 /* InstMul matchAndSelectPatternInstMul begin */
-static bool matchAndSelectPattern18(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern24(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstMul;
   /** Match Inst **/
   /* match inst InstMul */
@@ -905,7 +1151,7 @@ static bool matchAndSelectPattern18(MIRInst* inst1, ISelContext& ctx) {
   ctx.remove_inst(inst1);
   return true;
 }
-static bool matchAndSelectPattern19(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern25(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstMul;
   /** Match Inst **/
   /* match inst InstMul */
@@ -937,7 +1183,7 @@ static bool matchAndSelectPattern19(MIRInst* inst1, ISelContext& ctx) {
 /* InstMul matchAndSelectPatternInstMulend */
 
 /* InstUDiv matchAndSelectPatternInstUDiv begin */
-static bool matchAndSelectPattern20(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern26(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstUDiv;
   /** Match Inst **/
   /* match inst InstUDiv */
@@ -965,7 +1211,7 @@ static bool matchAndSelectPattern20(MIRInst* inst1, ISelContext& ctx) {
   ctx.remove_inst(inst1);
   return true;
 }
-static bool matchAndSelectPattern21(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern27(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstUDiv;
   /** Match Inst **/
   /* match inst InstUDiv */
@@ -997,7 +1243,7 @@ static bool matchAndSelectPattern21(MIRInst* inst1, ISelContext& ctx) {
 /* InstUDiv matchAndSelectPatternInstUDivend */
 
 /* InstURem matchAndSelectPatternInstURem begin */
-static bool matchAndSelectPattern22(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern28(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstURem;
   /** Match Inst **/
   /* match inst InstURem */
@@ -1025,7 +1271,7 @@ static bool matchAndSelectPattern22(MIRInst* inst1, ISelContext& ctx) {
   ctx.remove_inst(inst1);
   return true;
 }
-static bool matchAndSelectPattern23(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern29(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstURem;
   /** Match Inst **/
   /* match inst InstURem */
@@ -1057,7 +1303,7 @@ static bool matchAndSelectPattern23(MIRInst* inst1, ISelContext& ctx) {
 /* InstURem matchAndSelectPatternInstURemend */
 
 /* InstAnd matchAndSelectPatternInstAnd begin */
-static bool matchAndSelectPattern24(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern30(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstAnd;
   /** Match Inst **/
   /* match inst InstAnd */
@@ -1085,7 +1331,7 @@ static bool matchAndSelectPattern24(MIRInst* inst1, ISelContext& ctx) {
   ctx.remove_inst(inst1);
   return true;
 }
-static bool matchAndSelectPattern27(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern33(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstAnd;
   /** Match Inst **/
   /* match inst InstAnd */
@@ -1117,7 +1363,7 @@ static bool matchAndSelectPattern27(MIRInst* inst1, ISelContext& ctx) {
 /* InstAnd matchAndSelectPatternInstAndend */
 
 /* InstOr matchAndSelectPatternInstOr begin */
-static bool matchAndSelectPattern25(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern31(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstOr;
   /** Match Inst **/
   /* match inst InstOr */
@@ -1145,7 +1391,7 @@ static bool matchAndSelectPattern25(MIRInst* inst1, ISelContext& ctx) {
   ctx.remove_inst(inst1);
   return true;
 }
-static bool matchAndSelectPattern28(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern34(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstOr;
   /** Match Inst **/
   /* match inst InstOr */
@@ -1177,7 +1423,7 @@ static bool matchAndSelectPattern28(MIRInst* inst1, ISelContext& ctx) {
 /* InstOr matchAndSelectPatternInstOrend */
 
 /* InstXor matchAndSelectPatternInstXor begin */
-static bool matchAndSelectPattern26(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern32(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstXor;
   /** Match Inst **/
   /* match inst InstXor */
@@ -1205,7 +1451,7 @@ static bool matchAndSelectPattern26(MIRInst* inst1, ISelContext& ctx) {
   ctx.remove_inst(inst1);
   return true;
 }
-static bool matchAndSelectPattern29(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern35(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstXor;
   /** Match Inst **/
   /* match inst InstXor */
@@ -1237,7 +1483,7 @@ static bool matchAndSelectPattern29(MIRInst* inst1, ISelContext& ctx) {
 /* InstXor matchAndSelectPatternInstXorend */
 
 /* InstShl matchAndSelectPatternInstShl begin */
-static bool matchAndSelectPattern30(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern36(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstShl;
   /** Match Inst **/
   /* match inst InstShl */
@@ -1265,7 +1511,7 @@ static bool matchAndSelectPattern30(MIRInst* inst1, ISelContext& ctx) {
   ctx.remove_inst(inst1);
   return true;
 }
-static bool matchAndSelectPattern31(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern37(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstShl;
   /** Match Inst **/
   /* match inst InstShl */
@@ -1293,7 +1539,7 @@ static bool matchAndSelectPattern31(MIRInst* inst1, ISelContext& ctx) {
   ctx.remove_inst(inst1);
   return true;
 }
-static bool matchAndSelectPattern32(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern38(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstShl;
   /** Match Inst **/
   /* match inst InstShl */
@@ -1321,7 +1567,7 @@ static bool matchAndSelectPattern32(MIRInst* inst1, ISelContext& ctx) {
   ctx.remove_inst(inst1);
   return true;
 }
-static bool matchAndSelectPattern33(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern39(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstShl;
   /** Match Inst **/
   /* match inst InstShl */
@@ -1353,7 +1599,7 @@ static bool matchAndSelectPattern33(MIRInst* inst1, ISelContext& ctx) {
 /* InstShl matchAndSelectPatternInstShlend */
 
 /* InstLShr matchAndSelectPatternInstLShr begin */
-static bool matchAndSelectPattern34(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern40(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstLShr;
   /** Match Inst **/
   /* match inst InstLShr */
@@ -1381,7 +1627,7 @@ static bool matchAndSelectPattern34(MIRInst* inst1, ISelContext& ctx) {
   ctx.remove_inst(inst1);
   return true;
 }
-static bool matchAndSelectPattern35(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern41(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstLShr;
   /** Match Inst **/
   /* match inst InstLShr */
@@ -1413,7 +1659,7 @@ static bool matchAndSelectPattern35(MIRInst* inst1, ISelContext& ctx) {
 /* InstLShr matchAndSelectPatternInstLShrend */
 
 /* InstAShr matchAndSelectPatternInstAShr begin */
-static bool matchAndSelectPattern36(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern42(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstAShr;
   /** Match Inst **/
   /* match inst InstAShr */
@@ -1441,7 +1687,7 @@ static bool matchAndSelectPattern36(MIRInst* inst1, ISelContext& ctx) {
   ctx.remove_inst(inst1);
   return true;
 }
-static bool matchAndSelectPattern37(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern43(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstAShr;
   /** Match Inst **/
   /* match inst InstAShr */
@@ -1469,7 +1715,7 @@ static bool matchAndSelectPattern37(MIRInst* inst1, ISelContext& ctx) {
   ctx.remove_inst(inst1);
   return true;
 }
-static bool matchAndSelectPattern38(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern44(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstAShr;
   /** Match Inst **/
   /* match inst InstAShr */
@@ -1497,7 +1743,7 @@ static bool matchAndSelectPattern38(MIRInst* inst1, ISelContext& ctx) {
   ctx.remove_inst(inst1);
   return true;
 }
-static bool matchAndSelectPattern39(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern45(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstAShr;
   /** Match Inst **/
   /* match inst InstAShr */
@@ -1529,7 +1775,7 @@ static bool matchAndSelectPattern39(MIRInst* inst1, ISelContext& ctx) {
 /* InstAShr matchAndSelectPatternInstAShrend */
 
 /* InstSDiv matchAndSelectPatternInstSDiv begin */
-static bool matchAndSelectPattern40(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern46(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstSDiv;
   /** Match Inst **/
   /* match inst InstSDiv */
@@ -1557,7 +1803,7 @@ static bool matchAndSelectPattern40(MIRInst* inst1, ISelContext& ctx) {
   ctx.remove_inst(inst1);
   return true;
 }
-static bool matchAndSelectPattern41(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern47(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstSDiv;
   /** Match Inst **/
   /* match inst InstSDiv */
@@ -1589,7 +1835,7 @@ static bool matchAndSelectPattern41(MIRInst* inst1, ISelContext& ctx) {
 /* InstSDiv matchAndSelectPatternInstSDivend */
 
 /* InstSRem matchAndSelectPatternInstSRem begin */
-static bool matchAndSelectPattern42(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern48(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstSRem;
   /** Match Inst **/
   /* match inst InstSRem */
@@ -1617,7 +1863,7 @@ static bool matchAndSelectPattern42(MIRInst* inst1, ISelContext& ctx) {
   ctx.remove_inst(inst1);
   return true;
 }
-static bool matchAndSelectPattern43(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern49(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstSRem;
   /** Match Inst **/
   /* match inst InstSRem */
@@ -1649,7 +1895,7 @@ static bool matchAndSelectPattern43(MIRInst* inst1, ISelContext& ctx) {
 /* InstSRem matchAndSelectPatternInstSRemend */
 
 /* InstSMin matchAndSelectPatternInstSMin begin */
-static bool matchAndSelectPattern44(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern50(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstSMin;
   /** Match Inst **/
   /* match inst InstSMin */
@@ -1681,7 +1927,7 @@ static bool matchAndSelectPattern44(MIRInst* inst1, ISelContext& ctx) {
 /* InstSMin matchAndSelectPatternInstSMinend */
 
 /* InstSMax matchAndSelectPatternInstSMax begin */
-static bool matchAndSelectPattern45(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern51(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstSMax;
   /** Match Inst **/
   /* match inst InstSMax */
@@ -1713,7 +1959,7 @@ static bool matchAndSelectPattern45(MIRInst* inst1, ISelContext& ctx) {
 /* InstSMax matchAndSelectPatternInstSMaxend */
 
 /* InstAbs matchAndSelectPatternInstAbs begin */
-static bool matchAndSelectPattern46(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern52(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstAbs;
   /** Match Inst **/
   /* match inst InstAbs */
@@ -1751,7 +1997,7 @@ static bool matchAndSelectPattern46(MIRInst* inst1, ISelContext& ctx) {
 /* InstAbs matchAndSelectPatternInstAbsend */
 
 /* InstICmp matchAndSelectPatternInstICmp begin */
-static bool matchAndSelectPattern47(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern53(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstICmp;
   /** Match Inst **/
   /* match inst InstICmp */
@@ -1781,7 +2027,7 @@ static bool matchAndSelectPattern47(MIRInst* inst1, ISelContext& ctx) {
   ctx.remove_inst(inst1);
   return true;
 }
-static bool matchAndSelectPattern48(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern54(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstICmp;
   /** Match Inst **/
   /* match inst InstICmp */
@@ -1818,7 +2064,7 @@ static bool matchAndSelectPattern48(MIRInst* inst1, ISelContext& ctx) {
   ctx.remove_inst(inst1);
   return true;
 }
-static bool matchAndSelectPattern49(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern55(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstICmp;
   /** Match Inst **/
   /* match inst InstICmp */
@@ -1848,7 +2094,7 @@ static bool matchAndSelectPattern49(MIRInst* inst1, ISelContext& ctx) {
   ctx.remove_inst(inst1);
   return true;
 }
-static bool matchAndSelectPattern50(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern56(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstICmp;
   /** Match Inst **/
   /* match inst InstICmp */
@@ -1878,7 +2124,7 @@ static bool matchAndSelectPattern50(MIRInst* inst1, ISelContext& ctx) {
   ctx.remove_inst(inst1);
   return true;
 }
-static bool matchAndSelectPattern51(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern57(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstICmp;
   /** Match Inst **/
   /* match inst InstICmp */
@@ -1908,7 +2154,7 @@ static bool matchAndSelectPattern51(MIRInst* inst1, ISelContext& ctx) {
   ctx.remove_inst(inst1);
   return true;
 }
-static bool matchAndSelectPattern52(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern58(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstICmp;
   /** Match Inst **/
   /* match inst InstICmp */
@@ -1937,7 +2183,7 @@ static bool matchAndSelectPattern52(MIRInst* inst1, ISelContext& ctx) {
   ctx.remove_inst(inst1);
   return true;
 }
-static bool matchAndSelectPattern53(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern59(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstICmp;
   /** Match Inst **/
   /* match inst InstICmp */
@@ -1966,7 +2212,7 @@ static bool matchAndSelectPattern53(MIRInst* inst1, ISelContext& ctx) {
   ctx.remove_inst(inst1);
   return true;
 }
-static bool matchAndSelectPattern54(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern60(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstICmp;
   /** Match Inst **/
   /* match inst InstICmp */
@@ -2007,7 +2253,7 @@ static bool matchAndSelectPattern54(MIRInst* inst1, ISelContext& ctx) {
 /* InstICmp matchAndSelectPatternInstICmpend */
 
 /* InstBranch matchAndSelectPatternInstBranch begin */
-static bool matchAndSelectPattern55(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern61(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstBranch;
   /** Match Inst **/
   /* match inst InstBranch */
@@ -2038,7 +2284,7 @@ static bool matchAndSelectPattern55(MIRInst* inst1, ISelContext& ctx) {
 /* InstBranch matchAndSelectPatternInstBranchend */
 
 /* InstF2S matchAndSelectPatternInstF2S begin */
-static bool matchAndSelectPattern56(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern62(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstF2S;
   /** Match Inst **/
   /* match inst InstF2S */
@@ -2063,7 +2309,7 @@ static bool matchAndSelectPattern56(MIRInst* inst1, ISelContext& ctx) {
 /* InstF2S matchAndSelectPatternInstF2Send */
 
 /* InstS2F matchAndSelectPatternInstS2F begin */
-static bool matchAndSelectPattern57(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern63(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstS2F;
   /** Match Inst **/
   /* match inst InstS2F */
@@ -2088,7 +2334,7 @@ static bool matchAndSelectPattern57(MIRInst* inst1, ISelContext& ctx) {
 /* InstS2F matchAndSelectPatternInstS2Fend */
 
 /* InstFCmp matchAndSelectPatternInstFCmp begin */
-static bool matchAndSelectPattern58(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern64(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstFCmp;
   /** Match Inst **/
   /* match inst InstFCmp */
@@ -2124,7 +2370,7 @@ static bool matchAndSelectPattern58(MIRInst* inst1, ISelContext& ctx) {
 /* InstFCmp matchAndSelectPatternInstFCmpend */
 
 /* InstFNeg matchAndSelectPatternInstFNeg begin */
-static bool matchAndSelectPattern59(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern65(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstFNeg;
   /** Match Inst **/
   /* match inst InstFNeg */
@@ -2149,7 +2395,7 @@ static bool matchAndSelectPattern59(MIRInst* inst1, ISelContext& ctx) {
 /* InstFNeg matchAndSelectPatternInstFNegend */
 
 /* InstFAdd matchAndSelectPatternInstFAdd begin */
-static bool matchAndSelectPattern60(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern66(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstFAdd;
   /** Match Inst **/
   /* match inst InstFAdd */
@@ -2176,7 +2422,7 @@ static bool matchAndSelectPattern60(MIRInst* inst1, ISelContext& ctx) {
 /* InstFAdd matchAndSelectPatternInstFAddend */
 
 /* InstFSub matchAndSelectPatternInstFSub begin */
-static bool matchAndSelectPattern61(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern67(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstFSub;
   /** Match Inst **/
   /* match inst InstFSub */
@@ -2203,7 +2449,7 @@ static bool matchAndSelectPattern61(MIRInst* inst1, ISelContext& ctx) {
 /* InstFSub matchAndSelectPatternInstFSubend */
 
 /* InstFMul matchAndSelectPatternInstFMul begin */
-static bool matchAndSelectPattern62(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern68(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstFMul;
   /** Match Inst **/
   /* match inst InstFMul */
@@ -2230,7 +2476,7 @@ static bool matchAndSelectPattern62(MIRInst* inst1, ISelContext& ctx) {
 /* InstFMul matchAndSelectPatternInstFMulend */
 
 /* InstFDiv matchAndSelectPatternInstFDiv begin */
-static bool matchAndSelectPattern63(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern69(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstFDiv;
   /** Match Inst **/
   /* match inst InstFDiv */
@@ -2257,7 +2503,7 @@ static bool matchAndSelectPattern63(MIRInst* inst1, ISelContext& ctx) {
 /* InstFDiv matchAndSelectPatternInstFDivend */
 
 /* InstZExt matchAndSelectPatternInstZExt begin */
-static bool matchAndSelectPattern64(MIRInst* inst1, ISelContext& ctx) {
+static bool matchAndSelectPattern70(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstZExt;
   /** Match Inst **/
   /* match inst InstZExt */
@@ -2368,9 +2614,6 @@ static bool matchAndSelectImpl(MIRInst* inst, ISelContext& ctx, bool debugMatchS
         success = true;
         break;
       }
-      break;
-    }
-    case InstSub: {
       if (matchAndSelectPattern16(inst, ctx)) {
         success = true;
         break;
@@ -2379,9 +2622,6 @@ static bool matchAndSelectImpl(MIRInst* inst, ISelContext& ctx, bool debugMatchS
         success = true;
         break;
       }
-      break;
-    }
-    case InstMul: {
       if (matchAndSelectPattern18(inst, ctx)) {
         success = true;
         break;
@@ -2390,9 +2630,6 @@ static bool matchAndSelectImpl(MIRInst* inst, ISelContext& ctx, bool debugMatchS
         success = true;
         break;
       }
-      break;
-    }
-    case InstUDiv: {
       if (matchAndSelectPattern20(inst, ctx)) {
         success = true;
         break;
@@ -2403,7 +2640,7 @@ static bool matchAndSelectImpl(MIRInst* inst, ISelContext& ctx, bool debugMatchS
       }
       break;
     }
-    case InstURem: {
+    case InstSub: {
       if (matchAndSelectPattern22(inst, ctx)) {
         success = true;
         break;
@@ -2414,8 +2651,19 @@ static bool matchAndSelectImpl(MIRInst* inst, ISelContext& ctx, bool debugMatchS
       }
       break;
     }
-    case InstAnd: {
+    case InstMul: {
       if (matchAndSelectPattern24(inst, ctx)) {
+        success = true;
+        break;
+      }
+      if (matchAndSelectPattern25(inst, ctx)) {
+        success = true;
+        break;
+      }
+      break;
+    }
+    case InstUDiv: {
+      if (matchAndSelectPattern26(inst, ctx)) {
         success = true;
         break;
       }
@@ -2425,19 +2673,8 @@ static bool matchAndSelectImpl(MIRInst* inst, ISelContext& ctx, bool debugMatchS
       }
       break;
     }
-    case InstOr: {
-      if (matchAndSelectPattern25(inst, ctx)) {
-        success = true;
-        break;
-      }
+    case InstURem: {
       if (matchAndSelectPattern28(inst, ctx)) {
-        success = true;
-        break;
-      }
-      break;
-    }
-    case InstXor: {
-      if (matchAndSelectPattern26(inst, ctx)) {
         success = true;
         break;
       }
@@ -2447,16 +2684,8 @@ static bool matchAndSelectImpl(MIRInst* inst, ISelContext& ctx, bool debugMatchS
       }
       break;
     }
-    case InstShl: {
+    case InstAnd: {
       if (matchAndSelectPattern30(inst, ctx)) {
-        success = true;
-        break;
-      }
-      if (matchAndSelectPattern31(inst, ctx)) {
-        success = true;
-        break;
-      }
-      if (matchAndSelectPattern32(inst, ctx)) {
         success = true;
         break;
       }
@@ -2466,8 +2695,19 @@ static bool matchAndSelectImpl(MIRInst* inst, ISelContext& ctx, bool debugMatchS
       }
       break;
     }
-    case InstLShr: {
+    case InstOr: {
+      if (matchAndSelectPattern31(inst, ctx)) {
+        success = true;
+        break;
+      }
       if (matchAndSelectPattern34(inst, ctx)) {
+        success = true;
+        break;
+      }
+      break;
+    }
+    case InstXor: {
+      if (matchAndSelectPattern32(inst, ctx)) {
         success = true;
         break;
       }
@@ -2477,7 +2717,7 @@ static bool matchAndSelectImpl(MIRInst* inst, ISelContext& ctx, bool debugMatchS
       }
       break;
     }
-    case InstAShr: {
+    case InstShl: {
       if (matchAndSelectPattern36(inst, ctx)) {
         success = true;
         break;
@@ -2496,7 +2736,7 @@ static bool matchAndSelectImpl(MIRInst* inst, ISelContext& ctx, bool debugMatchS
       }
       break;
     }
-    case InstSDiv: {
+    case InstLShr: {
       if (matchAndSelectPattern40(inst, ctx)) {
         success = true;
         break;
@@ -2507,7 +2747,7 @@ static bool matchAndSelectImpl(MIRInst* inst, ISelContext& ctx, bool debugMatchS
       }
       break;
     }
-    case InstSRem: {
+    case InstAShr: {
       if (matchAndSelectPattern42(inst, ctx)) {
         success = true;
         break;
@@ -2516,34 +2756,28 @@ static bool matchAndSelectImpl(MIRInst* inst, ISelContext& ctx, bool debugMatchS
         success = true;
         break;
       }
-      break;
-    }
-    case InstSMin: {
       if (matchAndSelectPattern44(inst, ctx)) {
         success = true;
         break;
       }
-      break;
-    }
-    case InstSMax: {
       if (matchAndSelectPattern45(inst, ctx)) {
         success = true;
         break;
       }
       break;
     }
-    case InstAbs: {
+    case InstSDiv: {
       if (matchAndSelectPattern46(inst, ctx)) {
+        success = true;
+        break;
+      }
+      if (matchAndSelectPattern47(inst, ctx)) {
         success = true;
         break;
       }
       break;
     }
-    case InstICmp: {
-      if (matchAndSelectPattern47(inst, ctx)) {
-        success = true;
-        break;
-      }
+    case InstSRem: {
       if (matchAndSelectPattern48(inst, ctx)) {
         success = true;
         break;
@@ -2552,18 +2786,30 @@ static bool matchAndSelectImpl(MIRInst* inst, ISelContext& ctx, bool debugMatchS
         success = true;
         break;
       }
+      break;
+    }
+    case InstSMin: {
       if (matchAndSelectPattern50(inst, ctx)) {
         success = true;
         break;
       }
+      break;
+    }
+    case InstSMax: {
       if (matchAndSelectPattern51(inst, ctx)) {
         success = true;
         break;
       }
+      break;
+    }
+    case InstAbs: {
       if (matchAndSelectPattern52(inst, ctx)) {
         success = true;
         break;
       }
+      break;
+    }
+    case InstICmp: {
       if (matchAndSelectPattern53(inst, ctx)) {
         success = true;
         break;
@@ -2572,73 +2818,97 @@ static bool matchAndSelectImpl(MIRInst* inst, ISelContext& ctx, bool debugMatchS
         success = true;
         break;
       }
-      break;
-    }
-    case InstBranch: {
       if (matchAndSelectPattern55(inst, ctx)) {
         success = true;
         break;
       }
-      break;
-    }
-    case InstF2S: {
       if (matchAndSelectPattern56(inst, ctx)) {
         success = true;
         break;
       }
-      break;
-    }
-    case InstS2F: {
       if (matchAndSelectPattern57(inst, ctx)) {
         success = true;
         break;
       }
-      break;
-    }
-    case InstFCmp: {
       if (matchAndSelectPattern58(inst, ctx)) {
         success = true;
         break;
       }
-      break;
-    }
-    case InstFNeg: {
       if (matchAndSelectPattern59(inst, ctx)) {
         success = true;
         break;
       }
-      break;
-    }
-    case InstFAdd: {
       if (matchAndSelectPattern60(inst, ctx)) {
         success = true;
         break;
       }
       break;
     }
-    case InstFSub: {
+    case InstBranch: {
       if (matchAndSelectPattern61(inst, ctx)) {
         success = true;
         break;
       }
       break;
     }
-    case InstFMul: {
+    case InstF2S: {
       if (matchAndSelectPattern62(inst, ctx)) {
         success = true;
         break;
       }
       break;
     }
-    case InstFDiv: {
+    case InstS2F: {
       if (matchAndSelectPattern63(inst, ctx)) {
         success = true;
         break;
       }
       break;
     }
-    case InstZExt: {
+    case InstFCmp: {
       if (matchAndSelectPattern64(inst, ctx)) {
+        success = true;
+        break;
+      }
+      break;
+    }
+    case InstFNeg: {
+      if (matchAndSelectPattern65(inst, ctx)) {
+        success = true;
+        break;
+      }
+      break;
+    }
+    case InstFAdd: {
+      if (matchAndSelectPattern66(inst, ctx)) {
+        success = true;
+        break;
+      }
+      break;
+    }
+    case InstFSub: {
+      if (matchAndSelectPattern67(inst, ctx)) {
+        success = true;
+        break;
+      }
+      break;
+    }
+    case InstFMul: {
+      if (matchAndSelectPattern68(inst, ctx)) {
+        success = true;
+        break;
+      }
+      break;
+    }
+    case InstFDiv: {
+      if (matchAndSelectPattern69(inst, ctx)) {
+        success = true;
+        break;
+      }
+      break;
+    }
+    case InstZExt: {
+      if (matchAndSelectPattern70(inst, ctx)) {
         success = true;
         break;
       }
