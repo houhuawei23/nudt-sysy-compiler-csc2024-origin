@@ -5,6 +5,8 @@
 #include "ir/value.hpp"
 #include "support/utils.hpp"
 
+#include <initializer_list>
+
 namespace ir {
 
 class AllocaInst;
@@ -245,6 +247,13 @@ class CallInst : public Instruction {
 public:
   CallInst(Function* callee,
            const_value_ptr_vector rargs = {},
+           BasicBlock* parent = nullptr,
+           const_str_ref name = "")
+    : Instruction(vCALL, callee->retType(), parent, name), mCallee(callee), mIsTail(false) {
+    addOperands(rargs);
+  }
+  CallInst(Function* callee,
+           std::initializer_list<Value*> rargs = {},
            BasicBlock* parent = nullptr,
            const_str_ref name = "")
     : Instruction(vCALL, callee->retType(), parent, name), mCallee(callee), mIsTail(false) {
@@ -604,15 +613,12 @@ class FunctionPtrInst : public Instruction {
 public:
   explicit FunctionPtrInst(Function* func, Type* dstType, BasicBlock* parent = nullptr)
     : Instruction(vFUNCPTR, dstType, parent) {
-      addOperand(func);
-    }
+    addOperand(func);
+  }
   Function* getFunc() const { return operand(0)->as<Function>(); }
   static bool classof(const Value* v) { return v->valueId() == vFUNCPTR; }
   void print(std::ostream& os) const override;
-  Instruction* copy(std::function<Value*(Value*)> getValue) const override {
-    return nullptr;
-  }
-
+  Instruction* copy(std::function<Value*(Value*)> getValue) const override { return nullptr; }
 };
 
 class indVar {
@@ -665,6 +671,7 @@ public:
   PhiInst* phiinst() { return mphiinst; }
   Constant* getBegin() { return mbeginVar; }
   Constant* getStep() { return mstepVar; }
+  Value* getEnd() { return mendVar; }
 };
 
 }  // namespace ir

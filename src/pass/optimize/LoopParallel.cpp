@@ -74,7 +74,7 @@ void LoopParallel::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
     LoopBodyFuncInfo loopBodyInfo;
     if (not extractLoopBody(func, *loop, indVar, tp, loopBodyInfo /* ret */)) continue;
 
-    const auto parallelFor = loopupParallelFor(func->module());
+    auto parallelFor = loopupParallelFor(func->module());
 
     const auto i32 = ir::Type::TypeInt32();
     const auto f32 = ir::Type::TypeFloat32();
@@ -175,8 +175,19 @@ void LoopParallel::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
     // prepare payloadStorage
     // prepare parallel_body func ptr
     // call parallelFor(beg, end, parallel_body_ptr)
+    // void (i32, i32)*
+    const auto voidType = ir::Type::void_type();
+    const auto parallelBodyPtrType =
+      ir::PointerType::gen(ir::FunctionType::gen(voidType, {i32, i32}));
 
-    // auto parallelBodyFuncPtr =
+    auto parallelBodyFuncPtr =
+      builder.makeInst<ir::FunctionPtrInst>(parallelBody, parallelBodyPtrType);
+
+    auto callArgs = std::vector<ir::Value*>{loopBodyInfo.indVar->getBegin(),
+                                            loopBodyInfo.indVar->getEnd(), parallelBodyFuncPtr};
+    builder.makeInst<ir::CallInst>(parallelFor, callArgs);
+    
+    
   }
 }
 

@@ -12,6 +12,7 @@ namespace pass {
 struct LoopBodyFuncInfo {
   BasicBlock* loop;
   CallInst* callInst;
+  ir::indVar* indVar;
 };
 
 class LoopParallel : public FunctionPass {
