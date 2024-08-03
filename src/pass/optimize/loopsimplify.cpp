@@ -73,7 +73,7 @@ ir::BasicBlock* loopsimplify::insertUniquePreheader(
     TopAnalysisInfoManager* tp) {
   ir::BasicBlock* header = L->header();
   ir::Function* F = header->function();
-  ir::BasicBlock* preheader = L->getlooppPredecessor();
+  ir::BasicBlock* preheader = L->getloopPredecessor();
   if (!preheader) {  // 有多个循环外的preheader，则插入一个新的汇合块
     std::vector<ir::BasicBlock*> preBBs;
     for (ir::BasicBlock* BB : header->pre_blocks()) {

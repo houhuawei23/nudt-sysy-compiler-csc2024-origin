@@ -49,7 +49,7 @@ void indVarAnalysis::run(ir::Function* func, TopAnalysisInfoManager* tp) {
             mBeginVar=getConstantBeginVarFromPhi(mBeginVarPhi,lp->parent());
         }
         if(mBeginVar==nullptr)continue;
-        auto iterInst=keyPhiInst->getValue(0)==keyPhiInst->getvalfromBB(lp->getlooppPredecessor())?
+        auto iterInst=keyPhiInst->getValue(0)==keyPhiInst->getvalfromBB(lp->getloopPredecessor())?
             keyPhiInst->getValue(1):keyPhiInst->getValue(0);
         auto iterInstScid = iterInst->valueId();
         ir::Constant* mstepVar;
