@@ -105,10 +105,10 @@ std::any SysYIRGenerator::visitAssignStmt(SysYParser::AssignStmtContext* ctx) {
 
   if (auto cexp = dyn_cast<ir::Constant>(exp)) {  //! 1. 右值为常值
     switch (lvar_pointee_type->btype()) {
-      case ir::INT32:
+      case ir::BasicTypeRank::INT32:
         exp = ir::Constant::gen_i32(cexp->i32());
         break;
-      case ir::FLOAT:
+      case ir::BasicTypeRank::FLOAT:
         exp = ir::Constant::gen_f32(cexp->f32());
         break;
       default:

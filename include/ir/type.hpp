@@ -12,7 +12,7 @@ class FunctionType;
 using type_ptr_vector = std::vector<Type*>;
 
 // ir base type
-typedef enum : size_t {
+enum class BasicTypeRank : size_t {
   VOID,
   INT1,
   INT8,
@@ -24,24 +24,24 @@ typedef enum : size_t {
   FUNCTION,
   ARRAY,
   UNDEFINE
-} BType; // FIXME: BType -> BasicTypeRank
+};  // FIXME: BType -> BasicTypeRank
 
 /* Type */
 class Type {
- protected:
-  BType mBtype;
+protected:
+  BasicTypeRank mBtype;
   size_t mSize;
 
- public:
+public:
   static constexpr auto arenaSource = utils::Arena::Source::IR;
-  Type(BType btype, size_t size = 4) : mBtype(btype), mSize(size) {}
+  Type(BasicTypeRank btype, size_t size = 4) : mBtype(btype), mSize(size) {}
   virtual ~Type() = default;
 
- public:  // static method for construct Type instance
+public:  // static method for construct Type instance
   static Type* void_type();
 
   static Type* TypeBool();
-  static Type* TypeInt8(); // for pointer type
+  static Type* TypeInt8();  // for pointer type
   static Type* TypeInt32();
   static Type* TypeFloat32();
   static Type* TypeDouble();
@@ -49,12 +49,10 @@ class Type {
   static Type* TypeLabel();
   static Type* TypeUndefine();
   static Type* TypePointer(Type* baseType);
-  static Type* TypeArray(Type* baseType,
-                         std::vector<size_t> dims,
-                         size_t capacity = 1);
+  static Type* TypeArray(Type* baseType, std::vector<size_t> dims, size_t capacity = 1);
   static Type* TypeFunction(Type* ret_type, const type_ptr_vector& param_types);
 
- public:  // check
+public:  // check
   bool is(Type* type);
   bool isnot(Type* type);
   bool isVoid();
@@ -73,12 +71,12 @@ class Type {
   bool isArray();
   bool isFunction();
 
- public:  // get
+public:  // get
   auto btype() const { return mBtype; }
   auto size() const { return mSize; }
 
- public:
-  void print(std::ostream& os) const;
+public:
+  virtual void print(std::ostream& os) const;
 
   template <typename T>
   T* as() {
@@ -95,51 +93,54 @@ class Type {
 };
 
 SYSYC_ARENA_TRAIT(Type, IR);
+
 /* PointerType */
 class PointerType : public Type {
   Type* mBaseType;
 
- public:
+public:
   // fix: pointer size is 8 bytes
-  PointerType(Type* baseType) : Type(POINTER, 8), mBaseType(baseType) {}
+  PointerType(Type* baseType) : Type(BasicTypeRank::POINTER, 8), mBaseType(baseType) {}
   static PointerType* gen(Type* baseType);
 
   auto baseType() const { return mBaseType; }
+  void print(std::ostream& os) const override;
 };
+
 /* ArrayType */
 class ArrayType : public Type {
- protected:
+protected:
   std::vector<size_t> mDims;  // dimensions
   Type* mBaseType;            // size_t or float
 
- public:
+public:
   ArrayType(Type* baseType, std::vector<size_t> dims, size_t capacity = 1)
-      : Type(ARRAY, capacity * 4), mBaseType(baseType), mDims(dims) {}
+    : Type(BasicTypeRank::ARRAY, capacity * 4), mBaseType(baseType), mDims(dims) {}
 
-  static ArrayType* gen(Type* baseType,
-                        std::vector<size_t> dims,
-                        size_t capacity = 1);
+  static ArrayType* gen(Type* baseType, std::vector<size_t> dims, size_t capacity = 1);
 
- public:
   auto dims_cnt() const { return mDims.size(); }
   auto dim(size_t index) const { return mDims[index]; }
   auto& dims() const { return mDims; }
   auto baseType() const { return mBaseType; }
+  void print(std::ostream& os) const override;
 };
+
 /* FunctionType */
 class FunctionType : public Type {
- protected:
+protected:
   Type* mRetType;
   std::vector<Type*> mArgTypes;
 
- public:  // Gen
+public:
   FunctionType(Type* ret_type, const type_ptr_vector& arg_types = {})
-      : Type(FUNCTION, 8), mRetType(ret_type), mArgTypes(arg_types) {}
+    : Type(BasicTypeRank::FUNCTION, 8), mRetType(ret_type), mArgTypes(arg_types) {}
+
   static FunctionType* gen(Type* ret_type, const type_ptr_vector& arg_types);
 
-  //! get the return type of the function
   auto retType() const { return mRetType; }
 
   auto& argTypes() const { return mArgTypes; }
+  void print(std::ostream& os) const override;
 };
-}
+}  // namespace ir
