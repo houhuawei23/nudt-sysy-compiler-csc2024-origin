@@ -382,7 +382,6 @@ bool Mem2Reg::promotemem2reg(ir::Function* F) {
 void Mem2Reg::run(ir::Function* F, TopAnalysisInfoManager* tp) {
     if (not F->entry()) return;
     domctx = tp->getDomTree(F);
-    domctx->refresh();
     Allocas.clear();
     DefsBlock.clear();
     UsesBlock.clear();

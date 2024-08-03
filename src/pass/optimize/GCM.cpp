@@ -92,11 +92,8 @@ void GCM::scheduleEarly(ir::Instruction* instruction, ir::BasicBlock* entry) {
 
 void GCM::run(ir::Function* F, TopAnalysisInfoManager* tp) {
     domctx = tp->getDomTree(F);
-    domctx->refresh();
     lpctx = tp->getLoopInfo(F);
-    lpctx->refresh();
     sectx = tp->getSideEffectInfo();
-    sectx->refresh();
     std::vector<ir::Instruction*> pininsts;
     insts_visited.clear();
 

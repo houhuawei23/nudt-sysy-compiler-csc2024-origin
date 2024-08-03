@@ -101,7 +101,7 @@ void idomGen::dfsBlocks(ir::BasicBlock* bb) {
 
 void idomGen::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     if (func->isOnlyDeclare()) return;
-    domctx = tp->getDomTree(func);
+    domctx = tp->getDomTreeWithoutRefresh(func);
     domctx->clearAll();
     domctx->initialize();
 
@@ -212,7 +212,7 @@ void domFrontierGen::getDomFrontier(ir::Function* func) {
 // generate dom tree
 void domFrontierGen::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     if (func->isOnlyDeclare()) return;
-    domctx = tp->getDomTree(func);
+    domctx = tp->getDomTreeWithoutRefresh(func);
     getDomTree(func);
     getDomInfo(func->entry(), 0);
     getDomFrontier(func);
@@ -222,7 +222,7 @@ void domFrontierGen::run(ir::Function* func, TopAnalysisInfoManager* tp) {
 void domInfoCheck::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     if (func->isOnlyDeclare()) return;
     func->rename();
-    domctx = tp->getDomTree(func);
+    domctx = tp->getDomTreeWithoutRefresh(func);
     using namespace std;
     cout << "In Function \"" << func->name() << "\"" << endl;
     for (auto bb : func->blocks()) {

@@ -11,7 +11,6 @@ static std::set<ir::Function*>funcToMem2Reg;
 void global2local::run(ir::Module* md,TopAnalysisInfoManager* tp){
     bool isChange=false;
     cgctx=tp->getCallGraph();
-    cgctx->refresh();
     globalCallAnalysis(md);
     funcToMem2Reg.clear();
     for(auto gvIter=md->globalVars().begin();gvIter!=md->globalVars().end();){

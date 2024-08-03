@@ -27,6 +27,7 @@
 #include "pass/optimize/SCEV.hpp"
 #include "pass/optimize/loopunroll.hpp"
 #include "pass/optimize/DAE.hpp"
+#include "pass/optimize/licm.hpp"
 
 #include "support/config.hpp"
 #include "support/FileSystem.hpp"
@@ -35,74 +36,73 @@
 #include <iostream>
 #include <cassert>
 
-#include "pass/optimize/LICM.hpp"
 namespace pass {
 
 template <typename PassType, typename Callable>
 void runPass(PassType* unit, Callable&& runFunc, const std::string& passName) {
-  const auto& config = sysy::Config::getInstance();
-  auto start = std::chrono::high_resolution_clock::now();
-  runFunc();
-  auto end = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double> elapsed = end - start;
-  double threshold = 1e-3;
+    const auto& config = sysy::Config::getInstance();
+    auto start = std::chrono::high_resolution_clock::now();
+    runFunc();
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = end - start;
+    double threshold = 1e-3;
 
-  if (elapsed.count() > threshold and config.logLevel >= sysy::LogLevel::DEBUG) {
-    std::cout << passName << " " << unit->name() << " took " << elapsed.count() << " seconds.\n";
-    // auto fileName = utils::preName(config.infile) + "_" + passName + ".ll";
-  }
+    if (elapsed.count() > threshold and config.logLevel >= sysy::LogLevel::DEBUG) {
+        std::cout << passName << " " << unit->name() << " took " << elapsed.count() << " seconds.\n";
+        // auto fileName = utils::preName(config.infile) + "_" + passName + ".ll";
+    }
 }
 
 void PassManager::run(ModulePass* mp) {
-  runPass(mp, [&]() { mp->run(irModule, tAIM); }, "ModulePass");
+    runPass(mp, [&]() { mp->run(irModule, tAIM); }, "ModulePass");
 }
 
 void PassManager::run(FunctionPass* fp) {
-  runPass(
-    fp,
-    [&]() {
-      for (auto func : irModule->funcs()) {
-        if (func->isOnlyDeclare()) continue;
-        fp->run(func, tAIM);
-      }
-    },
-    "FunctionPass");
+    runPass(
+      fp,
+      [&]() {
+          for (auto func : irModule->funcs()) {
+              if (func->isOnlyDeclare()) continue;
+              fp->run(func, tAIM);
+          }
+      },
+      "FunctionPass");
 }
 
 void PassManager::run(BasicBlockPass* bp) {
-  runPass(
-    bp,
-    [&]() {
-      for (auto func : irModule->funcs()) {
-        for (auto bb : func->blocks()) {
-          bp->run(bb, tAIM);
-        }
-      }
-    },
-    "BasicBlockPass");
+    runPass(
+      bp,
+      [&]() {
+          for (auto func : irModule->funcs()) {
+              for (auto bb : func->blocks()) {
+                  bp->run(bb, tAIM);
+              }
+          }
+      },
+      "BasicBlockPass");
 }
 
 void PassManager::runPasses(std::vector<std::string> passes) {
-  const auto& config = sysy::Config::getInstance();
+    const auto& config = sysy::Config::getInstance();
 
-  auto dumpModule = [&config](ir::Module* module, const std::string& fileName) {
-    auto path = config.debugDir() / fs::path(fileName);
-    std::cerr << "Dumping module to " << path << std::endl;
-    std::ofstream out(path);
-    module->rename();
-    module->print(out);
-    // out.close();/
-  };
+    auto dumpModule = [&config](ir::Module* module, const std::string& fileName) {
+        auto path = config.debugDir() / fs::path(fileName);
+        std::cerr << "Dumping module to " << path << std::endl;
+        std::ofstream out(path);
+        module->rename();
+        module->print(out);
+        // out.close();/
+    };
 
-  if (config.logLevel >= sysy::LogLevel::DEBUG) {
-    std::cerr << "Running passes: ";
-    for (auto pass_name : passes) {
-      std::cerr << pass_name << " ";
+    if (config.logLevel >= sysy::LogLevel::DEBUG) {
+        std::cerr << "Running passes: ";
+        for (auto pass_name : passes) {
+            std::cerr << pass_name << " ";
+        }
+        std::cerr << std::endl;
+        auto fileName = utils::preName(config.infile) + "_before_passes.ll";
+        dumpModule(irModule, fileName);
     }
-    std::cerr << std::endl;
-    auto fileName = utils::preName(config.infile) + "_before_passes.ll";
-    dumpModule(irModule, fileName);
-  }
 
   run(new pass::CFGAnalysisHHW());
 
@@ -170,12 +170,12 @@ void PassManager::runPasses(std::vector<std::string> passes) {
     }
   }
 
-  if (config.logLevel >= sysy::LogLevel::DEBUG) {
-    auto fileName = utils::preName(config.infile) + "_after_passes.ll";
-    dumpModule(irModule, fileName);
-  }
+    if (config.logLevel >= sysy::LogLevel::DEBUG) {
+        auto fileName = utils::preName(config.infile) + "_after_passes.ll";
+        dumpModule(irModule, fileName);
+    }
 
-  irModule->rename();
+    irModule->rename();
 }
 
 }  // namespace pass

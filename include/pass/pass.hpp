@@ -51,31 +51,78 @@ public:
   TopAnalysisInfoManager(ir::Module* pm) : mModule(pm), mCallGraph(nullptr) {}
   domTree* getDomTree(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
-    return mDomTree[func];
+    auto domctx=mDomTree[func];
+    domctx->refresh();
+    return domctx;
   }
   pdomTree* getPDomTree(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
-    return mPDomTree[func];
+    auto domctx=mPDomTree[func];
+    domctx->refresh();    
+    return domctx;
   }
   loopInfo* getLoopInfo(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
-    return mLoopInfo[func];
+    auto lpctx=mLoopInfo[func];
+    lpctx->refresh();
+    return lpctx;
   }
   indVarInfo* getIndVarInfo(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
-    return mIndVarInfo[func];
+    auto idvctx=mIndVarInfo[func];
+    idvctx->setOff();
+    idvctx->refresh();
+    return idvctx;
   }
 
 
-  callGraph* getCallGraph() { return mCallGraph; }
-  sideEffectInfo* getSideEffectInfo(){ return mSideEffectInfo;}
+  callGraph* getCallGraph() { 
+    mCallGraph->refresh();
+    return mCallGraph; 
+  }
+  sideEffectInfo* getSideEffectInfo(){
+    mSideEffectInfo->setOff(); 
+    mSideEffectInfo->refresh();
+    return mSideEffectInfo;
+  }
   
+  
+  domTree* getDomTreeWithoutRefresh(ir::Function* func) {
+    if (func->isOnlyDeclare()) return nullptr;
+    auto domctx=mDomTree[func];
+    return domctx;
+  }
+  pdomTree* getPDomTreeWithoutRefresh(ir::Function* func) {
+    if (func->isOnlyDeclare()) return nullptr;
+    auto domctx=mPDomTree[func];
+    return domctx;
+  }
+  loopInfo* getLoopInfoWithoutRefresh(ir::Function* func) {
+    if (func->isOnlyDeclare()) return nullptr;
+    auto lpctx=mLoopInfo[func];
+    return lpctx;
+  }
+  indVarInfo* getIndVarInfoWithoutRefresh(ir::Function* func) {
+    if (func->isOnlyDeclare()) return nullptr;
+    auto idvctx=mIndVarInfo[func];
+    return idvctx;
+  }
+
+
+  callGraph* getCallGraphWithoutRefresh() { 
+    return mCallGraph; 
+  }
+  sideEffectInfo* getSideEffectInfoWithoutRefresh(){
+    return mSideEffectInfo;
+  }
+
   void initialize();
   void CFGChange(ir::Function* func) {
     if (func->isOnlyDeclare()) return;
     mDomTree[func]->setOff();
     mPDomTree[func]->setOff();
     mLoopInfo[func]->setOff();
+    mIndVarInfo[func]->setOff();
   }
   void CallChange() { mCallGraph->setOff(); }
   void IndVarChange(ir::Function* func) {

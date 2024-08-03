@@ -7,8 +7,6 @@ static std::unordered_map<ir::Value*,ir::Value*>ptrToValue;
 
 void simpleDLE::run(ir::BasicBlock* bb,TopAnalysisInfoManager* tp){
     auto sectx=tp->getSideEffectInfo();
-    sectx->setOff();
-    sectx->refresh();
     loadedPtrSet.clear();
     removeInsts.clear();
     ptrToValue.clear();
