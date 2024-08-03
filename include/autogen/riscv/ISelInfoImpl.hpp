@@ -772,7 +772,7 @@ static bool matchAndSelectPattern13(MIRInst* inst1, ISelContext& ctx) {
   }
 
   /** Select Inst **/
-  auto op8 = (op2);
+  auto op8 = (op1);
   auto op9 = (op5);
   auto op10 = (op2);
   /* select inst SH1ADD */
@@ -854,7 +854,7 @@ static bool matchAndSelectPattern15(MIRInst* inst1, ISelContext& ctx) {
   }
 
   /** Select Inst **/
-  auto op8 = (op2);
+  auto op8 = (op1);
   auto op9 = (op5);
   auto op10 = (op2);
   /* select inst SH2ADD */
@@ -936,7 +936,7 @@ static bool matchAndSelectPattern17(MIRInst* inst1, ISelContext& ctx) {
   }
 
   /** Select Inst **/
-  auto op8 = (op2);
+  auto op8 = (op1);
   auto op9 = (op5);
   auto op10 = (op2);
   /* select inst SH3ADD */

@@ -124,7 +124,7 @@ static const auto perfPassesList = std::vector<std::string>{
   "indvar",
   // "scev",
   // "cfgprint",
-  // "reg2mem"
+  "reg2mem",
   "test",
 };
 
@@ -191,10 +191,11 @@ void Config::parseSubmitArgs(int argc, char* argv[]) {
   genASM = true;
   outfile = argv[3];
   infile = argv[4];
-  
-  // if (argc == 6) {
-  optLevel = OptLevel::O1;
-  // }
+
+  if (argc == 6) {
+    if (argv[5] == "-O0"sv) optLevel = OptLevel::O0;
+    if (argv[5] == "-O1"sv) optLevel = OptLevel::O1;
+  }
 
   if (argc == 7) {
     if (argv[6] == "-L2"sv) {
