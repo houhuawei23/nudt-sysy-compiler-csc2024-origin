@@ -73,9 +73,10 @@ public:
 
   bool hasDedicatedExits() const {
     for (auto exitbb : _exits) {
-      for (auto pred : exitbb->pre_blocks()) {
-        if (!contains(pred)) return false;
-      }
+      if (exitbb->pre_blocks().size() != 1) return false;
+      // for (auto pred : exitbb->pre_blocks()) {
+      //   if (!contains(pred)) return false;
+      // }
     }
     return true;
   }

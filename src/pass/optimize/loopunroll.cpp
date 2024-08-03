@@ -115,6 +115,7 @@ void loopUnroll::insertremainderloop(ir::Loop* loop, ir::Function* func) {
     for (auto inst : headuseouts) {
         if (getValue(inst) != inst) {
             repalceuseout(inst, getValue(inst)->dynCast<ir::Instruction>(), loop);
+            // std::cerr<<"replace useout: "<<std::endl;
         }
     }
 }
@@ -125,9 +126,9 @@ void loopUnroll::doconstunroll(ir::Loop* loop, ir::indVar* iv, int times) {
     int unrolltimes = calunrolltime(loop, times);
     // unrolltimes = 2;//debug
     int remainder = times % unrolltimes;
-    std::cerr << "times: " << times << std::endl;
-    std::cerr << "unrolltimes: " << unrolltimes << std::endl;
-    std::cerr << "remainder: " << remainder << std::endl;
+    // std::cerr << "times: " << times << std::endl;
+    // std::cerr << "unrolltimes: " << unrolltimes << std::endl;
+    // std::cerr << "remainder: " << remainder << std::endl;
 
     ir::BasicBlock* head = loop->header();
     ir::BasicBlock* latch = loop->getLoopLatch();
