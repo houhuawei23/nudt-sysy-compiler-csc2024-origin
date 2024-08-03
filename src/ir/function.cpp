@@ -56,7 +56,7 @@ void Function::forceDelBlock(BasicBlock* bb) {
 
 void Function::print(std::ostream& os) const {
   auto return_type = retType();
-  if (blocks().size()) {
+  if (not isOnlyDeclare()) {
     os << "define " << *return_type << " @" << name() << "(";
     if (mArguments.size() > 0) {
       auto last_iter = mArguments.end() - 1;

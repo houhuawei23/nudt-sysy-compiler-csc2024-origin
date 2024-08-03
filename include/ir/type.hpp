@@ -15,6 +15,7 @@ using type_ptr_vector = std::vector<Type*>;
 typedef enum : size_t {
   VOID,
   INT1,
+  INT8,
   INT32,
   FLOAT,   // represent f32 in C
   DOUBLE,  // represent f64
@@ -40,8 +41,8 @@ class Type {
   static Type* void_type();
 
   static Type* TypeBool();
+  static Type* TypeInt8(); // for pointer type
   static Type* TypeInt32();
-
   static Type* TypeFloat32();
   static Type* TypeDouble();
 
@@ -77,7 +78,7 @@ class Type {
   auto size() const { return mSize; }
 
  public:
-  void print(std::ostream& os);
+  void print(std::ostream& os) const;
 
   template <typename T>
   T* as() {
@@ -87,9 +88,9 @@ class Type {
     return ptr;
   }
   template <typename T>
-  T* dynCast() {
+  const T* dynCast() const {
     static_assert(std::is_base_of_v<Type, T>);
-    return dynamic_cast<T*>(this);
+    return dynamic_cast<const T*>(this);
   }
 };
 

@@ -151,6 +151,9 @@ class Instruction : public User {
     void virtual print(std::ostream& os) const = 0;
     virtual Value* getConstantRepl() { return nullptr; };
     virtual Instruction* copy(std::function<Value*(Value*)> getValue) const = 0;
+    virtual Instruction* clone() const {
+      return nullptr;
+    };
 };
 
 }  // namespace ir

@@ -153,7 +153,7 @@ public:
   auto varInc() { return mVarCnt++; }
   void setVarCnt(size_t x) { mVarCnt = x; }
 
-  bool isOnlyDeclare() { return mBlocks.empty(); }
+  bool isOnlyDeclare() const { return mBlocks.empty(); }
 
   void delArgumant(size_t idx) {
     assert(idx < argCnt && "idx out of args vector");

@@ -16,6 +16,10 @@ Type* Type::TypeBool() {
 }
 
 // return static Type instance of size_t
+Type* Type::TypeInt8() {
+    static Type intType(INT8);
+    return &intType;
+}
 Type* Type::TypeInt32() {
     static Type intType(INT32);
     return &intType;
@@ -90,7 +94,7 @@ bool Type::isArray() {
 }
 
 //! print
-void Type::print(std::ostream& os) {
+void Type::print(std::ostream& os) const {
     auto basetype = btype();
     switch (basetype) {
         case INT1: os << "i1";
@@ -106,12 +110,13 @@ void Type::print(std::ostream& os) {
         case FUNCTION: os << "function";
             break;
         case POINTER:
-            static_cast<const PointerType*>(this)->baseType()->print(os);
+            // static_cast<const PointerType*>(this)->baseType()->print(os);
+            dynCast<PointerType>()->baseType()->print(os);
             os << "*";
             break;
         case LABEL: break;
         case ARRAY:
-            if (auto atype = static_cast<ArrayType*>(this)) {
+            if (auto atype = dynCast<ArrayType>()) {
                 size_t dims = atype->dims_cnt();
                 for (size_t i = 0; i < dims; i++) {
                     size_t value = atype->dim(i);
