@@ -571,7 +571,7 @@ void RISCVISelInfo::postLegalizeInst(const InstLegalizeContext& ctx) const {
       std::cerr << "Unsupported opcode for postLegalizeInst" << std::endl;
   }
 }
-
+// opt float on RISCV
 MIROperand RISCVISelInfo::materializeFPConstant(float fpVal, LoweringContext& loweringCtx) const {
   const auto val = fpVal;
   uint32_t rep;

@@ -23,19 +23,19 @@ namespace mir {
 MIROperand FloatPointConstantPool::getFloatConstant(class LoweringContext& ctx, float val) {
   uint32_t rep;
   memcpy(&rep, &val, sizeof(float));
-  const auto it = mFloatMap.find(rep);
   uint32_t offset;
-  if (it != mFloatMap.cend()) {
+  if (const auto it = mFloatOffsetMap.find(rep); it != mFloatOffsetMap.cend()) {
     offset = it->second;
   } else {
-    if (!mFloatDataStorage) {
+    // not found, materialize
+    if (!mFloatDataStorage) {  // create data storage if not exist
       auto storage =
-        std::make_unique<MIRDataStorage>(MIRDataStorage::Storage{}, true, "float_const_pool", true);
+        std::make_unique<MIRDataStorage>(MIRDataStorage::Storage{}, true, "floatConstPool", true);
       mFloatDataStorage = storage.get();
       auto pool = std::make_unique<MIRGlobalObject>(sizeof(float), std::move(storage), nullptr);
       ctx.module.global_objs().push_back(std::move(pool));
     }
-    offset = mFloatMap[rep] = mFloatDataStorage->append_word(rep) * sizeof(float);
+    offset = (mFloatOffsetMap[rep] = mFloatDataStorage->append_word(rep) * sizeof(float));
   }
 
   const auto ptrType = ctx.getPointerType();
@@ -56,14 +56,19 @@ MIROperand FloatPointConstantPool::getFloatConstant(class LoweringContext& ctx, 
 static OperandType get_optype(ir::Type* type) {
   if (type->isInt()) {
     switch (type->btype()) {
-      case ir::INT1: return OperandType::Bool;
-      case ir::INT32: return OperandType::Int32;
-      default: assert(false && "unsupported int type");
+      case ir::INT1:
+        return OperandType::Bool;
+      case ir::INT32:
+        return OperandType::Int32;
+      default:
+        assert(false && "unsupported int type");
     }
   } else if (type->isFloatPoint()) {
     switch (type->btype()) {
-      case ir::FLOAT: return OperandType::Float32;
-      default: assert(false && "unsupported float type");
+      case ir::FLOAT:
+        return OperandType::Float32;
+      default:
+        assert(false && "unsupported float type");
     }
   } else if (type->isPointer()) {
     /* NOTE: rv64 */
@@ -114,15 +119,23 @@ MIROperand LoweringContext::map2operand(ir::Value* ir_val) {
     auto imm = MIROperand::asImm(const_val->i32(), OperandType::Int32);
     return imm;
   }
-  // TODO: support float constant
+
   if (const_val->type()->isFloat32()) {
-    if (auto fpOperand = codeGenctx->iselInfo->materializeFPConstant(const_val->f32(), *this);
+    const float floatval = const_val->f32();
+    // find in block cache
+    auto& blockCache = mBlockLoadedFloatCache[mCurrBlock];
+    if (auto iter = blockCache.find(floatval); iter != blockCache.end()) {
+      return iter->second;
+    }
+    // not found, materialize
+    if (auto fpOperand = codeGenctx->iselInfo->materializeFPConstant(floatval, *this);
         fpOperand.isInit()) {
+      blockCache.emplace(floatval, fpOperand);
       return fpOperand;
     }
-
-    auto fpOperand = mFloatConstantPool.getFloatConstant(*this, const_val->f32());
-
+    // not materialized, load from constant pool
+    auto fpOperand = mFloatConstantPool.getFloatConstant(*this, floatval);
+    blockCache.emplace(floatval, fpOperand);
     return fpOperand;
   }
   std::cerr << "Map2Operand Error: Not Supported IR Value Type: "
@@ -1093,7 +1106,8 @@ void lower_GetElementPtr(ir::inst_iterator begin, ir::inst_iterator end, Lowerin
       mir_offset = ctx.map2operand(ir_offset);
     } else {
       auto newPtr = ctx.newVReg(OperandType::Int64);
-      ctx.emitInstBeta(InstMul, {newPtr, mir_offset, MIROperand::asImm(dims[i], OperandType::Int64)});
+      ctx.emitInstBeta(InstMul,
+                       {newPtr, mir_offset, MIROperand::asImm(dims[i], OperandType::Int64)});
       mir_offset = newPtr;
     }
   }
@@ -1135,7 +1149,8 @@ void lower_GetElementPtr(ir::inst_iterator begin, ir::inst_iterator end, Lowerin
         mir_offset = ctx.map2operand(ir_offset);
       } else {
         auto newPtr = ctx.newVReg(OperandType::Int64);
-        ctx.emitInstBeta(InstMul, {newPtr, mir_offset, MIROperand::asImm(dims[i], OperandType::Int64)});
+        ctx.emitInstBeta(InstMul,
+                         {newPtr, mir_offset, MIROperand::asImm(dims[i], OperandType::Int64)});
         mir_offset = newPtr;
       }
     }

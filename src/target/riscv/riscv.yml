@@ -531,80 +531,80 @@ InstSelInfo: {
         # InstAdd
         # Fuse address generation: TOOD: lowering not generate these patterns
         # imm = 1,2,3
-        {
-          # InstAdd $dst[I64], { InstShl $tmp, $src1, 1 }, $src2 -> SH1ADD $dst, $src1, $src2
-          # dst = (src1 << 1) + src2
-          pattern:
-            {
-              name: InstAdd,
-              dst: $dst,
-              src1: { name: InstShl, dst: $tmp, src1: $src1, src2: $imm },
-              src2: $src2,
-              predicate: "isOperandIReg($dst) && isOperandIReg($src1) && isOperandIReg($src2) && ($imm).isImm() && ($imm).imm() == 1",
-            },
-          replace: { name: SH1ADD, rd: $dst, rs1: $src1, rs2: $src2 },
-        },
-        {
-          # InstAdd $dst[I64], $src1, { InstShl $tmp, $src2, 1 } -> SH1ADD $dst, $src2, $src1
-          # dst = (src2 << 1) + src1
-          pattern:
-            {
-              name: InstAdd,
-              dst: $dst,
-              src1: $src1,
-              src2: { name: InstShl, src1: $src2, src2: $imm },
-              predicate: "isOperandIReg($dst) && isOperandIReg($src1) && isOperandIReg($src2) && ($imm).isImm() && ($imm).imm() == 1",
-            },
-          replace: { name: SH1ADD, rd: $dst, rs1: $src2, rs2: $src1 },
-        },
-        {
-          # InstAdd $dst[I64], { InstShl $tmp, $src1, 2 }, $src2 -> SH2ADD $dst, $src1, $src2
-          # dst = (src1 << 2) + src2
-          pattern:
-            {
-              name: InstAdd,
-              dst: $dst,
-              src1: { name: InstShl, dst: $tmp, src1: $src1, src2: $imm },
-              src2: $src2,
-              predicate: "isOperandIReg($dst) && isOperandIReg($src1) && isOperandIReg($src2) && ($imm).isImm() && ($imm).imm() == 2",
-            },
-          replace: { name: SH2ADD, rd: $dst, rs1: $src1, rs2: $src2 },
-        },
-        {
-          pattern:
-            {
-              name: InstAdd,
-              dst: $dst,
-              src1: $src1,
-              src2: { name: InstShl, src1: $src2, src2: $imm },
-              predicate: "isOperandIReg($dst) && isOperandIReg($src1) && isOperandIReg($src2) && ($imm).isImm() && ($imm).imm() == 2",
-            },
-          replace: { name: SH2ADD, rd: $dst, rs1: $src2, rs2: $src1 },
-        },
-        {
-          # InstAdd $dst[I64], { InstShl $tmp, $src1, 3 }, $src2 -> SH3ADD $dst, $src1, $src2
-          # dst = (src1 << 3) + src2
-          pattern:
-            {
-              name: InstAdd,
-              dst: $dst,
-              src1: { name: InstShl, dst: $tmp, src1: $src1, src2: $imm },
-              src2: $src2,
-              predicate: "isOperandIReg($dst) && isOperandIReg($src1) && isOperandIReg($src2) && ($imm).isImm() && ($imm).imm() == 3",
-            },
-          replace: { name: SH3ADD, rd: $dst, rs1: $src1, rs2: $src2 },
-        },
-        {
-          pattern:
-            {
-              name: InstAdd,
-              dst: $dst,
-              src1: $src1,
-              src2: { name: InstShl, src1: $src2, src2: $imm },
-              predicate: "isOperandIReg($dst) && isOperandIReg($src1) && isOperandIReg($src2) && ($imm).isImm() && ($imm).imm() == 3",
-            },
-          replace: { name: SH3ADD, rd: $dst, rs1: $src2, rs2: $src1 },
-        },
+        # {
+        #   # InstAdd $dst[I64], { InstShl $tmp, $src1, 1 }, $src2 -> SH1ADD $dst, $src1, $src2
+        #   # dst = (src1 << 1) + src2
+        #   pattern:
+        #     {
+        #       name: InstAdd,
+        #       dst: $dst,
+        #       src1: { name: InstShl, dst: $tmp, src1: $src1, src2: $imm },
+        #       src2: $src2,
+        #       predicate: "isOperandIReg($dst) && isOperandIReg($src1) && isOperandIReg($src2) && ($imm).isImm() && ($imm).imm() == 1",
+        #     },
+        #   replace: { name: SH1ADD, rd: $dst, rs1: $src1, rs2: $src2 },
+        # },
+        # {
+        #   # InstAdd $dst[I64], $src1, { InstShl $tmp, $src2, 1 } -> SH1ADD $dst, $src2, $src1
+        #   # dst = (src2 << 1) + src1
+        #   pattern:
+        #     {
+        #       name: InstAdd,
+        #       dst: $dst,
+        #       src1: $src1,
+        #       src2: { name: InstShl, src1: $src2, src2: $imm },
+        #       predicate: "isOperandIReg($dst) && isOperandIReg($src1) && isOperandIReg($src2) && ($imm).isImm() && ($imm).imm() == 1",
+        #     },
+        #   replace: { name: SH1ADD, rd: $dst, rs1: $src2, rs2: $src1 },
+        # },
+        # {
+        #   # InstAdd $dst[I64], { InstShl $tmp, $src1, 2 }, $src2 -> SH2ADD $dst, $src1, $src2
+        #   # dst = (src1 << 2) + src2
+        #   pattern:
+        #     {
+        #       name: InstAdd,
+        #       dst: $dst,
+        #       src1: { name: InstShl, dst: $tmp, src1: $src1, src2: $imm },
+        #       src2: $src2,
+        #       predicate: "isOperandIReg($dst) && isOperandIReg($src1) && isOperandIReg($src2) && ($imm).isImm() && ($imm).imm() == 2",
+        #     },
+        #   replace: { name: SH2ADD, rd: $dst, rs1: $src1, rs2: $src2 },
+        # },
+        # {
+        #   pattern:
+        #     {
+        #       name: InstAdd,
+        #       dst: $dst,
+        #       src1: $src1,
+        #       src2: { name: InstShl, src1: $src2, src2: $imm },
+        #       predicate: "isOperandIReg($dst) && isOperandIReg($src1) && isOperandIReg($src2) && ($imm).isImm() && ($imm).imm() == 2",
+        #     },
+        #   replace: { name: SH2ADD, rd: $dst, rs1: $src2, rs2: $src1 },
+        # },
+        # {
+        #   # InstAdd $dst[I64], { InstShl $tmp, $src1, 3 }, $src2 -> SH3ADD $dst, $src1, $src2
+        #   # dst = (src1 << 3) + src2
+        #   pattern:
+        #     {
+        #       name: InstAdd,
+        #       dst: $dst,
+        #       src1: { name: InstShl, dst: $tmp, src1: $src1, src2: $imm },
+        #       src2: $src2,
+        #       predicate: "isOperandIReg($dst) && isOperandIReg($src1) && isOperandIReg($src2) && ($imm).isImm() && ($imm).imm() == 3",
+        #     },
+        #   replace: { name: SH3ADD, rd: $dst, rs1: $src1, rs2: $src2 },
+        # },
+        # {
+        #   pattern:
+        #     {
+        #       name: InstAdd,
+        #       dst: $dst,
+        #       src1: $src1,
+        #       src2: { name: InstShl, src1: $src2, src2: $imm },
+        #       predicate: "isOperandIReg($dst) && isOperandIReg($src1) && isOperandIReg($src2) && ($imm).isImm() && ($imm).imm() == 3",
+        #     },
+        #   replace: { name: SH3ADD, rd: $dst, rs1: $src2, rs2: $src1 },
+        # },
         # InstAdd
         {
           # InstAdd $dst[I64], $src1, $src2[imm12] -> ADDI $dst, $src1, $src2

@@ -8,7 +8,8 @@ namespace mir {
 
 class FloatPointConstantPool {
   MIRDataStorage* mFloatDataStorage = nullptr;
-  std::unordered_map<uint32_t, uint32_t> mFloatMap;
+  // (uint32_t) fval -> offset in data storage
+  std::unordered_map<uint32_t, size_t> mFloatOffsetMap;
 
 public:
   MIROperand getFloatConstant(class LoweringContext& ctx, float val);
@@ -30,6 +31,8 @@ public:
 
   /* Float Point Constant Pool */
   FloatPointConstantPool mFloatConstantPool;
+  // TODO: can use inter-block cache to reduce memory usage?
+  std::unordered_map<MIRBlock*, std::unordered_map<float, MIROperand>> mBlockLoadedFloatCache;
 
   /* Pointer Type for Target Platform */
   OperandType pointerType = OperandType::Int64;
@@ -39,28 +42,28 @@ public:
   MIRFunction* memsetFunc;
 
 public:
-  LoweringContext(MIRModule& mir_module, Target& target)
-    : module(mir_module), mTarget(target) {
+  LoweringContext(MIRModule& mir_module, Target& target) : module(mir_module), mTarget(target) {
     module.functions().push_back(std::make_unique<MIRFunction>("_memset", &mir_module));
     memsetFunc = module.functions().back().get();
   }
 
 public:  // set function
   void setCodeGenCtx(CodeGenContext* ctx) { codeGenctx = ctx; }
+
 public:  // get function
   auto getPointerType() { return pointerType; }
+
 public:  // gen function
   MIROperand newVReg(ir::Type* type);
   MIROperand newVReg(OperandType type);
+
 public:  // emit function
   void emitCopy(MIROperand dst, MIROperand src);
 
   // ir_val -> mir_operand
   void addValueMap(ir::Value* ir_val, MIROperand mir_operand);
   MIROperand map2operand(ir::Value* ir_val);
-  MIRBlock* map2block(ir::BasicBlock* ir_block) {
-    return blockMap.at(ir_block);
-  }
+  MIRBlock* map2block(ir::BasicBlock* ir_block) { return blockMap.at(ir_block); }
 };
 
 std::unique_ptr<MIRModule> createMIRModule(ir::Module& ir_module,
