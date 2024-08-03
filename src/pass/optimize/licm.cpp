@@ -104,14 +104,14 @@ std::vector<ir::Instruction*> LICM::getinvariant(ir::BasicBlock* bb, ir::Loop* l
             if (isinvariantop(storeinst, loop))
                 if (checkload(storeinst, loop)){  // 接下来检查循环体里有无对本数组的load
                     res.push_back(storeinst);
-                    std::cerr<<"lift store"<<std::endl;
+                    // std::cerr<<"lift store"<<std::endl;
                 }
         
         } else if (auto loadinst = inst->dynCast<ir::LoadInst>()) {
             if (isinvariantop(loadinst, loop))
                 if (checkstore(loadinst, loop)){  // 接下来检查循环体里有无对本数组的store
                     res.push_back(loadinst);
-                    std::cerr<<"lift load"<<std::endl;
+                    // std::cerr<<"lift load"<<std::endl;
                 }
         }
     }
