@@ -500,8 +500,9 @@ public:  // check function
   auto is_readonly() const { return mIsReadonly; }
   auto is_float() const { return mIsFloat; }
 public:  // set function
-  uint32_t append_word(uint32_t word) {
-    auto idx = static_cast<uint32_t>(mData.size());
+  // return the index of this word
+  size_t append_word(uint32_t word) {
+    auto idx = static_cast<size_t>(mData.size());
     mData.push_back(word);
     return idx;
   }
