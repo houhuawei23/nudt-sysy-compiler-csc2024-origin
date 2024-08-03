@@ -18,7 +18,7 @@ struct LoopBodyFuncInfo {
 class LoopParallel : public FunctionPass {
 public:
   void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
-  std::string name() { return "LoopParallel"; }
+  std::string name() const override { return "LoopParallel"; }
 
 private:
   static ir::Function* loopupParallelFor(ir::Module* module);

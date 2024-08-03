@@ -52,6 +52,8 @@ void LoopParallel::run(ir::Function* func, TopAnalysisInfoManager* tp) {
 }
 
 void LoopParallel::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
+  func->print(std::cerr);
+
   auto indVarInfo = tp->getIndVarInfo(func);
   indVarInfo->setOff();
   indVarInfo->refresh();
@@ -59,9 +61,11 @@ void LoopParallel::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
   auto lpctx = tp->getLoopInfo(func);
   // for all loops
   for (auto loop : lpctx->loops()) {
+    loop->print(std::cerr);
     const auto indVar = indVarInfo->getIndvar(loop);
     const auto step = indVar->getStep()->i32();
-
+    indVar->print(std::cerr);
+    
     if (step != 1) continue;  // only support step = 1
 
     // extact loop body as a new loop_body func from func.loop

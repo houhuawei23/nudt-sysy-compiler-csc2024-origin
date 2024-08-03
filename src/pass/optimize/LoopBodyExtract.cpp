@@ -18,19 +18,11 @@ bool extractLoopBody(ir::Function* func,
                      LoopBodyFuncInfo& info) {
   assert((loop.latchs().size() == 1) && "Loop must have exactly one latch");
   if (loop.header() == loop.getLoopLatch()) {
+    // header == latch, no loop body
     return false;
   }
 
-  CFGAnalysisHHW().run(func, tp);
-
-  // ir::indVar* indVar = nullptr;
-
-  // {
-  //   auto indVarInfo = tp->getIndVarInfo(func);
-  //   indVarInfo->setOff();
-  //   indVarInfo->refresh();
-  //   indVar = indVarInfo->getIndvar(&loop);
-  // }
+  CFGAnalysisHHW().run(func, tp); // refresh CFG
 
   size_t phiCount = 0;
   for (auto inst : loop.header()->insts()) {

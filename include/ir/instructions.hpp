@@ -672,6 +672,25 @@ public:
   Constant* getBegin() { return mbeginVar; }
   Constant* getStep() { return mstepVar; }
   Value* getEnd() { return mendVar; }
+  void print(std::ostream& os) const {
+    os << "beginVar: ";
+    mbeginVar->print(os);
+
+    os << "\n endVar: ";
+    mendVar->print(os);
+
+    os << "\n stepVar: ";
+    mstepVar->print(os);
+
+    os << "\n iterInst: ";
+    miterInst->print(os);
+
+    os << "\n cmpInst: ";
+    mcmpInst->print(os);
+
+    os << "\n phiInst: ";
+    mphiinst->print(os);
+  }
 };
 
 }  // namespace ir
