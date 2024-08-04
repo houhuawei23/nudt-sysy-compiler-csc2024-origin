@@ -24,7 +24,9 @@ int loopUnroll::calunrolltime(ir::Loop* loop, int times) {
 }
 
 void loopUnroll::dynamicunroll(ir::Loop* loop, ir::indVar* iv) {
-    return;
+     if (loop->exits().size() != 1)  // 只对单exit的loop做unroll
+        return;
+
 }
 void loopUnroll::constunroll(ir::Loop* loop, ir::indVar* iv) {
     if (loop->exits().size() != 1)  // 只对单exit的loop做unroll

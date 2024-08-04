@@ -82,7 +82,7 @@ namespace pass{
     void loopInfoCheck::run(ir::Function* func,TopAnalysisInfoManager* tp){
         using namespace std;
         if(func->isOnlyDeclare())return;
-        lpctx=tp->getLoopInfo(func);
+        lpctx=tp->getLoopInfoWithoutRefresh(func);
         cout<<"In Function \""<<func->name()<<"\": "<<endl;
         int cnt=0;
         for(auto loop:lpctx->loops()){//func->Loops()
