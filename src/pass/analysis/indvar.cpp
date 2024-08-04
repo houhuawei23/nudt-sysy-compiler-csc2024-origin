@@ -93,8 +93,8 @@ void indVarAnalysis::addIndVar(ir::Loop* lp,
 
 void indVarInfoCheck::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     if (func->isOnlyDeclare()) return;
-    lpctx = tp->getLoopInfo(func);
-    ivctx = tp->getIndVarInfo(func);
+    lpctx = tp->getLoopInfoWithoutRefresh(func);
+    ivctx = tp->getIndVarInfoWithoutRefresh(func);
     using namespace std;
     cerr<<"In Function \""<<func->name()<<"\":"<<endl;
     for (auto lp : lpctx->loops()) {

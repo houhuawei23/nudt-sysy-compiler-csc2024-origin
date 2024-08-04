@@ -140,6 +140,34 @@ static const auto perfPassesList = std::vector<std::string>{
   // "test",
 };
 
+static const auto perfPassesList_731 = std::vector<std::string>{
+  "mem2reg",  //
+  "sccp",     //
+  "adce",     // passed all functional
+  "simplifycfg", //error in backend CFGAnalysis.successors
+  "gcm",  // global code motion
+  "gvn",          // global value numbering: passed, slow
+  "instcombine",  //
+  "adce",     // passed all functional
+  "inline",   // segfault on 60_sort_test6/69_expr_eval/...
+  "tco",      // tail call optimization
+  "inline",   //
+  "g2l",      // global to local
+  "dle",
+  "dse",
+  "dle",
+  "dse",
+  "sccp",     //
+  "adce",     // passed all functional
+  "simplifycfg",
+  "gcm",  // global code motion
+  "gvn",          // global value numbering: passed, slow
+  "instcombine",  //
+  "adce",     // passed all functional
+  "reg2mem"
+};
+
+
 // clang-format on
 
 static const auto testPassesList = std::vector<std::string>{
@@ -232,6 +260,7 @@ void Config::parseCmdArgs(int argc, char* argv[]) {
     exit(EXIT_FAILURE);
   }
   if (optLevel == OptLevel::O1) {
+    // passes = perfPassesList;
     passes = perfPassesList;
   }
 }
