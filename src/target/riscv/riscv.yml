@@ -1252,9 +1252,7 @@ InstSelInfo: {
       ],
   }
 
-ScheduleModel:
-  #
-  { sifive_u74: {
+ScheduleModel: { sifive_u74: {
         #
         Classes: {
             #
@@ -1364,6 +1362,7 @@ ScheduleModel:
                 # REMUW,
               ],
             SDivRemW: [DIVW, REMW],
+            # SiFive U74-MC Core Complex Manual Floating-Point Unit Instruction Timing
             FPCycle1: [FMV_X_W],
             FPCycle2:
               [

@@ -1,5 +1,6 @@
 #include "pass/optimize/optimize.hpp"
 #include "pass/optimize/LoopParallel.hpp"
+#include "pass/analysis/ControlFlowGraph.hpp"
 // #include "libgen.h"
 #include <set>
 #include <cassert>
@@ -52,8 +53,10 @@ void LoopParallel::run(ir::Function* func, TopAnalysisInfoManager* tp) {
 }
 
 void LoopParallel::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
+  func->rename();
   func->print(std::cerr);
 
+  CFGAnalysisHHW().run(func, tp); // refresh CFG
   auto indVarInfo = tp->getIndVarInfo(func);
   indVarInfo->setOff();
   indVarInfo->refresh();
