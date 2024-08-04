@@ -12,6 +12,7 @@ class loopUnroll : public FunctionPass {
     indVarInfo* ivctx;
     static std::unordered_map<ir::Value*, ir::Value*> copymap;
     std::vector<ir::Instruction*> headuseouts;
+    ir::BasicBlock* nowlatchnext;
   public:
     std::string name() const override { return "loopunroll"; }
     bool definuseout(ir::Instruction* inst, ir::Loop* L);
