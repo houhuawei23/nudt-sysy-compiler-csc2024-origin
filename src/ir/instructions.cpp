@@ -692,4 +692,11 @@ void MemsetInst::print(std::ostream& os) const {
      << dyn_cast<PointerType>(type())->baseType()->size() << ", i1 false)";
 }
 
+/**
+ * 
+ */
+void FunctionPtrInst::print(std::ostream& os) const {
+
+}
+
 }  // namespace ir

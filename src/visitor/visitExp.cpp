@@ -212,13 +212,13 @@ std::any SysYIRGenerator::visitUnaryExp(SysYParser::UnaryExpContext* ctx) {
     if (auto cexp = dyn_cast<ir::Constant>(exp)) {
       //! constant
       switch (cexp->type()->btype()) {
-        case ir::INT32:
+        case ir::BasicTypeRank::INT32:
           res = ir::Constant::gen_i32(-cexp->i32());
           break;
-        case ir::FLOAT:
+        case ir::BasicTypeRank::FLOAT:
           res = ir::Constant::gen_f32(-cexp->f32());
           break;
-        case ir::DOUBLE:
+        case ir::BasicTypeRank::DOUBLE:
           assert(false && "Unsupport Double");
           break;
         default:
@@ -226,10 +226,10 @@ std::any SysYIRGenerator::visitUnaryExp(SysYParser::UnaryExpContext* ctx) {
       }
     } else if (ir::isa<ir::LoadInst>(exp) || ir::isa<ir::BinaryInst>(exp)) {
       switch (exp->type()->btype()) {
-        case ir::INT32:
+        case ir::BasicTypeRank::INT32:
           res = mBuilder.makeBinary(ir::BinaryOp::SUB, ir::Constant::gen_i32(0), exp);
           break;
-        case ir::FLOAT:
+        case ir::BasicTypeRank::FLOAT:
           res = mBuilder.makeUnary(ir::ValueId::vFNEG, exp);
           break;
         default:
@@ -279,7 +279,7 @@ std::any SysYIRGenerator::visitMultiplicativeExp(
     double ans_f64;
 
     switch (higher_Btype) {
-      case ir::INT32:
+      case ir::BasicTypeRank::INT32:
         if (ctx->MUL())
           ans_i32 = cop1->i32() * cop2->i32();
         else if (ctx->DIV())
@@ -290,7 +290,7 @@ std::any SysYIRGenerator::visitMultiplicativeExp(
           assert(false && "Unknown Binary Operator");
         res = ir::Constant::gen_i32(ans_i32);
         break;
-      case ir::FLOAT:
+      case ir::BasicTypeRank::FLOAT:
         if (ctx->MUL())
           ans_f32 = cop1->f32() * cop2->f32();
         else if (ctx->DIV())
@@ -299,7 +299,7 @@ std::any SysYIRGenerator::visitMultiplicativeExp(
           assert(false && "Unknown Binary Operator");
         res = ir::Constant::gen_f32(ans_f32);
         break;
-      case ir::DOUBLE:
+      case ir::BasicTypeRank::DOUBLE:
         assert(false && "Unsupported DOUBLE");
         break;
       default:
@@ -351,7 +351,7 @@ std::any SysYIRGenerator::visitAdditiveExp(
     double ans_f64;
 
     switch (higher_BType) {
-      case ir::INT32: {
+      case ir::BasicTypeRank::INT32: {
         if (ctx->ADD())
           ans_i32 = clhs->i32() + crhs->i32();
         else
@@ -359,7 +359,7 @@ std::any SysYIRGenerator::visitAdditiveExp(
         res = ir::Constant::gen_i32(ans_i32);
       } break;
 
-      case ir::FLOAT: {
+      case ir::BasicTypeRank::FLOAT: {
         if (ctx->ADD())
           ans_f32 = clhs->f32() + crhs->f32();
         else
@@ -367,7 +367,7 @@ std::any SysYIRGenerator::visitAdditiveExp(
         res = ir::Constant::gen_f32(ans_f32);
       } break;
 
-      case ir::DOUBLE: {
+      case ir::BasicTypeRank::DOUBLE: {
         assert(false && "not support double");
       } break;
 

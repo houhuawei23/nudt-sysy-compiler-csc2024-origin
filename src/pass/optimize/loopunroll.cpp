@@ -24,7 +24,9 @@ int loopUnroll::calunrolltime(ir::Loop* loop, int times) {
 }
 
 void loopUnroll::dynamicunroll(ir::Loop* loop, ir::indVar* iv) {
-    return;
+     if (loop->exits().size() != 1)  // 只对单exit的loop做unroll
+        return;
+
 }
 void loopUnroll::constunroll(ir::Loop* loop, ir::indVar* iv) {
     if (loop->exits().size() != 1)  // 只对单exit的loop做unroll
@@ -62,7 +64,7 @@ void loopUnroll::constunroll(ir::Loop* loop, ir::indVar* iv) {
         } else if (ivcmp->valueId() == ir::vINE) {
             times = ((ivbegin - ivend) % ivstep) ? ((ivbegin - ivend) / ivstep) : -1;
         } else if (ivcmp->valueId() == ir::vISGE) {
-            times = (ivbegin - ivend ) / ivstep + 1;
+            times = (ivbegin - ivend) / ivstep + 1;
         } else if (ivcmp->valueId() == ir::vISLE) {
             times = -1;
         } else if (ivcmp->valueId() == ir::vISGT) {
@@ -111,16 +113,24 @@ void loopUnroll::insertremainderloop(ir::Loop* loop, ir::Function* func) {
             break;
         }
     }
+
+    for (auto inst : headuseouts) {
+        if (getValue(inst) != inst) {
+            repalceuseout(inst, getValue(inst)->dynCast<ir::Instruction>(), loop);
+            // std::cerr<<"replace useout: "<<std::endl;
+        }
+    }
 }
 
 void loopUnroll::doconstunroll(ir::Loop* loop, ir::indVar* iv, int times) {
+    headuseouts.clear();
     ir::Function* func = loop->header()->function();
     int unrolltimes = calunrolltime(loop, times);
     // unrolltimes = 2;//debug
     int remainder = times % unrolltimes;
-    std::cerr << "times: " << times << std::endl;
-    std::cerr << "unrolltimes: " << unrolltimes << std::endl;
-    std::cerr << "remainder: " << remainder << std::endl;
+    // std::cerr << "times: " << times << std::endl;
+    // std::cerr << "unrolltimes: " << unrolltimes << std::endl;
+    // std::cerr << "remainder: " << remainder << std::endl;
 
     ir::BasicBlock* head = loop->header();
     ir::BasicBlock* latch = loop->getLoopLatch();
@@ -132,10 +142,10 @@ void loopUnroll::doconstunroll(ir::Loop* loop, ir::indVar* iv, int times) {
     for (auto bb : head->next_blocks()) {
         if (loop->contains(bb)) headnext = bb;
     }
+    getdefinuseout(loop);
 
     if (remainder != 0) {
-        insertremainderloop(loop, func);
-        // return ;
+        insertremainderloop(loop, func);  // 插入尾循环
         // 修改迭代上限
         int ivbegin = iv->getBeginI32();
         ir::Value* ivend = iv->endValue();  // 常数
@@ -171,7 +181,7 @@ void loopUnroll::doconstunroll(ir::Loop* loop, ir::indVar* iv, int times) {
     for (auto inst : head->insts()) {
         if (auto phiinst = inst->dynCast<ir::PhiInst>()) {
             ir::PhiInst* newphiinst = utils::make<ir::PhiInst>(nullptr, phiinst->type());
-            latchnext->emplace_back_inst(newphiinst);//保证映射正确
+            latchnext->emplace_back_inst(newphiinst);  // 保证映射正确
             auto val = phiinst->getvalfromBB(latch);
             newphiinst->addIncoming(val, latch);
             phireplacevec.push_back({phiinst, newphiinst});
@@ -259,7 +269,7 @@ void loopUnroll::doconstunroll(ir::Loop* loop, ir::indVar* iv, int times) {
     }
 }
 
-void loopUnroll::copyloop(std::vector<ir::BasicBlock*> bbs, ir::BasicBlock* begin, ir::Loop* L, ir::Function* func) {  // 复制
+void loopUnroll::copyloop(std::vector<ir::BasicBlock*> bbs, ir::BasicBlock* begin, ir::Loop* L, ir::Function* func) {  // 复制循环体
     std::vector<ir::BasicBlock*> copybbs;
     auto Module = func->module();
     // auto getValue = [&](ir::Value* val) -> ir::Value* {
@@ -315,7 +325,7 @@ void loopUnroll::copyloop(std::vector<ir::BasicBlock*> bbs, ir::BasicBlock* begi
     }
 }
 
-void loopUnroll::copyloopremainder(std::vector<ir::BasicBlock*> bbs, ir::BasicBlock* begin, ir::Loop* L, ir::Function* func) {  // 复制
+void loopUnroll::copyloopremainder(std::vector<ir::BasicBlock*> bbs, ir::BasicBlock* begin, ir::Loop* L, ir::Function* func) {  // 复制余数循环
     std::vector<ir::BasicBlock*> copybbs;
     auto Module = func->module();
     // auto getValue = [&](ir::Value* val) -> ir::Value* {
@@ -389,6 +399,42 @@ bool loopUnroll::definuseout(ir::Instruction* inst, ir::Loop* L) {
         }
     }
     return false;
+}
+
+void loopUnroll::getdefinuseout(ir::Loop* L) {
+    auto head = L->header();
+    for (auto inst : head->insts()) {
+        if (definuseout(inst, L)) {
+            headuseouts.push_back(inst);
+        }
+    }
+}
+
+void loopUnroll::repalceuseout(ir::Instruction* inst, ir::Instruction* copyinst, ir::Loop* L) {
+    std::vector<ir::Use*> usetoreplace;
+    for (auto use : inst->uses()) {
+        if (auto useinst = use->user()->dynCast<ir::Instruction>()) {
+            auto useinstbb = useinst->block();
+            if (auto phiinst = useinst->dynCast<ir::PhiInst>()) {
+                for (size_t i = 0; i < phiinst->getsize(); i++) {
+                    auto phival = phiinst->getValue(i);
+                    auto phibb = phiinst->getBlock(i);
+                    if (phival == inst) {
+                        if (!L->contains(phibb)){
+                            usetoreplace.push_back(use);
+                        }
+                    }
+                }
+            } else {
+                if (!L->contains(useinstbb))
+                    usetoreplace.push_back(use);
+            }
+        }
+    }
+    for (auto use : usetoreplace) {
+        auto useinst = use->user()->dynCast<ir::Instruction>();
+        useinst->setOperand(use->index(), copyinst);
+    }
 }
 
 bool loopUnroll::isconstant(ir::indVar* iv) {  // 判断迭代的end是否为常数

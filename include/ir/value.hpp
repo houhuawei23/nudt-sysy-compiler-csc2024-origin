@@ -191,9 +191,8 @@ enum ValueId {
   vFREM,
   vBINARY_END,
   // Phi Instruction
-  vPHI_BEGIN,
   vPHI,
-  VPHI_END,
+  vFUNCPTR,
   vInvalid,
 };
 class Value {
