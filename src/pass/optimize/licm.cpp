@@ -50,21 +50,19 @@ bool LICM::checkload(ir::StoreInst* storeinst, ir::Loop* loop) {
     for (auto bb : loop->blocks()) {
         for (auto inst : bb->insts()) {
             if (inst->dynCast<ir::LoadInst>()) {
-                if (alias(inst, storeinst)){
+                if (alias(inst, storeinst)) {
                     auto storebb = storeinst->block();
                     auto loadbb = inst->block();
-                    if (storebb != loadbb){
-                        if (domctx->dominate(loadbb, storebb))
-                            return false;
-                    }
-                    else{
+                    if (storebb != loadbb) {
+                        if (domctx->dominate(loadbb, storebb)) return false;
+                    } else {
                         auto storeit = std::find(storebb->insts().begin(), storebb->insts().end(), storeinst);
                         auto loadit = std::find(loadbb->insts().begin(), loadbb->insts().end(), inst);
                         int storeidx = std::distance(storebb->insts().begin(), storeit);
                         int loadidx = std::distance(loadbb->insts().begin(), loadit);
                         if (storeidx > loadidx) return false;
                     }
-                } 
+                }
             }
         }
     }
@@ -76,10 +74,9 @@ bool LICM::checkstore(ir::LoadInst* loadinst, ir::Loop* loop) {
         for (auto inst : bb->insts()) {
             if (inst->dynCast<ir::StoreInst>()) {
                 if (alias(inst, loadinst)) return false;
-            }
-            else if (inst->dynCast<ir::CallInst>()) {
+            } else if (inst->dynCast<ir::CallInst>()) {
                 auto callee = inst->dynCast<ir::CallInst>()->callee();
-                if (sectx->hasSideEffect(callee)){
+                if (sectx->hasSideEffect(callee)) {
                     return false;
                 }
             }
@@ -92,27 +89,45 @@ std::vector<ir::Instruction*> LICM::getinvariant(ir::BasicBlock* bb, ir::Loop* l
     std::vector<ir::Instruction*> res;
     auto head = loop->header();
     ir::BasicBlock* headnext;
-    for (auto bb : head->next_blocks()){
-        if (loop->contains(bb)){
+    for (auto bb : head->next_blocks()) {
+        if (loop->contains(bb)) {
             headnext = bb;
             break;
-        } 
+        }
     }
-    if (!pdomcctx->pdominate(bb,headnext)) return res;
+    if (!pdomcctx->pdominate(bb, headnext)) return res;
     for (auto inst : bb->insts()) {
         if (auto storeinst = inst->dynCast<ir::StoreInst>()) {
             if (isinvariantop(storeinst, loop))
-                if (checkload(storeinst, loop)){  // 接下来检查循环体里有无对本数组的load
+                if (checkload(storeinst, loop)) {  // 接下来检查循环体里有无对本数组的load
                     res.push_back(storeinst);
-                    // std::cerr<<"lift store"<<std::endl;
+                    // std::cerr << "lift store" << std::endl;
                 }
-        
+
         } else if (auto loadinst = inst->dynCast<ir::LoadInst>()) {
             if (isinvariantop(loadinst, loop))
-                if (checkstore(loadinst, loop)){  // 接下来检查循环体里有无对本数组的store
+                if (checkstore(loadinst, loop)) {  // 接下来检查循环体里有无对本数组的store
                     res.push_back(loadinst);
-                    // std::cerr<<"lift load"<<std::endl;
+                    // std::cerr << "lift load" << std::endl;
                 }
+        } else if (auto callinst = inst->dynCast<ir::CallInst>()) {
+            auto callee = callinst->callee();
+            if (sectx->isPureFunc(callee)) {
+                if (isinvariantop(callinst, loop)) {
+                    res.push_back(callinst);
+                    // std::cerr << "lift call" << std::endl;
+                }
+            }
+        } else if (auto UnaryInst = inst->dynCast<ir::UnaryInst>()) {
+            if (isinvariantop(UnaryInst, loop)) {
+                res.push_back(UnaryInst);
+                // std::cerr << "lift Unary" << std::endl;
+            }
+        } else if (auto BinaryInst = inst->dynCast<ir::BinaryInst>()) {
+            if (isinvariantop(BinaryInst, loop)) {
+                res.push_back(BinaryInst);
+                // std::cerr << "lift Binary" << std::endl;
+            }
         }
     }
     return res;
