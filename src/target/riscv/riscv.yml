@@ -1320,9 +1320,8 @@ ScheduleModel:
               ],
             # IntegerArithmeticLateB:
             #   [ROL, ROLW, ROR, RORI, RORIW, RORW, CLZ, CLZW, CTZ, CTZW, ORC_B],
-            # IntegerArithmeticEarlyB: [],
-            # IntegerArithmeticLateAB: [],
-            # IntegerArithmeticEarlyLateB: [],
+            IntegerArithmeticEarlyLateB:
+              [SH1ADD, SH1ADD_UW, SH2ADD, SH2ADD_UW, SH3ADD, SH3ADD_UW],
             Branch: [
                 JAL,
                 RET,
