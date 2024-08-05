@@ -17,7 +17,6 @@ protected:
     float mFloat32;
     double mDouble;
   };
-
 public:
   Constant(bool val, const_str_ref name) : User(Type::TypeBool(), vCONSTANT, name), mInt1(val) {}
 
@@ -35,7 +34,6 @@ public:
 
   Constant() : User(Type::void_type(), vCONSTANT, "VOID") {}
   Constant(const_str_ref name) : User(Type::TypeUndefine(), vCONSTANT, "undef") {}
-
 public:
   //* add constant to cache
   template <typename T>
@@ -49,7 +47,6 @@ public:
     auto res = cache.emplace(name, c);
     return c;
   }
-
 public:  // generate function
   template <typename T>
   static Constant* gen_i1(T v) {

@@ -97,48 +97,45 @@ SYSYC_ARENA_TRAIT(Type, IR);
 /* PointerType */
 class PointerType : public Type {
   Type* mBaseType;
-
- public:
-  // fix: pointer size is 8 bytes
+public:
   PointerType(Type* baseType) : Type(POINTER, 8), mBaseType(baseType) {}
+public:  // generate function
   static PointerType* gen(Type* baseType);
-
+public:  // get function
   auto baseType() const { return mBaseType; }
 };
+
 /* ArrayType */
 class ArrayType : public Type {
- protected:
+protected:
   std::vector<size_t> mDims;  // dimensions
   Type* mBaseType;            // size_t or float
 
- public:
-  ArrayType(Type* baseType, std::vector<size_t> dims, size_t capacity = 1)
+public:
+  ArrayType(Type* baseType, std::vector<size_t> dims, size_t capacity=1)
       : Type(ARRAY, capacity * 4), mBaseType(baseType), mDims(dims) {}
-
-  static ArrayType* gen(Type* baseType,
-                        std::vector<size_t> dims,
-                        size_t capacity = 1);
-
- public:
+public:  // generate function
+  static ArrayType* gen(Type* baseType, std::vector<size_t> dims,
+                        size_t capacity=1);
+public:  // get function
   auto dims_cnt() const { return mDims.size(); }
   auto dim(size_t index) const { return mDims[index]; }
   auto& dims() const { return mDims; }
   auto baseType() const { return mBaseType; }
 };
+
 /* FunctionType */
 class FunctionType : public Type {
- protected:
+protected:
   Type* mRetType;
   std::vector<Type*> mArgTypes;
-
- public:  // Gen
+public:
   FunctionType(Type* ret_type, const type_ptr_vector& arg_types = {})
       : Type(FUNCTION, 8), mRetType(ret_type), mArgTypes(arg_types) {}
+public:  // generate function
   static FunctionType* gen(Type* ret_type, const type_ptr_vector& arg_types);
-
-  //! get the return type of the function
+public:  // get function
   auto retType() const { return mRetType; }
-
   auto& argTypes() const { return mArgTypes; }
 };
 }
