@@ -153,6 +153,11 @@ bool global2local::processGlobalVariables(ir::GlobalVariable* gv,ir::Module* md,
             auto newStoreInst=new ir::StoreInst(gv->init(0),newAlloca,oldEntry);
             oldEntry->emplace_first_inst(newStoreInst);
         }
+        else{
+            auto oldEntry=func->entry()->next_blocks().front();//这里已经经过之前的针对mem2reg的条件的转换,所以这里直接取出
+            auto newStoreInst=new ir::StoreInst(ir::Constant::gen_i32(0),newAlloca,oldEntry);
+            oldEntry->emplace_first_inst(newStoreInst);
+        }
         md->delGlobalVariable(gv);
         return true;
     }
