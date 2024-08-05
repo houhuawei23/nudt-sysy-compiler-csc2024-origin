@@ -45,7 +45,7 @@ void loopInfo::refresh() {
         loopAnalysis la = loopAnalysis();
         loopInfoCheck lic = loopInfoCheck();
         la.run(passUnit,topManager);
-        lic.run(passUnit,topManager);
+        // lic.run(passUnit,topManager);
         setOn();
     }
 }

@@ -40,6 +40,7 @@ void SCEV::runOnLoop(ir::Loop* lp){
     if(defaultIdv==nullptr)return;//要进行分析，必须具有基础indvar形式
     normalizeIcmpAndBr(lp,defaultIdv);//标准化br和Icmp
     auto lpHeader=lp->header();
+    SCEVValues.clear();
     for(auto pinst:lpHeader->phi_insts()){
         auto phiinst=pinst->dynCast<ir::PhiInst>();
         if(phiinst==defaultIdv->phiinst())continue;//不再分析indvar
@@ -49,7 +50,7 @@ void SCEV::runOnLoop(ir::Loop* lp){
     if(SCEVValues.empty())return;//没有可以化简的SCEV,return直接
     ir::Value* IterCntVal;
     ir::IRBuilder builder;
-    builder.set_pos(*lp->exits().begin());
+    builder.set_pos(*(lp->exits().begin()));
     if(defaultIdv->isEndVarConst()){
         int iterCnt=getConstantEndvarIndVarIterCnt(lp,defaultIdv);
         IterCntVal=ir::Constant::gen_i32(iterCnt);
@@ -66,13 +67,18 @@ void SCEV::SCEVReduceInstr(ir::Loop* lp,SCEVValue* scevVal,ir::Value* itercnt,ir
     if(scevVal->addsteps.empty() and scevVal->substeps.empty())return;
     ir::Value* finalStepVar;
     ir::Value* finalVar;
-    builder.set_pos(*lp->exits().begin());
+    // builder.set_pos(*lp->exits().begin());
     if(not scevVal->addsteps.empty()){
         finalStepVar=*scevVal->addsteps.begin();
         for(auto subval:scevVal->substeps){
             finalStepVar=builder.makeBinary(ir::SUB,finalStepVar,subval);
         }
+        bool tmpBool=false;
         for(auto addval:scevVal->addsteps){
+            if(not tmpBool){
+                tmpBool=true;
+                continue;
+            }
             finalStepVar=builder.makeBinary(ir::ADD,finalStepVar,addval);
         }
         if(finalStepVar->isFloat32())
@@ -81,7 +87,13 @@ void SCEV::SCEVReduceInstr(ir::Loop* lp,SCEVValue* scevVal,ir::Value* itercnt,ir
         finalVar=builder.makeBinary(ir::ADD,finalVar,scevVal->initVal);
     }
     else{
+        finalStepVar=scevVal->substeps.front();
+        bool tmpBool=false;
         for(auto subval:scevVal->substeps){
+            if(not tmpBool){
+                tmpBool=true;
+                continue;
+            }
             finalStepVar=builder.makeBinary(ir::ADD,finalStepVar,subval);
         }
         if(finalStepVar->isFloat32())
@@ -89,17 +101,38 @@ void SCEV::SCEVReduceInstr(ir::Loop* lp,SCEVValue* scevVal,ir::Value* itercnt,ir
         finalVar=builder.makeBinary(ir::MUL,itercnt,finalStepVar);
         finalVar=builder.makeBinary(ir::SUB,scevVal->initVal,finalVar);
     }
-    for(auto puse:scevVal->phiinst->uses()){
+    for(auto puseIter=scevVal->phiinst->uses().begin();puseIter!=scevVal->phiinst->uses().end();){
+        auto puse=*puseIter;
+        puseIter++;
         auto userInst=puse->user()->dynCast<ir::Instruction>();
         auto userIdx=puse->index();
-        if(lp->blocks().count(userInst->block())==0){
+        if(lp->blocks().count(userInst->block())!=0)continue;
+        auto lpExit=*lp->exits().begin();//lp must have only one exit
+        if(lpExit!=userInst->block()){
             userInst->setOperand(userIdx,finalVar);
+        }
+        else{
+            bool isReplace;
+            for(auto inst:lpExit->insts()){
+                if(inst==finalVar){
+                    isReplace=true;
+                    break;
+                }
+                if(inst==userInst){
+                    isReplace=false;
+                    break;
+                }
+            }
+            if(isReplace){
+                userInst->setOperand(userIdx,finalVar);
+            }
         }
     }
 }
 
 
 void SCEV::visitPhi(ir::Loop* lp,ir::PhiInst* phiinst){
+    if(phiinst->isFloat32())return;
     std::stack<ir::Instruction*>instStk;
     for(auto puse:phiinst->uses()){
         auto user=puse->user();
@@ -133,6 +166,7 @@ void SCEV::visitPhi(ir::Loop* lp,ir::PhiInst* phiinst){
     int res=-1;
     for(auto puse:phiinst->uses()){
         auto inst=puse->user()->dynCast<ir::BinaryInst>();
+        if(inst==nullptr)continue;
         if(inst->valueId()==ir::vADD or inst->valueId()==ir::vFADD or inst->valueId()==ir::vSUB or inst->valueId()==ir::vFSUB){}
         else continue;
         if(lp->blocks().count(inst->block())==0)continue;
@@ -226,7 +260,10 @@ bool SCEV::isSimplyLoopInvariant(ir::Loop* lp,ir::Value* val){
         return true;
     }   
     if(auto phiinst=val->dynCast<ir::PhiInst>()){
-        return domctx->dominate(phiinst->block(),lp->header());
+        return domctx->dominate(phiinst->block(),lp->header()) and phiinst->block()!=lp->header();
+    }
+    if(auto arg=val->dynCast<ir::Argument>()){
+        return true;
     }
     return false;
 }
@@ -385,7 +422,7 @@ ir::Value* SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv,ir::IRB
     //对icmp进行标准化
     normalizeIcmpAndBr(lp,idv);
     //对于不能确定具体cnt的，只生成stepVar==1的情况，否则可以生成所有的情况
-    builder.set_pos(lpExit,lpExit->insts().begin());
+    // builder.set_pos(lpExit,lpExit->insts().begin());
     switch (icmpinst->valueId())
     {
     case ir::vIEQ:
@@ -635,6 +672,9 @@ bool SCEV::isSimplyNotInLoop(ir::Loop* lp,ir::Value* val){
         return lp->blocks().count(instVal->block())==0;
     }
     if(auto argVal=val->dynCast<ir::Argument>()){
+        return true;
+    }
+    if(auto constVal=val->dynCast<ir::Constant>()){
         return true;
     }
     return false;
