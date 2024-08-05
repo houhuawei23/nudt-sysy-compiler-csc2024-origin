@@ -43,7 +43,7 @@ void SCEV::runOnLoop(ir::Loop* lp){
     SCEVValues.clear();
     for(auto pinst:lpHeader->phi_insts()){
         auto phiinst=pinst->dynCast<ir::PhiInst>();
-        if(phiinst==defaultIdv->phiinst())continue;//不再分析indvar
+        // if(phiinst==defaultIdv->phiinst())continue;//不再分析indvar
         if(not isUsedOutsideLoop(lp,phiinst))continue;//只有在外被使用对应value才有被化简的价值
         visitPhi(lp,phiinst);
     }
