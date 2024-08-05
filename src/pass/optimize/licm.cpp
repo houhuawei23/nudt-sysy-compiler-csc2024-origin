@@ -76,7 +76,8 @@ bool LICM::checkstore(ir::LoadInst* loadinst, ir::Loop* loop) {
                 if (alias(inst, loadinst)) return false;
             } else if (inst->dynCast<ir::CallInst>()) {
                 auto callee = inst->dynCast<ir::CallInst>()->callee();
-                if (sectx->hasSideEffect(callee)) {
+                if (!callee->isOnlyDeclare() && sectx->hasSideEffect(callee)) {
+                    // std::cerr << callee->name() << std::endl;
                     return false;
                 }
             }
@@ -89,13 +90,13 @@ std::vector<ir::Instruction*> LICM::getinvariant(ir::BasicBlock* bb, ir::Loop* l
     std::vector<ir::Instruction*> res;
     auto head = loop->header();
     ir::BasicBlock* headnext;
-    for (auto bb : head->next_blocks()) {
-        if (loop->contains(bb)) {
-            headnext = bb;
+    for (auto ibb : head->next_blocks()) {
+        if (loop->contains(ibb)) {
+            headnext = ibb;
             break;
         }
     }
-    if (!pdomcctx->pdominate(bb, headnext)) return res;
+    if (bb != head && !pdomcctx->pdominate(bb, headnext)) return res;
     for (auto inst : bb->insts()) {
         if (auto storeinst = inst->dynCast<ir::StoreInst>()) {
             if (isinvariantop(storeinst, loop))
@@ -134,6 +135,7 @@ std::vector<ir::Instruction*> LICM::getinvariant(ir::BasicBlock* bb, ir::Loop* l
 }
 
 void LICM::run(ir::Function* func, TopAnalysisInfoManager* tp) {
+    // std::cout<<"In Function \""<<func->name()<<"\": "<<std::endl;
     loopctx = tp->getLoopInfo(func);
     loopctx->refresh();
     domctx = tp->getDomTree(func);

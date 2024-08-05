@@ -43,7 +43,7 @@ void loopInfo::refresh() {
     if (not isValid) {
         using namespace pass;
         loopAnalysis la = loopAnalysis();
-        loopInfoCheck lic = loopInfoCheck();
+        // loopInfoCheck lic = loopInfoCheck();
         la.run(passUnit,topManager);
         // lic.run(passUnit,topManager);
         setOn();
@@ -65,7 +65,7 @@ void indVarInfo::refresh() {
         using namespace pass;
         // PassManager pm = PassManager(passUnit->module(), topManager);
         indVarAnalysis iva = indVarAnalysis();
-        indVarInfoCheck ivc = indVarInfoCheck();
+        // indVarInfoCheck ivc = indVarInfoCheck();
         iva.run(passUnit,topManager);
         // ivc.run(passUnit,topManager);
         setOn();
