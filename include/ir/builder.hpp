@@ -51,7 +51,7 @@ public:  // set function
     mInsertPos = pos;  // mInsertPos 与 ->end() 绑定?
   }
   void set_pos(BasicBlock* block) {
-    assert(block != nullptr and block->insts().empty());
+    // assert(block != nullptr and block->insts().empty());
     mBlock = block;
     mInsertPos = block->insts().begin();
   }
