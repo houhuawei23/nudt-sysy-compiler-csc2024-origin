@@ -98,33 +98,31 @@ ir::Value* SysYIRGenerator::visitVarDef_global(SysYParser::VarDefContext* ctx, i
 ir::Value* SysYIRGenerator::visitArray_global(SysYParser::VarDefContext* ctx, ir::Type* btype, bool is_const,
                                               std::vector<size_t> dims, int capacity) {
   const auto name = ctx->lValue()->ID()->getText();
-  int dimensions = dims.size();
 
   std::vector<ir::Value*> Arrayinit;
+  bool is_init = false;
   for (int i = 0; i < capacity; i++) {
-    if (btype->isFloatPoint())
+    if (btype->isFloatPoint()) {
       Arrayinit.push_back(ir::Constant::gen_f32(0.0));
-    else if (btype->isInt32())
+    } else if (btype->isInt32()) {
       Arrayinit.push_back(ir::Constant::gen_i32(0));
-    else
+    } else {
       assert(false && "Invalid type.");
+    }
   }
 
   //! get initial value (将数组元素的初始化值存储在Arrayinit中)
   if (ctx->ASSIGN()) {
-    _d = 0;
-    _n = 0;
-    _path.clear();
+    _d = 0; _n = 0; _path.clear();
     _path = std::vector<size_t>(dims.size(), 0);
-    _current_type = btype;
-    _is_alloca = true;
+    _current_type = btype; _is_alloca = true;
     for (auto expr : ctx->initValue()->initValue()) {
-      visitInitValue_Array(expr, capacity, dims, Arrayinit);
+      is_init |= visitInitValue_Array(expr, capacity, dims, Arrayinit);
     }
   }
 
   //! generate global variable and assign
-  auto global_var = ir::GlobalVariable::gen(btype, Arrayinit, mModule, name, is_const, dims);
+  auto global_var = ir::GlobalVariable::gen(btype, Arrayinit, mModule, name, is_const, dims, is_init, capacity);
   mTables.insert(name, global_var);
   mModule->addGlobalVar(name, global_var);
 
@@ -146,19 +144,19 @@ ir::Value* SysYIRGenerator::visitScalar_global(SysYParser::VarDefContext* ctx,
   const auto name = ctx->lValue()->ID()->getText();
 
   ir::Value* init = nullptr;
-  if (btype->isFloatPoint())
+  bool is_init = false;
+  if (btype->isFloatPoint()) {
     init = ir::Constant::gen_f32(0.0);
-  else if (btype->isInt32())
+  } else if (btype->isInt32()) {
     init = ir::Constant::gen_i32(0);
-  else
+  } else {
     assert(false && "invalid type");
-
+  }
   if (ctx->ASSIGN()) {
     init = any_cast_Value(visit(ctx->initValue()->exp()));
-    assert(ir::isa<ir::Constant>(init) &&
-           "global must be initialized by constant");
-
     ir::Constant* tmp = dyn_cast<ir::Constant>(init);
+    assert(tmp && "global must be initialized by constant");
+    if (tmp->i32() != 0) is_init = true;
     if (btype->isInt32() && tmp->isFloatPoint()) {
       init = ir::Constant::gen_i32(tmp->f32());
     } else if (btype->isFloatPoint() && tmp->isInt32()) {
@@ -167,7 +165,7 @@ ir::Value* SysYIRGenerator::visitScalar_global(SysYParser::VarDefContext* ctx,
   }
 
   //! generate global variable and assign
-  auto global_var = ir::GlobalVariable::gen(btype, {init}, mModule, name, is_const);
+  auto global_var = ir::GlobalVariable::gen(btype, {init}, mModule, name, is_const, {}, is_init);
   mTables.insert(name, global_var);
   mModule->addGlobalVar(name, global_var);
 
@@ -338,13 +336,14 @@ ir::Value* SysYIRGenerator::visitScalar_local(SysYParser::VarDefContext* ctx, ir
 }
 
 /*
- * @brief visit array initvalue
+ * @brief: visit array initvalue
  * @details:
  *      varDef: lValue (ASSIGN initValue)?;
  *      initValue: exp | LBRACE (initValue (COMMA initValue)*)? RBRACE;
  */
-void SysYIRGenerator::visitInitValue_Array(SysYParser::InitValueContext* ctx, const int capacity,
+bool SysYIRGenerator::visitInitValue_Array(SysYParser::InitValueContext* ctx, const int capacity,
                                            const std::vector<size_t> dims, std::vector<ir::Value*>& init) {
+  bool res = false;
   if (ctx->exp()) {
     auto value = any_cast_Value(visit(ctx->exp()));
 
@@ -381,8 +380,10 @@ void SysYIRGenerator::visitInitValue_Array(SysYParser::InitValueContext* ctx, co
       factor *= dims[i];
     }
     if (auto cvalue = dyn_cast<ir::Constant>(value)) {  // 1. 常值 (global OR local)
+      if (cvalue->i32() != 0) res = true;
       init[offset] = value;
     } else {  // 2. 变量 (just for local)
+      res = true;
       if (_is_alloca) {
         init[offset] = value;
       } else {
@@ -392,7 +393,7 @@ void SysYIRGenerator::visitInitValue_Array(SysYParser::InitValueContext* ctx, co
   } else {
     int cur_d = _d, cur_n = _n;
     for (auto expr : ctx->initValue()) {
-      visitInitValue_Array(expr, capacity, dims, init);
+      res |= visitInitValue_Array(expr, capacity, dims, init);
     }
     _d = cur_d, _n = cur_n;
   }
@@ -402,6 +403,7 @@ void SysYIRGenerator::visitInitValue_Array(SysYParser::InitValueContext* ctx, co
   while (_d >= 0 && _n >= dims[_d]) {
     _n = _path[--_d] + 1;
   }
+  return res;
 }
 
 }  // namespace sysy

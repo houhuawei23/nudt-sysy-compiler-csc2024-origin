@@ -29,7 +29,9 @@ void MIRFunction::print(std::ostream& os, CodeGenContext& ctx) {
     }
 }
 /* Information of MIRRelocable */
-void MIRZeroStorage::print(std::ostream& os, CodeGenContext& ctx) {}
+void MIRZeroStorage::print(std::ostream& os, CodeGenContext& ctx) {
+    os << "\t.zero\t" << mSize << std::endl;
+}
 void MIRDataStorage::print(std::ostream& os, CodeGenContext& ctx) {
     int start = -1;  // 初始时未找到连续0的起始位置
 

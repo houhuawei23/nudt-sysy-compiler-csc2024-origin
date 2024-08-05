@@ -711,7 +711,7 @@ bool genericPeepholeOpt(MIRFunction& mfunc, CodeGenContext& ctx) {
     // std::cerr << "DeadInstElimination: " << modified << "\n";
     modified |= EliminateInvisibleInsts(mfunc, ctx);
     // std::cerr << "EliminateInvisibleInsts: " << modified << "\n";
-    modified |= ctx.scheduleModel->peepholeOpt(mfunc, ctx);
+    // modified |= ctx.scheduleModel->peepholeOpt(mfunc, ctx);
     // std::cerr << "scheduleModel->peepholeOpt: " << modified << "\n";
     return modified;
 }

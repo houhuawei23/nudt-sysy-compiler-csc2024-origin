@@ -18,7 +18,8 @@ void GlobalVariable::print(std::ostream& os) const {
 
   if (isArray()) {
     size_t idx = 0, dimensions = dims_cnt();
-    print_ArrayInit(os, dimensions, 0, &idx);
+    if (isInit()) print_ArrayInit(os, dimensions, 0, &idx);
+    else os << "zeroinitializer";
   } else {
     os << *scalarValue();
   }

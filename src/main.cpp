@@ -78,8 +78,6 @@ int main(int argc, char* argv[]) {
     }
   }
 
-
-
   //! 3. Code Generation
   constexpr bool DebugDomBFS = false;
   for (auto fun : module_ir->funcs()) {
