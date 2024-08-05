@@ -335,12 +335,12 @@ static bool simplifyOpWithZero(MIRFunction& func, const CodeGenContext&) {
           if (isZero(1)) resetToZero();
           break;
         }
-        case SH1ADD:
-        case SH2ADD:
-        case SH3ADD: {
-          if (isZero(1)) resetToCopy(2);
-          break;
-        }
+        // case SH1ADD:
+        // case SH2ADD:
+        // case SH3ADD: {
+        //   if (isZero(1)) resetToCopy(2);
+        //   break;
+        // }
         case ADD: {
           if (isZero(1)) resetToCopy(2);
           else if (isZero(2)) resetToCopy(1);
@@ -368,15 +368,15 @@ static bool simplifyOpWithZero(MIRFunction& func, const CodeGenContext&) {
           break;
         }
         // case SEXT_W:
-        case ADD_UW: {
-          if (isZero(1) && isZero(2)) resetToZero();
-          else if (isZero(1)) resetToCopy(2);
-          else if (isZero(2)) {
-            // 
-            modified = true;
-          }
-          break;
-        }
+        // case ADD_UW: {
+        //   if (isZero(1) && isZero(2)) resetToZero();
+        //   else if (isZero(1)) resetToCopy(2);
+        //   else if (isZero(2)) {
+        //     // 
+        //     modified = true;
+        //   }
+        //   break;
+        // }
         default: break;
       }
     }
@@ -390,7 +390,7 @@ static bool relaxWInst(MIRFunction& func, const CodeGenContext& ctx) {
   const auto isWUser = [](uint32_t opcode) {
     switch (opcode) {
       case ADDIW:
-      case ADD_UW:
+      // case ADD_UW:
       case ADDW:
       case SUBW:
       case MULW:
