@@ -8,35 +8,41 @@ namespace ir {
 /* GlobalVariable */
 /*
  * @brief: GlobalVariable Class
- * @note: 
+ * @note:
  *      1. Array (全局矢量)
  *      2. Scalar (全局标量)
- * @var: 
+ * @var:
  *      1. _parent: 当前
- * 
+ *
  * GlobalVariable must be PointerType
  */
 class GlobalVariable : public User {
- protected:
+protected:
   Module* mModule = nullptr;
   bool mIsArray = false;
   bool mIsConst = false;
   std::vector<Value*> mInitValues;
 
- public:
+public:
+  GlobalVariable(Type* base_type,
+                 const_str_ref name,
+                 bool is_const = false,
+                 Module* parent = nullptr)
+    : User(Type::TypePointer(base_type), vGLOBAL_VAR, name), mModule(parent), mIsConst(is_const) {
+    //
+  }
+
   //! 1. Array
   GlobalVariable(Type* base_type,
-                 const std::vector<Value*>& init,
-                 const std::vector<size_t>& dims,
+                 const std::vector<Value*> init,
+                 const std::vector<size_t> dims,
                  Module* parent = nullptr,
                  const_str_ref name = "",
                  bool is_const = false)
-      : User(Type::TypePointer(Type::TypeArray(base_type, dims)),
-             vGLOBAL_VAR,
-             name),
-        mModule(parent),
-        mInitValues(init),
-        mIsConst(is_const) {
+    : User(Type::TypePointer(Type::TypeArray(base_type, dims)), vGLOBAL_VAR, name),
+      mModule(parent),
+      mInitValues(init),
+      mIsConst(is_const) {
     mIsArray = true;
   }
 
@@ -46,14 +52,14 @@ class GlobalVariable : public User {
                  Module* parent = nullptr,
                  const_str_ref name = "",
                  bool is_const = false)
-      : User(ir::Type::TypePointer(base_type), vGLOBAL_VAR, name),
-        mModule(parent),
-        mInitValues(init),
-        mIsConst(is_const) {
+    : User(ir::Type::TypePointer(base_type), vGLOBAL_VAR, name),
+      mModule(parent),
+      mInitValues(init),
+      mIsConst(is_const) {
     mIsArray = false;
   }
 
- public:  // generate function
+public:  // generate function
   static GlobalVariable* gen(Type* base_type,
                              const std::vector<Value*>& init,
                              Module* parent = nullptr,
@@ -69,12 +75,12 @@ class GlobalVariable : public User {
     return var;
   }
 
- public:  // check function
+public:  // check function
   bool isArray() const { return mIsArray; }
   bool isConst() const { return mIsConst; }
   bool isInit() const { return mInitValues.size() > 0; }
 
- public:  // get function
+public:  // get function
   auto parent() const { return mModule; }
   auto dims_cnt() const {
     if (isArray())
@@ -84,21 +90,23 @@ class GlobalVariable : public User {
   }
   auto init_cnt() const { return mInitValues.size(); }
   auto init(size_t index) const { return mInitValues[index]; }
+
   Type* baseType() const {
     assert(dyn_cast<PointerType>(type()) && "type error");
     return dyn_cast<PointerType>(type())->baseType();
   }
   auto scalarValue() const { return mInitValues[0]; }
 
- public:
+public:
   void print_ArrayInit(std::ostream& os,
                        const size_t dimension,
                        const size_t begin,
                        size_t* idx) const;
 
- public:
+public:
   static bool classof(const Value* v) { return v->valueId() == vGLOBAL_VAR; }
   std::string name() const override { return "@" + mName; }
+  void dumpAsOpernd(std::ostream& os) const override { os << "@" << mName; }
   void print(std::ostream& os) const override;
 };
 }  // namespace ir

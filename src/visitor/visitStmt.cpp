@@ -1,5 +1,7 @@
 #include "visitor/visitor.hpp"
 
+using namespace ir;
+
 namespace sysy {
 
 /*
@@ -18,18 +20,17 @@ namespace sysy {
  *          | blockStmt
  *          | emptyStmt;
  */
+/*
+curBlock is sequencially set as curBlock, so if curBlock is Terminal,
+means this blockStmt is over, just break.
+
+当前块如果已经Terminal, 后续的 blockItem 不会创建新的块, 可以直接 break.
+*/
 std::any SysYIRGenerator::visitBlockStmt(SysYParser::BlockStmtContext* ctx) {
-  ir::SymbolTable::BlockScope scope(mTables);
+  SymbolTable::BlockScope scope(mTables);
   for (auto item : ctx->blockItem()) {
     visit(item);
     if (mBuilder.curBlock()->isTerminal()) {
-      // std::cerr << "curBlock is terminal!" << std::endl;
-      /*
-      curBlock is sequencially set as curBlock, so if curBlock is Terminal,
-      means this blockStmt is over, just break.
-
-      当前块如果已经Terminal, 后续的 blockItem 不会创建新的块, 可以直接 break.
-      */
       break;
     }
   }
@@ -45,43 +46,29 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
 
   auto func = mBuilder.curBlock()->function();
 
-  assert(ir::isa<ir::Function>(func) && "ret stmt block parent err!");
+  assert(func && "ret stmt block parent err!");
 
   // 匹配 返回值类型 与 函数定义类型
   if (func->retType()->isVoid()) {
     if (ctx->exp())
       assert(false && "the returned value is not matching the function");
-  } else {
-    if (ctx->exp()) {
-      if (auto cvalue = dyn_cast<ir::Constant>(value)) {  //! 常值
-        if (func->retType()->isInt32() && cvalue->isFloatPoint()) {
-          value = ir::Constant::gen_i32(cvalue->f32());
-        } else if (func->retType()->isFloatPoint() && cvalue->isInt32()) {
-          value = ir::Constant::gen_f32(cvalue->i32());
-        } else if (func->retType() != cvalue->type()) {
-          assert(false && "invalid type");
-        }
-      } else {  //! 变量
-        if (func->retType()->isInt32() && value->isFloatPoint()) {
-          value = mBuilder.makeUnary(ir::ValueId::vFPTOSI, value,
-                                     ir::Type::TypeInt32());
-        } else if (func->retType()->isFloatPoint() && value->isInt32()) {
-          value = mBuilder.makeUnary(ir::ValueId::vSITOFP, value,
-                                     ir::Type::TypeFloat32());
-        } else if (func->retType() != value->type()) {
-          assert(false && "invalid type");
-        }
-      }
-    } else {
-      assert(false && "the returned value is not matching the function");
-    }
 
-    // store res to ret_value
-    auto store = mBuilder.makeInst<ir::StoreInst>(value, func->retValPtr());
+    return std::any();
   }
 
-  if (not mBuilder.curBlock()->isTerminal()) {
-    auto br = mBuilder.makeInst<ir::BranchInst>(func->exit());
+  assert(ctx->exp() && "the returned value is not matching the function");
+
+  if (value->isa<ConstantValue>()) {  //! 常值
+    value = mBuilder.castConstantType(value, func->retType());
+  } else {  //! 变量
+    value = mBuilder.makeTypeCast(value, func->retType());
+  }
+
+  // store res to ret_value
+  auto store = mBuilder.makeInst<StoreInst>(value, func->retValPtr());
+
+  if (not mBuilder.curBlock()->isTerminal()) {  // ?
+    auto br = mBuilder.makeInst<BranchInst>(func->exit());
   }
 
   return std::any();
@@ -93,37 +80,18 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
  *      assignStmt: lValue ASSIGN exp SEMICOLON
  */
 std::any SysYIRGenerator::visitAssignStmt(SysYParser::AssignStmtContext* ctx) {
-  const auto lvalue_ptr = any_cast_Value(visit(ctx->lValue()));  // 左值
-  ir::Type* lvar_pointee_type = nullptr;
-  if (lvalue_ptr->type()->isPointer())
-    lvar_pointee_type = lvalue_ptr->type()->as<ir::PointerType>()->baseType();
+  const auto lvalue = any_cast_Value(visit(ctx->lValue()));  // 左值
+  auto exp = any_cast_Value(visit(ctx->exp()));              // 右值
+
+  Type* lvalueType = nullptr;
+  if (lvalue->type()->isPointer())
+    lvalueType = lvalue->type()->as<PointerType>()->baseType();
   else
-    lvar_pointee_type = lvalue_ptr->type()->as<ir::ArrayType>()->baseType();
-  auto exp = any_cast_Value(visit(ctx->exp()));  // 右值
+    lvalueType = lvalue->type()->as<ArrayType>()->baseType();
 
-  ir::Value* res = nullptr;
+  exp = mBuilder.makeTypeCast(exp, lvalueType);
 
-  if (auto cexp = dyn_cast<ir::Constant>(exp)) {  //! 1. 右值为常值
-    switch (lvar_pointee_type->btype()) {
-      case ir::BasicTypeRank::INT32:
-        exp = ir::Constant::gen_i32(cexp->i32());
-        break;
-      case ir::BasicTypeRank::FLOAT:
-        exp = ir::Constant::gen_f32(cexp->f32());
-        break;
-      default:
-        assert(false && "not valid btype");
-    }
-  } else {  //! 2. 右值为变量
-    if (lvar_pointee_type == exp->type()) {
-      exp = exp;
-    } else if (lvar_pointee_type->isInt32() && exp->isFloat32()) {
-      exp = mBuilder.makeUnary(ir::ValueId::vFPTOSI, exp);
-    } else if (lvar_pointee_type->isFloat32() && exp->isInt32()) {
-      exp = mBuilder.makeUnary(ir::ValueId::vSITOFP, exp);
-    }
-  }
-  res = mBuilder.makeInst<ir::StoreInst>(exp, lvalue_ptr);
+  auto res = mBuilder.makeInst<StoreInst>(exp, lvalue);
 
   return dyn_cast_Value(res);
 }
@@ -164,7 +132,7 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
     cond = mBuilder.castToBool(cond);  //* cast to i1
     //* create cond br inst
     if (not mBuilder.curBlock()->isTerminal()) {
-      mBuilder.makeInst<ir::BranchInst>(cond, lhs_t_target, lhs_f_target);
+      mBuilder.makeInst<BranchInst>(cond, lhs_t_target, lhs_f_target);
 
       //! [CFG] link the basic block
     }
@@ -174,7 +142,7 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
     mBuilder.set_pos(then_block);
     visit(ctx->stmt(0));  //* may change the basic block
     if (not mBuilder.curBlock()->isTerminal()) {
-      mBuilder.makeInst<ir::BranchInst>(merge_block);
+      mBuilder.makeInst<BranchInst>(merge_block);
     }
   }
 
@@ -184,7 +152,7 @@ std::any SysYIRGenerator::visitIfStmt(SysYParser::IfStmtContext* ctx) {
     if (auto elsestmt = ctx->stmt(1))
       visit(elsestmt);
     if (not mBuilder.curBlock()->isTerminal()) {
-      mBuilder.makeInst<ir::BranchInst>(merge_block);
+      mBuilder.makeInst<BranchInst>(merge_block);
     }
   }
 
@@ -217,7 +185,7 @@ std::any SysYIRGenerator::visitWhileStmt(SysYParser::WhileStmtContext* ctx) {
   mBuilder.push_loop(judge_block, next_block);
 
   // jump without cond, directly jump to judge block
-  mBuilder.makeInst<ir::BranchInst>(judge_block);
+  mBuilder.makeInst<BranchInst>(judge_block);
 
   {  // visit cond
     mBuilder.set_pos(judge_block);
@@ -231,15 +199,14 @@ std::any SysYIRGenerator::visitWhileStmt(SysYParser::WhileStmtContext* ctx) {
 
     cond = mBuilder.castToBool(cond);
 
-    mBuilder.makeInst<ir::BranchInst>(cond, tTarget, fTarget);
-
+    mBuilder.makeInst<BranchInst>(cond, tTarget, fTarget);
   }
 
   {  // visit loop block
     mBuilder.set_pos(loop_block);
     visit(ctx->stmt());
 
-    mBuilder.makeInst<ir::BranchInst>(judge_block);
+    mBuilder.makeInst<BranchInst>(judge_block);
 
     // pop header and exit block
     mBuilder.pop_loop();
@@ -255,7 +222,7 @@ std::any SysYIRGenerator::visitBreakStmt(SysYParser::BreakStmtContext* ctx) {
   const auto breakDest = mBuilder.exit();
   assert(breakDest);
 
-  const auto res = mBuilder.makeInst<ir::BranchInst>(breakDest);
+  const auto res = mBuilder.makeInst<BranchInst>(breakDest);
 
   // create a basic block
   const auto next_block = mBuilder.curBlock()->function()->newBlock();
@@ -264,12 +231,11 @@ std::any SysYIRGenerator::visitBreakStmt(SysYParser::BreakStmtContext* ctx) {
   return std::any();
 }
 
-std::any SysYIRGenerator::visitContinueStmt(
-    SysYParser::ContinueStmtContext* ctx) {
+std::any SysYIRGenerator::visitContinueStmt(SysYParser::ContinueStmtContext* ctx) {
   const auto continueDest = mBuilder.header();
   assert(continueDest);
 
-  const auto res = mBuilder.makeInst<ir::BranchInst>(continueDest);
+  const auto res = mBuilder.makeInst<BranchInst>(continueDest);
 
   const auto next_block = mBuilder.curBlock()->function()->newBlock();
 

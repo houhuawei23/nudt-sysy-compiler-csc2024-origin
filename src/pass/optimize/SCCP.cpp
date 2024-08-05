@@ -51,7 +51,7 @@ void SCCP::searchCFG(ir::BasicBlock* bb) {
     assert(terBrInst != nullptr);
     if (terBrInst->is_cond()) {
         if (terBrInst->cond()->valueId() == ir::vCONSTANT) {
-            auto constCond = dyn_cast<ir::Constant>(terBrInst->cond());
+            auto constCond = terBrInst->cond()->dynCast<ir::ConstantValue>();
             if (constCond->i1()) {
                 searchCFG(terBrInst->iftrue());
                 for (auto pinst : terBrInst->iffalse()->phi_insts()) {

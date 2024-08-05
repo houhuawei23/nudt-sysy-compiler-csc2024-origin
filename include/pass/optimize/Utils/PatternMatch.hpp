@@ -65,7 +65,7 @@ class ConstantIntMatcher {
   public:
   ConstantIntMatcher(int64_t& value) : mVal{value} {}
   bool operator()(const MatchContext<Value>& ctx) const {
-    if (auto value = ctx.value->dynCast<Constant>()) {
+    if (auto value = ctx.value->dynCast<ConstantValue>()) {
       if (value->type()->isInt32()) {
         mVal = value->i32();
         return true;
@@ -81,7 +81,7 @@ class ConstantIntValMatcher {
   public:
   ConstantIntValMatcher(int64_t value) : mVal{value} {}
   bool operator()(const MatchContext<Value>& ctx) const {
-    if (auto value = ctx.value->dynCast<Constant>()) {
+    if (auto value = ctx.value->dynCast<ConstantValue>()) {
       if (value->type()->isInt32()) {
         return mVal == value->i32();
       }
@@ -104,7 +104,7 @@ class ConstantFloatMatcher {
   public:
   ConstantFloatMatcher(float& value) : mVal{value} {}
   bool operator()(const MatchContext<Value>& ctx) const {
-    if (auto value = ctx.value->dynCast<Constant>()) {
+    if (auto value = ctx.value->dynCast<ConstantValue>()) {
       if (value->type()->isFloat32()) {
         mVal = value->f32();
         return true;
@@ -120,7 +120,7 @@ class ConstantFloatValMatcher {
   public:
   ConstantFloatValMatcher(float value) : mVal{value} {}
   bool operator()(const MatchContext<Value>& ctx) const {
-    if (auto value = ctx.value->dynCast<Constant>()) {
+    if (auto value = ctx.value->dynCast<ConstantValue>()) {
       if (value->type()->isFloat32()) {
         return mVal == value->f32();
       }

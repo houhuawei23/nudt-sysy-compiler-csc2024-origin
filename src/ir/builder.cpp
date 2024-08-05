@@ -1,4 +1,5 @@
 #include "ir/builder.hpp"
+#include "ir/ConstantValue.hpp"
 namespace ir {
 
 Value* IRBuilder::makeBinary(BinaryOp op, Value* lhs, Value* rhs) {
@@ -59,8 +60,6 @@ Value* IRBuilder::makeUnary(ValueId vid, Value* val, Type* ty) {
     return res;
   }
   //! else
-  // assert(ty != nullptr && "must have target type");
-
   switch (vid) {
     case ValueId::vSITOFP:
       ty = Type::TypeFloat32();
@@ -104,6 +103,67 @@ Value* IRBuilder::promoteType(Value* val, Type* target_tpye, Type* base_type) {
         res = makeUnary(ValueId::vSITOFP, res);
       }
     }
+  }
+  return res;
+}
+
+Value* IRBuilder::castConstantType(Value* val, Type* target_tpye) {
+  if (not val->isa<ConstantValue>())
+    return val;
+
+  if (val->type() == target_tpye)
+    return val;
+
+  if (val->type()->isInt32() and target_tpye->isFloatPoint()) {
+    return ConstantFloating::gen_f32(val->as<ConstantInteger>()->getVal());
+  }
+
+  if (val->type()->isFloatPoint() and target_tpye->isInt32()) {
+    return ConstantInteger::gen_i32(val->as<ConstantFloating>()->getVal());
+  }
+
+  std::cerr << "castConstantType: invalid cast from " << *(val->type()) << " to " << *target_tpye
+            << std::endl;
+
+  return nullptr;
+}
+
+Value* IRBuilder::promoteTypeBeta(Value* val, Type* targetType) {
+  if (val->type()->btype() >= targetType->btype())
+    return val;
+  Value* res = val;
+  // else need to promote
+  auto pair = [&]() {
+    if (val->type()->isBool()) {
+      if (targetType->btype() <= BasicTypeRank::FLOAT)  // bool -> int
+        return std::make_pair(ValueId::vZEXT, Type::TypeInt32());
+    } else if (val->type()->isInt32()) {
+      if (targetType->isFloatPoint())  // int -> float
+        return std::make_pair(ValueId::vSITOFP, Type::TypeFloat32());
+    }
+    assert(false && "promoteTypeBeta: invalid type!");
+    return std::make_pair(ValueId::vInvalid, Type::TypeUndefine());
+  }();
+
+  if (pair.first != ValueId::vInvalid)
+    res = makeUnary(pair.first, res, pair.second);
+
+  if (res->type() != targetType) {
+    res = promoteTypeBeta(res, targetType);
+  }
+  assert(res->type() == targetType);
+  return res;
+}
+
+Value* IRBuilder::makeTypeCast(Value* val, Type* target_type) {
+  Value* res = val;
+  if (val->type() == target_type)
+    return res;
+
+  if (val->type()->isInt() and target_type->isFloatPoint()) {
+    res = makeUnary(ValueId::vSITOFP, val, target_type);
+  } else if (val->type()->isFloatPoint() and target_type->isInt()) {
+    res = makeUnary(ValueId::vFPTOSI, val, target_type);
   }
   return res;
 }
@@ -173,9 +233,9 @@ Value* IRBuilder::castToBool(Value* val) {
   Value* res = nullptr;
   if (not val->isBool()) {
     if (val->isInt32()) {
-      res = makeInst<ICmpInst>(ValueId::vINE, val, Constant::gen_i32(0));
+      res = makeInst<ICmpInst>(ValueId::vINE, val, ConstantInteger::gen_i32(0));
     } else if (val->isFloatPoint()) {
-      res = makeInst<FCmpInst>(ValueId::vFONE, val, Constant::gen_f32(0.0));
+      res = makeInst<FCmpInst>(ValueId::vFONE, val, ConstantFloating::gen_f32(0.0));
     }
   } else {
     res = val;
@@ -210,8 +270,7 @@ Value* IRBuilder::makeAlloca(Type* base_type,
     inst = makeIdenticalInst<AllocaInst>(base_type, entryBlock, "", is_const);
 
   } else {
-    inst = makeIdenticalInst<AllocaInst>(base_type, dims, entryBlock, "",
-                                         is_const, capacity);
+    inst = makeIdenticalInst<AllocaInst>(base_type, dims, entryBlock, "", is_const, capacity);
   }
 
   /* hhw, add alloca to function entry block*/
@@ -221,8 +280,11 @@ Value* IRBuilder::makeAlloca(Type* base_type,
   return inst;
 }
 
-Value* IRBuilder::makeGetElementPtr(Type* base_type, Value* value, Value* idx,
-                                    std::vector<size_t> dims, std::vector<size_t> cur_dims) {
+Value* IRBuilder::makeGetElementPtr(Type* base_type,
+                                    Value* value,
+                                    Value* idx,
+                                    std::vector<size_t> dims,
+                                    std::vector<size_t> cur_dims) {
   GetElementPtrInst* inst = nullptr;
   if (dims.size() == 0 && cur_dims.size() == 0) {
     inst = makeInst<GetElementPtrInst>(base_type, value, idx);

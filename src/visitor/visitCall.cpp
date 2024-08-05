@@ -1,5 +1,5 @@
 #include "visitor/visitor.hpp"
-
+#include "ir/ConstantValue.hpp"
 namespace sysy {
 /*
  * @brief: visit call
@@ -26,7 +26,7 @@ std::any SysYIRGenerator::visitCall(SysYParser::CallContext* ctx) {
   
   if (func_name.compare("_sysy_starttime") == 0 or
       func_name.compare("_sysy_stoptime") == 0) {
-      rargs.push_back(ir::Constant::gen_i32(lineNumber));
+      rargs.push_back(ir::ConstantInteger::gen_i32(lineNumber));
   } else {
     if (ctx->funcRParams()) {
       for (auto exp : ctx->funcRParams()->exp()) {
@@ -42,16 +42,10 @@ std::any SysYIRGenerator::visitCall(SysYParser::CallContext* ctx) {
   for (int i = 0; i < length; i++) {
     const auto rarg = rargs[i];
     const auto arg_type = callee->argTypes()[i];
-    auto val = rarg;
-    if (arg_type->isInt32() and rarg->isFloatPoint()) {
-      val = mBuilder.makeUnary(ir::ValueId::vFPTOSI, rargs[i]);
-    } else if (arg_type->isFloatPoint() and rarg->isInt32()) {
-      val = mBuilder.makeUnary(ir::ValueId::vSITOFP, rargs[i]);
-    }
+    auto val = mBuilder.makeTypeCast(rargs[i], arg_type);
     final_rargs.push_back(val);
   }
   auto inst = mBuilder.makeInst<ir::CallInst>(callee, final_rargs);
-  // auto inst = mBuilder.makeInstBeta<ir::CallInst>(callee, final_rargs);
   return dyn_cast_Value(inst);
 }
 }  // namespace sysy

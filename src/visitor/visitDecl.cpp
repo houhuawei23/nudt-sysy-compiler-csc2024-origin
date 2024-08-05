@@ -1,5 +1,6 @@
 #include "visitor/visitor.hpp"
 
+using namespace ir;
 namespace sysy {
 /*
  * @brief Visit Variable Type (变量类型)
@@ -8,9 +9,9 @@ namespace sysy {
  */
 std::any SysYIRGenerator::visitBtype(SysYParser::BtypeContext* ctx) {
   if (ctx->INT()) {
-    return ir::Type::TypeInt32();
+    return Type::TypeInt32();
   } else if (ctx->FLOAT()) {
-    return ir::Type::TypeFloat32();
+    return Type::TypeFloat32();
   }
   return nullptr;
 }
@@ -21,70 +22,51 @@ std::any SysYIRGenerator::visitBtype(SysYParser::BtypeContext* ctx) {
  *      Global OR Local (全局 OR 局部)
  */
 std::any SysYIRGenerator::visitDecl(SysYParser::DeclContext* ctx) {
-  if (mTables.isModuleScope()) {
-    return visitDeclGlobal(ctx);
-  } else {
-    return visitDeclLocal(ctx);
-  }
-}
-
-/*
- * @brief Visit Local Variable Declaration (局部变量定义 && 声明)
- * @details
- *      decl: CONST? btype varDef (COMMA varDef)* SEMICOLON;
- */
-ir::Value* SysYIRGenerator::visitDeclLocal(SysYParser::DeclContext* ctx) {
-  auto btype = any_cast_Type(visitBtype(ctx->btype()));
-  bool is_const = ctx->CONST();
-  ir::Value* res = nullptr;
-
-  for (auto varDef : ctx->varDef()) {
-    res = visitVarDef_local(varDef, btype, is_const);
-  }
-  return dyn_cast_Value(res);
-}
-
-/*
- * @brief Visit Global Variable Declaration (全局变量定义 && 声明)
- * @details
- *      decl: CONST? btype varDef (COMMA varDef)* SEMICOLON;
- */
-ir::Value* SysYIRGenerator::visitDeclGlobal(SysYParser::DeclContext* ctx) {
   auto btype = any_cast_Type(visit(ctx->btype()));
   bool is_const = ctx->CONST();
-
-  ir::Value* res = nullptr;
+  // std::cerr << ctx->getText() << std::endl;
   for (auto varDef : ctx->varDef()) {
-    res = visitVarDef_global(varDef, btype, is_const);
+    visitVarDef(varDef, btype, is_const);
   }
-  return dyn_cast_Value(res);
+
+  return std::any();
 }
 
-ir::Value* SysYIRGenerator::visitVarDef_global(SysYParser::VarDefContext* ctx, ir::Type* btype, bool is_const) {
-  const auto name = ctx->lValue()->ID()->getText();
+// Value* expandConstant(Instruction* val) {
+//   return val->getConstantRepl
+// }
 
+
+Value* SysYIRGenerator::visitVarDef(SysYParser::VarDefContext* ctx, Type* btype, bool is_const) {
   // 获得数组的各个维度 (常量)
   std::vector<size_t> dims;
-  int capacity = 1;
-  for (auto dim : ctx->lValue()->exp()) {
-    ir::Value* tmp = any_cast_Value(visit(dim));
-    if (auto ctmp = dyn_cast<ir::Constant>(tmp)) {
-      if (ctmp->isFloatPoint()) {
-        capacity *= (int)(ctmp->f32());
-        dims.push_back((int)ctmp->f32());
-      } else {
-        capacity *= ctmp->i32();
-        dims.push_back(ctmp->i32());
-      }
-    } else {
-      assert(false && "dimension must be a constant");
-    }
+  size_t capacity = 1;
+  // std::cerr << "visitVarDef: " << ctx->getText() << std::endl;
+  for (auto dimCtx : ctx->lValue()->exp()) {
+    auto dim = any_cast_Value(visit(dimCtx));
+    if(auto instdim = dim->dynCast<Instruction>())
+      dim = instdim->getConstantRepl();
+    assert(dim->isa<ConstantValue>() && "dimension must be a constant");
+    auto cdim = dim->dynCast<ConstantValue>();
+    capacity *= cdim->i32();
+    dims.push_back(cdim->i32());
   }
   bool isArray = dims.size() > 0;
 
-  if (isArray) return visitArray_global(ctx, btype, is_const, dims, capacity);
-  else return visitScalar_global(ctx, btype, is_const);
+  // std::cerr << ctx->getText() << std::endl;
+  if (mTables.isModuleScope()) {
+    if (isArray)
+      return visitGlobalArray(ctx, btype, is_const, dims, capacity);
+    else
+      return visitGlobalScalar(ctx, btype, is_const);
+  } else {
+    if (isArray)
+      return visitLocalArray(ctx, btype, is_const, dims, capacity);
+    else
+      return visitLocalScalar(ctx, btype, is_const);
+  }
 }
+
 /*
  * @brief: visit global array
  * @details:
@@ -95,17 +77,20 @@ ir::Value* SysYIRGenerator::visitVarDef_global(SysYParser::VarDefContext* ctx, i
  *      1. const
  *      2. variable
  */
-ir::Value* SysYIRGenerator::visitArray_global(SysYParser::VarDefContext* ctx, ir::Type* btype, bool is_const,
-                                              std::vector<size_t> dims, int capacity) {
+Value* SysYIRGenerator::visitGlobalArray(SysYParser::VarDefContext* ctx,
+                                         Type* btype,
+                                         bool is_const,
+                                         std::vector<size_t> dims,
+                                         int capacity) {
   const auto name = ctx->lValue()->ID()->getText();
   int dimensions = dims.size();
 
-  std::vector<ir::Value*> Arrayinit;
+  std::vector<Value*> Arrayinit;
   for (int i = 0; i < capacity; i++) {
     if (btype->isFloatPoint())
-      Arrayinit.push_back(ir::Constant::gen_f32(0.0));
+      Arrayinit.push_back(ConstantFloating::gen_f32(0.0));
     else if (btype->isInt32())
-      Arrayinit.push_back(ir::Constant::gen_i32(0));
+      Arrayinit.push_back(ConstantInteger::gen_i32(0));
     else
       assert(false && "Invalid type.");
   }
@@ -124,7 +109,7 @@ ir::Value* SysYIRGenerator::visitArray_global(SysYParser::VarDefContext* ctx, ir
   }
 
   //! generate global variable and assign
-  auto global_var = ir::GlobalVariable::gen(btype, Arrayinit, mModule, name, is_const, dims);
+  auto global_var = GlobalVariable::gen(btype, Arrayinit, mModule, name, is_const, dims);
   mTables.insert(name, global_var);
   mModule->addGlobalVar(name, global_var);
 
@@ -140,70 +125,35 @@ ir::Value* SysYIRGenerator::visitArray_global(SysYParser::VarDefContext* ctx, ir
  *      1. const
  *      2. variable
  */
-ir::Value* SysYIRGenerator::visitScalar_global(SysYParser::VarDefContext* ctx,
-                                               ir::Type* btype,
-                                               bool is_const) {
+Value* SysYIRGenerator::visitGlobalScalar(SysYParser::VarDefContext* ctx,
+                                          Type* btype,
+                                          bool is_const) {
   const auto name = ctx->lValue()->ID()->getText();
 
-  ir::Value* init = nullptr;
+  Value* init = nullptr;
   if (btype->isFloatPoint())
-    init = ir::Constant::gen_f32(0.0);
+    init = ConstantFloating::gen_f32(0.0);
   else if (btype->isInt32())
-    init = ir::Constant::gen_i32(0);
+    init = ConstantInteger::gen_i32(0);
   else
     assert(false && "invalid type");
 
   if (ctx->ASSIGN()) {
     init = any_cast_Value(visit(ctx->initValue()->exp()));
-    assert(ir::isa<ir::Constant>(init) &&
-           "global must be initialized by constant");
-
-    ir::Constant* tmp = dyn_cast<ir::Constant>(init);
-    if (btype->isInt32() && tmp->isFloatPoint()) {
-      init = ir::Constant::gen_i32(tmp->f32());
-    } else if (btype->isFloatPoint() && tmp->isInt32()) {
-      init = ir::Constant::gen_f32(tmp->i32());
-    }
+    if(auto initInst = init->dynCast<Instruction>()) 
+      init = initInst->getConstantRepl();
+    assert(init->isa<ConstantValue>() && "global must be initialized by constant");
+    init = mBuilder.castConstantType(init, btype);
   }
 
   //! generate global variable and assign
-  auto global_var = ir::GlobalVariable::gen(btype, {init}, mModule, name, is_const);
+  auto global_var = GlobalVariable::gen(btype, {init}, mModule, name, is_const);
   mTables.insert(name, global_var);
   mModule->addGlobalVar(name, global_var);
 
   return dyn_cast_Value(global_var);
 }
 
-ir::Value* SysYIRGenerator::visitVarDef_local(SysYParser::VarDefContext* ctx,
-                                              ir::Type* btype,
-                                              bool is_const) {
-  // 获得数组的各个维度 (常量)
-  std::vector<size_t> dims;
-  int capacity = 1;
-  for (auto dim : ctx->lValue()->exp()) {
-    ir::Value* tmp = any_cast_Value(visit(dim));
-    if (auto ctmp = dyn_cast<ir::Constant>(tmp)) {
-      if (ctmp->isFloatPoint()) {
-        capacity *= (int)(ctmp->f32());
-        dims.push_back((int)ctmp->f32());
-      } else if (ctmp->isInt32()) {
-        capacity *= ctmp->i32();
-        dims.push_back(ctmp->i32());
-      } else {
-        assert(false && "Invalid type.");
-      }
-    } else {
-      assert(false && "dimension must be a constant");
-    }
-  }
-  bool isArray = dims.size() > 0;
-
-  if (isArray) {
-    return visitArray_local(ctx, btype, is_const, dims, capacity);
-  } else {
-    return visitScalar_local(ctx, btype, is_const);
-  }
-}
 /*
  * @brief: visit local array
  * @details:
@@ -214,13 +164,16 @@ ir::Value* SysYIRGenerator::visitVarDef_local(SysYParser::VarDefContext* ctx,
  *      1. const
  *      2. variable
  */
-ir::Value* SysYIRGenerator::visitArray_local(SysYParser::VarDefContext* ctx, ir::Type* btype,
-                                             bool is_const, std::vector<size_t> dims, int capacity) {
+Value* SysYIRGenerator::visitLocalArray(SysYParser::VarDefContext* ctx,
+                                        Type* btype,
+                                        bool is_const,
+                                        std::vector<size_t> dims,
+                                        int capacity) {
   const auto name = ctx->lValue()->ID()->getText();
   int dimensions = dims.size();
   std::vector<size_t> cur_dims(dims);
 
-  std::vector<ir::Value*> Arrayinit;
+  std::vector<Value*> Arrayinit;
 
   //! alloca
   auto alloca_ptr = mBuilder.makeAlloca(btype, is_const, dims, name, capacity);
@@ -230,9 +183,14 @@ ir::Value* SysYIRGenerator::visitArray_local(SysYParser::VarDefContext* ctx, ir:
   if (ctx->ASSIGN()) {
     for (int i = 0; i < capacity; i++)
       Arrayinit.push_back(nullptr);
-    auto tmp =
-        mBuilder.makeInst<ir::BitCastInst>(alloca_ptr->type(), alloca_ptr);
-    mBuilder.makeInst<ir::MemsetInst>(tmp->type(), tmp);
+    auto tmp = mBuilder.makeInst<BitCastInst>(alloca_ptr->type(), alloca_ptr);
+    mBuilder.makeInst<MemsetInst>(tmp->type(), tmp);
+
+    // auto ptr = mBuilder.makeInst<BitCastInst>(Type::TypeInt8(), alloca_ptr);
+    // // mBuilder.makeInst<MemsetInst>(tmp->type(), tmp);
+    // const auto len = alloca_ptr->type()->as<PointerType>()->baseType()->size();
+    // // mBuilder.makeInst<MemsetInstBeta>(ptr, ConstantInteger::gen_i8(0),
+    // ConstantInteger::gen_i32(len));
 
     _d = 0;
     _n = 0;
@@ -254,19 +212,21 @@ ir::Value* SysYIRGenerator::visitArray_local(SysYParser::VarDefContext* ctx, ir:
     }
   }
 
-  if (!isAssign) return dyn_cast_Value(alloca_ptr);
-  ir::Value* element_ptr = dyn_cast<ir::Value>(alloca_ptr);
+  if (!isAssign)
+    return dyn_cast_Value(alloca_ptr);
+  Value* element_ptr = dyn_cast<Value>(alloca_ptr);
   for (int cur = 1; cur <= dimensions; cur++) {
     dims.erase(dims.begin());
-    element_ptr = mBuilder.makeGetElementPtr(btype, element_ptr, ir::Constant::gen_i32(0), dims, cur_dims);
+    element_ptr =
+      mBuilder.makeGetElementPtr(btype, element_ptr, ConstantInteger::gen_i32(0), dims, cur_dims);
     cur_dims.erase(cur_dims.begin());
   }
 
   int cnt = 0;
   for (int i = 0; i < Arrayinit.size(); i++) {
     if (Arrayinit[i] != nullptr) {
-      element_ptr = mBuilder.makeGetElementPtr(btype, element_ptr, ir::Constant::gen_i32(cnt));
-      mBuilder.makeInst<ir::StoreInst>(Arrayinit[i], element_ptr);
+      element_ptr = mBuilder.makeGetElementPtr(btype, element_ptr, ConstantInteger::gen_i32(cnt));
+      mBuilder.makeInst<StoreInst>(Arrayinit[i], element_ptr);
       cnt = 0;
     }
     cnt++;
@@ -284,56 +244,40 @@ ir::Value* SysYIRGenerator::visitArray_local(SysYParser::VarDefContext* ctx, ir:
  *      1. const     ignore
  *      2. variable  alloca
  */
-ir::Value* SysYIRGenerator::visitScalar_local(SysYParser::VarDefContext* ctx, ir::Type* btype, bool is_const) {
+Value* SysYIRGenerator::visitLocalScalar(SysYParser::VarDefContext* ctx,
+                                         Type* btype,
+                                         bool is_const) {
   const auto name = ctx->lValue()->ID()->getText();
-  ir::Value* init = nullptr;
 
-  if (is_const) {  //! 常量
+  if (is_const) {  //! const qulifier
     if (!ctx->ASSIGN())
       assert(false && "const without initialization");
-    init = any_cast_Value(visit(ctx->initValue()->exp()));
-    if (ir::isa<ir::Constant>(init)) {  //! 1. 右值为常量
-      auto cinit = dyn_cast<ir::Constant>(init);
-      if (btype->isInt32() && cinit->isFloatPoint()) {
-        cinit = ir::Constant::gen_i32(cinit->f32());
-        init = dyn_cast<ir::Value>(cinit);
-      } else if (btype->isFloatPoint() && cinit->isInt32()) {
-        cinit = ir::Constant::gen_f32(cinit->i32());
-        init = dyn_cast<ir::Value>(cinit);
-      }
-      mTables.insert(name, init);
-    } else {  //! 2. 右值为变量
-      assert(false && "const must be initialized by constant");
-    }
+    auto init = any_cast_Value(visit(ctx->initValue()->exp()));
+
+    assert(init->isa<ConstantValue>() && "const must be initialized by constant");
+
+    // init is Constant
+    init = mBuilder.castConstantType(init, btype);
+    mTables.insert(name, init);
 
     return init;
-  } else {  //! 变量
-    auto alloca_ptr = mBuilder.makeAlloca(btype, is_const);
-    alloca_ptr->setComment(name);
+  } else {  //! not const qulifier
+    auto alloca_ptr = mBuilder.makeAlloca(btype, is_const)->setComment(name);
     mTables.insert(name, alloca_ptr);
 
-    if (ctx->ASSIGN()) {
-      init = any_cast_Value(visit(ctx->initValue()->exp()));
-      if (ir::isa<ir::Constant>(init)) {  //! 1. 右值为常量
-        auto cinit = dyn_cast<ir::Constant>(init);
-        if (btype->isInt32() && cinit->isFloatPoint()) {
-          cinit = ir::Constant::gen_i32(cinit->f32());
-          init = dyn_cast<ir::Value>(cinit);
-        } else if (btype->isFloatPoint() && cinit->isInt32()) {
-          cinit = ir::Constant::gen_f32(cinit->i32());
-          init = dyn_cast<ir::Value>(cinit);
-        }
-      } else {  //! 2. 右值为变量
-        if (btype->isInt32() && init->isFloatPoint()) {
-          init = mBuilder.makeUnary(ir::vFPTOSI, init);
-        } else if (btype->isFloatPoint() && init->isInt32()) {
-          init = mBuilder.makeUnary(ir::vSITOFP, init);
-        }
-      }
-      mBuilder.makeInst<ir::StoreInst>(init, alloca_ptr);
-    }
+    if (not ctx->ASSIGN())
+      return alloca_ptr;
 
-    return dyn_cast_Value(alloca_ptr);
+    // has init
+    auto init = any_cast_Value(visit(ctx->initValue()->exp()));
+    if (init->isa<ConstantValue>())
+      init = mBuilder.castConstantType(init, btype);
+    else
+      init = mBuilder.makeTypeCast(init, btype);
+
+    mBuilder.makeInst<StoreInst>(init, alloca_ptr);
+
+    return alloca_ptr;
   }
 }
 
@@ -343,44 +287,37 @@ ir::Value* SysYIRGenerator::visitScalar_local(SysYParser::VarDefContext* ctx, ir
  *      varDef: lValue (ASSIGN initValue)?;
  *      initValue: exp | LBRACE (initValue (COMMA initValue)*)? RBRACE;
  */
-void SysYIRGenerator::visitInitValue_Array(SysYParser::InitValueContext* ctx, const int capacity,
-                                           const std::vector<size_t> dims, std::vector<ir::Value*>& init) {
+void SysYIRGenerator::visitInitValue_Array(SysYParser::InitValueContext* ctx,
+                                           const int capacity,
+                                           const std::vector<size_t> dims,
+                                           std::vector<Value*>& init) {
   if (ctx->exp()) {
     auto value = any_cast_Value(visit(ctx->exp()));
 
     //! 类型转换 (匹配左值与右值的数据类型)
-    if (auto cvalue = dyn_cast<ir::Constant>(value)) {  //! 1. 常量
-      if (_current_type->isInt32() && cvalue->isFloatPoint()) {
-        value = ir::Constant::gen_i32(cvalue->f32());
-      } else if (_current_type->isFloatPoint() && cvalue->isInt32()) {
-        value = ir::Constant::gen_f32(cvalue->i32());
-      }
-    } else {  //! 2. 变量
-      if (_current_type->isInt32() && value->isFloatPoint()) {
-        value = mBuilder.makeUnary(ir::ValueId::vFPTOSI, value);
-      } else if (_current_type->isFloatPoint() && value->isInt32()) {
-        value = mBuilder.makeUnary(ir::ValueId::vSITOFP, value);
-      }
-    }
+    if (value->isa<ConstantValue>())
+      value = mBuilder.castConstantType(value, _current_type);
+    else
+      value = mBuilder.makeTypeCast(value, _current_type);
 
     //! 获取当前数组元素的位置
     while (_d < dims.size() - 1) {
       _path[_d++] = _n;
       _n = 0;
     }
-    std::vector<ir::Value*> indices;  // 大小为数组维度 (存储当前visit的元素的下标)
+    std::vector<Value*> indices;  // 大小为数组维度 (存储当前visit的元素的下标)
     for (int i = 0; i < dims.size() - 1; i++) {
-      indices.push_back(ir::Constant::gen_i32(_path[i]));
+      indices.push_back(ConstantInteger::gen_i32(_path[i]));
     }
-    indices.push_back(ir::Constant::gen_i32(_n));
+    indices.push_back(ConstantInteger::gen_i32(_n));
 
     //! 将特定位置的数组元素存入init数组中
     int factor = 1, offset = 0;
     for (int i = indices.size() - 1; i >= 0; i--) {
-      offset += factor * dyn_cast<ir::Constant>(indices[i])->i32();
+      offset += factor * indices[i]->dynCast<ConstantInteger>()->getVal();
       factor *= dims[i];
     }
-    if (auto cvalue = dyn_cast<ir::Constant>(value)) {  // 1. 常值 (global OR local)
+    if (auto cvalue = value->dynCast<ConstantInteger>()) {  // 1. 常值 (global OR local)
       init[offset] = value;
     } else {  // 2. 变量 (just for local)
       if (_is_alloca) {

@@ -19,6 +19,7 @@ class User;
 class Value;
 
 class Constant;
+class ConstantValue;
 class Instruction;
 class BasicBlock;
 class Argument;
@@ -47,6 +48,7 @@ using use_ptr_vector = std::vector<Use*>;
 //* BasicBlock
 using block_ptr_list = std::list<BasicBlock*>;
 using block_ptr_vector = std::vector<BasicBlock*>;
+using BasicBlockList = std::list<BasicBlock*>;
 // true or false targets stack
 using block_ptr_stack = std::stack<BasicBlock*>;
 
@@ -58,6 +60,7 @@ using arg_ptr_vector = std::vector<Argument*>;
 //* Instruction
 // basicblock insts
 using inst_list = std::list<Instruction*>;
+using InstructionList = std::list<Instruction*>;
 // iterator for add/del/traverse inst list
 using inst_iterator = inst_list::iterator;
 using reverse_iterator = inst_list::reverse_iterator;
@@ -128,7 +131,7 @@ enum ValueId {
 
   vBITCAST,
   vMEMSET,
-
+  vMEMSETBeta,
   vINSTRUCTION,
   // vMEM_BEGIN,
   vALLOCA,
@@ -193,6 +196,7 @@ enum ValueId {
   // Phi Instruction
   vPHI,
   vFUNCPTR,
+  vPTRCAST,
   vInvalid,
 };
 class Value {
@@ -228,9 +232,9 @@ public:
   // manage
   virtual std::string comment() const { return mComment; }
 
-  void setComment(const_str_ref comment);
+  Value* setComment(const_str_ref comment);
 
-  void addComment(const_str_ref comment);
+  Value* addComment(const_str_ref comment);
 
 public:  // check
   bool isBool() const { return mType->isBool(); }
@@ -245,7 +249,9 @@ public:  // check
 public:
   ValueId valueId() const { return mValueId; }
   virtual void print(std::ostream& os) const = 0;
-
+  virtual void dumpAsOpernd(std::ostream& os) const {
+    os << mName;
+  }
   template <typename T>
   T* as() {
     static_assert(std::is_base_of_v<Value, T>);

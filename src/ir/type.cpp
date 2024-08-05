@@ -102,6 +102,8 @@ static std::string_view getTypeName(BasicTypeRank btype) {
   switch (btype) {
     case BasicTypeRank::INT1:
       return "i1"sv;
+    case BasicTypeRank::INT8:
+      return "i8"sv;
     case BasicTypeRank::INT32:
       return "i32"sv;
     case BasicTypeRank::FLOAT:

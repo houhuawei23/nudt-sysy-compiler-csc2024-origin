@@ -32,7 +32,7 @@ void loopUnroll::constunroll(ir::Loop* loop, ir::indVar* iv) {
         return;
 
     int ivbegin = iv->getBeginI32();
-    int ivend = iv->endValue()->dynCast<ir::Constant>()->i32();
+    int ivend = iv->endValue()->dynCast<ir::ConstantValue>()->i32();
     int ivstep = iv->getStepI32();
     ir::BinaryInst* ivbinary = iv->iterInst();
     ir::Instruction* ivcmp = iv->cmpInst();
@@ -152,7 +152,7 @@ void loopUnroll::doconstunroll(ir::Loop* loop, ir::indVar* iv, int times) {
         ir::BinaryInst* ivbinary = iv->iterInst();
         ir::Instruction* ivcmp = iv->cmpInst();
         if (ivbinary->valueId() == ir::vADD) {
-            auto isub = utils::make<ir::BinaryInst>(ir::vSUB, ir::Type::TypeInt32(), ivend, ir::Constant::gen_i32(remainder));
+            auto isub = utils::make<ir::BinaryInst>(ir::vSUB, ir::Type::TypeInt32(), ivend, ir::ConstantInteger::gen_i32(remainder));
             preheader->emplace_lastbutone_inst(isub);
             for (auto op : ivcmp->operands()) {
                 if (op->value() == ivend) {
@@ -161,7 +161,7 @@ void loopUnroll::doconstunroll(ir::Loop* loop, ir::indVar* iv, int times) {
                 }
             }
         } else if (ivbinary->valueId() == ir::vSUB) {
-            auto iadd = utils::make<ir::BinaryInst>(ir::vADD, ir::Type::TypeInt32(), ivend, ir::Constant::gen_i32(remainder));
+            auto iadd = utils::make<ir::BinaryInst>(ir::vADD, ir::Type::TypeInt32(), ivend, ir::ConstantInteger::gen_i32(remainder));
             preheader->emplace_lastbutone_inst(iadd);
             for (auto op : ivcmp->operands()) {
                 if (op->value() == ivend) {
@@ -272,7 +272,7 @@ void loopUnroll::doconstunroll(ir::Loop* loop, ir::indVar* iv, int times) {
 
     auto ivphi = iv->phiinst();
     if (iv->iterInst()->valueId() == ir::vADD) {
-        auto iadd = utils::make<ir::BinaryInst>(ir::vADD, ir::Type::TypeInt32(), ivphi, ir::Constant::gen_i32(unrolltimes * (iv->getStepI32())));
+        auto iadd = utils::make<ir::BinaryInst>(ir::vADD, ir::Type::TypeInt32(), ivphi, ir::ConstantInteger::gen_i32(unrolltimes * (iv->getStepI32())));
         nowlatchnext->emplace_lastbutone_inst(iadd);
         for (size_t i = 0; i < ivphi->getsize(); i++) {
             auto phibb = ivphi->getBlock(i);
@@ -281,7 +281,7 @@ void loopUnroll::doconstunroll(ir::Loop* loop, ir::indVar* iv, int times) {
             }
         }
     } else if (iv->iterInst()->valueId() == ir::vSUB) {
-        auto isub = utils::make<ir::BinaryInst>(ir::vSUB, ir::Type::TypeInt32(), ivphi, ir::Constant::gen_i32(unrolltimes * (iv->getStepI32())));
+        auto isub = utils::make<ir::BinaryInst>(ir::vSUB, ir::Type::TypeInt32(), ivphi, ir::ConstantInteger::gen_i32(unrolltimes * (iv->getStepI32())));
         nowlatchnext->emplace_lastbutone_inst(isub);
         for (size_t i = 0; i < ivphi->getsize(); i++) {
             auto phibb = ivphi->getBlock(i);
@@ -296,7 +296,7 @@ void loopUnroll::copyloop(std::vector<ir::BasicBlock*> bbs, ir::BasicBlock* begi
     std::vector<ir::BasicBlock*> copybbs;
     auto Module = func->module();
     // auto getValue = [&](ir::Value* val) -> ir::Value* {
-    //     if (auto c = dyn_cast<ir::Constant>(val)) return c;
+    //     if (auto c = dyn_cast<ir::ConstantValue>(val)) return c;
     //     if (copymap.count(val)) return copymap[val];
     //     return val;
     // };
@@ -351,7 +351,7 @@ void loopUnroll::copyloopremainder(std::vector<ir::BasicBlock*> bbs, ir::BasicBl
     std::vector<ir::BasicBlock*> copybbs;
     auto Module = func->module();
     // auto getValue = [&](ir::Value* val) -> ir::Value* {
-    //     if (auto c = dyn_cast<ir::Constant>(val)) return c;
+    //     if (auto c = dyn_cast<ir::ConstantValue>(val)) return c;
     //     if (copymap.count(val)) return copymap[val];
     //     return val;
     // };
@@ -458,7 +458,7 @@ void loopUnroll::repalceuseout(ir::Instruction* inst, ir::Instruction* copyinst,
 }
 
 bool loopUnroll::isconstant(ir::indVar* iv) {  // 判断迭代的end是否为常数
-    if (auto constiv = iv->endValue()->dynCast<ir::Constant>()) return true;
+    if (auto constiv = iv->endValue()->dynCast<ir::ConstantValue>()) return true;
     return false;
 }
 void loopUnroll::run(ir::Function* func, TopAnalysisInfoManager* tp) {

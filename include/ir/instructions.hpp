@@ -4,7 +4,7 @@
 #include "ir/infrast.hpp"
 #include "ir/value.hpp"
 #include "support/utils.hpp"
-
+#include "ir/ConstantValue.hpp"
 #include <initializer_list>
 
 namespace ir {
@@ -75,7 +75,9 @@ public:  // check function
 public:
   static bool classof(const Value* v) { return v->valueId() == vALLOCA; }
   void print(std::ostream& os) const override;
-
+  void dumpAsOpernd(std::ostream& os) const override {
+    os << mName;
+  }
   Instruction* copy(std::function<Value*(Value*)> getValue) const override {
     if (isScalar()) {
       auto inst = utils::make<AllocaInst>(baseType());
@@ -437,8 +439,8 @@ public:
  */
 class BitCastInst : public Instruction {
 public:
-  BitCastInst(Type* type, Value* value, BasicBlock* parent = nullptr)
-    : Instruction(vBITCAST, type, parent) {
+  BitCastInst(Type* dsttype, Value* value, BasicBlock* parent = nullptr)
+    : Instruction(vBITCAST, dsttype, parent) {
     addOperand(value);
   }
 
@@ -460,9 +462,9 @@ public:
  */
 class MemsetInst : public Instruction {
 public:
-  MemsetInst(Type* type, Value* value, BasicBlock* parent = nullptr)
+  MemsetInst(Type* type, Value* dst, BasicBlock* parent = nullptr)
     : Instruction(vMEMSET, type, parent) {
-    addOperand(value);
+    addOperand(dst);
   }
 
 public:  // get function
@@ -473,6 +475,42 @@ public:  // utils function
   void print(std::ostream& os) const override;
   Instruction* copy(std::function<Value*(Value*)> getValue) const override {
     return utils::make<MemsetInst>(mType, getValue(operand(0)));
+  }
+};
+
+class BitCastInstBeta : public Instruction {
+public:
+  BitCastInstBeta(Type* dsttype, Value* value, BasicBlock* parent = nullptr)
+    : Instruction(vBITCAST, dsttype, parent) {
+    addOperand(value);
+  }
+
+public:
+  auto value() const { return operand(0); }
+
+  static bool classof(const Value* v) { return v->valueId() == vBITCAST; }
+  void print(std::ostream& os) const override;
+  Instruction* copy(std::function<Value*(Value*)> getValue) const override {
+    return utils::make<BitCastInst>(mType, getValue(operand(0)));
+  }
+};
+
+/* memset(ptr dst, i8 val, i32 len)*/
+class MemsetInstBeta : public Instruction {
+public:
+  MemsetInstBeta(Value* dst, Value* val, Value* len, BasicBlock* parent = nullptr)
+    : Instruction(vMEMSET, Type::void_type(), parent) {
+    addOperand(dst);
+    addOperand(val);
+    addOperand(len);
+  }
+
+public:
+  static bool classof(const Value* v) { return v->valueId() == vMEMSETBeta; }
+  void print(std::ostream& os) const override;
+  Instruction* copy(std::function<Value*(Value*)> getValue) const override {
+    return utils::make<MemsetInstBeta>(getValue(operand(0)), getValue(operand(1)),
+                                       getValue(operand(2)));
   }
 };
 
@@ -621,12 +659,23 @@ public:
   Instruction* copy(std::function<Value*(Value*)> getValue) const override { return nullptr; }
 };
 
+class PtrCastInst : public Instruction {
+public:
+  explicit PtrCastInst(Value* src, Type* dstType, BasicBlock* parent = nullptr)
+    : Instruction(vPTRCAST, dstType, parent) {
+    addOperand(src);
+  }
+  static bool classof(const Value* v) { return v->valueId() == vPTRCAST; }
+  void print(std::ostream& os) const override;
+  Instruction* copy(std::function<Value*(Value*)> getValue) const override { return nullptr; }
+};
+
 class indVar {
 private:  // only for constant beginvar and stepvar
-  Constant* mbeginVar;
+  ConstantInteger* mbeginVar;
   Value* mendVar;
 
-  Constant* mstepVar;
+  ConstantInteger* mstepVar;
 
   bool mendIsConst;
 
@@ -635,9 +684,9 @@ private:  // only for constant beginvar and stepvar
   PhiInst* mphiinst;
 
 public:
-  indVar(Constant* mbegin,
+  indVar(ConstantInteger* mbegin,
          Value* mend,
-         Constant* mstep,
+         ConstantInteger* mstep,
          BinaryInst* bininst,
          Instruction* cmpinst,
          PhiInst* phiinst)
@@ -647,7 +696,7 @@ public:
       miterInst(bininst),
       mcmpInst(cmpinst),
       mphiinst(phiinst) {
-    mendIsConst = dyn_cast<Constant>(mendVar) != nullptr;
+    mendIsConst = mendVar->isa<ConstantInteger>();
   }
   int getBeginI32() {
     if (not mbeginVar->isInt32()) assert("BeginVar is not i32!");
@@ -660,8 +709,7 @@ public:
   bool isEndVarConst() { return mendIsConst; }
   int getEndVarI32() {
     if (mendIsConst) {
-      auto mendConst = dyn_cast<Constant>(mendVar);
-      return mendConst->i32();
+      return mendVar->dynCast<ConstantValue>()->i32();
     } else
       assert(false && "endVar is not constant");
   }
@@ -669,8 +717,8 @@ public:
   BinaryInst* iterInst() { return miterInst; }
   Instruction* cmpInst() { return mcmpInst; }
   PhiInst* phiinst() { return mphiinst; }
-  Constant* getBegin() { return mbeginVar; }
-  Constant* getStep() { return mstepVar; }
+  ConstantInteger* getBegin() { return mbeginVar; }
+  ConstantInteger* getStep() { return mstepVar; }
   Value* getEnd() { return mendVar; }
   void print(std::ostream& os) const {
     os << "beginVar: ";

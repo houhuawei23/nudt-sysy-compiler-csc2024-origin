@@ -43,7 +43,7 @@ void SCEV::runOnLoop(ir::Loop* lp){
     builder.set_pos(*lp->exits().begin());
     if(defaultIdv->isEndVarConst()){
         int iterCnt=getConstantEndvarIndVarIterCnt(lp,defaultIdv);
-        IterCntVal=ir::Constant::gen_i32(iterCnt);
+        IterCntVal=ir::ConstantInteger::gen_i32(iterCnt);
     }
     else{
         IterCntVal=addCalcIterCntInstructions(lp,defaultIdv,builder);
@@ -204,7 +204,7 @@ bool SCEV::isSimplyLoopInvariant(ir::Loop* lp,ir::Value* val){
         auto instBB=inst->block();
         if(domctx->dominate(instBB,lp->header()))return true;
     }
-    if(auto conVal=val->dynCast<ir::Constant>())return true;
+    if(auto conVal=val->dynCast<ir::ConstantValue>())return true;
     return false;
 }
 
@@ -419,7 +419,7 @@ ir::Value* SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv,ir::IRB
                 newVal2=builder.makeBinary(ir::DIV,newVal1,stepVal);
             else 
                 newVal2=newVal1;
-            auto const1=ir::Constant::gen_i32(1);
+            auto const1=ir::ConstantInteger::gen_i32(1);
             return builder.makeBinary(ir::ADD,newVal2,const1);
         }
         else if(iterinst->valueId()==ir::vSUB){
@@ -439,7 +439,7 @@ ir::Value* SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv,ir::IRB
                 auto newVal1=builder.makeBinary(ir::SUB,beginVal,endVal);
                 newVal2=builder.makeBinary(ir::DIV,newVal1,stepVal);
             }
-            auto const1=ir::Constant::gen_i32(1);
+            auto const1=ir::ConstantInteger::gen_i32(1);
             return builder.makeBinary(ir::ADD,newVal2,const1);
         }
         else if(iterinst->valueId()==ir::vMUL){
@@ -495,7 +495,7 @@ ir::Value* SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv,ir::IRB
                 newVal2=newVal1;
             else
                 newVal2=builder.makeBinary(ir::DIV,newVal1,stepVal);
-            auto const1=ir::Constant::gen_i32(1);
+            auto const1=ir::ConstantInteger::gen_i32(1);
             return builder.makeBinary(ir::ADD,newVal2,const1);
 
         }
@@ -516,7 +516,7 @@ ir::Value* SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv,ir::IRB
                 auto newVal1=builder.makeBinary(ir::SUB,beginVal,endVal);
                 newVal2=builder.makeBinary(ir::DIV,newVal1,stepVal);
             }
-            auto const1=ir::Constant::gen_i32(1);
+            auto const1=ir::ConstantInteger::gen_i32(1);
             return builder.makeBinary(ir::ADD,newVal2,const1);
 
         }

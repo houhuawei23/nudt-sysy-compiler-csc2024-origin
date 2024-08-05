@@ -36,18 +36,20 @@ void Value::replaceAllUseWith(Value* mValue) {
 }
 
 
-void Value::setComment(const_str_ref comment) {
+Value* Value::setComment(const_str_ref comment) {
   if (!mComment.empty()) {
     std::cerr << "re-set basicblock comment!" << std::endl;
   }
   mComment = comment;
+  return this;
 }
-void Value::addComment(const_str_ref comment) {
+Value* Value::addComment(const_str_ref comment) {
   if (mComment.empty()) {
     mComment = comment;
   } else {
     mComment = mComment + ", " + comment;
   }
+  return this;
 }
 //! User: public Value
 

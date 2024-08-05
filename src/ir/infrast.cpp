@@ -3,6 +3,7 @@
 #include "ir/utils_ir.hpp"
 #include "ir/instructions.hpp"
 #include "support/arena.hpp"
+#include "ir/ConstantValue.hpp"
 namespace ir {
 
 void Argument::print(std::ostream& os) const {
@@ -17,6 +18,7 @@ bool BasicBlock::verify(std::ostream& os) const {
   if (mInsts.empty()) return false;
   for (auto inst : mInsts) {
     if (inst->isTerminator() and inst != mInsts.back()) {
+      inst->print(os);
       os << "block have terminator inst not at the end" << std::endl;
       return false;
     }
@@ -167,7 +169,7 @@ void BasicBlock::replaceinst(Instruction* old_inst, Value* new_) {
       emplace_inst(pos, inst);
       old_inst->replaceAllUseWith(inst);
       delete_inst(old_inst);
-    } else if (auto constant = dyn_cast<Constant>(new_)) {
+    } else if (auto constant = new_->dynCast<ConstantValue>()) {
       old_inst->replaceAllUseWith(constant);
       delete_inst(old_inst);
     }

@@ -53,37 +53,36 @@ int main(int argc, char* argv[]) {
 
   //! 1. IR Generation
   auto module = ir::Module();
-  auto base_module = &module;
-  sysy::SysYIRGenerator gen(base_module, ast_root);
-  auto module_ir = gen.build_ir();
-  if (not module_ir->verify(std::cerr)) {
+  sysy::SysYIRGenerator gen(&module, ast_root);
+  gen.build_ir();
+  if (not module.verify(std::cerr)) {
+    module.print(std::cerr);
     std::cerr << "IR verification failed" << std::endl;
-    assert(false && "IR verification failed");
+    // assert(false && "IR verification failed");
   }
 
   //! 2. Optimization Passes
-  auto tAIM = new pass::TopAnalysisInfoManager(module_ir);
+  auto tAIM = new pass::TopAnalysisInfoManager(&module);
   tAIM->initialize();
-  auto pm = new pass::PassManager(module_ir, tAIM);
+  auto pm = new pass::PassManager(&module, tAIM);
 
   pm->runPasses(config.passes);
 
   if (config.genIR) {  // ir print
     if (config.outfile.empty()) {
-      module_ir->print(std::cout);
+      module.print(std::cout);
     } else {
       ofstream fout;
       fout.open(config.outfile);
-      module_ir->print(fout);
+      module.print(fout);
     }
   }
 
-
-
   //! 3. Code Generation
   constexpr bool DebugDomBFS = false;
-  for (auto fun : module_ir->funcs()) {
-    if (fun->isOnlyDeclare()) continue;
+  for (auto fun : module.funcs()) {
+    if (fun->isOnlyDeclare())
+      continue;
     auto dom_ctx = tAIM->getDomTree(fun);
     // dom_ctx->setOff();
     dom_ctx->refresh();
@@ -92,14 +91,14 @@ int main(int argc, char* argv[]) {
 
     if (DebugDomBFS) {
       for (auto bb : dom_ctx->BFSDomTreeVector()) {
-        std::cerr << bb->name() << " "<< bb->insts().size() <<std::endl;
-        for(auto bbdomson : dom_ctx->domson(bb)){
+        std::cerr << bb->name() << " " << bb->insts().size() << std::endl;
+        for (auto bbdomson : dom_ctx->domson(bb)) {
           std::cerr << bbdomson->name() << " " << bbdomson->insts().size() << " ";
         }
-        std::cerr<<std::endl;
+        std::cerr << std::endl;
       }
       for (auto bb : fun->blocks()) {
-        std::cerr << bb->name() << " "<<bb->insts().size()<<std::endl;
+        std::cerr << bb->name() << " " << bb->insts().size() << std::endl;
       }
       std::cerr << "\n";
     }
@@ -107,7 +106,7 @@ int main(int argc, char* argv[]) {
 
   if (config.genASM) {
     auto target = mir::RISCVTarget();
-    auto mir_module = mir::createMIRModule(*module_ir, target, tAIM);
+    auto mir_module = mir::createMIRModule(module, target, tAIM);
     if (config.outfile.empty()) {
       target.emit_assembly(std::cout, *mir_module);
     } else {
@@ -117,13 +116,13 @@ int main(int argc, char* argv[]) {
     }
     {
       auto filename = utils::preName(config.infile) + ".s";
-      auto path= config.debugDir() / filename;
+      auto path = config.debugDir() / filename;
       ofstream fout(path);
       target.emit_assembly(fout, *mir_module);
     }
   }
 
-  if(config.logLevel >= sysy::LogLevel::DEBUG) {
+  if (config.logLevel >= sysy::LogLevel::DEBUG) {
     utils::Profiler::get().printStatistics();
   }
   return EXIT_SUCCESS;

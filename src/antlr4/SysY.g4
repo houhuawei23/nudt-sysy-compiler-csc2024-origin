@@ -144,7 +144,7 @@ emptyStmt: SEMICOLON;
 
 exp:
 	LPAREN exp RPAREN				# parenExp
-	| var							# varExp
+	| var								# varExp
 	| number						# numberExp
 	| string						# stringExp
 	| call							# callExp

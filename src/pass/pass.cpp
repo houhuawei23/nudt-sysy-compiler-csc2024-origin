@@ -86,6 +86,8 @@ void PassManager::run(BasicBlockPass* bp) {
 static LoopParallel loopParallelPass;
 
 void PassManager::runPasses(std::vector<std::string> passes) {
+  if(passes.size() == 0) return;
+
   const auto& config = sysy::Config::getInstance();
 
   auto dumpModule = [&config](ir::Module* module, const std::string& fileName) {

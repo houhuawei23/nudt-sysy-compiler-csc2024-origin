@@ -18,12 +18,12 @@ bool ArithmeticReduce::runOnBlock(ir::IRBuilder& builder,
       std::cerr << "Checking: " << inst->valueId() << std::endl;
     }
     // commutative c x -> commutative x c
-    auto isConst = [](Value* v) { return v->isa<Constant>(); };
+    auto isConst = [](Value* v) { return v->isa<ConstantValue>(); };
 
     if (const auto biInst = inst->dynCast<BinaryInst>()) {
       if (biInst->isCommutative()) {
-        if (biInst->operand(0)->isa<Constant>() and
-            !biInst->operand(1)->isa<Constant>()) {
+        if (biInst->operand(0)->isa<ConstantValue>() and
+            !biInst->operand(1)->isa<ConstantValue>()) {
           // std::cerr << "Swap operands: "
           //           <<
           //           utils::enumName(static_cast<ValueId>(biInst->valueId()))
@@ -51,15 +51,15 @@ bool ArithmeticReduce::runOnBlock(ir::IRBuilder& builder,
     if (fsub(any(v1), floatval_(0.0))(matchCtx)) return v1;
 
     // mul(x, 0) = 0
-    if (mul(any(v1), intval_(0))(matchCtx)) return Constant::gen_i32(0);
-    if (fmul(any(v1), floatval_(0.0))(matchCtx)) return Constant::gen_f32(0.0);
+    if (mul(any(v1), intval_(0))(matchCtx)) return ConstantInteger::gen_i32(0);
+    if (fmul(any(v1), floatval_(0.0))(matchCtx)) return ConstantFloating::gen_f32(0.0);
     // mul(x, 1) = x
     if (mul(any(v1), intval_(1))(matchCtx)) return v1;
     if (fmul(any(v1), floatval_(1.0))(matchCtx)) return v1;
 
     // div(0, x) = 0
-    if (sdiv(intval_(0), any(v1))(matchCtx)) return Constant::gen_i32(0);
-    if (fdiv(floatval_(0.0), any(v1))(matchCtx)) return Constant::gen_f32(0.0);
+    if (sdiv(intval_(0), any(v1))(matchCtx)) return ConstantInteger::gen_i32(0);
+    if (fdiv(floatval_(0.0), any(v1))(matchCtx)) return ConstantFloating::gen_f32(0.0);
     // div(x, 1) = x
     if (sdiv(any(v1), intval_(1))(matchCtx)) return v1;
     if (fdiv(any(v1), floatval_(1.0))(matchCtx)) return v1;
@@ -71,8 +71,8 @@ bool ArithmeticReduce::runOnBlock(ir::IRBuilder& builder,
       return builder.makeInst<UnaryInst>(ValueId::vFNEG, v1->type(), v1);
     }
     // div(x, x) = 1
-    if (sdiv(any(v1), exactly(v1))(matchCtx)) return Constant::gen_i32(1);
-    if (fdiv(any(v1), exactly(v1))(matchCtx)) return Constant::gen_f32(1.0);
+    if (sdiv(any(v1), exactly(v1))(matchCtx)) return ConstantInteger::gen_i32(1);
+    if (fdiv(any(v1), exactly(v1))(matchCtx)) return ConstantFloating::gen_f32(1.0);
     // (a / c1) / c2 -> a / (c1 * c2)
     if (sdiv(sdiv(any(v1), any(v3)), any(v4))(matchCtx)) {
       const auto mulInst =
@@ -86,11 +86,11 @@ bool ArithmeticReduce::runOnBlock(ir::IRBuilder& builder,
 
     /* rem */
     // 0 % x -> 0
-    if (srem(intval_(0), any(v1))(matchCtx)) return Constant::gen_i32(0);
+    if (srem(intval_(0), any(v1))(matchCtx)) return ConstantInteger::gen_i32(0);
     // a % 1 -> 0
-    if (srem(any(v1), intval_(1))(matchCtx)) return Constant::gen_i32(0);
+    if (srem(any(v1), intval_(1))(matchCtx)) return ConstantInteger::gen_i32(0);
     // a % a -> 0
-    if (srem(any(v1), exactly(v1))(matchCtx)) return Constant::gen_i32(0);
+    if (srem(any(v1), exactly(v1))(matchCtx)) return ConstantInteger::gen_i32(0);
 
     // a * b + a * c = a * (b + c)
     if (add(oneUse(mul(any(v1), any(v2))),
@@ -137,22 +137,22 @@ bool ArithmeticReduce::runOnBlock(ir::IRBuilder& builder,
     // add(add(x, c1), c2) = add(x, c1+c2)
     if (add(add(any(v1), int_(i1)), int_(i2))(matchCtx)) {
       return builder.makeInst<BinaryInst>(ValueId::vADD, v1->type(), v1,
-                                          Constant::gen_i32(i1 + i2));
+                                          ConstantInteger::gen_i32(i1 + i2));
     }
     // add(sub(x, c1), c2) = sub(x, c1-c2)
     if (add(sub(any(v1), int_(i1)), int_(i2))(matchCtx)) {
       return builder.makeInst<BinaryInst>(ValueId::vSUB, v1->type(), v1,
-                                          Constant::gen_i32(i1 - i2));
+                                          ConstantInteger::gen_i32(i1 - i2));
     }
     // sub(sub(x, c1), c2) = sub(x, c1+c2)
     if (sub(sub(any(v1), int_(i1)), int_(i2))(matchCtx)) {
       return builder.makeInst<BinaryInst>(ValueId::vSUB, v1->type(), v1,
-                                          Constant::gen_i32(i1 + i2));
+                                          ConstantInteger::gen_i32(i1 + i2));
     }
     // sub(add(x, c1), c2) = add(x, c1-c2)
     if (sub(add(any(v1), int_(i1)), int_(i2))(matchCtx)) {
       return builder.makeInst<BinaryInst>(ValueId::vADD, v1->type(), v1,
-                                          Constant::gen_i32(i1 - i2));
+                                          ConstantInteger::gen_i32(i1 - i2));
     }
     // (a / ci + b / ci) -> (a + b) / ci
     if (add(sdiv(any(v1), int_(i1)), sdiv(any(v2), int_(i2)))(matchCtx)) {
@@ -160,7 +160,7 @@ bool ArithmeticReduce::runOnBlock(ir::IRBuilder& builder,
         auto addInst =
             builder.makeInst<BinaryInst>(ValueId::vADD, v1->type(), v1, v2);
         return builder.makeInst<BinaryInst>(ValueId::vSDIV, v1->type(), addInst,
-                                            Constant::gen_i32(i1));
+                                            ConstantInteger::gen_i32(i1));
       }
     }
     // (a / cf + b / cf) -> (a + b) / cf
@@ -169,7 +169,7 @@ bool ArithmeticReduce::runOnBlock(ir::IRBuilder& builder,
         auto addInst =
             builder.makeInst<BinaryInst>(ValueId::vADD, v1->type(), v1, v2);
         return builder.makeInst<BinaryInst>(ValueId::vFDIV, v1->type(), addInst,
-                                            Constant::gen_f32(f1));
+                                            ConstantFloating::gen_f32(f1));
       }
     }
     // (a / c + b / c) -> (a + b) / c

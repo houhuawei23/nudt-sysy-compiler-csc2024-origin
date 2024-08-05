@@ -41,7 +41,7 @@ void indVarAnalysis::run(ir::Function* func, TopAnalysisInfoManager* tp) {
         } 
         else
             continue;
-        auto mBeginVar = dyn_cast<ir::Constant>(keyPhiInst->getvalfromBB(lpPreHeader));
+        auto mBeginVar = dyn_cast<ir::ConstantInteger>(keyPhiInst->getvalfromBB(lpPreHeader));
         if(mBeginVar==nullptr){//考虑内层循环嵌套问题
             if(lpctx->looplevel(lpHeader)==1 or lpctx->looplevel(lpHeader)==0)continue;//如果这时本来就是最外层循环，那么就不适合分析indvar
             auto mBeginVarPhi=dyn_cast<ir::PhiInst>(keyPhiInst->getvalfromBB(lpPreHeader));
@@ -52,17 +52,17 @@ void indVarAnalysis::run(ir::Function* func, TopAnalysisInfoManager* tp) {
         auto iterInst=keyPhiInst->getValue(0)==keyPhiInst->getvalfromBB(lpPreHeader)?
             keyPhiInst->getValue(1):keyPhiInst->getValue(0);
         auto iterInstScid = iterInst->valueId();
-        ir::Constant* mstepVar;
+        ir::ConstantInteger* mstepVar;
         if (not(iterInstScid == ir::vADD or iterInstScid == ir::vFADD or iterInstScid == ir::vSUB or
                 iterInstScid == ir::vFSUB or iterInstScid == ir::vMUL or iterInstScid == ir::vFMUL))
             continue;
         auto iterInstBinary = dyn_cast<ir::BinaryInst>(iterInst);
         if (iterInstBinary->lValue()->valueId() == ir::vPHI) {
             if (dyn_cast<ir::PhiInst>(iterInstBinary->lValue()) != keyPhiInst) continue;
-            mstepVar = dyn_cast<ir::Constant>(iterInstBinary->rValue());
+            mstepVar = dyn_cast<ir::ConstantInteger>(iterInstBinary->rValue());
         } else if (iterInstBinary->rValue()->valueId() == ir::vPHI) {
             if (dyn_cast<ir::PhiInst>(iterInstBinary->rValue()) != keyPhiInst) continue;
-            mstepVar = dyn_cast<ir::Constant>(iterInstBinary->lValue());
+            mstepVar = dyn_cast<ir::ConstantInteger>(iterInstBinary->lValue());
         } else
             continue;
         addIndVar(lp, mBeginVar, mstepVar, mEndVar, iterInstBinary,
@@ -81,8 +81,8 @@ void indVarAnalysis::run(ir::Function* func, TopAnalysisInfoManager* tp) {
 }
 
 void indVarAnalysis::addIndVar(ir::Loop* lp,
-                               ir::Constant* mbegin,
-                               ir::Constant* mstep,
+                               ir::ConstantInteger* mbegin,
+                               ir::ConstantInteger* mstep,
                                ir::Value* mend,
                                ir::BinaryInst* iterinst,
                                ir::Instruction* cmpinst,
@@ -112,7 +112,7 @@ void indVarInfoCheck::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     }
 }
 
-ir::Constant* indVarAnalysis::getConstantBeginVarFromPhi(ir::PhiInst* phiinst,ir::PhiInst* oldPhiinst,ir::Loop* lp){
+ir::ConstantInteger* indVarAnalysis::getConstantBeginVarFromPhi(ir::PhiInst* phiinst,ir::PhiInst* oldPhiinst,ir::Loop* lp){
     if(not lp->isLoopSimplifyForm())return nullptr;
     if(phiinst->block()!=lp->header())return nullptr;
     auto lpPreHeader=lp->getLoopPreheader();
@@ -121,7 +121,7 @@ ir::Constant* indVarAnalysis::getConstantBeginVarFromPhi(ir::PhiInst* phiinst,ir
     auto phivalfromLatch=phiinst->getvalfromBB(*lp->latchs().begin());
     if(lp->latchs().size()!=1)return nullptr;
     if(phivalfromLatch!=oldPhiinst)return nullptr;
-    auto constVal=phivalfromlpPreHeader->dynCast<ir::Constant>();
+    auto constVal=phivalfromlpPreHeader->dynCast<ir::ConstantInteger>();
     if(constVal!=nullptr)return constVal;
     auto phiVal=phivalfromlpPreHeader->dynCast<ir::PhiInst>();
     if(phiVal==nullptr)return nullptr;
