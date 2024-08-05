@@ -9,7 +9,7 @@ Value* IRBuilder::makeBinary(BinaryOp op, Value* lhs, Value* rhs) {
 
   auto vid = [btype = ltype->btype(), op] {
     switch (btype) {
-      case INT32: {
+      case BasicTypeRank::INT32: {
         switch (op) {
           case BinaryOp::ADD:
             return ValueId::vADD;
@@ -25,7 +25,7 @@ Value* IRBuilder::makeBinary(BinaryOp op, Value* lhs, Value* rhs) {
             assert(false && "makeBinary: invalid op!");
         }
       }
-      case FLOAT: {
+      case BasicTypeRank::FLOAT: {
         switch (op) {
           case BinaryOp::ADD:
             return ValueId::vFADD;
@@ -115,7 +115,7 @@ Value* IRBuilder::makeCmp(CmpOp op, Value* lhs, Value* rhs) {
 
   auto vid = [type = lhs->type()->btype(), op] {
     switch (type) {
-      case INT32:
+      case BasicTypeRank::INT32:
         switch (op) {
           case CmpOp::EQ:
             return ValueId::vIEQ;
@@ -132,8 +132,8 @@ Value* IRBuilder::makeCmp(CmpOp op, Value* lhs, Value* rhs) {
           default:
             assert(false && "makeCmp: invalid op!");
         }
-      case FLOAT:
-      case DOUBLE:
+      case BasicTypeRank::FLOAT:
+      case BasicTypeRank::DOUBLE:
         switch (op) {
           case CmpOp::EQ:
             return ValueId::vFOEQ;
@@ -157,11 +157,11 @@ Value* IRBuilder::makeCmp(CmpOp op, Value* lhs, Value* rhs) {
   }();
 
   switch (lhs->type()->btype()) {
-    case INT32:
+    case BasicTypeRank::INT32:
       return makeInst<ICmpInst>(vid, lhs, rhs);
       break;
-    case FLOAT:
-    case DOUBLE:
+    case BasicTypeRank::FLOAT:
+    case BasicTypeRank::DOUBLE:
       return makeInst<FCmpInst>(vid, lhs, rhs);
       break;
     default:

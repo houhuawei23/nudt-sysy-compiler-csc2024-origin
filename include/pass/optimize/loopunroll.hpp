@@ -11,7 +11,8 @@ class loopUnroll : public FunctionPass {
     loopInfo* lpctx;
     indVarInfo* ivctx;
     static std::unordered_map<ir::Value*, ir::Value*> copymap;
-
+    std::vector<ir::Instruction*> headuseouts;
+    ir::BasicBlock* nowlatchnext;
   public:
     std::string name() const override { return "loopunroll"; }
     bool definuseout(ir::Instruction* inst, ir::Loop* L);
@@ -23,7 +24,8 @@ class loopUnroll : public FunctionPass {
     void dynamicunroll(ir::Loop* loop, ir::indVar* iv);
     void constunroll(ir::Loop* loop, ir::indVar* iv);
     bool isconstant(ir::indVar* iv);
-
+    void getdefinuseout(ir::Loop* L);
+    void repalceuseout(ir::Instruction* inst, ir::Instruction* copyinst, ir::Loop* L);
     static ir::Value* getValue(ir::Value* val) {
         if (auto c = dyn_cast<ir::Constant>(val)) {
             return c;

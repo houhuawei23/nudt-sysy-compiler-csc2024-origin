@@ -19,9 +19,8 @@ void sideEffectAnalysis::run(ir::Module* md,TopAnalysisInfoManager* tp){
     worklist.clear();
     vis.clear();
     hasSideEffectFunctions.clear();
-    sectx=tp->getSideEffectInfo();
+    sectx=tp->getSideEffectInfoWithoutRefresh();
     cgctx=tp->getCallGraph();
-    cgctx->refresh();
     sectx->clearAll();
 
     for(auto func:md->funcs()){

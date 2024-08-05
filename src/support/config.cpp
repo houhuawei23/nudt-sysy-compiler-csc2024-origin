@@ -94,6 +94,54 @@ void Config::parseTestArgs(int argc, char* argv[]) {
 
 // clang-format off
 static const auto perfPassesList = std::vector<std::string>{
+  "mem2reg", 
+
+  "sccp",     
+  "adce",     
+  "simplifycfg", 
+
+  "loopsimplify",
+  "gcm",  // global code motion
+  "gvn",          // global value numbering: passed, slow
+  "licm",         // loop invariant code motion
+
+  "instcombine",  //
+  "adce",     // passed all functional
+  "loopsimplify",
+  "scev",
+  // "inline",   
+  // "tco",      // tail call optimization
+  // "inline",   
+
+  // "g2l",      // global to local
+
+  // "dle",
+  // "dse",
+  // "dle",
+  // "dse",
+
+  // "sccp",     //
+  // "adce", 
+  // "dae",    
+  // "simplifycfg",
+  // "loopsimplify",
+  // "gcm",  // global code motion
+  // "gvn",          // global value numbering: passed, slow
+  // "licm",         // loop invariant code motion
+  // "instcombine",
+  // "sccp",
+  // "adce",
+  // "simplifycfg",    
+  // "loopsimplify",
+  // "unroll",
+  // "simplifycfg",    
+  // "scev",
+  "cfgprint",
+  // "reg2mem",
+  // "test",
+};
+
+static const auto perfPassesList_731 = std::vector<std::string>{
   "mem2reg",  //
   "sccp",     //
   "adce",     // passed all functional
@@ -111,22 +159,15 @@ static const auto perfPassesList = std::vector<std::string>{
   "dle",
   "dse",
   "sccp",     //
-  "adce", 
-  "dae",    
+  "adce",     // passed all functional
   "simplifycfg",
   "gcm",  // global code motion
   "gvn",          // global value numbering: passed, slow
-  "instcombine",
-  "sccp",
-  "adce",
-  "simplifycfg",     // passed all functional
-  "loopsimplify",
-  "indvar",
-  // "scev",
-  // "cfgprint",
-  "reg2mem",
-  "test",
+  "instcombine",  //
+  "adce",     // passed all functional
+  "reg2mem"
 };
+
 
 // clang-format on
 
@@ -220,6 +261,7 @@ void Config::parseCmdArgs(int argc, char* argv[]) {
     exit(EXIT_FAILURE);
   }
   if (optLevel == OptLevel::O1) {
+    // passes = perfPassesList;
     passes = perfPassesList;
   }
 }

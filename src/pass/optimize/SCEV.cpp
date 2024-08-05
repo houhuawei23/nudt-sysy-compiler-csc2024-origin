@@ -1,21 +1,26 @@
+/*
+循环标准化:
+1. 保证所有的循环条件判断都是左边indvar右边endvar
+2. 保证所有的循环头条件跳转都是真继续循环 假退出循环
+循环标量计算:
+对于所有再循环中每次+-循环不变量的值进行直接计算
+对于二阶和indvar*LInv的情况放着先太抽象了
+*/
 #include "pass/optimize/SCEV.hpp"
 using namespace pass;
 
-static std::vector<ir::PhiInst*>phiworklist;
+static std::vector<SCEVValue*>SCEVValues;
+static std::vector<ir::BinaryInst*>binstStk;//used in findAddSubChain and getSCEVValue
+
 
 void SCEV::run(ir::Function* func,TopAnalysisInfoManager* tp){
     if(func->isOnlyDeclare())return;
+    domctx=tp->getDomTree(func);
     lpctx=tp->getLoopInfo(func);
     idvctx=tp->getIndVarInfo(func);
     sectx=tp->getSideEffectInfo();
-    domctx=tp->getDomTree(func);
-    domctx->refresh();
-    lpctx->refresh();
-    idvctx->setOff();
-    idvctx->refresh();
-    sectx->setOff();
-    sectx->refresh();
-    phiworklist.clear();
+    func->rename();
+    
     
     for(auto lp:lpctx->loops()){
         if(lp->parent()!=nullptr)continue;//只处理顶层循环，底层循环通过顶层循环向下分析
@@ -24,6 +29,7 @@ void SCEV::run(ir::Function* func,TopAnalysisInfoManager* tp){
 }
 
 void SCEV::runOnLoop(ir::Loop* lp){
+    if(lp==nullptr)return;
     if(lp->exits().size()>1)return;//不处理多出口
     auto defaultIdv=idvctx->getIndvar(lp);
     // if(defaultIdv==nullptr)return;//必须有基础indvar
@@ -31,27 +37,197 @@ void SCEV::runOnLoop(ir::Loop* lp){
     for(auto subLp:lp->subLoops()){
         runOnLoop(subLp);
     }
-    if(defaultIdv==nullptr)return;
-    normalizeIcmpAndBr(lp,defaultIdv);
+    if(defaultIdv==nullptr)return;//要进行分析，必须具有基础indvar形式
+    normalizeIcmpAndBr(lp,defaultIdv);//标准化br和Icmp
     auto lpHeader=lp->header();
     for(auto pinst:lpHeader->phi_insts()){
-        if(pinst->uses().empty())continue;
-        phiworklist.push_back(pinst->dynCast<ir::PhiInst>());
+        auto phiinst=pinst->dynCast<ir::PhiInst>();
+        if(phiinst==defaultIdv->phiinst())continue;//不再分析indvar
+        if(not isUsedOutsideLoop(lp,phiinst))continue;//只有在外被使用对应value才有被化简的价值
+        visitPhi(lp,phiinst);
     }
-
+    if(SCEVValues.empty())return;//没有可以化简的SCEV,return直接
+    ir::Value* IterCntVal;
+    ir::IRBuilder builder;
+    builder.set_pos(*lp->exits().begin());
+    if(defaultIdv->isEndVarConst()){
+        int iterCnt=getConstantEndvarIndVarIterCnt(lp,defaultIdv);
+        IterCntVal=ir::Constant::gen_i32(iterCnt);
+    }
+    else{
+        IterCntVal=addCalcIterCntInstructions(lp,defaultIdv,builder);
+    }
+    for(auto scevval:SCEVValues){
+        SCEVReduceInstr(lp,scevval,IterCntVal,builder);
+    }
 }
+
+void SCEV::SCEVReduceInstr(ir::Loop* lp,SCEVValue* scevVal,ir::Value* itercnt,ir::IRBuilder& builder){
+    if(scevVal->addsteps.empty() and scevVal->substeps.empty())return;
+    ir::Value* finalStepVar;
+    ir::Value* finalVar;
+    builder.set_pos(*lp->exits().begin());
+    if(not scevVal->addsteps.empty()){
+        finalStepVar=*scevVal->addsteps.begin();
+        for(auto subval:scevVal->substeps){
+            finalStepVar=builder.makeBinary(ir::SUB,finalStepVar,subval);
+        }
+        for(auto addval:scevVal->addsteps){
+            finalStepVar=builder.makeBinary(ir::ADD,finalStepVar,addval);
+        }
+        if(finalStepVar->isFloat32())
+            itercnt=builder.makeUnary(ir::vSITOFP,itercnt,ir::Type::TypeFloat32());
+        finalVar=builder.makeBinary(ir::MUL,itercnt,finalStepVar);
+        finalVar=builder.makeBinary(ir::ADD,finalVar,scevVal->initVal);
+    }
+    else{
+        for(auto subval:scevVal->substeps){
+            finalStepVar=builder.makeBinary(ir::ADD,finalStepVar,subval);
+        }
+        if(finalStepVar->isFloat32())
+            itercnt=builder.makeUnary(ir::vSITOFP,itercnt,ir::Type::TypeFloat32());
+        finalVar=builder.makeBinary(ir::MUL,itercnt,finalStepVar);
+        finalVar=builder.makeBinary(ir::SUB,scevVal->initVal,finalVar);
+    }
+    for(auto puse:scevVal->phiinst->uses()){
+        auto userInst=puse->user()->dynCast<ir::Instruction>();
+        auto userIdx=puse->index();
+        if(lp->blocks().count(userInst->block())==0){
+            userInst->setOperand(userIdx,finalVar);
+        }
+    }
+}
+
 
 void SCEV::visitPhi(ir::Loop* lp,ir::PhiInst* phiinst){
-
+    std::stack<ir::Instruction*>instStk;
+    for(auto puse:phiinst->uses()){
+        auto user=puse->user();
+        if(auto inst=user->dynCast<ir::Instruction>()){
+            auto instBlk=inst->block();
+            if(lp->blocks().count(instBlk))
+                instStk.push(inst);//只有在循环中的对phi的使用才被插入
+        }
+            
+    }
+    bool isAnalysisOK=false;
+    while(not instStk.empty()){//这一段工作表分析是用来展示存在环
+        auto inst=instStk.top();
+        instStk.pop();
+        if(inst==phiinst){
+            isAnalysisOK=true;
+            break;
+        }
+        auto newPhiinst=inst->dynCast<ir::PhiInst>();
+        if(newPhiinst!=nullptr and newPhiinst!=phiinst){
+            break;
+        }
+        for(auto puse:inst->uses()){
+            auto puser=puse->user();
+            auto inst=puser->dynCast<ir::Instruction>();
+            if(lp->blocks().count(inst->block()))
+                instStk.push(inst);
+        }
+    }
+    if(not isAnalysisOK)return;
+    int res=-1;
+    for(auto puse:phiinst->uses()){
+        auto inst=puse->user()->dynCast<ir::BinaryInst>();
+        if(inst->valueId()==ir::vADD or inst->valueId()==ir::vFADD or inst->valueId()==ir::vSUB or inst->valueId()==ir::vFSUB){}
+        else continue;
+        if(lp->blocks().count(inst->block())==0)continue;
+        if(inst!=nullptr){
+            binstStk.clear();
+            res=findAddSubChain(lp,phiinst,inst);
+        }
+        if(res==1)break;
+    }
+    if(res==1){
+        getSCEVValue(lp,phiinst,binstStk);
+    }
 }
 
-//简单的判断一下对应的value是不是循环不变量,其定值如果支配循环头自然就是
-bool SCEV::isSimplyLoopInvariant(ir::Loop* lp,ir::Value* val){
-    if(auto inst=val->dynCast<ir::Instruction>()){
-        auto instBB=inst->block();
-        if(domctx->dominate(instBB,lp->header()))return true;
+
+int SCEV::findAddSubChain(ir::Loop* lp,ir::PhiInst* phiinst,ir::BinaryInst* nowInst){
+    bool isPushStack=false;
+    if(nowInst->valueId()==ir::vADD or nowInst->valueId()==ir::vFADD){
+        if(isSimplyLoopInvariant(lp,nowInst->lValue())){
+            binstStk.push_back(nowInst);
+        }
+        else if(isSimplyLoopInvariant(lp,nowInst->rValue())){
+            binstStk.push_back(nowInst);
+        }
+        else
+            return -1;
     }
+    else if(nowInst->valueId()==ir::vSUB or nowInst->valueId()==ir::vFSUB){
+        if(isSimplyLoopInvariant(lp,nowInst->rValue())){
+            binstStk.push_back(nowInst);
+        }
+        else
+            return -1;
+    }
+    else 
+        return -1;
+    for(auto puse:nowInst->uses()){
+        auto inst=puse->user()->dynCast<ir::Instruction>();
+        if(inst==nullptr)continue;
+        if(inst==phiinst)return 1;
+        if(lp->blocks().count(inst->block())==0)continue;
+        auto binst=inst->dynCast<ir::BinaryInst>();
+        if(binst==nullptr)continue;
+        auto binstid=binst->valueId();
+        if(not(binstid==ir::vADD or binstid==ir::vFADD or binstid==ir::vSUB or binstid==ir::vFSUB))continue;
+        int res=findAddSubChain(lp,phiinst,binst);
+        if(res==1)return res;
+    }
+    binstStk.pop_back();
+    return -1;
+}
+
+void SCEV::getSCEVValue(ir::Loop* lp,ir::PhiInst* phiinst,
+            std::vector<ir::BinaryInst*>&instsChain){
+    auto initVal=phiinst->getvalfromBB(lp->getLoopPreheader());
+    if(not isSimplyLoopInvariant(lp,initVal))return;
+    auto pnewSCEV=new SCEVValue;
+    pnewSCEV->initVal=initVal;
+    if(initVal->isFloat32())pnewSCEV->isFloat=true;
+    pnewSCEV->phiinst=phiinst;
+    for(auto binst:instsChain){
+        assert(binst->isFloat32()==pnewSCEV->isFloat and "Different types of SCEV steps!");
+        if(binst->valueId()==ir::vADD or binst->valueId()==ir::vFADD){
+            if(isSimplyLoopInvariant(lp,binst->lValue()))
+                pnewSCEV->addsteps.push_back(binst->lValue());
+            else
+                pnewSCEV->addsteps.push_back(binst->rValue());
+        }
+        else{//SUB
+            pnewSCEV->substeps.push_back(binst->rValue());
+        }
+    }
+    SCEVValues.push_back(pnewSCEV);
+    instsChain.clear();
+}
+
+//简单的判断一下对应的value是不是循环不变量
+bool SCEV::isSimplyLoopInvariant(ir::Loop* lp,ir::Value* val){
     if(auto conVal=val->dynCast<ir::Constant>())return true;
+    if(auto binaryVal=val->dynCast<ir::BinaryInst>()){
+        return isSimplyNotInLoop(lp,binaryVal->lValue()) and isSimplyNotInLoop(lp,binaryVal->rValue());
+    }
+    if(auto unaryVal=val->dynCast<ir::UnaryInst>()){
+        return isSimplyNotInLoop(lp,unaryVal->value());
+    }
+    if(auto callVal=val->dynCast<ir::CallInst>()){
+        if(not sectx->isPureFunc(callVal->callee()))return false;
+        for(auto rarg:callVal->rargs()){
+            if(not isSimplyLoopInvariant(lp,rarg->value()))return false;
+        }
+        return true;
+    }   
+    if(auto phiinst=val->dynCast<ir::PhiInst>()){
+        return domctx->dominate(phiinst->block(),lp->header());
+    }
     return false;
 }
 
@@ -60,10 +236,10 @@ bool SCEV::isUsedOutsideLoop(ir::Loop* lp,ir::Value* val){
     for(auto puse:val->uses()){
         auto user=puse->user();
         if(auto inst=user->dynCast<ir::Instruction>()){
-            if(lp->blocks().count(inst->block())==0)return false;
+            if(lp->blocks().count(inst->block())==0)return true;
         }
     }
-    return true;
+    return false;
 }
 
 //如果endvar是常数，就直接计算出对应的迭代次数
@@ -188,13 +364,13 @@ int SCEV::getConstantEndvarIndVarIterCnt(ir::Loop* lp,ir::indVar* idv){
     default:
         break;
     }
-    
+    return -1;
     
 }
 
 //如果不是常数，就要在必要的时候生成计算迭代次数的指令
 //return nullptr if cannot calcuate
-ir::Value* SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv){//-1 for cannot calc
+ir::Value* SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv,ir::IRBuilder& builder){//-1 for cannot calc
     assert(not idv->isEndVarConst());
     auto beginVar=idv->getBeginI32();
     auto stepVar=idv->getStepI32();
@@ -209,6 +385,7 @@ ir::Value* SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv){//-1 f
     //对icmp进行标准化
     normalizeIcmpAndBr(lp,idv);
     //对于不能确定具体cnt的，只生成stepVar==1的情况，否则可以生成所有的情况
+    builder.set_pos(lpExit,lpExit->insts().begin());
     switch (icmpinst->valueId())
     {
     case ir::vIEQ:
@@ -227,7 +404,7 @@ ir::Value* SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv){//-1 f
             if(stepVar!=-1)return nullptr;
             
             //TODO: makeInst here: sub i32 %beginVal, i32 %endVal;
-
+            return builder.makeBinary(ir::SUB,beginVal,endVal);
         }
         else if(iterinst->valueId()==ir::vSUB){
             // if(stepVar<0)return -1;
@@ -238,6 +415,7 @@ ir::Value* SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv){//-1 f
             if(stepVar!=1)return nullptr;
 
             //TODO: makeInst here: sub i32 %beginVal, i32 %endVal;
+            return builder.makeBinary(ir::SUB,beginVal,endVal);
 
         }
         else if(iterinst->valueId()==ir::vMUL){
@@ -258,6 +436,14 @@ ir::Value* SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv){//-1 f
             //TODO: makeInst here: %newVal = sub i32 %beginVal, i32 %endVal;
             //TODO: makeInst here: %newVal2 = sdiv i32 %newVal, i32 %stepVal;
             //TODO: makeInst here: %newVal2 = add i32 %newVal2, 1
+            auto newVal1=builder.makeBinary(ir::SUB,beginVal,endVal);
+            ir::Value* newVal2;
+            if(stepVar!=1)
+                newVal2=builder.makeBinary(ir::DIV,newVal1,stepVal);
+            else 
+                newVal2=newVal1;
+            auto const1=ir::Constant::gen_i32(1);
+            return builder.makeBinary(ir::ADD,newVal2,const1);
         }
         else if(iterinst->valueId()==ir::vSUB){
             if(stepVar<0)return nullptr;
@@ -268,7 +454,16 @@ ir::Value* SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv){//-1 f
             //TODO: makeInst here: %newVal = sub i32 %beginVal, i32 %endVal;
             //TODO: makeInst here: %newVal2 = sdiv i32 %newVal, i32 %stepVal;
             //TODO: makeInst here: %newVal2 = add i32 %newVal2, 1
-
+            ir::Value* newVal2;
+            if(stepVar==-1){
+                newVal2=builder.makeBinary(ir::SUB,endVal,beginVal);
+            }
+            else{
+                auto newVal1=builder.makeBinary(ir::SUB,beginVal,endVal);
+                newVal2=builder.makeBinary(ir::DIV,newVal1,stepVal);
+            }
+            auto const1=ir::Constant::gen_i32(1);
+            return builder.makeBinary(ir::ADD,newVal2,const1);
         }
         else if(iterinst->valueId()==ir::vMUL){
             return nullptr;//TODO: do not support != with MUL
@@ -287,6 +482,7 @@ ir::Value* SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv){//-1 f
             if(stepVar!=1)return nullptr;
             
             //TODO: makeInst here: sub i32 %endVal, i32 %beginVal;
+            return builder.makeBinary(ir::SUB,endVal,beginVal);
         }
         else if(iterinst->valueId()==ir::vSUB){
             // if(stepVar>0)return -1;
@@ -297,6 +493,7 @@ ir::Value* SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv){//-1 f
             if(stepVar!=-1)return nullptr;
             
             //TODO: makeInst here: sub i32 %endVal, i32 %beginVal;
+            return builder.makeBinary(ir::SUB,endVal,beginVal);
         }
         else if(iterinst->valueId()==ir::vMUL){
             return nullptr;//TODO: do not support != with MUL
@@ -315,6 +512,15 @@ ir::Value* SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv){//-1 f
             //TODO: makeInst here: %newVal = sub i32 %endVal, i32 %beginVal;
             //TODO: makeInst here: %newVal2 = sdiv i32 %newVal, i32 %stepVal;
             //TODO: makeInst here: %newVal2 = add i32 %newVal2, 1
+            ir::Value* newVal2;
+            auto newVal1=builder.makeBinary(ir::SUB,endVal,beginVal);
+            if(stepVar==1)
+                newVal2=newVal1;
+            else
+                newVal2=builder.makeBinary(ir::DIV,newVal1,stepVal);
+            auto const1=ir::Constant::gen_i32(1);
+            return builder.makeBinary(ir::ADD,newVal2,const1);
+
         }
         else if(iterinst->valueId()==ir::vSUB){
             if(stepVar>0)return nullptr;
@@ -325,6 +531,17 @@ ir::Value* SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv){//-1 f
             //TODO: makeInst here: %newVal = sub i32 %beginVal, i32 %endVal;
             //TODO: makeInst here: %newVal2 = sdiv i32 %newVal, i32 %stepVal;
             //TODO: makeInst here: %newVal2 = add i32 %newVal2, 1
+            ir::Value* newVal2;
+            if(stepVar==-1){
+                newVal2=builder.makeBinary(ir::SUB,endVal,beginVal);
+            }
+            else{
+                auto newVal1=builder.makeBinary(ir::SUB,beginVal,endVal);
+                newVal2=builder.makeBinary(ir::DIV,newVal1,stepVal);
+            }
+            auto const1=ir::Constant::gen_i32(1);
+            return builder.makeBinary(ir::ADD,newVal2,const1);
+
         }
         else if(iterinst->valueId()==ir::vMUL){
             return nullptr;//TODO: do not support != with MUL
@@ -336,6 +553,8 @@ ir::Value* SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv){//-1 f
     default:
         break;
     }
+    assert(false and "something error happened in func\" addCalCntInstuctions \"");
+    return nullptr;
 }
 
 //标准化:把idv放在op1 把endvar放在op2,icmp true就保持循环,false就跳出
@@ -409,4 +628,14 @@ void SCEV::exchangeBrDest(ir::BranchInst* brInst){
     auto falseTarget=brInst->iffalse();
     brInst->set_iftrue(falseTarget);
     brInst->set_iffalse(trueTarget);
+}
+
+bool SCEV::isSimplyNotInLoop(ir::Loop* lp,ir::Value* val){
+    if(auto instVal=val->dynCast<ir::Instruction>()){
+        return lp->blocks().count(instVal->block())==0;
+    }
+    if(auto argVal=val->dynCast<ir::Argument>()){
+        return true;
+    }
+    return false;
 }

@@ -45,7 +45,7 @@ void loopInfo::refresh() {
         loopAnalysis la = loopAnalysis();
         loopInfoCheck lic = loopInfoCheck();
         la.run(passUnit,topManager);
-        // lic.run(passUnit,topManager);
+        lic.run(passUnit,topManager);
         setOn();
     }
 }
@@ -67,7 +67,7 @@ void indVarInfo::refresh() {
         indVarAnalysis iva = indVarAnalysis();
         indVarInfoCheck ivc = indVarInfoCheck();
         iva.run(passUnit,topManager);
-        // ivc.run(passUnit,topManager);
+        ivc.run(passUnit,topManager);
         setOn();
     }
 }

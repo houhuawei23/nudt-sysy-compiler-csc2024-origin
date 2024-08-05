@@ -7,26 +7,16 @@ namespace pass{
     void loopAnalysis::run(ir::Function* func,TopAnalysisInfoManager* tp){
         if(func->isOnlyDeclare())return;
         stLoopLevel.clear();
-        func->rename();
-        // func->print(std::cerr);
         domctx=tp->getDomTree(func);
-        domctx->refresh();
-        // func->rename();
-        // func->print(std::cerr);
-        lpctx=tp->getLoopInfo(func);
+        lpctx=tp->getLoopInfoWithoutRefresh(func);
         lpctx->clearAll();
+        
         for(auto bb:func->blocks()) lpctx->set_looplevel(bb,0);
-        // func->rename();
-        // func->print(std::cerr);
         for(auto bb:func->blocks()){
             if(bb->pre_blocks().empty())continue;
             for(auto bbPre:bb->pre_blocks()){
                 if(domctx->dominate(bb,bbPre)){//bb->dominate(bbPre)
-                    // func->rename();
-                    // func->print(std::cerr);
                     addLoopBlocks(func,bb,bbPre);
-                    // func->rename();
-                    // func->print(std::cerr);
                 }
             }
         }
@@ -92,7 +82,7 @@ namespace pass{
     void loopInfoCheck::run(ir::Function* func,TopAnalysisInfoManager* tp){
         using namespace std;
         if(func->isOnlyDeclare())return;
-        lpctx=tp->getLoopInfo(func);
+        lpctx=tp->getLoopInfoWithoutRefresh(func);
         cout<<"In Function \""<<func->name()<<"\": "<<endl;
         int cnt=0;
         for(auto loop:lpctx->loops()){//func->Loops()

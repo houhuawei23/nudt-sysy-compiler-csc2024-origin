@@ -2,7 +2,7 @@
 
 namespace pass {
 void callGraphBuild::run(ir::Module* ctx, TopAnalysisInfoManager* tp) {
-    cgctx = tp->getCallGraph();
+    cgctx = tp->getCallGraphWithoutRefresh();
     cgctx->clearAll();
     cgctx->initialize();
     

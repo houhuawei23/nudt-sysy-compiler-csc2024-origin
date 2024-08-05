@@ -110,11 +110,11 @@ std::any SysYIRGenerator::visitFuncDef(SysYParser::FuncDefContext* ctx) {
         auto ret_value_ptr = mBuilder.makeAlloca(retType);
         ret_value_ptr->addComment("retval");
         switch (retType->btype()) {
-          case ir::BType::INT32:
+          case ir::BasicTypeRank::INT32:
             mBuilder.makeInst<ir::StoreInst>(ir::Constant::gen_i32(0),
                                              ret_value_ptr);
             break;
-          case ir::BType::FLOAT:
+          case ir::BasicTypeRank::FLOAT:
             mBuilder.makeInst<ir::StoreInst>(ir::Constant::gen_f32(0.0),
                                              ret_value_ptr);
             break;

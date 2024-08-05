@@ -56,16 +56,16 @@ MIROperand FloatPointConstantPool::getFloatConstant(class LoweringContext& ctx, 
 static OperandType get_optype(ir::Type* type) {
   if (type->isInt()) {
     switch (type->btype()) {
-      case ir::INT1:
+      case ir::BasicTypeRank::INT1:
         return OperandType::Bool;
-      case ir::INT32:
+      case ir::BasicTypeRank::INT32:
         return OperandType::Int32;
       default:
         assert(false && "unsupported int type");
     }
   } else if (type->isFloatPoint()) {
     switch (type->btype()) {
-      case ir::FLOAT:
+      case ir::BasicTypeRank::FLOAT:
         return OperandType::Float32;
       default:
         assert(false && "unsupported float type");
@@ -139,7 +139,7 @@ MIROperand LoweringContext::map2operand(ir::Value* ir_val) {
     return fpOperand;
   }
   std::cerr << "Map2Operand Error: Not Supported IR Value Type: "
-            << utils::enumName(static_cast<ir::BType>(ir_val->type()->btype())) << std::endl;
+            << utils::enumName(static_cast<ir::BasicTypeRank>(ir_val->type()->btype())) << std::endl;
   assert(false && "Not Supported Type.");
   return MIROperand{};
 }
@@ -344,10 +344,10 @@ void createMIRModule(ir::Module& ir_module,
     { codegen_ctx.flags.inSSAForm = false; }
 
     // /* stage6: Optimize: pre-RA scheduling, minimize register usage */
-    // {
-    //   preRASchedule(*mir_func, codegen_ctx);
-    //   dumpStageResult("AfterPreRASchedule", mir_func, codegen_ctx);
-    // }
+    {
+      preRASchedule(*mir_func, codegen_ctx);
+      dumpStageResult("AfterPreRASchedule", mir_func, codegen_ctx);
+    }
 
     /* stage7: register allocation */
     {

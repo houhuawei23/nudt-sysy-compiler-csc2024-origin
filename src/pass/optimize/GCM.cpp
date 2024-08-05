@@ -11,15 +11,6 @@ namespace pass {
 ir::BasicBlock* GCM::LCA(ir::BasicBlock* lhs, ir::BasicBlock* rhs) {
     if (!lhs) return rhs;
     if (!rhs) return lhs;
-    // while (lhs->domLevel > rhs->domLevel)
-    //     lhs = lhs->idom;
-    // while (rhs->domLevel > lhs->domLevel)
-    //     rhs = rhs->idom;
-    // while (lhs != rhs)
-    // {
-    //     lhs = lhs->idom;
-    //     rhs = rhs->idom;
-    // }
     while (domctx->domlevel(lhs) > domctx->domlevel(rhs))
         lhs = domctx->idom(lhs);
     while (domctx->domlevel(rhs) < domctx->domlevel(lhs))
@@ -87,16 +78,14 @@ void GCM::scheduleEarly(ir::Instruction* instruction, ir::BasicBlock* entry) {
         if (bestBB == instbb) return;
         instbb->move_inst(instruction);                // 将指令从bb中移除
         bestBB->emplace_lastbutone_inst(instruction);  // 将指令移入destBB
+        // std::cerr<<"gcm!"<<std::endl;
     }
 }
 
 void GCM::run(ir::Function* F, TopAnalysisInfoManager* tp) {
     domctx = tp->getDomTree(F);
-    domctx->refresh();
     lpctx = tp->getLoopInfo(F);
-    lpctx->refresh();
     sectx = tp->getSideEffectInfo();
-    sectx->refresh();
     std::vector<ir::Instruction*> pininsts;
     insts_visited.clear();
 

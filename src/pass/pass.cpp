@@ -27,6 +27,9 @@
 #include "pass/optimize/SCEV.hpp"
 #include "pass/optimize/loopunroll.hpp"
 #include "pass/optimize/DAE.hpp"
+#include "pass/optimize/licm.hpp"
+
+#include "pass/optimize/LoopParallel.hpp"
 
 #include "support/config.hpp"
 #include "support/FileSystem.hpp"
@@ -35,7 +38,6 @@
 #include <iostream>
 #include <cassert>
 
-#include "pass/optimize/LICM.hpp"
 namespace pass {
 
 template <typename PassType, typename Callable>
@@ -81,6 +83,7 @@ void PassManager::run(BasicBlockPass* bp) {
     },
     "BasicBlockPass");
 }
+static LoopParallel loopParallelPass;
 
 void PassManager::runPasses(std::vector<std::string> passes) {
   const auto& config = sysy::Config::getInstance();
@@ -164,6 +167,8 @@ void PassManager::runPasses(std::vector<std::string> passes) {
       run(new pass::loopUnroll());
     } else if (pass_name.compare("dae") == 0) {
       run(new pass::DAE());
+    } else if (pass_name == "parallel") {
+      run(&loopParallelPass);
     } else {
       std::cerr << "Invalid pass name: " << pass_name << std::endl;
       assert(false && "Invalid pass name");

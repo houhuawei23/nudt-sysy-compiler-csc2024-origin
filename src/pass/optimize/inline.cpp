@@ -177,7 +177,6 @@ std::vector<ir::Function*> Inline::getinlineFunc(ir::Module* module) {
 }
 void Inline::run(ir::Module* module, TopAnalysisInfoManager* tp) {
     cgctx = tp->getCallGraph();
-    cgctx->refresh();
 
     std::vector<ir::Function*> functiontoremove = getinlineFunc(module);
     bool isFuncInline = false;
@@ -193,8 +192,7 @@ void Inline::run(ir::Module* module, TopAnalysisInfoManager* tp) {
 
         functiontoremove.pop_back();
         if (functiontoremove.empty()) {
-            cgctx->setOff();
-            cgctx->refresh();
+            cgctx=tp->getCallGraph();
             functiontoremove = getinlineFunc(module);
         }
     }

@@ -2,30 +2,65 @@
 #include "pass/pass.hpp"
 #include "pass/analysis/ControlFlowGraph.hpp"
 #include "pass/analysis/indvar.hpp"
+#include "pass/optimize/LoopParallel.hpp"
+
 #include <cassert>
 #include <unordered_map>
 #include <iostream>
 #include <vector>
 namespace pass {
+/**
+      other
+        |
+        v
+  |-> loop header --> loop next
+  |     |
+  |     v
+  |   loop body
+  |     |
+  |     v
+  --- loop latch
 
+- loop.header: 
+  - phi = phi [v1, other], [i.next, loop.latch] ; phi inst (for indvar),
+  - cond = imcp op phi, endVar
+  - br cond, loop.body, loop.next
+
+- loop.body:
+  - real body of the loop
+
+- loop.latch:
+  - i.next = i + step
+  - br loop.header
+
+==> after extractLoopBody:
+
+      other
+        |
+        v   
+  --> newLoop --> loop.next
+  |     |
+  |     v
+  -- callBlock
+
+
+newLoop:
+  - i = phi [i0, other], [i.next, newLoop]
+  - 
+ */
 // need iterInst in loop.latch
-bool extractLoopBody(ir::Function* func, ir::Loop& loop, TopAnalysisInfoManager* tp) {
+bool extractLoopBody(ir::Function* func,
+                     ir::Loop& loop,
+                     ir::indVar* indVar,
+                     TopAnalysisInfoManager* tp,
+                     LoopBodyFuncInfo& info) {
   assert((loop.latchs().size() == 1) && "Loop must have exactly one latch");
-  if (loop.header() == loop.getLoopLatch()) {
+  if (loop.header() == loop.getLoopLatch() and loop.exits().size() != 1) {
+    // header == latch, no loop body
+    // only support loop with one exit
     return false;
   }
-
-  CFGAnalysisHHW().run(func, tp);
-
-  ir::indVar* indVar = nullptr;
-
-  {
-    auto indVarInfo = tp->getIndVarInfo(func);
-    indVarInfo->setOff();
-    indVarInfo->refresh();
-    indVar = indVarInfo->getIndvar(&loop);
-  }
-
+  // only support 2 phi insts: 1 for indvar, 1 for giv
   size_t phiCount = 0;
   for (auto inst : loop.header()->insts()) {
     if (inst->isa<ir::PhiInst>()) {
@@ -35,7 +70,8 @@ bool extractLoopBody(ir::Function* func, ir::Loop& loop, TopAnalysisInfoManager*
   if (phiCount > 2) return false;
 
   for (auto block : loop.blocks()) {
-    if (block == loop.getLoopLatch()) continue;
+    // if (block == loop.getLoopLatch()) continue; cmmc
+    if (block == loop.header()) continue;
 
     for (auto next : block->next_blocks()) {
       if (not loop.contains(next)) {
@@ -46,6 +82,7 @@ bool extractLoopBody(ir::Function* func, ir::Loop& loop, TopAnalysisInfoManager*
   }
 
   // first phi inst != loop.inductionVar, giv = that phi inst
+  // global induction var, such as n
   ir::PhiInst* giv = nullptr;
   for (auto inst : loop.header()->insts()) {
     if (inst->isa<ir::PhiInst>() and inst != indVar->phiinst()) {
@@ -194,7 +231,7 @@ bool extractLoopBody(ir::Function* func, ir::Loop& loop, TopAnalysisInfoManager*
       break;
   }
   const auto callInst = builder.makeInst<ir::CallInst>(bodyFunc, callRealArgs);
-  // const auto 
+  // const auto
 
   return true;
 }

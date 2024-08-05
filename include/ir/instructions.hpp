@@ -5,6 +5,8 @@
 #include "ir/value.hpp"
 #include "support/utils.hpp"
 
+#include <initializer_list>
+
 namespace ir {
 
 class AllocaInst;
@@ -250,6 +252,13 @@ public:
     : Instruction(vCALL, callee->retType(), parent, name), mCallee(callee), mIsTail(false) {
     addOperands(rargs);
   }
+  CallInst(Function* callee,
+           std::initializer_list<Value*> rargs = {},
+           BasicBlock* parent = nullptr,
+           const_str_ref name = "")
+    : Instruction(vCALL, callee->retType(), parent, name), mCallee(callee), mIsTail(false) {
+    addOperands(rargs);
+  }
   bool istail() { return mIsTail; }
   void setIsTail(bool b) { mIsTail = b; }
   bool isgetarrayorfarray() {
@@ -268,6 +277,13 @@ public:
     std::vector<Value*> args;
     for (auto arg : mOperands) {
       args.push_back(getValue(arg->value()));
+    }
+    return utils::make<CallInst>(mCallee, args);
+  }
+  Instruction* clone() const override {
+    std::vector<Value*> args;
+    for (auto arg : mOperands) {
+      args.push_back(arg->value());
     }
     return utils::make<CallInst>(mCallee, args);
   }
@@ -368,9 +384,9 @@ public:
 
   bool isReverse(ICmpInst* y);
 
-  void setCmpOp(ValueId newv){
-    assert(newv>=vICMP_BEGIN and newv<=vICMP_END);
-    mValueId=newv;
+  void setCmpOp(ValueId newv) {
+    assert(newv >= vICMP_BEGIN and newv <= vICMP_END);
+    mValueId = newv;
   }
 
   static bool classof(const Value* v) {
@@ -490,7 +506,7 @@ public:
                     Value* idx,
                     std::vector<size_t> dims,
                     std::vector<size_t> cur_dims,
-                    BasicBlock* parent=nullptr)
+                    BasicBlock* parent = nullptr)
     : Instruction(vGETELEMENTPTR,
                   ir::Type::TypePointer(ir::Type::TypeArray(base_type, dims)),
                   parent),
@@ -593,12 +609,27 @@ public:
   }
 };
 
+class FunctionPtrInst : public Instruction {
+public:
+  explicit FunctionPtrInst(Function* func, Type* dstType, BasicBlock* parent = nullptr)
+    : Instruction(vFUNCPTR, dstType, parent) {
+    addOperand(func);
+  }
+  Function* getFunc() const { return operand(0)->as<Function>(); }
+  static bool classof(const Value* v) { return v->valueId() == vFUNCPTR; }
+  void print(std::ostream& os) const override;
+  Instruction* copy(std::function<Value*(Value*)> getValue) const override { return nullptr; }
+};
+
 class indVar {
 private:  // only for constant beginvar and stepvar
   Constant* mbeginVar;
   Value* mendVar;
+
   Constant* mstepVar;
+
   bool mendIsConst;
+
   BinaryInst* miterInst;
   Instruction* mcmpInst;
   PhiInst* mphiinst;
@@ -638,8 +669,30 @@ public:
   BinaryInst* iterInst() { return miterInst; }
   Instruction* cmpInst() { return mcmpInst; }
   PhiInst* phiinst() { return mphiinst; }
-  Constant* getBegin(){ return mbeginVar; }
-  Constant* getStep(){ return mstepVar; }
+  Constant* getBegin() { return mbeginVar; }
+  Constant* getStep() { return mstepVar; }
+  Value* getEnd() { return mendVar; }
+  void print(std::ostream& os) const {
+    os << "beginVar: ";
+    mbeginVar->print(os);
+
+    os << "\n endVar: ";
+    mendVar->print(os);
+
+    os << "\n stepVar: ";
+    mstepVar->print(os);
+
+    os << "\n iterInst: ";
+    miterInst->print(os);
+
+    os << "\n cmpInst: ";
+    mcmpInst->print(os);
+
+    os << "\n phiInst: ";
+    mphiinst->print(os);
+
+    os << "\n";
+  }
 };
 
 }  // namespace ir

@@ -4,6 +4,65 @@
 #include "ir/instructions.hpp"
 #include "support/arena.hpp"
 namespace ir {
+void Loop::print(std::ostream& os) const {
+  os << "header: " << mHeader->name() << std::endl;
+  os << "exits: " << mExits.size() << std::endl;
+  for (auto exit : mExits) {
+    os << "  " << exit->name() << std::endl;
+  }
+  os << "latchs: " << mLatchs.size() << std::endl;
+  for (auto latch : mLatchs) {
+    os << "  " << latch->name() << std::endl;
+  }
+  os << "blocks: " << mBlocks.size() << std::endl;
+  for (auto bb : mBlocks) {
+    os << "  " << bb->name() << std::endl;
+  }
+}
+
+BasicBlock* Loop::getloopPredecessor() const {
+  BasicBlock* predecessor = nullptr;
+  BasicBlock* Header = header();
+  for (auto* pred : Header->pre_blocks()) {
+    if (!contains(pred)) {
+      if (predecessor && (predecessor != pred)) {
+        return nullptr;  // 多个前驱
+      }
+      predecessor = pred;
+    }
+  }
+  return predecessor;  // 返回唯一的predecessor
+}
+
+BasicBlock* Loop::getLoopPreheader() const {
+  BasicBlock* preheader = getloopPredecessor();
+  if (!preheader) return nullptr;
+  if (preheader->next_blocks().size() != 1) return nullptr;
+  return preheader;
+}
+
+BasicBlock* Loop::getLoopLatch() const {
+  BasicBlock* latch = nullptr;
+  BasicBlock* Header = header();
+  for (auto* pred : Header->pre_blocks()) {
+    if (contains(pred)) {
+      if (latch) return nullptr;
+      latch = pred;
+    }
+  }
+  return latch;  // 返回唯一的latch
+}
+
+bool Loop::hasDedicatedExits() const {
+  for (auto exitbb : mExits) {
+    if (exitbb->pre_blocks().size() != 1) return false;
+    // for (auto pred : exitbb->pre_blocks()) {
+    //   if (!contains(pred)) return false;
+    // }
+  }
+  return true;
+}
+
 BasicBlock* Function::newBlock() {
   auto nb = utils::make<BasicBlock>("", this);
   mBlocks.emplace_back(nb);
@@ -28,8 +87,7 @@ void Function::delBlock(BasicBlock* bb) {
   for (auto bbnext : bb->next_blocks()) {
     bbnext->pre_blocks().remove(bb);
   }
-  for (auto bbinstIter = bb->insts().begin();
-       bbinstIter != bb->insts().end();) {
+  for (auto bbinstIter = bb->insts().begin(); bbinstIter != bb->insts().end();) {
     auto delinst = *bbinstIter;
     bbinstIter++;
     bb->delete_inst(delinst);
@@ -45,8 +103,7 @@ void Function::forceDelBlock(BasicBlock* bb) {
   for (auto bbnext : bb->next_blocks()) {
     bbnext->pre_blocks().remove(bb);
   }
-  for (auto bbinstIter = bb->insts().begin();
-       bbinstIter != bb->insts().end();) {
+  for (auto bbinstIter = bb->insts().begin(); bbinstIter != bb->insts().end();) {
     auto delinst = *bbinstIter;
     bbinstIter++;
     bb->force_delete_inst(delinst);
@@ -56,7 +113,7 @@ void Function::forceDelBlock(BasicBlock* bb) {
 
 void Function::print(std::ostream& os) const {
   auto return_type = retType();
-  if (blocks().size()) {
+  if (not isOnlyDeclare()) {
     os << "define " << *return_type << " @" << name() << "(";
     if (mArguments.size() > 0) {
       auto last_iter = mArguments.end() - 1;

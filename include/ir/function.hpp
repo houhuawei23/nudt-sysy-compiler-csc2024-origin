@@ -13,75 +13,42 @@ class Loop;
 
 class Loop {
 protected:
-  Function* _parent;
-  Loop* _parentLoop;
-  std::set<Loop*> _subLoops;
+  Function* mParent;
+  Loop* mParentLoop;
+  std::set<Loop*> mSubLoops;
 
-  std::set<BasicBlock*> _blocks;
-  BasicBlock* _header;
-  std::set<BasicBlock*> _exits;
-  std::set<BasicBlock*> _latchs;
+  std::set<BasicBlock*> mBlocks;
+  BasicBlock* mHeader;
+  std::set<BasicBlock*> mExits;
+  std::set<BasicBlock*> mLatchs;
 
 public:
   Loop(BasicBlock* header, Function* parent) {
-    _header = header;
-    _parent = parent;
+    mHeader = header;
+    mParent = parent;
   }
-  auto header() const { return _header; }
-  auto parent() const { return _parent; }
-  auto& blocks() { return _blocks; }
-  auto& exits() { return _exits; }
-  auto& latchs() { return _latchs; }
-  auto& subLoops() { return _subLoops; }
+  auto header() const { return mHeader; }
+  auto parent() const { return mParent; }
+  auto& blocks() { return mBlocks; }
+  auto& exits() { return mExits; }
+  auto& latchs() { return mLatchs; }
+  auto& subLoops() { return mSubLoops; }
 
-  Loop* parent() { return _parentLoop; }
-  void setParent(Loop* lp) { _parentLoop = lp; }
-  bool contains(BasicBlock* block) const { return _blocks.find(block) != _blocks.end(); }
+  Loop* parent() { return mParentLoop; }
+  void setParent(Loop* lp) { mParentLoop = lp; }
+  bool contains(BasicBlock* block) const { return mBlocks.find(block) != mBlocks.end(); }
 
-  BasicBlock* getloopPredecessor() const {
-    BasicBlock* predecessor = nullptr;
-    BasicBlock* Header = header();
-    for (auto* pred : Header->pre_blocks()) {
-      if (!contains(pred)) {
-        if (predecessor && (predecessor != pred)) {
-          return nullptr;  // 多个前驱
-        }
-        predecessor = pred;
-      }
-    }
-    return predecessor;  // 返回唯一的predecessor
-  }
+  BasicBlock* getloopPredecessor() const;
 
-  BasicBlock* getLoopPreheader() const {
-    BasicBlock* preheader = getloopPredecessor();
-    if (!preheader) return nullptr;
-    if (preheader->next_blocks().size() != 1) return nullptr;
-    return preheader;
-  }
+  BasicBlock* getLoopPreheader() const;
 
-  BasicBlock* getLoopLatch() const {
-    BasicBlock* latch = nullptr;
-    BasicBlock* Header = header();
-    for (auto* pred : Header->pre_blocks()) {
-      if (contains(pred)) {
-        if (latch) return nullptr;
-        latch = pred;
-      }
-    }
-    return latch;  // 返回唯一的latch
-  }
+  BasicBlock* getLoopLatch() const;
+  bool hasDedicatedExits() const;
 
-  bool hasDedicatedExits() const {
-    for (auto exitbb : _exits) {
-      for (auto pred : exitbb->pre_blocks()) {
-        if (!contains(pred)) return false;
-      }
-    }
-    return true;
-  }
   bool isLoopSimplifyForm() const {
     return getLoopPreheader() && getLoopLatch() && hasDedicatedExits();
   }
+  void print(std::ostream& os) const;
 };
 
 class Function : public User {
@@ -153,7 +120,7 @@ public:
   auto varInc() { return mVarCnt++; }
   void setVarCnt(size_t x) { mVarCnt = x; }
 
-  bool isOnlyDeclare() { return mBlocks.empty(); }
+  bool isOnlyDeclare() const { return mBlocks.empty(); }
 
   void delArgumant(size_t idx) {
     assert(idx < argCnt && "idx out of args vector");
