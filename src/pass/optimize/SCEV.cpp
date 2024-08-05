@@ -1,3 +1,11 @@
+/*
+循环标准化:
+1. 保证所有的循环条件判断都是左边indvar右边endvar
+2. 保证所有的循环头条件跳转都是真继续循环 假退出循环
+循环标量计算:
+对于所有再循环中每次+-循环不变量的值进行直接计算
+对于二阶和indvar*LInv的情况放着先太抽象了
+*/
 #include "pass/optimize/SCEV.hpp"
 using namespace pass;
 
@@ -34,6 +42,7 @@ void SCEV::runOnLoop(ir::Loop* lp){
     auto lpHeader=lp->header();
     for(auto pinst:lpHeader->phi_insts()){
         auto phiinst=pinst->dynCast<ir::PhiInst>();
+        if(phiinst==defaultIdv->phiinst())continue;//不再分析indvar
         if(not isUsedOutsideLoop(lp,phiinst))continue;//只有在外被使用对应value才有被化简的价值
         visitPhi(lp,phiinst);
     }
@@ -109,7 +118,8 @@ void SCEV::visitPhi(ir::Loop* lp,ir::PhiInst* phiinst){
             isAnalysisOK=true;
             break;
         }
-        if(inst->dynCast<ir::PhiInst>()!=phiinst){
+        auto newPhiinst=inst->dynCast<ir::PhiInst>();
+        if(newPhiinst!=nullptr and newPhiinst!=phiinst){
             break;
         }
         for(auto puse:inst->uses()){
@@ -161,6 +171,7 @@ int SCEV::findAddSubChain(ir::Loop* lp,ir::PhiInst* phiinst,ir::BinaryInst* nowI
         return -1;
     for(auto puse:nowInst->uses()){
         auto inst=puse->user()->dynCast<ir::Instruction>();
+        if(inst==nullptr)continue;
         if(inst==phiinst)return 1;
         if(lp->blocks().count(inst->block())==0)continue;
         auto binst=inst->dynCast<ir::BinaryInst>();
@@ -198,13 +209,25 @@ void SCEV::getSCEVValue(ir::Loop* lp,ir::PhiInst* phiinst,
     instsChain.clear();
 }
 
-//简单的判断一下对应的value是不是循环不变量,其定值如果支配循环头自然就是
+//简单的判断一下对应的value是不是循环不变量
 bool SCEV::isSimplyLoopInvariant(ir::Loop* lp,ir::Value* val){
-    if(auto inst=val->dynCast<ir::Instruction>()){
-        auto instBB=inst->block();
-        if(domctx->dominate(instBB,lp->header()))return true;
-    }
     if(auto conVal=val->dynCast<ir::Constant>())return true;
+    if(auto binaryVal=val->dynCast<ir::BinaryInst>()){
+        return isSimplyNotInLoop(lp,binaryVal->lValue()) and isSimplyNotInLoop(lp,binaryVal->rValue());
+    }
+    if(auto unaryVal=val->dynCast<ir::UnaryInst>()){
+        return isSimplyNotInLoop(lp,unaryVal->value());
+    }
+    if(auto callVal=val->dynCast<ir::CallInst>()){
+        if(not sectx->isPureFunc(callVal->callee()))return false;
+        for(auto rarg:callVal->rargs()){
+            if(not isSimplyLoopInvariant(lp,rarg->value()))return false;
+        }
+        return true;
+    }   
+    if(auto phiinst=val->dynCast<ir::PhiInst>()){
+        return domctx->dominate(phiinst->block(),lp->header());
+    }
     return false;
 }
 
@@ -213,10 +236,10 @@ bool SCEV::isUsedOutsideLoop(ir::Loop* lp,ir::Value* val){
     for(auto puse:val->uses()){
         auto user=puse->user();
         if(auto inst=user->dynCast<ir::Instruction>()){
-            if(lp->blocks().count(inst->block())==0)return false;
+            if(lp->blocks().count(inst->block())==0)return true;
         }
     }
-    return true;
+    return false;
 }
 
 //如果endvar是常数，就直接计算出对应的迭代次数
@@ -605,4 +628,14 @@ void SCEV::exchangeBrDest(ir::BranchInst* brInst){
     auto falseTarget=brInst->iffalse();
     brInst->set_iftrue(falseTarget);
     brInst->set_iffalse(trueTarget);
+}
+
+bool SCEV::isSimplyNotInLoop(ir::Loop* lp,ir::Value* val){
+    if(auto instVal=val->dynCast<ir::Instruction>()){
+        return lp->blocks().count(instVal->block())==0;
+    }
+    if(auto argVal=val->dynCast<ir::Argument>()){
+        return true;
+    }
+    return false;
 }

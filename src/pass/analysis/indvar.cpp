@@ -122,7 +122,7 @@ ir::Constant* indVarAnalysis::getConstantBeginVarFromPhi(ir::PhiInst* phiinst,ir
     if(lp->latchs().size()!=1)return nullptr;
     if(phivalfromLatch!=oldPhiinst)return nullptr;
     auto constVal=phivalfromlpPreHeader->dynCast<ir::Constant>();
-    if(constVal!=nullptr)return constVal;
+    if(constVal!=nullptr and constVal->isInt32())return constVal;
     auto phiVal=phivalfromlpPreHeader->dynCast<ir::PhiInst>();
     if(phiVal==nullptr)return nullptr;
     auto outerLp=lp->parent();
