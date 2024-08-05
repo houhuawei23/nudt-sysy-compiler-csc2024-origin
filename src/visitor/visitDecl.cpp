@@ -156,7 +156,7 @@ ir::Value* SysYIRGenerator::visitScalar_global(SysYParser::VarDefContext* ctx,
     init = any_cast_Value(visit(ctx->initValue()->exp()));
     ir::Constant* tmp = dyn_cast<ir::Constant>(init);
     assert(tmp && "global must be initialized by constant");
-    if (tmp->i32() != 0) is_init = true;
+    is_init = true;
     if (btype->isInt32() && tmp->isFloatPoint()) {
       init = ir::Constant::gen_i32(tmp->f32());
     } else if (btype->isFloatPoint() && tmp->isInt32()) {
@@ -380,7 +380,7 @@ bool SysYIRGenerator::visitInitValue_Array(SysYParser::InitValueContext* ctx, co
       factor *= dims[i];
     }
     if (auto cvalue = dyn_cast<ir::Constant>(value)) {  // 1. 常值 (global OR local)
-      if (cvalue->i32() != 0) res = true;
+      res = true;
       init[offset] = value;
     } else {  // 2. 变量 (just for local)
       res = true;

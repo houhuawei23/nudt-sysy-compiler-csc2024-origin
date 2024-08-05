@@ -13,6 +13,8 @@ class RISCVScheduleModel_sifive_u74 final: public TargetScheduleModel {
     
     RISCVScheduleClassSlowLoadImm mScheduleClass_SlowLoadImm;
     
+    RISCVScheduleClassIntegerArithmeticEarlyLateB mScheduleClass_IntegerArithmeticEarlyLateB;
+    
     RISCVScheduleClassBranch mScheduleClass_Branch;
     
     RISCVScheduleClassLoadStore mScheduleClass_LoadStore;
@@ -89,6 +91,15 @@ public:
             case LoadImm32:
             case LoadImm64:
                 return mScheduleClass_SlowLoadImm;
+            
+            
+            case SH1ADD:
+            case SH1ADD_UW:
+            case SH2ADD:
+            case SH2ADD_UW:
+            case SH3ADD:
+            case SH3ADD_UW:
+                return mScheduleClass_IntegerArithmeticEarlyLateB;
             
             
             case JAL:

@@ -42,6 +42,210 @@ public:
 
 
 
+class RISCVInstInfoSH1ADD final: public InstInfo {
+public:
+    RISCVInstInfoSH1ADD() = default;
+
+    uint32_t operand_num() const override {
+        return 3;
+    }
+
+    OperandFlag operand_flag(uint32_t idx) const override {
+        switch (idx) {case 0:
+                    return OperandFlagDef;case 1:
+                    return OperandFlagUse;case 2:
+                    return OperandFlagUse;default:
+                return OperandFlagNone;
+                assert(false && "Invalid operand index");
+        }
+    }
+    
+    uint32_t inst_flag() const override {
+        return InstFlagNone;
+    }
+
+    std::string_view name() const override{
+        return "RISCV.SH1ADD";
+    }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) const override{        
+        out<<"sh1add"<<" "<<mir::RISCV::OperandDumper{ inst.operand(0) }<<", "<<mir::RISCV::OperandDumper{ inst.operand(1) }<<", "<<mir::RISCV::OperandDumper{ inst.operand(2) };}
+
+
+};
+
+
+
+class RISCVInstInfoSH1ADD_UW final: public InstInfo {
+public:
+    RISCVInstInfoSH1ADD_UW() = default;
+
+    uint32_t operand_num() const override {
+        return 3;
+    }
+
+    OperandFlag operand_flag(uint32_t idx) const override {
+        switch (idx) {case 0:
+                    return OperandFlagDef;case 1:
+                    return OperandFlagUse;case 2:
+                    return OperandFlagUse;default:
+                return OperandFlagNone;
+                assert(false && "Invalid operand index");
+        }
+    }
+    
+    uint32_t inst_flag() const override {
+        return InstFlagNone;
+    }
+
+    std::string_view name() const override{
+        return "RISCV.SH1ADD_UW";
+    }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) const override{        
+        out<<"sh1add.uw"<<" "<<mir::RISCV::OperandDumper{ inst.operand(0) }<<", "<<mir::RISCV::OperandDumper{ inst.operand(1) }<<", "<<mir::RISCV::OperandDumper{ inst.operand(2) };}
+
+
+};
+
+
+
+class RISCVInstInfoSH2ADD final: public InstInfo {
+public:
+    RISCVInstInfoSH2ADD() = default;
+
+    uint32_t operand_num() const override {
+        return 3;
+    }
+
+    OperandFlag operand_flag(uint32_t idx) const override {
+        switch (idx) {case 0:
+                    return OperandFlagDef;case 1:
+                    return OperandFlagUse;case 2:
+                    return OperandFlagUse;default:
+                return OperandFlagNone;
+                assert(false && "Invalid operand index");
+        }
+    }
+    
+    uint32_t inst_flag() const override {
+        return InstFlagNone;
+    }
+
+    std::string_view name() const override{
+        return "RISCV.SH2ADD";
+    }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) const override{        
+        out<<"sh2add"<<" "<<mir::RISCV::OperandDumper{ inst.operand(0) }<<", "<<mir::RISCV::OperandDumper{ inst.operand(1) }<<", "<<mir::RISCV::OperandDumper{ inst.operand(2) };}
+
+
+};
+
+
+
+class RISCVInstInfoSH2ADD_UW final: public InstInfo {
+public:
+    RISCVInstInfoSH2ADD_UW() = default;
+
+    uint32_t operand_num() const override {
+        return 3;
+    }
+
+    OperandFlag operand_flag(uint32_t idx) const override {
+        switch (idx) {case 0:
+                    return OperandFlagDef;case 1:
+                    return OperandFlagUse;case 2:
+                    return OperandFlagUse;default:
+                return OperandFlagNone;
+                assert(false && "Invalid operand index");
+        }
+    }
+    
+    uint32_t inst_flag() const override {
+        return InstFlagNone;
+    }
+
+    std::string_view name() const override{
+        return "RISCV.SH2ADD_UW";
+    }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) const override{        
+        out<<"sh2add.uw"<<" "<<mir::RISCV::OperandDumper{ inst.operand(0) }<<", "<<mir::RISCV::OperandDumper{ inst.operand(1) }<<", "<<mir::RISCV::OperandDumper{ inst.operand(2) };}
+
+
+};
+
+
+
+class RISCVInstInfoSH3ADD final: public InstInfo {
+public:
+    RISCVInstInfoSH3ADD() = default;
+
+    uint32_t operand_num() const override {
+        return 3;
+    }
+
+    OperandFlag operand_flag(uint32_t idx) const override {
+        switch (idx) {case 0:
+                    return OperandFlagDef;case 1:
+                    return OperandFlagUse;case 2:
+                    return OperandFlagUse;default:
+                return OperandFlagNone;
+                assert(false && "Invalid operand index");
+        }
+    }
+    
+    uint32_t inst_flag() const override {
+        return InstFlagNone;
+    }
+
+    std::string_view name() const override{
+        return "RISCV.SH3ADD";
+    }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) const override{        
+        out<<"sh3add"<<" "<<mir::RISCV::OperandDumper{ inst.operand(0) }<<", "<<mir::RISCV::OperandDumper{ inst.operand(1) }<<", "<<mir::RISCV::OperandDumper{ inst.operand(2) };}
+
+
+};
+
+
+
+class RISCVInstInfoSH3ADD_UW final: public InstInfo {
+public:
+    RISCVInstInfoSH3ADD_UW() = default;
+
+    uint32_t operand_num() const override {
+        return 3;
+    }
+
+    OperandFlag operand_flag(uint32_t idx) const override {
+        switch (idx) {case 0:
+                    return OperandFlagDef;case 1:
+                    return OperandFlagUse;case 2:
+                    return OperandFlagUse;default:
+                return OperandFlagNone;
+                assert(false && "Invalid operand index");
+        }
+    }
+    
+    uint32_t inst_flag() const override {
+        return InstFlagNone;
+    }
+
+    std::string_view name() const override{
+        return "RISCV.SH3ADD_UW";
+    }
+
+    void print(std::ostream& out, MIRInst& inst, bool comment) const override{        
+        out<<"sh3add.uw"<<" "<<mir::RISCV::OperandDumper{ inst.operand(0) }<<", "<<mir::RISCV::OperandDumper{ inst.operand(1) }<<", "<<mir::RISCV::OperandDumper{ inst.operand(2) };}
+
+
+};
+
+
+
 class RISCVInstInfoANDN final: public InstInfo {
 public:
     RISCVInstInfoANDN() = default;
@@ -3873,6 +4077,12 @@ public:
 
 
 class RISCVInstInfo final: public TargetInstInfo {RISCVInstInfoADD_UW _instinfoADD_UW;
+    RISCVInstInfoSH1ADD _instinfoSH1ADD;
+    RISCVInstInfoSH1ADD_UW _instinfoSH1ADD_UW;
+    RISCVInstInfoSH2ADD _instinfoSH2ADD;
+    RISCVInstInfoSH2ADD_UW _instinfoSH2ADD_UW;
+    RISCVInstInfoSH3ADD _instinfoSH3ADD;
+    RISCVInstInfoSH3ADD_UW _instinfoSH3ADD_UW;
     RISCVInstInfoANDN _instinfoANDN;
     RISCVInstInfoORN _instinfoORN;
     RISCVInstInfoXNOR _instinfoXNOR;
@@ -3991,7 +4201,13 @@ class RISCVInstInfo final: public TargetInstInfo {RISCVInstInfoADD_UW _instinfoA
     const InstInfo& getInstInfo(uint32_t opcode) const override {
         switch (opcode) {
             case RISCVInst::ADD_UW:
-            return _instinfoADD_UW;case RISCVInst::ANDN:
+            return _instinfoADD_UW;case RISCVInst::SH1ADD:
+            return _instinfoSH1ADD;case RISCVInst::SH1ADD_UW:
+            return _instinfoSH1ADD_UW;case RISCVInst::SH2ADD:
+            return _instinfoSH2ADD;case RISCVInst::SH2ADD_UW:
+            return _instinfoSH2ADD_UW;case RISCVInst::SH3ADD:
+            return _instinfoSH3ADD;case RISCVInst::SH3ADD_UW:
+            return _instinfoSH3ADD_UW;case RISCVInst::ANDN:
             return _instinfoANDN;case RISCVInst::ORN:
             return _instinfoORN;case RISCVInst::XNOR:
             return _instinfoXNOR;case RISCVInst::MIN:

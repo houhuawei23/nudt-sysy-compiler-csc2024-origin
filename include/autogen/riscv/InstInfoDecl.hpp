@@ -11,6 +11,12 @@ enum RISCVInst {
     RISCVInstBegin = ISASpecificBegin,
     
             ADD_UW,
+            SH1ADD,
+            SH1ADD_UW,
+            SH2ADD,
+            SH2ADD_UW,
+            SH3ADD,
+            SH3ADD_UW,
             ANDN,
             ORN,
             XNOR,
