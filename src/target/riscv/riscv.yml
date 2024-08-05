@@ -1252,9 +1252,7 @@ InstSelInfo: {
       ],
   }
 
-ScheduleModel:
-  #
-  { sifive_u74: {
+ScheduleModel: { sifive_u74: {
         #
         Classes: {
             #
@@ -1320,9 +1318,8 @@ ScheduleModel:
               ],
             # IntegerArithmeticLateB:
             #   [ROL, ROLW, ROR, RORI, RORIW, RORW, CLZ, CLZW, CTZ, CTZW, ORC_B],
-            # IntegerArithmeticEarlyB: [],
-            # IntegerArithmeticLateAB: [],
-            # IntegerArithmeticEarlyLateB: [],
+            IntegerArithmeticEarlyLateB:
+              [SH1ADD, SH1ADD_UW, SH2ADD, SH2ADD_UW, SH3ADD, SH3ADD_UW],
             Branch: [
                 JAL,
                 RET,
@@ -1365,6 +1362,7 @@ ScheduleModel:
                 # REMUW,
               ],
             SDivRemW: [DIVW, REMW],
+            # SiFive U74-MC Core Complex Manual Floating-Point Unit Instruction Timing
             FPCycle1: [FMV_X_W],
             FPCycle2:
               [

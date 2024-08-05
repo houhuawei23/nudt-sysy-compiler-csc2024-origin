@@ -690,6 +690,8 @@ public:
 
     os << "\n phiInst: ";
     mphiinst->print(os);
+
+    os << "\n";
   }
 };
 

@@ -24,9 +24,8 @@ int loopUnroll::calunrolltime(ir::Loop* loop, int times) {
 }
 
 void loopUnroll::dynamicunroll(ir::Loop* loop, ir::indVar* iv) {
-     if (loop->exits().size() != 1)  // 只对单exit的loop做unroll
+    if (loop->exits().size() != 1)  // 只对单exit的loop做unroll
         return;
-
 }
 void loopUnroll::constunroll(ir::Loop* loop, ir::indVar* iv) {
     if (loop->exits().size() != 1)  // 只对单exit的loop做unroll
@@ -128,9 +127,9 @@ void loopUnroll::doconstunroll(ir::Loop* loop, ir::indVar* iv, int times) {
     int unrolltimes = calunrolltime(loop, times);
     // unrolltimes = 2;//debug
     int remainder = times % unrolltimes;
-    // std::cerr << "times: " << times << std::endl;
-    // std::cerr << "unrolltimes: " << unrolltimes << std::endl;
-    // std::cerr << "remainder: " << remainder << std::endl;
+    std::cerr << "times: " << times << std::endl;
+    std::cerr << "unrolltimes: " << unrolltimes << std::endl;
+    std::cerr << "remainder: " << remainder << std::endl;
 
     ir::BasicBlock* head = loop->header();
     ir::BasicBlock* latch = loop->getLoopLatch();
@@ -175,6 +174,7 @@ void loopUnroll::doconstunroll(ir::Loop* loop, ir::indVar* iv, int times) {
 
     std::vector<std::vector<ir::Value*>> phireplacevec;
     ir::BasicBlock* latchnext = func->newBlock();
+    nowlatchnext = latchnext;
 
     loop->blocks().insert(latchnext);
     int cnt = 0;
@@ -205,12 +205,13 @@ void loopUnroll::doconstunroll(ir::Loop* loop, ir::indVar* iv, int times) {
     ir::BasicBlock* oldbegin = headnext;
     ir::BasicBlock* oldlatchnext = latchnext;
 
-    for (int i = 0; i < unrolltimes - 1; i++) {
+    for (int i = 0; i < unrolltimes - 1; i++) {  // 复制循环体
         copymap.clear();
         copyloop(bbexcepthead, oldbegin, loop, func);
 
         auto newbegin = copymap[oldbegin]->dynCast<ir::BasicBlock>();
         auto newlatchnext = copymap[oldlatchnext]->dynCast<ir::BasicBlock>();
+        nowlatchnext = newlatchnext;
 
         ir::BranchInst* oldlatchnextbr = oldlatchnext->insts().back()->dynCast<ir::BranchInst>();
         oldlatchnextbr->replaceDest(head, newbegin);
@@ -267,6 +268,28 @@ void loopUnroll::doconstunroll(ir::Loop* loop, ir::indVar* iv, int times) {
         } else
             break;
     }
+    // 修改迭代变量为 iv = iv + unrolltimes
+
+    auto ivphi = iv->phiinst();
+    if (iv->iterInst()->valueId() == ir::vADD) {
+        auto iadd = utils::make<ir::BinaryInst>(ir::vADD, ir::Type::TypeInt32(), ivphi, ir::Constant::gen_i32(unrolltimes * (iv->getStepI32())));
+        nowlatchnext->emplace_lastbutone_inst(iadd);
+        for (size_t i = 0; i < ivphi->getsize(); i++) {
+            auto phibb = ivphi->getBlock(i);
+            if (phibb == nowlatchnext) {
+                ivphi->setOperand(2 * i, iadd);
+            }
+        }
+    } else if (iv->iterInst()->valueId() == ir::vSUB) {
+        auto isub = utils::make<ir::BinaryInst>(ir::vSUB, ir::Type::TypeInt32(), ivphi, ir::Constant::gen_i32(unrolltimes * (iv->getStepI32())));
+        nowlatchnext->emplace_lastbutone_inst(isub);
+        for (size_t i = 0; i < ivphi->getsize(); i++) {
+            auto phibb = ivphi->getBlock(i);
+            if (phibb == nowlatchnext) {
+                ivphi->setOperand(2 * i, isub);
+            }
+        }
+    }
 }
 
 void loopUnroll::copyloop(std::vector<ir::BasicBlock*> bbs, ir::BasicBlock* begin, ir::Loop* L, ir::Function* func) {  // 复制循环体
@@ -303,7 +326,6 @@ void loopUnroll::copyloop(std::vector<ir::BasicBlock*> bbs, ir::BasicBlock* begi
     ir::BasicBlock::BasicBlockDfs(begin, [&](ir::BasicBlock* bb) -> bool {
         if (vis.count(bb) || (std::count(bbs.begin(), bbs.end(), bb) == 0)) return true;
         vis.insert(bb);
-        // std::cerr<<"1"<<std::endl;
         auto copybb = copymap[bb]->dynCast<ir::BasicBlock>();
         for (auto inst : bb->insts()) {
             auto copyinst = inst->copy(getValue);
@@ -359,7 +381,6 @@ void loopUnroll::copyloopremainder(std::vector<ir::BasicBlock*> bbs, ir::BasicBl
     ir::BasicBlock::BasicBlockDfs(begin, [&](ir::BasicBlock* bb) -> bool {
         if (vis.count(bb) || (std::count(bbs.begin(), bbs.end(), bb) == 0)) return true;
         vis.insert(bb);
-        // std::cerr<<"1"<<std::endl;
         auto copybb = copymap[bb]->dynCast<ir::BasicBlock>();
         for (auto inst : bb->insts()) {
             auto copyinst = inst->copy(getValue);
@@ -420,14 +441,13 @@ void loopUnroll::repalceuseout(ir::Instruction* inst, ir::Instruction* copyinst,
                     auto phival = phiinst->getValue(i);
                     auto phibb = phiinst->getBlock(i);
                     if (phival == inst) {
-                        if (!L->contains(phibb)){
+                        if (!L->contains(phibb)) {
                             usetoreplace.push_back(use);
                         }
                     }
                 }
             } else {
-                if (!L->contains(useinstbb))
-                    usetoreplace.push_back(use);
+                if (!L->contains(useinstbb)) usetoreplace.push_back(use);
             }
         }
     }
