@@ -168,5 +168,8 @@ bool indVarAnalysis::isSimplyLoopInvariant(ir::Loop* lp,ir::Value* val){
     if(auto arg=val->dynCast<ir::Argument>()){
         return true;
     }
+    if(auto loadinst=val->dynCast<ir::PhiInst>()){
+        return domctx->dominate(loadinst->block(),lp->header()) and loadinst->block()!=lp->header();
+    }
     return false;
 }

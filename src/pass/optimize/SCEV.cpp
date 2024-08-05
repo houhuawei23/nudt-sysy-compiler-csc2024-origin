@@ -48,6 +48,7 @@ void SCEV::runOnLoop(ir::Loop* lp){
         visitPhi(lp,phiinst);
     }
     if(SCEVValues.empty())return;//没有可以化简的SCEV,return直接
+    std::cerr<<"Got "<<SCEVValues.size()<<" SCEV Values!"<<std::endl;
     ir::Value* IterCntVal;
     ir::IRBuilder builder;
     builder.set_pos(*(lp->exits().begin()));
