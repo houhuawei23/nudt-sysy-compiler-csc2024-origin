@@ -2,7 +2,7 @@
 #include <cassert>
 #include <iostream>
 #include <algorithm>
-// #include "ir/constant.hpp"
+
 #include "ir/utils_ir.hpp"
 #include "support/arena.hpp"
 
@@ -10,8 +10,7 @@ namespace ir {
 
 void Module::addGlobalVar(const_str_ref name, GlobalVariable* gv) {
   auto iter = mGlobalVariableTable.find(name);  // find the name in _globals
-  assert(iter == mGlobalVariableTable.end() &&
-         "Redeclare! global variable already exists");
+  assert(iter == mGlobalVariableTable.end() && "Redeclare! global variable already exists");
   mGlobalVariableTable.emplace(name, gv);
   mGlobalVariables.emplace_back(gv);
 }
@@ -41,8 +40,8 @@ void Module::delFunction(ir::Function* func) {
   // }
 }
 
-void Module::delGlobalVariable(ir::GlobalVariable* gv){
-  auto pos=std::find(mGlobalVariables.begin(),mGlobalVariables.end(),gv);
+void Module::delGlobalVariable(ir::GlobalVariable* gv) {
+  auto pos = std::find(mGlobalVariables.begin(), mGlobalVariables.end(), gv);
   mGlobalVariables.erase(pos);
   mGlobalVariableTable.erase(gv->name());
 }
@@ -50,14 +49,12 @@ void Module::delGlobalVariable(ir::GlobalVariable* gv){
 // readable ir print
 void Module::print(std::ostream& os) const {
   //! print all global values
-  // rename();
   for (auto gv : mGlobalVariables) {
     os << *gv << std::endl;
   }
 
   // llvm inline function
-  os << "declare void @llvm.memset.p0i8.i64(i8* nocapture writeonly, i8, "
-        "i64, i1 immarg)"
+  os << "declare void @llvm.memset.p0i8.i64(i8* nocapture writeonly, i8, i64, i1 immarg)"
      << std::endl;
 
   //! print all functions
@@ -75,14 +72,16 @@ void Module::rename() {
 bool Module::verify(std::ostream& os) const {
   for (auto func : mFunctions) {
     if (not func->verify(os)) {
+      os << "func: " << func->name() << " failed" << std::endl;
       return false;
     }
   }
   return true;
 }
 
-GlobalVariable* Module::findGlobalVariable(const_str_ref name){
-  if(mGlobalVariableTable.count(name)==0)return nullptr;
+GlobalVariable* Module::findGlobalVariable(const_str_ref name) {
+  if (mGlobalVariableTable.count(name) == 0)
+    return nullptr;
   return mGlobalVariableTable[name];
 }
 }  // namespace ir

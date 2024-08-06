@@ -32,18 +32,29 @@ public:
     funcNum = 0;
     varNum = 0;
     blockNum = 0;
+    mBlock = nullptr;
+    mInsertPos = inst_iterator();
+    // _headers.
+    // _exits.clear();
+    // _true_targets.clear();
   }
+
 public:  // get function
   auto curBlock() const { return mBlock; }
   auto position() const { return mInsertPos; }
   BasicBlock* header() {
-    if (!_headers.empty()) return _headers.top();
-    else return nullptr;
+    if (!_headers.empty())
+      return _headers.top();
+    else
+      return nullptr;
   }
   BasicBlock* exit() {
-    if (!_exits.empty()) return _exits.top();
-    else return nullptr;
+    if (!_exits.empty())
+      return _exits.top();
+    else
+      return nullptr;
   }
+
 public:  // set function
   void set_pos(BasicBlock* block, inst_iterator pos) {
     assert(block != nullptr);
@@ -96,9 +107,13 @@ public:  // set function
 
   Value* castToBool(Value* val);
   // defalut promote to i32
-  Value* promoteType(Value* val,
-                     Type* target_tpye,
-                     Type* base_type=Type::TypeInt32());
+  Value* promoteType(Value* val, Type* target_tpye, Type* base_type = Type::TypeInt32());
+
+  Value* promoteTypeBeta(Value* val, Type* target_tpye);
+
+  Value* castConstantType(Value* val, Type* target_tpye);
+
+  Value* makeTypeCast(Value* val, Type* target_type);
 
   Value* makeCmp(CmpOp op, Value* lhs, Value* rhs);
 
@@ -106,10 +121,11 @@ public:  // set function
 
   Value* makeUnary(ValueId vid, Value* val, Type* ty = nullptr);
 
-  Value* makeAlloca(Type* base_type, bool is_const=false,
-                    const std::vector<size_t>& dims={},
-                    const_str_ref comment="",
-                    size_t capacity=1);
+  Value* makeAlloca(Type* base_type,
+                    bool is_const = false,
+                    const std::vector<size_t>& dims = {},
+                    const_str_ref comment = "",
+                    size_t capacity = 1);
   Value* makeLoad(Value* ptr);
 
   Value* makeGetElementPtr(Type* base_type,
@@ -121,9 +137,11 @@ public:  // set function
   template <typename T, typename... Args>
   auto makeInst(Args&&... args) {
     auto inst = utils::make<T>(std::forward<Args>(args)...);
-    inst->setBlock(mBlock);
-    // mBlock->emplace_back_inst(inst);
-    mBlock->insts().insert(mInsertPos, inst);
+    if (mBlock) {
+      inst->setBlock(mBlock);
+      mBlock->insts().insert(mInsertPos, inst);
+    } else
+      std::cerr << "insert to 0x0 Block" << std::endl;
     return inst;
   }
 
@@ -133,4 +151,4 @@ public:  // set function
   }
 };
 
-}
+}  // namespace ir

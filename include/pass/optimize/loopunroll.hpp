@@ -28,7 +28,7 @@ class loopUnroll : public FunctionPass {
     void getdefinuseout(ir::Loop* L);
     void repalceuseout(ir::Instruction* inst, ir::Instruction* copyinst, ir::Loop* L);
     static ir::Value* getValue(ir::Value* val) {
-        if (auto c = dyn_cast<ir::Constant>(val)) {
+        if (auto c = val->dynCast<ir::ConstantValue>()) {
             return c;
         }
         if (copymap.count(val)) {

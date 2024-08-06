@@ -13,13 +13,15 @@ private:
   domTree* domctx;
   sideEffectInfo* sectx;
   void addIndVar(ir::Loop* lp,
-                 ir::Constant* mbegin,
-                 ir::Constant* mstep,
+                 ir::ConstantInteger* mbegin,
+                 ir::ConstantInteger* mstep,
                  ir::Value* mend,
                  ir::BinaryInst* iterinst,
                  ir::Instruction* cmpinst,
                  ir::PhiInst* phiinst);
-  ir::Constant* getConstantBeginVarFromPhi(ir::PhiInst* phiinst,ir::PhiInst* oldPhiinst,ir::Loop* lp);
+  ir::ConstantInteger* getConstantBeginVarFromPhi(ir::PhiInst* phiinst,
+                                                  ir::PhiInst* oldPhiinst,
+                                                  ir::Loop* lp);
   bool isSimplyNotInLoop(ir::Loop* lp,ir::Value* val);
   bool isSimplyLoopInvariant(ir::Loop* lp,ir::Value* val);
 };

@@ -63,7 +63,13 @@ public:  // emit function
   // ir_val -> mir_operand
   void addValueMap(ir::Value* ir_val, MIROperand mir_operand);
   MIROperand map2operand(ir::Value* ir_val);
-  MIRBlock* map2block(ir::BasicBlock* ir_block) { return blockMap.at(ir_block); }
+  MIRBlock* map2block(ir::BasicBlock* ir_block) {
+    if (blockMap.find(ir_block) == blockMap.end()) {
+      std::cerr << ir_block->name() << " not found in blockMap" << std::endl;
+      assert(false);
+    }
+    return blockMap.at(ir_block);
+  }
 };
 
 std::unique_ptr<MIRModule> createMIRModule(ir::Module& ir_module,

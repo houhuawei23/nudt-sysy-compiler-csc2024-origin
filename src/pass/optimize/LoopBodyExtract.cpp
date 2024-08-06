@@ -169,7 +169,7 @@ bool extractLoopBody(ir::Function* func,
       for (auto opuse : inst->operands()) {
         auto op = opuse->value();
         if (val2arg.count(op)) continue;  // already mapped
-        if (op->dynCast<ir::Constant>() or op->dynCast<ir::GlobalVariable>()) {
+        if (op->dynCast<ir::ConstantValue>() or op->dynCast<ir::GlobalVariable>()) {
           continue;  // constants and global variables can be used directly
         }
         if (loop.blocks().count(op->dynCast<ir::Instruction>()->block())) continue;

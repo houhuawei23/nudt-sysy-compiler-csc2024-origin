@@ -105,14 +105,14 @@ void loopUnroll::dodynamicunroll(ir::Loop* loop, ir::indVar* iv) {
         if (auto ivendload = ivend->dynCast<ir::LoadInst>()) {
             auto loadglovalend = utils::make<ir::LoadInst>(ivendload->ptr(), ivend->type());
             if (ivcmp->valueId() == ir::vISLE)
-                distance = utils::make<ir::BinaryInst>(ir::vSUB, ir::Type::TypeInt32(), loadglovalend, ir::Constant::gen_i32(iv->getBeginI32() - 1));
+                distance = utils::make<ir::BinaryInst>(ir::vSUB, ir::Type::TypeInt32(), loadglovalend, ir::ConstantInteger::gen_i32(iv->getBeginI32() - 1));
             else if (ivcmp->valueId() == ir::vISLT)
                 distance = utils::make<ir::BinaryInst>(ir::vSUB, ir::Type::TypeInt32(), loadglovalend, iv->getBegin());
 
-            auto isrem = utils::make<ir::BinaryInst>(ir::vSREM, ir::Type::TypeInt32(), distance, ir::Constant::gen_i32(unrolltimes * ivstep));
+            auto isrem = utils::make<ir::BinaryInst>(ir::vSREM, ir::Type::TypeInt32(), distance, ir::ConstantInteger::gen_i32(unrolltimes * ivstep));
             auto isub = utils::make<ir::BinaryInst>(ir::vSUB, ir::Type::TypeInt32(), loadglovalend, isrem);
 
-            auto icmp = utils::make<ir::ICmpInst>(ir::vISGE, distance, ir::Constant::gen_i32(unrolltimes * ivstep));
+            auto icmp = utils::make<ir::ICmpInst>(ir::vISGE, distance, ir::ConstantInteger::gen_i32(unrolltimes * ivstep));
             auto newcondbr = utils::make<ir::BranchInst>(icmp, head, tailhead);
             auto oldbr = preheader->insts().back();
             preheader->delete_inst(oldbr);
@@ -143,13 +143,13 @@ void loopUnroll::dodynamicunroll(ir::Loop* loop, ir::indVar* iv) {
             }
         } else {
             if (ivcmp->valueId() == ir::vISLE)
-                distance = utils::make<ir::BinaryInst>(ir::vSUB, ir::Type::TypeInt32(), ivend, ir::Constant::gen_i32(iv->getBeginI32() - 1));
+                distance = utils::make<ir::BinaryInst>(ir::vSUB, ir::Type::TypeInt32(), ivend, ir::ConstantInteger::gen_i32(iv->getBeginI32() - 1));
             else if (ivcmp->valueId() == ir::vISLT)
                 distance = utils::make<ir::BinaryInst>(ir::vSUB, ir::Type::TypeInt32(), ivend, iv->getBegin());
-            auto isrem = utils::make<ir::BinaryInst>(ir::vSREM, ir::Type::TypeInt32(), distance, ir::Constant::gen_i32(unrolltimes * ivstep));
+            auto isrem = utils::make<ir::BinaryInst>(ir::vSREM, ir::Type::TypeInt32(), distance, ir::ConstantInteger::gen_i32(unrolltimes * ivstep));
             auto isub = utils::make<ir::BinaryInst>(ir::vSUB, ir::Type::TypeInt32(), ivend, isrem);
 
-            auto icmp = utils::make<ir::ICmpInst>(ir::vISGE, distance, ir::Constant::gen_i32(unrolltimes * ivstep));
+            auto icmp = utils::make<ir::ICmpInst>(ir::vISGE, distance, ir::ConstantInteger::gen_i32(unrolltimes * ivstep));
             auto newcondbr = utils::make<ir::BranchInst>(icmp, head, tailhead);
             auto oldbr = preheader->insts().back();
             preheader->delete_inst(oldbr);
@@ -183,14 +183,14 @@ void loopUnroll::dodynamicunroll(ir::Loop* loop, ir::indVar* iv) {
         if (auto ivendload = ivend->dynCast<ir::LoadInst>()) {
             auto loadglovalend = utils::make<ir::LoadInst>(ivendload->ptr(), ivend->type());
             if (ivcmp->valueId() == ir::vISLE)
-                distance = utils::make<ir::BinaryInst>(ir::vSUB, ir::Type::TypeInt32(), ir::Constant::gen_i32(iv->getBeginI32() + 1), loadglovalend);
+                distance = utils::make<ir::BinaryInst>(ir::vSUB, ir::Type::TypeInt32(), ir::ConstantInteger::gen_i32(iv->getBeginI32() + 1), loadglovalend);
             else if (ivcmp->valueId() == ir::vISLT)
                 distance = utils::make<ir::BinaryInst>(ir::vSUB, ir::Type::TypeInt32(), iv->getBegin(), loadglovalend);
 
-            auto isrem = utils::make<ir::BinaryInst>(ir::vSREM, ir::Type::TypeInt32(), distance, ir::Constant::gen_i32(unrolltimes * ivstep));
+            auto isrem = utils::make<ir::BinaryInst>(ir::vSREM, ir::Type::TypeInt32(), distance, ir::ConstantInteger::gen_i32(unrolltimes * ivstep));
             auto iadd = utils::make<ir::BinaryInst>(ir::vADD, ir::Type::TypeInt32(), ivend, isrem);
 
-            auto icmp = utils::make<ir::ICmpInst>(ir::vISGE, distance, ir::Constant::gen_i32(unrolltimes * ivstep));
+            auto icmp = utils::make<ir::ICmpInst>(ir::vISGE, distance, ir::ConstantInteger::gen_i32(unrolltimes * ivstep));
             auto newcondbr = utils::make<ir::BranchInst>(icmp, head, tailhead);
             auto oldbr = preheader->insts().back();
             preheader->delete_inst(oldbr);
@@ -221,14 +221,14 @@ void loopUnroll::dodynamicunroll(ir::Loop* loop, ir::indVar* iv) {
             }
         } else {
             if (ivcmp->valueId() == ir::vISLE)
-                distance = utils::make<ir::BinaryInst>(ir::vSUB, ir::Type::TypeInt32(), ir::Constant::gen_i32(iv->getBeginI32() + 1), ivend);
+                distance = utils::make<ir::BinaryInst>(ir::vSUB, ir::Type::TypeInt32(), ir::ConstantInteger::gen_i32(iv->getBeginI32() + 1), ivend);
             else if (ivcmp->valueId() == ir::vISLT)
                 distance = utils::make<ir::BinaryInst>(ir::vSUB, ir::Type::TypeInt32(), iv->getBegin(), ivend);
 
-            auto isrem = utils::make<ir::BinaryInst>(ir::vSREM, ir::Type::TypeInt32(), distance, ir::Constant::gen_i32(unrolltimes * ivstep));
+            auto isrem = utils::make<ir::BinaryInst>(ir::vSREM, ir::Type::TypeInt32(), distance, ir::ConstantInteger::gen_i32(unrolltimes * ivstep));
             auto iadd = utils::make<ir::BinaryInst>(ir::vADD, ir::Type::TypeInt32(), ivend, isrem);
 
-            auto icmp = utils::make<ir::ICmpInst>(ir::vISGE, distance, ir::Constant::gen_i32(unrolltimes * ivstep));
+            auto icmp = utils::make<ir::ICmpInst>(ir::vISGE, distance, ir::ConstantInteger::gen_i32(unrolltimes * ivstep));
             auto newcondbr = utils::make<ir::BranchInst>(icmp, head, tailhead);
             auto oldbr = preheader->insts().back();
             preheader->delete_inst(oldbr);
@@ -360,7 +360,7 @@ void loopUnroll::dodynamicunroll(ir::Loop* loop, ir::indVar* iv) {
 
     auto ivphi = iv->phiinst();
     if (iv->iterInst()->valueId() == ir::vADD) {
-        auto iadd = utils::make<ir::BinaryInst>(ir::vADD, ir::Type::TypeInt32(), ivphi, ir::Constant::gen_i32(unrolltimes * (iv->getStepI32())));
+        auto iadd = utils::make<ir::BinaryInst>(ir::vADD, ir::Type::TypeInt32(), ivphi, ir::ConstantInteger::gen_i32(unrolltimes * (iv->getStepI32())));
         nowlatchnext->emplace_lastbutone_inst(iadd);
         for (size_t i = 0; i < ivphi->getsize(); i++) {
             auto phibb = ivphi->getBlock(i);
@@ -369,7 +369,7 @@ void loopUnroll::dodynamicunroll(ir::Loop* loop, ir::indVar* iv) {
             }
         }
     } else if (iv->iterInst()->valueId() == ir::vSUB) {
-        auto isub = utils::make<ir::BinaryInst>(ir::vSUB, ir::Type::TypeInt32(), ivphi, ir::Constant::gen_i32(unrolltimes * (iv->getStepI32())));
+        auto isub = utils::make<ir::BinaryInst>(ir::vSUB, ir::Type::TypeInt32(), ivphi, ir::ConstantInteger::gen_i32(unrolltimes * (iv->getStepI32())));
         nowlatchnext->emplace_lastbutone_inst(isub);
         for (size_t i = 0; i < ivphi->getsize(); i++) {
             auto phibb = ivphi->getBlock(i);
@@ -384,7 +384,7 @@ void loopUnroll::constunroll(ir::Loop* loop, ir::indVar* iv) {
         return;
 
     int ivbegin = iv->getBeginI32();
-    int ivend = iv->endValue()->dynCast<ir::Constant>()->i32();
+    int ivend = iv->endValue()->dynCast<ir::ConstantValue>()->i32();
     int ivstep = iv->getStepI32();
     ir::BinaryInst* ivbinary = iv->iterInst();
     ir::Instruction* ivcmp = iv->cmpInst();
@@ -506,7 +506,7 @@ void loopUnroll::doconstunroll(ir::Loop* loop, ir::indVar* iv, int times) {
         ir::BinaryInst* ivbinary = iv->iterInst();
         ir::Instruction* ivcmp = iv->cmpInst();
         if (ivbinary->valueId() == ir::vADD) {
-            auto isub = utils::make<ir::BinaryInst>(ir::vSUB, ir::Type::TypeInt32(), ivend, ir::Constant::gen_i32(remainder * ivstep));
+            auto isub = utils::make<ir::BinaryInst>(ir::vSUB, ir::Type::TypeInt32(), ivend, ir::ConstantInteger::gen_i32(remainder * ivstep));
             preheader->emplace_lastbutone_inst(isub);
             for (auto op : ivcmp->operands()) {
                 if (op->value() == ivend) {
@@ -515,7 +515,7 @@ void loopUnroll::doconstunroll(ir::Loop* loop, ir::indVar* iv, int times) {
                 }
             }
         } else if (ivbinary->valueId() == ir::vSUB) {
-            auto iadd = utils::make<ir::BinaryInst>(ir::vADD, ir::Type::TypeInt32(), ivend, ir::Constant::gen_i32(remainder * ivstep));
+            auto iadd = utils::make<ir::BinaryInst>(ir::vADD, ir::Type::TypeInt32(), ivend, ir::ConstantInteger::gen_i32(remainder * ivstep));
             preheader->emplace_lastbutone_inst(iadd);
             for (auto op : ivcmp->operands()) {
                 if (op->value() == ivend) {
@@ -627,7 +627,7 @@ void loopUnroll::doconstunroll(ir::Loop* loop, ir::indVar* iv, int times) {
 
     auto ivphi = iv->phiinst();
     if (iv->iterInst()->valueId() == ir::vADD) {
-        auto iadd = utils::make<ir::BinaryInst>(ir::vADD, ir::Type::TypeInt32(), ivphi, ir::Constant::gen_i32(unrolltimes * (iv->getStepI32())));
+        auto iadd = utils::make<ir::BinaryInst>(ir::vADD, ir::Type::TypeInt32(), ivphi, ir::ConstantInteger::gen_i32(unrolltimes * (iv->getStepI32())));
         nowlatchnext->emplace_lastbutone_inst(iadd);
         for (size_t i = 0; i < ivphi->getsize(); i++) {
             auto phibb = ivphi->getBlock(i);
@@ -636,7 +636,7 @@ void loopUnroll::doconstunroll(ir::Loop* loop, ir::indVar* iv, int times) {
             }
         }
     } else if (iv->iterInst()->valueId() == ir::vSUB) {
-        auto isub = utils::make<ir::BinaryInst>(ir::vSUB, ir::Type::TypeInt32(), ivphi, ir::Constant::gen_i32(unrolltimes * (iv->getStepI32())));
+        auto isub = utils::make<ir::BinaryInst>(ir::vSUB, ir::Type::TypeInt32(), ivphi, ir::ConstantInteger::gen_i32(unrolltimes * (iv->getStepI32())));
         nowlatchnext->emplace_lastbutone_inst(isub);
         for (size_t i = 0; i < ivphi->getsize(); i++) {
             auto phibb = ivphi->getBlock(i);
@@ -651,7 +651,7 @@ void loopUnroll::copyloop(std::vector<ir::BasicBlock*> bbs, ir::BasicBlock* begi
     std::vector<ir::BasicBlock*> copybbs;
     auto Module = func->module();
     // auto getValue = [&](ir::Value* val) -> ir::Value* {
-    //     if (auto c = dyn_cast<ir::Constant>(val)) return c;
+    //     if (auto c = dyn_cast<ir::ConstantValue>(val)) return c;
     //     if (copymap.count(val)) return copymap[val];
     //     return val;
     // };
@@ -706,7 +706,7 @@ void loopUnroll::copyloopremainder(std::vector<ir::BasicBlock*> bbs, ir::BasicBl
     std::vector<ir::BasicBlock*> copybbs;
     auto Module = func->module();
     // auto getValue = [&](ir::Value* val) -> ir::Value* {
-    //     if (auto c = dyn_cast<ir::Constant>(val)) return c;
+    //     if (auto c = dyn_cast<ir::ConstantValue>(val)) return c;
     //     if (copymap.count(val)) return copymap[val];
     //     return val;
     // };
@@ -813,7 +813,7 @@ void loopUnroll::repalceuseout(ir::Instruction* inst, ir::Instruction* copyinst,
 }
 
 bool loopUnroll::isconstant(ir::indVar* iv) {  // 判断迭代的end是否为常数
-    if (auto constiv = iv->endValue()->dynCast<ir::Constant>()) return true;
+    if (auto constiv = iv->endValue()->dynCast<ir::ConstantValue>()) return true;
     return false;
 }
 void loopUnroll::run(ir::Function* func, TopAnalysisInfoManager* tp) {

@@ -214,7 +214,7 @@ void Mem2Reg::rename(ir::Function* F) {
     ir::Instruction* Inst;
     Worklist.push({F->entry(), {}});  // 用栈来做dfs
     for (ir::AllocaInst* alloca : Allocas) {
-        Worklist.top().second[alloca] = ir::Constant::gen_undefine();
+        Worklist.top().second[alloca] = ir::UndefinedValue::get(ir::Type::TypeUndefine());
     }
     while (!Worklist.empty()) {
         BB = Worklist.top().first;
@@ -240,7 +240,7 @@ void Mem2Reg::rename(ir::Function* F) {
                 if (find(Allocas.begin(), Allocas.end(), AI) != Allocas.end()) {
                     if (Incommings.find(AI) == Incommings.end())  // 如果这条alloca没有到达定义
                     {
-                        Incommings[AI] = ir::Constant::gen_undefine();
+                        Incommings[AI] = ir::UndefinedValue::get(ir::Type::TypeUndefine());
                     }
                     LD->replaceAllUseWith(Incommings[AI]);
                     instRemovelist.push_back(inst);

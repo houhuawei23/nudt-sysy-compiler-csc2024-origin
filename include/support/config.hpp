@@ -5,7 +5,7 @@
 #include <vector>
 
 #include <filesystem>
-
+#include "ir/ir.hpp"
 namespace fs = std::filesystem;
 
 namespace sysy {
@@ -44,8 +44,7 @@ public:
   }
   auto debugDir() const {
     // mkdir ./.debug/xxx/ for debug info
-    return fs::path("./.debug") /
-           fs::path(infile).filename().replace_extension("");
+    return fs::path("./.debug") / fs::path(infile).filename().replace_extension("");
   }
 
   void parseTestArgs(int argc, char* argv[]);
@@ -58,6 +57,8 @@ public:
 
   std::ostream& os() const { return *mos; }
   void set_ostream(std::ostream& os) { mos = &os; }
+
+  void dumpModule(ir::Module* module, const std::string& filename) const;
 };
 
 }  // namespace sysy

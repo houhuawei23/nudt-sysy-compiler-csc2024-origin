@@ -1,6 +1,6 @@
 #include "ir/global.hpp"
-#include "ir/constant.hpp"
 
+#include "ir/ConstantValue.hpp"
 namespace ir {
 /*
  * @brief: GlobalVariable::print
@@ -9,8 +9,8 @@ namespace ir {
  *      array:  @a = global [4 x [4 x i32]] zeroinitializer
  */
 void GlobalVariable::print(std::ostream& os) const {
-  os << name();
-  if (isConst())
+  os << "@" << mName;
+  if (mIsConst)
     os << " = constant ";
   else
     os << " = global ";
@@ -39,7 +39,8 @@ void GlobalVariable::print_ArrayInit(std::ostream& os,
 
     is_zero = true;
     for (size_t i = 0; i < num; i++) {
-      auto cinit = dyn_cast<ir::Constant>(init(*idx + i));
+      // auto cinit = init(*idx + i)->dynCast<ConstantInteger>();
+      auto cinit = init(*idx + i)->dynCast<ConstantValue>();
       if (!cinit->isZero()) {
         is_zero = false;
         break;
@@ -66,7 +67,7 @@ void GlobalVariable::print_ArrayInit(std::ostream& os,
 
       is_zero = true;
       for (size_t j = 0; j < num2; j++) {
-        auto cinit = dyn_cast<ir::Constant>(init(*idx + i * num2 + j));
+        auto cinit = init(*idx + i * num2 + j)->dynCast<ConstantValue>();
         if (!cinit->isZero()) {
           is_zero = false;
           break;
@@ -87,7 +88,7 @@ void GlobalVariable::print_ArrayInit(std::ostream& os,
 
     is_zero = true;
     for (size_t j = 0; j < num2; j++) {
-      auto cinit = dyn_cast<ir::Constant>(init(*idx + (num1 - 1) * num2 + j));
+      auto cinit = init(*idx + (num1 - 1) * num2 + j)->dynCast<ConstantValue>();
       if (!cinit->isZero()) {
         is_zero = false;
         break;

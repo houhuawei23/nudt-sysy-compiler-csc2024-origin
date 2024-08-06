@@ -30,6 +30,7 @@
 #include "pass/optimize/licm.hpp"
 
 #include "pass/optimize/LoopParallel.hpp"
+#include "pass/optimize/Misc/StatelessCache.hpp"
 
 #include "support/config.hpp"
 #include "support/FileSystem.hpp"
@@ -41,7 +42,7 @@
 namespace pass {
 
 template <typename PassType, typename Callable>
-void runPass(PassType* unit, Callable&& runFunc, const std::string& passName) {
+void runPass(PassType* pass, Callable&& runFunc, const std::string& passName) {
   const auto& config = sysy::Config::getInstance();
   auto start = std::chrono::high_resolution_clock::now();
   runFunc();
@@ -50,8 +51,8 @@ void runPass(PassType* unit, Callable&& runFunc, const std::string& passName) {
   double threshold = 1e-3;
 
   if (elapsed.count() > threshold and config.logLevel >= sysy::LogLevel::DEBUG) {
-    std::cout << passName << " " << unit->name() << " took " << elapsed.count() << " seconds.\n";
-    // auto fileName = utils::preName(config.infile) + "_" + passName + ".ll";
+    std::cout << passName << " " << pass->name() << " took " << elapsed.count() << " seconds.\n";
+    // auto fileName = utils::preName(config.infile) + "_after_" + passName + ".ll";
   }
 }
 
@@ -64,7 +65,8 @@ void PassManager::run(FunctionPass* fp) {
     fp,
     [&]() {
       for (auto func : irModule->funcs()) {
-        if (func->isOnlyDeclare()) continue;
+        if (func->isOnlyDeclare())
+          continue;
         fp->run(func, tAIM);
       }
     },
@@ -84,18 +86,12 @@ void PassManager::run(BasicBlockPass* bp) {
     "BasicBlockPass");
 }
 static LoopParallel loopParallelPass;
-
+static StatelessCache cachePass;
 void PassManager::runPasses(std::vector<std::string> passes) {
+  // if(passes.size() == 0) return;
+
   const auto& config = sysy::Config::getInstance();
 
-  auto dumpModule = [&config](ir::Module* module, const std::string& fileName) {
-    auto path = config.debugDir() / fs::path(fileName);
-    std::cerr << "Dumping module to " << path << std::endl;
-    std::ofstream out(path);
-    module->rename();
-    module->print(out);
-    // out.close();/
-  };
 
   if (config.logLevel >= sysy::LogLevel::DEBUG) {
     std::cerr << "Running passes: ";
@@ -104,7 +100,7 @@ void PassManager::runPasses(std::vector<std::string> passes) {
     }
     std::cerr << std::endl;
     auto fileName = utils::preName(config.infile) + "_before_passes.ll";
-    dumpModule(irModule, fileName);
+    config.dumpModule(irModule, fileName);
   }
 
   run(new pass::CFGAnalysisHHW());
@@ -169,15 +165,20 @@ void PassManager::runPasses(std::vector<std::string> passes) {
       run(new pass::DAE());
     } else if (pass_name == "parallel") {
       run(&loopParallelPass);
+    } else if (pass_name == "cache") {
+      run(&cachePass);
     } else {
       std::cerr << "Invalid pass name: " << pass_name << std::endl;
       assert(false && "Invalid pass name");
     }
+    auto fileName = utils::preName(config.infile) + "_after_" + pass_name + ".ll";
+    config.dumpModule(irModule, fileName);
   }
+  run(new pass::CFGAnalysisHHW());
 
   if (config.logLevel >= sysy::LogLevel::DEBUG) {
     auto fileName = utils::preName(config.infile) + "_after_passes.ll";
-    dumpModule(irModule, fileName);
+    config.dumpModule(irModule, fileName);
   }
 
   irModule->rename();

@@ -11,7 +11,7 @@
 
 namespace pass {
 bool LoopParallel::isConstant(ir::Value* val) {
-  if (val->isa<ir::Constant>() or val->isa<ir::GlobalVariable>()) {
+  if (val->isa<ir::ConstantValue>() or val->isa<ir::GlobalVariable>()) {
     return true;
   }
 
@@ -96,7 +96,7 @@ void LoopParallel::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
     std::unordered_set<ir::Value*> insertedArgs;
     auto addArg = [&](Value* realArg) {
       if (realArg == indVar->phiinst()) return;
-      if (realArg->isa<ir::Constant>()) return;
+      if (realArg->isa<ir::ConstantValue>()) return;
       // if(realArg == loopBodyInfo.rec) return; ?
       if (not insertedArgs.insert(realArg).second) return;  // avoid duplicate args
       const auto align = 4;                                 // 4 or 8, what is the difference?
@@ -112,7 +112,7 @@ void LoopParallel::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
       addArg(real_arg);
     }
 
-    const auto zero = ir::Constant::gen_i32(0);
+    const auto zero = ir::ConstantInteger::gen_i32(0);
     // arrayType?
     const auto playloadStorage =
       ir::GlobalVariable::gen(i32, {zero}, func->module(), "payloadStorage");
@@ -162,7 +162,7 @@ void LoopParallel::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
 
     // nexti = add i, 12
     const auto nexti =
-      builder.makeBinary(ir::BinaryOp::ADD, parallelBodyIndVar, ir::Constant::gen_i32(1));
+      builder.makeBinary(ir::BinaryOp::ADD, parallelBodyIndVar, ir::ConstantInteger::gen_i32(1));
     parallelBodyIndVar->addIncoming(nexti, subLoop);
 
     // cond = icmp <, nexti, end
