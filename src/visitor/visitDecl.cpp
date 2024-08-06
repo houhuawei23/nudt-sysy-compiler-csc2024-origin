@@ -45,7 +45,7 @@ Value* SysYIRGenerator::visitVarDef(SysYParser::VarDefContext* ctx, Type* btype,
   for (auto dimCtx : ctx->lValue()->exp()) {
     auto dim = any_cast_Value(visit(dimCtx));
     if(auto instdim = dim->dynCast<Instruction>())
-      dim = instdim->getConstantRepl();
+      dim = instdim->getConstantRepl(true);
     assert(dim->isa<ConstantValue>() && "dimension must be a constant");
     auto cdim = dim->dynCast<ConstantValue>();
     capacity *= cdim->i32();
@@ -141,7 +141,7 @@ Value* SysYIRGenerator::visitGlobalScalar(SysYParser::VarDefContext* ctx,
     is_init = true;
     init = any_cast_Value(visit(ctx->initValue()->exp()));
     if(auto initInst = init->dynCast<Instruction>()) 
-      init = initInst->getConstantRepl();
+      init = initInst->getConstantRepl(true);
     assert(init->isa<ConstantValue>() && "global must be initialized by constant");
     init = mBuilder.castConstantType(init, btype);
   }

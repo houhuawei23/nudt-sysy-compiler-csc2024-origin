@@ -194,7 +194,7 @@ public:
 
 public:
   void print(std::ostream& os) const override;
-  Value* getConstantRepl() override;
+  Value* getConstantRepl(bool recursive = false) override;
   Instruction* copy(std::function<Value*(Value*)> getValue) const override {
     return utils::make<UnaryInst>(mValueId, mType, getValue(operand(0)));
   }
@@ -236,7 +236,7 @@ public:
 
 public:
   void print(std::ostream& os) const override;
-  Value* getConstantRepl() override;
+  Value* getConstantRepl(bool recursive = false) override;
   Instruction* copy(std::function<Value*(Value*)> getValue) const override {
     return utils::make<BinaryInst>(mValueId, mType, getValue(operand(0)), getValue(operand(1)));
   }
@@ -395,7 +395,7 @@ public:
     return v->valueId() >= vICMP_BEGIN && v->valueId() <= vICMP_END;
   }
   void print(std::ostream& os) const override;
-  Value* getConstantRepl() override;
+  Value* getConstantRepl(bool recursive = false) override;
   Instruction* copy(std::function<Value*(Value*)> getValue) const override {
     return utils::make<ICmpInst>(mValueId, getValue(operand(0)), getValue(operand(1)));
   }
@@ -427,7 +427,8 @@ public:
     return v->valueId() >= vFCMP_BEGIN && v->valueId() <= vFCMP_END;
   }
   void print(std::ostream& os) const override;
-  Value* getConstantRepl() override;
+  Value* getConstantRepl(bool recursive = false) override;
+  // Value* getConstantReplaceRecursive() override;
   Instruction* copy(std::function<Value*(Value*)> getValue) const override {
     return utils::make<FCmpInst>(mValueId, getValue(operand(0)), getValue(operand(1)));
   }
@@ -641,7 +642,7 @@ public:
   void refreshMap();
 
   void print(std::ostream& os) const override;
-  Value* getConstantRepl() override;
+  Value* getConstantRepl(bool recursive = false) override;
   Instruction* copy(std::function<Value*(Value*)> getValue) const override {
     return utils::make<PhiInst>(nullptr, mType);
   }

@@ -179,168 +179,6 @@ void BinaryInst::print(std::ostream& os) const {
   }
 }
 
-Value* BinaryInst::getConstantRepl() {
-  auto lval = lValue();
-  auto rval = rValue();
-  assert(lval->type() == rval->type());
-
-  if (auto lvalInst = lval->dynCast<Instruction>()) {
-    lval = lvalInst->getConstantRepl();
-  }
-  if (auto rvalInst = rval->dynCast<Instruction>()) {
-    rval = rvalInst->getConstantRepl();
-  }
-
-  if (not(lval->isa<ConstantValue>() and rval->isa<ConstantValue>()))
-    return nullptr;
-
-  int32_t i32val = 0;
-  float f32val = 0.0;
-
-  auto clval = lval->dynCast<ConstantValue>();
-  auto crval = rval->dynCast<ConstantValue>();
-
-  switch (mValueId) {
-    case vADD:
-      i32val = clval->i32() + crval->i32();
-      break;
-    case vSUB:
-      i32val = clval->i32() - crval->i32();
-      break;
-    case vMUL:
-      i32val = clval->i32() * crval->i32();
-      break;
-    case vSDIV:
-      i32val = clval->i32() / crval->i32();
-      break;
-    case vSREM:
-      i32val = clval->i32() % crval->i32();
-      break;
-    case vFADD:
-      f32val = clval->f32() + crval->f32();
-      break;
-    case vFSUB:
-      f32val = clval->f32() - crval->f32();
-      break;
-    case vFMUL:
-      f32val = clval->f32() * crval->f32();
-      break;
-    case vFDIV:
-      f32val = clval->f32() / crval->f32();
-      break;
-    default:
-      assert(false and "Error in BinaryInst::getConstantRepl!");
-  }
-  if (type()->isFloat32())
-    return ConstantFloating::gen_f32(f32val);
-  else
-    return ConstantInteger::gen_i32(i32val);
-
-  // if (lval->isInt32() and rval->isInt32()) {
-  //   auto clval = lval->dynCast<ConstantInteger>();
-  //   auto crval = rval->dynCast<ConstantInteger>();
-  //   switch (valueId()) {
-  //     case vADD:
-  //       if (clval && crval)
-  //         return ConstantInteger::gen_i32(clval->getVal() + crval->getVal());
-  //       if (clval && clval->getVal() == 0)
-  //         return rval;
-  //       if (crval && crval->getVal() == 0)
-  //         return lval;
-  //       break;
-  //     case vSUB:
-  //       if (clval && crval)
-  //         return ConstantInteger::gen_i32(clval->getVal() - crval->getVal());
-  //       if (crval && crval->getVal() == 0)
-  //         return lval;
-  //       if (lval == rval)
-  //         return ConstantInteger::gen_i32(0);
-  //       break;
-  //     case vMUL:
-  //       if (clval and crval)
-  //         return ConstantInteger::gen_i32(clval->getVal() * crval->getVal());
-  //       if (clval and clval->getVal() == 1)
-  //         return rval;
-  //       if (crval and crval->getVal() == 1)
-  //         return lval;
-  //       if (clval and clval->getVal() == 0)
-  //         return ConstantInteger::gen_i32(0);
-  //       if (crval and crval->getVal() == 0)
-  //         return ConstantInteger::gen_i32(0);
-  //       break;
-  //     case vSDIV:
-  //       if (clval and crval)
-  //         return ConstantInteger::gen_i32(clval->getVal() / crval->getVal());
-  //       if (crval and crval->getVal() == 1)
-  //         return lval;
-  //       if (clval and clval->getVal() == 0)
-  //         return ConstantInteger::gen_i32(0);
-  //       if (lval == rval)
-  //         return ConstantInteger::gen_i32(1);
-  //       break;
-  //     case vSREM:
-  //       if (clval and crval)
-  //         return ConstantInteger::gen_i32(clval->getVal() % crval->getVal());
-  //       if (clval and clval->getVal() == 0)
-  //         return ConstantInteger::gen_i32(0);
-  //       break;
-  //     default:
-  //       assert(false and "Error in BinaryInst::getConstantRepl!");
-  //       break;
-  //   }
-  //   return nullptr;
-  // } else if (lval->isFloat32() and rval->isFloat32()) {
-  //   auto clval = lval->dynCast<ConstantFloating>();
-  //   auto crval = rval->dynCast<ConstantFloating>();
-  //   switch (valueId()) {
-  //     case vFADD:
-  //       if (clval and crval)
-  //         return ConstantFloating::gen_f32(clval->getVal() + crval->getVal());
-  //       if (clval and clval->getVal() == 0)
-  //         return rval;
-  //       if (crval and crval->getVal() == 0)
-  //         return lval;
-  //       break;
-  //     case vFSUB:
-  //       if (clval and crval)
-  //         return ConstantFloating::gen_f32(clval->getVal() - crval->getVal());
-  //       if (crval and crval->getVal() == 0)
-  //         return lval;
-  //       if (lval == rval)
-  //         return ConstantFloating::gen_f32(0);
-  //       break;
-  //     case vFMUL:
-  //       if (clval and crval)
-  //         return ConstantFloating::gen_f32(clval->getVal() * crval->getVal());
-  //       if (clval and clval->getVal() == 1)
-  //         return rval;
-  //       if (crval and crval->getVal() == 1)
-  //         return lval;
-  //       if (clval and clval->getVal() == 0)
-  //         return ConstantFloating::gen_f32(0);
-  //       if (crval and crval->getVal() == 0)
-  //         return ConstantFloating::gen_f32(0);
-  //       break;
-  //     case vFDIV:
-  //       if (clval and crval)
-  //         return ConstantFloating::gen_f32(clval->getVal() / crval->getVal());
-  //       if (crval and crval->getVal() == 1)
-  //         return lval;
-  //       if (clval and clval->getVal() == 0)
-  //         return ConstantFloating::gen_f32(0);
-  //       if (lval == rval)
-  //         return ConstantFloating::gen_f32(1);
-  //       break;
-
-  //     default:
-  //       assert(false and "Error in BinaryInst::getConstantRepl!");
-  //       break;
-  //   }
-  //   return nullptr;
-  // }
-  // return nullptr;
-}
-
 /*
  * @brief: Unary Instruction Output
  * @note:
@@ -365,32 +203,6 @@ void UnaryInst::print(std::ostream& os) const {
   }
 }
 
-Value* UnaryInst::getConstantRepl() {
-  auto val = value();
-  if (auto valInst = val->dynCast<Instruction>())
-    val = valInst->getConstantRepl();
-
-  if (not val->isa<ConstantValue>())
-    return nullptr;
-
-  auto cval = val->dynCast<ConstantValue>();
-
-  switch (valueId()) {
-    case vSITOFP:
-      return ConstantFloating::gen_f32(cval->i32());
-    case vFPTOSI:
-      return ConstantInteger::gen_i32(cval->f32());
-    case vZEXT:
-      return ConstantInteger::gen_i32(cval->i1());
-    case vFNEG:
-      return ConstantFloating::gen_f32(-cval->f32());
-    default:
-      std::cerr << mValueId << std::endl;
-      assert(false && "Invalid scid from UnaryInst::getConstantRepl");
-  }
-
-  return nullptr;
-}
 
 bool ICmpInst::isReverse(ICmpInst* y) {
   auto x = this;
@@ -430,37 +242,6 @@ void ICmpInst::print(std::ostream& os) const {
   }
 }
 
-Value* ICmpInst::getConstantRepl() {
-  auto lval = lhs();
-  auto rval = rhs();
-  if (auto lhsInst = lval->dynCast<Instruction>())
-    lval = lhsInst->getConstantRepl();
-  if (auto rhsInst = rval->dynCast<Instruction>())
-    rval = rhsInst->getConstantRepl();
-
-  if (not(lval->isa<ConstantValue>() and rval->isa<ConstantValue>()))
-    return nullptr;
-
-  auto clval = lval->dynCast<ConstantValue>()->i32();
-  auto crval = rval->dynCast<ConstantValue>()->i32();
-  switch (valueId()) {
-    case vIEQ:
-      return ConstantInteger::gen_i1(clval == crval);
-    case vINE:
-      return ConstantInteger::gen_i1(clval != crval);
-    case vISGT:
-      return ConstantInteger::gen_i1(clval > crval);
-    case vISLT:
-      return ConstantInteger::gen_i1(clval < crval);
-    case vISGE:
-      return ConstantInteger::gen_i1(clval >= crval);
-    case vISLE:
-      return ConstantInteger::gen_i1(clval <= crval);
-    default:
-      assert(false and "icmpinst const flod error");
-  }
-  return nullptr;
-}
 
 bool FCmpInst::isReverse(FCmpInst* y) {
   auto x = this;
@@ -502,37 +283,7 @@ void FCmpInst::print(std::ostream& os) const {
   }
 }
 
-Value* FCmpInst::getConstantRepl() {
-  auto lval = lhs();
-  auto rval = rhs();
-  if (auto lhsInst = lval->dynCast<Instruction>())
-    lval = lhsInst->getConstantRepl();
-  if (auto rhsInst = rval->dynCast<Instruction>())
-    rval = rhsInst->getConstantRepl();
 
-  if (not(lval->isa<ConstantValue>() and rval->isa<ConstantValue>()))
-    return nullptr;
-
-  auto clval = lval->dynCast<ConstantValue>()->f32();
-  auto crval = rval->dynCast<ConstantValue>()->f32();
-  switch (valueId()) {
-    case vFOEQ:
-      return ConstantInteger::gen_i1(clval == crval);
-    case vFONE:
-      return ConstantInteger::gen_i1(clval != crval);
-    case vFOGT:
-      return ConstantInteger::gen_i1(clval > crval);
-    case vFOLT:
-      return ConstantInteger::gen_i1(clval < crval);
-    case vFOGE:
-      return ConstantInteger::gen_i1(clval >= crval);
-    case vFOLE:
-      return ConstantInteger::gen_i1(clval <= crval);
-    default:
-      assert(false and "icmpinst const flod error");
-  }
-  return nullptr;
-}
 void BranchInst::replaceDest(ir::BasicBlock* olddest, ir::BasicBlock* newdest) {
   if (mIsCond) {
     if (iftrue() == olddest) {
@@ -738,18 +489,6 @@ void PhiInst::replaceoldtonew(BasicBlock* oldbb, BasicBlock* newbb) {
   addIncoming(val, newbb);
 }
 
-Value* PhiInst::getConstantRepl() {
-  if (mSize == 0)
-    return nullptr;
-  auto curval = getValue(0);
-  if (mSize == 1)
-    return getValue(0);
-  for (size_t i = 1; i < mSize; i++) {
-    if (getValue(i) != curval)
-      return nullptr;
-  }
-  return curval;
-}
 
 void PhiInst::refreshMap() {
   mbbToVal.clear();

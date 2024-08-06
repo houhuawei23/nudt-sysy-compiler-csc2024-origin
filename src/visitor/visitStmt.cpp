@@ -44,7 +44,7 @@ std::any SysYIRGenerator::visitBlockStmt(SysYParser::BlockStmtContext* ctx) {
 std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
   auto value = ctx->exp() ? any_cast_Value(visit(ctx->exp())) : nullptr;
 
-  auto func = mBuilder.curBlock()->function();
+  const auto func = mBuilder.curBlock()->function();
 
   assert(func && "ret stmt block parent err!");
 
@@ -53,6 +53,9 @@ std::any SysYIRGenerator::visitReturnStmt(SysYParser::ReturnStmtContext* ctx) {
     if (ctx->exp())
       assert(false && "the returned value is not matching the function");
 
+    if (not mBuilder.curBlock()->isTerminal()) {
+      auto br = mBuilder.makeInst<BranchInst>(func->exit());
+    }
     return std::any();
   }
 

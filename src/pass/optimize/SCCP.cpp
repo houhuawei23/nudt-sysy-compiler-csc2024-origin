@@ -10,8 +10,8 @@ void SCCP::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     do {
         isChange = false;
         isCFGChange = false;
-        isChange = isChange or SCPrun(func, tp);
-        isCFGChange = isCFGChange or cleanCFG(func);
+        isChange |= SCPrun(func, tp);
+        isCFGChange |= cleanCFG(func);
         isChange = isCFGChange or isChange;
     } while (isChange);
     if (isCFGChange) {
