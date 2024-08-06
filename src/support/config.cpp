@@ -1,8 +1,12 @@
 #include "support/config.hpp"
+#include "ir/ir.hpp"
 
 #include <cstring>
 #include <getopt.h>
 #include <string_view>
+#include <fstream>
+#include <iostream>
+
 using namespace std::string_view_literals;
 
 namespace sysy {
@@ -91,6 +95,13 @@ void Config::parseTestArgs(int argc, char* argv[]) {
     }
   }
 }
+void Config::dumpModule(ir::Module* module, const std::string& filename) const {
+  auto path = debugDir() / fs::path(filename);
+  std::cerr << "Dumping module to " << path << std::endl;
+  std::ofstream out(path);
+  module->rename();
+  module->print(out);
+}
 
 // clang-format off
 static const auto perfPassesList = std::vector<std::string>{
@@ -168,7 +179,6 @@ static const auto perfPassesList_731 = std::vector<std::string>{
   "reg2mem"
 };
 
-
 // clang-format on
 
 static const auto testPassesList = std::vector<std::string>{
@@ -234,8 +244,10 @@ void Config::parseSubmitArgs(int argc, char* argv[]) {
   infile = argv[4];
 
   if (argc == 6) {
-    if (argv[5] == "-O0"sv) optLevel = OptLevel::O0;
-    if (argv[5] == "-O1"sv) optLevel = OptLevel::O1;
+    if (argv[5] == "-O0"sv)
+      optLevel = OptLevel::O0;
+    if (argv[5] == "-O1"sv)
+      optLevel = OptLevel::O1;
   }
 
   if (argc == 7) {

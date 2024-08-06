@@ -36,7 +36,6 @@ std::any SysYIRGenerator::visitDecl(SysYParser::DeclContext* ctx) {
 //   return val->getConstantRepl
 // }
 
-
 Value* SysYIRGenerator::visitVarDef(SysYParser::VarDefContext* ctx, Type* btype, bool is_const) {
   // 获得数组的各个维度 (常量)
   std::vector<size_t> dims;
@@ -44,7 +43,7 @@ Value* SysYIRGenerator::visitVarDef(SysYParser::VarDefContext* ctx, Type* btype,
   // std::cerr << "visitVarDef: " << ctx->getText() << std::endl;
   for (auto dimCtx : ctx->lValue()->exp()) {
     auto dim = any_cast_Value(visit(dimCtx));
-    if(auto instdim = dim->dynCast<Instruction>())
+    if (auto instdim = dim->dynCast<Instruction>())
       dim = instdim->getConstantRepl(true);
     assert(dim->isa<ConstantValue>() && "dimension must be a constant");
     auto cdim = dim->dynCast<ConstantValue>();
@@ -98,16 +97,20 @@ Value* SysYIRGenerator::visitGlobalArray(SysYParser::VarDefContext* ctx,
 
   //! get initial value (将数组元素的初始化值存储在Arrayinit中)
   if (ctx->ASSIGN()) {
-    _d = 0; _n = 0; _path.clear();
+    _d = 0;
+    _n = 0;
+    _path.clear();
     _path = std::vector<size_t>(dims.size(), 0);
-    _current_type = btype; _is_alloca = true;
+    _current_type = btype;
+    _is_alloca = true;
     for (auto expr : ctx->initValue()->initValue()) {
       is_init |= visitInitValue_Array(expr, capacity, dims, Arrayinit);
     }
   }
 
   //! generate global variable and assign
-  auto global_var = GlobalVariable::gen(btype, Arrayinit, mModule, name, is_const, dims, is_init, capacity);
+  auto global_var =
+    GlobalVariable::gen(btype, Arrayinit, mModule, name, is_const, dims, is_init, capacity);
   mTables.insert(name, global_var);
   mModule->addGlobalVar(name, global_var);
 
@@ -140,7 +143,7 @@ Value* SysYIRGenerator::visitGlobalScalar(SysYParser::VarDefContext* ctx,
   if (ctx->ASSIGN()) {
     is_init = true;
     init = any_cast_Value(visit(ctx->initValue()->exp()));
-    if(auto initInst = init->dynCast<Instruction>()) 
+    if (auto initInst = init->dynCast<Instruction>())
       init = initInst->getConstantRepl(true);
     assert(init->isa<ConstantValue>() && "global must be initialized by constant");
     init = mBuilder.castConstantType(init, btype);
@@ -177,20 +180,25 @@ Value* SysYIRGenerator::visitLocalArray(SysYParser::VarDefContext* ctx,
 
   //! alloca
   auto alloca_ptr = mBuilder.makeAlloca(btype, is_const, dims, name, capacity);
+  // std::cerr << "alloca_ptr: " << alloca_ptr->type()->size() << std::endl;
+  // std::cerr << "capacity: " << capacity << std::endl;
+  // std::cerr << "baseType: " << alloca_ptr->type()->dynCast<PointerType>()->baseType()->size()
+  //           << std::endl;
   mTables.insert(name, alloca_ptr);
 
   //! get initial value (将数组元素的初始化值存储在Arrayinit中)
   if (ctx->ASSIGN()) {
     for (int i = 0; i < capacity; i++)
       Arrayinit.push_back(nullptr);
-    auto tmp = mBuilder.makeInst<BitCastInst>(alloca_ptr->type(), alloca_ptr);
-    mBuilder.makeInst<MemsetInst>(tmp->type(), tmp);
 
-    // auto ptr = mBuilder.makeInst<BitCastInst>(Type::TypeInt8(), alloca_ptr);
-    // // mBuilder.makeInst<MemsetInst>(tmp->type(), tmp);
-    // const auto len = alloca_ptr->type()->as<PointerType>()->baseType()->size();
-    // // mBuilder.makeInst<MemsetInstBeta>(ptr, ConstantInteger::gen_i8(0),
-    // ConstantInteger::gen_i32(len));
+    auto ptr = mBuilder.makeInst<UnaryInst>(ir::ValueId::vBITCAST,
+                                            PointerType::gen(Type::TypeInt8()), alloca_ptr);
+                                            
+    const auto len = alloca_ptr->type()->dynCast<PointerType>()->baseType()->size();
+
+    mBuilder.makeInst<MemsetInst>(ptr, ConstantInteger::get(Type::TypeInt8(), 0),
+                                  ConstantInteger::get(Type::TypeInt64(), len),
+                                  ConstantInteger::getFalse());
 
     _d = 0;
     _n = 0;

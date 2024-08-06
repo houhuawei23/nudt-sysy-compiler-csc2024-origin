@@ -49,14 +49,12 @@ void Module::delGlobalVariable(ir::GlobalVariable* gv) {
 // readable ir print
 void Module::print(std::ostream& os) const {
   //! print all global values
-  // rename();
   for (auto gv : mGlobalVariables) {
     os << *gv << std::endl;
   }
 
   // llvm inline function
-  os << "declare void @llvm.memset.p0i8.i64(i8* nocapture writeonly, i8, "
-        "i64, i1 immarg)"
+  os << "declare void @llvm.memset.p0i8.i64(i8* nocapture writeonly, i8, i64, i1 immarg)"
      << std::endl;
 
   //! print all functions

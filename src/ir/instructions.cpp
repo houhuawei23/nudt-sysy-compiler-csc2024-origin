@@ -40,10 +40,9 @@ static const std::string getInstName(ValueId instID) {
       return "ret";
     case vBR:
       return "br";
-    case vSITOFP:
-      return "sitofp";
-    case vFPTOSI:
-      return "fptosi";
+    // unary
+    case vFNEG:
+      return "fneg";
     case vTRUNC:
       return "trunc";
     case vZEXT:
@@ -52,8 +51,13 @@ static const std::string getInstName(ValueId instID) {
       return "sext";
     case vFPTRUNC:
       return "fptrunc";
-    case vFNEG:
-      return "fneg";
+    case vFPTOSI:
+      return "fptosi";
+    case vSITOFP:
+      return "sitofp";
+    case vBITCAST:
+      return "bitcast";
+    // cmp
     case vIEQ:
       return "icmp eq";
     case vINE:
@@ -203,7 +207,6 @@ void UnaryInst::print(std::ostream& os) const {
   }
 }
 
-
 bool ICmpInst::isReverse(ICmpInst* y) {
   auto x = this;
   if ((x->valueId() == vISGE && y->valueId() == vISLE) ||
@@ -241,7 +244,6 @@ void ICmpInst::print(std::ostream& os) const {
     os << " ; " << lhs()->comment() << " " << getInstName(mValueId) << " " << rhs()->comment();
   }
 }
-
 
 bool FCmpInst::isReverse(FCmpInst* y) {
   auto x = this;
@@ -282,7 +284,6 @@ void FCmpInst::print(std::ostream& os) const {
     os << " ; " << lhs()->comment() << " " << getInstName(mValueId) << " " << rhs()->comment();
   }
 }
-
 
 void BranchInst::replaceDest(ir::BasicBlock* olddest, ir::BasicBlock* newdest) {
   if (mIsCond) {
@@ -489,7 +490,6 @@ void PhiInst::replaceoldtonew(BasicBlock* oldbb, BasicBlock* newbb) {
   addIncoming(val, newbb);
 }
 
-
 void PhiInst::refreshMap() {
   mbbToVal.clear();
   for (size_t i = 0; i < mSize; i++) {
@@ -510,40 +510,21 @@ void BitCastInst::print(std::ostream& os) const {
   os << " to i8*";
 }
 
-void BitCastInstBeta::print(std::ostream& os) const {
-  os << name() << " = bitcast ";
-  os << *(value()->type()) << " ";
-  value()->dumpAsOpernd(os);
-  os << " to " << *mType;
-  // os << " to i8*";
-}
-
 /*
  * @brief: memset
  * @details:
  *      call void @llvm.memset.p0i8.i64(i8* <dest>, i8 0, i64 <len>, i1 false)
  */
 void MemsetInst::print(std::ostream& os) const {
-  // assert(dyn_cast<PointerType>(type()) && "type error");
-  os << "call void @llvm.memset.p0i8.i64(i8* ";
-  value()->dumpAsOpernd(os);
-  os << ", i8 0, i64 " << dyn_cast<PointerType>(type())->baseType()->size() << ", i1 false)";
-
-  // os << "call void @llvm.memset.p0i8.i64(" <<
-}
-
-void MemsetInstBeta::print(std::ostream& os) const {
   os << "call void @llvm.memset.p0i8.i64(";
-  os << *(operand(0)->type()) << " ";
-  operand(0)->dumpAsOpernd(os);
-  os << ", ";
-
-  os << *(operand(1)->type()) << " ";
-  operand(0)->dumpAsOpernd(os);
-  os << ", ";
-
-  os << *(operand(2)->type()) << " ";
-  operand(0)->dumpAsOpernd(os);
+  os << *(dst()->type()) << " ";
+  dst()->dumpAsOpernd(os);
+  os << ", " << *(val()->type()) << " ";
+  val()->dumpAsOpernd(os);
+  os << ", " << *(len()->type()) << " ";
+  len()->dumpAsOpernd(os);
+  os << ", " << *(isVolatile()->type()) << " ";
+  isVolatile()->dumpAsOpernd(os);
   os << ")";
 }
 /**

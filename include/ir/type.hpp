@@ -17,6 +17,7 @@ enum class BasicTypeRank : size_t {
   INT1,
   INT8,
   INT32,
+  INT64,
   FLOAT,   // represent f32 in C
   DOUBLE,  // represent f64
   LABEL,   // BasicBlock
@@ -43,6 +44,7 @@ public:  // static method for construct Type instance
   static Type* TypeBool();
   static Type* TypeInt8();  // for pointer type
   static Type* TypeInt32();
+  static Type* TypeInt64();
   static Type* TypeFloat32();
   static Type* TypeDouble();
 
@@ -53,23 +55,26 @@ public:  // static method for construct Type instance
   static Type* TypeFunction(Type* ret_type, const type_ptr_vector& param_types);
 
 public:  // check
-  bool is(Type* type);
-  bool isnot(Type* type);
-  bool isVoid();
+  bool is(Type* type) const;
+  bool isnot(Type* type) const;
+  bool isVoid() const;
 
-  bool isBool();
-  bool isInt32();
-  bool isInt() { return isBool() || isInt32(); }
+  bool isBool() const;
+  bool isInt32() const;
+  bool isInt64() const;
+  bool isInt() const { return BasicTypeRank::INT1 <= mBtype and mBtype <= BasicTypeRank::INT64; }
 
-  bool isFloat32();
-  bool isDouble();
-  bool isFloatPoint() { return isFloat32() || isDouble(); }
-  bool isUndef();
+  bool isFloat32() const;
+  bool isDouble() const;
+  bool isFloatPoint() const {
+    return BasicTypeRank::FLOAT <= mBtype and mBtype <= BasicTypeRank::DOUBLE;
+  }
+  bool isUndef() const;
 
-  bool isLabel();
-  bool isPointer();
-  bool isArray();
-  bool isFunction();
+  bool isLabel() const;
+  bool isPointer() const;
+  bool isArray() const;
+  bool isFunction() const;
 
 public:  // get
   auto btype() const { return mBtype; }
@@ -102,6 +107,7 @@ public:
   // fix: pointer size is 8 bytes
   PointerType(Type* baseType) : Type(BasicTypeRank::POINTER, 8), mBaseType(baseType) {}
   static PointerType* gen(Type* baseType);
+
 public:  // get function
   auto baseType() const { return mBaseType; }
   void print(std::ostream& os) const override;

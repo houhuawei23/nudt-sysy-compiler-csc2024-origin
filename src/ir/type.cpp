@@ -29,6 +29,10 @@ Type* Type::TypeInt32() {
   static Type intType(BasicTypeRank::INT32);
   return &intType;
 }
+Type* Type::TypeInt64() {
+  static Type intType(BasicTypeRank::INT64);
+  return &intType;
+}
 Type* Type::TypeFloat32() {
   static Type floatType(BasicTypeRank::FLOAT);
   return &floatType;
@@ -56,45 +60,48 @@ Type* Type::TypeFunction(Type* ret_type, const type_ptr_vector& arg_types) {
 }
 
 //! type check
-bool Type::is(Type* type) {
+bool Type::is(Type* type) const {
   return this == type;
 }
-bool Type::isnot(Type* type) {
+bool Type::isnot(Type* type) const {
   return this != type;
 }
 
-bool Type::isVoid() {
+bool Type::isVoid() const {
   return mBtype == BasicTypeRank::VOID;
 }
 
-bool Type::isBool() {
+bool Type::isBool() const {
   return mBtype == BasicTypeRank::INT1;
 }
-bool Type::isInt32() {
+bool Type::isInt32() const {
   return mBtype == BasicTypeRank::INT32;
 }
+bool Type::isInt64() const {
+  return mBtype == BasicTypeRank::INT64;
+}
 
-bool Type::isFloat32() {
+bool Type::isFloat32() const {
   return mBtype == BasicTypeRank::FLOAT;
 }
-bool Type::isDouble() {
+bool Type::isDouble() const {
   return mBtype == BasicTypeRank::DOUBLE;
 }
 
-bool Type::isUndef() {
+bool Type::isUndef() const {
   return mBtype == BasicTypeRank::UNDEFINE;
 }
 
-bool Type::isLabel() {
+bool Type::isLabel() const {
   return mBtype == BasicTypeRank::LABEL;
 }
-bool Type::isPointer() {
+bool Type::isPointer() const {
   return mBtype == BasicTypeRank::POINTER;
 }
-bool Type::isFunction() {
+bool Type::isFunction() const {
   return mBtype == BasicTypeRank::FUNCTION;
 }
-bool Type::isArray() {
+bool Type::isArray() const {
   return mBtype == BasicTypeRank::ARRAY;
 }
 
@@ -106,6 +113,8 @@ static std::string_view getTypeName(BasicTypeRank btype) {
       return "i8"sv;
     case BasicTypeRank::INT32:
       return "i32"sv;
+    case BasicTypeRank::INT64:
+      return "i64"sv;
     case BasicTypeRank::FLOAT:
       return "float"sv;
     case BasicTypeRank::DOUBLE:

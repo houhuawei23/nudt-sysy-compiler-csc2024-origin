@@ -571,6 +571,7 @@ void createMIRInst(ir::Instruction* ir_inst, LoweringContext& ctx) {
     case ir::ValueId::vFPTRUNC:
     case ir::ValueId::vFPTOSI:
     case ir::ValueId::vSITOFP:
+    case ir::ValueId::vBITCAST:
       lower(dyn_cast<ir::UnaryInst>(ir_inst), ctx);
       break;
     case ir::ValueId::vADD:
@@ -627,9 +628,9 @@ void createMIRInst(ir::Instruction* ir_inst, LoweringContext& ctx) {
     case ir::ValueId::vMEMSET:
       lower(dyn_cast<ir::MemsetInst>(ir_inst), ctx);
       break;
-    case ir::ValueId::vBITCAST:
-      lower(dyn_cast<ir::BitCastInst>(ir_inst), ctx);
-      break;
+    // case ir::ValueId::vBITCAST:
+    //   lower(dyn_cast<ir::BitCastInst>(ir_inst), ctx);
+    //   break;
     case ir::ValueId::vPHI:
       // std::cerr << "dont lowering phi" << std::endl;
       break;
@@ -656,6 +657,8 @@ void lower(ir::UnaryInst* ir_inst, LoweringContext& ctx) {
         return InstF2S;
       case ir::ValueId::vSITOFP:
         return InstS2F;
+      case ir::ValueId::vBITCAST:
+        return InstCopy;
       default:
         assert(false && "not supported unary inst");
     }
@@ -1002,26 +1005,31 @@ void lower(ir::BitCastInst* ir_inst, LoweringContext& ctx) {
   ctx.addValueMap(ir_inst, ctx.map2operand(base));
 }
 
-/* MemsetInst */
+/** MemsetInst IR:
+ * memset(i8* <dest>, i8 <val>, i64 <len>, i1 <isvolatile>)
+ * NOTE: only support val = 0 and len is constant
+ * -> MIR:
+ * memset(dst, len)
+ */
 void lower(ir::MemsetInst* ir_inst, LoweringContext& ctx) {
-  const auto ir_pointer = ir_inst->value();
-  const auto size = dyn_cast<ir::PointerType>(ir_pointer->type())->baseType()->size();
+  assert(ir_inst->val()->isa<ir::ConstantInteger>() and ir_inst->len()->isa<ir::ConstantInteger>());
+  const auto val = ir_inst->val()->dynCast<ir::ConstantInteger>()->getVal();
+  assert(val == 0);
 
   /* 通过寄存器传递参数 */
   // 1. 指针
   {
-    auto val = ctx.map2operand(ir_pointer);
+    auto val = ctx.map2operand(ir_inst->dst());
     auto dst = MIROperand::asISAReg(RISCV::X10, OperandType::Int64);
-    // assert(dst);
     ctx.emitCopy(dst, val);
   }
 
   // 2. 长度
   {
-    auto val = ctx.map2operand(ir::ConstantInteger::gen_i32(size));
+    auto len = ctx.map2operand(ir_inst->len());
     auto dst = MIROperand::asISAReg(RISCV::X11, OperandType::Int64);
     // assert(dst);
-    ctx.emitCopy(dst, val);
+    ctx.emitCopy(dst, len);
   }
 
   /* 生成跳转至被调用函数的指令 */

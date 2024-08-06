@@ -75,9 +75,7 @@ public:  // check function
 public:
   static bool classof(const Value* v) { return v->valueId() == vALLOCA; }
   void print(std::ostream& os) const override;
-  void dumpAsOpernd(std::ostream& os) const override {
-    os << mName;
-  }
+  void dumpAsOpernd(std::ostream& os) const override { os << mName; }
   Instruction* copy(std::function<Value*(Value*)> getValue) const override {
     if (isScalar()) {
       auto inst = utils::make<AllocaInst>(baseType());
@@ -172,6 +170,10 @@ public:
  *      <result> = fptosi <ty> <value> to <ty2>
  *
  *      <result> = fneg [fast-math flags]* <ty> <op1>
+ *
+ * contains some conversion instructions:
+ * trunc, zext, sext, fptrunc, fptosi, sitofp
+ * bitcast
  */
 class UnaryInst : public Instruction {
 public:
@@ -460,60 +462,35 @@ public:
  * @details:
  *      call void @llvm.memset.inline.p0.p0.i64(i8* <dest>, i8 0, i64 <len>, i1
  * <isvolatile>)
+ * 
+ * memset(i8* <dest>, i8 <val>, i64 <len>, i1 <isvolatile>)
  */
 class MemsetInst : public Instruction {
 public:
-  MemsetInst(Type* type, Value* dst, BasicBlock* parent = nullptr)
-    : Instruction(vMEMSET, type, parent) {
+  MemsetInst(Value* dst, Value* val, Value* len, Value* isVolatile, BasicBlock* parent = nullptr)
+    : Instruction(vMEMSET, Type::void_type(), parent) {
     addOperand(dst);
+    addOperand(val);
+    addOperand(len);
+    addOperand(isVolatile);
   }
 
 public:  // get function
-  auto value() const { return operand(0); }
+  auto dst() const { return operand(0); }
+  auto val() const { return operand(1); }
+  auto len() const { return operand(2); }
+  auto isVolatile() const { return operand(3); }
 
 public:  // utils function
   static bool classof(const Value* v) { return v->valueId() == vMEMSET; }
   void print(std::ostream& os) const override;
   Instruction* copy(std::function<Value*(Value*)> getValue) const override {
-    return utils::make<MemsetInst>(mType, getValue(operand(0)));
+    // return utils::make<MemsetInst>(mType, getValue(operand(0)), mSize);
+    return nullptr;
   }
 };
 
-class BitCastInstBeta : public Instruction {
-public:
-  BitCastInstBeta(Type* dsttype, Value* value, BasicBlock* parent = nullptr)
-    : Instruction(vBITCAST, dsttype, parent) {
-    addOperand(value);
-  }
 
-public:
-  auto value() const { return operand(0); }
-
-  static bool classof(const Value* v) { return v->valueId() == vBITCAST; }
-  void print(std::ostream& os) const override;
-  Instruction* copy(std::function<Value*(Value*)> getValue) const override {
-    return utils::make<BitCastInst>(mType, getValue(operand(0)));
-  }
-};
-
-/* memset(ptr dst, i8 val, i32 len)*/
-class MemsetInstBeta : public Instruction {
-public:
-  MemsetInstBeta(Value* dst, Value* val, Value* len, BasicBlock* parent = nullptr)
-    : Instruction(vMEMSET, Type::void_type(), parent) {
-    addOperand(dst);
-    addOperand(val);
-    addOperand(len);
-  }
-
-public:
-  static bool classof(const Value* v) { return v->valueId() == vMEMSETBeta; }
-  void print(std::ostream& os) const override;
-  Instruction* copy(std::function<Value*(Value*)> getValue) const override {
-    return utils::make<MemsetInstBeta>(getValue(operand(0)), getValue(operand(1)),
-                                       getValue(operand(2)));
-  }
-};
 
 /*
  * @brief GetElementPtr Instruction
@@ -700,11 +677,13 @@ public:
     mendIsConst = mendVar->isa<ConstantInteger>();
   }
   int getBeginI32() {
-    if (not mbeginVar->isInt32()) assert("BeginVar is not i32!");
+    if (not mbeginVar->isInt32())
+      assert("BeginVar is not i32!");
     return mbeginVar->i32();
   }
   int getStepI32() {
-    if (not mstepVar->isInt32()) assert("StepVar is not i32!");
+    if (not mstepVar->isInt32())
+      assert("StepVar is not i32!");
     return mstepVar->i32();
   }
   bool isEndVarConst() { return mendIsConst; }

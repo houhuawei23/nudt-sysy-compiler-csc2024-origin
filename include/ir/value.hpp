@@ -128,9 +128,7 @@ enum ValueId {
   vBASIC_BLOCK,
   vGLOBAL_VAR,
 
-  vBITCAST,
   vMEMSET,
-  vMEMSETBeta,
   vINSTRUCTION,
   // vMEM_BEGIN,
   vALLOCA,
@@ -173,6 +171,7 @@ enum ValueId {
   vFPTRUNC,
   vFPTOSI,
   vSITOFP,
+  vBITCAST,
   vUNARY_END,
   // Binary Instruction
   vBINARY_BEGIN,

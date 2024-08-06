@@ -51,7 +51,7 @@ BasicBlock* splitBlock(BasicBlockList& blocks,
                        InstructionList::iterator after) {
   auto preBlock = *blockIter;
   auto postBlock = utils::make<BasicBlock>("", preBlock->function());
-
+  // auto postBlock = preBlock->function()->newBlock();
   const auto beg = std::next(after);
   const auto end = preBlock->insts().end();
 

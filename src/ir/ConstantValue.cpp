@@ -44,6 +44,7 @@ bool ConstantValue::isZero() {
   } else if (auto cfloat = dynCast<ConstantFloating>()) {
     return cfloat->isZero();
   }
+  return false;
 }
 bool ConstantValue::isOne() {
   if (auto cint = dynCast<ConstantInteger>()) {
@@ -51,6 +52,7 @@ bool ConstantValue::isOne() {
   } else if (auto cfloat = dynCast<ConstantFloating>()) {
     return cfloat->isOne();
   }
+  return false;
 }
 size_t ConstantInteger::hash() const {
   return std::hash<intmax_t>{}(mVal);
@@ -66,12 +68,6 @@ ConstantInteger* ConstantInteger::gen_i1(bool val) {
 ConstantInteger* ConstantInteger::get(Type* type, intmax_t val) {
   if (type->isBool()) {
     return (val & 1) ? getTrue() : getFalse();
-  }
-
-  if (val == 0) {
-    assert(type->isInt32());
-    static auto i32Zero = utils::make<ConstantInteger>(Type::TypeInt32(), 0);
-    return i32Zero;
   }
   return utils::make<ConstantInteger>(type, val);
 }
