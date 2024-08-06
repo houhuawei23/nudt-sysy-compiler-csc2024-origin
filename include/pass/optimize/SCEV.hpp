@@ -28,7 +28,7 @@ class SCEV : public FunctionPass{
         indVarInfo* idvctx;
         sideEffectInfo* sectx;
         domTree* domctx;
-        void runOnLoop(ir::Loop* lp);
+        void runOnLoop(ir::Loop* lp,TopAnalysisInfoManager* tp);
         bool isSimplyLoopInvariant(ir::Loop* lp,ir::Value* val);
         bool isSimplyNotInLoop(ir::Loop* lp,ir::Value* val);
         bool isUsedOutsideLoop(ir::Loop* lp,ir::Value* val);

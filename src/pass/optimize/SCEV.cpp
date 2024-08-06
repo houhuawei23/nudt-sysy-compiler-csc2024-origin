@@ -7,6 +7,7 @@
 对于二阶和indvar*LInv的情况放着先太抽象了
 */
 #include "pass/optimize/SCEV.hpp"
+#include "pass/optimize/SCCP.hpp"
 using namespace pass;
 
 static std::vector<SCEVValue*>SCEVValues;
@@ -24,21 +25,23 @@ void SCEV::run(ir::Function* func,TopAnalysisInfoManager* tp){
     
     for(auto lp:lpctx->loops()){
         if(lp->parent()!=nullptr)continue;//只处理顶层循环，底层循环通过顶层循环向下分析
-        runOnLoop(lp);
+        runOnLoop(lp,tp);
     }
 }
 
-void SCEV::runOnLoop(ir::Loop* lp){
+void SCEV::runOnLoop(ir::Loop* lp,TopAnalysisInfoManager* tp){
     if(lp==nullptr)return;
     if(lp->exits().size()>1)return;//不处理多出口
     auto defaultIdv=idvctx->getIndvar(lp);
     // if(defaultIdv==nullptr)return;//必须有基础indvar
     if(not lp->isLoopSimplifyForm())return;
     for(auto subLp:lp->subLoops()){
-        runOnLoop(subLp);
+        runOnLoop(subLp,tp);
     }
     if(defaultIdv==nullptr)return;//要进行分析，必须具有基础indvar形式
     normalizeIcmpAndBr(lp,defaultIdv);//标准化br和Icmp
+    SCCP sccp=SCCP();
+    sccp.run(lp->header()->function(),tp);
     auto lpHeader=lp->header();
     SCEVValues.clear();
     for(auto pinst:lpHeader->phi_insts()){
@@ -133,7 +136,7 @@ void SCEV::SCEVReduceInstr(ir::Loop* lp,SCEVValue* scevVal,ir::Value* itercnt,ir
 
 
 void SCEV::visitPhi(ir::Loop* lp,ir::PhiInst* phiinst){
-    if(phiinst->isFloat32())return;
+    // if(phiinst->isFloat32())return;
     std::stack<ir::Instruction*>instStk;
     for(auto puse:phiinst->uses()){
         auto user=puse->user();
