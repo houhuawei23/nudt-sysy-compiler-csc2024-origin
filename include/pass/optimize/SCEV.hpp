@@ -30,6 +30,7 @@ class SCEV : public FunctionPass{
         domTree* domctx;
         void runOnLoop(ir::Loop* lp);
         bool isSimplyLoopInvariant(ir::Loop* lp,ir::Value* val);
+        bool isSimplyNotInLoop(ir::Loop* lp,ir::Value* val);
         bool isUsedOutsideLoop(ir::Loop* lp,ir::Value* val);
         int getConstantEndvarIndVarIterCnt(ir::Loop* lp,ir::indVar* idv);
         ir::Value* addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv,ir::IRBuilder& builder);

@@ -10,6 +10,8 @@ public:
 private:
   loopInfo* lpctx;
   indVarInfo* ivctx;
+  domTree* domctx;
+  sideEffectInfo* sectx;
   void addIndVar(ir::Loop* lp,
                  ir::ConstantInteger* mbegin,
                  ir::ConstantInteger* mstep,
@@ -20,6 +22,8 @@ private:
   ir::ConstantInteger* getConstantBeginVarFromPhi(ir::PhiInst* phiinst,
                                                   ir::PhiInst* oldPhiinst,
                                                   ir::Loop* lp);
+  bool isSimplyNotInLoop(ir::Loop* lp,ir::Value* val);
+  bool isSimplyLoopInvariant(ir::Loop* lp,ir::Value* val);
 };
 
 class indVarInfoCheck : public FunctionPass {

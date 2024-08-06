@@ -203,22 +203,22 @@ void createMIRModule(ir::Module& ir_module,
 
   //! 2. for all global variables, create MIRGlobalObject
   for (auto ir_gvar : ir_module.globalVars()) {
-    constexpr bool DebugGlobal = false;
     const auto name = ir_gvar->name().substr(1); /* remove '@' */
     /* 基础类型 (int OR float) */
     auto type = ir_gvar->type()->dynCast<ir::PointerType>()->baseType();
+    const size_t size = type->size();
     if (type->isArray())
       type = dyn_cast<ir::ArrayType>(type)->baseType();
-    const size_t size = type->size();
+
     const bool read_only = ir_gvar->isConst();
     const bool is_float = type->isFloat32();
     const size_t align = 4;
 
-    if (ir_gvar->isInit()) { /* .data: 已初始化的、可修改的全局数据 (Array and
-                                Scalar) */
+    if (ir_gvar->isInit()) {
+      /* .data: 已初始化的、可修改的全局数据 (Array and Scalar) */
       /* NOTE: 全局变量初始化一定为常值表达式 */
-      if (DebugGlobal)
-        std::cerr << "init size is " << ir_gvar->init_cnt() << "\n";
+      // if (DebugGlobal)
+      //   std::cerr << "init size is " << ir_gvar->init_cnt() << "\n";
       MIRDataStorage::Storage data;
       for (int i = 0; i < ir_gvar->init_cnt(); i++) {
         const auto constValue = dyn_cast<ir::ConstantValue>(ir_gvar->init(i));
@@ -239,7 +239,8 @@ void createMIRModule(ir::Module& ir_module,
         std::make_unique<MIRDataStorage>(std::move(data), read_only, name, is_float);
       auto mir_gobj = std::make_unique<MIRGlobalObject>(align, std::move(mir_storage), &mir_module);
       mir_module.global_objs().push_back(std::move(mir_gobj));
-    } else { /* .bss: 未初始化的全局数据 (Just Scalar) */
+    } else {
+      /* .bss: 未初始化的全局数据 (Just Scalar) */
       auto mir_storage = std::make_unique<MIRZeroStorage>(size, name, is_float);
       auto mir_gobj = std::make_unique<MIRGlobalObject>(align, std::move(mir_storage), &mir_module);
       mir_module.global_objs().push_back(std::move(mir_gobj));
@@ -433,7 +434,10 @@ void createMIRFunction(ir::Function* ir_func,
   auto irBlocks = domCtx->BFSDomTreeVector();
   // domCtx->DFSDomTreeInfoRefresh();
   // auto irBlocks = domCtx->DFSDomTreeVector();
-
+  std::cerr << ir_func->name() << " blocks: " << irBlocks.size() << std::endl;
+  // for(auto block : irBlocks) {
+  //   std::cerr << "block: " << block->name() << std::endl;
+  // }
   //! 1. map from ir to mir
   auto& block_map = lowering_ctx.blockMap;
   auto& target = codegen_ctx.target;
@@ -771,7 +775,8 @@ void lower(ir::BinaryInst* ir_inst, LoweringContext& ctx) {
   auto lhs = ir_inst->lValue();
   auto rhs = ir_inst->rValue();
 
-  if (ir_inst->isCommutative() and lhs->isa<ir::ConstantValue>() and !rhs->isa<ir::ConstantValue>()) {
+  if (ir_inst->isCommutative() and lhs->isa<ir::ConstantValue>() and
+      !rhs->isa<ir::ConstantValue>()) {
     std::swap(lhs, rhs);
   }
   // and (code == InstAdd || code == InstSub || code == InstFAdd || code == InstFSub )

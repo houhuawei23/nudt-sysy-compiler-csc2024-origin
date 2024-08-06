@@ -55,7 +55,7 @@ public:
   //! visitDecl
   std::any visitDecl(SysYParser::DeclContext* ctx) override;
 
-  void visitInitValue_Array(SysYParser::InitValueContext* ctx,
+  bool visitInitValue_Array(SysYParser::InitValueContext* ctx,
                             const int capacity,
                             const std::vector<size_t> dims,
                             std::vector<ir::Value*>& init);

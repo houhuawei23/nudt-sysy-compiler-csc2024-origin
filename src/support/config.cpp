@@ -107,7 +107,8 @@ static const auto perfPassesList = std::vector<std::string>{
 
   "instcombine",  //
   "adce",     // passed all functional
-
+  "loopsimplify",
+  "scev",
   "inline",   
   "tco",      // tail call optimization
   "inline",   
@@ -134,7 +135,7 @@ static const auto perfPassesList = std::vector<std::string>{
   "loopsimplify",
   "unroll",
   "simplifycfg",    
-  // "scev",
+  "scev",
   // "cfgprint",
   "reg2mem",
   // "test",

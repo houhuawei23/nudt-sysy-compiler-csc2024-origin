@@ -221,11 +221,11 @@ ir::Value* GVN::checkHashtable(ir::Value* v) {
         return vnum->second;
     }
 
-    // if (auto constant = dynamic_cast<ir::Constant *>(v))
+    // if (auto constant = dynamic_cast<ir::ConstantValue *>(v))
     // {
     //     for (auto [Key, Value] : _Hashtable)
     //     {
-    //         if (auto constkey = dynamic_cast<ir::Constant *>(Key))
+    //         if (auto constkey = dynamic_cast<ir::ConstantValue *>(Key))
     //         {
     //             if (constkey->isInt32() && (constkey->i32() == constant->i32()))
     //             {
@@ -289,7 +289,7 @@ void GVN::visitinst(ir::Instruction* inst) {
 
     auto value = checkHashtable(inst);
     if (inst != value) {
-        // if (auto constvalue = dyn_cast<ir::Constant>(value))
+        // if (auto constvalue = dyn_cast<ir::ConstantValue>(value))
         // {
         //     inst->replaceAllUseWith(value);
         //     NeedRemove.insert(inst);

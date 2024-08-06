@@ -21,6 +21,7 @@ class loopUnroll : public FunctionPass {
     void copyloopremainder(std::vector<ir::BasicBlock*> bbs, ir::BasicBlock* begin, ir::Loop* L, ir::Function* func);
     int calunrolltime(ir::Loop* loop, int times);
     void doconstunroll(ir::Loop* loop, ir::indVar* iv, int times);
+    void dodynamicunroll(ir::Loop* loop, ir::indVar* iv);
     void dynamicunroll(ir::Loop* loop, ir::indVar* iv);
     void constunroll(ir::Loop* loop, ir::indVar* iv);
     bool isconstant(ir::indVar* iv);

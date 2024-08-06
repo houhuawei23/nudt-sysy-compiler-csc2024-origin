@@ -18,7 +18,6 @@ class Use;
 class User;
 class Value;
 
-class Constant;
 class ConstantValue;
 class Instruction;
 class BasicBlock;

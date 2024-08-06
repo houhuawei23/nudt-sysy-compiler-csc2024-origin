@@ -86,7 +86,7 @@ void PassManager::run(BasicBlockPass* bp) {
 static LoopParallel loopParallelPass;
 
 void PassManager::runPasses(std::vector<std::string> passes) {
-  if(passes.size() == 0) return;
+  // if(passes.size() == 0) return;
 
   const auto& config = sysy::Config::getInstance();
 
@@ -176,6 +176,7 @@ void PassManager::runPasses(std::vector<std::string> passes) {
       assert(false && "Invalid pass name");
     }
   }
+  run(new pass::CFGAnalysisHHW());
 
   if (config.logLevel >= sysy::LogLevel::DEBUG) {
     auto fileName = utils::preName(config.infile) + "_after_passes.ll";

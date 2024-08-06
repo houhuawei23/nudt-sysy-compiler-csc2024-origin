@@ -11,16 +11,14 @@ namespace ir {
  * @note:
  *      1. Array (全局矢量)
  *      2. Scalar (全局标量)
- * @var:
- *      1. _parent: 当前
- *
- * GlobalVariable must be PointerType
+ *      NOTE: GlobalVariable must be PointerType
  */
 class GlobalVariable : public User {
 protected:
   Module* mModule = nullptr;
   bool mIsArray = false;
   bool mIsConst = false;
+  bool mIsInit = true;
   std::vector<Value*> mInitValues;
 
 public:
@@ -34,15 +32,18 @@ public:
 
   //! 1. Array
   GlobalVariable(Type* base_type,
-                 const std::vector<Value*> init,
-                 const std::vector<size_t> dims,
+                 const std::vector<Value*>& init,
+                 const std::vector<size_t>& dims,
                  Module* parent = nullptr,
                  const_str_ref name = "",
-                 bool is_const = false)
-    : User(Type::TypePointer(Type::TypeArray(base_type, dims)), vGLOBAL_VAR, name),
+                 bool is_const = false,
+                 bool is_init = false,
+                 size_t capacity = 1)
+    : User(Type::TypePointer(Type::TypeArray(base_type, dims, capacity)), vGLOBAL_VAR, name),
       mModule(parent),
       mInitValues(init),
-      mIsConst(is_const) {
+      mIsConst(is_const),
+      mIsInit(is_init) {
     mIsArray = true;
   }
 
@@ -51,11 +52,13 @@ public:
                  const std::vector<Value*> init,
                  Module* parent = nullptr,
                  const_str_ref name = "",
-                 bool is_const = false)
+                 bool is_const = false,
+                 bool is_init = false)
     : User(ir::Type::TypePointer(base_type), vGLOBAL_VAR, name),
       mModule(parent),
       mInitValues(init),
-      mIsConst(is_const) {
+      mIsConst(is_const),
+      mIsInit(is_init) {
     mIsArray = false;
   }
 
@@ -65,12 +68,15 @@ public:  // generate function
                              Module* parent = nullptr,
                              const_str_ref name = "",
                              bool is_const = false,
-                             const std::vector<size_t> dims = {}) {
+                             const std::vector<size_t> dims = {},
+                             bool is_init = false,
+                             size_t capacity = 1) {
     GlobalVariable* var = nullptr;
-    if (dims.size() == 0) {
-      var = utils::make<GlobalVariable>(base_type, init, parent, name, is_const);
-    } else {
-      var = utils::make<GlobalVariable>(base_type, init, dims, parent, name, is_const);
+    if (dims.size() == 0) {  // 标量
+      var = utils::make<GlobalVariable>(base_type, init, parent, name, is_const, is_init);
+    } else {  // 矢量
+      var = utils::make<GlobalVariable>(base_type, init, dims, parent, name, is_const, is_init,
+                                        capacity);
     }
     return var;
   }
@@ -78,15 +84,16 @@ public:  // generate function
 public:  // check function
   bool isArray() const { return mIsArray; }
   bool isConst() const { return mIsConst; }
-  bool isInit() const { return mInitValues.size() > 0; }
+  bool isInit() const { return mIsInit; }
 
 public:  // get function
   auto parent() const { return mModule; }
   auto dims_cnt() const {
-    if (isArray())
+    if (isArray()) {
       return dyn_cast<ArrayType>(baseType())->dims_cnt();
-    else
+    } else {
       return static_cast<size_t>(0);
+    }
   }
   auto init_cnt() const { return mInitValues.size(); }
   auto init(size_t index) const { return mInitValues[index]; }

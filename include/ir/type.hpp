@@ -102,7 +102,7 @@ public:
   // fix: pointer size is 8 bytes
   PointerType(Type* baseType) : Type(BasicTypeRank::POINTER, 8), mBaseType(baseType) {}
   static PointerType* gen(Type* baseType);
-
+public:  // get function
   auto baseType() const { return mBaseType; }
   void print(std::ostream& os) const override;
 };
@@ -136,10 +136,10 @@ public:
   FunctionType(Type* ret_type, const type_ptr_vector& arg_types = {})
     : Type(BasicTypeRank::FUNCTION, 8), mRetType(ret_type), mArgTypes(arg_types) {}
 
+public:  // generate function
   static FunctionType* gen(Type* ret_type, const type_ptr_vector& arg_types);
 
   auto retType() const { return mRetType; }
-
   auto& argTypes() const { return mArgTypes; }
   void print(std::ostream& os) const override;
 };

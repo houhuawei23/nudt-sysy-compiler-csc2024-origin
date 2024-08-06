@@ -1,11 +1,9 @@
 #pragma once
-
 #include <any>
 #include <iostream>
 #include <typeinfo>
 
 namespace utils {
-
 //! be careful, how to be safe?
 template <typename To, typename From>
 [[nodiscard]] inline decltype(auto) safe_dyn_cast(From *Val) {
@@ -28,6 +26,4 @@ T* safe_any_cast(std::any any_value) {
 
 #define any_cast_Type utils::safe_any_cast<ir::Type>
 #define any_cast_Value utils::safe_any_cast<ir::Value>
-
-
 }  // namespace utils
