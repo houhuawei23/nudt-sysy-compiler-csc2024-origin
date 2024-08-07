@@ -589,7 +589,7 @@ MIROperand RISCVISelInfo::materializeFPConstant(float fpVal, LoweringContext& lo
     // fmv.w.x
     const auto dst = loweringCtx.newVReg(OperandType::Float32);
 
-    loweringCtx.emitInstBeta(FMV_W_X, {dst, MIROperand::asISAReg(RISCV::X0, OperandType::Int32)});
+    loweringCtx.emitMIRInst(FMV_W_X, {dst, MIROperand::asISAReg(RISCV::X0, OperandType::Int32)});
     return dst;
   }
   if ((rep & 0xfff) == 0) {
@@ -598,9 +598,9 @@ MIROperand RISCVISelInfo::materializeFPConstant(float fpVal, LoweringContext& lo
     const auto gpr = loweringCtx.newVReg(OperandType::Int32);
     const auto fpr = loweringCtx.newVReg(OperandType::Float32);
 
-    loweringCtx.emitInstBeta(LUI, {gpr, MIROperand::asImm(high, OperandType::Int32)});
+    loweringCtx.emitMIRInst(LUI, {gpr, MIROperand::asImm(high, OperandType::Int32)});
 
-    loweringCtx.emitInstBeta(FMV_W_X, {fpr, gpr});
+    loweringCtx.emitMIRInst(FMV_W_X, {fpr, gpr});
     return fpr;
   }
   return MIROperand();

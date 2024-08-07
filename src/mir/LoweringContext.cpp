@@ -69,15 +69,15 @@ MIROperand FloatPointConstantPool::getFloatConstant(class LoweringContext& ctx, 
   const auto ptrType = ctx.getPointerType();
   const auto base = ctx.newVReg(ptrType);
   /* LoadGlobalAddress base, reloc */
-  ctx.emitInstBeta(InstLoadGlobalAddress, {base, MIROperand::asReloc(mFloatDataStorage)});
+  ctx.emitMIRInst(InstLoadGlobalAddress, {base, MIROperand::asReloc(mFloatDataStorage)});
 
   // Add addr, base, offset
   const auto addr = ctx.newVReg(ptrType);
-  ctx.emitInstBeta(InstAdd, {addr, base, MIROperand::asImm(offset, ptrType)});
+  ctx.emitMIRInst(InstAdd, {addr, base, MIROperand::asImm(offset, ptrType)});
 
   // Load dst, addr, 4
   const auto dst = ctx.newVReg(OperandType::Float32);
-  ctx.emitInstBeta(InstLoad, {dst, addr, MIROperand::asImm(4, OperandType::Special)});
+  ctx.emitMIRInst(InstLoad, {dst, addr, MIROperand::asImm(4, OperandType::Special)});
   return dst;
 }
 
@@ -107,7 +107,7 @@ MIROperand LoweringContext::map2operand(ir::Value* ir_val) {
   if (auto gvar = ir_val->dynCast<ir::GlobalVariable>()) {
     auto ptr = newVReg(pointerType);
     /* LoadGlobalAddress ptr, reloc */
-    emitInstBeta(InstLoadGlobalAddress, {ptr, MIROperand::asReloc(gvarMap.at(gvar)->reloc.get())});
+    emitMIRInst(InstLoadGlobalAddress, {ptr, MIROperand::asReloc(gvarMap.at(gvar)->reloc.get())});
 
     return ptr;
   }
@@ -151,5 +151,5 @@ MIROperand LoweringContext::map2operand(ir::Value* ir_val) {
 
 void LoweringContext::emitCopy(MIROperand dst, MIROperand src) {
   /* copy dst, src */
-  emitInstBeta(select_copy_opcode(dst, src), {dst, src});
+  emitMIRInst(select_copy_opcode(dst, src), {dst, src});
 }
