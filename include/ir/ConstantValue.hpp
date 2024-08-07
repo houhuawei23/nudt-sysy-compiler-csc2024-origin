@@ -6,15 +6,32 @@
 #include <variant>
 namespace ir {
 
+using ConstantValVariant = std::variant<intmax_t, double>;
+using ConstantValueKey = std::pair<Type*, ConstantValVariant>;
+
+struct ConstantValueHash {
+  std::size_t operator()(const ConstantValueKey& key) const {
+    std::size_t typeHash = std::hash<Type*>{}(key.first);
+    std::size_t valHash = std::hash<ConstantValVariant>{}(key.second);
+    return typeHash ^ (valHash << 1);
+  }
+};
+
+struct ConstantValueEqual {
+  bool operator()(const ConstantValueKey& lhs, const ConstantValueKey& rhs) const {
+    return lhs.first == rhs.first && lhs.second == rhs.second;
+  }
+};
+
 class ConstantValue : public Value {
-  static std::unordered_map<size_t, ConstantValue*> mConstantPool;
+protected:
+  static std::unordered_map<ConstantValueKey, ConstantValue*, ConstantValueHash> mConstantPool;
 
 public:
   ConstantValue(Type* type) : Value(type, ValueId::vCONSTANT) {}
   virtual size_t hash() const = 0;
-  static ConstantValue* findCacheByHash(size_t hash);
 
-  virtual std::variant<std::monostate, intmax_t, double> getValue() const = 0;
+  virtual ConstantValVariant getValue() const = 0;
 
   int32_t i32() const;
   float f32() const;
@@ -23,7 +40,7 @@ public:
   virtual bool isZero();
   virtual bool isOne();
 
-  static ConstantValue* get(Type* type, std::variant<std::monostate, intmax_t, double> val);
+  static ConstantValue* get(Type* type, ConstantValVariant val);
 };
 
 class ConstantInteger : public ConstantValue {
@@ -36,7 +53,7 @@ public:
 
   intmax_t getVal() const { return mVal; }
 
-  std::variant<std::monostate, intmax_t, double> getValue() const override { return mVal; }
+  ConstantValVariant getValue() const override { return mVal; }
 
   static ConstantInteger* get(Type* type, intmax_t val);
   static ConstantInteger* getTrue();
@@ -62,7 +79,7 @@ public:
   size_t hash() const override;
 
   double getVal() const { return mVal; }
-  std::variant<std::monostate, intmax_t, double> getValue() const override { return mVal; }
+  ConstantValVariant getValue() const override { return mVal; }
 
   static ConstantFloating* get(Type* type, double val);
   static ConstantFloating* gen_f32(double val);
@@ -84,9 +101,7 @@ public:
   void print(std::ostream& os) const override { os << "undef"; }
   void dumpAsOpernd(std::ostream& os) const override;
   size_t hash() const override { return 0; }
-  std::variant<std::monostate, intmax_t, double> getValue() const override {
-    return std::monostate{};
-  }
+  ConstantValVariant getValue() const override { return 0; }
 };
 
 }  // namespace ir
