@@ -691,6 +691,7 @@ bool EliminateInvisibleInsts(MIRFunction& mfunc, CodeGenContext& ctx) {
 
 /* 窥孔优化 */
 bool genericPeepholeOpt(MIRFunction& mfunc, CodeGenContext& ctx) {
+    return false;
     bool modified = false;
     modified |= EliminateStackLoads(mfunc, ctx);
     // std::cerr << "EliminateStackLoads: " << modified << "\n";

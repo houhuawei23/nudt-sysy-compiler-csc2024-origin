@@ -28,8 +28,8 @@ void mixedRegisterAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAUsageCac
     std::cerr << ", using fast allocator beta" << std::endl;
     fastAllocatorBeta(mfunc, ctx, infoIPRA);
   } else {
-    std::cerr << ", using graph coloring allocator" << std::endl;
-    GraphColoringAllocate(mfunc, ctx, infoIPRA);
+    // std::cerr << ", using graph coloring allocator" << std::endl;
+    fastAllocatorBeta(mfunc, ctx, infoIPRA);
   }
 }
 

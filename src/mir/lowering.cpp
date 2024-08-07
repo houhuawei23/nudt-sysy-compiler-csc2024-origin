@@ -354,8 +354,8 @@ void createMIRModule(ir::Module& ir_module,
 
     // /* stage6: Optimize: pre-RA scheduling, minimize register usage */
     {
-      preRASchedule(*mir_func, codegen_ctx);
-      dumpStageResult("AfterPreRASchedule", mir_func, codegen_ctx);
+      // preRASchedule(*mir_func, codegen_ctx);
+      // dumpStageResult("AfterPreRASchedule", mir_func, codegen_ctx);
     }
 
     /* stage7: register allocation */
@@ -434,7 +434,7 @@ void createMIRFunction(ir::Function* ir_func,
   auto irBlocks = domCtx->BFSDomTreeVector();
   // domCtx->DFSDomTreeInfoRefresh();
   // auto irBlocks = domCtx->DFSDomTreeVector();
-  std::cerr << ir_func->name() << " blocks: " << irBlocks.size() << std::endl;
+  // std::cerr << ir_func->name() << " blocks: " << irBlocks.size() << std::endl;
   // for(auto block : irBlocks) {
   //   std::cerr << "block: " << block->name() << std::endl;
   // }
@@ -558,7 +558,7 @@ void lower(ir::FCmpInst* ir_inst, LoweringContext& ctx);
 void lower(ir::CallInst* ir_inst, LoweringContext& ctx);
 void lower(ir::ReturnInst* ir_inst, LoweringContext& ctx);
 void lower(ir::BranchInst* ir_inst, LoweringContext& ctx);
-void lower(ir::BitCastInst* ir_inst, LoweringContext& ctx);
+// void lower(ir::BitCastInst* ir_inst, LoweringContext& ctx);
 void lower(ir::MemsetInst* ir_inst, LoweringContext& ctx);
 void lower(ir::GetElementPtrInst* ir_inst, LoweringContext& ctx);
 
@@ -1000,10 +1000,10 @@ void lower(ir::ReturnInst* ir_inst, LoweringContext& ctx) {
 }
 
 /* BitCastInst */
-void lower(ir::BitCastInst* ir_inst, LoweringContext& ctx) {
-  const auto base = ir_inst->value();
-  ctx.addValueMap(ir_inst, ctx.map2operand(base));
-}
+// void lower(ir::BitCastInst* ir_inst, LoweringContext& ctx) {
+//   const auto base = ir_inst->value();
+//   ctx.addValueMap(ir_inst, ctx.map2operand(base));
+// }
 
 /** MemsetInst IR:
  * memset(i8* <dest>, i8 <val>, i64 <len>, i1 <isvolatile>)

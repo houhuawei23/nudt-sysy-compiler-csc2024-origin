@@ -54,6 +54,28 @@ bool ConstantValue::isOne() {
   }
   return false;
 }
+
+ConstantValue* ConstantValue::get(Type* type, std::variant<std::monostate, intmax_t, double> val) {
+  if (type->isInt()) {
+    intmax_t intval = 0;
+    if (std::holds_alternative<intmax_t>(val)) {
+      intval = std::get<intmax_t>(val);
+    } else if (std::holds_alternative<double>(val)) {
+      intval = std::get<double>(val);
+    }
+    return ConstantInteger::get(type, intval);
+  } else if (type->isFloatPoint()) {
+    double floatval = 0.0;
+    if (std::holds_alternative<intmax_t>(val)) {
+      floatval = std::get<intmax_t>(val);
+    } else if (std::holds_alternative<double>(val)) {
+      floatval = std::get<double>(val);
+    }
+    return ConstantFloating::get(type, floatval);
+  }
+  assert(false && "Unsupported type for constant value");
+}
+
 size_t ConstantInteger::hash() const {
   return std::hash<intmax_t>{}(mVal);
 }

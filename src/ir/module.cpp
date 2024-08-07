@@ -54,12 +54,21 @@ void Module::print(std::ostream& os) const {
   }
 
   // llvm inline function
-  os << "declare void @llvm.memset.p0i8.i64(i8* nocapture writeonly, i8, i64, i1 immarg)"
+  os << "declare void @llvm.memset.p0i8.i64(i8* nocapture writeonly, i8, i64, i1 immarg)\n"
      << std::endl;
 
   //! print all functions
   for (auto func : mFunctions) {
-    os << *func << std::endl;
+    if (func->isOnlyDeclare()) {
+      func->print(os);
+      os << std::endl;
+    }
+  }
+  for (auto func : mFunctions) {
+    if (not func->isOnlyDeclare()) {
+      func->print(os);
+      os << std::endl;
+    }
   }
 }
 

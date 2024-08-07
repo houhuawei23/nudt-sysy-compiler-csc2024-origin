@@ -5,7 +5,9 @@ using namespace ir;
 
 namespace pass {
 class StatelessCache : public FunctionPass {
-  static Function* getLookupFunction(Module* module, ArrayType* lutType);
+  static Function* getLookupFunction(Module* module,
+                                     ArrayType* entryType,
+                                     ArrayType* lutType);
   static bool has2MoreRecursiveCalls(Function* func);
   bool runImpl(ir::Function* func, TopAnalysisInfoManager* tp);
 

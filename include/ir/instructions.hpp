@@ -38,23 +38,10 @@ protected:
 public:  // 构造函数
   //! 1. Alloca Scalar
   AllocaInst(Type* base_type,
-             BasicBlock* parent = nullptr,
-             const_str_ref name = "",
-             bool is_const = false)
-    : Instruction(vALLOCA, ir::Type::TypePointer(base_type), parent, name), mIsConst(is_const) {}
-
-  //! 2. Alloca Array
-  AllocaInst(Type* base_type,
-             std::vector<size_t> dims,
-             BasicBlock* parent = nullptr,
-             const_str_ref name = "",
              bool is_const = false,
-             size_t capacity = 1)
-    : Instruction(vALLOCA,
-                  ir::Type::TypePointer(ir::Type::TypeArray(base_type, dims, capacity)),
-                  parent,
-                  name),
-      mIsConst(is_const) {}
+             BasicBlock* parent = nullptr,
+             const_str_ref name = "")
+    : Instruction(vALLOCA, ir::Type::TypePointer(base_type), parent, name), mIsConst(is_const) {}
 
 public:  // get function
   Type* baseType() const {
@@ -76,20 +63,7 @@ public:
   static bool classof(const Value* v) { return v->valueId() == vALLOCA; }
   void print(std::ostream& os) const override;
   void dumpAsOpernd(std::ostream& os) const override { os << mName; }
-  Instruction* copy(std::function<Value*(Value*)> getValue) const override {
-    if (isScalar()) {
-      auto inst = utils::make<AllocaInst>(baseType());
-      inst->setComment(mComment);
-      return inst;
-    } else {
-      auto basetype = baseType()->dynCast<ArrayType>();
-      auto capacity = basetype->size();
-      auto inst = utils::make<AllocaInst>(basetype->baseType(), basetype->dims(), nullptr, "",
-                                          false, capacity);
-      inst->setComment(mComment);
-      return inst;
-    }
-  };
+  Instruction* copy(std::function<Value*(Value*)> getValue) const override;
 };
 
 class StoreInst : public Instruction {
@@ -107,11 +81,7 @@ public:
 public:
   static bool classof(const Value* v) { return v->valueId() == vSTORE; }
   void print(std::ostream& os) const override;
-  Instruction* copy(std::function<Value*(Value*)> getValue) const override {
-    auto inst = utils::make<StoreInst>(getValue(operand(0)), getValue(operand(1)));
-    inst->setComment(mComment);
-    return inst;
-  }
+  Instruction* copy(std::function<Value*(Value*)> getValue) const override;
 };
 
 /*
@@ -129,11 +99,7 @@ public:
   auto ptr() const { return operand(0); }
   static bool classof(const Value* v) { return v->valueId() == vLOAD; }
   void print(std::ostream& os) const override;
-  Instruction* copy(std::function<Value*(Value*)> getValue) const override {
-    auto inst = utils::make<LoadInst>(getValue(operand(0)), mType);
-    inst->setComment(mComment);
-    return inst;
-  }
+  Instruction* copy(std::function<Value*(Value*)> getValue) const override;
 };
 
 /*
@@ -158,9 +124,7 @@ public:
 public:
   static bool classof(const Value* v) { return v->valueId() == vRETURN; }
   void print(std::ostream& os) const override;
-  Instruction* copy(std::function<Value*(Value*)> getValue) const override {
-    return utils::make<ReturnInst>(getValue(returnValue()));
-  }
+  Instruction* copy(std::function<Value*(Value*)> getValue) const override;
 };
 
 /*
@@ -197,9 +161,7 @@ public:
 public:
   void print(std::ostream& os) const override;
   Value* getConstantRepl(bool recursive = false) override;
-  Instruction* copy(std::function<Value*(Value*)> getValue) const override {
-    return utils::make<UnaryInst>(mValueId, mType, getValue(operand(0)));
-  }
+  Instruction* copy(std::function<Value*(Value*)> getValue) const override;
 };
 
 /*
@@ -239,9 +201,7 @@ public:
 public:
   void print(std::ostream& os) const override;
   Value* getConstantRepl(bool recursive = false) override;
-  Instruction* copy(std::function<Value*(Value*)> getValue) const override {
-    return utils::make<BinaryInst>(mValueId, mType, getValue(operand(0)), getValue(operand(1)));
-  }
+  Instruction* copy(std::function<Value*(Value*)> getValue) const override;
 };
 /* CallInst */
 class CallInst : public Instruction {
@@ -277,20 +237,8 @@ public:
   static bool classof(const Value* v) { return v->valueId() == vCALL; }
   void print(std::ostream& os) const override;
 
-  Instruction* copy(std::function<Value*(Value*)> getValue) const override {
-    std::vector<Value*> args;
-    for (auto arg : mOperands) {
-      args.push_back(getValue(arg->value()));
-    }
-    return utils::make<CallInst>(mCallee, args);
-  }
-  Instruction* clone() const override {
-    std::vector<Value*> args;
-    for (auto arg : mOperands) {
-      args.push_back(arg->value());
-    }
-    return utils::make<CallInst>(mCallee, args);
-  }
+  Instruction* copy(std::function<Value*(Value*)> getValue) const override;
+  Instruction* clone() const override;
 };
 
 /*
@@ -355,15 +303,7 @@ public:  // get function
 public:
   static bool classof(const Value* v) { return v->valueId() == vBR; }
   void print(std::ostream& os) const override;
-  Instruction* copy(std::function<Value*(Value*)> getValue) const override {
-    if (is_cond()) {
-      return utils::make<BranchInst>(getValue(operand(0)), getValue(iftrue())->as<BasicBlock>(),
-                                     getValue(iffalse())->as<BasicBlock>());
-
-    } else {
-      return utils::make<BranchInst>(getValue(dest())->as<BasicBlock>());
-    }
-  }
+  Instruction* copy(std::function<Value*(Value*)> getValue) const override;
 };
 
 /*
@@ -398,9 +338,7 @@ public:
   }
   void print(std::ostream& os) const override;
   Value* getConstantRepl(bool recursive = false) override;
-  Instruction* copy(std::function<Value*(Value*)> getValue) const override {
-    return utils::make<ICmpInst>(mValueId, getValue(operand(0)), getValue(operand(1)));
-  }
+  Instruction* copy(std::function<Value*(Value*)> getValue) const override;
 };
 
 /* FCmpInst */
@@ -431,9 +369,7 @@ public:
   void print(std::ostream& os) const override;
   Value* getConstantRepl(bool recursive = false) override;
   // Value* getConstantReplaceRecursive() override;
-  Instruction* copy(std::function<Value*(Value*)> getValue) const override {
-    return utils::make<FCmpInst>(mValueId, getValue(operand(0)), getValue(operand(1)));
-  }
+  Instruction* copy(std::function<Value*(Value*)> getValue) const override;
 };
 
 /*
@@ -452,9 +388,7 @@ public:
 
   static bool classof(const Value* v) { return v->valueId() == vBITCAST; }
   void print(std::ostream& os) const override;
-  Instruction* copy(std::function<Value*(Value*)> getValue) const override {
-    return utils::make<BitCastInst>(mType, getValue(operand(0)));
-  }
+  Instruction* copy(std::function<Value*(Value*)> getValue) const override;
 };
 
 /*
@@ -462,7 +396,7 @@ public:
  * @details:
  *      call void @llvm.memset.inline.p0.p0.i64(i8* <dest>, i8 0, i64 <len>, i1
  * <isvolatile>)
- * 
+ *
  * memset(i8* <dest>, i8 <val>, i64 <len>, i1 <isvolatile>)
  */
 class MemsetInst : public Instruction {
@@ -484,13 +418,8 @@ public:  // get function
 public:  // utils function
   static bool classof(const Value* v) { return v->valueId() == vMEMSET; }
   void print(std::ostream& os) const override;
-  Instruction* copy(std::function<Value*(Value*)> getValue) const override {
-    // return utils::make<MemsetInst>(mType, getValue(operand(0)), mSize);
-    return nullptr;
-  }
+  Instruction* copy(std::function<Value*(Value*)> getValue) const override;
 };
-
-
 
 /*
  * @brief GetElementPtr Instruction
@@ -508,17 +437,16 @@ protected:
 
 public:
   //! 1. Pointer <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
-  GetElementPtrInst(Type* base_type, Value* value, Value* idx, BasicBlock* parent = nullptr)
+  GetElementPtrInst(Type* base_type, Value* ptr, Value* idx, BasicBlock* parent = nullptr)
     : Instruction(vGETELEMENTPTR, ir::Type::TypePointer(base_type), parent) {
     _id = 0;
-    addOperand(value);
+    addOperand(ptr);
     addOperand(idx);
   }
 
-  //! 2. 高维 Array <result> = getelementptr <type>, <type>* <ptrval>, i32 0,
-  //! i32 <idx>
+  //! 2. 高维 Array <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32 <idx>
   GetElementPtrInst(Type* base_type,
-                    Value* value,
+                    Value* ptr,
                     Value* idx,
                     std::vector<size_t> dims,
                     std::vector<size_t> cur_dims,
@@ -528,20 +456,19 @@ public:
                   parent),
       _cur_dims(cur_dims) {
     _id = 1;
-    addOperand(value);
+    addOperand(ptr);
     addOperand(idx);
   }
 
-  //! 3. 一维 Array <result> = getelementptr <type>, <type>* <ptrval>, i32 0,
-  //! i32 <idx>
+  //! 3. 一维 Array <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32 <idx>
   GetElementPtrInst(Type* base_type,
-                    Value* value,
+                    Value* ptr,
                     Value* idx,
                     std::vector<size_t> cur_dims,
                     BasicBlock* parent = nullptr)
     : Instruction(vGETELEMENTPTR, ir::Type::TypePointer(base_type), parent), _cur_dims(cur_dims) {
     _id = 2;
-    addOperand(value);
+    addOperand(ptr);
     addOperand(idx);
   }
 
@@ -562,20 +489,7 @@ public:  // check function
 public:
   static bool classof(const Value* v) { return v->valueId() == vGETELEMENTPTR; }
   void print(std::ostream& os) const override;
-  Instruction* copy(std::function<Value*(Value*)> getValue) const override {
-    auto newvalue = getValue(value());
-    auto newidx = getValue(index());
-    if (getid() == 0) {
-      return utils::make<GetElementPtrInst>(baseType(), newvalue, newidx);
-    } else if (getid() == 1) {
-      auto basetype = baseType()->dynCast<ArrayType>();
-      auto dims = basetype->dims();
-      auto curdims = cur_dims();
-      return utils::make<GetElementPtrInst>(basetype->baseType(), newvalue, newidx, dims, curdims);
-    } else {
-      return utils::make<GetElementPtrInst>(baseType(), newvalue, newidx, cur_dims());
-    }
-  }
+  Instruction* copy(std::function<Value*(Value*)> getValue) const override;
 };
 
 class PhiInst : public Instruction {
@@ -620,9 +534,7 @@ public:
 
   void print(std::ostream& os) const override;
   Value* getConstantRepl(bool recursive = false) override;
-  Instruction* copy(std::function<Value*(Value*)> getValue) const override {
-    return utils::make<PhiInst>(nullptr, mType);
-  }
+  Instruction* copy(std::function<Value*(Value*)> getValue) const override;
 };
 
 class FunctionPtrInst : public Instruction {

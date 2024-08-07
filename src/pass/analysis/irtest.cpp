@@ -1,15 +1,18 @@
 #include "pass/analysis/irtest.hpp"
-
+#include "support/config.hpp"
 using std::cerr, std::endl;
 
 
 namespace pass {
 void irCheck::run(ir::Module* ctx, TopAnalysisInfoManager* tp) {
+    const auto& config = sysy::Config::getInstance();
+    const bool debug = config.logLevel >= sysy::LogLevel::DEBUG;
     ctx->rename();
     bool isPass = true;
     for (auto func : ctx->funcs()) {
         if (func->isOnlyDeclare()) continue;
-        cerr << "Testing function \"" << func->name() << "\" ..." << endl;
+        if (debug)
+            cerr << "Testing function \"" << func->name() << "\" ..." << endl;
 
         isPass &= runDefUseTest(func);
         isPass &= runCFGTest(func);

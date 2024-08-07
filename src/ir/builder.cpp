@@ -258,40 +258,35 @@ Value* IRBuilder::makeLoad(Value* ptr) {
   return inst;
 }
 
-Value* IRBuilder::makeAlloca(Type* base_type,
-                             bool is_const,
-                             const std::vector<size_t>& dims,
-                             const_str_ref comment,
-                             size_t capacity) {
+Value* IRBuilder::makeAlloca(Type* base_type, bool is_const, const_str_ref comment) {
   AllocaInst* inst = nullptr;
   const auto entryBlock = mBlock->function()->entry();
 
-  if (dims.size() == 0) {
-    inst = makeIdenticalInst<AllocaInst>(base_type, entryBlock, "", is_const);
+  inst = makeIdenticalInst<AllocaInst>(base_type, is_const);
 
-  } else {
-    inst = makeIdenticalInst<AllocaInst>(base_type, dims, entryBlock, "", is_const, capacity);
-  }
-
-  /* hhw, add alloca to function entry block*/
+  /* add alloca to function entry block*/
   // entry already has a terminator, br
-  entryBlock->emplace_inst(--entryBlock->insts().end(), inst);
+  entryBlock->emplace_inst(std::prev(entryBlock->insts().end()), inst);
+  inst->setBlock(entryBlock);
   inst->setComment(comment);
   return inst;
 }
 
 Value* IRBuilder::makeGetElementPtr(Type* base_type,
-                                    Value* value,
+                                    Value* ptr,
                                     Value* idx,
                                     std::vector<size_t> dims,
                                     std::vector<size_t> cur_dims) {
   GetElementPtrInst* inst = nullptr;
   if (dims.size() == 0 && cur_dims.size() == 0) {
-    inst = makeInst<GetElementPtrInst>(base_type, value, idx);
+    // i32* + idx
+    inst = makeInst<GetElementPtrInst>(base_type, ptr, idx);
   } else if (dims.size() == 0 && cur_dims.size() != 0) {
-    inst = makeInst<GetElementPtrInst>(base_type, value, idx, cur_dims);
+    // gep i32* + idx, one dim array
+    inst = makeInst<GetElementPtrInst>(base_type, ptr, idx, cur_dims);
   } else {
-    inst = makeInst<GetElementPtrInst>(base_type, value, idx, dims, cur_dims);
+    // gep high dims array
+    inst = makeInst<GetElementPtrInst>(base_type, ptr, idx, dims, cur_dims);
   }
   return inst;
 }

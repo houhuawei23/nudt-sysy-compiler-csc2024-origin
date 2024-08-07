@@ -22,6 +22,8 @@ public:
 
   virtual bool isZero();
   virtual bool isOne();
+
+  static ConstantValue* get(Type* type, std::variant<std::monostate, intmax_t, double> val);
 };
 
 class ConstantInteger : public ConstantValue {
