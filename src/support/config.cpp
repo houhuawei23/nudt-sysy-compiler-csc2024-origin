@@ -122,6 +122,7 @@ static const auto perfPassesList = std::vector<std::string>{
   "scev",
   "inline",   
   "tco",      // tail call optimization
+  "cache", // cache the function that cant tco
   "inline",   
 
   "g2l",      // global to local

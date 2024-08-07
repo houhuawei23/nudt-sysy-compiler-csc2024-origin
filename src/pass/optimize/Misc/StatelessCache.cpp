@@ -144,8 +144,6 @@ bool StatelessCache::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
   auto valPtr = builder.makeGetElementPtr(i32, entryPtr, ConstantInteger::gen_i32(2), {}, {4});
   if (not(valPtr->type()->as<PointerType>()->baseType() == retType)) {
     // cast val pointer to the return type pointer
-    // valPtr = builder.makeInst<PtrCastInst>(valPtr, PointerType::gen(retType));
-    // valPtr = builder.makeInst<BitCastInst>(PointerType::gen(retType), valPtr);
     valPtr = builder.makeInst<UnaryInst>(ir::ValueId::vBITCAST, PointerType::gen(retType), valPtr);
   }
   // LUTEntry.hasVal ptr: PointerType::gen(i32)
@@ -162,26 +160,50 @@ bool StatelessCache::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
 
   // build entry end
   // earlyExitBlock: return the lookuped value directly
-  builder.set_pos(earlyExitBlock);
-  builder.makeInst<ReturnInst>(builder.makeLoad(valPtr));
+  // only one exit, modified cfg
+  const auto originalExit = func->exit();
 
-  for (auto block : func->blocks()) {
-    if (block == earlyExitBlock)
-      continue;
-    // not earlyExit, insert store hasVal and val
-    // before return, store hasVal and val to the lookuped entry
-    if (auto retInst = block->terminator()->dynCast<ReturnInst>()) {
-      builder.set_pos(block, std::prev(block->insts().end()));
-      // store hasVal to the lookuped entry
-      builder.makeInst<StoreInst>(ConstantInteger::gen_i32(1), hasValPtr);
-      // store val to the lookuped entry
-      builder.makeInst<StoreInst>(retInst->returnValue(), valPtr);
-    }
-  }
+  // remove retInst from originalExit
+  const auto retInst = originalExit->terminator()->as<ReturnInst>();
+  const auto originalRetVal = retInst->returnValue();
+  assert(retInst and originalRetVal);
+  originalExit->insts().remove(retInst);
+
+  builder.set_pos(originalExit, originalExit->insts().end());
+  // store hasVal to the lookuped entry
+  builder.makeInst<StoreInst>(ConstantInteger::gen_i32(1), hasValPtr);
+  // store val to the lookuped entry
+  builder.makeInst<StoreInst>(originalRetVal, valPtr);
+
+  // build newExit
+  const auto newExit = func->newBlock();
+  newExit->setComment("StatelessCache new exit block");
+  func->setExit(newExit);
+
+  // originalExit -> newExit
+  builder.set_pos(originalExit, originalExit->insts().end());
+  builder.makeInst<BranchInst>(newExit);
+
+  // earlyExitBlock -> newExit
+  builder.set_pos(earlyExitBlock, earlyExitBlock->insts().end());
+  auto earlyExitVal = builder.makeLoad(valPtr);
+  builder.makeInst<BranchInst>(newExit);
+
+  // newExit:
+  // insert phi inst to merge the lookuped value and original return value
+  builder.set_pos(newExit, newExit->insts().begin());
+  auto phi = utils::make<PhiInst>(nullptr, retType);
+  newExit->emplace_first_inst(phi);
+  // return phi
+  phi->addIncoming(earlyExitVal, earlyExitBlock);
+  phi->addIncoming(originalRetVal, originalExit);
+  builder.makeInst<ReturnInst>(phi);
+
   // func->rename();
   // func->print(std::cerr);
   tp->CallChange();
   tp->CFGChange(func);
+  tp->IndVarChange(func);
   return true;
 }
 

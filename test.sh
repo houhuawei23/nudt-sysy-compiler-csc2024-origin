@@ -49,10 +49,10 @@ EC_LLVMLINK=2
 EC_LLI=3
 EC_TIMEOUT=124
 
-TIMEOUT=100
+TIMEOUT=10
 
-lli_cmd="lli-17"
-llvm_link_cmd="llvm-link-17"
+lli_cmd="lli-14"
+llvm_link_cmd="llvm-link-14"
 # Function to print usage information
 usage() {
     echo "Usage: $0 [-t <test_path>] [-o <output_dir>] [-r <result_file>] [-r <result_file>][-h]"
@@ -170,7 +170,7 @@ function run_llvm_test() {
     cat "${sy_h}" >"${llvm_c}"
     cat "${single_file}" >>"${llvm_c}"
 
-    clang --no-warnings -emit-llvm -S "${llvm_c}" -o "${llvm_ll}"  -O3 -std=c90 
+    clang --no-warnings -emit-llvm -S "${llvm_c}" -o "${llvm_ll}"  -O0 -std=c90 
     # # ./compiler -f "${llvm_c}" -i -o "${llvm_ll}"
     # opt -O3 -debug-pass-manager "${llvm_ll}" -o "${llvm_ll}"
     # ./compiler -f "${single_file}" -i  -o "${llvm_ll}" "${OPT_LEVEL}" "${LOG_LEVEL}"
@@ -188,7 +188,8 @@ function run_llvm_test() {
     return ${llvmres}
 
 }
-
+lookup_ll="./test/link/lookup.ll"
+link_ll="./test/link/link.ll"
 function run_gen_test() {
     local single_file="$1"
     local output_dir="$2"
@@ -213,7 +214,7 @@ function run_gen_test() {
         return $EC_MAIN
     fi
 
-    $llvm_link_cmd --suppress-warnings ./test/link/link.ll "${gen_ll}" -S -o "${gen_llinked}"
+    $llvm_link_cmd --suppress-warnings $link_ll $lookup_ll "${gen_ll}" -S -o "${gen_llinked}"
     if [ $? != 0 ]; then
         return $EC_LLVMLINK
     fi

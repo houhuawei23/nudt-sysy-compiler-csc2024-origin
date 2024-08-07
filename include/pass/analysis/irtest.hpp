@@ -15,5 +15,6 @@ private:
   bool checkPhi(ir::PhiInst* phi);
   bool checkFuncInfo(ir::Function* func);
   bool checkAllocaOnlyInEntry(ir::Function* func);
+  bool checkOnlyOneExit(ir::Function* func);
 };
 }  // namespace pass

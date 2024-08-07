@@ -273,7 +273,6 @@ Value* SysYIRGenerator::visitLocalScalar(SysYParser::VarDefContext* ctx,
     return init;
   } else {  //! not const qulifier
     auto alloca = mBuilder.makeAlloca(btype, is_const, name);
-    alloca->setComment(name);
     mTables.insert(name, alloca);
 
     if (not ctx->ASSIGN())
