@@ -1,5 +1,5 @@
 #pragma once
-#include "mir/mir.hpp"
+#include "mir/MIR.hpp"
 #include "support/StaticReflection.hpp"
 namespace mir {
 /*

@@ -2,7 +2,7 @@
 #include <cstring>
 #include <unordered_set>
 #include <unordered_map>
-#include "mir/mir.hpp"
+#include "mir/MIR.hpp"
 #include "mir/target.hpp"
 #include "mir/LiveInterval.hpp"
 

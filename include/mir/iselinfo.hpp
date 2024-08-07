@@ -1,6 +1,6 @@
 #pragma once
 #include <unordered_set>
-#include "mir/mir.hpp"
+#include "mir/MIR.hpp"
 #include "mir/LiveInterval.hpp"
 #include "mir/instinfo.hpp"
 #include "mir/lowering.hpp"

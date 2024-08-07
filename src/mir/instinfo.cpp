@@ -1,4 +1,4 @@
-#include "mir/mir.hpp"
+#include "mir/MIR.hpp"
 #include "mir/instinfo.hpp"
 #include "autogen/generic/InstInfoDecl.hpp"
 #include "support/StaticReflection.hpp"

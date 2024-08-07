@@ -1,5 +1,5 @@
 #pragma once
-#include "mir/mir.hpp"
+#include "mir/MIR.hpp"
 #include "mir/instinfo.hpp"
 #include <stdint.h>
 #include <unordered_map>

@@ -1,6 +1,6 @@
 #pragma once
 #include "autogen/riscv/InstInfoDecl.hpp"
-#include "mir/mir.hpp"
+#include "mir/MIR.hpp"
 #include "mir/instinfo.hpp"
 #include "mir/ScheduleModel.hpp"
 RISCV_NAMESPACE_BEGIN

@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <unordered_map>
-#include "mir/mir.hpp"
+#include "mir/MIR.hpp"
 #include "mir/target.hpp"
 
 /*

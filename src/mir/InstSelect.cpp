@@ -1,5 +1,5 @@
 #include "ir/ir.hpp"
-#include "mir/mir.hpp"
+#include "mir/MIR.hpp"
 #include "mir/target.hpp"
 #include "mir/instinfo.hpp"
 #include "mir/iselinfo.hpp"

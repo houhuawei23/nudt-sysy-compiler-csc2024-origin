@@ -101,7 +101,7 @@ public:
   void print(std::ostream& os) const override { os << "undef"; }
   void dumpAsOpernd(std::ostream& os) const override;
   size_t hash() const override { return 0; }
-  ConstantValVariant getValue() const override { return 0; }
+  ConstantValVariant getValue() const override { return static_cast<intmax_t>(0); }
 };
 
 }  // namespace ir

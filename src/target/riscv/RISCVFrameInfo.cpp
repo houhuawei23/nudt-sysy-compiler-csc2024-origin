@@ -1,4 +1,4 @@
-#include "mir/mir.hpp"
+#include "mir/MIR.hpp"
 #include "mir/utils.hpp"
 #include "target/riscv/RISCVTarget.hpp"
 #include "autogen/riscv/InstInfoDecl.hpp"

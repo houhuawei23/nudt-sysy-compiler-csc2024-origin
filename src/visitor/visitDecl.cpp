@@ -94,7 +94,7 @@ Value* SysYIRGenerator::visitGlobalArray(SysYParser::VarDefContext* ctx,
   std::vector<Value*> Arrayinit;
   bool is_init = false;
   for (size_t i = 0; i < capacity; i++) {
-    Arrayinit.push_back(ConstantValue::get(btype, 0));
+    Arrayinit.push_back(ConstantValue::get(btype, static_cast<intmax_t>(0)));
   }
 
   //! get initial value (将数组元素的初始化值存储在Arrayinit中)
@@ -137,7 +137,7 @@ Value* SysYIRGenerator::visitGlobalScalar(SysYParser::VarDefContext* ctx,
   Value* init = nullptr;
   bool is_init = false;
   
-  init = ConstantValue::get(btype, 0);
+  init = ConstantValue::get(btype, static_cast<intmax_t>(0));
 
   if (ctx->ASSIGN()) {
     is_init = true;

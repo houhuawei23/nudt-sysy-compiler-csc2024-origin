@@ -1,5 +1,5 @@
 #pragma once
-#include "mir/mir.hpp"
+#include "mir/MIR.hpp"
 #include "mir/instinfo.hpp"
 #include "autogen/riscv/InstInfoDecl.hpp"
 #include "support/arena.hpp"

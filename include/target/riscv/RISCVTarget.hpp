@@ -1,5 +1,5 @@
 #pragma once
-#include "mir/mir.hpp"
+#include "mir/MIR.hpp"
 #include "mir/utils.hpp"
 #include "mir/target.hpp"
 #include "mir/datalayout.hpp"

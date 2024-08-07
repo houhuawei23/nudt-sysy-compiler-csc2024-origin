@@ -66,9 +66,11 @@ public:  // utils function
 constexpr uint32_t virtualRegBegin = 0b0101U << 28;
 constexpr uint32_t stackObjectBegin = 0b1010U << 28;
 constexpr uint32_t invalidReg = 0b1100U << 28;
+
 constexpr bool isISAReg(uint32_t x) { return x < virtualRegBegin; }
 constexpr bool isVirtualReg(uint32_t x) { return (x & virtualRegBegin) == virtualRegBegin; }
 constexpr bool isStackObject(uint32_t x) { return (x & stackObjectBegin) == stackObjectBegin; }
+
 enum class OperandType : uint32_t {
   Bool,
   Int8,
@@ -81,8 +83,10 @@ enum class OperandType : uint32_t {
   LowBits,
   Alignment
 };
+
 constexpr bool isIntType(OperandType type) { return type <= OperandType::Int64; }
 constexpr bool isFloatType(OperandType type) { return type == OperandType::Float32; }
+
 constexpr uint32_t getOperandSize(const OperandType type) {
   /* NOTE: RISC-V 64 */
   switch (type) {

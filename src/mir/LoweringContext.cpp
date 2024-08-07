@@ -6,7 +6,7 @@
 #include "pass/pass.hpp"
 #include "pass/analysisinfo.hpp"
 #include "pass/analysis/dom.hpp"
-#include "mir/mir.hpp"
+#include "mir/MIR.hpp"
 #include "mir/lowering.hpp"
 #include "mir/target.hpp"
 #include "mir/iselinfo.hpp"

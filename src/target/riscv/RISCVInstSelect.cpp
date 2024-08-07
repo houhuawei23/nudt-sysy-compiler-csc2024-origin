@@ -1,4 +1,4 @@
-#include "mir/mir.hpp"
+#include "mir/MIR.hpp"
 #include "mir/target.hpp"
 #include "mir/iselinfo.hpp"
 #include "target/riscv/RISCV.hpp"
