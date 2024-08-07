@@ -14,9 +14,7 @@ const InstInfo& TargetInstInfo::getInstInfo(uint32_t opcode) const {
   return GENERIC::getGENERICInstInfo().getInstInfo(opcode + offset);
 }
 
-bool TargetInstInfo::matchBranch(MIRInst* inst,
-                                 MIRBlock*& target,
-                                 double& prob) const {
+bool TargetInstInfo::matchBranch(MIRInst* inst, MIRBlock*& target, double& prob) const {
   auto oldOpcode = inst->opcode();
   inst->set_opcode(oldOpcode + offset);
   bool res = GENERIC::getGENERICInstInfo().matchBranch(inst, target, prob);
@@ -24,8 +22,7 @@ bool TargetInstInfo::matchBranch(MIRInst* inst,
   return res;
 }
 
-bool TargetInstInfo::matchUnconditionalBranch(MIRInst* inst,
-                                              MIRBlock*& Target) const {
+bool TargetInstInfo::matchUnconditionalBranch(MIRInst* inst, MIRBlock*& Target) const {
   double prob = 0.0;
   return matchBranch(inst, Target, prob) &&
          requireFlag(getInstInfo(inst).inst_flag(), InstFlagNoFallThrough);
@@ -38,9 +35,7 @@ void TargetInstInfo::redirectBranch(MIRInst* inst, MIRBlock* target) const {
   inst->set_opcode(oldOpcode);
 }
 
-bool TargetInstInfo::matchCopy(MIRInst* inst,
-                               MIROperand& dst,
-                               MIROperand& src) const {
+bool TargetInstInfo::matchCopy(MIRInst* inst, MIROperand& dst, MIROperand& src) const {
   const auto& info = getInstInfo(inst);
   if (requireFlag(info.inst_flag(), InstFlagRegCopy)) {
     if (info.operand_num() != 2) {
@@ -57,13 +52,6 @@ bool TargetInstInfo::matchCopy(MIRInst* inst,
   return false;
 }
 
-
 }  // namespace mir
-
-namespace mir::GENERIC {
-
-
-
-}  // namespace mir::GENERIC
 
 #include "autogen/generic/InstInfoImpl.hpp"
