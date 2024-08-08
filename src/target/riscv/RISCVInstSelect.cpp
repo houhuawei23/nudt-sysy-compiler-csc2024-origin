@@ -89,30 +89,26 @@ static bool selectFCmpOpcode(MIROperand opcode,
   }
   outlhs = lhs;
   outrhs = rhs;
-  RISCVInst newOpcode;
-  switch (op) {
-    case CompareOp::FCmpOrderedLessThan:
-      newOpcode = FLT_S;
-      break;
-    case CompareOp::FCmpOrderedLessEqual:
-      newOpcode = FLE_S;
-      break;
-    case CompareOp::FCmpOrderedGreaterThan:
-      outlhs = rhs;
-      outrhs = lhs;
-      newOpcode = FLT_S;
-      break;
-    case CompareOp::FCmpOrderedGreaterEqual:
-      outlhs = rhs;
-      outrhs = lhs;
-      newOpcode = FLE_S;
-      break;
-    case CompareOp::FCmpOrderedEqual:
-      newOpcode = FEQ_S;
-      break;
-    default:
-      return false;
-  }
+  auto newOpcode = [&]() {
+    switch (op) {
+      case CompareOp::FCmpOrderedLessThan:
+        return FLT_S;
+      case CompareOp::FCmpOrderedLessEqual:
+        return FLE_S;
+      case CompareOp::FCmpOrderedGreaterThan:
+        std::swap(outlhs, outrhs);
+        return FLT_S;
+      case CompareOp::FCmpOrderedGreaterEqual:
+        std::swap(outlhs, outrhs);
+        return FLE_S;
+      case CompareOp::FCmpOrderedEqual:
+        return FEQ_S;
+      default:
+        assert(false && "Unsupported compare op");
+        return FEQ_S;
+    }
+  }();
+
   outOpcode = MIROperand::asImm(newOpcode, OperandType::Special);
   // std::cerr << "newOpcode: " << newOpcode << std::endl;
   return true;
@@ -138,8 +134,6 @@ static bool selectAddrOffset(MIROperand addr,
       base = addrInst->operand(1);  // obj
       offset = MIROperand::asImm(0, OperandType::Int64);
       return true;
-    }
-    if (addrInst->opcode() == InstLoadGlobalAddress) {
     }
   }
   if (isOperandIReg(addr)) {
@@ -184,6 +178,22 @@ bool RISCVISelInfo::isLegalInst(uint32_t opcode) const {
 
 static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
   bool modified = false;
+
+  // Canonicalization: swap operands if commutative and first operand is imm
+  // ii, ix, xi, xx -> ii, xi, xx
+  const auto swapImmReg = [&modified](MIROperand& op1, MIROperand& op2) {
+    if (op1.isImm() && !op2.isImm()) {
+      std::swap(op1, op2);
+      modified = true;
+      return true;
+    }
+    return false;
+  };
+
+  const auto& instInfo = ctx.codegen_ctx().instInfo.getInstInfo(inst);
+  if (requireFlag(instInfo.inst_flag(), InstFlagCommutative)) {
+    swapImmReg(inst->operand(1), inst->operand(2));
+  }
 
   const auto imm2reg = [&](MIROperand& operand) {
     if (operand.isImm()) {
@@ -258,35 +268,34 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
     }
     case InstMul:
     case InstSDiv: {
-      {
-        auto selectCode = [code = inst->opcode()] {
-          switch (code) {
-            case InstMul:
-              return InstShl;
-            case InstSDiv:
-              return InstAShr;
-            default:
-              break;
-          }
-        }();
-        auto& src1 = inst->operand(1);
-        auto& src2 = inst->operand(2);
-        imm2reg(src1);
-        if (src2.isImm() and isOperandUImm6(src2) and utils::isPowerOf2(src2.imm())) {
-          /** InstMul dst, src1, imm[2^k]
-           * ->
-           * InstShl dst, src1, log2(imm)
-           */
-          auto shamt = utils::log2(src2.imm());
-          inst->set_opcode(selectCode);
-          inst->set_operand(2, MIROperand::asImm(shamt, OperandType::Int32));
-          modified = true;
-        } else {
-          imm2reg(src2);
+      auto selectCode = [code = inst->opcode()] {
+        switch (code) {
+          case InstMul:
+            return InstShl;
+          case InstSDiv:
+            return InstAShr;
+          default:
+            return InstUnreachable;
+            break;
         }
-
-        break;
+      }();
+      auto& src1 = inst->operand(1);
+      auto& src2 = inst->operand(2);
+      imm2reg(src1);
+      if (src2.isImm() and isOperandUImm6(src2) and utils::isPowerOf2(src2.imm())) {
+        /** InstMul dst, src1, imm[2^k]
+         * ->
+         * InstShl dst, src1, log2(imm)
+         */
+        auto shamt = utils::log2(src2.imm());
+        inst->set_opcode(selectCode);
+        inst->set_operand(2, MIROperand::asImm(shamt, OperandType::Int32));
+        modified = true;
+      } else {
+        imm2reg(src2);
       }
+
+      break;
     }
     case InstSRem:
     case InstUDiv:

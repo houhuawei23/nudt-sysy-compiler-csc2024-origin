@@ -25,7 +25,7 @@ public:
     bool availableInAG = true;
 
     /*
-    if operand latency is 0:
+    if operand RISCVTargetlatency is 0:
        availableInAG = availableInAG & true;
     else if operand latency is 1:
        availableInAG = false;
