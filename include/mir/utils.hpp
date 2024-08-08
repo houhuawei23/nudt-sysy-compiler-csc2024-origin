@@ -33,22 +33,6 @@ void postRASchedule(MIRFunction& func, const CodeGenContext& ctx);
 void preRASchedule(MIRFunction& func, const CodeGenContext& ctx);
 void postRASchedule(MIRFunction& func, const CodeGenContext& ctx);
 
-/* some utils function */
-struct CodeLocation final {
-  const char* const file;
-  const char* const func;
-  int line;
-};
-#define NUDT_LOCATION()          \
-  CodeLocation {                 \
-    __FILE__, __func__, __LINE__ \
-  }
-
-static void DumpForDebug(const CodeLocation& location);
-
-void ReportNotImplemented(const CodeLocation& location);
-void ReportUnreachable(const CodeLocation& location);
-
 void simplifyCFG(MIRFunction& func, CodeGenContext& ctx);
 
 bool expandMulWithConstant(MIRFunction& func, CodeGenContext& codeGenCtx, uint32_t maxCost);

@@ -63,9 +63,6 @@ Instruction* FCmpInst::copy(std::function<Value*(Value*)> getValue) const {
   return utils::make<FCmpInst>(mValueId, getValue(operand(0)), getValue(operand(1)));
 }
 
-Instruction* BitCastInst::copy(std::function<Value*(Value*)> getValue) const {
-  return utils::make<BitCastInst>(mType, getValue(operand(0)));
-}
 Instruction* MemsetInst::copy(std::function<Value*(Value*)> getValue) const {
   return utils::make<MemsetInst>(getValue(operand(0)), getValue(operand(1)), getValue(operand(2)),
                                  getValue(operand(3)));

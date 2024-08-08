@@ -157,14 +157,23 @@ Value* IRBuilder::promoteTypeBeta(Value* val, Type* targetType) {
 
 Value* IRBuilder::makeTypeCast(Value* val, Type* target_type) {
   Value* res = val;
+  // NOTE: complex type cant compare by Type*, need to fix
   if (val->type() == target_type)
     return res;
 
   if (val->type()->isInt() and target_type->isFloatPoint()) {
-    res = makeUnary(ValueId::vSITOFP, val, target_type);
-  } else if (val->type()->isFloatPoint() and target_type->isInt()) {
-    res = makeUnary(ValueId::vFPTOSI, val, target_type);
+    return makeUnary(ValueId::vSITOFP, val, target_type);
   }
+  if (val->type()->isFloatPoint() and target_type->isInt()) {
+    return makeUnary(ValueId::vFPTOSI, val, target_type);
+  } 
+  if(target_type->isPointer() and target_type->dynCast<PointerType>()->baseType()->isInt32()) {
+    return makeInst<UnaryInst>(vBITCAST, target_type, val);
+  }
+  // std::cerr << "makeTypeCast: invalid cast from " << *(val->type()) << " to " << *target_type;
+  // std::cerr << std::endl;
+  // std::cerr << "make default Bitcast inst";
+  // res = makeInst<UnaryInst>(ValueId::vBITCAST, target_type, val);
   return res;
 }
 

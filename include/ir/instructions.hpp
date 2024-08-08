@@ -13,7 +13,6 @@ class AllocaInst;
 class LoadInst;
 class StoreInst;
 class GetElementPtrInst;
-class BitcastInst;
 
 class ReturnInst;
 class BranchInst;
@@ -369,25 +368,6 @@ public:
   void print(std::ostream& os) const override;
   Value* getConstantRepl(bool recursive = false) override;
   // Value* getConstantReplaceRecursive() override;
-  Instruction* copy(std::function<Value*(Value*)> getValue) const override;
-};
-
-/*
- * @brief Bitcast Instruction
- * @note: <result> = bitcast <ty> <value> to i8*
- */
-class BitCastInst : public Instruction {
-public:
-  BitCastInst(Type* dsttype, Value* value, BasicBlock* parent = nullptr)
-    : Instruction(vBITCAST, dsttype, parent) {
-    addOperand(value);
-  }
-
-public:
-  auto value() const { return operand(0); }
-
-  static bool classof(const Value* v) { return v->valueId() == vBITCAST; }
-  void print(std::ostream& os) const override;
   Instruction* copy(std::function<Value*(Value*)> getValue) const override;
 };
 

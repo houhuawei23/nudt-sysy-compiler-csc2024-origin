@@ -857,11 +857,6 @@ void lower(ir::ReturnInst* ir_inst, LoweringContext& ctx) {
   ctx.mTarget.getTargetFrameInfo().emitReturn(ir_inst, ctx);
 }
 
-/* BitCastInst */
-// void lower(ir::BitCastInst* ir_inst, LoweringContext& ctx) {
-//   const auto base = ir_inst->value();
-//   ctx.addValueMap(ir_inst, ctx.map2operand(base));
-// }
 
 /** MemsetInst IR:
  * memset(i8* <dest>, i8 <val>, i64 <len>, i1 <isvolatile>)

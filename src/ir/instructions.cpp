@@ -498,19 +498,6 @@ void PhiInst::refreshMap() {
 }
 
 /*
- * @brief: BitcastInst::print
- * @details:
- *      <result> = bitcast <ty> <value> to i8*
- */
-
-void BitCastInst::print(std::ostream& os) const {
-  os << name() << " = bitcast ";
-  os << *type() << " ";
-  value()->dumpAsOpernd(os);
-  os << " to i8*";
-}
-
-/*
  * @brief: memset
  * @details:
  *      call void @llvm.memset.p0i8.i64(i8* <dest>, i8 0, i64 <len>, i1 false)

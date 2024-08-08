@@ -28,6 +28,7 @@ enum class BasicTypeRank : size_t {
 };  // FIXME: BType -> BasicTypeRank
 
 /* Type */
+// NOTE: complex type cant compare by Type*, need to fix
 class Type {
 protected:
   BasicTypeRank mBtype;

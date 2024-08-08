@@ -2,16 +2,16 @@
 #include "mir/RegisterAllocator.hpp"
 #include "mir/CFGAnalysis.hpp"
 namespace mir {
-struct RegNumComparator final {
+struct RegNumComparatorBeta final {
   const std::unordered_map<RegNum, double>* weights;
 
   bool operator()(RegNum lhs, RegNum rhs) const { return weights->at(lhs) > weights->at(rhs); }
 };
 
-class InterferenceGraph final {
+class InterferenceGraphBeta final {
   std::unordered_map<RegNum, std::unordered_set<RegNum>> mAdj;
   std::unordered_map<RegNum, uint32_t> mDegree;
-  using Queue = std::priority_queue<RegNum, std::vector<RegNum>, RegNumComparator>;
+  using Queue = std::priority_queue<RegNum, std::vector<RegNum>, RegNumComparatorBeta>;
   Queue mQueue;
 
 public:
@@ -28,7 +28,7 @@ public:
     if (!mDegree.count(u)) mDegree[u] = 0U;
   }
   void prepareForAssign(const std::unordered_map<RegNum, double>& weights, uint32_t k) {
-    mQueue = Queue{RegNumComparator{&weights}};
+    mQueue = Queue{RegNumComparatorBeta{&weights}};
     for (auto& [reg, degree] : mDegree) {
       if (degree < k) {
         assert(isVirtualReg(reg));
@@ -218,7 +218,7 @@ static void graphColoringAllocateImpl(MIRFunction& mfunc,
       copyHint[dst][src] += weight;
     };
     // Construct interference graph
-    InterferenceGraph graph;
+    InterferenceGraphBeta graph;
     auto cfg = calcCFG(mfunc, ctx);
     auto blockFreq = calcFreq(mfunc, cfg);
     // ISA specific reg
