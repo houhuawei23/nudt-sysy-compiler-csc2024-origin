@@ -431,8 +431,11 @@ void loopUnroll::constunroll(ir::Loop* loop, ir::indVar* iv) {
     if (times <= 0) {
         return;
     }
-
-    doconstunroll(loop, iv, times);
+    if (times <= 100) {
+        dofullunroll(loop, iv, times);
+    } else {
+        doconstunroll(loop, iv, times);
+    }
 }
 
 void loopUnroll::insertremainderloop(ir::Loop* loop, ir::Function* func) {
@@ -471,6 +474,147 @@ void loopUnroll::insertremainderloop(ir::Loop* loop, ir::Function* func) {
         if (getValue(inst) != inst) {
             repalceuseout(inst, getValue(inst)->dynCast<ir::Instruction>(), loop);
             // std::cerr<<"replace useout: "<<std::endl;
+        }
+    }
+}
+
+void loopUnroll::dofullunroll(ir::Loop* loop, ir::indVar* iv, int times) {
+    // doconstunroll(loop, iv, times);
+    // return;
+    std::cerr << "do full unroll" << std::endl;
+    headuseouts.clear();
+    ir::Function* func = loop->header()->function();
+    ir::BasicBlock* head = loop->header();
+    ir::BasicBlock* latch = loop->getLoopLatch();
+    ir::BasicBlock* preheader = loop->getLoopPreheader();
+    ir::BasicBlock* exit;
+    ir::BasicBlock* headnext;
+    for (auto bb : loop->exits())
+        exit = bb;
+    for (auto bb : head->next_blocks()) {
+        if (loop->contains(bb)) headnext = bb;
+    }
+
+    getdefinuseout(loop);
+    std::vector<std::vector<ir::Value*>> phireplacevec;
+    ir::BasicBlock* latchnext = func->newBlock();
+    nowlatchnext = latchnext;
+    loop->blocks().insert(latchnext);
+
+    int cnt = 0;
+
+    for (auto inst : head->insts()) {
+        if (auto phiinst = inst->dynCast<ir::PhiInst>()) {
+            ir::PhiInst* newphiinst = utils::make<ir::PhiInst>(nullptr, phiinst->type());
+            latchnext->emplace_back_inst(newphiinst);  // 保证映射正确
+            auto val = phiinst->getvalfromBB(latch);
+            newphiinst->addIncoming(val, latch);
+            phireplacevec.push_back({phiinst, newphiinst});
+        } else
+            break;
+    }
+
+    ir::BranchInst* jmplatchnext2head = utils::make<ir::BranchInst>(head, latchnext);
+    latchnext->emplace_back_inst(jmplatchnext2head);
+    ir::BasicBlock::delete_block_link(latch, head);
+    ir::BasicBlock::block_link(latch, latchnext);
+    ir::BasicBlock::block_link(latchnext, head);
+    ir::BranchInst* latchbr = latch->insts().back()->dynCast<ir::BranchInst>();
+    latchbr->replaceDest(head, latchnext);  // head的phi未更新
+
+    std::vector<ir::BasicBlock*> bbexcepthead;
+    for (auto bb : loop->blocks()) {
+        if (bb != head) bbexcepthead.push_back(bb);
+    }
+
+    ir::BasicBlock* oldbegin = headnext;
+    ir::BasicBlock* oldlatchnext = latchnext;
+
+    for (int i = 0; i < times - 1; i++) {  // 复制循环体
+        copymap.clear();
+        copyloop(bbexcepthead, oldbegin, loop, func);
+
+        auto newbegin = copymap[oldbegin]->dynCast<ir::BasicBlock>();
+        auto newlatchnext = copymap[oldlatchnext]->dynCast<ir::BasicBlock>();
+        nowlatchnext = newlatchnext;
+
+        ir::BranchInst* oldlatchnextbr = oldlatchnext->insts().back()->dynCast<ir::BranchInst>();
+        oldlatchnextbr->replaceDest(head, newbegin);
+        ir::BasicBlock::delete_block_link(oldlatchnext, head);  // 考虑到headnext不可能有phi，不必考虑修改前驱导致的对phi的影响
+        ir::BasicBlock::block_link(oldlatchnext, newbegin);
+        ir::BasicBlock::block_link(newlatchnext, head);
+
+        oldbegin = newbegin;
+        oldlatchnext = newlatchnext;
+
+        // //更新bbexcepthead
+        for (auto bb : bbexcepthead) {
+            auto copybb = copymap[bb]->dynCast<ir::BasicBlock>();
+            for (auto inst : copybb->insts()) {
+                for (auto op : inst->operands()) {
+                    for (auto vec : phireplacevec) {
+                        if (std::find(vec.begin(), vec.end(), op->value()) != vec.end()) {
+                            auto newval = vec.back();
+                            inst->setOperand(op->index(), newval);
+                        }
+                    }
+                }
+            }
+        }
+
+        cnt = 0;
+        for (auto inst : oldlatchnext->insts()) {
+            if (auto oldphiinst = inst->dynCast<ir::PhiInst>()) {
+                phireplacevec[cnt].push_back(oldphiinst);
+                cnt++;
+            } else
+                break;
+        }
+
+        std::vector<ir::BasicBlock*> newbbexcepthead;
+        for (auto bb : bbexcepthead) {
+            newbbexcepthead.push_back(copymap[bb]->dynCast<ir::BasicBlock>());
+        }
+        bbexcepthead = newbbexcepthead;
+    }
+    // 修改head的phi
+    cnt = 0;
+    for (auto inst : head->insts()) {
+        if (auto phiinst = inst->dynCast<ir::PhiInst>()) {
+            auto newval = phireplacevec[cnt].back();
+            cnt++;
+            for (size_t i = 0; i < phiinst->getsize(); i++) {
+                auto phibb = phiinst->getBlock(i);
+                if (phibb == latch) {
+                    phiinst->delBlock(phibb);
+                    phiinst->addIncoming(newval, oldlatchnext);
+                }
+            }
+        } else
+            break;
+    }
+
+    // 断开循环
+    auto headbr = head->insts().back()->dynCast<ir::BranchInst>();
+    head->delete_inst(headbr);
+    auto newheadbr = utils::make<ir::BranchInst>(headnext);
+    head->emplace_back_inst(newheadbr);
+    auto oldlatchbr = oldlatchnext->insts().back()->dynCast<ir::BranchInst>();
+    oldlatchbr->replaceDest(head, exit);
+    ir::BasicBlock::delete_block_link(oldlatchnext, head);
+    ir::BasicBlock::delete_block_link(head, exit);
+    ir::BasicBlock::block_link(oldlatchnext, exit);
+
+    for (auto inst : headuseouts) {
+        if (auto phiinst = inst->dynCast<ir::PhiInst>()) {
+            repalceuseout(inst, phiinst->getvalfromBB(oldlatchnext)->dynCast<ir::Instruction>(), loop);
+            // std::cerr<<"replace useout: "<<std::endl;
+        }
+    }
+
+    for (auto inst : head->insts()) {
+        if (auto phiinst = inst->dynCast<ir::PhiInst>()) {
+            phiinst->delBlock(oldlatchnext);
         }
     }
 }
