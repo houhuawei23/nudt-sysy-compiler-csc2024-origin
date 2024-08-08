@@ -139,7 +139,8 @@ public:  // set function
       inst->setBlock(mBlock);
       mBlock->insts().insert(mInsertPos, inst);
     } else
-      std::cerr << "insert to 0x0 Block" << std::endl;
+      // std::cerr << "insert to 0x0 Block" << std::endl;
+      ;
     return inst;
   }
 
