@@ -142,7 +142,7 @@ bool StatelessCache::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
   */
   // load the value from the lookuped entry: *(ptr + 2) by words (i32), LUTEntry.val ptr
   auto valPtr = builder.makeGetElementPtr(i32, entryPtr, ConstantInteger::gen_i32(2), {}, {4});
-  if (not(valPtr->type()->as<PointerType>()->baseType() == retType)) {
+  if (not(valPtr->type()->as<PointerType>()->baseType()->isSame(retType))) {
     // cast val pointer to the return type pointer
     valPtr = builder.makeInst<UnaryInst>(ir::ValueId::vBITCAST, PointerType::gen(retType), valPtr);
   }

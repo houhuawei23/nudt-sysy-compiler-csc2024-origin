@@ -111,7 +111,7 @@ Value* IRBuilder::castConstantType(Value* val, Type* target_tpye) {
   if (not val->isa<ConstantValue>())
     return val;
 
-  if (val->type() == target_tpye)
+  if(val->type()->isSame(target_tpye)) 
     return val;
 
   if (val->type()->isInt32() and target_tpye->isFloatPoint()) {
@@ -151,15 +151,13 @@ Value* IRBuilder::promoteTypeBeta(Value* val, Type* targetType) {
   if (res->type() != targetType) {
     res = promoteTypeBeta(res, targetType);
   }
-  assert(res->type() == targetType);
+  assert(res->type()->isSame(targetType));
   return res;
 }
 
 Value* IRBuilder::makeTypeCast(Value* val, Type* target_type) {
-  Value* res = val;
-  // NOTE: complex type cant compare by Type*, need to fix
-  if (val->type() == target_type)
-    return res;
+  if (val->type()->isSame(target_type))
+    return val;
 
   if (val->type()->isInt() and target_type->isFloatPoint()) {
     return makeUnary(ValueId::vSITOFP, val, target_type);
@@ -170,11 +168,10 @@ Value* IRBuilder::makeTypeCast(Value* val, Type* target_type) {
   if(target_type->isPointer() and target_type->dynCast<PointerType>()->baseType()->isInt32()) {
     return makeInst<UnaryInst>(vBITCAST, target_type, val);
   }
-  // std::cerr << "makeTypeCast: invalid cast from " << *(val->type()) << " to " << *target_type;
-  // std::cerr << std::endl;
-  // std::cerr << "make default Bitcast inst";
-  // res = makeInst<UnaryInst>(ValueId::vBITCAST, target_type, val);
-  return res;
+  std::cerr << "makeTypeCast: invalid cast from " << *(val->type()) << " to " << *target_type;
+  std::cerr << std::endl;
+  std::cerr << "make default Bitcast inst";
+  return makeInst<UnaryInst>(ValueId::vBITCAST, target_type, val);
 }
 
 Value* IRBuilder::makeCmp(CmpOp op, Value* lhs, Value* rhs) {

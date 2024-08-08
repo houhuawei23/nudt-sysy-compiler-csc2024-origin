@@ -19,7 +19,7 @@ struct ConstantValueHash {
 
 struct ConstantValueEqual {
   bool operator()(const ConstantValueKey& lhs, const ConstantValueKey& rhs) const {
-    return lhs.first == rhs.first && lhs.second == rhs.second;
+    return lhs.first->isSame(rhs.first) && lhs.second == rhs.second;
   }
 };
 
