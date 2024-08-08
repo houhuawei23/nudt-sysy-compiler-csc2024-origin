@@ -189,15 +189,7 @@ static void legalizeAddrBaseOffsetPostRA(MIRInstList& instructions,
     instructions.insert(iter, newInst);
     imm -= adjust;
     return;
-  } else {
-    // const auto adjust = imm;
-    // auto newInst = utils::make<MIRInst>(
-    //   RISCVInst::LoadImm32,
-    //   {dst, MIROperand::asImm(adjust, OperandType::Int32)});
-    // instructions.insert(iter, newInst);
-    // imm -= adjust;
-    return;
-  }
+  } 
   std::cerr << "adjust_reg: imm out of range: " << imm << std::endl;
   assert(false);
 }

@@ -30,6 +30,9 @@ void postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx);
 void preRASchedule(MIRFunction& func, const CodeGenContext& ctx);
 void postRASchedule(MIRFunction& func, const CodeGenContext& ctx);
 
+void preRASchedule(MIRFunction& func, const CodeGenContext& ctx);
+void postRASchedule(MIRFunction& func, const CodeGenContext& ctx);
+
 /* some utils function */
 struct CodeLocation final {
   const char* const file;

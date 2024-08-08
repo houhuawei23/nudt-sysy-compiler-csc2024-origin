@@ -21,11 +21,11 @@ static const std::string SysYRuntime =
   ;
 class RISCVDataLayout final : public DataLayout {
 public:
-  Endian edian() override { return Endian::Little; }
-  size_t typeAlign(ir::Type* type) override { return 4; }
-  size_t pointerSize() override { return 8; }
-  size_t codeAlign() override { return 4; }
-  size_t memAlign() override { return 8; }
+  Endian edian() const override { return Endian::Little; }
+  size_t typeAlign(ir::Type* type) const override { return 4; }
+  size_t pointerSize() const override { return 8; }
+  size_t codeAlign() const override { return 4; }
+  size_t memAlign() const override { return 8; }
 };
 /*
  * @brief: RISCVFrameInfo Class
@@ -36,8 +36,7 @@ public:  // lowering stage
   void emitCall(ir::CallInst* inst, LoweringContext& lowering_ctx) override;
   // 在函数调用前生成序言代码，用于设置栈帧和保存寄存器状态。
   void emitPrologue(MIRFunction* func, LoweringContext& lowering_ctx) override;
-  void emitReturn(ir::ReturnInst* ir_inst,
-                  LoweringContext& lowering_ctx) override;
+  void emitReturn(ir::ReturnInst* ir_inst, LoweringContext& lowering_ctx) override;
 
 public:  // ra stage (register allocation stage)
   // 调用者保存寄存器
@@ -45,10 +44,8 @@ public:  // ra stage (register allocation stage)
     const auto reg = op.reg();
     // $ra $t0-$t6 $a0-$a7 $ft0-$ft11 $fa0-$fa7
     return reg == RISCV::X1 || (RISCV::X5 <= reg && reg <= RISCV::X7) ||
-           (RISCV::X10 <= reg && reg <= RISCV::X17) ||
-           (RISCV::X28 <= reg && reg <= RISCV::X31) ||
-           (RISCV::F0 <= reg && reg <= RISCV::F7) ||
-           (RISCV::F10 <= reg && reg <= RISCV::F17) ||
+           (RISCV::X10 <= reg && reg <= RISCV::X17) || (RISCV::X28 <= reg && reg <= RISCV::X31) ||
+           (RISCV::F0 <= reg && reg <= RISCV::F7) || (RISCV::F10 <= reg && reg <= RISCV::F17) ||
            (RISCV::F28 <= reg && reg <= RISCV::F31);
   }
   // 被调用者保存寄存器
@@ -56,8 +53,7 @@ public:  // ra stage (register allocation stage)
     const auto reg = op.reg();
     // $sp $s0-$s7 $f20-$f30 $gp
     return reg == RISCV::X2 || (RISCV::X8 <= reg && reg <= RISCV::X9) ||
-           (RISCV::X18 <= reg && reg <= RISCV::X27) ||
-           (RISCV::F8 <= reg && reg <= RISCV::F9) ||
+           (RISCV::X18 <= reg && reg <= RISCV::X27) || (RISCV::F8 <= reg && reg <= RISCV::F9) ||
            (RISCV::F18 <= reg && reg <= RISCV::F27) || reg == RISCV::X3;
   }
 
@@ -69,8 +65,7 @@ public:  // sa stage (stack allocation stage)
   }
   void emitPostSAEpilogue(MIRBlock* exit, int32_t stack_size) override {
     auto& insts = exit->insts();
-    RISCV::adjust_reg(insts, std::prev(insts.end()), RISCV::sp, RISCV::sp,
-                      stack_size);
+    RISCV::adjust_reg(insts, std::prev(insts.end()), RISCV::sp, RISCV::sp, stack_size);
   }
   int32_t insertPrologueEpilogue(
     MIRFunction* func,
@@ -130,14 +125,13 @@ public:  // get function
   }
   MIROperand get_return_address_register() { return RISCV::ra; }
   MIROperand get_stack_pointer_register() { return RISCV::sp; }
+
 public:  // check function
   bool is_legal_isa_reg_operand(MIROperand& op) {
     std::cerr << "Not Impl is_legal_isa_reg_operand" << std::endl;
     return false;
   }
-  bool is_zero_reg(const uint32_t x) const {
-    return x == RISCV::RISCVRegister::X0;
-  }
+  bool is_zero_reg(const uint32_t x) const { return x == RISCV::RISCVRegister::X0; }
 };
 
 /*
@@ -145,26 +139,20 @@ public:  // check function
  * @note: RISC-V架构后端
  */
 class RISCVTarget : public Target {
-  RISCVDataLayout _datalayout;
-  RISCVFrameInfo _frameinfo;
-  RISCVRegisterInfo _mRegisterInfo;
+  RISCVDataLayout mDatalayout;
+  RISCVFrameInfo mFrameInfo;
+  RISCVRegisterInfo mRegisterInfo;
 
 public:
   RISCVTarget() = default;
 
 public:  // get function
-  DataLayout& getDataLayout() override { return _datalayout; }
-  TargetFrameInfo& getTargetFrameInfo() override { return _frameinfo; }
-  TargetRegisterInfo& getRegisterInfo() override { return _mRegisterInfo; }
-  TargetInstInfo& getTargetInstInfo() override {
-    return RISCV::getRISCVInstInfo();
-  }
-  TargetISelInfo& getTargetIselInfo() override {
-    return RISCV::getRISCVISelInfo();
-  }
-  TargetScheduleModel& getScheduleModel() override {
-    return RISCV::getRISCVScheduleModel();
-  }
+  DataLayout& getDataLayout() override { return mDatalayout; }
+  TargetFrameInfo& getTargetFrameInfo() override { return mFrameInfo; }
+  TargetRegisterInfo& getRegisterInfo() override { return mRegisterInfo; }
+  TargetInstInfo& getTargetInstInfo() override { return RISCV::getRISCVInstInfo(); }
+  TargetISelInfo& getTargetIselInfo() override { return RISCV::getRISCVISelInfo(); }
+  TargetScheduleModel& getScheduleModel() override { return RISCV::getRISCVScheduleModel(); }
 
 public:  // emit_assembly
   void postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) override;

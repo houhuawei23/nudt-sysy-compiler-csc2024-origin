@@ -4,7 +4,7 @@
 
 namespace mir {
 void CFGAnalysis::dump(std::ostream& out) {
-    for (auto [bb, info] : _block2CFGInfo) {
+    for (auto [bb, info] : mBlock2CFGInfo) {
         out << bb->name() << ": \n";
 
         out << "the predecessors are as follows: \n";

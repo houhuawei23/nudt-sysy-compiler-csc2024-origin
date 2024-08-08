@@ -556,8 +556,8 @@ static void graphColoringAllocateImpl(MIRFunction& mfunc,
       std::cerr << "block list " << blockList.size() << ' ' << graph.size() << '\n';
     }
     if (!isVirtualReg(u)) {
-      // std::cerr << mfunc.symbol() << std::endl;
-      // reportUnreachable(CMMC_LOCATION());
+      std::cerr << mfunc.name() << std::endl;
+      assert(false);
     }
     const auto size = getOperandSize(canonicalizedType);
     bool alreadyInStack = inStackArguments.count(u);

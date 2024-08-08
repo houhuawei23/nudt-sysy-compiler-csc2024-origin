@@ -16,11 +16,11 @@ public:
   virtual ~DataLayout() = default;
 
 public:  // get function
-  virtual Endian edian() = 0;
-  virtual size_t pointerSize() = 0;
+  virtual Endian edian() const = 0;
+  virtual size_t pointerSize() const = 0;
 
-  virtual size_t typeAlign(ir::Type* type) = 0;
-  virtual size_t codeAlign() = 0;
-  virtual size_t memAlign() { return 8; }
+  virtual size_t typeAlign(ir::Type* type) const = 0;
+  virtual size_t codeAlign() const = 0;
+  virtual size_t memAlign() const = 0;
 };
 }  // namespace mir
