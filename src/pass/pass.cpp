@@ -153,7 +153,7 @@ void PassManager::runPasses(std::vector<std::string> passes) {
       run(new pass::tailCallOpt());
     } else if (pass_name.compare("cfgprint") == 0) {
       run(new pass::CFGPrinter());
-    } else if (pass_name.compare("licm") == 0) {
+    } else if (pass_name.compare("licm") == 0) {//必须配合gcm使用才能unroll gcm gvn licm unroll
       run(new pass::LICM());
     } else if (pass_name.compare("dse") == 0) {
       run(new pass::simpleDSE());

@@ -481,7 +481,8 @@ void loopUnroll::insertremainderloop(ir::Loop* loop, ir::Function* func) {
 void loopUnroll::dofullunroll(ir::Loop* loop, ir::indVar* iv, int times) {
     // doconstunroll(loop, iv, times);
     // return;
-    std::cerr << "do full unroll" << std::endl;
+    // std::cerr << "do full unroll" << std::endl;
+
     headuseouts.clear();
     ir::Function* func = loop->header()->function();
     ir::BasicBlock* head = loop->header();

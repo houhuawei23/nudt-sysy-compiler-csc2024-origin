@@ -32,7 +32,8 @@ void GCM::scheduleEarly(ir::Instruction* instruction, ir::BasicBlock* entry) {
         auto op = *opiter;
         opiter++;
         if (auto opInst = dyn_cast<ir::Instruction>(op->value())) {
-            if (opInst->block() != entry) scheduleEarly(opInst, entry);
+            if (opInst->block() != entry) 
+                scheduleEarly(opInst, entry);
             opBB = opInst->block();
             if (domctx->domlevel(opBB) > domctx->domlevel(destBB)) {
                 destBB = opBB;
@@ -46,17 +47,16 @@ void GCM::scheduleEarly(ir::Instruction* instruction, ir::BasicBlock* entry) {
 
         auto bestBB = instbb;
         auto curBB = instbb;
-        while (domctx->domlevel(curBB) >= domctx->domlevel(destBB)) {
-            if (lpctx->looplevel(curBB) <= lpctx->looplevel(bestBB)) 
-                bestBB = curBB;
+
+        while (domctx->domlevel(curBB) > domctx->domlevel(destBB)) {
+            if (lpctx->looplevel(curBB) <= lpctx->looplevel(bestBB)) bestBB = curBB;
             curBB = domctx->idom(curBB);
-            if (!curBB || curBB == entry)
-                break;
+            if ((!curBB) || (curBB == entry)) break;
         }
+
         if (bestBB == instbb) return;
         instbb->move_inst(instruction);                // 将指令从bb中移除
         bestBB->emplace_lastbutone_inst(instruction);  // 将指令移入destBB
-        // std::cerr<<"gcm!"<<std::endl;
     }
 }
 
