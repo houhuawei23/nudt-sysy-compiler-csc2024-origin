@@ -17,7 +17,8 @@ namespace mir {
  * @note: RISC-V数据信息 (64位)
  */
 static const std::string SysYRuntime =
-#include "autogen/riscv/Runtime.hpp"
+// #include "autogen/riscv/Runtime.hpp"
+#include "autogen/riscv/RuntimeWithoutZ.hpp"
   ;
 class RISCVDataLayout final : public DataLayout {
 public:

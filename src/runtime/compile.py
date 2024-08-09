@@ -15,11 +15,15 @@ lookup_cpp = os.path.join(runtime_dir, "Lookup.cpp")
 
 infiles = [memset_cpp, lookup_cpp]
 
-gcc_ref_command = {
+gcc_ref_command_old = {
     "RISCV": "riscv64-linux-gnu-g++-12 -O3 -DNDEBUG -march=rv64gc_zba_zbb -fno-stack-protector -fomit-frame-pointer -mcpu=sifive-u74 -mabi=lp64d -mcmodel=medlow -ffp-contract=on -w ".split(),
     "ARM": "arm-linux-gnueabihf-g++-12 -O3 -DNDEBUG -march=armv7 -fno-stack-protector -fomit-frame-pointer -mcpu=cortex-a72 -mfpu=vfpv4 -ffp-contract=on -w -no-pie ".split(),
 }[target]
 
+gcc_ref_command = {
+    "RISCV": "riscv64-linux-gnu-g++-12 -O2 -DNDEBUG -march=rv64gc -fno-stack-protector -fomit-frame-pointer -mabi=lp64d -mcmodel=medlow -ffp-contract=on -w ".split(),
+    "ARM": "arm-linux-gnueabihf-g++-12 -O3 -DNDEBUG -march=armv7 -fno-stack-protector -fomit-frame-pointer -mcpu=cortex-a72 -mfpu=vfpv4 -ffp-contract=on -w -no-pie ".split(),
+}[target]
 
 merge = ""
 for infile in infiles:
