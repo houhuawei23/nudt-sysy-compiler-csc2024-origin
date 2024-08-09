@@ -1,7 +1,5 @@
 #include <assert.h>
-
-#include <variant>  // dynamic_cast
-
+#include <variant>
 #include <string_view>
 using namespace std::string_view_literals;
 
@@ -30,7 +28,7 @@ Type* Type::TypeInt32() {
   return &intType;
 }
 Type* Type::TypeInt64() {
-  static Type intType(BasicTypeRank::INT64);
+  static Type intType(BasicTypeRank::INT64, 8);
   return &intType;
 }
 Type* Type::TypeFloat32() {

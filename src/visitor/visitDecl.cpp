@@ -1,11 +1,10 @@
 #include "visitor/visitor.hpp"
-
 using namespace ir;
 namespace sysy {
 /*
- * @brief Visit Variable Type (变量类型)
+ * @brief visitBtype (变量类型)
  * @details
- *      btype: INT | FLOAT;
+ *    btype: INT | FLOAT;
  */
 std::any SysYIRGenerator::visitBtype(SysYParser::BtypeContext* ctx) {
   if (ctx->INT()) {
@@ -17,34 +16,24 @@ std::any SysYIRGenerator::visitBtype(SysYParser::BtypeContext* ctx) {
 }
 
 /*
- * @brief Visit Variable Declaration (变量定义 && 声明)
+ * @brief: visitDecl (变量定义 && 声明)
  * @details
- *      Global OR Local (全局 OR 局部)
- * 
- * decl: CONST? btype varDef (COMMA varDef)* SEMICOLON;
+ *    Global OR Local (全局 OR 局部)
  */
 std::any SysYIRGenerator::visitDecl(SysYParser::DeclContext* ctx) {
   auto btype = any_cast_Type(visit(ctx->btype()));
   bool is_const = ctx->CONST();
-  // std::cerr << ctx->getText() << std::endl;
-  for (auto varDefCtx : ctx->varDef()) {
-    visitVarDef(varDefCtx, btype, is_const);
+  for (auto varDef : ctx->varDef()) {
+    visitVarDef(varDef, btype, is_const);
   }
 
   return std::any();
 }
 
-/**
- * varDef: lValue (ASSIGN initValue)?;
- * lValue: ID (LBRACKET exp RBRACKET)*;
- * 
- * a[m][n]: m, n must be ConstantValue
- */
 Value* SysYIRGenerator::visitVarDef(SysYParser::VarDefContext* ctx, Type* btype, bool is_const) {
   // 获得数组的各个维度 (常量)
   std::vector<size_t> dims;
   size_t capacity = 1;
-  // std::cerr << "visitVarDef: " << ctx->getText() << std::endl;
   for (auto dimCtx : ctx->lValue()->exp()) {
     auto dimValue = any_cast_Value(visit(dimCtx));
 
@@ -60,29 +49,30 @@ Value* SysYIRGenerator::visitVarDef(SysYParser::VarDefContext* ctx, Type* btype,
   }
   bool isArray = dims.size() > 0;
 
-  // std::cerr << ctx->getText() << std::endl;
   if (mTables.isModuleScope()) {
-    if (isArray)
+    if (isArray) {
       return visitGlobalArray(ctx, btype, is_const, dims, capacity);
-    else
+    } else {
       return visitGlobalScalar(ctx, btype, is_const);
+    }
   } else {
-    if (isArray)
+    if (isArray) {
       return visitLocalArray(ctx, btype, is_const, dims, capacity);
-    else
+    } else {
       return visitLocalScalar(ctx, btype, is_const);
+    }
   }
 }
 
 /*
  * @brief: visit global array
  * @details:
- *      varDef: lValue (ASSIGN initValue)?;
- *      lValue: ID (LBRACKET exp RBRACKET)*;
- *      initValue: exp | LBRACE (initValue (COMMA initValue)*)? RBRACE;
+ *    varDef: lValue (ASSIGN initValue)?;
+ *    lValue: ID (LBRACKET exp RBRACKET)*;
+ *    initValue: exp | LBRACE (initValue (COMMA initValue)*)? RBRACE;
  * @note: global variable
- *      1. const
- *      2. variable
+ *    1. const
+ *    2. variable
  */
 Value* SysYIRGenerator::visitGlobalArray(SysYParser::VarDefContext* ctx,
                                          Type* btype,
@@ -99,9 +89,7 @@ Value* SysYIRGenerator::visitGlobalArray(SysYParser::VarDefContext* ctx,
 
   //! get initial value (将数组元素的初始化值存储在Arrayinit中)
   if (ctx->ASSIGN()) {
-    _d = 0;
-    _n = 0;
-    _path.clear();
+    _d = 0; _n = 0; _path.clear();
     _path = std::vector<size_t>(dims.size(), 0);
     _current_type = btype;
     _is_alloca = true;
@@ -122,12 +110,12 @@ Value* SysYIRGenerator::visitGlobalArray(SysYParser::VarDefContext* ctx,
 /*
  * @brief: visit global scalar
  * @details:
- *      varDef: lValue (ASSIGN initValue)?;
- *      lValue: ID (LBRACKET exp RBRACKET)*;
- *      initValue: exp | LBRACE (initValue (COMMA initValue)*)? RBRACE;
+ *    varDef: lValue (ASSIGN initValue)?;
+ *    lValue: ID (LBRACKET exp RBRACKET)*;
+ *    initValue: exp | LBRACE (initValue (COMMA initValue)*)? RBRACE;
  * @note: global variable
- *      1. const
- *      2. variable
+ *    1. const
+ *    2. variable
  */
 Value* SysYIRGenerator::visitGlobalScalar(SysYParser::VarDefContext* ctx,
                                           Type* btype,
@@ -157,14 +145,11 @@ Value* SysYIRGenerator::visitGlobalScalar(SysYParser::VarDefContext* ctx,
 }
 
 /*
- * @brief: visit local array
+ * @brief: visitLocalArray
  * @details:
- *      varDef: lValue (ASSIGN initValue)?;
- *      lValue: ID (LBRACKET exp RBRACKET)*;
- *      initValue: exp | LBRACE (initValue (COMMA initValue)*)? RBRACE;
- * @note: alloca
- *      1. const
- *      2. variable
+ *    varDef: lValue (ASSIGN initValue)?;
+ *    lValue: ID (LBRACKET exp RBRACKET)*;
+ *    initValue: exp | LBRACE (initValue (COMMA initValue)*)? RBRACE;
  */
 Value* SysYIRGenerator::visitLocalArray(SysYParser::VarDefContext* ctx,
                                         Type* btype,
@@ -174,8 +159,8 @@ Value* SysYIRGenerator::visitLocalArray(SysYParser::VarDefContext* ctx,
   const auto name = ctx->lValue()->ID()->getText();
   size_t dimensions = dims.size();
   std::vector<size_t> cur_dims(dims);
-
   std::vector<Value*> Arrayinit;
+  bool isAssign = false;
 
   //! alloca
   const auto arraytype = ArrayType::gen(btype, cur_dims, capacity);
@@ -189,41 +174,31 @@ Value* SysYIRGenerator::visitLocalArray(SysYParser::VarDefContext* ctx,
 
   //! get initial value (将数组元素的初始化值存储在Arrayinit中)
   if (ctx->ASSIGN()) {
-    for (size_t i = 0; i < capacity; i++)
+    for (int i = 0; i < capacity; i++) {
       Arrayinit.push_back(nullptr);
+    }
 
     auto ptr = mBuilder.makeInst<UnaryInst>(ir::ValueId::vBITCAST,
                                             PointerType::gen(Type::TypeInt8()), alloca_ptr);
                                             
     const auto len = alloca_ptr->type()->dynCast<PointerType>()->baseType()->size();
 
-    mBuilder.makeInst<MemsetInst>(ptr, ConstantInteger::get(Type::TypeInt8(), 0),
+    mBuilder.makeInst<MemsetInst>(ptr,
+                                  ConstantInteger::get(Type::TypeInt8(), 0),
                                   ConstantInteger::get(Type::TypeInt64(), len),
                                   ConstantInteger::getFalse());
 
-    _d = 0;
-    _n = 0;
-    _path.clear();
+    _d = 0; _n = 0; _path.clear();
     _path = std::vector<size_t>(dims.size(), 0);
     _current_type = btype;
     _is_alloca = true;
     for (auto expr : ctx->initValue()->initValue()) {
-      visitInitValue_Array(expr, capacity, dims, Arrayinit);
+      isAssign |= visitInitValue_Array(expr, capacity, dims, Arrayinit);
     }
   }
 
   //! assign
-  bool isAssign = false;
-  for (size_t i = 0; i < Arrayinit.size(); i++) {
-    if (Arrayinit[i] != nullptr) {
-      isAssign = true;
-      break;
-    }
-  }
-
-  if (!isAssign)
-    return dyn_cast_Value(alloca_ptr);
-
+  if (!isAssign) return dyn_cast_Value(alloca_ptr);
   Value* element_ptr = dyn_cast<Value>(alloca_ptr);
   for (size_t cur = 1; cur <= dimensions; cur++) {
     dims.erase(dims.begin());
@@ -244,19 +219,19 @@ Value* SysYIRGenerator::visitLocalArray(SysYParser::VarDefContext* ctx,
 
   return dyn_cast_Value(alloca_ptr);
 }
+
 /*
- * @brief: visit local scalar
+ * @brief: visitLocalScalar
  * @details:
- *      varDef: lValue (ASSIGN initValue)?;
- *      lValue: ID (LBRACKET exp RBRACKET)*;
- *      initValue: exp | LBRACE (initValue (COMMA initValue)*)? RBRACE;
+ *    varDef: lValue (ASSIGN initValue)?;
+ *    lValue: ID (LBRACKET exp RBRACKET)*;
+ *    initValue: exp | LBRACE (initValue (COMMA initValue)*)? RBRACE;
  * @note:
- *      1. const     ignore
- *      2. variable  alloca
+ *    1. const     ignore
+ *    2. variable  alloca
  */
 Value* SysYIRGenerator::visitLocalScalar(SysYParser::VarDefContext* ctx,
-                                         Type* btype,
-                                         bool is_const) {
+                                         Type* btype, bool is_const) {
   const auto name = ctx->lValue()->ID()->getText();
 
   if (is_const) {  //! const qulifier
@@ -292,10 +267,10 @@ Value* SysYIRGenerator::visitLocalScalar(SysYParser::VarDefContext* ctx,
 }
 
 /*
- * @brief: visit array initvalue
+ * @brief: visitInitValue_Array
  * @details:
- *      varDef: lValue (ASSIGN initValue)?;
- *      initValue: exp | LBRACE (initValue (COMMA initValue)*)? RBRACE;
+ *    varDef: lValue (ASSIGN initValue)?;
+ *    initValue: exp | LBRACE (initValue (COMMA initValue)*)? RBRACE;
  */
 bool SysYIRGenerator::visitInitValue_Array(SysYParser::InitValueContext* ctx,
                                            const size_t capacity,

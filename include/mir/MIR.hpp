@@ -214,6 +214,9 @@ enum MIRGenericInst : uint32_t {
   InstLoadRegFromStack,
   InstStoreRegToStack,
 
+  // Bitcast
+  InstBitCast, 
+
   // Return
   InstReturn,
 

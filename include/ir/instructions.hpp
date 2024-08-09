@@ -128,76 +128,53 @@ public:
 
 /*
  * @brief Unary Instruction
- * @details:
- *      <result> = sitofp <ty> <value> to <ty2>
- *      <result> = fptosi <ty> <value> to <ty2>
- *
- *      <result> = fneg [fast-math flags]* <ty> <op1>
- *
- * contains some conversion instructions:
- * trunc, zext, sext, fptrunc, fptosi, sitofp
- * bitcast
+ * @details: 
+ *    trunc, zext, sext, fptrunc, fptosi, sitofp,
+ *    bitcast, ptrtoint, inttoptr
  */
 class UnaryInst : public Instruction {
 public:
-  UnaryInst(ValueId kind,
-            Type* type,
-            Value* operand,
-            BasicBlock* parent = nullptr,
-            const_str_ref name = "")
+  UnaryInst(ValueId kind, Type* type, Value* operand,
+            BasicBlock* parent=nullptr, const_str_ref name="")
     : Instruction(kind, type, parent, name) {
     addOperand(operand);
   }
-
-public:
-  static bool classof(const Value* v) {
-    return v->valueId() >= vUNARY_BEGIN && v->valueId() <= vUNARY_END;
-  }
-
-public:
+public:  // get function
   auto value() const { return operand(0); }
-
-public:
+public:  // utils function
   void print(std::ostream& os) const override;
   Value* getConstantRepl(bool recursive = false) override;
   Instruction* copy(std::function<Value*(Value*)> getValue) const override;
+  static bool classof(const Value* v) {
+    return v->valueId() >= vUNARY_BEGIN && v->valueId() <= vUNARY_END;
+  }
 };
 
 /*
- * @brief Binary Instruction
- * @details:
- *      1. exp (MUL | DIV | MODULO) exp
- *      2. exp (ADD | SUB) exp
+ * @brief: Binary Instruction
+ * @note:
+ *    1. exp (MUL | DIV | MODULO) exp
+ *    2. exp (ADD | SUB) exp
  */
 class BinaryInst : public Instruction {
 public:
-  BinaryInst(ValueId kind,
-             Type* type,
-             Value* lvalue,
-             Value* rvalue,
-             BasicBlock* parent = nullptr,
-             const std::string name = "")
+  BinaryInst(ValueId kind, Type* type, Value* lvalue, Value* rvalue,
+             BasicBlock* parent=nullptr, const std::string name="")
     : Instruction(kind, type, parent, name) {
     addOperand(lvalue);
     addOperand(rvalue);
   }
-
-public:
+public:  // check function
   static bool classof(const Value* v) {
     return v->valueId() >= vBINARY_BEGIN && v->valueId() <= vBINARY_END;
   }
   bool isCommutative() const {
     return valueId() == vADD || valueId() == vFADD || valueId() == vMUL || valueId() == vFMUL;
   }
-
-public:
+public:  // get function
   auto lValue() const { return operand(0); }
   auto rValue() const { return operand(1); }
-
-  // auto lValue() { return operand(0); }
-  // auto rValue() { return operand(1); }
-
-public:
+public:  // utils function
   void print(std::ostream& os) const override;
   Value* getConstantRepl(bool recursive = false) override;
   Instruction* copy(std::function<Value*(Value*)> getValue) const override;
@@ -206,33 +183,32 @@ public:
 class CallInst : public Instruction {
   Function* mCallee = nullptr;
   bool mIsTail = false;
-
 public:
-  CallInst(Function* callee,
-           const_value_ptr_vector rargs = {},
-           BasicBlock* parent = nullptr,
-           const_str_ref name = "")
+  CallInst(Function* callee, const_value_ptr_vector rargs={},
+           BasicBlock* parent=nullptr, const_str_ref name="")
     : Instruction(vCALL, callee->retType(), parent, name), mCallee(callee), mIsTail(false) {
     addOperands(rargs);
   }
-  CallInst(Function* callee,
-           std::initializer_list<Value*> rargs = {},
-           BasicBlock* parent = nullptr,
-           const_str_ref name = "")
+  CallInst(Function* callee, std::initializer_list<Value*> rargs={},
+           BasicBlock* parent=nullptr, const_str_ref name="")
     : Instruction(vCALL, callee->retType(), parent, name), mCallee(callee), mIsTail(false) {
     addOperands(rargs);
   }
+public:  // check function
   bool istail() { return mIsTail; }
-  void setIsTail(bool b) { mIsTail = b; }
   bool isgetarrayorfarray() {
     return (mCallee->name() == "getarray") || (mCallee->name() == "getfarray");
   }
   bool isputarrayorfarray() {
     return (mCallee->name() == "putarray") || (mCallee->name() == "putfarray");
   }
+public:  // set function
+  void setIsTail(bool b) { mIsTail = b; }
+public:  // get function
   Function* callee() const { return mCallee; }
   /* real arguments */
   auto& rargs() const { return mOperands; }
+public:  // utils function
   static bool classof(const Value* v) { return v->valueId() == vCALL; }
   void print(std::ostream& os) const override;
 
@@ -243,30 +219,25 @@ public:
 /*
  * @brief: Conditional or Unconditional Branch Instruction
  * @note:
- *      1. br i1 <cond>, label <iftrue>, label <iffalse>
- *      2. br label <dest>
+ *    1. br i1 <cond>, label <iftrue>, label <iffalse>
+ *    2. br label <dest>
  */
 class BranchInst : public Instruction {
   bool mIsCond = false;
-
 public:
   /* Condition Branch */
-  BranchInst(Value* cond,
-             BasicBlock* iftrue,
-             BasicBlock* iffalse,
-             BasicBlock* parent = nullptr,
-             const_str_ref name = "")
+  BranchInst(Value* cond, BasicBlock* iftrue, BasicBlock* iffalse,
+             BasicBlock* parent=nullptr, const_str_ref name="")
     : Instruction(vBR, Type::void_type(), parent, name), mIsCond(true) {
     addOperand(cond);
     addOperand(iftrue);
     addOperand(iffalse);
   }
   /* UnCondition Branch */
-  BranchInst(BasicBlock* dest, BasicBlock* parent = nullptr, const_str_ref name = "")
+  BranchInst(BasicBlock* dest, BasicBlock* parent=nullptr, const_str_ref name="")
     : Instruction(vBR, Type::void_type(), parent, name), mIsCond(false) {
     addOperand(dest);
   }
-
 public:  // get function
   bool is_cond() const { return mIsCond; }
   auto cond() const {
@@ -285,6 +256,7 @@ public:  // get function
     assert(!mIsCond && "not an unconditional branch");
     return operand(0)->as<BasicBlock>();
   }
+public:  // set function
   void replaceDest(ir::BasicBlock* olddest, ir::BasicBlock* newdest);
   void set_iftrue(BasicBlock* bb) {
     assert(mIsCond and "not a conditional branch");
@@ -298,8 +270,7 @@ public:  // get function
     assert(not mIsCond and "not an unconditional branch");
     setOperand(0, bb);
   }
-
-public:
+public:  // utils function
   static bool classof(const Value* v) { return v->valueId() == vBR; }
   void print(std::ostream& os) const override;
   Instruction* copy(std::function<Value*(Value*)> getValue) const override;
@@ -307,31 +278,28 @@ public:
 
 /*
  * @brief: ICmpInst
- * @note: <result> = icmp <cond> <ty> <op1>, <op2>
+ * @note:
+ *    <result> = icmp <cond> <ty> <op1>, <op2>
  */
 class ICmpInst : public Instruction {
 public:
-  ICmpInst(ValueId itype,
-           Value* lhs,
-           Value* rhs,
-           BasicBlock* parent = nullptr,
-           const_str_ref name = "")
-    : Instruction(itype, Type::TypeBool(), parent, name) {  // cmp return i1
+  ICmpInst(ValueId itype, Value* lhs, Value* rhs,
+           BasicBlock* parent=nullptr, const_str_ref name="")
+    : Instruction(itype, Type::TypeBool(), parent, name) {
     addOperand(lhs);
     addOperand(rhs);
   }
-
-public:
+public:  // get function
   auto lhs() const { return operand(0); }
   auto rhs() const { return operand(1); }
-
+public:  // check function
   bool isReverse(ICmpInst* y);
-
+public:  // set function
   void setCmpOp(ValueId newv) {
     assert(newv >= vICMP_BEGIN and newv <= vICMP_END);
     mValueId = newv;
   }
-
+public:  // utils function
   static bool classof(const Value* v) {
     return v->valueId() >= vICMP_BEGIN && v->valueId() <= vICMP_END;
   }
@@ -343,25 +311,18 @@ public:
 /* FCmpInst */
 class FCmpInst : public Instruction {
 public:
-  FCmpInst(ValueId itype,
-           Value* lhs,
-           Value* rhs,
-           BasicBlock* parent = nullptr,
-           const_str_ref name = "")
-    : Instruction(itype,
-                  Type::TypeBool(),  // also return i1
-                  parent,
-                  name) {
+  FCmpInst(ValueId itype, Value* lhs, Value* rhs,
+           BasicBlock* parent=nullptr, const_str_ref name="")
+    : Instruction(itype, Type::TypeBool(), parent, name) {
     addOperand(lhs);
     addOperand(rhs);
   }
-
-public:
+public:  // get function
   auto lhs() const { return operand(0); }
   auto rhs() const { return operand(1); }
-
+public:  // check function
   bool isReverse(FCmpInst* y);
-
+public:  // utils function
   static bool classof(const Value* v) {
     return v->valueId() >= vFCMP_BEGIN && v->valueId() <= vFCMP_END;
   }
@@ -372,29 +333,24 @@ public:
 };
 
 /*
- * @brief: memset
+ * @brief: MemsetInst
  * @details:
- *      call void @llvm.memset.inline.p0.p0.i64(i8* <dest>, i8 0, i64 <len>, i1
- * <isvolatile>)
- *
- * memset(i8* <dest>, i8 <val>, i64 <len>, i1 <isvolatile>)
+ *    memset(i8* <dest>, i8 <val>, i64 <len>, i1 <isvolatile>)
  */
 class MemsetInst : public Instruction {
 public:
-  MemsetInst(Value* dst, Value* val, Value* len, Value* isVolatile, BasicBlock* parent = nullptr)
+  MemsetInst(Value* dst, Value* val, Value* len, Value* isVolatile, BasicBlock* parent=nullptr)
     : Instruction(vMEMSET, Type::void_type(), parent) {
     addOperand(dst);
     addOperand(val);
     addOperand(len);
     addOperand(isVolatile);
   }
-
 public:  // get function
   auto dst() const { return operand(0); }
   auto val() const { return operand(1); }
   auto len() const { return operand(2); }
   auto isVolatile() const { return operand(3); }
-
 public:  // utils function
   static bool classof(const Value* v) { return v->valueId() == vMEMSET; }
   void print(std::ostream& os) const override;
@@ -430,7 +386,7 @@ public:
                     Value* idx,
                     std::vector<size_t> dims,
                     std::vector<size_t> cur_dims,
-                    BasicBlock* parent = nullptr)
+                    BasicBlock* parent=nullptr)
     : Instruction(vGETELEMENTPTR,
                   ir::Type::TypePointer(ir::Type::TypeArray(base_type, dims)),
                   parent),
@@ -451,7 +407,6 @@ public:
     addOperand(ptr);
     addOperand(idx);
   }
-
 public:  // get function
   auto value() const { return operand(0); }
   auto index() const { return operand(1); }
@@ -461,12 +416,10 @@ public:  // get function
     return dyn_cast<PointerType>(type())->baseType();
   }
   auto cur_dims_cnt() const { return _cur_dims.size(); }
-  auto& cur_dims() const { return _cur_dims; }
-
+  auto cur_dims() const { return _cur_dims; }
 public:  // check function
   bool is_arrayInst() const { return _id != 0; }
-
-public:
+public:  // utils function
   static bool classof(const Value* v) { return v->valueId() == vGETELEMENTPTR; }
   void print(std::ostream& os) const override;
   Instruction* copy(std::function<Value*(Value*)> getValue) const override;
@@ -529,12 +482,17 @@ public:
   Instruction* copy(std::function<Value*(Value*)> getValue) const override { return nullptr; }
 };
 
+/*
+ * @brief: PtrCastInst
+ * @note: 
+ */
 class PtrCastInst : public Instruction {
 public:
   explicit PtrCastInst(Value* src, Type* dstType, BasicBlock* parent = nullptr)
     : Instruction(vPTRCAST, dstType, parent) {
     addOperand(src);
   }
+public:  // utils function
   static bool classof(const Value* v) { return v->valueId() == vPTRCAST; }
   void print(std::ostream& os) const override;
   Instruction* copy(std::function<Value*(Value*)> getValue) const override { return nullptr; }

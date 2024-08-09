@@ -36,8 +36,6 @@ public:
  * records its predecessor and successor `BasicBlock`s.
  */
 class BasicBlock : public Value {
-  // mType: TypeLabel()
-
 protected:
   Function* mFunction;
   inst_list mInsts;
@@ -53,7 +51,7 @@ protected:
   size_t mIdx = 0;
 
 public:
-  BasicBlock(const_str_ref name = "", Function* parent = nullptr)
+  BasicBlock(const_str_ref name="", Function* parent=nullptr)
     : Value(Type::TypeLabel(), vBASIC_BLOCK, name), mFunction(parent) {};
   auto idx() const { return mIdx; }
   void set_idx(uint32_t idx) { mIdx = idx; }
@@ -98,7 +96,6 @@ public:
     for (auto succ : bb->next_blocks())
       BasicBlockDfs(succ, func);
   }
-
 public:  // for CFG
   static void block_link(ir::BasicBlock* pre, ir::BasicBlock* next) {
     pre->next_blocks().emplace_back(next);
@@ -112,11 +109,9 @@ public:  // for CFG
     mNextBlocks.clear();
     mPreBlocks.clear();
   }
-
   bool isTerminal() const;
-
+public:  // utils function
   static bool classof(const Value* v) { return v->valueId() == vBASIC_BLOCK; }
-
   void print(std::ostream& os) const override;
   void dumpAsOpernd(std::ostream& os) const override { os << "%" << name(); }
   bool verify(std::ostream& os) const;

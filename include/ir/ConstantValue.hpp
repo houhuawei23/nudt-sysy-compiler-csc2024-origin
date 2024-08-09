@@ -30,13 +30,14 @@ protected:
 public:
   ConstantValue(Type* type) : Value(type, ValueId::vCONSTANT) {}
   virtual size_t hash() const = 0;
-
+  static ConstantValue* findCacheByHash(size_t hash);
   virtual ConstantValVariant getValue() const = 0;
-
+public:
+  int64_t i64() const;
   int32_t i32() const;
   float f32() const;
   bool i1() const;
-
+public:
   virtual bool isZero();
   virtual bool isOne();
 
@@ -45,12 +46,9 @@ public:
 
 class ConstantInteger : public ConstantValue {
   intmax_t mVal;
-
 public:
   ConstantInteger(Type* type, intmax_t val) : ConstantValue(type), mVal(val) {}
-
   size_t hash() const override;
-
   intmax_t getVal() const { return mVal; }
 
   ConstantValVariant getValue() const override { return mVal; }
@@ -58,12 +56,12 @@ public:
   static ConstantInteger* get(Type* type, intmax_t val);
   static ConstantInteger* getTrue();
   static ConstantInteger* getFalse();
-
+public:
+  static ConstantInteger* gen_i64(intmax_t val);
   static ConstantInteger* gen_i32(intmax_t val);
   static ConstantInteger* gen_i1(bool val);
-
   ConstantInteger* getNeg() const;
-
+public:
   void print(std::ostream& os) const override;
   void dumpAsOpernd(std::ostream& os) const override;
   bool isZero() override { return mVal == 0; }
@@ -72,20 +70,16 @@ public:
 
 class ConstantFloating : public ConstantValue {
   double mVal;
-
 public:
   ConstantFloating(Type* type, double val) : ConstantValue(type), mVal(val) {}
-
   size_t hash() const override;
-
   double getVal() const { return mVal; }
   ConstantValVariant getValue() const override { return mVal; }
 
   static ConstantFloating* get(Type* type, double val);
   static ConstantFloating* gen_f32(double val);
-
   ConstantFloating* getNeg() const;
-
+public:
   void print(std::ostream& os) const override;
   void dumpAsOpernd(std::ostream& os) const override;
   bool isZero() override { return mVal == 0.0; }
@@ -95,9 +89,9 @@ public:
 class UndefinedValue : public ConstantValue {
 public:
   explicit UndefinedValue(Type* type) : ConstantValue(type) { assert(not type->isVoid()); }
-
+public:
   static UndefinedValue* get(Type* type);
-
+public:
   void print(std::ostream& os) const override { os << "undef"; }
   void dumpAsOpernd(std::ostream& os) const override;
   size_t hash() const override { return 0; }
