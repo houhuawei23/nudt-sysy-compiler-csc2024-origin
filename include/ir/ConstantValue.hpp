@@ -31,7 +31,7 @@ public:
   ConstantValue(Type* type) : Value(type, ValueId::vCONSTANT) {}
   virtual size_t hash() const = 0;
   static ConstantValue* findCacheByHash(size_t hash);
-  virtual std::variant<std::monostate, intmax_t, double> getValue() const = 0;
+  virtual ConstantValVariant getValue() const = 0;
 public:
   int64_t i64() const;
   int32_t i32() const;

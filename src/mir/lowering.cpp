@@ -517,7 +517,7 @@ void lower(ir::UnaryInst* ir_inst, LoweringContext& ctx) {
 
   if (gc_instid != InstBitCast) {
     auto dst = ctx.newVReg(ir_inst->type());
-    ctx.emitInstBeta(gc_instid, {dst, ctx.map2operand(ir_inst->value())});
+    ctx.emitMIRInst(gc_instid, {dst, ctx.map2operand(ir_inst->value())});
     ctx.addValueMap(ir_inst, dst);
   } else {
     /* 类型转换 -> 无需生成指令 (因为在lli系统中是强类型, 而在后端不是强类型) */
@@ -849,12 +849,6 @@ void lower(ir::StoreInst* ir_inst, LoweringContext& ctx) {
 /* ReturnInst */
 void lower(ir::ReturnInst* ir_inst, LoweringContext& ctx) {
   ctx.mTarget.getTargetFrameInfo().emitReturn(ir_inst, ctx);
-}
-
-/* BitCastInst */
-void lower(ir::BitCastInst* ir_inst, LoweringContext& ctx) {
-  const auto base = ir_inst->value();
-  ctx.addValueMap(ir_inst, ctx.map2operand(base));
 }
 
 /*
