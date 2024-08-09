@@ -81,8 +81,11 @@ ir::Value* GVN::getValueNumber(ir::GetElementPtrInst* inst) {
         if (auto getelementptr = dynamic_cast<ir::GetElementPtrInst*>(Key)) {
             auto getval = checkHashtable(getelementptr->value());
             auto getidx = checkHashtable(getelementptr->index());
-
-            if (arval == getval && aridx == getidx) {
+            if (arval == getval && aridx == getidx ) {
+                if (!inst->type()->isSame(getelementptr->type()))
+                    continue;
+                    // TODO support typecast 
+                    // assert(false && "GVN: getelementptr type error");
                 return Value;
             }
         }

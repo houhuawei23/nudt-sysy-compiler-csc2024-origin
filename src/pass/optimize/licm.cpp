@@ -64,6 +64,13 @@ bool LICM::checkload(ir::StoreInst* storeinst, ir::Loop* loop) {
                     }
                 }
             }
+            else if (inst->dynCast<ir::CallInst>()) {
+                auto callee = inst->dynCast<ir::CallInst>()->callee();
+                if (!callee->isOnlyDeclare() && sectx->hasSideEffect(callee)) {
+                    // std::cerr << callee->name() << std::endl;
+                    return false;
+                }
+            }
         }
     }
     return true;
@@ -116,7 +123,7 @@ std::vector<ir::Instruction*> LICM::getinvariant(ir::BasicBlock* bb, ir::Loop* l
             if (sectx->isPureFunc(callee)) {
                 if (isinvariantop(callinst, loop)) {
                     res.push_back(callinst);
-                    std::cerr << "lift call" << std::endl;
+                    // std::cerr << "lift call" << std::endl;
                 }
             }
         } else if (auto UnaryInst = inst->dynCast<ir::UnaryInst>()) {
