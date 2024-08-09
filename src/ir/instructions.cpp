@@ -1,11 +1,9 @@
 #include "ir/instructions.hpp"
-
 #include "ir/utils_ir.hpp"
 #include "ir/ConstantValue.hpp"
 
 namespace ir {
 //! Value <- User <- Instruction <- XxxInst
-
 static const std::string getInstName(ValueId instID) {
   switch (instID) {
     case vADD:
@@ -57,6 +55,10 @@ static const std::string getInstName(ValueId instID) {
       return "sitofp";
     case vBITCAST:
       return "bitcast";
+    case vPTRTOINT:
+      return "ptrtoint";
+    case vINTTOPTR:
+      return "inttoptr";
     // cmp
     case vIEQ:
       return "icmp eq";
@@ -91,8 +93,9 @@ static const std::string getInstName(ValueId instID) {
 }
 
 /*
- * @brief AllocaInst::print
- * @details: alloca <ty>
+ * @brief: AllocaInst::print
+ * @details: 
+ *    <result> = alloca <ty>
  */
 void AllocaInst::print(std::ostream& os) const {
   dumpAsOpernd(os);
@@ -105,9 +108,9 @@ void AllocaInst::print(std::ostream& os) const {
 /*
  * @brief StoreInst::print
  * @details:
- *      store <ty> <value>, ptr <pointer>
+ *    store <ty> <value>, ptr <pointer>
  * @note:
- *      ptr: ArrayType or PointerType
+ *    ptr: ArrayType or PointerType
  */
 void StoreInst::print(std::ostream& os) const {
   os << getInstName(mValueId) << " ";
@@ -115,9 +118,9 @@ void StoreInst::print(std::ostream& os) const {
   value()->dumpAsOpernd(os);
   os << ", ";
 
-  if (ptr()->type()->isPointer())
+  if (ptr()->type()->isPointer()) {
     os << *(ptr()->type()) << " ";
-  else {
+  } else {
     auto ptype = ptr()->type();
     auto atype = ptype->dynCast<ArrayType>();
     os << *(atype->baseType()) << "* ";
@@ -126,7 +129,6 @@ void StoreInst::print(std::ostream& os) const {
 }
 
 void LoadInst::print(std::ostream& os) const {
-  // os << name() << " = load ";
   dumpAsOpernd(os);
   os << " = " << getInstName(mValueId) << " ";
   auto ptype = ptr()->type();
@@ -157,8 +159,9 @@ void ReturnInst::print(std::ostream& os) const {
 }
 
 /*
- * @brief Binary Instruction Output
- * @note: <result> = add <ty> <op1>, <op2>
+ * @brief: BinaryInst::print
+ * @details: 
+ *    <result> = add <ty> <op1>, <op2>
  */
 void BinaryInst::print(std::ostream& os) const {
   dumpAsOpernd(os);
@@ -184,11 +187,15 @@ void BinaryInst::print(std::ostream& os) const {
 }
 
 /*
- * @brief: Unary Instruction Output
- * @note:
- *      <result> = sitofp <ty> <value> to <ty2>
- *      <result> = fptosi <ty> <value> to <ty2>
- *      <result> = fneg [fast-math flags]* <ty> <op1>
+ * @brief: UnaryInst::print
+ * @details:
+ *    <result> = sitofp <ty> <value> to <ty2>
+ *    <result> = fptosi <ty> <value> to <ty2>
+ *    <result> = fneg [fast-math flags]* <ty> <op1>
+ *    <result> = bitcast <ty> <value> to <ty2>
+ *    <result> = ptrtoint <ty> <value> to <ty2>
+ *    <result> = inttoptr <ty> <value> to <ty2>
+ *    <result> = sext <ty> <value> to <ty2> 
  */
 void UnaryInst::print(std::ostream& os) const {
   dumpAsOpernd(os);
@@ -202,7 +209,7 @@ void UnaryInst::print(std::ostream& os) const {
   }
 
   /* comment */
-  if (not value()->comment().empty()) {
+  if (!value()->comment().empty()) {
     os << " ; " << "uop " << value()->comment();
   }
 }
@@ -225,9 +232,12 @@ bool ICmpInst::isReverse(ICmpInst* y) {
     return false;
   }
 }
+/*
+ * @brief: ICmpInst::print
+ * @details: 
+ *    <result> = icmp <cond> <ty> <op1>, <op2>   ; yields i1 or <N x i1>:result
+ */
 void ICmpInst::print(std::ostream& os) const {
-  // <result> = icmp <cond> <ty> <op1>, <op2>   ; yields i1 or <N x i1>:result
-  // %res = icmp eq i32, 1, 2
   dumpAsOpernd(os);
   os << " = ";
   os << getInstName(mValueId) << " ";
@@ -263,9 +273,12 @@ bool FCmpInst::isReverse(FCmpInst* y) {
     return false;
   }
 }
+/*
+ * @brief: FCmpInst::print
+ * @details: 
+ *    <result> = fcmp <cond> <ty> <op1>, <op2>   ; yields i1 or <N x i1>:result
+ */
 void FCmpInst::print(std::ostream& os) const {
-  // <result> = icmp <cond> <ty> <op1>, <op2>   ; yields i1 or <N x i1>:result
-  // %res = icmp eq i32, 1, 2
   dumpAsOpernd(os);
 
   os << " = ";
@@ -301,8 +314,8 @@ void BranchInst::replaceDest(ir::BasicBlock* olddest, ir::BasicBlock* newdest) {
 /*
  * @brief: BranchInst::print
  * @details:
- *      br i1 <cond>, label <iftrue>, label <iffalse>
- *      br label <dest>
+ *    1. br i1 <cond>, label <iftrue>, label <iffalse>
+ *    2. br label <dest>
  */
 void BranchInst::print(std::ostream& os) const {
   os << getInstName(mValueId) << " ";
@@ -329,8 +342,8 @@ void BranchInst::print(std::ostream& os) const {
 /*
  * @brief: GetElementPtrInst::print
  * @details:
- *      数组: <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32
- * <idx> 指针: <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
+ *    1. <result> = getelementptr <type>, <type>* <ptrval>, i32 0, i32 <idx>
+ *    2. <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
  */
 void GetElementPtrInst::print(std::ostream& os) const {
   if (is_arrayInst()) {
@@ -414,7 +427,7 @@ void CallInst::print(std::ostream& os) const {
 }
 
 void PhiInst::print(std::ostream& os) const {
-  // 在打印的时候对其vals和bbs进行更新
+  /* NOTE: 在打印的时候对其vals和bbs进行更新 */
   os << name() << " = ";
   os << "phi " << *(type()) << " ";
   // for all vals, bbs
@@ -500,7 +513,7 @@ void PhiInst::refreshMap() {
 /*
  * @brief: BitcastInst::print
  * @details:
- *      <result> = bitcast <ty> <value> to i8*
+ *    <result> = bitcast <ty> <value> to i8*
  */
 
 void BitCastInst::print(std::ostream& os) const {
@@ -511,9 +524,9 @@ void BitCastInst::print(std::ostream& os) const {
 }
 
 /*
- * @brief: memset
+ * @brief: MemsetInst::print
  * @details:
- *      call void @llvm.memset.p0i8.i64(i8* <dest>, i8 0, i64 <len>, i1 false)
+ *    call void @llvm.memset.p0i8.i64(i8* <dest>, i8 0, i64 <len>, i1 false)
  */
 void MemsetInst::print(std::ostream& os) const {
   os << "call void @llvm.memset.p0i8.i64(";
@@ -527,9 +540,7 @@ void MemsetInst::print(std::ostream& os) const {
   isVolatile()->dumpAsOpernd(os);
   os << ")";
 }
-/**
- *
- */
+
 void FunctionPtrInst::print(std::ostream& os) const {}
 
 void PtrCastInst::print(std::ostream& os) const {}

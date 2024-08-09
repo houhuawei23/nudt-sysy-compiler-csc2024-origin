@@ -12,6 +12,15 @@ ConstantValue* ConstantValue::findCacheByHash(size_t hash) {
   return nullptr;
 }
 
+int64_t ConstantValue::i64() const {
+  const auto val = getValue();
+  if (std::holds_alternative<intmax_t>(val)) {
+    return static_cast<int64_t>(std::get<intmax_t>(val));
+  } else if (std::holds_alternative<double>(val)) {
+    return static_cast<int64_t>(std::get<double>(val));
+  }
+  assert(false);
+}
 int32_t ConstantValue::i32() const {
   const auto val = getValue();
   if (std::holds_alternative<intmax_t>(val)) {
@@ -58,6 +67,9 @@ size_t ConstantInteger::hash() const {
   return std::hash<intmax_t>{}(mVal);
 }
 
+ConstantInteger* ConstantInteger::gen_i64(intmax_t val) {
+  return ConstantInteger::get(Type::TypeInt64(), val);
+}
 ConstantInteger* ConstantInteger::gen_i32(intmax_t val) {
   return ConstantInteger::get(Type::TypeInt32(), val);
 }

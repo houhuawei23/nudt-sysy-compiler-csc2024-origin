@@ -216,7 +216,6 @@ bool ISelContext::runInstSelectImpl(MIRFunction* func) {
       for (uint32_t idx = 0; idx < info.operand_num(); idx++) {
         auto op = inst->operand(idx);
         if (!op.isReg()) continue;
-        // replace map: old operand* -> new operand*
         if (auto iter = mReplaceMap.find(op); iter != mReplaceMap.end()) {
           inst->set_operand(idx, iter->second);
         }

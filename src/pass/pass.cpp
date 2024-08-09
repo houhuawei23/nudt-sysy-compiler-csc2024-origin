@@ -28,13 +28,11 @@
 #include "pass/optimize/loopunroll.hpp"
 #include "pass/optimize/DAE.hpp"
 #include "pass/optimize/licm.hpp"
-
 #include "pass/optimize/LoopParallel.hpp"
+#include "pass/optimize/GepSplit.hpp"
 #include "pass/optimize/Misc/StatelessCache.hpp"
-
 #include "support/config.hpp"
 #include "support/FileSystem.hpp"
-
 #include <fstream>
 #include <iostream>
 #include <cassert>
@@ -167,6 +165,8 @@ void PassManager::runPasses(std::vector<std::string> passes) {
       run(&loopParallelPass);
     } else if (pass_name == "cache") {
       run(&cachePass);
+    } else if (pass_name == "GepSplit") {
+      run(new pass::GepSplit());
     } else {
       std::cerr << "Invalid pass name: " << pass_name << std::endl;
       assert(false && "Invalid pass name");

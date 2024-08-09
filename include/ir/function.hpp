@@ -66,51 +66,45 @@ protected:
   size_t mVarCnt = 0;              // for local variables count
   size_t argCnt = 0;               // formal arguments count
 public:
-  Function(Type* TypeFunction, const_str_ref name = "", Module* parent = nullptr)
+  Function(Type* TypeFunction, const_str_ref name="", Module* parent=nullptr)
     : User(TypeFunction, vFUNCTION, name), mModule(parent) {
     argCnt = 0;
     mRetValueAddr = nullptr;
   }
-
-  //* get
+public:  // get function
   auto module() const { return mModule; }
-
-  // return value
+  
   auto retValPtr() const { return mRetValueAddr; }
   auto retType() const { return mType->as<FunctionType>()->retType(); }
-
-  void setRetValueAddr(Value* value) {
-    assert(mRetValueAddr == nullptr && "new_ret_value can not call 2th");
-    mRetValueAddr = value;
-  }
-
-  //* Block
+  
   auto& blocks() const { return mBlocks; }
   auto& blocks() { return mBlocks; }
 
   auto entry() const { return mEntry; }
-  void setEntry(ir::BasicBlock* bb) { mEntry = bb; }
-
   auto exit() const { return mExit; }
-  void setExit(ir::BasicBlock* bb) { mExit = bb; }
 
-  BasicBlock* newBlock();
-  BasicBlock* newEntry(const_str_ref name = "");
-  BasicBlock* newExit(const_str_ref name = "");
-
-  void delBlock(BasicBlock* bb);
-  void forceDelBlock(BasicBlock* bb);
-
-  //* Arguments
   auto& args() const { return mArguments; }
   auto& argTypes() const { return mType->as<FunctionType>()->argTypes(); }
-
   auto arg_i(size_t idx) {
     assert(idx < argCnt && "idx out of args vector");
     return mArguments[idx];
   }
+public:  // set function
+  void setRetValueAddr(Value* value) {
+    assert(mRetValueAddr == nullptr && "new_ret_value can not call 2th");
+    mRetValueAddr = value;
+  }
+  void setEntry(ir::BasicBlock* bb) { mEntry = bb; }
+  void setExit(ir::BasicBlock* bb) { mExit = bb; }
 
-  auto new_arg(Type* btype, const_str_ref name = "") {
+  BasicBlock* newBlock();
+  BasicBlock* newEntry(const_str_ref name="");
+  BasicBlock* newExit(const_str_ref name="");
+
+  void delBlock(BasicBlock* bb);
+  void forceDelBlock(BasicBlock* bb);
+
+  auto new_arg(Type* btype, const_str_ref name="") {
     auto arg = utils::make<Argument>(btype, argCnt, this, name);
     argCnt++;
     mArguments.emplace_back(arg);
@@ -126,8 +120,7 @@ public:
     assert(idx < argCnt && "idx out of args vector");
     mArguments.erase(mArguments.begin() + idx);
   }
-
-public:
+public:  // utils function
   static bool classof(const Value* v) { return v->valueId() == vFUNCTION; }
   ir::Function* copy_func();
 

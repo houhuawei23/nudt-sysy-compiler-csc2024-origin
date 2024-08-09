@@ -10,6 +10,22 @@ Value* IRBuilder::makeBinary(BinaryOp op, Value* lhs, Value* rhs) {
 
   auto vid = [btype = ltype->btype(), op] {
     switch (btype) {
+      case BasicTypeRank::INT64: {
+        switch (op) {
+          case BinaryOp::ADD:
+            return ValueId::vADD;
+          case BinaryOp::SUB:
+            return ValueId::vSUB;
+          case BinaryOp::MUL:
+            return ValueId::vMUL;
+          case BinaryOp::DIV:
+            return ValueId::vSDIV;
+          case BinaryOp::REM:
+            return ValueId::vSREM;
+          default:
+            assert(false && "makeBinary: invalid op!");
+        }
+      }
       case BasicTypeRank::INT32: {
         switch (op) {
           case BinaryOp::ADD:
@@ -46,12 +62,10 @@ Value* IRBuilder::makeBinary(BinaryOp op, Value* lhs, Value* rhs) {
     return ValueId::vInvalid;
   }();
   auto res = makeInst<BinaryInst>(vid, lhs->type(), lhs, rhs);
-  // auto res = makeInstBeta<BinaryInst>(vid, lhs->type(), lhs, rhs);
   return res;
 }
 
 Value* IRBuilder::makeUnary(ValueId vid, Value* val, Type* ty) {
-  //! check vid
   Value* res = nullptr;
 
   if (vid == ValueId::vFNEG) {
@@ -59,7 +73,7 @@ Value* IRBuilder::makeUnary(ValueId vid, Value* val, Type* ty) {
     res = makeInst<UnaryInst>(vid, Type::TypeFloat32(), val);
     return res;
   }
-  //! else
+
   switch (vid) {
     case ValueId::vSITOFP:
       ty = Type::TypeFloat32();
@@ -78,6 +92,12 @@ Value* IRBuilder::makeUnary(ValueId vid, Value* val, Type* ty) {
       break;
     case ValueId::vFPTRUNC:
       assert(val->type()->isFloatPoint() && ty->isFloatPoint());
+      break;
+    case ValueId::vPTRTOINT:
+      assert(val->type()->isPointer());
+      break;
+    case ValueId::vINTTOPTR:
+      assert(val->type()->isInt());
       break;
     default:
       assert(false && "makeUnary: invalid vid!");
@@ -108,11 +128,8 @@ Value* IRBuilder::promoteType(Value* val, Type* target_tpye, Type* base_type) {
 }
 
 Value* IRBuilder::castConstantType(Value* val, Type* target_tpye) {
-  if (not val->isa<ConstantValue>())
-    return val;
-
-  if (val->type() == target_tpye)
-    return val;
+  if (!val->isa<ConstantValue>()) return val;
+  if (val->type() == target_tpye) return val;
 
   if (val->type()->isInt32() and target_tpye->isFloatPoint()) {
     return ConstantFloating::gen_f32(val->as<ConstantInteger>()->getVal());
@@ -132,7 +149,7 @@ Value* IRBuilder::promoteTypeBeta(Value* val, Type* targetType) {
   if (val->type()->btype() >= targetType->btype())
     return val;
   Value* res = val;
-  // else need to promote
+
   auto pair = [&]() {
     if (val->type()->isBool()) {
       if (targetType->btype() <= BasicTypeRank::FLOAT)  // bool -> int
@@ -145,9 +162,9 @@ Value* IRBuilder::promoteTypeBeta(Value* val, Type* targetType) {
     return std::make_pair(ValueId::vInvalid, Type::TypeUndefine());
   }();
 
-  if (pair.first != ValueId::vInvalid)
+  if (pair.first != ValueId::vInvalid) {
     res = makeUnary(pair.first, res, pair.second);
-
+  }
   if (res->type() != targetType) {
     res = promoteTypeBeta(res, targetType);
   }
@@ -157,8 +174,7 @@ Value* IRBuilder::promoteTypeBeta(Value* val, Type* targetType) {
 
 Value* IRBuilder::makeTypeCast(Value* val, Type* target_type) {
   Value* res = val;
-  if (val->type() == target_type)
-    return res;
+  if (val->type() == target_type) return res;
 
   if (val->type()->isInt() and target_type->isFloatPoint()) {
     res = makeUnary(ValueId::vSITOFP, val, target_type);
@@ -219,11 +235,9 @@ Value* IRBuilder::makeCmp(CmpOp op, Value* lhs, Value* rhs) {
   switch (lhs->type()->btype()) {
     case BasicTypeRank::INT32:
       return makeInst<ICmpInst>(vid, lhs, rhs);
-      break;
     case BasicTypeRank::FLOAT:
     case BasicTypeRank::DOUBLE:
       return makeInst<FCmpInst>(vid, lhs, rhs);
-      break;
     default:
       assert(false && "create_eq_beta: type mismatch!");
   }
@@ -231,7 +245,7 @@ Value* IRBuilder::makeCmp(CmpOp op, Value* lhs, Value* rhs) {
 
 Value* IRBuilder::castToBool(Value* val) {
   Value* res = nullptr;
-  if (not val->isBool()) {
+  if (!val->isBool()) {
     if (val->isInt32()) {
       res = makeInst<ICmpInst>(ValueId::vINE, val, ConstantInteger::gen_i32(0));
     } else if (val->isFloatPoint()) {
@@ -245,10 +259,11 @@ Value* IRBuilder::castToBool(Value* val) {
 
 Value* IRBuilder::makeLoad(Value* ptr) {
   auto type = [ptr] {
-    if (ptr->type()->isPointer())
+    if (ptr->type()->isPointer()) {
       return ptr->type()->as<PointerType>()->baseType();
-    else
+    } else {
       return ptr->type()->as<ArrayType>()->baseType();
+    }
   }();
   auto inst = makeInst<LoadInst>(ptr, type);
 
@@ -258,17 +273,14 @@ Value* IRBuilder::makeLoad(Value* ptr) {
   return inst;
 }
 
-Value* IRBuilder::makeAlloca(Type* base_type,
-                             bool is_const,
+Value* IRBuilder::makeAlloca(Type* base_type, bool is_const,
                              const std::vector<size_t>& dims,
-                             const_str_ref comment,
-                             size_t capacity) {
+                             const_str_ref comment, size_t capacity) {
   AllocaInst* inst = nullptr;
   const auto entryBlock = mBlock->function()->entry();
 
   if (dims.size() == 0) {
     inst = makeIdenticalInst<AllocaInst>(base_type, entryBlock, "", is_const);
-
   } else {
     inst = makeIdenticalInst<AllocaInst>(base_type, dims, entryBlock, "", is_const, capacity);
   }
@@ -280,11 +292,8 @@ Value* IRBuilder::makeAlloca(Type* base_type,
   return inst;
 }
 
-Value* IRBuilder::makeGetElementPtr(Type* base_type,
-                                    Value* value,
-                                    Value* idx,
-                                    std::vector<size_t> dims,
-                                    std::vector<size_t> cur_dims) {
+Value* IRBuilder::makeGetElementPtr(Type* base_type, Value* value, Value* idx,
+                                    std::vector<size_t> dims, std::vector<size_t> cur_dims) {
   GetElementPtrInst* inst = nullptr;
   if (dims.size() == 0 && cur_dims.size() == 0) {
     inst = makeInst<GetElementPtrInst>(base_type, value, idx);
