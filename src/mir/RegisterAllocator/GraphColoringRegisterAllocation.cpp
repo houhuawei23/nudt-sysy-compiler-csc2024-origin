@@ -35,7 +35,9 @@ bool GraphColoringAllocateContext::collectInStackArgumentsRegisters(MIRFunction&
       const auto dst = inst->operand(0).reg();
       const auto src = inst->operand(1);
       const auto& obj = mfunc.stackObjs().at(src);
-      if (obj.usage == StackObjectUsage::Argument) { inStackArguments.emplace(dst, src); }
+      if (obj.usage == StackObjectUsage::Argument) {
+        inStackArguments.emplace(dst, src);
+      }
     }
   }
   return true;
@@ -64,7 +66,9 @@ bool GraphColoringAllocateContext::collectConstantsRegisters(MIRFunction& mfunc,
           if (not(opflag & OperandFlagDef)) continue;
           // operand is defined by non-constant instruction, remove from map
           auto& op = inst->operand(idx);
-          if (isOperandVReg(op)) { constants[op.reg()] = nullptr; }
+          if (isOperandVReg(op)) {
+            constants[op.reg()] = nullptr;
+          }
         }
       }
     }
@@ -100,12 +104,14 @@ std::unordered_set<RegNum> GraphColoringAllocateContext::collectVirtualRegs(MIRF
   return std::move(vregSet);
 }
 
-void GraphColoringAllocateContext::buildGraph(MIRFunction& mfunc,
-                                              CodeGenContext& ctx,
-                                              LiveVariablesInfo& liveInterval,
-                                              InterferenceGraph& graph,
-                                              std::unordered_set<RegNum>& vregSet,
-                                              BlockTripCountResult& blockFreq) {
+InterferenceGraph GraphColoringAllocateContext::buildGraph(
+  MIRFunction& mfunc,
+  CodeGenContext& ctx,
+  const LiveVariablesInfo& liveInterval,
+  const std::unordered_set<RegNum>& vregSet,
+  const BlockTripCountResult& blockFreq) {
+  InterferenceGraph graph;
+  // ISA specific reg
   for (auto& block : mfunc.blocks()) {
     auto& instructions = block->insts();
     std::unordered_set<uint32_t> underRenamedISAReg;
@@ -217,6 +223,21 @@ void GraphColoringAllocateContext::buildGraph(MIRFunction& mfunc,
       iter = next;
     }
   }
+  auto vregs = graph.collect_nodes();
+  assert(vregs.size() == vregSet.size());
+
+  for (size_t i = 0; i < vregs.size(); ++i) {
+    auto u = vregs[i];
+    auto& intervalU = liveInterval.reg2Interval.at(u);
+    for (size_t j = i + 1; j < vregs.size(); ++j) {
+      auto& v = vregs[j];
+      auto& intervalV = liveInterval.reg2Interval.at(v);
+      if (intervalU.intersectWith(intervalV)) {
+        graph.add_edge(u, v);
+      }
+    }
+  }
+  return std::move(graph);
 }
 
 RegWeightMap GraphColoringAllocateContext::computeRegWeight(
@@ -262,10 +283,10 @@ RegWeightMap GraphColoringAllocateContext::computeRegWeight(
 
 bool GraphColoringAllocateContext::assignRegisters(MIRFunction& mfunc,
                                                    CodeGenContext& ctx,
-                                                   InterferenceGraph& graph,
-                                                   RegWeightMap& weights,
+                                                   const InterferenceGraph& graph,
+                                                   const RegWeightMap& weights,
                                                    std::stack<uint32_t>& assignStack) {
-  //
+  // try to assign registers, if failed, spill registers
   const auto k = static_cast<uint32_t>(regCount);
   bool spillRegister = false;
   auto dynamicGraph = graph;
@@ -329,7 +350,9 @@ bool GraphColoringAllocateContext::allocateRegisters(
     std::unordered_set<uint32_t> exclude;
     for (auto v : graph.adj(u)) {
       if (isVirtualReg(v)) {
-        if (auto iter = regMap.find(v); iter != regMap.cend()) { exclude.insert(iter->second); }
+        if (auto iter = regMap.find(v); iter != regMap.cend()) {
+          exclude.insert(iter->second);
+        }
       } else {
         exclude.insert(v);
       }
@@ -410,88 +433,13 @@ bool GraphColoringAllocateContext::allocateRegisters(
   return true;
 }
 
-static bool runAllocate(MIRFunction& mfunc,
-                        CodeGenContext& ctx,
-                        GraphColoringAllocateContext& allocateCtx) {
-  /* return true if success; false if need to reAllocate */
-  const auto allocationClass = allocateCtx.allocationClass;
+bool GraphColoringAllocateContext::spillRegisters(MIRFunction& mfunc,
+                                                  CodeGenContext& ctx,
+                                                  InterferenceGraph& graph,
+                                                  RegWeightMap& weights) {
   const auto canonicalizedType =
     ctx.registerInfo->getCanonicalizedRegisterTypeForClass(allocationClass);
-  const auto& inStackArguments = allocateCtx.inStackArguments;
-  const auto& constants = allocateCtx.constants;
-  auto& regMap = allocateCtx.regMap;
-  const auto fixHazard = allocateCtx.fixHazard;
-  const auto& allocableISARegs = allocateCtx.allocableISARegs;
-  const auto& list = ctx.registerInfo->get_allocation_list(allocationClass);
-  auto& blockList = allocateCtx.blockList;
-
-  auto liveInterval = calcLiveIntervals(mfunc, ctx);
-  //   if (debugRA) mfunc.print(std::cerr, ctx);
-
-  const auto isAllocatableType = [&](OperandType type) {
-    return (type <= OperandType::Float32) &&
-           (ctx.registerInfo->getAllocationClass(type) == allocationClass);
-  };
-  const auto isLockedOrUnderRenamedType = [&](OperandType type) {
-    return (type <= OperandType::Float32);
-  };
-  // Collect virtual registers
-  auto vregSet = allocateCtx.collectVirtualRegs(mfunc, ctx);
-
-  auto& defUseTime = allocateCtx.defUseTime;
-  auto& copyHint = allocateCtx.copyHint;
-
-  // Construct interference graph
-  InterferenceGraph graph;
-  auto cfg = calcCFG(mfunc, ctx);
-  auto blockFreq = calcFreq(mfunc, cfg);
-  // ISA specific reg
-  allocateCtx.buildGraph(mfunc, ctx, liveInterval, graph /* ret */, vregSet, blockFreq);
-
-  // all virtual registers need to be assigned
-  auto vregs = graph.collect_nodes();
-  assert(vregs.size() == vregSet.size());
-  //   if (debugRA) { std::cerr << vregs.size() << std::endl; }
-
-  for (size_t i = 0; i < vregs.size(); ++i) {
-    auto u = vregs[i];
-    auto& intervalU = liveInterval.reg2Interval.at(u);
-    for (size_t j = i + 1; j < vregs.size(); ++j) {
-      auto& v = vregs[j];
-      auto& intervalV = liveInterval.reg2Interval.at(v);
-      if (intervalU.intersectWith(intervalV)) { graph.add_edge(u, v); }
-    }
-  }
-  if (graph.empty()) return true;
-  assert(vregs.size() == graph.size());
-
-  // Calculate weights for virtual registers
-  // Weight = \sum (number of use/def) * Freq
-  std::vector<std::pair<InstNum, double>> freq;
-  for (auto& block : mfunc.blocks()) {
-    auto endInst = liveInterval.inst2Num.at(block->insts().back());
-    freq.emplace_back(endInst + 2, blockFreq.query(block.get()));
-  }
-  auto getBlockFreq = [&](InstNum inst) {
-    const auto it = std::lower_bound(freq.begin(), freq.end(), inst,
-                                     [](const auto& a, const auto& b) { return a.first < b; });
-    assert(it != freq.end());
-    return it->second;
-  };
-  auto weights = allocateCtx.computeRegWeight(mfunc, ctx, vregs, blockFreq, liveInterval, freq);
-
-  // Assign registers
-  std::stack<uint32_t> assignStack;
-  auto spillRegister =
-    allocateCtx.assignRegisters(mfunc, ctx, graph, weights, assignStack /* ret */);
-
-  if (!spillRegister and
-      allocateCtx.allocateRegisters(mfunc, ctx, vregs, assignStack, graph, freq)) {
-    return true;
-  }
-
-  // Spill register
-  auto u = graph.pick_to_spill(blockList, weights, allocateCtx.regCount);
+  auto u = graph.pick_to_spill(blockList, weights, regCount);
   blockList.insert(u);
   if (debugRA) {
     std::cerr << "spill " << (u ^ virtualRegBegin) << std::endl;
@@ -620,8 +568,59 @@ static bool runAllocate(MIRFunction& mfunc,
 
     // TODO: update live interval instead of recomputation?
   }
-
   cleanupRegFlags(mfunc, ctx);
+  return true;
+}
+/**
+ * 1. calculate live intervals for virtual registers
+ * 2. collect all virtual registers
+ * 3. construct interference graph
+
+ */
+static bool runAllocate(MIRFunction& mfunc,
+                        CodeGenContext& ctx,
+                        GraphColoringAllocateContext& allocateCtx) {
+  /* return true if success; false if need to reAllocate */
+
+  auto liveInterval = calcLiveIntervals(mfunc, ctx);
+  // Collect virtual registers
+  auto vregSet = allocateCtx.collectVirtualRegs(mfunc, ctx);
+
+  // Construct interference graph
+  // InterferenceGraph graph;
+  auto cfg = calcCFG(mfunc, ctx);
+  auto blockFreq = calcFreq(mfunc, cfg);
+
+  auto graph = allocateCtx.buildGraph(mfunc, ctx, liveInterval, vregSet, blockFreq);
+  auto vregs = graph.collect_nodes();  // all virtual registers need to be assigned
+  assert(vregs.size() == vregSet.size());
+
+  if (graph.empty()) return true;
+
+  // Calculate weights for virtual registers
+  // Weight = \sum (number of use/def) * Freq
+  std::vector<std::pair<InstNum, double>> freq;
+  for (auto& block : mfunc.blocks()) {
+    auto endInst = liveInterval.inst2Num.at(block->insts().back());
+    freq.emplace_back(endInst + 2, blockFreq.query(block.get()));
+  }
+  auto weights = allocateCtx.computeRegWeight(mfunc, ctx, vregs, blockFreq, liveInterval, freq);
+
+  // Assign registers
+  std::stack<uint32_t> assignStack;
+  auto spillRegister =
+    allocateCtx.assignRegisters(mfunc, ctx, graph, weights, assignStack /* ret */);
+
+  // no spill register, allocate registers directly
+  if (!spillRegister and
+      allocateCtx.allocateRegisters(mfunc, ctx, vregs, assignStack, graph, freq)) {
+    return true;
+  }
+
+  // Spill register
+  if (allocateCtx.spillRegisters(mfunc, ctx, graph, weights)) {
+    return false;
+  }
   return false;
 }
 
@@ -629,24 +628,19 @@ static void graphColoringAllocateImpl(MIRFunction& mfunc,
                                       CodeGenContext& ctx,
                                       GraphColoringAllocateContext& allocateCtx) {
   const auto allocationClass = allocateCtx.allocationClass;
-  const auto canonicalizedType =
-    ctx.registerInfo->getCanonicalizedRegisterTypeForClass(allocationClass);
-  const auto& list = ctx.registerInfo->get_allocation_list(allocationClass);
-  allocateCtx.regCount = list.size();
-  allocateCtx.allocableISARegs.insert(list.cbegin(), list.cend());
-  allocateCtx.fixHazard = true;
+  constexpr auto debugRA = true;
 
-  constexpr auto debugRA = false;
-
-  if (debugRA) { std::cerr << "allocate for class " << allocationClass << std::endl; }
-
-  allocateCtx.collectInStackArgumentsRegisters(mfunc, ctx);
-  allocateCtx.collectConstantsRegisters(mfunc, ctx);
+  if (debugRA) {
+    std::cerr << "allocate for class " << allocationClass << std::endl;
+  }
 
   size_t iterantion = 0;
   while (not runAllocate(mfunc, ctx, allocateCtx)) {
-    if (debugRA) { std::cerr << "iteration " << iterantion << std::endl; }
+    if (debugRA) {
+      std::cerr << "iteration " << iterantion++ << std::endl;
+    }
   }
+  std::cerr << "allocate for class " << allocationClass << " success" << std::endl;
 }
 
 void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAUsageCache& infoIPRA) {
@@ -654,9 +648,14 @@ void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAUsageCac
   //   std::unordered_map<uint32_t, uint32_t> regMap;  // -->
   //   存储[虚拟寄存器]到[物理寄存器]之间的映射
   auto allocateCtx = GraphColoringAllocateContext{infoIPRA};
+  allocateCtx.collectInStackArgumentsRegisters(mfunc, ctx);
+  allocateCtx.collectConstantsRegisters(mfunc, ctx);
+  auto microArch = ctx.scheduleModel->getMicroArchInfo();
+  allocateCtx.fixHazard = microArch.enablePostRAScheduling and !microArch.hasRegRenaming;
+
   auto& regMap = allocateCtx.regMap;
   for (uint32_t idx = 0; idx < classCount; idx++) {
-    allocateCtx.allocationClass = idx;
+    allocateCtx.initForAllocationClass(idx, ctx);
     graphColoringAllocateImpl(mfunc, ctx, allocateCtx);
   }
 

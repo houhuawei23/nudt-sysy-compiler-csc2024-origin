@@ -5,7 +5,7 @@
 #include "mir/MIR.hpp"
 #include "mir/target.hpp"
 #include "mir/LiveInterval.hpp"
-
+#include "mir/CFGAnalysis.hpp"
 namespace mir {
 /*
  * @brief: IPRAInfo Class
@@ -92,20 +92,37 @@ public: /* just for debug */
 };
 
 struct GraphColoringAllocateContext final {
+  // live over the allocating process
   IPRAUsageCache& infoIPRA;
   std::unordered_map<uint32_t, uint32_t> regMap;
-  uint32_t allocationClass;
-
   std::unordered_map<RegNum, MIROperand> inStackArguments;  // reg to in stack argument inst
   std::unordered_map<RegNum, MIRInst*> constants;           // reg to constant inst
-
   bool fixHazard;
-  size_t regCount;
-  std::unordered_set<uint32_t> allocableISARegs;
-  std::unordered_set<uint32_t> blockList;
 
   bool collectInStackArgumentsRegisters(MIRFunction& mfunc, CodeGenContext& ctx);
   bool collectConstantsRegisters(MIRFunction& mfunc, CodeGenContext& ctx);
+
+  // live for specific allocationClass
+  uint32_t allocationClass;
+  size_t regCount;
+  std::unordered_set<uint32_t> allocableISARegs;
+  std::unordered_set<uint32_t> blockList;
+  std::unordered_map<RegNum, std::set<InstNum>> defUseTime;
+  std::unordered_map<RegNum, RegWeightMap> copyHint;
+
+  void initForAllocationClass(uint32_t idx, CodeGenContext& ctx) {
+    allocationClass = idx;
+    
+    const auto& list = ctx.registerInfo->get_allocation_list(allocationClass);
+    regCount = list.size();
+
+    allocableISARegs.clear();
+    allocableISARegs.insert(list.cbegin(), list.cend());
+
+    blockList.clear();
+    defUseTime.clear();
+    copyHint.clear();
+  }
 
   std::unordered_set<RegNum> collectVirtualRegs(MIRFunction& mfunc, CodeGenContext& ctx);
 
@@ -115,7 +132,6 @@ struct GraphColoringAllocateContext final {
   }
   bool isLockedOrUnderRenamedType(OperandType type) { return (type <= OperandType::Float32); };
 
-  std::unordered_map<RegNum, std::set<InstNum>> defUseTime;
   void colorDefUse(RegNum src, RegNum dst) {
     assert(isVirtualReg(src) && isISAReg(dst));
     if (!fixHazard || !defUseTime.count(src)) return;
@@ -124,17 +140,16 @@ struct GraphColoringAllocateContext final {
     dstInfo.insert(srcInfo.begin(), srcInfo.end());
   };
 
-  std::unordered_map<RegNum, RegWeightMap> copyHint;
   void updateCopyHint(RegNum dst, RegNum src, double weight) {
-    if (isVirtualReg(dst)) { copyHint[dst][src] += weight; }
+    if (isVirtualReg(dst)) {
+      copyHint[dst][src] += weight;
+    }
   };
-
-  void buildGraph(MIRFunction& mfunc,
-                  CodeGenContext& ctx,
-                  LiveVariablesInfo& liveInterval,
-                  InterferenceGraph& graph,
-                  std::unordered_set<RegNum>& vregSet,
-                  class BlockTripCountResult& blockFreq);
+  InterferenceGraph buildGraph(MIRFunction& mfunc,
+                               CodeGenContext& ctx,
+                               const LiveVariablesInfo& liveInterval,
+                               const std::unordered_set<RegNum>& vregSet,
+                               const BlockTripCountResult& blockFreq);
 
   RegWeightMap computeRegWeight(MIRFunction& mfunc,
                                 CodeGenContext& ctx,
@@ -147,8 +162,8 @@ struct GraphColoringAllocateContext final {
   // std::stack<uint32_t> assignStack;
   bool assignRegisters(MIRFunction& mfunc,
                        CodeGenContext& ctx,
-                       InterferenceGraph& graph,
-                       RegWeightMap& weights,
+                       const InterferenceGraph& graph,
+                       const RegWeightMap& weights,
                        std::stack<uint32_t>& assignStack);
   //
   bool allocateRegisters(MIRFunction& mfunc,
@@ -157,5 +172,10 @@ struct GraphColoringAllocateContext final {
                          std::stack<uint32_t>& assignStack,
                          InterferenceGraph& graph,
                          std::vector<std::pair<InstNum, double>>& freq);
+
+  bool spillRegisters(MIRFunction& mfunc,
+                      CodeGenContext& ctx,
+                      InterferenceGraph& graph,
+                      RegWeightMap& weights);
 };
 };  // namespace mir
