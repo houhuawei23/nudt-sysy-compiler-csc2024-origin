@@ -1,23 +1,28 @@
 #include "pass/analysis/irtest.hpp"
-
+#include "support/config.hpp"
 using std::cerr, std::endl;
-
 
 namespace pass {
 void irCheck::run(ir::Module* ctx, TopAnalysisInfoManager* tp) {
+    const auto& config = sysy::Config::getInstance();
+    const bool debug = config.logLevel >= sysy::LogLevel::DEBUG;
     ctx->rename();
     bool isPass = true;
     for (auto func : ctx->funcs()) {
-        if (func->isOnlyDeclare()) continue;
-        cerr << "Testing function \"" << func->name() << "\" ..." << endl;
+        if (func->isOnlyDeclare())
+            continue;
+        if (debug)
+            cerr << "Testing function \"" << func->name() << "\" ..." << endl;
 
         isPass &= runDefUseTest(func);
         isPass &= runCFGTest(func);
         isPass &= runPhiTest(func);
         isPass &= checkFuncInfo(func);
         isPass &= checkAllocaOnlyInEntry(func);
+        isPass &= checkOnlyOneExit(func);
     }
-    if (not isPass) assert(false && "didn't pass irCheck!");
+    if (not isPass)
+        assert(false && "didn't pass irCheck!");
 }
 
 bool irCheck::checkDefUse(ir::Value* val) {
@@ -33,7 +38,8 @@ bool irCheck::checkDefUse(ir::Value* val) {
         }
     }
     auto user = dyn_cast<ir::User>(val);
-    if (user == nullptr) return isPass;
+    if (user == nullptr)
+        return isPass;
     int realIdx = 0;
     for (auto op : user->operands()) {
         auto muser = op->user();
@@ -65,33 +71,35 @@ bool irCheck::checkDefUse(ir::Value* val) {
     return isPass;
 }
 
-    bool irCheck::runDefUseTest(ir::Function* func){
-        bool isPass=true;
-        for(auto bb:func->blocks()){
-            bool bbOK=checkDefUse(bb);
-            for(auto inst:bb->insts()){
-                bbOK=bbOK and checkDefUse(inst);
-                if(bb==func->entry() and (inst->valueId()!=ir::vALLOCA and inst->valueId()!=ir::vBR)){
-                    isPass=false;
-                    cerr<<"Entry block has non-alloca inst!"<<endl;
-                }
-                if(inst->valueId()==ir::vALLOCA and bb!=func->entry()){
-                    isPass=false;
-                    cerr<<"AllocaInst occur in BB:\""<<bb->name()<<"\" but it's not entry block!"<<endl;
-                }
-                if(inst->block()!=bb){
-                    isPass=false;
-                    cerr<<"Inst in BB:\""<<bb->name()<<"\" and can't match its parent block!"<<endl;
-                }
-                if (not bbOK) {
-                    isPass = false;
-                    cerr << "Error occur in BB:\"" << bb->name() << "\"!" << endl;
-                }
-            
+bool irCheck::runDefUseTest(ir::Function* func) {
+    bool isPass = true;
+    for (auto bb : func->blocks()) {
+        bool bbOK = checkDefUse(bb);
+        for (auto inst : bb->insts()) {
+            bbOK = bbOK and checkDefUse(inst);
+            if (bb == func->entry() and
+                (inst->valueId() != ir::vALLOCA and inst->valueId() != ir::vBR)) {
+                isPass = false;
+                cerr << "Entry block has non-alloca inst!" << endl;
+            }
+            if (inst->valueId() == ir::vALLOCA and bb != func->entry()) {
+                isPass = false;
+                cerr << "AllocaInst occur in BB:\"" << bb->name() << "\" but it's not entry block!"
+                     << endl;
+            }
+            if (inst->block() != bb) {
+                isPass = false;
+                cerr << "Inst in BB:\"" << bb->name() << "\" and can't match its parent block!"
+                     << endl;
+            }
+            if (not bbOK) {
+                isPass = false;
+                cerr << "Error occur in BB:\"" << bb->name() << "\"!" << endl;
             }
         }
-        return isPass;
     }
+    return isPass;
+}
 
 bool irCheck::checkPhi(ir::PhiInst* phi) {
     bool isPass = true;
@@ -118,7 +126,8 @@ bool irCheck::runPhiTest(ir::Function* func) {
         auto instIter = bb->insts().begin();
         auto phiIter = bb->phi_insts().begin();
         while (1) {
-            if (phiIter == bb->phi_insts().end()) break;
+            if (phiIter == bb->phi_insts().end())
+                break;
             if (*instIter != *phiIter) {
                 cerr << "In BB\"" << bb->name() << "\", we got a phiinst list error!" << endl;
                 isPass = false;
@@ -201,6 +210,34 @@ bool irCheck::checkAllocaOnlyInEntry(ir::Function* func) {
                      << endl;
             }
         }
+    }
+    return isPass;
+}
+
+bool irCheck::checkOnlyOneExit(ir::Function* func) {
+    bool isPass = true;
+    int exitNum = 0;
+    for (auto bb : func->blocks()) {
+        for (auto inst : bb->insts()) {
+            if (inst->isa<ir::ReturnInst>()) {
+                if (bb != func->exit()) {
+                    std::cerr << "Funtion " << func->name()
+                              << " return inst not in function exit block" << std::endl;
+                    std::cerr << "Return inst in block " << bb->name() << std::endl;
+                    std::cerr << "Function exit block is " << func->exit()->name() << std::endl;
+                    std::cerr << "return inst: ";
+                    inst->print(std::cerr);
+                    std::cerr << std::endl;
+                    isPass = false;
+                    return isPass;
+                }
+                exitNum++;
+            }
+        }
+    }
+    if(exitNum != 1) {
+        std::cerr << "Funtion " << func->name() << " has " << exitNum << " exit inst" << std::endl;
+        isPass = false;
     }
     return isPass;
 }

@@ -1,4 +1,4 @@
-#include "mir/mir.hpp"
+#include "mir/MIR.hpp"
 #include "mir/utils.hpp"
 #include "target/riscv/RISCVTarget.hpp"
 #include "autogen/riscv/InstInfoDecl.hpp"
@@ -171,7 +171,7 @@ void RISCVFrameInfo::emitCall(ir::CallInst* inst, LoweringContext& lowering_ctx)
         lowering_ctx.emitCopy(reg, val);
         val = reg;
       }
-      lowering_ctx.emitInstBeta(InstStoreRegToStack, {obj, val});
+      lowering_ctx.emitMIRInst(InstStoreRegToStack, {obj, val});
     }
   }
   /* prepare args: 为通过寄存器传递的参数生成相应的寄存器赋值指令 */
@@ -195,7 +195,7 @@ void RISCVFrameInfo::emitCall(ir::CallInst* inst, LoweringContext& lowering_ctx)
     }
   }
   /* 生成跳转至被调用函数的指令。*/
-  lowering_ctx.emitInstBeta(RISCV::JAL, {MIROperand::asReloc(mirCalleeFunc)});
+  lowering_ctx.emitMIRInst(RISCV::JAL, {MIROperand::asReloc(mirCalleeFunc)});
 
   const auto irRetType = inst->callee()->retType();
 
@@ -285,7 +285,7 @@ void RISCVFrameInfo::emitPrologue(MIRFunction* func, LoweringContext& lowering_c
         func->newStackObject(lowering_ctx.codeGenctx->nextId(), size, align,
                              offset, StackObjectUsage::Argument);
       // load vreg(arg) from stack(obj)
-      lowering_ctx.emitInstBeta(InstLoadRegFromStack, {arg, obj});
+      lowering_ctx.emitMIRInst(InstLoadRegFromStack, {arg, obj});
     }
   }
 }
@@ -313,7 +313,7 @@ void RISCVFrameInfo::emitReturn(ir::ReturnInst* ir_inst, LoweringContext& loweri
         lowering_ctx.map2operand(retval));
     }
   }
-  lowering_ctx.emitInstBeta(RISCV::RET);
+  lowering_ctx.emitMIRInst(RISCV::RET);
 }
 
 }  // namespace mir

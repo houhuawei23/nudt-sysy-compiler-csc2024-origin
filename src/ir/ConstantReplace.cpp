@@ -9,7 +9,7 @@ using namespace ir;
 Value* BinaryInst::getConstantRepl(bool recursive) {
   auto lval = lValue();
   auto rval = rValue();
-  assert(lval->type() == rval->type());
+  assert(lval->type()->isSame(rval->type()));
   if (recursive) {
     if (auto lvalInst = lval->dynCast<Instruction>()) {
       lval = lvalInst->getConstantRepl(recursive);

@@ -1,6 +1,6 @@
 #include "ir/ir.hpp"
 
-#include "mir/mir.hpp"
+#include "mir/MIR.hpp"
 #include "mir/instinfo.hpp"
 
 #include "target/riscv/RISCV.hpp"

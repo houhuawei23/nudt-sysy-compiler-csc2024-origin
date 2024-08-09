@@ -2,7 +2,7 @@
 #include <iostream>
 #include <deque>
 #include <unordered_set>
-#include "mir/mir.hpp"
+#include "mir/MIR.hpp"
 #include "mir/instinfo.hpp"
 
 namespace mir {

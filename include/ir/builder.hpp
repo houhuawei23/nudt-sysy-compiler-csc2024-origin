@@ -115,17 +115,15 @@ public:  // set function
 
   Value* makeTypeCast(Value* val, Type* target_type);
 
+  Value* makeAlloca(Type* base_type, bool is_const = false, const_str_ref comment = "");
+  
   Value* makeCmp(CmpOp op, Value* lhs, Value* rhs);
 
   Value* makeBinary(BinaryOp op, Value* lhs, Value* rhs);
 
   Value* makeUnary(ValueId vid, Value* val, Type* ty = nullptr);
 
-  Value* makeAlloca(Type* base_type,
-                    bool is_const = false,
-                    const std::vector<size_t>& dims = {},
-                    const_str_ref comment = "",
-                    size_t capacity = 1);
+
   Value* makeLoad(Value* ptr);
 
   Value* makeGetElementPtr(Type* base_type,
@@ -141,7 +139,8 @@ public:  // set function
       inst->setBlock(mBlock);
       mBlock->insts().insert(mInsertPos, inst);
     } else
-      std::cerr << "insert to 0x0 Block" << std::endl;
+      // std::cerr << "insert to 0x0 Block" << std::endl;
+      ;
     return inst;
   }
 

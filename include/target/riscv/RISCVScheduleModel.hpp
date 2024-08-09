@@ -1,6 +1,6 @@
 #pragma once
 #include "autogen/riscv/InstInfoDecl.hpp"
-#include "mir/mir.hpp"
+#include "mir/MIR.hpp"
 #include "mir/instinfo.hpp"
 #include "mir/ScheduleModel.hpp"
 RISCV_NAMESPACE_BEGIN
@@ -25,7 +25,7 @@ public:
     bool availableInAG = true;
 
     /*
-    if operand latency is 0:
+    if operand RISCVTargetlatency is 0:
        availableInAG = availableInAG & true;
     else if operand latency is 1:
        availableInAG = false;

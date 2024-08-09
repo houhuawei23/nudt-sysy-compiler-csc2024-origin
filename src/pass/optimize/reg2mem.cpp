@@ -1,153 +1,160 @@
 #include "pass/optimize/optimize.hpp"
 #include "pass/optimize/reg2mem.hpp"
+#include "support/arena.hpp"
 #include <set>
 #include <cassert>
 #include <map>
 #include <vector>
 #include <queue>
 #include <algorithm>
+
+using namespace ir;
 namespace pass {
-void Reg2Mem::getallphi(ir::Function* func) {
-    for (ir::BasicBlock* bb : func->blocks()) {
-        if (bb->phi_insts().empty()) {
-            continue;
-        } else {
-            phiblocks.push_back(bb);
-            for (auto inst : bb->phi_insts()) {
-                ir::PhiInst* phiinst = dyn_cast<ir::PhiInst>(inst);
-                bbphismap[bb].push_back(phiinst);
-                allphi.push_back(phiinst);
-            }
-        }
+void Reg2Mem::getallphi(Function* func) {
+  for (BasicBlock* bb : func->blocks()) {
+    if (bb->phi_insts().empty()) {
+      continue;
+    } else {
+      phiblocks.push_back(bb);
+      for (auto inst : bb->phi_insts()) {
+        PhiInst* phiinst = dyn_cast<PhiInst>(inst);
+        bbphismap[bb].push_back(phiinst);
+        allphi.push_back(phiinst);
+      }
     }
+  }
 }
 
-void Reg2Mem::run(ir::Function* func, TopAnalysisInfoManager* tp) {
-    clear();
-    getallphi(func);
-    ir::BasicBlock* entry = func->entry();
-    for (ir::PhiInst* phiinst : allphi) {
-        ir::AllocaInst* var = new ir::AllocaInst(phiinst->type());
-        allocasToinsert.push_back(var);
-        phiweb[phiinst] = var;
-    }
-    // for (auto alloca : allocasToinsert) {
-        
-    //     entry->emplace_lastbutone_inst(alloca);
-    // }
-    for (auto BB : phiblocks) {
-        std::map<ir::BasicBlock*, ir::BasicBlock*> repalceBBmap;
-        for (ir::PhiInst* phiinst : bbphismap[BB]) {
-            // ir::AllocaInst* variable = phiweb[phiinst];
-            // assert(variable!=nullptr&&"nullptr val");
-            // ir::LoadInst* phiload = new ir::LoadInst(variable, phiinst->type(), nullptr);  // 用这条load替换所有对phiinst的使用
-            // philoadmap[phiinst] = phiload;                                                 // 记录phiinst与load的映射
+void Reg2Mem::run(Function* func, TopAnalysisInfoManager* tp) {
+  clear();
+  getallphi(func);
+  BasicBlock* entry = func->entry();
+  for (PhiInst* phiinst : allphi) {
+    auto var = utils::make<AllocaInst>(phiinst->type());
+    allocasToinsert.push_back(var);
+    phiweb[phiinst] = var;
+  }
+  // for (auto alloca : allocasToinsert) {
 
-            for (size_t i = 0; i < phiinst->getsize(); i++) {
-                ir::BasicBlock* prebb = phiinst->getBlock(i);
-                ir::Value* phival = phiinst->getValue(i);
-                // if (phival->type()->isUndef()) {  // 如果是phi或则undef则不插入store
-                //     continue;
-                // }
+  //     entry->emplace_lastbutone_inst(alloca);
+  // }
+  for (auto BB : phiblocks) {
+    std::map<BasicBlock*, BasicBlock*> repalceBBmap;
+    for (PhiInst* phiinst : bbphismap[BB]) {
+      // AllocaInst* variable = phiweb[phiinst];
+      // assert(variable!=nullptr&&"nullptr val");
+      // LoadInst* phiload = new LoadInst(variable, phiinst->type(), nullptr);  //
+      // 用这条load替换所有对phiinst的使用 philoadmap[phiinst] = phiload; // 记录phiinst与load的映射
 
-                if (repalceBBmap.count(prebb)){
-                    prebb = repalceBBmap[prebb];
-                }
-                // ir::StoreInst* phistore = new ir::StoreInst(phival, variable);
-                if ((prebb->next_blocks().size() == 1) && (prebb != entry)) {  // 如果前驱块只有一个后继，直接在前驱块末尾插入store
-                    // prebb->emplace_lastbutone_inst(phistore);
-                    // phistore->setBlock(prebb);
-                    ;
-                } else {  // 有多个后继则需要在前驱块与当前块中插入一个新的块，在新块中插入store与br指令
-                    ir::BasicBlock* newbb = func->newBlock();
-                    repalceBBmap[prebb] = newbb;
-                    ir::BranchInst* br = new ir::BranchInst(BB);
-                    // newbb->emplace_back_inst(phistore);
-                    newbb->emplace_back_inst(br);
-                    ir::Instruction* lastinst = prebb->insts().back();
-                    ir::BranchInst* oldbr = dyn_cast<ir::BranchInst>(lastinst);
-                    oldbr->replaceDest(BB, newbb);
-                    ir::BasicBlock::delete_block_link(prebb, BB);
-                    ir::BasicBlock::block_link(prebb, newbb);
-                    ir::BasicBlock::block_link(newbb, BB);
-                    prebb = newbb;
-                }
-                phiinst->replaceBlock(prebb,i);
-            }
+      for (size_t i = 0; i < phiinst->getsize(); i++) {
+        BasicBlock* prebb = phiinst->getBlock(i);
+        Value* phival = phiinst->getValue(i);
+        // if (phival->type()->isUndef()) {  // 如果是phi或则undef则不插入store
+        //     continue;
+        // }
+
+        if (repalceBBmap.count(prebb)) {
+          prebb = repalceBBmap[prebb];
         }
+        // StoreInst* phistore = new StoreInst(phival, variable);
+        if ((prebb->next_blocks().size() == 1) &&
+            (prebb != entry)) {  // 如果前驱块只有一个后继，直接在前驱块末尾插入store
+          // prebb->emplace_lastbutone_inst(phistore);
+          // phistore->setBlock(prebb);
+          ;
+        } else {  // 有多个后继则需要在前驱块与当前块中插入一个新的块，在新块中插入store与br指令
+          BasicBlock* newbb = func->newBlock();
+          repalceBBmap[prebb] = newbb;
+          BranchInst* br = new BranchInst(BB);
+          // newbb->emplace_back_inst(phistore);
+          newbb->emplace_back_inst(br);
+          Instruction* lastinst = prebb->insts().back();
+          BranchInst* oldbr = dyn_cast<BranchInst>(lastinst);
+          oldbr->replaceDest(BB, newbb);
+          BasicBlock::delete_block_link(prebb, BB);
+          BasicBlock::block_link(prebb, newbb);
+          BasicBlock::block_link(newbb, BB);
+          prebb = newbb;
+        }
+        phiinst->replaceBlock(prebb, i);
+      }
     }
+  }
 
-    // // 删除phi，并将对phi的使用替换为load
-    // for (ir::PhiInst* phitoremove : allphi) {
-    //     ir::BasicBlock* phibb = phitoremove->block();
-    //     ir::LoadInst* loadinst = philoadmap[phitoremove];
-    //     phitoremove->replaceAllUseWith(loadinst);
-    //     phibb->delete_inst(phitoremove);
-    //     phibb->emplace_first_inst(loadinst);
-    // }
+  // // 删除phi，并将对phi的使用替换为load
+  // for (PhiInst* phitoremove : allphi) {
+  //     BasicBlock* phibb = phitoremove->block();
+  //     LoadInst* loadinst = philoadmap[phitoremove];
+  //     phitoremove->replaceAllUseWith(loadinst);
+  //     phibb->delete_inst(phitoremove);
+  //     phibb->emplace_first_inst(loadinst);
+  // }
 }
 }  // namespace pass
 
-// void Reg2Mem::run(ir::Function* func) {
+// void Reg2Mem::run(Function* func) {
 //     clear();
 //     getallphi(func);
 //     DisjSet();
-//     for (ir::PhiInst* phiinst : allphi){
+//     for (PhiInst* phiinst : allphi){
 //         int idx = getindex(phiinst);
-//         ir::PhiInst* root = allphi[find(idx)];
+//         PhiInst* root = allphi[find(idx)];
 //         if (phiweb.find(root) == phiweb.end()){
-//             ir::AllocaInst* var = new ir::AllocaInst(phiinst->type());
+//             AllocaInst* var = new AllocaInst(phiinst->type());
 //             allocasToinsert.push_back(var);
 //             phiweb[root] = var;
 //         }
 //     }
 //     for (auto alloca : allocasToinsert){
-//         ir::BasicBlock* entry = func->entry();
+//         BasicBlock* entry = func->entry();
 //         entry->emplace_first_inst(alloca);
 //         alloca->setBlock(entry);
 //     }
-//     for (ir::PhiInst* phiinst : allphi){
-//         ir::BasicBlock* nextbb = phiinst->block();
+//     for (PhiInst* phiinst : allphi){
+//         BasicBlock* nextbb = phiinst->block();
 //         int idx = getindex(phiinst);
-//         ir::PhiInst* root = allphi[find(idx)];
-//         ir::AllocaInst* variable = phiweb[root];
-//         ir::LoadInst* phiload = new ir::LoadInst(variable,phiinst->type(),nullptr);//用这条load替换所有对phiinst的使用
+//         PhiInst* root = allphi[find(idx)];
+//         AllocaInst* variable = phiweb[root];
+//         LoadInst* phiload = new
+//         LoadInst(variable,phiinst->type(),nullptr);//用这条load替换所有对phiinst的使用
 //         philoadmap[phiinst] = phiload;//记录phiinst与load的映射
 
 //         for (size_t i = 0; i < phiinst->getsize(); i++){
 
-//             ir::BasicBlock* prebb = phiinst->getBlock(i);
-//             ir::Value* phival = phiinst->getValue(i);
-//             ir::StoreInst* phistore = new ir::StoreInst(phival,variable);
-//             if (auto inst = dyn_cast<ir::PhiInst>(phival) || phival->type()->isUndef()){//如果是phi或则undef则不插入store
+//             BasicBlock* prebb = phiinst->getBlock(i);
+//             Value* phival = phiinst->getValue(i);
+//             StoreInst* phistore = new StoreInst(phival,variable);
+//             if (auto inst = dyn_cast<PhiInst>(phival) ||
+//             phival->type()->isUndef()){//如果是phi或则undef则不插入store
 //                     continue;
 //             }
-//             if(prebb->next_blocks().size() == 1){//如果前驱块只有一个后继，直接在前驱块末尾插入store
-//                 ir::inst_iterator it = --(prebb->insts().end());
+//             if(prebb->next_blocks().size() ==
+//             1){//如果前驱块只有一个后继，直接在前驱块末尾插入store
+//                 inst_iterator it = --(prebb->insts().end());
 //                 prebb->emplace_inst(it,phistore);
 //                 phistore->setBlock(prebb);
 //             }
 //             else{//有多个后继则需要在前驱块与当前块中插入一个新的块，在新块中插入store与br指令
-//                 ir::BasicBlock* newbb = func->newBlock();
+//                 BasicBlock* newbb = func->newBlock();
 //                 newbb->set_parent(func);
-//                 ir::BranchInst* br = new ir::BranchInst(nextbb);
+//                 BranchInst* br = new BranchInst(nextbb);
 //                 newbb->emplace_back_inst(phistore);
 //                 newbb->emplace_back_inst(br);
 //                 phistore->setBlock(newbb);
 //                 br->set_parent(newbb);
-//                 ir::Instruction* lastinst = *(--(prebb->insts().end()));
-//                 ir::BranchInst* oldbr = dyn_cast<ir::BranchInst>(lastinst);
+//                 Instruction* lastinst = *(--(prebb->insts().end()));
+//                 BranchInst* oldbr = dyn_cast<BranchInst>(lastinst);
 //                 oldbr->replaceDest(nextbb,newbb);
-//                 ir::BasicBlock::delete_block_link(prebb,nextbb);
-//                 ir::BasicBlock::block_link(prebb,newbb);
-//                 ir::BasicBlock::block_link(newbb,nextbb);
+//                 BasicBlock::delete_block_link(prebb,nextbb);
+//                 BasicBlock::block_link(prebb,newbb);
+//                 BasicBlock::block_link(newbb,nextbb);
 //             }
 //         }
 //     }
 //     //删除phi，并将对phi的使用替换为load
-//     for (ir::PhiInst* phitoremove : allphi){
-//         ir::BasicBlock* phibb = phitoremove->block();
-//         ir::LoadInst* loadinst = philoadmap[phitoremove];
+//     for (PhiInst* phitoremove : allphi){
+//         BasicBlock* phibb = phitoremove->block();
+//         LoadInst* loadinst = philoadmap[phitoremove];
 //         phitoremove->replaceAllUseWith(loadinst);
 //         phibb->delete_inst(phitoremove);
 //         phibb->emplace_first_inst(loadinst);

@@ -1,5 +1,5 @@
 #include <queue>
-#include "mir/mir.hpp"
+#include "mir/MIR.hpp"
 #include "mir/instinfo.hpp"
 #include "mir/utils.hpp"
 #include "mir/CFGAnalysis.hpp"

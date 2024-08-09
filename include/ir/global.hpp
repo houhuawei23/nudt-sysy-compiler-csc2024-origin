@@ -28,6 +28,10 @@ public:
                  Module* parent = nullptr)
     : User(Type::TypePointer(base_type), vGLOBAL_VAR, name), mModule(parent), mIsConst(is_const) {
     //
+    if(base_type->isArray()) {
+      mIsArray = true;
+    }
+    mIsInit = false;
   }
 
   //! 1. Array

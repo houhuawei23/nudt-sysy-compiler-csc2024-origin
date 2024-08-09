@@ -1,6 +1,6 @@
 #pragma once
 #include "pass/analysisinfo.hpp"
-#include "mir/mir.hpp"
+#include "mir/MIR.hpp"
 #include "mir/target.hpp"
 #include "mir/iselinfo.hpp"
 #include "support/arena.hpp"

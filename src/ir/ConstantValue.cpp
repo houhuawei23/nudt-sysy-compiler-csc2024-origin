@@ -3,14 +3,8 @@
 
 using namespace ir;
 
-std::unordered_map<size_t, ConstantValue*> constantPool;
-
-ConstantValue* ConstantValue::findCacheByHash(size_t hash) {
-  if (const auto iter = constantPool.find(hash); iter != constantPool.cend()) {
-    return iter->second;
-  }
-  return nullptr;
-}
+std::unordered_map<ConstantValueKey, ConstantValue*, ConstantValueHash>
+  ConstantValue::mConstantPool;
 
 int64_t ConstantValue::i64() const {
   const auto val = getValue();
@@ -42,7 +36,7 @@ float ConstantValue::f32() const {
 bool ConstantValue::i1() const {
   const auto val = getValue();
   if (std::holds_alternative<intmax_t>(val)) {
-    return static_cast<int32_t>(std::get<intmax_t>(val));
+    return static_cast<bool>(std::get<intmax_t>(val));
   }
   assert(false);
 }
@@ -63,6 +57,33 @@ bool ConstantValue::isOne() {
   }
   return false;
 }
+
+ConstantValue* ConstantValue::get(Type* type, ConstantValVariant val) {
+  const auto key = std::make_pair(type, val);
+  if (const auto iter = mConstantPool.find(key); iter != mConstantPool.cend()) {
+    return iter->second;
+  }
+
+  if (type->isInt()) {
+    intmax_t intval = 0;
+    if (std::holds_alternative<intmax_t>(val)) {
+      intval = std::get<intmax_t>(val);
+    } else if (std::holds_alternative<double>(val)) {
+      intval = std::get<double>(val);
+    }
+    return ConstantInteger::get(type, intval);
+  } else if (type->isFloatPoint()) {
+    double floatval = 0.0;
+    if (std::holds_alternative<intmax_t>(val)) {
+      floatval = std::get<intmax_t>(val);
+    } else if (std::holds_alternative<double>(val)) {
+      floatval = std::get<double>(val);
+    }
+    return ConstantFloating::get(type, floatval);
+  }
+  assert(false && "Unsupported type for constant value");
+}
+
 size_t ConstantInteger::hash() const {
   return std::hash<intmax_t>{}(mVal);
 }
@@ -78,10 +99,16 @@ ConstantInteger* ConstantInteger::gen_i1(bool val) {
 }
 
 ConstantInteger* ConstantInteger::get(Type* type, intmax_t val) {
+  const auto key = std::make_pair(type, val);
+  if (const auto iter = mConstantPool.find(key); iter != mConstantPool.cend()) {
+    return iter->second->dynCast<ConstantInteger>();
+  }
   if (type->isBool()) {
     return (val & 1) ? getTrue() : getFalse();
   }
-  return utils::make<ConstantInteger>(type, val);
+  const auto cintValue = utils::make<ConstantInteger>(type, val);
+  mConstantPool.emplace(key, cintValue);
+  return cintValue;
 }
 
 ConstantInteger* ConstantInteger::getTrue() {
@@ -110,7 +137,14 @@ ConstantFloating* ConstantFloating::gen_f32(double val) {
 }
 
 ConstantFloating* ConstantFloating::get(Type* type, double val) {
-  return utils::make<ConstantFloating>(type, val);
+  const auto key = std::make_pair(type, val);
+  if (const auto iter = mConstantPool.find(key); iter != mConstantPool.cend()) {
+    return iter->second->dynCast<ConstantFloating>();
+  }
+  const auto cfloatValue = utils::make<ConstantFloating>(type, val);
+  mConstantPool.emplace(key, cfloatValue);
+
+  return cfloatValue;
 }
 ConstantFloating* ConstantFloating::getNeg() const {
   return ConstantFloating::get(mType, -mVal);
@@ -128,7 +162,8 @@ size_t ConstantFloating::hash() const {
 }
 
 UndefinedValue* UndefinedValue::get(Type* type) {
-  return utils::make<UndefinedValue>(type);
+  static auto undefined = utils::make<UndefinedValue>(type);
+  return undefined;
 }
 void UndefinedValue::dumpAsOpernd(std::ostream& os) const {
   print(os);

@@ -128,8 +128,11 @@ Value* IRBuilder::promoteType(Value* val, Type* target_tpye, Type* base_type) {
 }
 
 Value* IRBuilder::castConstantType(Value* val, Type* target_tpye) {
-  if (!val->isa<ConstantValue>()) return val;
-  if (val->type() == target_tpye) return val;
+  if (not val->isa<ConstantValue>())
+    return val;
+
+  if(val->type()->isSame(target_tpye)) 
+    return val;
 
   if (val->type()->isInt32() and target_tpye->isFloatPoint()) {
     return ConstantFloating::gen_f32(val->as<ConstantInteger>()->getVal());
@@ -168,20 +171,27 @@ Value* IRBuilder::promoteTypeBeta(Value* val, Type* targetType) {
   if (res->type() != targetType) {
     res = promoteTypeBeta(res, targetType);
   }
-  assert(res->type() == targetType);
+  assert(res->type()->isSame(targetType));
   return res;
 }
 
 Value* IRBuilder::makeTypeCast(Value* val, Type* target_type) {
-  Value* res = val;
-  if (val->type() == target_type) return res;
+  if (val->type()->isSame(target_type))
+    return val;
 
   if (val->type()->isInt() and target_type->isFloatPoint()) {
-    res = makeUnary(ValueId::vSITOFP, val, target_type);
-  } else if (val->type()->isFloatPoint() and target_type->isInt()) {
-    res = makeUnary(ValueId::vFPTOSI, val, target_type);
+    return makeUnary(ValueId::vSITOFP, val, target_type);
   }
-  return res;
+  if (val->type()->isFloatPoint() and target_type->isInt()) {
+    return makeUnary(ValueId::vFPTOSI, val, target_type);
+  } 
+  if(target_type->isPointer() and target_type->dynCast<PointerType>()->baseType()->isInt32()) {
+    return makeInst<UnaryInst>(vBITCAST, target_type, val);
+  }
+  std::cerr << "makeTypeCast: invalid cast from " << *(val->type()) << " to " << *target_type;
+  std::cerr << std::endl;
+  std::cerr << "make default Bitcast inst";
+  return makeInst<UnaryInst>(ValueId::vBITCAST, target_type, val);
 }
 
 Value* IRBuilder::makeCmp(CmpOp op, Value* lhs, Value* rhs) {
@@ -273,34 +283,35 @@ Value* IRBuilder::makeLoad(Value* ptr) {
   return inst;
 }
 
-Value* IRBuilder::makeAlloca(Type* base_type, bool is_const,
-                             const std::vector<size_t>& dims,
-                             const_str_ref comment, size_t capacity) {
+Value* IRBuilder::makeAlloca(Type* base_type, bool is_const, const_str_ref comment) {
   AllocaInst* inst = nullptr;
   const auto entryBlock = mBlock->function()->entry();
 
-  if (dims.size() == 0) {
-    inst = makeIdenticalInst<AllocaInst>(base_type, entryBlock, "", is_const);
-  } else {
-    inst = makeIdenticalInst<AllocaInst>(base_type, dims, entryBlock, "", is_const, capacity);
-  }
+  inst = makeIdenticalInst<AllocaInst>(base_type, is_const);
 
-  /* hhw, add alloca to function entry block*/
+  /* add alloca to function entry block*/
   // entry already has a terminator, br
-  entryBlock->emplace_inst(--entryBlock->insts().end(), inst);
+  entryBlock->emplace_inst(std::prev(entryBlock->insts().end()), inst);
+  inst->setBlock(entryBlock);
   inst->setComment(comment);
   return inst;
 }
 
-Value* IRBuilder::makeGetElementPtr(Type* base_type, Value* value, Value* idx,
-                                    std::vector<size_t> dims, std::vector<size_t> cur_dims) {
+Value* IRBuilder::makeGetElementPtr(Type* base_type,
+                                    Value* ptr,
+                                    Value* idx,
+                                    std::vector<size_t> dims,
+                                    std::vector<size_t> cur_dims) {
   GetElementPtrInst* inst = nullptr;
   if (dims.size() == 0 && cur_dims.size() == 0) {
-    inst = makeInst<GetElementPtrInst>(base_type, value, idx);
+    // i32* + idx
+    inst = makeInst<GetElementPtrInst>(base_type, ptr, idx);
   } else if (dims.size() == 0 && cur_dims.size() != 0) {
-    inst = makeInst<GetElementPtrInst>(base_type, value, idx, cur_dims);
+    // gep i32* + idx, one dim array
+    inst = makeInst<GetElementPtrInst>(base_type, ptr, idx, cur_dims);
   } else {
-    inst = makeInst<GetElementPtrInst>(base_type, value, idx, dims, cur_dims);
+    // gep high dims array
+    inst = makeInst<GetElementPtrInst>(base_type, ptr, idx, dims, cur_dims);
   }
   return inst;
 }

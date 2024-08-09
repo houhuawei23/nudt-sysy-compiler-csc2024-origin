@@ -116,7 +116,7 @@ std::vector<ir::Instruction*> LICM::getinvariant(ir::BasicBlock* bb, ir::Loop* l
             if (sectx->isPureFunc(callee)) {
                 if (isinvariantop(callinst, loop)) {
                     res.push_back(callinst);
-                    // std::cerr << "lift call" << std::endl;
+                    std::cerr << "lift call" << std::endl;
                 }
             }
         } else if (auto UnaryInst = inst->dynCast<ir::UnaryInst>()) {
@@ -126,8 +126,16 @@ std::vector<ir::Instruction*> LICM::getinvariant(ir::BasicBlock* bb, ir::Loop* l
             }
         } else if (auto BinaryInst = inst->dynCast<ir::BinaryInst>()) {
             if (isinvariantop(BinaryInst, loop)) {
-                res.push_back(BinaryInst);
-                // std::cerr << "lift Binary" << std::endl;
+                if (BinaryInst->valueId() != ir::vSDIV && BinaryInst->valueId() != ir::vSREM && BinaryInst->valueId() != ir::vFDIV &&
+                    BinaryInst->valueId() != ir::vFREM) {
+                    res.push_back(BinaryInst);
+                    // std::cerr << "lift Binary" << std::endl;
+                }
+            }
+        } else if (auto GepInst = inst->dynCast<ir::GetElementPtrInst>()) {
+            if (isinvariantop(GepInst, loop)) {
+                res.push_back(GepInst);
+                // std::cerr << "lift Gep" << std::endl;
             }
         }
     }

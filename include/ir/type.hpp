@@ -28,6 +28,7 @@ enum class BasicTypeRank : size_t {
 };
 
 /* Type */
+// NOTE: complex type cant compare by Type*, need to fix
 class Type {
 protected:
   BasicTypeRank mBtype;
@@ -89,6 +90,7 @@ public:  // utils function
     static_assert(std::is_base_of_v<Type, T>);
     return dynamic_cast<const T*>(this);
   }
+  virtual bool isSame(Type* rhs) const;
 };
 
 SYSYC_ARENA_TRAIT(Type, IR);
@@ -102,6 +104,7 @@ public:
 public:  // get function
   auto baseType() const { return mBaseType; }
   void print(std::ostream& os) const override;
+  bool isSame(Type* rhs) const override;
 };
 
 /* ArrayType */
@@ -120,6 +123,7 @@ public:  // get function
   auto& dims() const { return mDims; }
   auto baseType() const { return mBaseType; }
   void print(std::ostream& os) const override;
+  bool isSame(Type* rhs) const override;
 };
 
 /* FunctionType */
@@ -136,5 +140,6 @@ public:  // get function
   auto retType() const { return mRetType; }
   auto& argTypes() const { return mArgTypes; }
   void print(std::ostream& os) const override;
+  bool isSame(Type* rhs) const override;
 };
 }  // namespace ir

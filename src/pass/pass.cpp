@@ -85,11 +85,13 @@ void PassManager::run(BasicBlockPass* bp) {
 }
 static LoopParallel loopParallelPass;
 static StatelessCache cachePass;
+static irCheck irCheckPass;
+static CFGAnalysisHHW cfgAnalysisPass;
+
 void PassManager::runPasses(std::vector<std::string> passes) {
   // if(passes.size() == 0) return;
 
   const auto& config = sysy::Config::getInstance();
-
 
   if (config.logLevel >= sysy::LogLevel::DEBUG) {
     std::cerr << "Running passes: ";
@@ -149,7 +151,7 @@ void PassManager::runPasses(std::vector<std::string> passes) {
       run(new pass::tailCallOpt());
     } else if (pass_name.compare("cfgprint") == 0) {
       run(new pass::CFGPrinter());
-    } else if (pass_name.compare("licm") == 0) {
+    } else if (pass_name.compare("licm") == 0) {//必须配合gcm使用才能unroll gcm gvn licm unroll
       run(new pass::LICM());
     } else if (pass_name.compare("dse") == 0) {
       run(new pass::simpleDSE());
@@ -165,14 +167,18 @@ void PassManager::runPasses(std::vector<std::string> passes) {
       run(&loopParallelPass);
     } else if (pass_name == "cache") {
       run(&cachePass);
+      run(&cfgAnalysisPass);
     } else if (pass_name == "GepSplit") {
       run(new pass::GepSplit());
     } else {
       std::cerr << "Invalid pass name: " << pass_name << std::endl;
       assert(false && "Invalid pass name");
     }
-    auto fileName = utils::preName(config.infile) + "_after_" + pass_name + ".ll";
-    config.dumpModule(irModule, fileName);
+    if (config.logLevel >= sysy::LogLevel::DEBUG) {
+      auto fileName = utils::preName(config.infile) + "_after_" + pass_name + ".ll";
+      config.dumpModule(irModule, fileName);
+    }
+    run(&irCheckPass);
   }
   run(new pass::CFGAnalysisHHW());
 

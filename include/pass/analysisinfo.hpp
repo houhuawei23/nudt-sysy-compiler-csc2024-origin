@@ -24,7 +24,8 @@ class analysisInfo {
     bool isValid;
 
   public:
-    analysisInfo(PassUnit* mp, TopAnalysisInfoManager* mtp, bool v = false) : isValid(v), passUnit(mp), topManager(mtp) {}
+    analysisInfo(PassUnit* mp, TopAnalysisInfoManager* mtp, bool v = false)
+      : isValid(v), passUnit(mp), topManager(mtp) {}
     void setOn() { isValid = true; }
     void setOff() { isValid = false; }
     virtual void refresh() = 0;
@@ -79,10 +80,12 @@ class domTree : public FunctionACtx {
     }
     void refresh() override;
     bool dominate(ir::BasicBlock* bb1, ir::BasicBlock* bb2) {
-        if (bb1 == bb2) return true;
+        if (bb1 == bb2)
+            return true;
         auto bbIdom = _idom[bb2];
         while (bbIdom != nullptr) {
-            if (bbIdom == bb1) return true;
+            if (bbIdom == bb1)
+                return true;
             bbIdom = _idom[bbIdom];
         }
         return false;
@@ -139,11 +142,24 @@ class pdomTree : public FunctionACtx {  // also used as pdom
 
   public:
     pdomTree(ir::Function* func, TopAnalysisInfoManager* tp) : FunctionACtx(func, tp) {}
-    ir::BasicBlock* ipdom(ir::BasicBlock* bb) { return _ipdom[bb]; }
-    void set_ipdom(ir::BasicBlock* bb, ir::BasicBlock* idbb) { _ipdom[bb] = idbb; }
-    ir::BasicBlock* spdom(ir::BasicBlock* bb) { return _spdom[bb]; }
-    void set_spdom(ir::BasicBlock* bb, ir::BasicBlock* sdbb) { _spdom[bb] = sdbb; }
-    int pdomlevel(ir::BasicBlock* bb) { return _pdomlevel[bb]; }
+    ir::BasicBlock* ipdom(ir::BasicBlock* bb) {
+        assert(bb && "bb is null");
+        return _ipdom[bb];
+    }
+    void set_ipdom(ir::BasicBlock* bb, ir::BasicBlock* idbb) {
+        _ipdom[bb] = idbb;
+    }
+    ir::BasicBlock* spdom(ir::BasicBlock* bb) {
+        assert(bb && "bb is null");
+        return _spdom[bb];
+    }
+    void set_spdom(ir::BasicBlock* bb, ir::BasicBlock* sdbb) {
+        _spdom[bb] = sdbb;
+    }
+    int pdomlevel(ir::BasicBlock* bb) {
+        assert(bb && "bb is null");
+        return _pdomlevel[bb];
+    }
     void set_pdomlevel(ir::BasicBlock* bb, int lv) { _pdomlevel[bb] = lv; }
     std::vector<ir::BasicBlock*>& pdomson(ir::BasicBlock* bb) { return _pdomson[bb]; }
     std::vector<ir::BasicBlock*>& pdomfrontier(ir::BasicBlock* bb) { return _pdomfrontier[bb]; }
@@ -163,10 +179,12 @@ class pdomTree : public FunctionACtx {  // also used as pdom
     }
 
     bool pdominate(ir::BasicBlock* bb1, ir::BasicBlock* bb2) {
-        if (bb1 == bb2) return true;
+        if (bb1 == bb2)
+            return true;
         auto bbIdom = _ipdom[bb2];
         while (bbIdom != nullptr) {
-            if (bbIdom == bb1) return true;
+            if (bbIdom == bb1)
+                return true;
             bbIdom = _ipdom[bbIdom];
         }
         return false;
@@ -185,7 +203,8 @@ class loopInfo : public FunctionACtx {
     loopInfo(ir::Function* fp, TopAnalysisInfoManager* tp) : FunctionACtx(fp, tp) {}
     std::vector<ir::Loop*>& loops() { return _loops; }
     ir::Loop* head2loop(ir::BasicBlock* bb) {
-        if (_head2loop.count(bb) == 0) return nullptr;
+        if (_head2loop.count(bb) == 0)
+            return nullptr;
         return _head2loop[bb];
     }
     void set_head2loop(ir::BasicBlock* bb, ir::Loop* lp) { _head2loop[bb] = lp; }
@@ -204,7 +223,8 @@ class loopInfo : public FunctionACtx {
                 if (innermost == nullptr)
                     innermost = L;
                 else {
-                    if (_looplevel[L->header()] < _looplevel[innermost->header()]) innermost = L;
+                    if (_looplevel[L->header()] < _looplevel[innermost->header()])
+                        innermost = L;
                 }
             }
         }
@@ -245,9 +265,11 @@ class callGraph : public ModuleACtx {
         }
     }
     bool isNoCallee(ir::Function* func) {
-        if (_callees[func].size() == 0) return true;
+        if (_callees[func].size() == 0)
+            return true;
         for (auto f : _callees[func]) {
-            if (not isLib(f)) return false;
+            if (not isLib(f))
+                return false;
         }
         return true;
     }
@@ -261,7 +283,8 @@ class indVarInfo : public FunctionACtx {
   public:
     indVarInfo(ir::Function* fp, TopAnalysisInfoManager* tp) : FunctionACtx(fp, tp) {}
     ir::indVar* getIndvar(ir::Loop* loop) {
-        if (_loopToIndvar.count(loop) == 0) return nullptr;
+        if (_loopToIndvar.count(loop) == 0)
+            return nullptr;
         return _loopToIndvar[loop];
     }
     void clearAll() { _loopToIndvar.clear(); }
@@ -284,6 +307,8 @@ class sideEffectInfo : public ModuleACtx {
     void setFuncSideEffect(ir::Function* func, bool b) { _hasSideEffect[func] = b; }
     bool hasSideEffect(ir::Function* func) { return _hasSideEffect[func]; }
     void setFuncGVUse(ir::Function* func, bool b) { _hasGlobalVariableUse[func] = b; }
-    bool isPureFunc(ir::Function* func) { return not _hasGlobalVariableUse[func] and not _hasSideEffect[func]; }
+    bool isPureFunc(ir::Function* func) {
+        return not _hasGlobalVariableUse[func] and not _hasSideEffect[func];
+    }
 };
 };  // namespace pass
