@@ -5,15 +5,13 @@
 RISCV_NAMESPACE_BEGIN
 
 static bool matchInstJump(MIRInst* inst, MIROperand& target) {
-  if (inst->opcode() != InstJump)
-    return false;
+  if (inst->opcode() != InstJump) return false;
   target = inst->operand(0);
   return true;
 }
 
 static bool matchInstBranch(MIRInst* inst, MIROperand& cond, MIROperand& target, MIROperand& prob) {
-  if (inst->opcode() != InstBranch)
-    return false;
+  if (inst->opcode() != InstBranch) return false;
   cond = inst->operand(0);
   target = inst->operand(1);
   prob = inst->operand(2);
@@ -21,15 +19,13 @@ static bool matchInstBranch(MIRInst* inst, MIROperand& cond, MIROperand& target,
 }
 
 static bool matchInstUnreachable(MIRInst* inst) {
-  if (inst->opcode() != InstUnreachable)
-    return false;
+  if (inst->opcode() != InstUnreachable) return false;
 
   return true;
 }
 
 static bool matchInstLoad(MIRInst* inst, MIROperand& dst, MIROperand& addr, MIROperand& align) {
-  if (inst->opcode() != InstLoad)
-    return false;
+  if (inst->opcode() != InstLoad) return false;
   dst = inst->operand(0);
   addr = inst->operand(1);
   align = inst->operand(2);
@@ -37,8 +33,7 @@ static bool matchInstLoad(MIRInst* inst, MIROperand& dst, MIROperand& addr, MIRO
 }
 
 static bool matchInstStore(MIRInst* inst, MIROperand& addr, MIROperand& src, MIROperand& align) {
-  if (inst->opcode() != InstStore)
-    return false;
+  if (inst->opcode() != InstStore) return false;
   addr = inst->operand(0);
   src = inst->operand(1);
   align = inst->operand(2);
@@ -46,8 +41,7 @@ static bool matchInstStore(MIRInst* inst, MIROperand& addr, MIROperand& src, MIR
 }
 
 static bool matchInstAdd(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIROperand& src2) {
-  if (inst->opcode() != InstAdd)
-    return false;
+  if (inst->opcode() != InstAdd) return false;
   dst = inst->operand(0);
   src1 = inst->operand(1);
   src2 = inst->operand(2);
@@ -55,8 +49,7 @@ static bool matchInstAdd(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIROp
 }
 
 static bool matchInstSub(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIROperand& src2) {
-  if (inst->opcode() != InstSub)
-    return false;
+  if (inst->opcode() != InstSub) return false;
   dst = inst->operand(0);
   src1 = inst->operand(1);
   src2 = inst->operand(2);
@@ -64,8 +57,7 @@ static bool matchInstSub(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIROp
 }
 
 static bool matchInstMul(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIROperand& src2) {
-  if (inst->opcode() != InstMul)
-    return false;
+  if (inst->opcode() != InstMul) return false;
   dst = inst->operand(0);
   src1 = inst->operand(1);
   src2 = inst->operand(2);
@@ -73,8 +65,7 @@ static bool matchInstMul(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIROp
 }
 
 static bool matchInstUDiv(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIROperand& src2) {
-  if (inst->opcode() != InstUDiv)
-    return false;
+  if (inst->opcode() != InstUDiv) return false;
   dst = inst->operand(0);
   src1 = inst->operand(1);
   src2 = inst->operand(2);
@@ -82,8 +73,7 @@ static bool matchInstUDiv(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIRO
 }
 
 static bool matchInstURem(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIROperand& src2) {
-  if (inst->opcode() != InstURem)
-    return false;
+  if (inst->opcode() != InstURem) return false;
   dst = inst->operand(0);
   src1 = inst->operand(1);
   src2 = inst->operand(2);
@@ -91,8 +81,7 @@ static bool matchInstURem(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIRO
 }
 
 static bool matchInstAnd(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIROperand& src2) {
-  if (inst->opcode() != InstAnd)
-    return false;
+  if (inst->opcode() != InstAnd) return false;
   dst = inst->operand(0);
   src1 = inst->operand(1);
   src2 = inst->operand(2);
@@ -100,8 +89,7 @@ static bool matchInstAnd(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIROp
 }
 
 static bool matchInstOr(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIROperand& src2) {
-  if (inst->opcode() != InstOr)
-    return false;
+  if (inst->opcode() != InstOr) return false;
   dst = inst->operand(0);
   src1 = inst->operand(1);
   src2 = inst->operand(2);
@@ -109,8 +97,7 @@ static bool matchInstOr(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIROpe
 }
 
 static bool matchInstXor(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIROperand& src2) {
-  if (inst->opcode() != InstXor)
-    return false;
+  if (inst->opcode() != InstXor) return false;
   dst = inst->operand(0);
   src1 = inst->operand(1);
   src2 = inst->operand(2);
@@ -118,8 +105,7 @@ static bool matchInstXor(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIROp
 }
 
 static bool matchInstShl(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIROperand& src2) {
-  if (inst->opcode() != InstShl)
-    return false;
+  if (inst->opcode() != InstShl) return false;
   dst = inst->operand(0);
   src1 = inst->operand(1);
   src2 = inst->operand(2);
@@ -127,8 +113,7 @@ static bool matchInstShl(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIROp
 }
 
 static bool matchInstLShr(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIROperand& src2) {
-  if (inst->opcode() != InstLShr)
-    return false;
+  if (inst->opcode() != InstLShr) return false;
   dst = inst->operand(0);
   src1 = inst->operand(1);
   src2 = inst->operand(2);
@@ -136,8 +121,7 @@ static bool matchInstLShr(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIRO
 }
 
 static bool matchInstAShr(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIROperand& src2) {
-  if (inst->opcode() != InstAShr)
-    return false;
+  if (inst->opcode() != InstAShr) return false;
   dst = inst->operand(0);
   src1 = inst->operand(1);
   src2 = inst->operand(2);
@@ -145,8 +129,7 @@ static bool matchInstAShr(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIRO
 }
 
 static bool matchInstSDiv(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIROperand& src2) {
-  if (inst->opcode() != InstSDiv)
-    return false;
+  if (inst->opcode() != InstSDiv) return false;
   dst = inst->operand(0);
   src1 = inst->operand(1);
   src2 = inst->operand(2);
@@ -154,8 +137,7 @@ static bool matchInstSDiv(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIRO
 }
 
 static bool matchInstSRem(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIROperand& src2) {
-  if (inst->opcode() != InstSRem)
-    return false;
+  if (inst->opcode() != InstSRem) return false;
   dst = inst->operand(0);
   src1 = inst->operand(1);
   src2 = inst->operand(2);
@@ -163,8 +145,7 @@ static bool matchInstSRem(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIRO
 }
 
 static bool matchInstSMin(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIROperand& src2) {
-  if (inst->opcode() != InstSMin)
-    return false;
+  if (inst->opcode() != InstSMin) return false;
   dst = inst->operand(0);
   src1 = inst->operand(1);
   src2 = inst->operand(2);
@@ -172,8 +153,7 @@ static bool matchInstSMin(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIRO
 }
 
 static bool matchInstSMax(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIROperand& src2) {
-  if (inst->opcode() != InstSMax)
-    return false;
+  if (inst->opcode() != InstSMax) return false;
   dst = inst->operand(0);
   src1 = inst->operand(1);
   src2 = inst->operand(2);
@@ -181,24 +161,21 @@ static bool matchInstSMax(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIRO
 }
 
 static bool matchInstNeg(MIRInst* inst, MIROperand& dst, MIROperand& src) {
-  if (inst->opcode() != InstNeg)
-    return false;
+  if (inst->opcode() != InstNeg) return false;
   dst = inst->operand(0);
   src = inst->operand(1);
   return true;
 }
 
 static bool matchInstAbs(MIRInst* inst, MIROperand& dst, MIROperand& src) {
-  if (inst->opcode() != InstAbs)
-    return false;
+  if (inst->opcode() != InstAbs) return false;
   dst = inst->operand(0);
   src = inst->operand(1);
   return true;
 }
 
 static bool matchInstFAdd(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIROperand& src2) {
-  if (inst->opcode() != InstFAdd)
-    return false;
+  if (inst->opcode() != InstFAdd) return false;
   dst = inst->operand(0);
   src1 = inst->operand(1);
   src2 = inst->operand(2);
@@ -206,8 +183,7 @@ static bool matchInstFAdd(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIRO
 }
 
 static bool matchInstFSub(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIROperand& src2) {
-  if (inst->opcode() != InstFSub)
-    return false;
+  if (inst->opcode() != InstFSub) return false;
   dst = inst->operand(0);
   src1 = inst->operand(1);
   src2 = inst->operand(2);
@@ -215,8 +191,7 @@ static bool matchInstFSub(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIRO
 }
 
 static bool matchInstFMul(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIROperand& src2) {
-  if (inst->opcode() != InstFMul)
-    return false;
+  if (inst->opcode() != InstFMul) return false;
   dst = inst->operand(0);
   src1 = inst->operand(1);
   src2 = inst->operand(2);
@@ -224,8 +199,7 @@ static bool matchInstFMul(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIRO
 }
 
 static bool matchInstFDiv(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIROperand& src2) {
-  if (inst->opcode() != InstFDiv)
-    return false;
+  if (inst->opcode() != InstFDiv) return false;
   dst = inst->operand(0);
   src1 = inst->operand(1);
   src2 = inst->operand(2);
@@ -233,24 +207,25 @@ static bool matchInstFDiv(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIRO
 }
 
 static bool matchInstFNeg(MIRInst* inst, MIROperand& dst, MIROperand& src) {
-  if (inst->opcode() != InstFNeg)
-    return false;
+  if (inst->opcode() != InstFNeg) return false;
   dst = inst->operand(0);
   src = inst->operand(1);
   return true;
 }
 
 static bool matchInstFAbs(MIRInst* inst, MIROperand& dst, MIROperand& src) {
-  if (inst->opcode() != InstFAbs)
-    return false;
+  if (inst->opcode() != InstFAbs) return false;
   dst = inst->operand(0);
   src = inst->operand(1);
   return true;
 }
 
-static bool matchInstFFma(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIROperand& src2, MIROperand& acc) {
-  if (inst->opcode() != InstFFma)
-    return false;
+static bool matchInstFFma(MIRInst* inst,
+                          MIROperand& dst,
+                          MIROperand& src1,
+                          MIROperand& src2,
+                          MIROperand& acc) {
+  if (inst->opcode() != InstFFma) return false;
   dst = inst->operand(0);
   src1 = inst->operand(1);
   src2 = inst->operand(2);
@@ -258,9 +233,12 @@ static bool matchInstFFma(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIRO
   return true;
 }
 
-static bool matchInstICmp(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIROperand& src2, MIROperand& op) {
-  if (inst->opcode() != InstICmp)
-    return false;
+static bool matchInstICmp(MIRInst* inst,
+                          MIROperand& dst,
+                          MIROperand& src1,
+                          MIROperand& src2,
+                          MIROperand& op) {
+  if (inst->opcode() != InstICmp) return false;
   dst = inst->operand(0);
   src1 = inst->operand(1);
   src2 = inst->operand(2);
@@ -268,9 +246,12 @@ static bool matchInstICmp(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIRO
   return true;
 }
 
-static bool matchInstFCmp(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIROperand& src2, MIROperand& op) {
-  if (inst->opcode() != InstFCmp)
-    return false;
+static bool matchInstFCmp(MIRInst* inst,
+                          MIROperand& dst,
+                          MIROperand& src1,
+                          MIROperand& src2,
+                          MIROperand& op) {
+  if (inst->opcode() != InstFCmp) return false;
   dst = inst->operand(0);
   src1 = inst->operand(1);
   src2 = inst->operand(2);
@@ -279,79 +260,73 @@ static bool matchInstFCmp(MIRInst* inst, MIROperand& dst, MIROperand& src1, MIRO
 }
 
 static bool matchInstSExt(MIRInst* inst, MIROperand& dst, MIROperand& src) {
-  if (inst->opcode() != InstSExt)
-    return false;
+  if (inst->opcode() != InstSExt) return false;
   dst = inst->operand(0);
   src = inst->operand(1);
   return true;
 }
 
 static bool matchInstZExt(MIRInst* inst, MIROperand& dst, MIROperand& src) {
-  if (inst->opcode() != InstZExt)
-    return false;
+  if (inst->opcode() != InstZExt) return false;
   dst = inst->operand(0);
   src = inst->operand(1);
   return true;
 }
 
 static bool matchInstTrunc(MIRInst* inst, MIROperand& dst, MIROperand& src) {
-  if (inst->opcode() != InstTrunc)
-    return false;
+  if (inst->opcode() != InstTrunc) return false;
   dst = inst->operand(0);
   src = inst->operand(1);
   return true;
 }
 
 static bool matchInstF2U(MIRInst* inst, MIROperand& dst, MIROperand& src) {
-  if (inst->opcode() != InstF2U)
-    return false;
+  if (inst->opcode() != InstF2U) return false;
   dst = inst->operand(0);
   src = inst->operand(1);
   return true;
 }
 
 static bool matchInstF2S(MIRInst* inst, MIROperand& dst, MIROperand& src) {
-  if (inst->opcode() != InstF2S)
-    return false;
+  if (inst->opcode() != InstF2S) return false;
   dst = inst->operand(0);
   src = inst->operand(1);
   return true;
 }
 
 static bool matchInstU2F(MIRInst* inst, MIROperand& dst, MIROperand& src) {
-  if (inst->opcode() != InstU2F)
-    return false;
+  if (inst->opcode() != InstU2F) return false;
   dst = inst->operand(0);
   src = inst->operand(1);
   return true;
 }
 
 static bool matchInstS2F(MIRInst* inst, MIROperand& dst, MIROperand& src) {
-  if (inst->opcode() != InstS2F)
-    return false;
+  if (inst->opcode() != InstS2F) return false;
   dst = inst->operand(0);
   src = inst->operand(1);
   return true;
 }
 
 static bool matchInstFCast(MIRInst* inst, MIROperand& dst) {
-  if (inst->opcode() != InstFCast)
-    return false;
+  if (inst->opcode() != InstFCast) return false;
   dst = inst->operand(0);
   return true;
 }
 
 static bool matchInstCopy(MIRInst* inst, MIROperand& dst, MIROperand& src) {
-  if (inst->opcode() != InstCopy)
-    return false;
+  if (inst->opcode() != InstCopy) return false;
   dst = inst->operand(0);
   src = inst->operand(1);
   return true;
 }
 
-static bool matchInstSelect(MIRInst* inst, MIROperand& dst, MIROperand& cond, MIROperand& src1, MIROperand& src2) {
-  if (inst->opcode() != InstSelect)
-    return false;
+static bool matchInstSelect(MIRInst* inst,
+                            MIROperand& dst,
+                            MIROperand& cond,
+                            MIROperand& src1,
+                            MIROperand& src2) {
+  if (inst->opcode() != InstSelect) return false;
   dst = inst->operand(0);
   cond = inst->operand(1);
   src1 = inst->operand(2);
@@ -360,72 +335,63 @@ static bool matchInstSelect(MIRInst* inst, MIROperand& dst, MIROperand& cond, MI
 }
 
 static bool matchInstLoadGlobalAddress(MIRInst* inst, MIROperand& dst, MIROperand& addr) {
-  if (inst->opcode() != InstLoadGlobalAddress)
-    return false;
+  if (inst->opcode() != InstLoadGlobalAddress) return false;
   dst = inst->operand(0);
   addr = inst->operand(1);
   return true;
 }
 
 static bool matchInstLoadImm(MIRInst* inst, MIROperand& dst, MIROperand& imm) {
-  if (inst->opcode() != InstLoadImm)
-    return false;
+  if (inst->opcode() != InstLoadImm) return false;
   dst = inst->operand(0);
   imm = inst->operand(1);
   return true;
 }
 
 static bool matchInstLoadStackObjectAddr(MIRInst* inst, MIROperand& dst, MIROperand& obj) {
-  if (inst->opcode() != InstLoadStackObjectAddr)
-    return false;
+  if (inst->opcode() != InstLoadStackObjectAddr) return false;
   dst = inst->operand(0);
   obj = inst->operand(1);
   return true;
 }
 
 static bool matchInstCopyFromReg(MIRInst* inst, MIROperand& dst, MIROperand& src) {
-  if (inst->opcode() != InstCopyFromReg)
-    return false;
+  if (inst->opcode() != InstCopyFromReg) return false;
   dst = inst->operand(0);
   src = inst->operand(1);
   return true;
 }
 
 static bool matchInstCopyToReg(MIRInst* inst, MIROperand& dst, MIROperand& src) {
-  if (inst->opcode() != InstCopyToReg)
-    return false;
+  if (inst->opcode() != InstCopyToReg) return false;
   dst = inst->operand(0);
   src = inst->operand(1);
   return true;
 }
 
 static bool matchInstLoadImmToReg(MIRInst* inst, MIROperand& dst, MIROperand& imm) {
-  if (inst->opcode() != InstLoadImmToReg)
-    return false;
+  if (inst->opcode() != InstLoadImmToReg) return false;
   dst = inst->operand(0);
   imm = inst->operand(1);
   return true;
 }
 
 static bool matchInstLoadRegFromStack(MIRInst* inst, MIROperand& dst, MIROperand& obj) {
-  if (inst->opcode() != InstLoadRegFromStack)
-    return false;
+  if (inst->opcode() != InstLoadRegFromStack) return false;
   dst = inst->operand(0);
   obj = inst->operand(1);
   return true;
 }
 
 static bool matchInstStoreRegToStack(MIRInst* inst, MIROperand& obj, MIROperand& src) {
-  if (inst->opcode() != InstStoreRegToStack)
-    return false;
+  if (inst->opcode() != InstStoreRegToStack) return false;
   obj = inst->operand(0);
   src = inst->operand(1);
   return true;
 }
 
 static bool matchInstReturn(MIRInst* inst) {
-  if (inst->opcode() != InstReturn)
-    return false;
+  if (inst->opcode() != InstReturn) return false;
 
   return true;
 }
@@ -759,7 +725,8 @@ static bool matchAndSelectPattern12(MIRInst* inst1, ISelContext& ctx) {
   }
 
   /* match predicate for operands  */
-  if (not(isOperandIReg(op1) && isOperandIReg(op5) && isOperandIReg(op3) && (op6).isImm() && (op6).imm() == 1)) {
+  if (not(isOperandIReg(op1) && isOperandIReg(op5) && isOperandIReg(op3) && (op6).isImm() &&
+          (op6).imm() == 1)) {
     return false;
   }
 
@@ -799,7 +766,8 @@ static bool matchAndSelectPattern13(MIRInst* inst1, ISelContext& ctx) {
   }
 
   /* match predicate for operands  */
-  if (not(isOperandIReg(op1) && isOperandIReg(op2) && isOperandIReg(op5) && (op6).isImm() && (op6).imm() == 1)) {
+  if (not(isOperandIReg(op1) && isOperandIReg(op2) && isOperandIReg(op5) && (op6).isImm() &&
+          (op6).imm() == 1)) {
     return false;
   }
 
@@ -839,7 +807,8 @@ static bool matchAndSelectPattern14(MIRInst* inst1, ISelContext& ctx) {
   }
 
   /* match predicate for operands  */
-  if (not(isOperandIReg(op1) && isOperandIReg(op5) && isOperandIReg(op3) && (op6).isImm() && (op6).imm() == 2)) {
+  if (not(isOperandIReg(op1) && isOperandIReg(op5) && isOperandIReg(op3) && (op6).isImm() &&
+          (op6).imm() == 2)) {
     return false;
   }
 
@@ -879,7 +848,8 @@ static bool matchAndSelectPattern15(MIRInst* inst1, ISelContext& ctx) {
   }
 
   /* match predicate for operands  */
-  if (not(isOperandIReg(op1) && isOperandIReg(op2) && isOperandIReg(op5) && (op6).isImm() && (op6).imm() == 2)) {
+  if (not(isOperandIReg(op1) && isOperandIReg(op2) && isOperandIReg(op5) && (op6).isImm() &&
+          (op6).imm() == 2)) {
     return false;
   }
 
@@ -919,7 +889,8 @@ static bool matchAndSelectPattern16(MIRInst* inst1, ISelContext& ctx) {
   }
 
   /* match predicate for operands  */
-  if (not(isOperandIReg(op1) && isOperandIReg(op5) && isOperandIReg(op3) && (op6).isImm() && (op6).imm() == 3)) {
+  if (not(isOperandIReg(op1) && isOperandIReg(op5) && isOperandIReg(op3) && (op6).isImm() &&
+          (op6).imm() == 3)) {
     return false;
   }
 
@@ -959,7 +930,8 @@ static bool matchAndSelectPattern17(MIRInst* inst1, ISelContext& ctx) {
   }
 
   /* match predicate for operands  */
-  if (not(isOperandIReg(op1) && isOperandIReg(op2) && isOperandIReg(op5) && (op6).isImm() && (op6).imm() == 3)) {
+  if (not(isOperandIReg(op1) && isOperandIReg(op2) && isOperandIReg(op5) && (op6).isImm() &&
+          (op6).imm() == 3)) {
     return false;
   }
 
@@ -2038,7 +2010,8 @@ static bool matchAndSelectPattern53(MIRInst* inst1, ISelContext& ctx) {
   }
 
   /* match predicate for operands  */
-  if (not(isOperandIReg(op2) && isOperandIReg(op3) && isCompareOp(op4, CompareOp::ICmpSignedLessThan))) {
+  if (not(isOperandIReg(op2) && isOperandIReg(op3) &&
+          isCompareOp(op4, CompareOp::ICmpSignedLessThan))) {
     return false;
   }
 
@@ -2067,7 +2040,8 @@ static bool matchAndSelectPattern54(MIRInst* inst1, ISelContext& ctx) {
   }
 
   /* match predicate for operands  */
-  if (not(isOperandIReg(op2) && isOperandIReg(op3) && isCompareOp(op4, CompareOp::ICmpSignedGreaterEqual))) {
+  if (not(isOperandIReg(op2) && isOperandIReg(op3) &&
+          isCompareOp(op4, CompareOp::ICmpSignedGreaterEqual))) {
     return false;
   }
 
@@ -2103,7 +2077,8 @@ static bool matchAndSelectPattern55(MIRInst* inst1, ISelContext& ctx) {
   }
 
   /* match predicate for operands  */
-  if (not(isOperandIReg(op2) && isOperandIReg(op3) && isCompareOp(op4, CompareOp::ICmpUnsignedLessThan))) {
+  if (not(isOperandIReg(op2) && isOperandIReg(op3) &&
+          isCompareOp(op4, CompareOp::ICmpUnsignedLessThan))) {
     return false;
   }
 
@@ -2132,7 +2107,8 @@ static bool matchAndSelectPattern56(MIRInst* inst1, ISelContext& ctx) {
   }
 
   /* match predicate for operands  */
-  if (not(isOperandIReg(op2) && isOperandIReg(op3) && isCompareOp(op4, CompareOp::ICmpSignedGreaterThan))) {
+  if (not(isOperandIReg(op2) && isOperandIReg(op3) &&
+          isCompareOp(op4, CompareOp::ICmpSignedGreaterThan))) {
     return false;
   }
 
@@ -2161,7 +2137,8 @@ static bool matchAndSelectPattern57(MIRInst* inst1, ISelContext& ctx) {
   }
 
   /* match predicate for operands  */
-  if (not(isOperandIReg(op2) && isOperandIReg(op3) && isCompareOp(op4, CompareOp::ICmpUnsignedGreaterThan))) {
+  if (not(isOperandIReg(op2) && isOperandIReg(op3) &&
+          isCompareOp(op4, CompareOp::ICmpUnsignedGreaterThan))) {
     return false;
   }
 
@@ -2248,7 +2225,8 @@ static bool matchAndSelectPattern60(MIRInst* inst1, ISelContext& ctx) {
   }
 
   /* match predicate for operands  */
-  if (not(isOperandIReg(op2) && isOperandIReg(op3) && isCompareOp(op4, CompareOp::ICmpSignedLessEqual))) {
+  if (not(isOperandIReg(op2) && isOperandIReg(op3) &&
+          isCompareOp(op4, CompareOp::ICmpSignedLessEqual))) {
     return false;
   }
 
@@ -2553,6 +2531,36 @@ static bool matchAndSelectPattern70(MIRInst* inst1, ISelContext& ctx) {
 }
 
 /* InstZExt matchAndSelectPatternInstZExtend */
+
+/* InstSExt matchAndSelectPatternInstSExt begin */
+static bool matchAndSelectPattern71(MIRInst* inst1, ISelContext& ctx) {
+  uint32_t rootOpcode = InstSExt;
+  /** Match Inst **/
+  /* match inst InstSExt */
+  MIROperand op1;
+  MIROperand op2;
+  if (not matchInstSExt(inst1, op1, op2)) {
+    return false;
+  }
+
+  /* match predicate for operands  */
+  if (not(isOperandIReg(op2))) {
+    return false;
+  }
+
+  /** Select Inst **/
+  auto op4 = (op1);
+  auto op5 = (op2);
+  /* select inst InstCopy */
+  auto inst2 = ctx.insertMIRInst(InstCopy, {op4, op5});
+
+  /* Replace Operand */
+  ctx.replace_operand(ctx.getInstDefOperand(inst1), ctx.getInstDefOperand(inst2));
+  ctx.remove_inst(inst1);
+  return true;
+}
+
+/* InstSExt matchAndSelectPatternInstSExtend */
 
 static bool matchAndSelectImpl(MIRInst* inst, ISelContext& ctx, bool debugMatchSelect) {
   bool success = false;
@@ -2936,6 +2944,13 @@ static bool matchAndSelectImpl(MIRInst* inst, ISelContext& ctx, bool debugMatchS
       }
       break;
     }
+    case InstSExt: {
+      if (matchAndSelectPattern71(inst, ctx)) {
+        success = true;
+        break;
+      }
+      break;
+    }
     default:
       break;
   }
@@ -2954,7 +2969,9 @@ class RISCVISelInfo final : public TargetISelInfo {
 public:
   bool isLegalInst(uint32_t opcode) const override;
   bool match_select(MIRInst* inst, ISelContext& ctx) const override;
-  void legalizeInstWithStackOperand(const InstLegalizeContext& ctx, MIROperand op, StackObject& obj) const override;
+  void legalizeInstWithStackOperand(const InstLegalizeContext& ctx,
+                                    MIROperand op,
+                                    StackObject& obj) const override;
   void postLegalizeInst(const InstLegalizeContext& ctx) const override;
   MIROperand materializeFPConstant(float fpVal, LoweringContext& loweringCtx) const override;
 };

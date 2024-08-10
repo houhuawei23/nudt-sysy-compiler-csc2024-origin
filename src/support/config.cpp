@@ -136,10 +136,12 @@ static const auto perfPassesList = std::vector<std::string>{
   "adce", 
   "dae",    
   "simplifycfg",
+
   "loopsimplify",
   "gcm",  // global code motion
   "gvn",          // global value numbering: passed, slow
   "licm",         // loop invariant code motion
+  
   "instcombine",
   "sccp",
   "adce",
@@ -148,6 +150,8 @@ static const auto perfPassesList = std::vector<std::string>{
   "unroll",
   "simplifycfg",
   "loopsimplify",
+  "sccp",
+  "adce",
   "gcm",
   "gvn",
   "licm",

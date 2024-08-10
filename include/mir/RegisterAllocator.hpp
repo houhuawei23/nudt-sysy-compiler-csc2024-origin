@@ -15,24 +15,20 @@ namespace mir {
 using IPRAInfo = std::unordered_set<RegNum>;
 class Target;
 class IPRAUsageCache final {
-  std::unordered_map<std::string, IPRAInfo> _cache;
+  std::unordered_map<std::string, IPRAInfo> mCache;
 
-public:  // utils function
+public:
   void add(const CodeGenContext& ctx, MIRFunction& mfunc);
   void add(std::string symbol, IPRAInfo info);
   const IPRAInfo* query(std::string calleeFunc) const;
 
-public:  // Just for Debug
+public:
   void dump(std::ostream& out, std::string calleeFunc) const;
 };
 
-void fastAllocator(MIRFunction& mfunc, CodeGenContext& ctx, IPRAUsageCache& infoIPRA);
-void fastAllocatorBeta(MIRFunction& mfunc, CodeGenContext& ctx, IPRAUsageCache& infoIPRA);
+void intraBlockAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAUsageCache& infoIPRA);
 
-void graphColoringAllocateBeta(MIRFunction& mfunc, CodeGenContext& ctx, IPRAUsageCache& infoIPRA);
-void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAUsageCache& infoIPRA);
-
-void linearAllocator(MIRFunction& mfunc, CodeGenContext& ctx);
+void graphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAUsageCache& infoIPRA);
 
 void mixedRegisterAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAUsageCache& infoIPRA);
 
@@ -112,7 +108,7 @@ struct GraphColoringAllocateContext final {
 
   void initForAllocationClass(uint32_t idx, CodeGenContext& ctx) {
     allocationClass = idx;
-    
+
     const auto& list = ctx.registerInfo->get_allocation_list(allocationClass);
     regCount = list.size();
 
@@ -132,19 +128,9 @@ struct GraphColoringAllocateContext final {
   }
   bool isLockedOrUnderRenamedType(OperandType type) { return (type <= OperandType::Float32); };
 
-  void colorDefUse(RegNum src, RegNum dst) {
-    assert(isVirtualReg(src) && isISAReg(dst));
-    if (!fixHazard || !defUseTime.count(src)) return;
-    auto& dstInfo = defUseTime[dst];
-    auto& srcInfo = defUseTime[src];
-    dstInfo.insert(srcInfo.begin(), srcInfo.end());
-  };
+  void colorDefUse(RegNum src, RegNum dst);
 
-  void updateCopyHint(RegNum dst, RegNum src, double weight) {
-    if (isVirtualReg(dst)) {
-      copyHint[dst][src] += weight;
-    }
-  };
+  void updateCopyHint(RegNum dst, RegNum src, double weight);
   InterferenceGraph buildGraph(MIRFunction& mfunc,
                                CodeGenContext& ctx,
                                const LiveVariablesInfo& liveInterval,
@@ -158,14 +144,12 @@ struct GraphColoringAllocateContext final {
                                 LiveVariablesInfo& liveInterval,
                                 std::vector<std::pair<InstNum, double>>& freq);
 
-  //
-  // std::stack<uint32_t> assignStack;
   bool assignRegisters(MIRFunction& mfunc,
                        CodeGenContext& ctx,
                        const InterferenceGraph& graph,
                        const RegWeightMap& weights,
                        std::stack<uint32_t>& assignStack);
-  //
+
   bool allocateRegisters(MIRFunction& mfunc,
                          CodeGenContext& ctx,
                          std::vector<uint32_t>& vregs,
@@ -177,5 +161,81 @@ struct GraphColoringAllocateContext final {
                       CodeGenContext& ctx,
                       InterferenceGraph& graph,
                       RegWeightMap& weights);
+};
+
+struct VirtualRegUseInfo final {
+  std::unordered_set<MIRBlock*> uses;
+  std::unordered_set<MIRBlock*> defs;
+};
+struct FastAllocatorContext final {
+  MIRFunction& mfunc;
+  CodeGenContext& ctx;
+  LiveVariablesInfo& liveInterval;
+  IPRAUsageCache& infoIPRA;
+
+  std::unordered_map<MIROperand, VirtualRegUseInfo, MIROperandHasher> useDefInfo;
+  std::unordered_map<MIROperand, MIROperand, MIROperandHasher> isaRegHint;
+
+  // find all cross-block vregs and allocate stack slots for them
+  std::unordered_map<MIROperand, MIROperand, MIROperandHasher> stackMap;
+  std::unordered_map<MIROperand, MIROperand, MIROperandHasher> isaRegStackMap;
+
+  void collectUseDefInfo(MIRFunction& mfunc, CodeGenContext& ctx);
+  void collectStackMap(MIRFunction& mfunc, CodeGenContext& ctx);
+};
+
+struct BlockAllocator final : public MIRBuilder {
+  CodeGenContext& ctx;
+  FastAllocatorContext& allocateCtx;
+  // 存储当前块内需要spill到内存的虚拟寄存器
+  std::unordered_map<MIROperand, MIROperand, MIROperandHasher> localStackMap;
+  // 当前块中, 每个虚拟寄存器的映射 -> 栈 or 物理寄存器
+  std::unordered_map<MIROperand, std::vector<MIROperand>, MIROperandHasher> currentMap;
+  // 当前块中, [物理寄存器, MIROperand] (注意: 同一个物理寄存器可以分配给多个MIROperand)
+  std::unordered_map<MIROperand, MIROperand, MIROperandHasher> physMap;
+  // 分为两类: int registers and float registers
+  std::unordered_map<uint32_t, std::queue<MIROperand>> allocationQueue;
+  // retvals/callee arguments
+  std::unordered_set<MIROperand, MIROperandHasher> protectedLockedISAReg;
+  // callee retvals/arguments
+  std::unordered_set<MIROperand, MIROperandHasher> underRenamedISAReg;
+
+  MultiClassRegisterSelector selector;
+
+  std::unordered_set<MIROperand, MIROperandHasher> dirtyVRegs;
+
+  LiveVariablesBlockInfo& liveIntervalInfo;
+  BlockAllocator(FastAllocatorContext& allocateCtx,
+                 MIRBlock* block,
+                 LiveVariablesBlockInfo& liveInfo)
+    : allocateCtx(allocateCtx),
+      ctx(allocateCtx.ctx),
+      selector(*allocateCtx.ctx.registerInfo),
+      liveIntervalInfo(liveInfo) {
+    mCurrBlock = block;
+    mInsertPoint = block->insts().begin();
+  }
+
+  const auto getStackStorage(const MIROperand& op);
+  auto& getDataMap(const MIROperand& op);
+
+  const auto isAllocatableType(OperandType type);
+  const auto isProtected(const MIROperand& isaReg,
+                         std::unordered_set<MIROperand, MIROperandHasher>& protectedRegs);
+
+  const auto collectUnderRenamedISARegs(MIRInstList::iterator it);
+
+  const auto evictVReg(MIROperand operand);
+  auto getFreeReg(const MIROperand& operand,
+                  std::unordered_set<MIROperand, MIROperandHasher>& protectedRegs);
+
+  const auto use(MIROperand& op,
+                 std::unordered_set<MIROperand, MIROperandHasher>& protectedRegs,
+                 std::unordered_set<MIROperand, MIROperandHasher>& releaseVRegs);
+
+  const auto def(MIROperand& op, std::unordered_set<MIROperand, MIROperandHasher>& protectedRegs);
+
+  const auto spillBeforeBranch(MIRInst* inst);
+  const auto saveCallerSavedRegsForCall(MIRInst* inst);
 };
 };  // namespace mir

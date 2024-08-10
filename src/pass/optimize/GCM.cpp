@@ -17,6 +17,8 @@ bool GCM::ispinned(ir::Instruction* instruction) {
         return false;
     else if (dyn_cast<ir::GetElementPtrInst>(instruction))
         return false;  // GEP指令不固定
+    else if (dyn_cast<ir::PtrCastInst>(instruction))
+        return false;
     else               // 其他指令固定在自己的BB上
         return true;
 }

@@ -208,8 +208,8 @@ void createMIRModule(ir::Module& ir_module,
     // /* stage6: Optimize: pre-RA scheduling, minimize register usage */
     {
       // preRASchedule(*mir_func, codegen_ctx);
-      preRASchedule(*mir_func, codegen_ctx);
-      dumpStageResult("AfterPreRASchedule", mir_func, codegen_ctx);
+      // preRASchedule(*mir_func, codegen_ctx);
+      // dumpStageResult("AfterPreRASchedule", mir_func, codegen_ctx);
     }
 
     /* stage7: register allocation */

@@ -1249,6 +1249,16 @@ InstSelInfo: {
             },
           replace: { name: InstCopy, dst: $dst, src: $src },
         },
+        {
+          pattern:
+            {
+              name: InstSExt,
+              dst: $dst,
+              src: $src,
+              predicate: isOperandIReg($src),
+            },
+          replace: { name: InstCopy, dst: $dst, src: $src },
+        },
       ],
   }
 

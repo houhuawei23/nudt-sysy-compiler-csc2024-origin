@@ -25,7 +25,8 @@ public:
   ir::Value* getValueNumber(ir::UnaryInst* unary);
   ir::Value* getValueNumber(ir::GetElementPtrInst* getelementptr);
   ir::Value* getValueNumber(ir::LoadInst* load);
-  ir::Value *getValueNumber(ir::CallInst *call);
+  ir::Value* getValueNumber(ir::CallInst* call);
+  ir::Value* getValueNumber(ir::PtrCastInst* ptrcast);
 
   void visitinst(ir::Instruction* inst);
   domTree* domctx;
