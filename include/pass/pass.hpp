@@ -46,7 +46,7 @@ private:
   std::unordered_map<ir::Function*, pdomTree*> mPDomTree;
   std::unordered_map<ir::Function*, loopInfo*> mLoopInfo;
   std::unordered_map<ir::Function*, indVarInfo*> mIndVarInfo;
-  std::unordered_map<ir::Function*, dependenceInfoForLoops*> mDepInfo;
+  std::unordered_map<ir::Function*, dependenceInfo*> mDepInfo;
   // bb info
 public:
   TopAnalysisInfoManager(ir::Module* pm) : mModule(pm), mCallGraph(nullptr) {}
@@ -75,13 +75,14 @@ public:
     idvctx->refresh();
     return idvctx;
   }
-  dependenceInfoForLoops* getDepInfo(ir::Function* func){
+  dependenceInfo* getDepInfo(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
     auto dpctx=mDepInfo[func];
     dpctx->setOff();
     dpctx->refresh();
     return dpctx;
   }
+
 
 
   callGraph* getCallGraph() { 
@@ -115,12 +116,11 @@ public:
     auto idvctx=mIndVarInfo[func];
     return idvctx;
   }
-  dependenceInfoForLoops* getDepInfoWithoutRefresh(ir::Function* func) {
+  dependenceInfo* getDepInfoWithoutRefresh(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
     auto dpctx=mDepInfo[func];
     return dpctx;
   }
-
 
   callGraph* getCallGraphWithoutRefresh() { 
     return mCallGraph; 

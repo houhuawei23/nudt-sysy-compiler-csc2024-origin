@@ -317,80 +317,19 @@ class sideEffectInfo : public ModuleACtx {
     bool isPureFunc(ir::Function* func) { return _GlobalVariableUse[func].empty() and not _hasSideEffect[func]; }
 };
 
-enum memOp{
-    memread,
-    memwrite
-};
-
-struct memRW{
-    ir::Instruction* inst;
-    memOp memop;
-    ir::GetElementPtrInst* gepPtr;
-};
-
-enum idxType{
-    iCONST,
-    iLPINVARIANT,
-    iIDV,
-    iIDVPLUSMINUSCON,
-    iSIV,
-    iMIV,
-    iCALL,
-    iLOAD,
-    iELSE
-};
-//常数，循环不变量，归纳变量，归纳变量加减常数，归纳变量一元线性表达式，多元式，函数调用值，内存取数，其他
-
-enum baseAddrType{
-    typeglobal,
-    typearg,
-    typelocal
-};
-
-struct subAddrIdx{
-    std::vector<ir::Value*>idxlist;
-    std::unordered_map<ir::Value*,idxType>idxTypes;
-};
-
-struct dependenceInfoForLoop{
-    ir::Loop* lp;
-    std::set<ir::Value*>baseAddrs;
-    std::unordered_map<ir::Value*,std::set<ir::GetElementPtrInst*>>baseAddrToSubAddrs;
-    std::unordered_map<ir::GetElementPtrInst*,std::set<memRW*>>subAddrToMemWR;
-    std::unordered_map<ir::GetElementPtrInst*,bool>subAddrIsRead;
-    std::unordered_map<ir::GetElementPtrInst*,bool>subAddrIsWrite;
-    bool isParallel;
-    std::set<ir::Instruction*>memInsts;//including loads and stores
-    std::unordered_map<ir::GetElementPtrInst*,subAddrIdx*>subAddrToIdxPtr;
-
-    public:
-    void addMemRW(memRW* memrw,ir::Value* baseptr){
-        baseAddrs.insert(baseptr);
-        auto geptr=memrw->gepPtr;
-        baseAddrToSubAddrs[baseptr].insert(geptr);
-        if(memrw->memop==memread){
-            subAddrIsRead[geptr]=true;
-        }
-        else{
-            subAddrIsWrite[geptr]=true;
-        }
-        subAddrToMemWR[geptr].insert(memrw);
-        memInsts.insert(memrw->inst);
-    }
-    void print(std::ostream& os);
-    void setSubAddr(ir::GetElementPtrInst* subAddr,subAddrIdx* idx){subAddrToIdxPtr[subAddr]=idx;}
-};
-
-class dependenceInfoForLoops:public FunctionACtx{
+class dependenceInfo:public FunctionACtx{
     private:
-        std::unordered_map<ir::Loop*,dependenceInfoForLoop*>_loopdpInfo;
+        std::unordered_map<ir::Loop*,std::any>funcToLoopDependenceInfo;
     public:
-        dependenceInfoForLoops(ir::Function* func ,TopAnalysisInfoManager* tp) : FunctionACtx(func, tp) {}
-        void clearAll(){_loopdpInfo.clear();}
-        void refresh()override;
-        dependenceInfoForLoop* dpInfo(ir::Loop* lp){return _loopdpInfo[lp];}
-        void setDepInfo(ir::Loop* lp,dependenceInfoForLoop* dif){_loopdpInfo[lp]=dif;}
-
-
+        dependenceInfo(ir::Function* func, TopAnalysisInfoManager* tp) : FunctionACtx(func, tp) {}
+        std::any getLoopDependenceInfo(ir::Loop* lp){return funcToLoopDependenceInfo[lp];}
+        void clearAll(){funcToLoopDependenceInfo.clear();}
+        void refresh() override;
+        void setDepInfoLp(ir::Loop* lp,std::any input){
+            funcToLoopDependenceInfo[lp]=input;
+        }
 };
+
+
+
 };  // namespace pass
