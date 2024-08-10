@@ -6,6 +6,8 @@
 #include "pass/analysis/loop.hpp"
 #include "pass/analysis/indvar.hpp"
 #include "pass/analysis/sideEffectAnalysis.hpp"
+#include "pass/analysis/dependenceAnalysis/DependenceAnalysis.hpp"
+#include "pass/analysis/dependenceAnalysis/dpaUtils.hpp"
 
 using namespace pass;
 
@@ -18,6 +20,7 @@ void TopAnalysisInfoManager::initialize() {
         mPDomTree[func] = new pdomTree(func, this);
         mLoopInfo[func] = new loopInfo(func, this);
         mIndVarInfo[func] = new indVarInfo(func, this);
+        mDepInfo[func] = new dependenceInfoForLoops(func, this);
     }
 }
 
@@ -80,4 +83,36 @@ void sideEffectInfo::refresh() {
         sea.run(passUnit,topManager);
         setOn();
     }
+}
+
+void dependenceInfoForLoops::refresh() {
+    if(not isValid){
+        using namespace pass;
+        // PassManager pm = PassManager(passUnit, topManager);
+        dependenceAnalysis da=dependenceAnalysis();
+        da.run(passUnit,topManager);
+        setOn();
+    }
+}
+
+void dependenceInfoForLoop::print(std::ostream& os){
+    using namespace std;
+    os<<"loop whose header is \""
+        <<lp->header()->name()<<"\", depinfo:"<<std::endl;
+    os<<"Used base addrs:"<<endl;
+    for(auto bd:baseAddrs){
+        auto typebaseaddr=getBaseaddrType(bd);
+        if(typebaseaddr==baseAddrType::typeglobal){
+            os<<"global:\t";
+        }
+        if(typebaseaddr==baseAddrType::typelocal){
+            os<<"local:\t";
+        }
+        if(typebaseaddr==baseAddrType::typearg){
+            os<<"arg:\t";
+        }
+        os<<bd->name()<<endl;
+        os<<"We got "<<(baseAddrToSubAddrs[bd]).size()<<" sub addrs."<<endl;
+    }
+    
 }

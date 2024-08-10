@@ -25,10 +25,10 @@ void sideEffectAnalysis::run(ir::Module* md,TopAnalysisInfoManager* tp){
 
     for(auto func:md->funcs()){
         sectx->setFuncSideEffect(func,false);
-        sectx->setFuncGVUse(func,false);
+        // sectx->setFuncGVUse(func,false);
         if(cgctx->isLib(func)){//cond 4
             sectx->setFuncSideEffect(func,true);
-            sectx->setFuncGVUse(func,false);
+            // sectx->setFuncGVUse(func,false);
             hasSideEffectFunctions.insert(func);
             worklist.insert(func);
         }
@@ -65,11 +65,11 @@ void sideEffectAnalysis::run(ir::Module* md,TopAnalysisInfoManager* tp){
                     else if(auto loadInst=inst->dynCast<ir::LoadInst>()){
                         auto loadPtr=loadInst->ptr();
                         if(auto gv=loadPtr->dynCast<ir::GlobalVariable>()){
-                            sectx->setFuncGVUse(func,true);
+                            sectx->setFuncGVUse(func,gv);
                         }
                         else if(auto gep=loadPtr->dynCast<ir::GetElementPtrInst>()){
                             if(isGlobal(gep)){
-                                sectx->setFuncGVUse(func,true);
+                                sectx->setFuncGVUse(func,isGlobal(gep));
                             }
                         }
 
@@ -94,6 +94,9 @@ void sideEffectAnalysis::run(ir::Module* md,TopAnalysisInfoManager* tp){
             if(not hasSideEffectFunctions.count(callerFunc)){
                 sectx->setFuncSideEffect(callerFunc,true);
                 hasSideEffectFunctions.insert(callerFunc);
+                for(auto gv:sectx->funcUseGv(func)){
+                    sectx->setFuncGVUse(callerFunc,gv);
+                }
                 worklist.insert(callerFunc);
                 // std::cerr<<"Side Effect "<<callerFunc->name()<<std::endl;
             }
@@ -103,10 +106,10 @@ void sideEffectAnalysis::run(ir::Module* md,TopAnalysisInfoManager* tp){
     // infoCheck(md);
 }
 
-bool sideEffectAnalysis::isGlobal(ir::GetElementPtrInst* gep){
-    if(auto gvbasePtr=gep->value()->dynCast<ir::GlobalVariable>())return true;
+ir::GlobalVariable* sideEffectAnalysis:: isGlobal(ir::GetElementPtrInst* gep){
+    if(auto gvbasePtr=gep->value()->dynCast<ir::GlobalVariable>())return gvbasePtr;
     if(auto gepbasePtr=gep->value()->dynCast<ir::GetElementPtrInst>())return isGlobal(gepbasePtr);
-    return false;
+    return nullptr;
 }
 
 void sideEffectAnalysis::infoCheck(ir::Module* md){

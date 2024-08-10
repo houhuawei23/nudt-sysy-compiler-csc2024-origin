@@ -15,6 +15,8 @@ class loopInfo;
 class callGraph;
 class indVarInfo;
 class TopAnalysisInfoManager;
+class dependenceAnalysis;
+
 
 template <typename PassUnit>
 class analysisInfo {
@@ -220,11 +222,15 @@ class callGraph : public ModuleACtx {
     std::unordered_map<ir::Function*, bool> _is_called;
     std::unordered_map<ir::Function*, bool> _is_inline;
     std::unordered_map<ir::Function*, bool> _is_lib;
+    std::unordered_map<ir::Function*, std::set<ir::CallInst*>>_callerCallInsts;
+    std::unordered_map<ir::Function*, std::set<ir::CallInst*>>_calleeCallInsts;
 
   public:
     callGraph(ir::Module* md, TopAnalysisInfoManager* tp) : ModuleACtx(md, tp) {}
     std::set<ir::Function*>& callees(ir::Function* func) { return _callees[func]; }
     std::set<ir::Function*>& callers(ir::Function* func) { return _callers[func]; }
+    std::set<ir::CallInst*>& callerCallInsts(ir::Function* func) { return _callerCallInsts[func]; }
+    std::set<ir::CallInst*>& calleeCallInsts(ir::Function* func) { return _calleeCallInsts[func]; }
     bool isCalled(ir::Function* func) { return _is_called[func]; }
     bool isInline(ir::Function* func) { return _is_inline[func]; }
     bool isLib(ir::Function* func) { return _is_lib[func]; }
@@ -272,18 +278,96 @@ class indVarInfo : public FunctionACtx {
 class sideEffectInfo : public ModuleACtx {
   private:
     std::unordered_map<ir::Function*, bool> _hasSideEffect;
-    std::unordered_map<ir::Function*, bool> _hasGlobalVariableUse;
+    std::unordered_map<ir::Function*, std::set<ir::GlobalVariable*>> _GlobalVariableUse;
 
   public:
     sideEffectInfo(ir::Module* ctx, TopAnalysisInfoManager* tp) : ModuleACtx(ctx, tp) {}
     void clearAll() {
         _hasSideEffect.clear();
-        _hasGlobalVariableUse.clear();
+        _GlobalVariableUse.clear();
     }
     void refresh() override;
     void setFuncSideEffect(ir::Function* func, bool b) { _hasSideEffect[func] = b; }
     bool hasSideEffect(ir::Function* func) { return _hasSideEffect[func]; }
-    void setFuncGVUse(ir::Function* func, bool b) { _hasGlobalVariableUse[func] = b; }
-    bool isPureFunc(ir::Function* func) { return not _hasGlobalVariableUse[func] and not _hasSideEffect[func]; }
+    void setFuncGVUse(ir::Function* func, ir::GlobalVariable* gv) { _GlobalVariableUse[func].insert(gv); }
+    std::set<ir::GlobalVariable*>funcUseGv(ir::Function* func){return _GlobalVariableUse[func];}
+    bool isPureFunc(ir::Function* func) { return _GlobalVariableUse[func].empty() and not _hasSideEffect[func]; }
+};
+
+enum memOp{
+    memread,
+    memwrite
+};
+
+struct memRW{
+    ir::Instruction* inst;
+    memOp memop;
+    ir::GetElementPtrInst* gepPtr;
+};
+
+enum idxType{
+    iCONST,
+    iLPINVARIANT,
+    iIDV,
+    iIDVPLUSMINUSCON,
+    iSIV,
+    iMIV,
+    iCALL,
+    iLOAD,
+    iELSE
+};
+//常数，循环不变量，归纳变量，归纳变量加减常数，归纳变量一元线性表达式，多元式，函数调用值，内存取数，其他
+
+enum baseAddrType{
+    typeglobal,
+    typearg,
+    typelocal
+};
+
+struct subAddrIdx{
+    std::vector<ir::Value*>idxlist;
+    std::unordered_map<ir::Value*,idxType>idxTypes;
+};
+
+struct dependenceInfoForLoop{
+    ir::Loop* lp;
+    std::set<ir::Value*>baseAddrs;
+    std::unordered_map<ir::Value*,std::set<ir::GetElementPtrInst*>>baseAddrToSubAddrs;
+    std::unordered_map<ir::GetElementPtrInst*,std::set<memRW*>>subAddrToMemWR;
+    std::unordered_map<ir::GetElementPtrInst*,bool>subAddrIsRead;
+    std::unordered_map<ir::GetElementPtrInst*,bool>subAddrIsWrite;
+    bool isParallel;
+    std::set<ir::Instruction*>memInsts;//including loads and stores
+    std::unordered_map<ir::GetElementPtrInst*,subAddrIdx*>subAddrToIdxPtr;
+
+    public:
+    void addMemRW(memRW* memrw,ir::Value* baseptr){
+        baseAddrs.insert(baseptr);
+        auto geptr=memrw->gepPtr;
+        baseAddrToSubAddrs[baseptr].insert(geptr);
+        if(memrw->memop==memread){
+            subAddrIsRead[geptr]=true;
+        }
+        else{
+            subAddrIsWrite[geptr]=true;
+        }
+        subAddrToMemWR[geptr].insert(memrw);
+        memInsts.insert(memrw->inst);
+    }
+    void print(std::ostream& os);
+    void setSubAddr(ir::GetElementPtrInst* subAddr,subAddrIdx* idx){subAddrToIdxPtr[subAddr]=idx;}
+};
+
+class dependenceInfoForLoops:public FunctionACtx{
+    private:
+        std::unordered_map<ir::Loop*,dependenceInfoForLoop*>_loopdpInfo;
+    public:
+        dependenceInfoForLoops(ir::Function* func ,TopAnalysisInfoManager* tp) : FunctionACtx(func, tp) {}
+        void clearAll(){_loopdpInfo.clear();}
+        void refresh()override;
+        dependenceInfoForLoop* dpInfo(ir::Loop* lp){return _loopdpInfo[lp];}
+        void setDepInfo(ir::Loop* lp,dependenceInfoForLoop* dif){_loopdpInfo[lp]=dif;}
+
+
 };
 };  // namespace pass

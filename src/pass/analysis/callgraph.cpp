@@ -34,7 +34,9 @@ void callGraphBuild::run(ir::Module* ctx, TopAnalysisInfoManager* tp) {
                     // func->callees().insert(calleePtr);
                     // func->set_is_called(true);
                     cgctx->callees(func).insert(calleePtr);
+                    cgctx->calleeCallInsts(func).insert(instCall);
                     cgctx->callers(calleePtr).insert(func);
+                    cgctx->callerCallInsts(calleePtr).insert(instCall);
                     cgctx->set_isCalled(func, true);
                 }
             }
@@ -64,7 +66,7 @@ void callGraphBuild::dfsFuncCallGraph(ir::Function* func) {
 }
 
 void callGraphCheck::run(ir::Module* ctx, TopAnalysisInfoManager* tp) {
-    cgctx = tp->getCallGraph();
+    cgctx = tp->getCallGraphWithoutRefresh();
     using namespace std;
     for (auto func : ctx->funcs()) {
         if (cgctx->isLib(func)) continue;

@@ -28,7 +28,7 @@
 #include "pass/optimize/loopunroll.hpp"
 #include "pass/optimize/DAE.hpp"
 #include "pass/optimize/licm.hpp"
-
+#include "pass/analysis/dependenceAnalysis/DependenceAnalysis.hpp"
 #include "pass/optimize/LoopParallel.hpp"
 #include "pass/optimize/Misc/StatelessCache.hpp"
 
@@ -167,6 +167,8 @@ void PassManager::runPasses(std::vector<std::string> passes) {
       run(&loopParallelPass);
     } else if (pass_name == "cache") {
       run(&cachePass);
+    } else if (pass_name.compare("da")) {
+      run(new pass::dependenceAnalysis());
     } else {
       std::cerr << "Invalid pass name: " << pass_name << std::endl;
       assert(false && "Invalid pass name");
