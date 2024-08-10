@@ -7,40 +7,17 @@
 #include <algorithm>
 
 namespace pass {
-// 找到两个bb的最近公共祖先
-ir::BasicBlock* GCM::LCA(ir::BasicBlock* lhs, ir::BasicBlock* rhs) {
-    if (!lhs) return rhs;
-    if (!rhs) return lhs;
-    while (domctx->domlevel(lhs) > domctx->domlevel(rhs))
-        lhs = domctx->idom(lhs);
-    while (domctx->domlevel(rhs) < domctx->domlevel(lhs))
-        rhs = domctx->idom(rhs);
-    while (lhs != rhs) {
-        lhs = domctx->idom(lhs);
-        rhs = domctx->idom(rhs);
-    }
-    return lhs;
-}
-
-// 通过指令的类型判断该指令是否固定在bb上
+// 通过指令类型判断该指令是否固定
 bool GCM::ispinned(ir::Instruction* instruction) {
     if (dyn_cast<ir::BinaryInst>(instruction)) {
-        // 二元运算指令不固定(除法取余固定，因为除法取余指令可能产生除零错误)
-        if (instruction->valueId() == ir::vSDIV || instruction->valueId() == ir::vSREM) return true;
+        if (instruction->valueId() == ir::vSDIV || instruction->valueId() == ir::vSREM)  // 二元运算指令不固定(除法取余固定，因为除法取余指令可能产生除零错误)
+            return true;
         return false;
-    }
-    else if (dyn_cast<ir::UnaryInst>(instruction))  // 一元运算指令不固定
+    } else if (dyn_cast<ir::UnaryInst>(instruction))  // 一元运算指令不固定
         return false;
     else if (dyn_cast<ir::GetElementPtrInst>(instruction))
         return false;  // GEP指令不固定
-    else if (dyn_cast<ir::CallInst>(instruction)){
-        auto callinst = instruction->dynCast<ir::CallInst>();
-        auto callee = callinst->callee();
-        if (sectx->isPureFunc(callee))
-            return false;
-        return true;
-    }
-    else  // 其他指令固定在自己的BB上
+    else               // 其他指令固定在自己的BB上
         return true;
 }
 // 提前调度:思想是如果把一个指令尽量往前提，那么应该在提之前将该指令参数来自的指令前提
@@ -55,7 +32,7 @@ void GCM::scheduleEarly(ir::Instruction* instruction, ir::BasicBlock* entry) {
         auto op = *opiter;
         opiter++;
         if (auto opInst = dyn_cast<ir::Instruction>(op->value())) {
-            if (opInst->block() != entry)
+            if (opInst->block() != entry) 
                 scheduleEarly(opInst, entry);
             opBB = opInst->block();
             if (domctx->domlevel(opBB) > domctx->domlevel(destBB)) {
@@ -64,21 +41,22 @@ void GCM::scheduleEarly(ir::Instruction* instruction, ir::BasicBlock* entry) {
         }
     }
     if (!ispinned(instruction)) {
-        if (lpctx->looplevel(instruction->block()) == 0)
-            return;
+        if (lpctx->looplevel(instruction->block()) == 0) return;
         auto instbb = instruction->block();
         if (destBB == instbb) return;
 
         auto bestBB = instbb;
         auto curBB = instbb;
+
         while (domctx->domlevel(curBB) > domctx->domlevel(destBB)) {
-            if (lpctx->looplevel(curBB) < lpctx->looplevel(bestBB)) bestBB = curBB;
+            if (lpctx->looplevel(curBB) <= lpctx->looplevel(bestBB)) bestBB = curBB;
             curBB = domctx->idom(curBB);
+            if ((!curBB) || (curBB == entry)) break;
         }
+
         if (bestBB == instbb) return;
         instbb->move_inst(instruction);                // 将指令从bb中移除
         bestBB->emplace_lastbutone_inst(instruction);  // 将指令移入destBB
-        // std::cerr<<"gcm!"<<std::endl;
     }
 }
 

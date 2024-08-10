@@ -1,5 +1,5 @@
 #include "ir/ir.hpp"
-#include "mir/mir.hpp"
+#include "mir/MIR.hpp"
 #include "mir/target.hpp"
 #include "mir/instinfo.hpp"
 #include "mir/iselinfo.hpp"
@@ -216,7 +216,6 @@ bool ISelContext::runInstSelectImpl(MIRFunction* func) {
       for (uint32_t idx = 0; idx < info.operand_num(); idx++) {
         auto op = inst->operand(idx);
         if (!op.isReg()) continue;
-        // replace map: old operand* -> new operand*
         if (auto iter = mReplaceMap.find(op); iter != mReplaceMap.end()) {
           inst->set_operand(idx, iter->second);
         }

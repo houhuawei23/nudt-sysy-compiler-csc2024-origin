@@ -1,5 +1,5 @@
 #include "ir/ir.hpp"
-#include "mir/mir.hpp"
+#include "mir/MIR.hpp"
 #include "mir/instinfo.hpp"
 #include "mir/target.hpp"
 #include "target/riscv/RISCV.hpp"
@@ -253,26 +253,26 @@ static bool largeImmMaterialize(MIRBlock& block) {
 
       /* *3 -> sh1add */
       if (rhs * 3 == val) {
-        inst->set_opcode(SH1ADD);
-        inst->set_operand(1, rhsOp);
-        inst->set_operand(2, rhsOp);
-        return true;
+        // inst->set_opcode(SH1ADD);
+        // inst->set_operand(1, rhsOp);
+        // inst->set_operand(2, rhsOp);
+        // return true;
       }
 
       /* *5 -> sh2add */
       if (rhs * 5 == val) {
-        inst->set_opcode(SH2ADD);
-        inst->set_operand(1, rhsOp);
-        inst->set_operand(2, rhsOp);
-        return true;
+        // inst->set_opcode(SH2ADD);
+        // inst->set_operand(1, rhsOp);
+        // inst->set_operand(2, rhsOp);
+        // return true;
       }
 
       /* *9 -> sh3add */
       if (rhs * 9 == val) {
-        inst->set_opcode(SH3ADD);
-        inst->set_operand(1, rhsOp);
-        inst->set_operand(2, rhsOp);
-        return true;
+        // inst->set_opcode(SH3ADD);
+        // inst->set_operand(1, rhsOp);
+        // inst->set_operand(2, rhsOp);
+        // return true;
       }
     }
     return false;
@@ -519,12 +519,12 @@ static bool simplifyOpWithZero(MIRFunction& func, const CodeGenContext&) {
           if (isZero(1)) resetToZero();
           break;
         }
-        case SH1ADD:
-        case SH2ADD:
-        case SH3ADD: {
-          if (isZero(1)) resetToCopy(2);
-          break;
-        }
+        // case SH1ADD:
+        // case SH2ADD:
+        // case SH3ADD: {
+          // if (isZero(1)) resetToCopy(2);
+          // break;
+        // }
         case ADD: {
           if (isZero(1)) resetToCopy(2);
           else if (isZero(2)) resetToCopy(1);

@@ -9,10 +9,13 @@ namespace pass {
 void ADCE::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     bool isCFGChange = false;
     bool isCallGraphChange = false;
-
+    // func->print(std::cerr);
     if (func->isOnlyDeclare()) return;
+    // std::cerr << "ADCE running on function " << func->name() << std::endl;
 
     pdctx = tp->getPDomTree(func);
+    pdctx->setOff();
+    pdctx->refresh();
     liveBB.clear();
     liveInst.clear();
     auto sectx=tp->getSideEffectInfo();
@@ -21,6 +24,7 @@ void ADCE::run(ir::Function* func, TopAnalysisInfoManager* tp) {
 
     // 初始化所有的inst和BB的live信息
     for (auto bb : func->blocks()) {
+        assert(bb != nullptr);
         liveBB[bb] = false;
         for (auto inst : bb->insts()) {
             liveInst[inst] = false;
@@ -34,11 +38,13 @@ void ADCE::run(ir::Function* func, TopAnalysisInfoManager* tp) {
             }
         }
     }
-
+    // std::cerr << "ADCE worklist size: " << workList.size() << std::endl;
     // 工作表算法
     while (not workList.empty()) {
+        // std::cerr << "ADCE worklist size: " << workList.size() << std::endl;
         auto curInst = workList.front();
         auto curBB = curInst->block();
+        assert(curInst != nullptr and curBB != nullptr);
         workList.pop();
         if (liveInst[curInst]) continue;
         // 设置当前的inst为活, 以及其块
@@ -52,6 +58,7 @@ void ADCE::run(ir::Function* func, TopAnalysisInfoManager* tp) {
                 auto phibbTerminator = phibb->terminator();
                 if (phibbTerminator and not liveInst[phibbTerminator]) {
                     workList.push(phibbTerminator);
+                    assert(phibb != nullptr and phibbTerminator != nullptr);
                     liveBB[phibb] = true;
                 }
             }
@@ -68,6 +75,7 @@ void ADCE::run(ir::Function* func, TopAnalysisInfoManager* tp) {
         }
     }
     // delete useless insts
+    // std::cerr << "Delete useless insts" << std::endl;
     for (auto bb : func->blocks()) {
         for (auto instIter = bb->insts().begin(); instIter != bb->insts().end();) {
             auto inst = *instIter;
@@ -79,10 +87,11 @@ void ADCE::run(ir::Function* func, TopAnalysisInfoManager* tp) {
         }
     }
     // delete bb
+    // std::cerr << "Delete useless bb" << std::endl;
     for (auto bbIter = func->blocks().begin(); bbIter != func->blocks().end();) {
         auto bb = *bbIter;
         bbIter++;
-        if (not liveBB[bb] and bb != func->entry()) {
+        if ((not liveBB[bb]) and (bb != func->entry())) {
             func->forceDelBlock(bb);
             isCFGChange = true;
         }
@@ -90,6 +99,7 @@ void ADCE::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     // rebuild jmp
     // unnecessary to rebuild phi, because:
     // if a phi inst is alive, all its incoming bbs are alive
+    // std::cerr << "Rebuild jmp" << std::endl;
     for (auto bb : func->blocks()) {
         auto terInst = dyn_cast<ir::BranchInst>(bb->terminator());
         if (terInst == nullptr) continue;
@@ -98,6 +108,7 @@ void ADCE::run(ir::Function* func, TopAnalysisInfoManager* tp) {
             // std::cerr<<"Operands size:"<<terInst->operands().size()<<std::endl;
             auto trueTarget = terInst->iftrue();
             auto falseTarget = terInst->iffalse();
+            assert(trueTarget != nullptr and falseTarget != nullptr);
             if (not liveBB[trueTarget]) {
                 auto newTarget = getTargetBB(trueTarget);
                 assert(newTarget != nullptr);
@@ -126,6 +137,8 @@ void ADCE::run(ir::Function* func, TopAnalysisInfoManager* tp) {
             }
         }
     }
+    
+    // std::cerr << "isCFGChange: " << isCFGChange << std::endl;
     if (isCFGChange) {
         tp->CFGChange(func);
         // rebuild CFG
@@ -146,13 +159,19 @@ void ADCE::run(ir::Function* func, TopAnalysisInfoManager* tp) {
             }
         }
     }
+    // std::cerr << "isCallGraphChange: " << isCallGraphChange << std::endl;
     if (isCallGraphChange) tp->CallChange();
 }
 
 ir::BasicBlock* ADCE::getTargetBB(ir::BasicBlock* bb) {
+    // std::cerr << "Get target BB for " << bb->name() << std::endl;
     auto targetBB = bb;
-    while (not liveBB[targetBB])
+    while (not liveBB[targetBB]) {
         targetBB = pdctx->ipdom(targetBB);
+        // std::cerr << "Target BB is not live, find its ipdom: " << targetBB->name() << std::endl;
+        assert(targetBB && "Target BB is null!");
+    }
+    // std::cerr << "Target BB is " << targetBB->name() << std::endl;
     return targetBB;
 }
 

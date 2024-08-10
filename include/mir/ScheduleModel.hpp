@@ -1,5 +1,5 @@
 #pragma once
-#include "mir/mir.hpp"
+#include "mir/MIR.hpp"
 #include "mir/instinfo.hpp"
 #include <stdint.h>
 #include <unordered_map>
@@ -32,12 +32,8 @@ public:
   virtual ~TargetScheduleModel() = default;
   virtual ScheduleClass& getInstScheClass(uint32_t opcode) = 0;
   virtual MicroArchInfo& getMicroArchInfo() = 0;
-  virtual bool peepholeOpt(MIRFunction& func, CodeGenContext& context) {
-    return false;
-  }
-  virtual bool isExpensiveInst(MIRInst* inst, CodeGenContext& context) {
-    return false;
-  }
+  virtual bool peepholeOpt(MIRFunction& func, CodeGenContext& context) { return false; }
+  virtual bool isExpensiveInst(MIRInst* inst, CodeGenContext& context) { return false; }
 };
 
 class ScheduleState {
@@ -49,17 +45,13 @@ class ScheduleState {
   std::unordered_map<uint32_t, uint32_t> mRegisterAvailableTime;
 
   // inst.idx -> renamedRegIdx, 寄存器重命名映射
-  const std::unordered_map<const MIRInst*,
-                           std::unordered_map<uint32_t, uint32_t>>&
-    mRegRenameMap;
+  const std::unordered_map<const MIRInst*, std::unordered_map<uint32_t, uint32_t>>& mRegRenameMap;
   // 已发射指令的标记掩码
   uint32_t mIssuedFlag;
 
 public:
   ScheduleState(
-    const std::unordered_map<const MIRInst*,
-                             std::unordered_map<uint32_t, uint32_t>>&
-      regRenameMap)
+    const std::unordered_map<const MIRInst*, std::unordered_map<uint32_t, uint32_t>>& regRenameMap)
     : mCycleCount(0), mRegRenameMap(regRenameMap), mIssuedFlag(0) {}
   // query
   uint32_t queryRegisterLatency(const MIRInst& inst, uint32_t idx);
@@ -75,5 +67,23 @@ public:
     mIssuedFlag = 0;
     return mCycleCount;
   }
+};
+
+struct BlockScheduleContext final {
+  /* build anti-dependencies */
+  std::unordered_map<MIRInst*, std::unordered_set<MIRInst*>> antiDeps;
+
+  /* inst -> (operand_idx -> reg_idx) */
+  std::unordered_map<const MIRInst*, std::unordered_map<uint32_t, uint32_t>> renameMap;
+
+  /* indegree: number of insts this inst depends on: inst -> degree */
+  std::unordered_map<MIRInst*, uint32_t> degrees;
+
+  std::unordered_map<MIRInst*, int32_t> rank;
+
+  int32_t waitPenalty;
+
+public:
+  bool celloctInfo(MIRBlock& block, const CodeGenContext& ctx);
 };
 }  // namespace mir

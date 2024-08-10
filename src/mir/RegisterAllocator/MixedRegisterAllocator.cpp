@@ -1,4 +1,4 @@
-#include "mir/mir.hpp"
+#include "mir/MIR.hpp"
 #include "mir/RegisterAllocator.hpp"
 
 namespace mir {

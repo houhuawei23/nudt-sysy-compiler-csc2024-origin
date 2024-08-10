@@ -1,5 +1,5 @@
 #include <queue>
-#include "mir/mir.hpp"
+#include "mir/MIR.hpp"
 #include "mir/instinfo.hpp"
 #include "mir/utils.hpp"
 #include "mir/CFGAnalysis.hpp"
@@ -711,7 +711,7 @@ bool genericPeepholeOpt(MIRFunction& mfunc, CodeGenContext& ctx) {
     // std::cerr << "DeadInstElimination: " << modified << "\n";
     modified |= EliminateInvisibleInsts(mfunc, ctx);
     // std::cerr << "EliminateInvisibleInsts: " << modified << "\n";
-    modified |= ctx.scheduleModel->peepholeOpt(mfunc, ctx);
+    // modified |= ctx.scheduleModel->peepholeOpt(mfunc, ctx);
     // std::cerr << "scheduleModel->peepholeOpt: " << modified << "\n";
     return modified;
 }

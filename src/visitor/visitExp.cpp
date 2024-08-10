@@ -4,14 +4,14 @@
 using namespace ir;
 namespace sysy {
 /*
- * @brief: Visit Number Expression
+ * @brief: visitNumberExp
  * @details:
- *      number: ILITERAL | FLITERAL; (即: int or float)
+ *    number: ILITERAL | FLITERAL; (即: int or float)
  */
 std::any SysYIRGenerator::visitNumberExp(SysYParser::NumberExpContext* ctx) {
   Value* res = nullptr;
   if (auto iLiteral = ctx->number()->ILITERAL()) {
-    //! 基数 (8, 10, 16)
+    /* 基数 (8, 10, 16) */
     const auto text = iLiteral->getText();
     int base = 10;
     if (text.find("0x") == 0 || text.find("0X") == 0) {
@@ -30,8 +30,9 @@ std::any SysYIRGenerator::visitNumberExp(SysYParser::NumberExpContext* ctx) {
 }
 
 /*
- * @brief: Visit Var Expression
- * @details: var: ID (LBRACKET exp RBRACKET)*;
+ * @brief: visitVarExp
+ * @details:
+ *    var: ID (LBRACKET exp RBRACKET)*;
  */
 std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
   const auto varname = ctx->var()->ID()->getText();
@@ -57,7 +58,8 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
     }
   } else {  //! 2. array
     auto type = ptr->type()->as<PointerType>()->baseType();
-    if (type->isArray()) {  // 数组 (eg. int a[2][3]) -> 常规使用
+    if (type->isArray()) {
+      /* 数组 (eg. int a[2][3]) -> 常规使用 */
       auto atype = dyn_cast<ArrayType>(type);
       auto base_type = atype->baseType();
       auto dims = atype->dims(), cur_dims(dims);
@@ -71,16 +73,15 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
       }
       if (ctx->var()->exp().empty()) {
         dims.erase(dims.begin());
-        ptr =
-          mBuilder.makeGetElementPtr(base_type, ptr, ConstantInteger::gen_i32(0), dims, cur_dims);
+        ptr = mBuilder.makeGetElementPtr(base_type, ptr, ConstantInteger::gen_i32(0), dims, cur_dims);
       } else if (delta > 0) {
         dims.erase(dims.begin());
-        ptr =
-          mBuilder.makeGetElementPtr(base_type, ptr, ConstantInteger::gen_i32(0), dims, cur_dims);
+        ptr = mBuilder.makeGetElementPtr(base_type, ptr, ConstantInteger::gen_i32(0), dims, cur_dims);
       }
 
-      if (delta == 0)
+      if (delta == 0) {
         ptr = mBuilder.makeLoad(ptr);
+      }
     } else if (type->isPointer()) {  // 一级及指针 (eg. int a[] OR int
                                      // a[][5]) -> 函数参数
       ptr = mBuilder.makeLoad(ptr);
@@ -108,7 +109,6 @@ std::any SysYIRGenerator::visitVarExp(SysYParser::VarExpContext* ctx) {
             cur_dims.erase(cur_dims.begin());
           } else if (delta == 0) {
             ptr = mBuilder.makeLoad(ptr);
-            // ptr = mBuilder.makeInst<LoadInst>(ptr);
           } else {
             assert(false && "the array dimensions error");
           }

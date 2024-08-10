@@ -1,7 +1,5 @@
 #include <assert.h>
-
-#include <variant>  // dynamic_cast
-
+#include <variant>
 #include <string_view>
 using namespace std::string_view_literals;
 
@@ -30,7 +28,7 @@ Type* Type::TypeInt32() {
   return &intType;
 }
 Type* Type::TypeInt64() {
-  static Type intType(BasicTypeRank::INT64);
+  static Type intType(BasicTypeRank::INT64, 8);
   return &intType;
 }
 Type* Type::TypeFloat32() {
@@ -143,6 +141,12 @@ void Type::print(std::ostream& os) const {
   os << getTypeName(mBtype);
 }
 
+bool Type::isSame(Type* rhs) const {
+  // only base type will jump in this function
+  // complex type will override this function
+  return this == rhs;
+}
+
 PointerType* PointerType::gen(Type* base_type) {
   return utils::make<PointerType>(base_type);
 }
@@ -150,6 +154,11 @@ PointerType* PointerType::gen(Type* base_type) {
 void PointerType::print(std::ostream& os) const {
   mBaseType->print(os);
   os << "*";
+}
+
+bool PointerType::isSame(Type* rhs) const {
+  if (rhs == this) return true;
+  return rhs->isPointer() && mBaseType->isSame(rhs->as<PointerType>()->baseType());
 }
 
 ArrayType* ArrayType::gen(Type* baseType, std::vector<size_t> dims, size_t capacity) {
@@ -164,6 +173,17 @@ void ArrayType::print(std::ostream& os) const {
   mBaseType->print(os);
   for (size_t i = 0; i < mDims.size(); i++)
     os << "]";
+}
+
+bool ArrayType::isSame(Type* rhs) const {
+  if (rhs == this) return true;
+  if (not(rhs->isArray() && mBaseType->isSame(rhs->as<ArrayType>()->baseType()) &&
+          mDims.size() == rhs->as<ArrayType>()->dims().size()))
+    return false;
+  for (size_t idx = 0; idx < mDims.size(); idx++) {
+    if (mDims[idx] != rhs->as<ArrayType>()->dims()[idx]) return false;
+  }
+  return true;
 }
 
 FunctionType* FunctionType::gen(Type* ret_type, const type_ptr_vector& arg_types) {
@@ -184,4 +204,14 @@ void FunctionType::print(std::ostream& os) const {
   os << ")";
 }
 
+bool FunctionType::isSame(Type* rhs) const {
+  if (rhs == this) return true;
+  if (not(rhs->isFunction() && mRetType->isSame(rhs->as<FunctionType>()->retType()) &&
+          mArgTypes.size() == rhs->as<FunctionType>()->argTypes().size()))
+    return false;
+  for (size_t idx = 0; idx < mArgTypes.size(); idx++) {
+    if (not mArgTypes[idx]->isSame(rhs->as<FunctionType>()->argTypes()[idx])) return false;
+  }
+  return true;
+}
 }  // namespace ir

@@ -25,11 +25,8 @@ public:
   ir::Value* getValueNumber(ir::UnaryInst* unary);
   ir::Value* getValueNumber(ir::GetElementPtrInst* getelementptr);
   ir::Value* getValueNumber(ir::LoadInst* load);
-  // ir::Value *getValueNumber(ir::PhiInst *phi);
-  ir::Value *getValueNumber(ir::CallInst *cal);
-  // ir::Value *getValueNumber(ir::AllocaInst *alloca);
-  // ir::Value *getValueNumber(ir::ICmpInst *icmp);
-  // ir::Value *getValueNumber(ir::FCmpInst *fcmp);
+  ir::Value *getValueNumber(ir::CallInst *call);
+
   void visitinst(ir::Instruction* inst);
   domTree* domctx;
   sideEffectInfo* sectx;

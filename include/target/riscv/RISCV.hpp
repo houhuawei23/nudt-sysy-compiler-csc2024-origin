@@ -1,5 +1,5 @@
 #pragma once
-#include "mir/mir.hpp"
+#include "mir/MIR.hpp"
 #include "mir/instinfo.hpp"
 #include "autogen/riscv/InstInfoDecl.hpp"
 #include "support/arena.hpp"
@@ -189,15 +189,7 @@ static void legalizeAddrBaseOffsetPostRA(MIRInstList& instructions,
     instructions.insert(iter, newInst);
     imm -= adjust;
     return;
-  } else {
-    // const auto adjust = imm;
-    // auto newInst = utils::make<MIRInst>(
-    //   RISCVInst::LoadImm32,
-    //   {dst, MIROperand::asImm(adjust, OperandType::Int32)});
-    // instructions.insert(iter, newInst);
-    // imm -= adjust;
-    return;
-  }
+  } 
   std::cerr << "adjust_reg: imm out of range: " << imm << std::endl;
   assert(false);
 }

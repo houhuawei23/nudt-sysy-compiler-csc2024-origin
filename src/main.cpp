@@ -5,7 +5,7 @@
 #include "visitor/visitor.hpp"
 #include "pass/pass.hpp"
 
-#include "mir/mir.hpp"
+#include "mir/MIR.hpp"
 #include "mir/target.hpp"
 #include "mir/lowering.hpp"
 #include "target/riscv/RISCV.hpp"

@@ -56,24 +56,24 @@ public:
   std::any visitDecl(SysYParser::DeclContext* ctx) override;
 
   bool visitInitValue_Array(SysYParser::InitValueContext* ctx,
-                            const int capacity,
+                            const size_t capacity,
                             const std::vector<size_t> dims,
                             std::vector<ir::Value*>& init);
   // 局部变量
   ir::Value* visitLocalArray(SysYParser::VarDefContext* ctx,
-                              ir::Type* btype,
-                              bool is_const,
-                              std::vector<size_t> dims,
-                              int capacity);
+                             ir::Type* btype,
+                             bool is_const,
+                             std::vector<size_t> dims,
+                             size_t capacity);
   ir::Value* visitLocalScalar(SysYParser::VarDefContext* ctx, ir::Type* btype, bool is_const);
 
   ir::Value* visitVarDef(SysYParser::VarDefContext* ctx, ir::Type* btype, bool is_const);
   // 全局变量
   ir::Value* visitGlobalArray(SysYParser::VarDefContext* ctx,
-                               ir::Type* btype,
-                               bool is_const,
-                               std::vector<size_t> dims,
-                               int capacity);
+                              ir::Type* btype,
+                              const bool is_const,
+                              const std::vector<size_t>& dims,
+                              size_t capacity);
   ir::Value* visitGlobalScalar(SysYParser::VarDefContext* ctx, ir::Type* btype, bool is_const);
 
   std::any visitBtype(SysYParser::BtypeContext* ctx) override;

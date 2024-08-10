@@ -24,6 +24,7 @@ class loopUnroll : public FunctionPass {
     void dodynamicunroll(ir::Loop* loop, ir::indVar* iv);
     void dynamicunroll(ir::Loop* loop, ir::indVar* iv);
     void constunroll(ir::Loop* loop, ir::indVar* iv);
+    void dofullunroll(ir::Loop* loop, ir::indVar* iv, int times);
     bool isconstant(ir::indVar* iv);
     void getdefinuseout(ir::Loop* L);
     void repalceuseout(ir::Instruction* inst, ir::Instruction* copyinst, ir::Loop* L);

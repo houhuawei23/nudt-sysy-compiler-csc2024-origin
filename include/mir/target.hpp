@@ -1,6 +1,6 @@
 
 #pragma once
-#include "mir/mir.hpp"
+#include "mir/MIR.hpp"
 #include "mir/datalayout.hpp"
 #include "mir/iselinfo.hpp"
 #include "mir/instinfo.hpp"

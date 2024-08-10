@@ -1,6 +1,6 @@
 #pragma once
 #include <unordered_set>
-#include "mir/mir.hpp"
+#include "mir/MIR.hpp"
 #include "mir/LiveInterval.hpp"
 #include "mir/instinfo.hpp"
 #include "mir/lowering.hpp"
@@ -89,7 +89,6 @@ public:
 
   virtual bool match_select(MIRInst* inst, ISelContext& ctx) const = 0;
 
-  /* */
   virtual void legalizeInstWithStackOperand(const InstLegalizeContext& ctx,
                                             MIROperand op,
                                             StackObject& obj) const = 0;

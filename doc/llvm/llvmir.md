@@ -469,3 +469,31 @@ For the purposes of the SSA form, the use of each incoming value is deemed to oc
 
 The optional fast-math-flags marker indicates that the phi has one or more fast-math-flags. These are optimization hints to enable otherwise unsafe floating-point optimizations. Fast-math-flags are only valid for phis that return a floating-point scalar or vector type, or an array (nested to any depth) of floating-point scalar or vector types.
 可选的 fast-math-flags 标记表示 phi 有一个或多个快速数学标志。这些是优化提示，用于启用其他不安全的浮点优化。 Fast-math-flags 仅对返回浮点标量或向量类型，或浮点标量或向量类型的数组（嵌套到任意深度）的 phi 有效。
+
+## GetElementPtr
+
+https://llvm.org/docs/LangRef.html#getelementptr-instruction
+
+https://llvm.org/docs/GetElementPtr.html#i-m-writing-a-backend-for-a-target-which-needs-custom-lowering-for-gep-how-do-i-do-this
+
+```llvm
+<result> = getelementptr <ty>, ptr <ptrval>{, <ty> <idx>}*
+<result> = getelementptr inbounds <ty>, ptr <ptrval>{, <ty> <idx>}*
+<result> = getelementptr nusw <ty>, ptr <ptrval>{, <ty> <idx>}*
+<result> = getelementptr nuw <ty>, ptr <ptrval>{, <ty> <idx>}*
+<result> = getelementptr inrange(S,E) <ty>, ptr <ptrval>{, <ty> <idx>}*
+<result> = getelementptr <ty>, <N x ptr> <ptrval>, <vector index type> <idx>
+
+```
+
+The first argument is always a type used as the basis for the calculations. The second argument is always a pointer or a vector of pointers, and is the base address to start from. The remaining arguments are indices that indicate which of the elements of the aggregate object are indexed. The interpretation of each index is dependent on the type being indexed into. The first index always indexes the pointer value given as the second argument, the second index indexes a value of the type pointed to (not necessarily the value directly pointed to, since the first index can be non-zero), etc. The first type indexed into must be a pointer value, subsequent types can be arrays, vectors, and structs. Note that subsequent types being indexed into can never be pointers, since that would require loading the pointer before continuing calculation.
+
+第一个参数始终是用作计算基础的类型。第二个参数始终是指针或指针向量，并且是起始基地址。其余参数是索引，指示聚合对象的哪些元素已建立索引。每个索引的解释取决于索引的类型。第一个索引始终索引作为第二个参数给出的指针值，第二个索引索引指向的类型的值（不一定是直接指向的值，因为第一个索引可以是非零），等等。索引必须是指针值，后续类型可以是数组、向量和结构体。请注意，后续被索引的类型永远不能是指针，因为这需要在继续计算之前加载指针。
+
+The type of each index argument depends on the type it is indexing into. When indexing into a (optionally packed) structure, only i32 integer constants are allowed (when using a vector of indices they must all be the same i32 integer constant). When indexing into an array, pointer or vector, integers of any width are allowed, and they are not required to be constant. These integers are treated as signed values where relevant.
+
+每个索引参数的类型取决于它索引到的类型。当索引到（可选打包）结构时，仅允许使用i32整型常量（当使用索引向量时，它们必须都是相同的i32整型常量）。当索引到数组、指针或向量时，允许任何宽度的整数，并且它们不需要是常量。这些整数在相关时被视为有符号值。
+
+For example, let’s consider a C code fragment and how it gets compiled to LLVM:
+
+例如，让我们考虑一个 C 代码片段以及它如何编译为 LLVM：

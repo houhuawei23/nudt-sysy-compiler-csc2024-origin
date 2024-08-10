@@ -172,6 +172,8 @@ enum ValueId {
   vFPTOSI,
   vSITOFP,
   vBITCAST,
+  vPTRTOINT, 
+  vINTTOPTR, 
   vUNARY_END,
   // Binary Instruction
   vBINARY_BEGIN,
@@ -234,42 +236,33 @@ public:
 
   Value* addComment(const_str_ref comment);
 
-public:  // check
+public:  // check function
   bool isBool() const { return mType->isBool(); }
   bool isInt32() const { return mType->isInt32(); }
+  bool isInt64() const { return mType->isInt64(); }
   bool isFloat32() const { return mType->isFloat32(); }
   bool isDouble() const { return mType->isDouble(); }
   bool isFloatPoint() const { return mType->isFloatPoint(); }
   bool isUndef() const { return mType->isUndef(); }
   bool isPointer() const { return mType->isPointer(); }
   bool isVoid() const { return mType->isVoid(); }
-
-public:
+public:  // utils function
   ValueId valueId() const { return mValueId; }
   virtual void print(std::ostream& os) const = 0;
   virtual void dumpAsOpernd(std::ostream& os) const {
     os << mName;
   }
-  template <typename T>
-  T* as() {
+  template <typename T> T* as() {
     static_assert(std::is_base_of_v<Value, T>);
     auto ptr = dynamic_cast<T*>(this);
     assert(ptr);
     return ptr;
   }
-  template <typename T>
-  bool isa() const {
+  template <typename T> bool isa() const {
     static_assert(std::is_base_of_v<Value, T>);
     return dynamic_cast<const T*>(this);
   }
-
-  // template <typename T>
-  // const T* const dynCast() {
-  //   static_assert(std::is_base_of_v<Value, T>);
-  //   return dynamic_cast<const T*>(this);
-  // }
-  template <typename T>
-  T* dynCast() {
+  template <typename T> T* dynCast() {
     static_assert(std::is_base_of_v<Value, T>);
     return dynamic_cast<T*>(this);
   }

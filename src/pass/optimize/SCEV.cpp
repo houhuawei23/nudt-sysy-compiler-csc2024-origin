@@ -136,7 +136,7 @@ void SCEV::SCEVReduceInstr(ir::Loop* lp,SCEVValue* scevVal,ir::Value* itercnt,ir
 
 
 void SCEV::visitPhi(ir::Loop* lp,ir::PhiInst* phiinst){
-    // if(phiinst->isFloat32())return;
+    if(phiinst->isFloat32())return;
     std::stack<ir::Instruction*>instStk;
     for(auto puse:phiinst->uses()){
         auto user=puse->user();

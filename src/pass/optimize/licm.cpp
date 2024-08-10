@@ -64,6 +64,13 @@ bool LICM::checkload(ir::StoreInst* storeinst, ir::Loop* loop) {
                     }
                 }
             }
+            else if (inst->dynCast<ir::CallInst>()) {
+                auto callee = inst->dynCast<ir::CallInst>()->callee();
+                if (!callee->isOnlyDeclare() && sectx->hasSideEffect(callee)) {
+                    // std::cerr << callee->name() << std::endl;
+                    return false;
+                }
+            }
         }
     }
     return true;
@@ -126,8 +133,16 @@ std::vector<ir::Instruction*> LICM::getinvariant(ir::BasicBlock* bb, ir::Loop* l
             }
         } else if (auto BinaryInst = inst->dynCast<ir::BinaryInst>()) {
             if (isinvariantop(BinaryInst, loop)) {
-                res.push_back(BinaryInst);
-                // std::cerr << "lift Binary" << std::endl;
+                if (BinaryInst->valueId() != ir::vSDIV && BinaryInst->valueId() != ir::vSREM && BinaryInst->valueId() != ir::vFDIV &&
+                    BinaryInst->valueId() != ir::vFREM) {
+                    res.push_back(BinaryInst);
+                    // std::cerr << "lift Binary" << std::endl;
+                }
+            }
+        } else if (auto GepInst = inst->dynCast<ir::GetElementPtrInst>()) {
+            if (isinvariantop(GepInst, loop)) {
+                res.push_back(GepInst);
+                // std::cerr << "lift Gep" << std::endl;
             }
         }
     }

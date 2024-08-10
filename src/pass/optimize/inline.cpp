@@ -176,12 +176,15 @@ std::vector<ir::Function*> Inline::getinlineFunc(ir::Module* module) {
     return functiontoremove;
 }
 void Inline::run(ir::Module* module, TopAnalysisInfoManager* tp) {
+    
     cgctx = tp->getCallGraph();
-
+    // cgctx->setOff();
+    // cgctx->refresh();
     std::vector<ir::Function*> functiontoremove = getinlineFunc(module);
     bool isFuncInline = false;
     while (!functiontoremove.empty()) {  // 找到所有调用了可以被内联优化展开的函数的call指令
         auto func = functiontoremove.back();
+        std::cerr << "inline function: " << func->name() << std::endl;
         std::vector<ir::CallInst*> callList = getcall(module, func);
         for (auto call : callList) {
             callinline(call);

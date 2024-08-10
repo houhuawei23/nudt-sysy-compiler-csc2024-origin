@@ -1,5 +1,5 @@
 #pragma once
-#include "mir/mir.hpp"
+#include "mir/MIR.hpp"
 namespace mir {
 /*
  * @brief: TargetRegisterInfo Class (抽象基类)

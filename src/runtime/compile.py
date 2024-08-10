@@ -8,21 +8,43 @@ target = sys.argv[1]
 # infile = sys.argv[2]
 outfile = sys.argv[2]
 # src = os.path.dirname(os.path.abspath(__file__)) + "/LoopParallel.cpp"
-infile = os.path.dirname(os.path.abspath(__file__)) + "/memset.cpp"
+runtime_dir = os.path.dirname(os.path.abspath(__file__))
 
-gcc_ref_command = {
+memset_cpp = os.path.join(runtime_dir, "memset.cpp")
+lookup_cpp = os.path.join(runtime_dir, "Lookup.cpp")
+
+infiles = [memset_cpp, lookup_cpp]
+
+gcc_ref_command_old = {
     "RISCV": "riscv64-linux-gnu-g++-12 -O3 -DNDEBUG -march=rv64gc_zba_zbb -fno-stack-protector -fomit-frame-pointer -mcpu=sifive-u74 -mabi=lp64d -mcmodel=medlow -ffp-contract=on -w ".split(),
     "ARM": "arm-linux-gnueabihf-g++-12 -O3 -DNDEBUG -march=armv7 -fno-stack-protector -fomit-frame-pointer -mcpu=cortex-a72 -mfpu=vfpv4 -ffp-contract=on -w -no-pie ".split(),
 }[target]
 
-ret = subprocess.check_output(
-    gcc_ref_command + [infile, "-S", "-o", "/dev/stdout"]
+gcc_ref_command = {
+    "RISCV": "riscv64-linux-gnu-g++-12 -O2 -DNDEBUG -march=rv64gc -fno-stack-protector -fomit-frame-pointer -mabi=lp64d -mcmodel=medlow -ffp-contract=on -w ".split(),
+    "ARM": "arm-linux-gnueabihf-g++-12 -O3 -DNDEBUG -march=armv7 -fno-stack-protector -fomit-frame-pointer -mcpu=cortex-a72 -mfpu=vfpv4 -ffp-contract=on -w -no-pie ".split(),
+}[target]
+
+merge = ""
+for infile in infiles:
+    if not os.path.exists(infile):
+        print(f"Error: {infile} does not exist")
+        sys.exit(1)
+    with open(infile, "r") as f:
+        merge += "// " + infile + "\n"
+        merge += f.read()
+
+mergefile = os.path.join(runtime_dir, ".merge.cpp")
+with open(mergefile, "w") as f:
+    f.write(merge)
+
+runtime = subprocess.check_output(
+    gcc_ref_command + [mergefile, "-S", "-o", "/dev/stdout"]
 ).decode("utf-8")
 
-# print(ret)
 
 with open(outfile, "w") as f:
     f.write("// Automatically generated file, do not edit!\n")
     f.write('R"(')
-    f.write(ret)
+    f.write(runtime)
     f.write(')"')
