@@ -26,6 +26,18 @@ namespace mir {
  *          (answer,存储虚拟寄存器到物理寄存器之间的映射)
  */
 
+void GraphColoringAllocateContext::colorDefUse(RegNum src, RegNum dst) {
+  assert(isVirtualReg(src) && isISAReg(dst));
+  if (!fixHazard || !defUseTime.count(src)) return;
+  auto& dstInfo = defUseTime[dst];
+  auto& srcInfo = defUseTime[src];
+  dstInfo.insert(srcInfo.begin(), srcInfo.end());
+};
+void GraphColoringAllocateContext::updateCopyHint(RegNum dst, RegNum src, double weight) {
+  if (isVirtualReg(dst)) {
+    copyHint[dst][src] += weight;
+  }
+};
 bool GraphColoringAllocateContext::collectInStackArgumentsRegisters(MIRFunction& mfunc,
                                                                     CodeGenContext& ctx) {
   for (auto& inst : mfunc.blocks().front()->insts()) {
@@ -643,7 +655,7 @@ static void graphColoringAllocateImpl(MIRFunction& mfunc,
   std::cerr << "allocate for class " << allocationClass << " success" << std::endl;
 }
 
-void GraphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAUsageCache& infoIPRA) {
+void graphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAUsageCache& infoIPRA) {
   const auto classCount = ctx.registerInfo->get_alloca_class_cnt();
   //   std::unordered_map<uint32_t, uint32_t> regMap;  // -->
   //   存储[虚拟寄存器]到[物理寄存器]之间的映射
