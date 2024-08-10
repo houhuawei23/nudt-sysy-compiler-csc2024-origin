@@ -30,6 +30,8 @@ static OperandType get_optype(ir::Type* type) {
         return OperandType::Bool;
       case ir::BasicTypeRank::INT32:
         return OperandType::Int32;
+      case ir::BasicTypeRank::INT64:
+        return OperandType::Int64;
       default:
         assert(false && "unsupported int type");
     }
