@@ -168,7 +168,7 @@ void PassManager::runPasses(std::vector<std::string> passes) {
       run(&loopParallelPass);
     } else if (pass_name == "cache") {
       run(&cachePass);
-    } else if (pass_name.compare("da")) {
+    } else if (pass_name.compare("da") == 0) {
       run(new pass::dependenceAnalysis());
       run(&cfgAnalysisPass);
     } else if (pass_name == "GepSplit") {

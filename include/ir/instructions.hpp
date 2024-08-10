@@ -494,6 +494,7 @@ public:
   }
 public:  // utils function
   static bool classof(const Value* v) { return v->valueId() == vPTRCAST; }
+  Value* src(){return operand(0);}
   void print(std::ostream& os) const override;
   Instruction* copy(std::function<Value*(Value*)> getValue) const override { return nullptr; }
 };

@@ -38,6 +38,8 @@ ir::Value* GVN::getValueNumber(ir::Instruction* inst) {
         return getValueNumber(getelementptr);
     else if (auto load = inst->dynCast<ir::LoadInst>())
         return getValueNumber(load);
+    else if (auto ptrcast = inst->dynCast<ir::PtrCastInst>())
+        return getValueNumber(ptrcast);
     else if (auto call = dynamic_cast<ir::CallInst*>(inst)) {
         auto callee = call->callee();
         if (sectx->isPureFunc(callee)) {
@@ -81,11 +83,10 @@ ir::Value* GVN::getValueNumber(ir::GetElementPtrInst* inst) {
         if (auto getelementptr = dynamic_cast<ir::GetElementPtrInst*>(Key)) {
             auto getval = checkHashtable(getelementptr->value());
             auto getidx = checkHashtable(getelementptr->index());
-            if (arval == getval && aridx == getidx ) {
-                if (!inst->type()->isSame(getelementptr->type()))
-                    continue;
-                    // TODO support typecast 
-                    // assert(false && "GVN: getelementptr type error");
+            if (arval == getval && aridx == getidx) {
+                if (!inst->type()->isSame(getelementptr->type())) continue;
+                // TODO support typecast
+                // assert(false && "GVN: getelementptr type error");
                 return Value;
             }
         }
@@ -128,6 +129,18 @@ ir::Value* GVN::getValueNumber(ir::CallInst* inst) {
     return static_cast<ir::Value*>(inst);
 }
 
+ir::Value* GVN::getValueNumber(ir::PtrCastInst* inst) {
+    auto arsrc = checkHashtable(inst->src());
+    for (auto [Key, Value] : _Hashtable) {
+        if (auto ptrcast = dynamic_cast<ir::PtrCastInst*>(Key)) {
+            auto getsrc = checkHashtable(ptrcast->src());
+            if (arsrc == getsrc) {
+                return Value;
+            }
+        }
+    }
+    return inst;
+}
 ir::Value* GVN::checkHashtable(ir::Value* v) {
     if (auto vnum = _Hashtable.find(v); vnum != _Hashtable.end()) {
         return vnum->second;
