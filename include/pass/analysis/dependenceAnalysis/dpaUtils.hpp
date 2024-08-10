@@ -46,8 +46,8 @@ namespace pass{
         public:
             void makeLoopDepInfo(ir::Loop* lp);//直接根据循环相关信息对当前info进行构建
             void clearAll();
-            bool isParallel(){return isParallel;}
-            bool isBaseAddrPossiblySame(){return isBaseAddrPossiblySame;}
+            bool getIsParallel(){return isParallel;}
+            bool getIsBaseAddrPossiblySame(){return isBaseAddrPossiblySame;}
         private:
             void addPtr(ir::Value* val,ir::Instruction* inst);//用于添加一个指针进入
     };

@@ -112,6 +112,11 @@ namespace pass{
             }
             cout<<endl<<endl;
             cnt++;
+            cout<<"SubLoop Headers:"<<endl;
+            for(auto sbLoop:loop->subLoops()){
+                cout<<sbLoop->header()->name()<<"\t";
+            }
+            cout<<endl<<endl;
         }
         cout<<"Loop Level:"<<endl;
         for(auto bb:func->blocks()){
