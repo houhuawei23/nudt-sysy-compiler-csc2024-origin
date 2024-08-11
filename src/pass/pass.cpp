@@ -125,7 +125,7 @@ void PassManager::runPasses(std::vector<std::string> passes) {
       run(new pass::simplifyCFG());
     } else if (pass_name.compare("loopanalysis") == 0) {
       run(new pass::loopAnalysis());
-      // run(new pass::loopInfoCheck());
+      run(new pass::loopInfoCheck());
     } else if (pass_name.compare("gcm") == 0) {
       run(new pass::GCM());
     } else if (pass_name.compare("gvn") == 0) {
@@ -145,7 +145,7 @@ void PassManager::runPasses(std::vector<std::string> passes) {
       run(new pass::irCheck());
     } else if (pass_name.compare("indvar") == 0) {
       run(new pass::indVarAnalysis());
-      // run(new pass::indVarInfoCheck());
+      run(new pass::indVarInfoCheck());
     } else if (pass_name.compare("g2l") == 0) {
       run(new pass::global2local());
     } else if (pass_name.compare("tco") == 0) {

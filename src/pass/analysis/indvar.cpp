@@ -45,12 +45,12 @@ void indVarAnalysis::run(ir::Function* func, TopAnalysisInfoManager* tp) {
             continue;
         if(not isSimplyLoopInvariant(lp,mEndVar))continue;
         auto mBeginVar = dyn_cast<ir::ConstantInteger>(keyPhiInst->getvalfromBB(lpPreHeader));
-        if(mBeginVar==nullptr){//考虑内层循环嵌套问题
-            if(lpctx->looplevel(lpHeader)==1 or lpctx->looplevel(lpHeader)==0)continue;//如果这时本来就是最外层循环，那么就不适合分析indvar
-            auto mBeginVarPhi=dyn_cast<ir::PhiInst>(keyPhiInst->getvalfromBB(lpPreHeader));
-            if(mBeginVarPhi==nullptr)continue;
-            mBeginVar=getConstantBeginVarFromPhi(mBeginVarPhi,keyPhiInst,lp->parent());
-        }
+        // if(mBeginVar==nullptr){//考虑内层循环嵌套问题
+        //     if(lpctx->looplevel(lpHeader)==1 or lpctx->looplevel(lpHeader)==0)continue;//如果这时本来就是最外层循环，那么就不适合分析indvar
+        //     auto mBeginVarPhi=dyn_cast<ir::PhiInst>(keyPhiInst->getvalfromBB(lpPreHeader));
+        //     if(mBeginVarPhi==nullptr)continue;
+        //     mBeginVar=getConstantBeginVarFromPhi(mBeginVarPhi,keyPhiInst,lp->parent());
+        // }
         if(mBeginVar==nullptr)continue;
         auto iterInst=keyPhiInst->getValue(0)==keyPhiInst->getvalfromBB(lpPreHeader)?
             keyPhiInst->getValue(1):keyPhiInst->getValue(0);
@@ -115,23 +115,23 @@ void indVarInfoCheck::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     }
 }
 
-ir::ConstantInteger* indVarAnalysis::getConstantBeginVarFromPhi(ir::PhiInst* phiinst,ir::PhiInst* oldPhiinst,ir::Loop* lp){
-    if(not lp->isLoopSimplifyForm())return nullptr;
-    if(phiinst->block()!=lp->header())return nullptr;
-    auto lpPreHeader=lp->getLoopPreheader();
-    if(phiinst->getsize()!=2)return nullptr;
-    auto phivalfromlpPreHeader=phiinst->getvalfromBB(lpPreHeader);
-    auto phivalfromLatch=phiinst->getvalfromBB(*lp->latchs().begin());
-    if(lp->latchs().size()!=1)return nullptr;
-    if(phivalfromLatch!=oldPhiinst)return nullptr;
-    auto constVal=phivalfromlpPreHeader->dynCast<ir::ConstantInteger>();
-    if(constVal!=nullptr and constVal->isInt32())return constVal;
-    auto phiVal=phivalfromlpPreHeader->dynCast<ir::PhiInst>();
-    if(phiVal==nullptr)return nullptr;
-    auto outerLp=lp->parent();
-    if(outerLp==nullptr)return nullptr;
-    return getConstantBeginVarFromPhi(phiVal,phiinst,outerLp);
-}
+// ir::ConstantInteger* indVarAnalysis::getConstantBeginVarFromPhi(ir::PhiInst* phiinst,ir::PhiInst* oldPhiinst,ir::Loop* lp){
+//     if(not lp->isLoopSimplifyForm())return nullptr;
+//     if(phiinst->block()!=lp->header())return nullptr;
+//     auto lpPreHeader=lp->getLoopPreheader();
+//     if(phiinst->getsize()!=2)return nullptr;
+//     auto phivalfromlpPreHeader=phiinst->getvalfromBB(lpPreHeader);
+//     auto phivalfromLatch=phiinst->getvalfromBB(*lp->latchs().begin());
+//     if(lp->latchs().size()!=1)return nullptr;
+//     if(phivalfromLatch!=oldPhiinst)return nullptr;
+//     auto constVal=phivalfromlpPreHeader->dynCast<ir::ConstantInteger>();
+//     if(constVal!=nullptr and constVal->isInt32())return constVal;
+//     auto phiVal=phivalfromlpPreHeader->dynCast<ir::PhiInst>();
+//     if(phiVal==nullptr)return nullptr;
+//     auto outerLp=lp->parent();
+//     if(outerLp==nullptr)return nullptr;
+//     return getConstantBeginVarFromPhi(phiVal,phiinst,outerLp);
+// }
 
 bool indVarAnalysis::isSimplyNotInLoop(ir::Loop* lp,ir::Value* val){
     if(auto instVal=val->dynCast<ir::Instruction>()){
