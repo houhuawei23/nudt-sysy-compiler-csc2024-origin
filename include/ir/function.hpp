@@ -139,7 +139,9 @@ public:  // utils function
   ir::Function* copy_func();
 
   void rename();
+  void dumpAsOpernd(std::ostream& os) const override;
   void print(std::ostream& os) const override;
+
   bool verify(std::ostream& os) const;
 
   void updateTypeFromArgs() {

@@ -86,6 +86,9 @@ static const std::string getInstName(ValueId instID) {
       return "ole";
     case vGETELEMENTPTR:
       return "getelementptr";
+    case vCALL:
+      return "call";
+
     default:
       std::cerr << "Error: Unknown instruction ID: " << instID << std::endl;
       assert(false);
@@ -94,7 +97,7 @@ static const std::string getInstName(ValueId instID) {
 
 /*
  * @brief: AllocaInst::print
- * @details: 
+ * @details:
  *    <result> = alloca <ty>
  */
 void AllocaInst::print(std::ostream& os) const {
@@ -160,7 +163,7 @@ void ReturnInst::print(std::ostream& os) const {
 
 /*
  * @brief: BinaryInst::print
- * @details: 
+ * @details:
  *    <result> = add <ty> <op1>, <op2>
  */
 void BinaryInst::print(std::ostream& os) const {
@@ -195,7 +198,7 @@ void BinaryInst::print(std::ostream& os) const {
  *    <result> = bitcast <ty> <value> to <ty2>
  *    <result> = ptrtoint <ty> <value> to <ty2>
  *    <result> = inttoptr <ty> <value> to <ty2>
- *    <result> = sext <ty> <value> to <ty2> 
+ *    <result> = sext <ty> <value> to <ty2>
  */
 void UnaryInst::print(std::ostream& os) const {
   dumpAsOpernd(os);
@@ -234,7 +237,7 @@ bool ICmpInst::isReverse(ICmpInst* y) {
 }
 /*
  * @brief: ICmpInst::print
- * @details: 
+ * @details:
  *    <result> = icmp <cond> <ty> <op1>, <op2>   ; yields i1 or <N x i1>:result
  */
 void ICmpInst::print(std::ostream& os) const {
@@ -275,7 +278,7 @@ bool FCmpInst::isReverse(FCmpInst* y) {
 }
 /*
  * @brief: FCmpInst::print
- * @details: 
+ * @details:
  *    <result> = fcmp <cond> <ty> <op1>, <op2>   ; yields i1 or <N x i1>:result
  */
 void FCmpInst::print(std::ostream& os) const {
@@ -390,21 +393,17 @@ void GetElementPtrInst::print(std::ostream& os) const {
 }
 
 void CallInst::print(std::ostream& os) const {
-  if (callee()->retType()->isVoid()) {
-    if (mIsTail)
-      os << "tail ";
-    os << "call ";
-  } else {
-    os << name() << " = ";
-    if (mIsTail)
-      os << "tail ";
-    os << "call ";
+  if (not callee()->retType()->isVoid()) {
+    dumpAsOpernd(os);
+    os << " = ";
   }
-
+  if (mIsTail) os << "tail ";
+  os << getInstName(mValueId) << " "; // call 
   // retType
   os << *type() << " ";
   // func name
-  os << "@" << callee()->name() << "(";
+  mCallee->dumpAsOpernd(os);
+  os << "(";
 
   if (operands().size() > 0) {
     // Iterator pointing to the last element
@@ -414,13 +413,11 @@ void CallInst::print(std::ostream& os) const {
       // which is the Value* ptr
       auto val = (*it)->value();
       os << *(val->type()) << " ";
-      // os << val->name();
       val->dumpAsOpernd(os);
       os << ", ";
     }
     auto lastval = (*last)->value();
     os << *(lastval->type()) << " ";
-    // os << lastval->name();
     lastval->dumpAsOpernd(os);
   }
   os << ")";
@@ -435,16 +432,14 @@ void PhiInst::print(std::ostream& os) const {
     os << "[ ";
     getValue(i)->dumpAsOpernd(os);
     os << ", %" << getBlock(i)->name() << " ]";
-    if (i != mSize - 1)
-      os << ",";
+    if (i != mSize - 1) os << ",";
   }
 }
 
 BasicBlock* PhiInst::getbbfromVal(Value* val) {
   //! only return first matched val
   for (size_t i = 0; i < mSize; i++) {
-    if (getValue(i) == val)
-      return getBlock(i);
+    if (getValue(i) == val) return getBlock(i);
   }
   // assert(false && "can't find match basic block!");
   return nullptr;
@@ -452,8 +447,7 @@ BasicBlock* PhiInst::getbbfromVal(Value* val) {
 
 Value* PhiInst::getvalfromBB(BasicBlock* bb) {
   refreshMap();
-  if (mbbToVal.count(bb))
-    return mbbToVal[bb];
+  if (mbbToVal.count(bb)) return mbbToVal[bb];
   // assert(false && "can't find match value!");
   return nullptr;
 }
@@ -463,8 +457,7 @@ void PhiInst::delValue(Value* val) {
   size_t i;
   auto bb = getbbfromVal(val);
   for (i = 0; i < mSize; i++) {
-    if (getValue(i) == val)
-      break;
+    if (getValue(i) == val) break;
   }
   delete_operands(2 * i);
   delete_operands(2 * i);
@@ -473,12 +466,10 @@ void PhiInst::delValue(Value* val) {
 }
 
 void PhiInst::delBlock(BasicBlock* bb) {
-  if (not mbbToVal.count(bb))
-    assert(false and "can't find bb incoming!");
+  if (not mbbToVal.count(bb)) assert(false and "can't find bb incoming!");
   size_t i;
   for (i = 0; i < mSize; i++) {
-    if (getBlock(i) == bb)
-      break;
+    if (getBlock(i) == bb) break;
   }
   delete_operands(2 * i);
   delete_operands(2 * i);
