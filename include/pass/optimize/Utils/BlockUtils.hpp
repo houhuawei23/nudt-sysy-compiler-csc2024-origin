@@ -11,4 +11,6 @@ bool reduceBlock(IRBuilder& builder, BasicBlock& block, const BlockReducer& redu
 BasicBlock* splitBlock(BasicBlockList& blocks,
                        BasicBlockList::iterator blockIt,
                        InstructionList::iterator instIt);
+
+bool fixAllocaInEntry(Function& func);
 }  // namespace pass

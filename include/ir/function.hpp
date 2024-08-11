@@ -49,6 +49,11 @@ public:
     return getLoopPreheader() && getLoopLatch() && hasDedicatedExits();
   }
   void print(std::ostream& os) const;
+
+  void setLatch(BasicBlock* latch)  {
+    mLatchs.clear();
+    mLatchs.insert(latch);
+  }
 };
 
 class Function : public User {
@@ -66,17 +71,18 @@ protected:
   size_t mVarCnt = 0;              // for local variables count
   size_t argCnt = 0;               // formal arguments count
 public:
-  Function(Type* TypeFunction, const_str_ref name="", Module* parent=nullptr)
+  Function(Type* TypeFunction, const_str_ref name = "", Module* parent = nullptr)
     : User(TypeFunction, vFUNCTION, name), mModule(parent) {
     argCnt = 0;
     mRetValueAddr = nullptr;
   }
+
 public:  // get function
   auto module() const { return mModule; }
-  
+
   auto retValPtr() const { return mRetValueAddr; }
   auto retType() const { return mType->as<FunctionType>()->retType(); }
-  
+
   auto& blocks() const { return mBlocks; }
   auto& blocks() { return mBlocks; }
 
@@ -89,22 +95,29 @@ public:  // get function
     assert(idx < argCnt && "idx out of args vector");
     return mArguments[idx];
   }
+
 public:  // set function
   void setRetValueAddr(Value* value) {
     assert(mRetValueAddr == nullptr && "new_ret_value can not call 2th");
     mRetValueAddr = value;
   }
-  void setEntry(ir::BasicBlock* bb) { mEntry = bb; }
-  void setExit(ir::BasicBlock* bb) { mExit = bb; }
+  void setEntry(ir::BasicBlock* bb) {
+    mEntry = bb;
+    bb->set_parent(this);
+  }
+  void setExit(ir::BasicBlock* bb) {
+    mExit = bb;
+    bb->set_parent(this);
+  }
 
   BasicBlock* newBlock();
-  BasicBlock* newEntry(const_str_ref name="");
-  BasicBlock* newExit(const_str_ref name="");
+  BasicBlock* newEntry(const_str_ref name = "");
+  BasicBlock* newExit(const_str_ref name = "");
 
   void delBlock(BasicBlock* bb);
   void forceDelBlock(BasicBlock* bb);
 
-  auto new_arg(Type* btype, const_str_ref name="") {
+  auto new_arg(Type* btype, const_str_ref name = "") {
     auto arg = utils::make<Argument>(btype, argCnt, this, name);
     argCnt++;
     mArguments.emplace_back(arg);
@@ -120,6 +133,7 @@ public:  // set function
     assert(idx < argCnt && "idx out of args vector");
     mArguments.erase(mArguments.begin() + idx);
   }
+
 public:  // utils function
   static bool classof(const Value* v) { return v->valueId() == vFUNCTION; }
   ir::Function* copy_func();

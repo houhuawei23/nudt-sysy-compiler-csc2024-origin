@@ -15,14 +15,12 @@ struct LoopBodyFuncInfo {
   ir::indVar* indVar;
 };
 
-class LoopParallel : public FunctionPass {
+class LoopBodyExtract : public FunctionPass {
 public:
   void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
-  std::string name() const override { return "LoopParallel"; }
+  std::string name() const override { return "LoopBodyExtract"; }
 
 private:
-  static ir::Function* loopupParallelFor(ir::Module* module);
-  static bool isConstant(ir::Value* val);
   void runImpl(ir::Function* func, TopAnalysisInfoManager* tp);
 };
 
