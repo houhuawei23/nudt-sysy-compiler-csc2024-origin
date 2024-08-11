@@ -16,6 +16,7 @@ namespace pass{
             loopInfo* lpctx;
             indVarInfo* idvctx;
             sideEffectInfo* sectx;
+            callGraph* cgctx;
             dependenceInfo* dpctx;
             void runOnLoop(ir::Loop* lp);
     };
