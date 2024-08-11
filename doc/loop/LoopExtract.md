@@ -1,3 +1,63 @@
+```llvm
+
+bb3: ; other
+    ; pres: bb2
+    ; nexts: bb6
+    br label %bb6 ; br while1_judge
+    
+bb6: ; while1_judge
+    ; pres: bb3, bb5
+    ; nexts: bb5, bb4
+    %3 = phi i32 [ 0, %bb3 ],[ %2, %bb5 ]
+    %4 = icmp slt i32 %3, 100 
+    br i1 %4, label %bb5, label %bb4 ; br while1_loop, while1_next
+
+bb5: ; while1_loop
+    ; pres: bb6
+    ; nexts: bb6
+    %1 = getelementptr [100 x i32], [100 x i32]* %0, i32 0, i32 %3
+    store i32 %3, i32* %1
+
+latch:
+    %2 = add i32 %3, 1
+    br label %bb6 ; br while1_judge
+
+bb4: ; while1_next
+    ; pres: bb6
+    ; nexts: bb1
+    br label %bb1 ; br exit
+
+```
+
+=>
+
+```llvm
+
+bb6: ; while1_judge
+    ; pres: bb3, bb5
+    ; nexts: bb5, bb4
+    %3 = phi i32 [ 0, %bb3 ],[ %2, %bb5 ]
+    %4 = icmp slt i32 %3, 100 
+    br i1 %4, label %callblock, label %bb4 ; br callblock, while1_next
+
+callblock: 
+    ; pres: bb6
+    ; nexts: bb6
+    call void @loop_boby(i32 %3, [100 x i32]* %0)
+   br label %latch ; br latch
+latch:
+    %2 = add i32 %3, 1
+    br label %bb6 ; br while1_judge
+
+void loop_boby(i32 %3, [100 x i32]* %0){
+    %1 = getelementptr [100 x i32], [100 x i32]* %0, i32 0, i32 %3
+    store i32 %3, i32* %1
+    ret void
+}
+
+```
+
+
 `extractLoopBody`函数的目的是从一个给定的循环中提取循环体，以便进行进一步的优化或转换。这个函数接受多个参数，包括循环本身、支配树分析结果、控制流图分析结果、模块、是否独立、指针基础分析结果、是否允许内循环、是否只添加递归、是否估计未展开的块大小、是否需要子循环、是否将减少操作转换为原子操作、是否复制比较操作等。函数的执行流程如下：
 
 1. **参数检查**:

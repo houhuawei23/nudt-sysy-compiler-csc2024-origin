@@ -3,6 +3,43 @@
 using namespace ir;
 
 namespace pass {
+void dumpFunction(Function& func) {
+  func.rename();
+  func.print(std::cerr);
+}
+
+bool fixAllocaInEntry(Function& func) {
+  dumpFunction(func);
+  std::unordered_set<Instruction*> allocas;
+  for (auto block : func.blocks()) {
+    for (auto inst : block->insts()) {
+      if (auto allocaInst = inst->dynCast<AllocaInst>()) {
+        allocas.insert(allocaInst);
+      }
+    }
+  }
+  // remove
+  for (auto block : func.blocks()) {
+    block->insts().remove_if([&](Instruction* inst) { return allocas.count(inst); });
+  }
+  const auto oldEntry = func.entry();
+  // new entry block"
+  auto newEntry = utils::make<BasicBlock>("new_entry");
+  func.blocks().push_front(newEntry);
+  func.setEntry(newEntry);
+  // add allocas to new entry
+  for (auto allocaInst : allocas) {
+    newEntry->emplace_back_inst(allocaInst);
+  }
+  // link new entry to old entry
+  IRBuilder builder;
+  builder.set_pos(newEntry, newEntry->insts().end());
+  builder.makeInst<BranchInst>(oldEntry);
+
+  dumpFunction(func);
+  return true;
+}
+
 bool reduceBlock(IRBuilder& builder, BasicBlock& block, const BlockReducer& reducer) {
   auto& insts = block.insts();
   bool modified = false;
@@ -42,7 +79,7 @@ preBlock:
 postBlock:
   inst2
   ...
-  
+
 otherblock:
 
 */
@@ -55,7 +92,7 @@ BasicBlock* splitBlock(BasicBlockList& blocks,
   const auto beg = std::next(after);
   const auto end = preBlock->insts().end();
 
-  for(auto iter = beg; iter!= end; ) {
+  for (auto iter = beg; iter != end;) {
     auto next = std::next(iter);
     postBlock->emplace_back_inst(*iter);
     preBlock->insts().erase(iter);

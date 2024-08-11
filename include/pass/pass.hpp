@@ -180,6 +180,10 @@ public:
   void initialize();
   void CFGChange(ir::Function* func) {
     if (func->isOnlyDeclare()) return;
+    if(mDomTree.find(func) == mDomTree.cend()) {
+      std::cerr << "DomTree not found for function " << func->name() << std::endl;
+      return;
+    }
     mDomTree[func]->setOff();
     mPDomTree[func]->setOff();
     mLoopInfo[func]->setOff();

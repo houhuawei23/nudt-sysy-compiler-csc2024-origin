@@ -29,9 +29,11 @@
 #include "pass/optimize/DAE.hpp"
 #include "pass/optimize/licm.hpp"
 #include "pass/analysis/dependenceAnalysis/DependenceAnalysis.hpp"
-#include "pass/optimize/LoopParallel.hpp"
+#include "pass/optimize/Loop/LoopParallel.hpp"
 #include "pass/optimize/GepSplit.hpp"
 #include "pass/optimize/Misc/StatelessCache.hpp"
+#include "pass/optimize/Loop/LoopBodyExtract.hpp"
+
 #include "support/config.hpp"
 #include "support/FileSystem.hpp"
 #include <fstream>
@@ -64,8 +66,7 @@ void PassManager::run(FunctionPass* fp) {
     fp,
     [&]() {
       for (auto func : irModule->funcs()) {
-        if (func->isOnlyDeclare())
-          continue;
+        if (func->isOnlyDeclare()) continue;
         fp->run(func, tAIM);
       }
     },
@@ -88,7 +89,7 @@ static LoopParallel loopParallelPass;
 static StatelessCache cachePass;
 static irCheck irCheckPass;
 static CFGAnalysisHHW cfgAnalysisPass;
-
+static LoopBodyExtract loopBodyExtractPass;
 void PassManager::runPasses(std::vector<std::string> passes) {
   // if(passes.size() == 0) return;
 
@@ -152,7 +153,7 @@ void PassManager::runPasses(std::vector<std::string> passes) {
       run(new pass::tailCallOpt());
     } else if (pass_name.compare("cfgprint") == 0) {
       run(new pass::CFGPrinter());
-    } else if (pass_name.compare("licm") == 0) {//必须配合gcm使用才能unroll gcm gvn licm unroll
+    } else if (pass_name.compare("licm") == 0) {  // 必须配合gcm使用才能unroll gcm gvn licm unroll
       run(new pass::LICM());
     } else if (pass_name.compare("dse") == 0) {
       run(new pass::simpleDSE());
@@ -168,8 +169,11 @@ void PassManager::runPasses(std::vector<std::string> passes) {
       run(&loopParallelPass);
     } else if (pass_name == "cache") {
       run(&cachePass);
+      // run(&cfgAnalysisPass); run in cache pass
     } else if (pass_name == "GepSplit") {
       run(new pass::GepSplit());
+    } else if (pass_name == "LoopBodyExtract") {
+      run(&loopBodyExtractPass);
     } else if (pass_name == "da") {
       run(new pass::dependenceAnalysis());
     } else {

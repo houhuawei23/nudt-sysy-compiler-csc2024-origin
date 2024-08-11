@@ -79,30 +79,6 @@ int main(int argc, char* argv[]) {
   }
 
   //! 3. Code Generation
-  constexpr bool DebugDomBFS = false;
-  for (auto fun : module.funcs()) {
-    if (fun->isOnlyDeclare())
-      continue;
-    auto dom_ctx = tAIM->getDomTree(fun);
-    // dom_ctx->setOff();
-    dom_ctx->refresh();
-    dom_ctx->BFSDomTreeInfoRefresh();
-    auto dom_vec = dom_ctx->BFSDomTreeVector();
-
-    if (DebugDomBFS) {
-      for (auto bb : dom_ctx->BFSDomTreeVector()) {
-        std::cerr << bb->name() << " " << bb->insts().size() << std::endl;
-        for (auto bbdomson : dom_ctx->domson(bb)) {
-          std::cerr << bbdomson->name() << " " << bbdomson->insts().size() << " ";
-        }
-        std::cerr << std::endl;
-      }
-      for (auto bb : fun->blocks()) {
-        std::cerr << bb->name() << " " << bb->insts().size() << std::endl;
-      }
-      std::cerr << "\n";
-    }
-  }
 
   if (config.genASM) {
     auto target = mir::RISCVTarget();

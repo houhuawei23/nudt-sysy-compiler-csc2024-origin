@@ -1,5 +1,6 @@
 #include "pass/optimize/Utils/BlockUtils.hpp"
 #include "pass/optimize/Misc/StatelessCache.hpp"
+#include "pass/analysis/ControlFlowGraph.hpp"
 
 using namespace ir;
 
@@ -204,6 +205,8 @@ bool StatelessCache::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
   tp->CallChange();
   tp->CFGChange(func);
   tp->IndVarChange(func);
+  // fix cfg
+  CFGAnalysisHHW().run(func, tp);
   return true;
 }
 

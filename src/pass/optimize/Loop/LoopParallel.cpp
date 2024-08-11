@@ -1,6 +1,7 @@
 #include "pass/optimize/optimize.hpp"
-#include "pass/optimize/LoopParallel.hpp"
+#include "pass/optimize/Loop/LoopParallel.hpp"
 #include "pass/analysis/ControlFlowGraph.hpp"
+#include "pass/optimize/Loop/LoopBodyExtract.hpp"
 // #include "libgen.h"
 #include <set>
 #include <cassert>
