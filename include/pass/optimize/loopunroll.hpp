@@ -20,12 +20,12 @@ class loopUnroll : public FunctionPass {
     void copyloop(std::vector<ir::BasicBlock*> bbs, ir::BasicBlock* begin, ir::Loop* L, ir::Function* func);
     void copyloopremainder(std::vector<ir::BasicBlock*> bbs, ir::BasicBlock* begin, ir::Loop* L, ir::Function* func);
     int calunrolltime(ir::Loop* loop, int times);
-    void doconstunroll(ir::Loop* loop, ir::indVar* iv, int times);
-    void dodynamicunroll(ir::Loop* loop, ir::indVar* iv);
-    void dynamicunroll(ir::Loop* loop, ir::indVar* iv);
-    void constunroll(ir::Loop* loop, ir::indVar* iv);
-    void dofullunroll(ir::Loop* loop, ir::indVar* iv, int times);
-    bool isconstant(ir::indVar* iv);
+    void doconstunroll(ir::Loop* loop, ir::IndVar* iv, int times);
+    void dodynamicunroll(ir::Loop* loop, ir::IndVar* iv);
+    void dynamicunroll(ir::Loop* loop, ir::IndVar* iv);
+    void constunroll(ir::Loop* loop, ir::IndVar* iv);
+    void dofullunroll(ir::Loop* loop, ir::IndVar* iv, int times);
+    bool isconstant(ir::IndVar* iv);
     void getdefinuseout(ir::Loop* L);
     void repalceuseout(ir::Instruction* inst, ir::Instruction* copyinst, ir::Loop* L);
     static ir::Value* getValue(ir::Value* val) {

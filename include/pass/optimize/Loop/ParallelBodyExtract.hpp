@@ -9,14 +9,12 @@
 using namespace ir;
 namespace pass {
 
-class LoopParallel : public FunctionPass {
+class ParallelBodyExtract : public FunctionPass {
 public:
   void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
-  std::string name() const override { return "LoopParallel"; }
+  std::string name() const override { return "ParallelBodyExtract"; }
 
 private:
-  static ir::Function* loopupParallelFor(ir::Module* module);
-  static bool isConstant(ir::Value* val);
   void runImpl(ir::Function* func, TopAnalysisInfoManager* tp);
 };
 

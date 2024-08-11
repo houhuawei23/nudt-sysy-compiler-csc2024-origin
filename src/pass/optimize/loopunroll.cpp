@@ -23,7 +23,7 @@ int loopUnroll::calunrolltime(ir::Loop* loop, int times) {
     return unrolltimes;
 }
 
-void loopUnroll::dynamicunroll(ir::Loop* loop, ir::indVar* iv) {
+void loopUnroll::dynamicunroll(ir::Loop* loop, ir::IndVar* iv) {
     // return ;
     if (loop->exits().size() != 1)  // 只对单exit的loop做unroll
         return;
@@ -73,7 +73,7 @@ void loopUnroll::dynamicunroll(ir::Loop* loop, ir::indVar* iv) {
     dodynamicunroll(loop, iv);
 }
 
-void loopUnroll::dodynamicunroll(ir::Loop* loop, ir::indVar* iv) {
+void loopUnroll::dodynamicunroll(ir::Loop* loop, ir::IndVar* iv) {
     headuseouts.clear();
     ir::Function* func = loop->header()->function();
     int unrolltimes = 4;  // 可以修改的超参数
@@ -379,7 +379,7 @@ void loopUnroll::dodynamicunroll(ir::Loop* loop, ir::indVar* iv) {
         }
     }
 }
-void loopUnroll::constunroll(ir::Loop* loop, ir::indVar* iv) {
+void loopUnroll::constunroll(ir::Loop* loop, ir::IndVar* iv) {
     if (loop->exits().size() != 1)  // 只对单exit的loop做unroll
         return;
 
@@ -478,7 +478,7 @@ void loopUnroll::insertremainderloop(ir::Loop* loop, ir::Function* func) {
     }
 }
 
-void loopUnroll::dofullunroll(ir::Loop* loop, ir::indVar* iv, int times) {
+void loopUnroll::dofullunroll(ir::Loop* loop, ir::IndVar* iv, int times) {
     // doconstunroll(loop, iv, times);
     // return;
     // std::cerr << "do full unroll" << std::endl;
@@ -620,7 +620,7 @@ void loopUnroll::dofullunroll(ir::Loop* loop, ir::indVar* iv, int times) {
     }
 }
 
-void loopUnroll::doconstunroll(ir::Loop* loop, ir::indVar* iv, int times) {
+void loopUnroll::doconstunroll(ir::Loop* loop, ir::IndVar* iv, int times) {
     headuseouts.clear();
     ir::Function* func = loop->header()->function();
     int unrolltimes = calunrolltime(loop, times);
@@ -957,7 +957,7 @@ void loopUnroll::repalceuseout(ir::Instruction* inst, ir::Instruction* copyinst,
     }
 }
 
-bool loopUnroll::isconstant(ir::indVar* iv) {  // 判断迭代的end是否为常数
+bool loopUnroll::isconstant(ir::IndVar* iv) {  // 判断迭代的end是否为常数
     if (auto constiv = iv->endValue()->dynCast<ir::ConstantValue>()) return true;
     return false;
 }
@@ -965,7 +965,7 @@ void loopUnroll::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     lpctx = tp->getLoopInfo(func);
     ivctx = tp->getIndVarInfo(func);
     for (auto& loop : lpctx->loops()) {
-        ir::indVar* iv = ivctx->getIndvar(loop);
+        ir::IndVar* iv = ivctx->getIndvar(loop);
         if (loop->subLoops().empty() && iv) {
             if (isconstant(iv))
                 constunroll(loop, iv);

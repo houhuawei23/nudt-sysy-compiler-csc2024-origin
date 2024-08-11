@@ -152,7 +152,7 @@ void Function::print(std::ostream& os) const {
   if (blocks().size()) {
     os << " {\n";
     for (auto& bb : mBlocks) {
-      os << *bb << std::endl;
+      os << *bb;
     }
     os << "}";
   } else {

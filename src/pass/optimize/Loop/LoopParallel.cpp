@@ -27,10 +27,8 @@ bool LoopParallel::isConstant(ir::Value* val) {
  * void @parallelFor(i32 %beg, i32 %end, void (i32, i32)* %parallel_body_ptr);
  */
 ir::Function* LoopParallel::loopupParallelFor(ir::Module* module) {
-  for (auto func : module->funcs()) {
-    if (func->name() == "parallelFor") {
-      return func;
-    }
+  if (auto func = module->findFunction("parallelFor")) {
+    return func;
   }
   const auto voidType = ir::Type::void_type();
   const auto i32 = ir::Type::TypeInt32();
@@ -57,19 +55,18 @@ void LoopParallel::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
   func->rename();
   func->print(std::cerr);
 
-  CFGAnalysisHHW().run(func, tp); // refresh CFG
-  auto indVarInfo = tp->getIndVarInfo(func);
-  indVarInfo->setOff();
-  indVarInfo->refresh();
+  CFGAnalysisHHW().run(func, tp);  // refresh CFG
 
-  auto lpctx = tp->getLoopInfo(func);
+  auto lpctx = tp->getLoopInfo(func);         // fisrt loop analysis
+  auto indVarInfo = tp->getIndVarInfo(func);  // then indvar analysis
+
   // for all loops
   for (auto loop : lpctx->loops()) {
     loop->print(std::cerr);
     const auto indVar = indVarInfo->getIndvar(loop);
     const auto step = indVar->getStep()->i32();
     indVar->print(std::cerr);
-    
+
     if (step != 1) continue;  // only support step = 1
 
     // extact loop body as a new loop_body func from func.loop
@@ -80,7 +77,8 @@ void LoopParallel::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
      * entry -> newLoop{phi, call loop_body, i.next, icmp, br} -> exit
      */
     LoopBodyFuncInfo loopBodyInfo;
-    if (not extractLoopBody(func, *loop, indVar, tp, loopBodyInfo /* ret */)) continue;
+    if (not extractLoopBody(func, *loop /* modified */, indVar, tp, loopBodyInfo /* ret */))
+      continue;
 
     auto parallelFor = loopupParallelFor(func->module());
 
@@ -194,8 +192,6 @@ void LoopParallel::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
     auto callArgs = std::vector<ir::Value*>{loopBodyInfo.indVar->getBegin(),
                                             loopBodyInfo.indVar->getEnd(), parallelBodyFuncPtr};
     builder.makeInst<ir::CallInst>(parallelFor, callArgs);
-    
-    
   }
 }
 

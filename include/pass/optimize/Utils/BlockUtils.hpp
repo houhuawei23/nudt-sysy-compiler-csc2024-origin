@@ -1,5 +1,6 @@
 #pragma once
 #include "ir/ir.hpp"
+#include "pass/analysisinfo.hpp"
 #include <functional>
 
 using namespace ir;
@@ -13,4 +14,7 @@ BasicBlock* splitBlock(BasicBlockList& blocks,
                        InstructionList::iterator instIt);
 
 bool fixAllocaInEntry(Function& func);
+
+bool blockSort(Function& func, TopAnalysisInfoManager* tAIM);
+
 }  // namespace pass

@@ -26,7 +26,7 @@ class CallInst;
 
 class PhiInst;
 
-class indVar;
+class IndVar;
 /*
  * @brief: AllocaInst
  */
@@ -194,7 +194,7 @@ public:
     : Instruction(vCALL, callee->retType(), parent, name), mCallee(callee), mIsTail(false) {
     addOperands(rargs);
   }
-public:  // check function
+
   bool istail() { return mIsTail; }
   bool isgetarrayorfarray() {
     return (mCallee->name() == "getarray") || (mCallee->name() == "getfarray");
@@ -202,13 +202,13 @@ public:  // check function
   bool isputarrayorfarray() {
     return (mCallee->name() == "putarray") || (mCallee->name() == "putfarray");
   }
-public:  // set function
+
   void setIsTail(bool b) { mIsTail = b; }
-public:  // get function
+
   Function* callee() const { return mCallee; }
   /* real arguments */
   auto& rargs() const { return mOperands; }
-public:  // utils function
+
   static bool classof(const Value* v) { return v->valueId() == vCALL; }
   void print(std::ostream& os) const override;
 
@@ -499,7 +499,7 @@ public:  // utils function
   Instruction* copy(std::function<Value*(Value*)> getValue) const override { return nullptr; }
 };
 
-class indVar {
+class IndVar {
 private:  // only for constant beginvar and stepvar
   ConstantInteger* mbeginVar;
   Value* mendVar;
@@ -513,7 +513,7 @@ private:  // only for constant beginvar and stepvar
   PhiInst* mphiinst;
 
 public:
-  indVar(ConstantInteger* mbegin,
+  IndVar(ConstantInteger* mbegin,
          Value* mend,
          ConstantInteger* mstep,
          BinaryInst* bininst,
