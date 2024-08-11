@@ -75,7 +75,7 @@ void ParallelBodyExtract::runImpl(ir::Function* func, TopAnalysisInfoManager* tp
     builder.makeInst<BranchInst>(callBlock);
     builder.set_pos(callBlock, callBlock->insts().end());
     // call parallel_body(beg, end)
-    auto callArgs = std::vector<Value*>{argBeg, argEnd};
+    auto callArgs = std::vector<Value*>{indVar->getBegin(), indVar->getEnd()};
     auto callInst = builder.makeInst<CallInst>(parallelBody, callArgs);
     assert(loop->exits().size() == 1);
     builder.makeInst<BranchInst>(loopExitBlock);
@@ -143,15 +143,23 @@ void ParallelBodyExtract::runImpl(ir::Function* func, TopAnalysisInfoManager* tp
         }
       }
     }
-
-    // debug
-    blockSort(*func, tp);
-    func->rename();
-    func->print(std::cerr);
-
-    // blockSort(*parallelBody, tp);
-    parallelBody->rename();
-    parallelBody->print(std::cerr);
+    const auto fixFunction = [&](Function* function) { 
+      CFGAnalysisHHW().run(function, tp);
+      blockSortDFS(*function, tp);
+      function->rename();
+      function->print(std::cerr);
+    };
+    // fic function
+    fixFunction(func);
+    fixFunction(parallelBody);
+    // CFGAnalysisHHW().run(func, tp);
+    // blockSortDFS(*func, tp);
+    // func->rename();
+    // func->print(std::cerr);
+    // CFGAnalysisHHW().run(parallelBody, tp);
+    // blockSortDFS(*parallelBody, tp);
+    // parallelBody->rename();
+    // parallelBody->print(std::cerr);
   }
 }
 

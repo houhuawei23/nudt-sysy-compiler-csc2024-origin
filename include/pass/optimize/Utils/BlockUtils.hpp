@@ -15,6 +15,7 @@ BasicBlock* splitBlock(BasicBlockList& blocks,
 
 bool fixAllocaInEntry(Function& func);
 
-bool blockSort(Function& func, TopAnalysisInfoManager* tAIM);
+bool blockSortBFS(Function& func, TopAnalysisInfoManager* tAIM);
+bool blockSortDFS(Function& func, TopAnalysisInfoManager* tAIM);
 
 }  // namespace pass

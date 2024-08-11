@@ -9,24 +9,49 @@ void dumpFunction(Function& func) {
   func.print(std::cerr);
 }
 
-bool blockSort(Function& func, TopAnalysisInfoManager* tAIM) {
+bool blockSortBFS(Function& func, TopAnalysisInfoManager* tAIM) {
   auto domCtx = tAIM->getDomTree(&func);
   domCtx->setOff();
   domCtx->refresh();
   domCtx->BFSDomTreeInfoRefresh();
   auto irBlocks = domCtx->BFSDomTreeVector();
-  std::cerr << "func Blocks: " << std::endl;
-  for(auto block : func.blocks()) {
-    block->dumpAsOpernd(std::cerr);
-    std::cerr << " ";
+  // std::cerr << "func Blocks: " << std::endl;
+  // for(auto block : func.blocks()) {
+  //   block->dumpAsOpernd(std::cerr);
+  //   std::cerr << " ";
+  // }
+  // std::cerr << std::endl;
+  // std::cerr << "IRBlocks: " << std::endl;
+  // for(auto block : irBlocks) {
+  //   block->dumpAsOpernd(std::cerr);
+  //   std::cerr << " ";
+  // }
+  // std::cerr << std::endl;
+  assert(irBlocks.size() == func.blocks().size());
+  func.blocks().clear();
+  for (auto block : irBlocks) {
+    func.blocks().push_back(block);
   }
-  std::cerr << std::endl;
-  std::cerr << "IRBlocks: " << std::endl;
-  for(auto block : irBlocks) {
-    block->dumpAsOpernd(std::cerr);
-    std::cerr << " ";
-  }
-  std::cerr << std::endl;
+  return true;
+}
+bool blockSortDFS(Function& func, TopAnalysisInfoManager* tAIM) {
+  auto domCtx = tAIM->getDomTree(&func);
+  domCtx->setOff();
+  domCtx->refresh();
+  domCtx->DFSDomTreeInfoRefresh();
+  auto irBlocks = domCtx->DFSDomTreeVector();
+  // std::cerr << "func Blocks: " << std::endl;
+  // for(auto block : func.blocks()) {
+  //   block->dumpAsOpernd(std::cerr);
+  //   std::cerr << " ";
+  // }
+  // std::cerr << std::endl;
+  // std::cerr << "IRBlocks: " << std::endl;
+  // for(auto block : irBlocks) {
+  //   block->dumpAsOpernd(std::cerr);
+  //   std::cerr << " ";
+  // }
+  // std::cerr << std::endl;
   assert(irBlocks.size() == func.blocks().size());
   func.blocks().clear();
   for (auto block : irBlocks) {
