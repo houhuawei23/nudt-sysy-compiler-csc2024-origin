@@ -170,13 +170,12 @@ void PassManager::runPasses(std::vector<std::string> passes) {
     } else if (pass_name == "cache") {
       run(&cachePass);
       // run(&cfgAnalysisPass); run in cache pass
-    } else if (pass_name.compare("da") == 0) {
-      run(new pass::dependenceAnalysis());
-      run(&cfgAnalysisPass);
     } else if (pass_name == "GepSplit") {
       run(new pass::GepSplit());
     } else if (pass_name == "LoopBodyExtract") {
       run(&loopBodyExtractPass);
+    } else if (pass_name == "da") {
+      run(new pass::dependenceAnalysis());
     } else {
       std::cerr << "Invalid pass name: " << pass_name << std::endl;
       assert(false && "Invalid pass name");

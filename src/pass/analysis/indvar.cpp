@@ -148,6 +148,9 @@ bool indVarAnalysis::isSimplyNotInLoop(ir::Loop* lp,ir::Value* val){
 
 //简单的判断一下对应的value是不是循环不变量
 bool indVarAnalysis::isSimplyLoopInvariant(ir::Loop* lp,ir::Value* val){
+    if(auto instVal=val->dynCast<ir::Instruction>()){
+        if(domctx->dominate(instVal->block(),lp->header()) and instVal->block()!=lp->header())return true;
+    }
     if(auto conVal=val->dynCast<ir::ConstantValue>())return true;
     if(auto binaryVal=val->dynCast<ir::BinaryInst>()){
         return isSimplyNotInLoop(lp,binaryVal->lValue()) and isSimplyNotInLoop(lp,binaryVal->rValue());
