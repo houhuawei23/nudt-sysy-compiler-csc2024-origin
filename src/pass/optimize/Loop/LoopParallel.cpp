@@ -51,28 +51,29 @@ void LoopParallel::run(ir::Function* func, TopAnalysisInfoManager* tp) {
   runImpl(func, tp);
 }
 
-void LoopParallel::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
+bool LoopParallel::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
   func->rename();
-  func->print(std::cerr);
+  // func->print(std::cerr);
 
   CFGAnalysisHHW().run(func, tp);  // refresh CFG
 
   auto lpctx = tp->getLoopInfo(func);         // fisrt loop analysis
   auto indVarInfo = tp->getIndVarInfo(func);  // then indvar analysis
-
+  bool modified = false;
   // for all loops
+  lpctx->print(std::cerr);
   for (auto loop : lpctx->loops()) {
-    loop->print(std::cerr);
+    // loop->print(std::cerr);
     const auto indVar = indVarInfo->getIndvar(loop);
     const auto step = indVar->getStep()->i32();
-    indVar->print(std::cerr);
+    // indVar->print(std::cerr);
 
     if (step != 1) continue;  // only support step = 1
     ParallelBodyInfo parallelBodyInfo;
     if (not extractParallelBody(func, loop /* modified */, indVar, tp, parallelBodyInfo /* ret */))
       continue;
     std::cerr << "parallel body extracted" << std::endl;
-    func->print(std::cerr);
+    // func->print(std::cerr);
     const auto parallelBody = parallelBodyInfo.parallelBody;
     auto parallelFor = loopupParallelFor(func->module());
 
@@ -84,8 +85,8 @@ void LoopParallel::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
     std::vector<ir::Value*> args = {parallelBodyInfo.beg, parallelBodyInfo.end, parallelBody};
     for (auto iter = insts.begin(); iter != insts.end(); ++iter) {
       const auto inst = *iter;
-      inst->print(std::cerr);
-      std::cerr << std::endl;
+      // inst->print(std::cerr);
+      // std::cerr << std::endl;
       if (inst == parallelBodyInfo.callInst) {
         builder.set_pos(callBlock, iter);
         builder.makeInst<CallInst>(parallelFor, args);
@@ -98,10 +99,13 @@ void LoopParallel::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
       CFGAnalysisHHW().run(function, tp);
       blockSortDFS(*function, tp);
       function->rename();
-      function->print(std::cerr);
+      // function->print(std::cerr);
     };
     fixFunction(func);
+    modified = true;
+    break;
   }
+  return modified;
 }
 
 }  // namespace pass

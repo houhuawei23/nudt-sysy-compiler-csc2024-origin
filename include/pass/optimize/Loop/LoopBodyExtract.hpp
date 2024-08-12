@@ -46,7 +46,7 @@ public:
   std::string name() const override { return "LoopBodyExtract"; }
 
 private:
-  void runImpl(Function* func, TopAnalysisInfoManager* tp);
+  bool runImpl(Function* func, TopAnalysisInfoManager* tp);
 };
 
 bool extractLoopBody(Function* func,

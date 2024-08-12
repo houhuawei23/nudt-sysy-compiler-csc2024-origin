@@ -8,9 +8,9 @@ int globalSum;
 void exampleFunc(int32_t beg, int32_t end) {
   int localSum = 0;
   for (int32_t i = beg; i < end; ++i) {
-    globalSum += 1;
+    localSum += 1;
   }
-  // globalSum += localSum;
+  globalSum += localSum;
 }
 
 int main() {

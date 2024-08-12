@@ -8,7 +8,7 @@
 #include "pass/analysis/sideEffectAnalysis.hpp"
 #include "pass/analysis/dependenceAnalysis/DependenceAnalysis.hpp"
 #include "pass/analysis/dependenceAnalysis/dpaUtils.hpp"
-
+using namespace ir;
 using namespace pass;
 
 void TopAnalysisInfoManager::initialize() {
@@ -45,6 +45,22 @@ void loopInfo::refresh() {
     la.run(passUnit,topManager);
     // lic.run(passUnit,topManager);
     setOn();
+}
+void loopInfo::print(std::ostream& os) const {
+    os << "Loop Info:\n";
+    for (auto loop : _loops) {
+        std::cerr << "level: " << _looplevel.at(loop->header()) << std::endl;
+        loop->print(os);
+    }
+    std::cerr << std::endl;
+}
+// looplevel small to big
+std::vector<ir::Loop*> loopInfo::sortedLoops(bool traverse ) {
+    auto loops = _loops;
+    std::sort(loops.begin(), loops.end(), [&](Loop* lhs, Loop* rhs) {
+        return _looplevel.at(lhs->header()) < _looplevel.at(rhs->header());
+    });
+    return std::move(loops);
 }
 
 void callGraph::refresh() {

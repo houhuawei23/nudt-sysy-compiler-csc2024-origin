@@ -23,7 +23,7 @@ public:
   std::string name() const override { return "ParallelBodyExtract"; }
 
 private:
-  void runImpl(ir::Function* func, TopAnalysisInfoManager* tp);
+  bool runImpl(ir::Function* func, TopAnalysisInfoManager* tp);
 };
 
 bool extractParallelBody(Function* func,

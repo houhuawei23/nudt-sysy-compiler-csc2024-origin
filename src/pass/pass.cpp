@@ -34,6 +34,7 @@
 #include "pass/optimize/Misc/StatelessCache.hpp"
 #include "pass/optimize/Loop/LoopBodyExtract.hpp"
 #include "pass/optimize/Loop/ParallelBodyExtract.hpp"
+#include "pass/optimize/Misc/BlockSort.hpp"
 #include "support/config.hpp"
 #include "support/FileSystem.hpp"
 #include <fstream>
@@ -91,6 +92,8 @@ static irCheck irCheckPass;
 static CFGAnalysisHHW cfgAnalysisPass;
 static LoopBodyExtract loopBodyExtractPass;
 static ParallelBodyExtract parallelBodyExtractPass;
+static BlockSort blockSortPass;
+
 void PassManager::runPasses(std::vector<std::string> passes) {
   // if(passes.size() == 0) return;
 
@@ -177,6 +180,8 @@ void PassManager::runPasses(std::vector<std::string> passes) {
       run(&loopBodyExtractPass);
     } else if (pass_name == "ParallelBodyExtract") {
       run(&parallelBodyExtractPass);
+    } else if (pass_name == "blocksort") {
+      run(&blockSortPass);
     } else if (pass_name == "da") {
       run(new pass::dependenceAnalysis());
     } else {

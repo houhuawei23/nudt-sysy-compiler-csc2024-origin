@@ -6,13 +6,19 @@ using namespace ir;
 
 namespace pass {
 
+static auto getUniqueID() {
+  static size_t id = 0;
+  const auto base = "sysyc_parallel_body";
+  return base + std::to_string(id++);
+}
+
 bool extractParallelBody(Function* func,
                          Loop* loop,
                          IndVar* indVar,
                          TopAnalysisInfoManager* tp,
                          ParallelBodyInfo& parallelBodyInfo) {
   const auto step = indVar->getStep()->i32();
-  indVar->print(std::cerr);
+  // indVar->print(std::cerr);
 
   if (step != 1) return false;                  // only support step = 1
   if (loop->exits().size() != 1) return false;  // only support single exit loop
@@ -28,10 +34,10 @@ bool extractParallelBody(Function* func,
   if (not extractLoopBody(func, *loop /* modified */, indVar, tp, loopBodyInfo /* ret */))
     return false;
 
-  loopBodyInfo.print(std::cerr);
+  // loopBodyInfo.print(std::cerr);
   const auto i32 = Type::TypeInt32();
   auto funcType = FunctionType::gen(Type::void_type(), {i32, i32});
-  auto parallelBody = func->module()->addFunction(funcType, "parallel_body");
+  auto parallelBody = func->module()->addFunction(funcType, getUniqueID());
 
   auto argBeg = parallelBody->new_arg(i32, "beg");
   auto argEnd = parallelBody->new_arg(i32, "end");
@@ -72,17 +78,17 @@ bool extractParallelBody(Function* func,
 
   // fix value in paraplel_body
   const auto fixPhi = [&](PhiInst* phi) {
-    std::cerr << "fix phi inst: ";
-    phi->dumpAsOpernd(std::cerr);
-    std::cerr << std::endl;
+    // std::cerr << "fix phi inst: ";
+    // phi->dumpAsOpernd(std::cerr);
+    // std::cerr << std::endl;
     if (phi == indVar->phiinst()) {
       phi->delBlock(loopBodyInfo.preHeader);
       phi->addIncoming(argBeg, newEntry);
       return;
     }
-    std::cerr << "phi inst not indvar phi inst" << std::endl;
-    phi->print(std::cerr);
-    std::cerr << std::endl;
+    // std::cerr << "phi inst not indvar phi inst" << std::endl;
+    // phi->print(std::cerr);
+    // std::cerr << std::endl;
   };
 
   const auto fixCmp = [&](ICmpInst* cmpInst) {
@@ -91,9 +97,9 @@ bool extractParallelBody(Function* func,
         auto op = opuse->value();
       }
     }
-    std::cerr << "cmp inst not indvar cmp inst" << std::endl;
-    cmpInst->print(std::cerr);
-    std::cerr << std::endl;
+    // std::cerr << "cmp inst not indvar cmp inst" << std::endl;
+    // cmpInst->print(std::cerr);
+    // std::cerr << std::endl;
   };
   std::unordered_map<BasicBlock*, BasicBlock*> blockMap;
   blockMap.emplace(loopExitBlock, newExit);
@@ -118,10 +124,10 @@ bool extractParallelBody(Function* func,
     }
   };
   for (auto block : parallelBody->blocks()) {
-    std::cerr << "block: " << block->name() << std::endl;
+    // std::cerr << "block: " << block->name() << std::endl;
     for (auto inst : block->insts()) {
-      inst->print(std::cerr);
-      std::cerr << std::endl;
+      // inst->print(std::cerr);
+      // std::cerr << std::endl;
       if (auto phi = inst->dynCast<PhiInst>()) {
         fixPhi(phi);
       } else if (auto cmpInst = inst->dynCast<ICmpInst>()) {
@@ -137,7 +143,7 @@ bool extractParallelBody(Function* func,
     CFGAnalysisHHW().run(function, tp);
     blockSortDFS(*function, tp);
     function->rename();
-    function->print(std::cerr);
+    // function->print(std::cerr);
   };
   // fic function
   fixFunction(func);
@@ -153,24 +159,50 @@ bool extractParallelBody(Function* func,
 void ParallelBodyExtract::run(ir::Function* func, TopAnalysisInfoManager* tp) {
   runImpl(func, tp);
 }
-void ParallelBodyExtract::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
+
+#define NDEBUG
+bool ParallelBodyExtract::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
   func->rename();
-  func->print(std::cerr);
+  // func->print(std::cerr);
 
   CFGAnalysisHHW().run(func, tp);  // refresh CFG
 
   auto lpctx = tp->getLoopInfo(func);         // fisrt loop analysis
   auto indVarInfo = tp->getIndVarInfo(func);  // then indvar analysis
 
-  // for all loops
-  for (auto loop : lpctx->loops()) {
-    loop->print(std::cerr);
+  auto loops = lpctx->sortedLoops();
+  bool modified = false;
+
+  std::unordered_set<Loop*> extractedLoops;
+  const auto isBlocked = [&](Loop* lp) {
+    for (auto extracted : extractedLoops) {
+      if (extracted->blocks().count(lp->header())) {
+#ifndef NDEBUG
+        lp->header()->dumpAsOpernd(std::cerr);
+        std::cerr << "is sub of ";
+        extracted->header()->dumpAsOpernd(std::cerr);
+        std::cerr << std::endl;
+#endif
+        return true;
+      }
+    }
+    return false;
+  };
+  for (auto loop : loops) {  // for all loops
+    if (isBlocked(loop)) continue;
     const auto indVar = indVarInfo->getIndvar(loop);
+    const auto step = indVar->getStep()->i32();
+    if (step != 1) continue;  // only support step = 1
+
     ParallelBodyInfo info;
     if (not extractParallelBody(func, loop, indVar, tp, info)) {
       std::cerr << "failed to extract parallel body for loop" << std::endl;
+      continue;
     }
+    modified = true;
+    extractedLoops.insert(loop);
   }
+  return modified;
 }
 
 }  // namespace pass

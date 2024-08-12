@@ -61,7 +61,7 @@ bool blockSortDFS(Function& func, TopAnalysisInfoManager* tAIM) {
 }
 
 bool fixAllocaInEntry(Function& func) {
-  dumpFunction(func);
+  // dumpFunction(func);
   std::unordered_set<Instruction*> allocas;
   for (auto block : func.blocks()) {
     for (auto inst : block->insts()) {
@@ -88,7 +88,7 @@ bool fixAllocaInEntry(Function& func) {
   builder.set_pos(newEntry, newEntry->insts().end());
   builder.makeInst<BranchInst>(oldEntry);
 
-  dumpFunction(func);
+  // dumpFunction(func);
   return true;
 }
 

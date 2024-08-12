@@ -17,7 +17,7 @@ public:
 private:
   static ir::Function* loopupParallelFor(ir::Module* module);
   static bool isConstant(ir::Value* val);
-  void runImpl(ir::Function* func, TopAnalysisInfoManager* tp);
+  bool runImpl(ir::Function* func, TopAnalysisInfoManager* tp);
 };
 
 

@@ -112,6 +112,13 @@ MIROperand LoweringContext::map2operand(ir::Value* ir_val) {
     emitMIRInst(InstLoadGlobalAddress, {ptr, MIROperand::asReloc(gvarMap.at(gvar)->reloc.get())});
 
     return ptr;
+  } 
+  // for function ptr
+  if(auto func = ir_val->dynCast<ir::Function>()) {
+    auto ptr = newVReg(pointerType);
+    /* LoadGlobalAddress ptr, reloc */
+    emitMIRInst(InstLoadGlobalAddress, {ptr, MIROperand::asReloc(funcMap.at(func))});
+    return ptr;
   }
 
   /* 3. Constant */

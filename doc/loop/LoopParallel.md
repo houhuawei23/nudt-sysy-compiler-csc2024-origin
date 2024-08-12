@@ -157,3 +157,85 @@ exit:
     ret void
 }
 ```
+
+Loop Info:
+
+level: 1
+header: bb2
+exits: 1
+  bb7
+latchs: 1
+  bb6
+blocks: 5
+  bb2
+  bb6
+  bb5
+  bb4
+  bb3
+level: 2
+
+header: bb4
+exits: 1
+  bb6
+latchs: 1
+  bb5
+blocks: 2
+  bb5
+  bb4
+
+
+```llvm
+define i32 @main() {
+bb0: ; entry
+    br label %bb1 ; br next
+bb1: ; next
+    call void @_sysy_starttime(i32 7)
+    br label %bb2 ; br while1_judge
+bb2: ; while1_judge
+    %0 = phi i32 [ 0, %bb1 ],[ %2, %bb4 ]
+    %1 = icmp slt i32 %0, 100000 
+    br i1 %1, label %bb3, label %bb5
+bb3:
+    call void @sysyc_loop_body0(i32 %0)
+    br label %bb4
+bb4:
+    %2 = add i32 %0, 1
+    br label %bb2 ; br while1_judge
+bb5: ; while1_next
+    call void @_sysy_stoptime(i32 17)
+    %3 = getelementptr [100000 x i32], [100000 x i32]* @arr, i32 0, i32 0
+    %4 = load i32, i32* %3
+    %5 = getelementptr [100000 x i32], [100000 x i32]* @arr, i32 0, i32 1
+    %6 = load i32, i32* %5
+    %7 = add i32 %4, %6
+    %8 = getelementptr [100000 x i32], [100000 x i32]* @arr, i32 0, i32 2
+    %9 = load i32, i32* %8
+    %10 = add i32 %7, %9
+    %11 = getelementptr [100000 x i32], [100000 x i32]* @arr, i32 0, i32 3
+    %12 = load i32, i32* %11
+    %13 = add i32 %10, %12
+    %14 = getelementptr [100000 x i32], [100000 x i32]* @arr, i32 0, i32 4
+    %15 = load i32, i32* %14
+    %16 = add i32 %13, %15
+    ret i32 %16
+}
+
+define void @sysyc_loop_body0(i32 %0) {
+bb0:
+    br label %bb1
+bb1:
+    br label %bb2 ; br while2_judge
+bb2: ; while2_judge
+    %1 = phi i32 [ %5, %bb3 ],[ 0, %bb1 ]
+    %2 = icmp slt i32 %1, 100000 
+    br i1 %2, label %bb3, label %bb4 ; br while2_loop, while2_next
+bb3: ; while2_loop
+    %3 = getelementptr [100000 x i32], [100000 x i32]* @arr, i32 0, i32 %0
+    %4 = add i32 %1, %1
+    store i32 %4, i32* %3
+    %5 = add i32 %1, 1
+    br label %bb2 ; br while2_judge
+bb4: ; while2_next
+    ret void
+}
+```

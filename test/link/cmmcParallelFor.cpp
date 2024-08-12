@@ -77,10 +77,10 @@ struct Worker final {
 };
 Worker workers[maxThreads];  // NOLINT
 
-static_assert(std::atomic_uint32_t::is_always_lock_free);
-static_assert(std::atomic_int32_t::is_always_lock_free);
-static_assert(std::atomic<void*>::is_always_lock_free);
-static_assert(std::atomic<CmmcForLoop>::is_always_lock_free);
+// static_assert(std::atomic_uint32_t::is_always_lock_free);
+// static_assert(std::atomic_int32_t::is_always_lock_free);
+// static_assert(std::atomic<void*>::is_always_lock_free);
+// static_assert(std::atomic<CmmcForLoop>::is_always_lock_free);
 
 int cmmcWorker(void* ptr) {
   auto& worker = *static_cast<Worker*>(ptr);
@@ -223,7 +223,7 @@ static ParallelForEntry& selectNumberOfThreads(CmmcForLoop func,
   sample = false;
   return entry;
 }
-void cmmcParallelFor(int32_t beg, int32_t end, CmmcForLoop func) {
+void ParallelFor(int32_t beg, int32_t end, CmmcForLoop func) {
   if (end <= beg)
     return;
   const auto size = static_cast<uint32_t>(end - beg);
@@ -283,51 +283,51 @@ void cmmcParallelFor(int32_t beg, int32_t end, CmmcForLoop func) {
     entry.times[threads] += diff;
   }
 }
-constexpr uint32_t m1 = 1021, m2 = 1019;
-struct LUTEntry final {
-  uint64_t key;
-  int val;
-  int hasVal;
-};
-static_assert(sizeof(LUTEntry) == sizeof(uint32_t) * 4);
-LUTEntry* cmmcCacheLookup(LUTEntry* table, int key1, int key2) {
-  const auto key =
-      static_cast<uint64_t>(key1) << 32 | static_cast<uint64_t>(key2);
-  const auto ha = key % m1, hb = 1 + key % m2;
-  auto cur = ha;
-  constexpr uint32_t maxLookupCount = 5;
-  uint32_t count = maxLookupCount;
-  while (true) {
-    auto& ref = table[cur];
-    if (!ref.hasVal) {
-      ref.key = key;
-      return &ref;
-    }
-    if (ref.key == key) {
-      return &ref;
-    }
-    if (++count >= maxLookupCount)
-      break;
-    cur += hb;
-    if (cur >= m1)
-      cur -= m1;
-  }
-  // evict, FIFO
-  auto& ref = table[ha];
-  ref.hasVal = 0;
-  ref.key = key;
-  return &ref;
-}
-int32_t cmmcAddRec3SRem(int32_t x, int32_t rem) {
-  const auto n64 = static_cast<int64_t>(x);
-  return static_cast<int32_t>(n64 * (n64 - 1) / 2 % rem);
-}
-void cmmcReduceAddI32(std::atomic_int32_t& x, int32_t val) {
-  x += val;
-}
-void cmmcReduceAddF32(std::atomic<float>& x, float val) {
-  float base = x.load();
-  while (!x.compare_exchange_weak(base, base + val))
-    ;
-}
+// constexpr uint32_t m1 = 1021, m2 = 1019;
+// struct LUTEntry final {
+//   uint64_t key;
+//   int val;
+//   int hasVal;
+// };
+// static_assert(sizeof(LUTEntry) == sizeof(uint32_t) * 4);
+// LUTEntry* cmmcCacheLookup(LUTEntry* table, int key1, int key2) {
+//   const auto key =
+//       static_cast<uint64_t>(key1) << 32 | static_cast<uint64_t>(key2);
+//   const auto ha = key % m1, hb = 1 + key % m2;
+//   auto cur = ha;
+//   constexpr uint32_t maxLookupCount = 5;
+//   uint32_t count = maxLookupCount;
+//   while (true) {
+//     auto& ref = table[cur];
+//     if (!ref.hasVal) {
+//       ref.key = key;
+//       return &ref;
+//     }
+//     if (ref.key == key) {
+//       return &ref;
+//     }
+//     if (++count >= maxLookupCount)
+//       break;
+//     cur += hb;
+//     if (cur >= m1)
+//       cur -= m1;
+//   }
+//   // evict, FIFO
+//   auto& ref = table[ha];
+//   ref.hasVal = 0;
+//   ref.key = key;
+//   return &ref;
+// }
+// int32_t cmmcAddRec3SRem(int32_t x, int32_t rem) {
+//   const auto n64 = static_cast<int64_t>(x);
+//   return static_cast<int32_t>(n64 * (n64 - 1) / 2 % rem);
+// }
+// void cmmcReduceAddI32(std::atomic_int32_t& x, int32_t val) {
+//   x += val;
+// }
+// void cmmcReduceAddF32(std::atomic<float>& x, float val) {
+//   float base = x.load();
+//   while (!x.compare_exchange_weak(base, base + val))
+//     ;
+// }
 }

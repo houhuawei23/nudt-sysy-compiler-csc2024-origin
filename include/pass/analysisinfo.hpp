@@ -233,6 +233,8 @@ class loopInfo : public FunctionACtx {
         return innermost;
     }
     void refresh() override;
+    void print(std::ostream& os) const;
+    std::vector<ir::Loop*> sortedLoops(bool traverse = false); // looplevel small to big
 };
 
 class callGraph : public ModuleACtx {

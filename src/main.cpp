@@ -54,7 +54,10 @@ int main(int argc, char* argv[]) {
   //! 1. IR Generation
   auto module = ir::Module();
   sysy::SysYIRGenerator gen(&module, ast_root);
-  gen.build_ir();
+  {
+    utils::Stage stage("IR Generation"sv);
+    gen.build_ir();
+  }
   if (not module.verify(std::cerr)) {
     module.print(std::cerr);
     std::cerr << "IR verification failed" << std::endl;
@@ -65,8 +68,10 @@ int main(int argc, char* argv[]) {
   auto tAIM = new pass::TopAnalysisInfoManager(&module);
   tAIM->initialize();
   auto pm = new pass::PassManager(&module, tAIM);
-
-  pm->runPasses(config.passes);
+  {
+    utils::Stage stage("Optimization Passes"sv);
+    pm->runPasses(config.passes);
+  }
 
   if (config.genIR) {  // ir print
     if (config.outfile.empty()) {
