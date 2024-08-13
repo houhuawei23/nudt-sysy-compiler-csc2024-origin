@@ -24,7 +24,7 @@ void SCEV::run(ir::Function* func,TopAnalysisInfoManager* tp){
     
     
     for(auto lp:lpctx->loops()){
-        if(lp->parent()!=nullptr)continue;//只处理顶层循环，底层循环通过顶层循环向下分析
+        if(lp->parentloop()!=nullptr)continue;//只处理顶层循环，底层循环通过顶层循环向下分析
         runOnLoop(lp,tp);
     }
 }

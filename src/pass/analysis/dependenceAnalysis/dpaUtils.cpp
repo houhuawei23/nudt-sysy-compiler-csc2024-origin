@@ -19,16 +19,26 @@ void LoopDependenceInfo::makeLoopDepInfo(ir::Loop* lp){
     }
 }
 
+
+void LoopDependenceInfo::getInfoFromSubLoop(ir::Loop* subLoop,LoopDependenceInfo* subLoopDepInfo){
+    for(auto memInst:subLoopDepInfo->memInsts){
+        if(auto ldInst=memInst->dynCast<ir::LoadInst>()){
+            addPtrFromSubLoop(ldInst->ptr(),ldInst,subLoopDepInfo);
+        }
+        else if(auto stInst=memInst->dynCast<ir::StoreInst>()){
+            addPtrFromSubLoop(stInst->ptr(),stInst,subLoopDepInfo);
+        }
+        else{
+            assert("error in function \"getInfoFromSubLoop\"!" and false);
+        }
+    }
+}
+
+
 //取出基址
 ir::Value* pass::getBaseAddr(ir::Value* val){
     if(auto gep=val->dynCast<ir::GetElementPtrInst>()){
-        auto gepBaseAddr=gep->value()->dynCast<ir::GetElementPtrInst>();
-        auto curGep=gep;
-        while(gepBaseAddr!=nullptr){
-            curGep=gepBaseAddr;
-            gepBaseAddr=curGep->dynCast<ir::GetElementPtrInst>();
-        }
-        return curGep->value();
+        return getBaseAddr(gep->value());
     }
     else{
         if(val->dynCast<ir::GlobalVariable>())return val;
@@ -53,10 +63,11 @@ baseAddrType pass::getBaseAddrType(ir::Value* val){
 
 //加入单个ptr的接口
 void LoopDependenceInfo::addPtr(ir::Value* ptr,ir::Instruction* inst){
+    if(memInsts.count(inst)!=0)return;
     auto baseAddr=getBaseAddr(ptr);
     auto subAddr=ptr->dynCast<ir::GetElementPtrInst>();
     if(subAddr==nullptr)return;//这实际上排除全局变量
-    if(inst->dynCast<ir::LoadInst>()!=nullptr or inst->dynCast<ir::StoreInst>()!=nullptr)return;
+    if(inst->dynCast<ir::LoadInst>()!=nullptr and inst->dynCast<ir::StoreInst>()!=nullptr)return;
     //基址
     if(baseAddrs.count(baseAddr)==0){
         baseAddrIsRead[baseAddr]=false;
@@ -89,14 +100,77 @@ void LoopDependenceInfo::addPtr(ir::Value* ptr,ir::Instruction* inst){
     }
     if(subAddrToGepIdx.count(subAddr)==0){
         auto pnewGepIdx=new gepIdx;
-        while(subAddr!=nullptr){
-            pnewGepIdx->idxList.push_back(subAddr->index());
-            subAddr=subAddr->value()->dynCast<ir::GetElementPtrInst>();
+        auto curSubAddr=subAddr;
+        while(curSubAddr!=nullptr){
+            pnewGepIdx->idxList.push_back(curSubAddr->index());
+            curSubAddr=curSubAddr->value()->dynCast<ir::GetElementPtrInst>();
         }
         std::reverse(pnewGepIdx->idxList.begin(),pnewGepIdx->idxList.end());
+        for(auto idxVal:pnewGepIdx->idxList){
+            pnewGepIdx->idxTypes[idxVal]=iELSE;//初始值都是ELSE
+        }
         subAddrToGepIdx[subAddr]=pnewGepIdx;
     }
     //具体语句
+    subAddrToInst[subAddr].insert(inst);
+    memInsts.insert(inst);
+}
+
+
+void LoopDependenceInfo::addPtrFromSubLoop(ir::Value* ptr,ir::Instruction* inst,LoopDependenceInfo* subLoopDepInfo){
+    //基地址
+    if(memInsts.count(inst)!=0)return;
+    auto baseAddr=getBaseAddr(ptr);
+    auto subAddr=ptr->dynCast<ir::GetElementPtrInst>();
+    if(subAddr==nullptr)return;//这实际上排除全局变量
+    if(inst->dynCast<ir::LoadInst>()!=nullptr and inst->dynCast<ir::StoreInst>()!=nullptr)return;
+    //基址
+    if(baseAddrs.count(baseAddr)==0){
+        baseAddrIsRead[baseAddr]=false;
+        baseAddrIsWrite[baseAddr]=false;
+    }
+    baseAddrs.insert(baseAddr);
+    if(inst->valueId()==ir::vLOAD){
+        baseAddrIsRead[baseAddr]=true;
+    }
+    else if(inst->valueId()==ir::vSTORE){
+        baseAddrIsWrite[baseAddr]=true;
+    }
+    else{
+        assert(false and "error in function\"addPtr\", invalid input inst type!");
+    }
+    //子地址
+    if(baseAddrToSubAddrs[baseAddr].count(subAddr)==0){
+        subAddrIsRead[subAddr]=false;
+        subAddrIsRead[subAddr]=false;
+    }
+    baseAddrToSubAddrs[baseAddr].insert(subAddr);
+    if(inst->valueId()==ir::vLOAD){
+        subAddrIsRead[subAddr]=true;
+    }
+    else if(inst->valueId()==ir::vSTORE){
+        subAddrIsWrite[subAddr]=true;
+    }
+    else{
+        assert(false and "error in function\"addPtr\", invalid input inst type!");
+    }
+    if(subAddrToGepIdx.count(subAddr)==0){
+        auto oldGepIdx=subLoopDepInfo->getGepIdx(subAddr);
+        auto pnewGepIdx=new gepIdx;
+        for(auto indexValOld:oldGepIdx->idxList){
+            pnewGepIdx->idxList.push_back(indexValOld);
+            auto valType=oldGepIdx->idxTypes[indexValOld];
+            if(valType!=iIDV and valType!=iIDVPLUSMINUSFORMULA and valType!=iLOOPINVARIANT)
+                pnewGepIdx->idxTypes[indexValOld]=valType;
+            else if(valType==iIDV)
+                pnewGepIdx->idxTypes[indexValOld]=iINNERIDV;
+            else if(valType==iIDVPLUSMINUSFORMULA)
+                pnewGepIdx->idxTypes[indexValOld]=iINNERIDVPLUSMINUSFORMULA;
+            else if(valType==iLOOPINVARIANT)
+                pnewGepIdx->idxTypes[indexValOld]=iELSE;
+        }
+        subAddrToGepIdx[subAddr]=pnewGepIdx;
+    }
     subAddrToInst[subAddr].insert(inst);
     memInsts.insert(inst);
 }
@@ -129,16 +203,17 @@ bool pass::isTwoBaseAddrPossiblySame(ir::Value* ptr1,ir::Value* ptr2,ir::Functio
                 auto rarg2=callInst->rargs()[idx2]->value();
                 if(getBaseAddr(rarg1)!=getBaseAddr(rarg2))continue;
                 else
-                    return false;//简单的认为他们一致
-            }   
+                    return true;//简单的认为他们一致
+            }  
+            return false; 
         }
     }
     else{
         if(type1!=argType and type2!=argType){
-            return true;
+            return false;
         }
         else{
-            if(type1==localType or type2==localType) return true;
+            if(type1==localType or type2==localType) return false;
             ir::GlobalVariable* gv;
             ir::Argument* arg;
             if(type1==globalType){
@@ -155,9 +230,9 @@ bool pass::isTwoBaseAddrPossiblySame(ir::Value* ptr1,ir::Value* ptr2,ir::Functio
                 auto rargBaseAddr=getBaseAddr(rarg);
                 if(rargBaseAddr!=gv)continue;
                 else
-                    return false;
+                    return true;
             }
-            return true;
+            return false;
         }
     }   
     assert("error occur in function \"isTwoBaseAddrPossiblySame\"");
@@ -169,13 +244,68 @@ void LoopDependenceInfo::print(std::ostream& os){
     os<<"In function \""<<parent->header()->function()->name()<<"\":"<<endl;
     os<<"In loop whose header is\""<<parent->header()->name()<<"\":\n";
     if(baseAddrs.empty()){
-        os<<"No mem read or write."<<endl;
+        os<<"No mem read or write."<<endl<<endl;
         return;
     }
     os<<"Base addrs:"<<endl;
     for(auto baseaddr:baseAddrs){
         os<<baseaddr->name()<<" ";
-        os<<"has "<<baseAddrToSubAddrs[baseaddr].size()<<"sub addrs."<<endl;
+        os<<"has "<<baseAddrToSubAddrs[baseaddr].size()<<" sub addrs."<<endl;
+        os<<"read:\t";
+        if(baseAddrIsRead[baseaddr])os<<"yes\t";
+        else os<<"no\t";
+        os<<"write:\t";
+        if(baseAddrIsWrite[baseaddr])os<<"yes\t";
+        else os<<"no\t";
+        os<<endl;
+        auto subAddrset=baseAddrToSubAddrs[baseaddr];
+        os<<"subAddrs:\t"<<endl;
+        for(auto subaddr:subAddrset){
+            os<<subaddr->name()<<":";
+            for(auto idxVal:subAddrToGepIdx[subaddr]->idxList){
+                printIdxType(subAddrToGepIdx[subaddr]->idxTypes[idxVal],os);
+                os<<"\t";
+            }
+            os<<endl;
+        }
     }
+    os<<"This Loop should ";
+    if(not isParallelConcerningArray){
+        os<<"not ";
+    }
+    os<<"be parallelize."<<endl;
     os<<endl;
+}
+
+void pass::printIdxType(idxType idxtype,std::ostream& os){
+    switch (idxtype)
+    {
+    case iLOOPINVARIANT:
+        os<<"LpI";
+        break;
+    case iIDV:
+        os<<"idv";
+        break;
+    case iIDVPLUSMINUSFORMULA:
+        os<<"idvAddMinusFormula";
+        break;
+    case iCALL:
+        os<<"call";
+        break;
+    case iLOAD:
+        os<<"load";
+        break;
+    case iELSE:
+        os<<"else";
+        break;
+    case iINNERIDV:
+        os<<"InnerIdv";
+        break;
+    case iINNERIDVPLUSMINUSFORMULA:
+        os<<"InnerIdvAddMinusFormula";
+        break;
+    default:
+        assert(false and "wrong idx type!");
+        break;
+    }
 }

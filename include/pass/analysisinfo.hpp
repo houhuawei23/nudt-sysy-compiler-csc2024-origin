@@ -319,13 +319,17 @@ class sideEffectInfo : public ModuleACtx {
 
 class dependenceInfo:public FunctionACtx{
     private:
-        std::unordered_map<ir::Loop*,std::any>funcToLoopDependenceInfo;
+        std::unordered_map<ir::Loop*,void*>funcToLoopDependenceInfo;
     public:
         dependenceInfo(ir::Function* func, TopAnalysisInfoManager* tp) : FunctionACtx(func, tp) {}
-        std::any getLoopDependenceInfo(ir::Loop* lp){return funcToLoopDependenceInfo[lp];}
+        void* getLoopDependenceInfo(ir::Loop* lp){
+            if(funcToLoopDependenceInfo.count(lp))
+                return funcToLoopDependenceInfo[lp];
+            else return nullptr;
+        }
         void clearAll(){funcToLoopDependenceInfo.clear();}
         void refresh() override;
-        void setDepInfoLp(ir::Loop* lp,std::any input){
+        void setDepInfoLp(ir::Loop* lp,void* input){
             funcToLoopDependenceInfo[lp]=input;
         }
 };

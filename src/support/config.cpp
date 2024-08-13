@@ -115,58 +115,60 @@ static const auto perfPassesList = std::vector<std::string>{
   "gcm",  // global code motion
   "gvn",          // global value numbering: passed, slow
   "licm",         // loop invariant code motion
+  // "indvar",
+  "dp",
 
-  "instcombine",  //
-  "adce",     // passed all functional
-  "loopsimplify",
-  "scev",
-  "inline",   
-  "tco",      // tail call optimization
-  "cache", // cache the function that cant tco
-  "inline",   
+  // "instcombine",  //
+  // "adce",     // passed all functional
+  // "loopsimplify",
+  // "scev",
+  // "inline",   
+  // "tco",      // tail call optimization
+  // "cache", // cache the function that cant tco
+  // "inline",   
 
-  "g2l",      // global to local
+  // "g2l",      // global to local
 
-  "dle",
-  "dse",
-  "dle",
-  "dse",
+  // "dle",
+  // "dse",
+  // "dle",
+  // "dse",
 
-  "sccp",     //
-  "adce", 
-  "dae",    
-  "simplifycfg",
+  // "sccp",     //
+  // "adce", 
+  // "dae",    
+  // "simplifycfg",
 
-  "loopsimplify",
-  "gcm",  // global code motion
-  "gvn",          // global value numbering: passed, slow
-  "licm",         // loop invariant code motion
-  
-  "instcombine",
-  "sccp",
-  "adce",
-  "simplifycfg",    
-  "loopsimplify",
-  "unroll",
-  "simplifycfg",
-  "loopsimplify",
-  "sccp",
-  "adce",
-  "gcm",
-  "gvn",
-  "licm",
-  "dle",
-  "dse",
-  "dle",
-  "dse",
-  "instcombine",
-  "adce",
-  "sccp",    
-  "simplifycfg",    
-  "scev",
+  // "loopsimplify",
+  // "gcm",  // global code motion
+  // "gvn",          // global value numbering: passed, slow
+  // "licm",         // loop invariant code motion
+
+  // "instcombine",
+  // "sccp",
+  // "adce",
+  // "simplifycfg",    
+  // "loopsimplify",
+  // "unroll",
+  // "simplifycfg",
+  // "loopsimplify",
+  // "sccp",
+  // "adce",
+  // "gcm",
+  // "gvn",
+  // "licm",
+  // "dle",
+  // "dse",
+  // "dle",
+  // "dse",
+  // "instcombine",
+  // "adce",
+  // "sccp",    
+  // "simplifycfg",    
+  // "scev",
   // "cfgprint",
-  "reg2mem",
-  // "test",
+  // "reg2mem",
+  // // "test",
 };
 
 static const auto perfPassesList_731 = std::vector<std::string>{

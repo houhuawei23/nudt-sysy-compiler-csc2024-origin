@@ -174,7 +174,7 @@ void PassManager::runPasses(std::vector<std::string> passes) {
       run(new pass::GepSplit());
     } else if (pass_name == "LoopBodyExtract") {
       run(&loopBodyExtractPass);
-    } else if (pass_name == "da") {
+    } else if (pass_name == "dp") {
       run(new pass::dependenceAnalysis());
     } else {
       std::cerr << "Invalid pass name: " << pass_name << std::endl;
