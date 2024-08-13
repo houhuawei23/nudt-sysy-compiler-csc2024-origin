@@ -92,10 +92,15 @@ bool extractParallelBody(Function* func,
     // std::cerr << std::endl;
   };
 
+  // fix cmp inst
   const auto fixCmp = [&](ICmpInst* cmpInst) {
     if (cmpInst == indVar->cmpInst()) {
       for (auto opuse : cmpInst->operands()) {
         auto op = opuse->value();
+        if(op == indVar->getEnd()) {
+          cmpInst->setOperand(opuse->index(), argEnd);
+          break;
+        }
       }
     }
     // std::cerr << "cmp inst not indvar cmp inst" << std::endl;

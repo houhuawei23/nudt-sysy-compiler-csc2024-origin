@@ -53,6 +53,7 @@ constexpr uint32_t entryCount = 16;
 static ParallelForEntry parallelCache[entryCount];  // NOLINT
 static uint32_t lookupPtr;                          // NOLINT
 static ParallelForEntry& selectEntry(CmmcForLoop func, uint32_t size) {
+  fprintf(stderr, "lookup %p %d\n", func, size);
   for (uint32_t i = 0; i < entryCount; ++i, ++lookupPtr) {
     if (lookupPtr == entryCount)
       lookupPtr = 0;
@@ -101,18 +102,22 @@ static ParallelForEntry& selectNumberOfThreads(CmmcForLoop func,
                                                uint32_t size,
                                                uint32_t& threads,
                                                bool& sample) {
+
   auto& entry = selectEntry(func, size);
+  fprintf(stderr, "hitCount %d\n", entry.hitCount);
   if (entry.hitCount < ParallelForEntry::sampleThreshold) {
     threads = 2;
     sample = false;
     return entry;
   }
+  fprintf(stdout, "here\n");
   if (entry.hitCount < ParallelForEntry::stopSampleThreshold) {
     threads = ((entry.hitCount - ParallelForEntry::sampleThreshold) /
                ParallelForEntry::sampleCount);
     sample = true;
     return entry;
   }
+  fprintf(stderr, "hitCount %d\n", entry.hitCount);
   if (!entry.bestThreads) {
     uint32_t best = 0;
     Time minTime = std::numeric_limits<Time>::max();
@@ -143,7 +148,7 @@ void parallelFor(int32_t beg, int32_t end, CmmcForLoop func) {
       return;
     }
 
-    // fprintf(stderr, "parallel for %d %d\n", beg, end);
+    fprintf(stderr, "parallel for %d %d\n", beg, end);
     std::atomic_thread_fence(std::memory_order_seq_cst);
 
     constexpr uint32_t alignment = 4;
@@ -157,7 +162,7 @@ void parallelFor(int32_t beg, int32_t end, CmmcForLoop func) {
         subEnd = end;
       if (subBeg >= subEnd)
         continue;
-      // fprintf(stderr, "launch %d %d\n", subBeg, subEnd);
+      fprintf(stderr, "launch %d %d\n", subBeg, subEnd);
       // cmmc_exec_for(subBeg, subEnd, func, payload);
       auto& worker = workers[static_cast<size_t>(i)];
       worker.func = func;
@@ -177,6 +182,7 @@ void parallelFor(int32_t beg, int32_t end, CmmcForLoop func) {
   bool sample;
   uint32_t threads;
   auto& entry = selectNumberOfThreads(func, size, threads, sample);
+  fprintf(stderr, "threads %d\n", threads);
   Time start;
   if (sample)
     start = getTimePoint();

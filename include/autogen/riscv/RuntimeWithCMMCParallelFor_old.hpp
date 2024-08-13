@@ -8,7 +8,7 @@ R"(	.file	".merge.cpp"
 	.align	1
 	.type	_ZN12_GLOBAL__N_110cmmcWorkerEPv, @function
 _ZN12_GLOBAL__N_110cmmcWorkerEPv:
-.LFB928:
+.LFB300:
 	.cfi_startproc
 	addi	sp,sp,-192
 	.cfi_def_cfa_offset 192
@@ -127,7 +127,7 @@ _ZN12_GLOBAL__N_110cmmcWorkerEPv:
 	beq	a5,zero,.L7
 	j	.L4
 	.cfi_endproc
-.LFE928:
+.LFE300:
 	.size	_ZN12_GLOBAL__N_110cmmcWorkerEPv, .-_ZN12_GLOBAL__N_110cmmcWorkerEPv
 	.align	1
 	.globl	_memset
@@ -176,7 +176,7 @@ sysycCacheLookup:
 	.globl	cmmcInitRuntime
 	.type	cmmcInitRuntime, @function
 cmmcInitRuntime:
-.LFB929:
+.LFB1214:
 	.cfi_startproc
 	addi	sp,sp,-64
 	.cfi_def_cfa_offset 64
@@ -249,7 +249,7 @@ cmmcInitRuntime:
 	.cfi_def_cfa_offset 0
 	jr	ra
 	.cfi_endproc
-.LFE929:
+.LFE1214:
 	.size	cmmcInitRuntime, .-cmmcInitRuntime
 	.section	.init_array,"aw"
 	.align	3
@@ -259,7 +259,7 @@ cmmcInitRuntime:
 	.globl	cmmcUninitRuntime
 	.type	cmmcUninitRuntime, @function
 cmmcUninitRuntime:
-.LFB930:
+.LFB1215:
 	.cfi_startproc
 	addi	sp,sp,-32
 	.cfi_def_cfa_offset 32
@@ -317,7 +317,7 @@ cmmcUninitRuntime:
 	bne	s0,s2,.L36
 	j	.L32
 	.cfi_endproc
-.LFE930:
+.LFE1215:
 	.size	cmmcUninitRuntime, .-cmmcUninitRuntime
 	.section	.fini_array,"aw"
 	.align	3
@@ -327,7 +327,7 @@ cmmcUninitRuntime:
 	.globl	parallelFor
 	.type	parallelFor, @function
 parallelFor:
-.LFB934:
+.LFB1219:
 	.cfi_startproc
 	bge	a0,a1,.L122
 	addi	sp,sp,-144
@@ -827,7 +827,7 @@ parallelFor:
 	li	a3,14
 	j	.L46
 	.cfi_endproc
-.LFE934:
+.LFE1219:
 	.size	parallelFor, .-parallelFor
 	.bss
 	.align	3

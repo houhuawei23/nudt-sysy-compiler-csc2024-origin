@@ -223,7 +223,7 @@ static ParallelForEntry& selectNumberOfThreads(CmmcForLoop func,
   sample = false;
   return entry;
 }
-void ParallelFor(int32_t beg, int32_t end, CmmcForLoop func) {
+void parallelFor(int32_t beg, int32_t end, CmmcForLoop func) {
   if (end <= beg)
     return;
   const auto size = static_cast<uint32_t>(end - beg);

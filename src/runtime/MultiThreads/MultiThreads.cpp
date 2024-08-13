@@ -73,6 +73,7 @@ int workerRun(void* workerPtr) {
     std::atomic_thread_fence(std::memory_order_seq_cst);
     worker.func.load()(worker.beg.load(), worker.end.load());
     std::atomic_thread_fence(std::memory_order_seq_cst);
+    fprintf(stderr, "finish %d %d\n", worker.beg.load(), worker.end.load());
     // signal worker is done
     worker.done.post();
   }
@@ -113,7 +114,7 @@ __attribute((destructor)) void destroyRuntime() {
 }
 
 std::size_t getNumThreads() {
-  return 4;
+  return maxThreads;
 }
 
 void parallelFor(int32_t beg, int32_t end, LoopFuncHeader func) {
@@ -163,5 +164,6 @@ void parallelFor(int32_t beg, int32_t end, LoopFuncHeader func) {
 
   std::size_t threads;
   threads = getNumThreads();
+  fprintf(stderr, "parallel for %d %d, threads %ld\n", beg, end, threads);
   spawnAndJoin(threads);
 }

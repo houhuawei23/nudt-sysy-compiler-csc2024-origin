@@ -5,29 +5,38 @@ R"(	.file	".merge.cpp"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
+	.section	.rodata.str1.8,"aMS",@progbits,1
+	.align	3
+.LC0:
+	.string	"finish %d %d\n"
+	.text
 	.align	1
 	.globl	_Z9workerRunPv
 	.type	_Z9workerRunPv, @function
 _Z9workerRunPv:
 .LFB1036:
 	.cfi_startproc
-	addi	sp,sp,-192
-	.cfi_def_cfa_offset 192
-	sd	s0,176(sp)
+	addi	sp,sp,-208
+	.cfi_def_cfa_offset 208
+	sd	s0,192(sp)
 	.cfi_offset 8, -16
 	mv	s0,a0
-	sd	ra,184(sp)
-	sd	s1,168(sp)
-	sd	s2,160(sp)
-	sd	s3,152(sp)
-	sd	s4,144(sp)
-	sd	s5,136(sp)
+	sd	ra,200(sp)
+	sd	s1,184(sp)
+	sd	s2,176(sp)
+	sd	s3,168(sp)
+	sd	s4,160(sp)
+	sd	s5,152(sp)
+	sd	s6,144(sp)
+	sd	s7,136(sp)
 	.cfi_offset 1, -8
 	.cfi_offset 9, -24
 	.cfi_offset 18, -32
 	.cfi_offset 19, -40
 	.cfi_offset 20, -48
 	.cfi_offset 21, -56
+	.cfi_offset 22, -64
+	.cfi_offset 23, -72
 	fence	iorw,iorw
 	lw	a5,16(a0)
 	fence	iorw,iorw
@@ -54,11 +63,13 @@ _Z9workerRunPv:
 	addi	s1,s0,44
 	call	sched_setaffinity@plt
 	li	s3,1
+	la	s6,stderr
+	lla	s5,.LC0
 	j	.L5
 .L15:
 	fence iorw,ow;  1: lr.w.aq a5,0(s2); bne a5,s3,1f; sc.w.aq a4,zero,0(s2); bnez a4,1b; 1:
 	addiw	a5,a5,-1
-	li	s5,1
+	li	s7,1
 	bne	a5,zero,.L4
 .L7:
 	fence	iorw,iorw
@@ -74,6 +85,16 @@ _Z9workerRunPv:
 	fence	iorw,iorw
 	jalr	a5
 	fence	iorw,iorw
+	ld	a0,0(s6)
+	fence	iorw,iorw
+	lw	a2,32(s0)
+	fence	iorw,iorw
+	fence	iorw,iorw
+	sext.w	a2,a2
+	lw	a3,36(s0)
+	fence	iorw,iorw
+	mv	a1,s5
+	call	fprintf@plt
 	fence iorw,ow;  1: lr.w.aq a5,0(s1); bne a5,zero,1f; sc.w.aq a4,s3,0(s1); bnez a4,1b; 1:
 	sext.w	a5,a5
 	bne	a5,zero,.L5
@@ -89,23 +110,27 @@ _Z9workerRunPv:
 	lw	a5,0(s4)
 	fence	iorw,iorw
 	bne	a5,zero,.L15
-	ld	ra,184(sp)
+	ld	ra,200(sp)
 	.cfi_remember_state
 	.cfi_restore 1
 	li	a0,0
-	ld	s0,176(sp)
+	ld	s0,192(sp)
 	.cfi_restore 8
-	ld	s1,168(sp)
+	ld	s1,184(sp)
 	.cfi_restore 9
-	ld	s2,160(sp)
+	ld	s2,176(sp)
 	.cfi_restore 18
-	ld	s3,152(sp)
+	ld	s3,168(sp)
 	.cfi_restore 19
-	ld	s4,144(sp)
+	ld	s4,160(sp)
 	.cfi_restore 20
-	ld	s5,136(sp)
+	ld	s5,152(sp)
 	.cfi_restore 21
-	addi	sp,sp,192
+	ld	s6,144(sp)
+	.cfi_restore 22
+	ld	s7,136(sp)
+	.cfi_restore 23
+	addi	sp,sp,208
 	.cfi_def_cfa_offset 0
 	jr	ra
 .L4:
@@ -118,7 +143,7 @@ _Z9workerRunPv:
 	li	a2,0
 	li	a0,98
 	call	syscall@plt
-	fence iorw,ow;  1: lr.w.aq a5,0(s2); bne a5,s5,1f; sc.w.aq a4,zero,0(s2); bnez a4,1b; 1:
+	fence iorw,ow;  1: lr.w.aq a5,0(s2); bne a5,s7,1f; sc.w.aq a4,zero,0(s2); bnez a4,1b; 1:
 	addiw	a5,a5,-1
 	beq	a5,zero,.L7
 	j	.L4
@@ -235,12 +260,12 @@ _ZN5Futex4postEv:
 	.cfi_endproc
 .LFE1035:
 	.size	_ZN5Futex4postEv, .-_ZN5Futex4postEv
-	.section	.rodata.str1.8,"aMS",@progbits,1
-	.align	3
-.LC0:
-	.string	"initRuntime begin\n"
+	.section	.rodata.str1.8
 	.align	3
 .LC1:
+	.string	"initRuntime begin\n"
+	.align	3
+.LC2:
 	.string	"initRuntime end\n"
 	.section	.text.startup,"ax",@progbits
 	.align	1
@@ -253,7 +278,7 @@ _Z11initRuntimev:
 	.cfi_def_cfa_offset 80
 	li	a2,18
 	li	a1,1
-	lla	a0,.LC0
+	lla	a0,.LC1
 	sd	s6,16(sp)
 	.cfi_offset 22, -64
 	la	s6,stderr
@@ -315,7 +340,7 @@ _Z11initRuntimev:
 	li	a1,1
 	ld	s0,64(sp)
 	.cfi_restore 8
-	lla	a0,.LC1
+	lla	a0,.LC2
 	ld	s1,56(sp)
 	.cfi_restore 9
 	ld	s2,48(sp)
@@ -341,10 +366,10 @@ _Z11initRuntimev:
 	.dword	_Z11initRuntimev
 	.section	.rodata.str1.8
 	.align	3
-.LC2:
+.LC3:
 	.string	"destroyRuntime begin\n"
 	.align	3
-.LC3:
+.LC4:
 	.string	"destroyRuntime\n"
 	.section	.text.exit,"ax",@progbits
 	.align	1
@@ -357,7 +382,7 @@ _Z14destroyRuntimev:
 	.cfi_def_cfa_offset 16
 	li	a2,21
 	li	a1,1
-	lla	a0,.LC2
+	lla	a0,.LC3
 	sd	s0,0(sp)
 	.cfi_offset 8, -16
 	la	s0,stderr
@@ -372,7 +397,7 @@ _Z14destroyRuntimev:
 	li	a1,1
 	ld	s0,0(sp)
 	.cfi_restore 8
-	lla	a0,.LC3
+	lla	a0,.LC4
 	addi	sp,sp,16
 	.cfi_def_cfa_offset 0
 	tail	fwrite@plt
@@ -396,7 +421,10 @@ _Z13getNumThreadsv:
 	.size	_Z13getNumThreadsv, .-_Z13getNumThreadsv
 	.section	.rodata.str1.8
 	.align	3
-.LC4:
+.LC5:
+	.string	"parallel for %d %d, threads %ld\n"
+	.align	3
+.LC6:
 	.string	"worker.ready.post() %ld [%d, %d)\n"
 	.text
 	.align	1
@@ -405,76 +433,87 @@ _Z13getNumThreadsv:
 parallelFor:
 .LFB1040:
 	.cfi_startproc
-	addi	sp,sp,-80
-	.cfi_def_cfa_offset 80
-	subw	a5,a1,a0
-	li	a4,32
-	sd	s3,40(sp)
-	.cfi_offset 19, -40
-	mv	s3,a2
-	sd	ra,72(sp)
-	sd	s0,64(sp)
-	sd	s1,56(sp)
-	sd	s2,48(sp)
-	sd	s4,32(sp)
-	sd	s5,24(sp)
-	sd	s6,16(sp)
+	addi	sp,sp,-96
+	.cfi_def_cfa_offset 96
+	li	a5,32
+	sd	s1,72(sp)
+	.cfi_offset 9, -24
+	subw	s1,a1,a0
+	sd	s4,48(sp)
+	.cfi_offset 20, -48
+	mv	s4,a2
+	sd	ra,88(sp)
+	sd	s0,80(sp)
+	sd	s2,64(sp)
+	sd	s3,56(sp)
+	sd	s5,40(sp)
+	sd	s6,32(sp)
+	sd	s7,24(sp)
 	.cfi_offset 1, -8
 	.cfi_offset 8, -16
-	.cfi_offset 9, -24
 	.cfi_offset 18, -32
-	.cfi_offset 20, -48
+	.cfi_offset 19, -40
 	.cfi_offset 21, -56
 	.cfi_offset 22, -64
-	bgtu	a5,a4,.L42
-	ld	ra,72(sp)
+	.cfi_offset 23, -72
+	bgtu	s1,a5,.L42
+	ld	ra,88(sp)
 	.cfi_remember_state
 	.cfi_restore 1
-	ld	s0,64(sp)
+	ld	s0,80(sp)
 	.cfi_restore 8
-	ld	s1,56(sp)
+	ld	s1,72(sp)
 	.cfi_restore 9
-	ld	s2,48(sp)
+	ld	s2,64(sp)
 	.cfi_restore 18
-	ld	s3,40(sp)
+	ld	s3,56(sp)
 	.cfi_restore 19
-	ld	s4,32(sp)
+	ld	s4,48(sp)
 	.cfi_restore 20
-	ld	s5,24(sp)
+	ld	s5,40(sp)
 	.cfi_restore 21
-	ld	s6,16(sp)
+	ld	s6,32(sp)
 	.cfi_restore 22
-	addi	sp,sp,80
+	ld	s7,24(sp)
+	.cfi_restore 23
+	addi	sp,sp,96
 	.cfi_def_cfa_offset 0
 	jr	a2
 .L42:
 	.cfi_restore_state
-	srli	s0,a5,2
-	mv	a3,a0
-	addi	s0,s0,3
-	mv	s1,a1
-	srli	s0,s0,2
-	slliw	s0,s0,2
-	addw	s2,a0,s0
-	sw	zero,8(sp)
-	mv	s5,s2
-	bgt	s2,a1,.L73
-	mv	a4,s2
-	bge	a0,s2,.L47
-.L44:
-	lla	s4,.LANCHOR0
-	addi	a5,s4,24
-	fence iorw,ow; amoswap.d.aq zero,s3,0(a5)
-	addi	a5,s4,32
-	fence iorw,ow; amoswap.w.aq zero,a3,0(a5)
-	addi	a5,s4,36
-	fence iorw,ow; amoswap.w.aq zero,a4,0(a5)
-	la	a5,stderr
-	li	a2,0
-	ld	a0,0(a5)
-	lla	a1,.LC4
+	srli	s1,s1,2
+	la	s5,stderr
+	mv	s0,a0
+	addi	s1,s1,3
+	ld	a0,0(s5)
+	mv	a3,a1
+	mv	a2,s0
+	srli	s1,s1,2
+	mv	s2,a1
+	slliw	s1,s1,2
+	li	a4,4
+	lla	a1,.LC5
+	addw	s3,s0,s1
 	call	fprintf@plt
-	addi	a2,s4,40
+	sw	zero,8(sp)
+	mv	s6,s3
+	bgt	s3,s2,.L73
+	mv	a4,s3
+	bge	s0,s3,.L47
+.L44:
+	lla	s7,.LANCHOR0
+	addi	a5,s7,24
+	fence iorw,ow; amoswap.d.aq zero,s4,0(a5)
+	addi	a5,s7,32
+	fence iorw,ow; amoswap.w.aq zero,s0,0(a5)
+	addi	a5,s7,36
+	fence iorw,ow; amoswap.w.aq zero,a4,0(a5)
+	ld	a0,0(s5)
+	mv	a3,s0
+	li	a2,0
+	lla	a1,.LC6
+	call	fprintf@plt
+	addi	a2,s7,40
 	li	a4,1
 	fence iorw,ow;  1: lr.w.aq a5,0(a2); bne a5,zero,1f; sc.w.aq a3,a4,0(a2); bnez a3,1b; 1:
 	sext.w	a5,a5
@@ -491,24 +530,23 @@ parallelFor:
 	li	a5,1
 	sb	a5,8(sp)
 .L47:
-	addw	s4,s5,s0
-	min	a4,s4,s1
+	addw	s0,s6,s1
+	min	a4,s0,s2
 .L46:
-	bge	s2,a4,.L45
-	lla	s6,.LANCHOR0
-	addi	a5,s6,72
-	fence iorw,ow; amoswap.d.aq zero,s3,0(a5)
-	addi	a5,s6,80
-	fence iorw,ow; amoswap.w.aq zero,s5,0(a5)
-	addi	a5,s6,84
+	bge	s3,a4,.L45
+	lla	s7,.LANCHOR0
+	addi	a5,s7,72
+	fence iorw,ow; amoswap.d.aq zero,s4,0(a5)
+	addi	a5,s7,80
+	fence iorw,ow; amoswap.w.aq zero,s6,0(a5)
+	addi	a5,s7,84
 	fence iorw,ow; amoswap.w.aq zero,a4,0(a5)
-	la	a5,stderr
-	mv	a3,s2
-	ld	a0,0(a5)
+	ld	a0,0(s5)
+	mv	a3,s3
 	li	a2,1
-	lla	a1,.LC4
+	lla	a1,.LC6
 	call	fprintf@plt
-	addi	a2,s6,88
+	addi	a2,s7,88
 	li	a4,1
 	fence iorw,ow;  1: lr.w.aq a5,0(a2); bne a5,zero,1f; sc.w.aq a3,a4,0(a2); bnez a3,1b; 1:
 	sext.w	a5,a5
@@ -525,26 +563,25 @@ parallelFor:
 	li	a5,1
 	sb	a5,9(sp)
 .L45:
-	addw	s2,s0,s4
-	mv	s0,s2
-	blt	s1,s2,.L53
-	bge	s4,s2,.L54
-	mv	a4,s2
+	addw	s3,s1,s0
+	mv	s1,s3
+	blt	s2,s3,.L53
+	bge	s0,s3,.L54
+	mv	a4,s3
 .L64:
-	lla	s5,.LANCHOR0
-	addi	a5,s5,120
-	fence iorw,ow; amoswap.d.aq zero,s3,0(a5)
-	addi	a5,s5,128
-	fence iorw,ow; amoswap.w.aq zero,s4,0(a5)
-	addi	a5,s5,132
+	lla	s6,.LANCHOR0
+	addi	a5,s6,120
+	fence iorw,ow; amoswap.d.aq zero,s4,0(a5)
+	addi	a5,s6,128
+	fence iorw,ow; amoswap.w.aq zero,s0,0(a5)
+	addi	a5,s6,132
 	fence iorw,ow; amoswap.w.aq zero,a4,0(a5)
-	la	a5,stderr
-	mv	a3,s4
-	ld	a0,0(a5)
+	ld	a0,0(s5)
+	mv	a3,s0
 	li	a2,2
-	lla	a1,.LC4
+	lla	a1,.LC6
 	call	fprintf@plt
-	addi	a2,s5,136
+	addi	a2,s6,136
 	li	a4,1
 	fence iorw,ow;  1: lr.w.aq a5,0(a2); bne a5,zero,1f; sc.w.aq a3,a4,0(a2); bnez a3,1b; 1:
 	sext.w	a5,a5
@@ -561,22 +598,21 @@ parallelFor:
 	li	a5,1
 	sb	a5,10(sp)
 .L54:
-	ble	s1,s2,.L57
-	lla	s4,.LANCHOR0
-	addi	a5,s4,168
-	fence iorw,ow; amoswap.d.aq zero,s3,0(a5)
-	addi	a5,s4,176
-	fence iorw,ow; amoswap.w.aq zero,s0,0(a5)
-	addi	a5,s4,180
+	ble	s2,s3,.L57
+	lla	s0,.LANCHOR0
+	addi	a5,s0,168
+	fence iorw,ow; amoswap.d.aq zero,s4,0(a5)
+	addi	a5,s0,176
 	fence iorw,ow; amoswap.w.aq zero,s1,0(a5)
-	la	a5,stderr
-	mv	a4,s1
-	ld	a0,0(a5)
-	mv	a3,s2
+	addi	a5,s0,180
+	fence iorw,ow; amoswap.w.aq zero,s2,0(a5)
+	ld	a0,0(s5)
+	mv	a4,s2
+	mv	a3,s3
 	li	a2,3
-	lla	a1,.LC4
+	lla	a1,.LC6
 	call	fprintf@plt
-	addi	a2,s4,184
+	addi	a2,s0,184
 	li	a4,1
 	fence iorw,ow;  1: lr.w.aq a5,0(a2); bne a5,zero,1f; sc.w.aq a3,a4,0(a2); bnez a3,1b; 1:
 	sext.w	a5,a5
@@ -603,24 +639,26 @@ parallelFor:
 	addi	s4,s4,48
 	addi	s0,s0,1
 	bne	s4,s1,.L60
-	ld	ra,72(sp)
+	ld	ra,88(sp)
 	.cfi_remember_state
 	.cfi_restore 1
-	ld	s0,64(sp)
+	ld	s0,80(sp)
 	.cfi_restore 8
-	ld	s1,56(sp)
+	ld	s1,72(sp)
 	.cfi_restore 9
-	ld	s2,48(sp)
+	ld	s2,64(sp)
 	.cfi_restore 18
-	ld	s3,40(sp)
+	ld	s3,56(sp)
 	.cfi_restore 19
-	ld	s4,32(sp)
+	ld	s4,48(sp)
 	.cfi_restore 20
-	ld	s5,24(sp)
+	ld	s5,40(sp)
 	.cfi_restore 21
-	ld	s6,16(sp)
+	ld	s6,32(sp)
 	.cfi_restore 22
-	addi	sp,sp,80
+	ld	s7,24(sp)
+	.cfi_restore 23
+	addi	sp,sp,96
 	.cfi_def_cfa_offset 0
 	jr	ra
 .L59:
@@ -643,17 +681,17 @@ parallelFor:
 	beq	a5,zero,.L62
 	j	.L63
 .L73:
-	blt	a0,a1,.L65
-	addw	a4,s2,s0
-	mv	s4,a4
-	ble	a4,a1,.L46
+	blt	s0,s2,.L65
+	addw	a4,s3,s1
+	mv	s0,a4
+	ble	a4,s2,.L46
 	j	.L45
 .L53:
-	mv	a4,s1
-	bgt	s1,s4,.L64
+	mv	a4,s2
+	bgt	s2,s0,.L64
 	j	.L57
 .L65:
-	mv	a4,a1
+	mv	a4,s2
 	j	.L44
 	.cfi_endproc
 .LFE1040:
