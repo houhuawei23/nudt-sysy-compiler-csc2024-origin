@@ -190,6 +190,8 @@ function run_llvm_test() {
 }
 lookup_ll="./test/link/lookup.ll"
 link_ll="./test/link/link.ll"
+parallelfor_ll="./test/link/parallelFor.ll"
+# parallelfor_ll="./test/link/cmmcParallelFor.ll"
 function run_gen_test() {
     local single_file="$1"
     local output_dir="$2"
@@ -214,7 +216,7 @@ function run_gen_test() {
         return $EC_MAIN
     fi
 
-    $llvm_link_cmd --suppress-warnings $link_ll $lookup_ll "${gen_ll}" -S -o "${gen_llinked}"
+    $llvm_link_cmd --suppress-warnings $link_ll $lookup_ll $parallelfor_ll "${gen_ll}" -S -o "${gen_llinked}"
     if [ $? != 0 ]; then
         return $EC_LLVMLINK
     fi
