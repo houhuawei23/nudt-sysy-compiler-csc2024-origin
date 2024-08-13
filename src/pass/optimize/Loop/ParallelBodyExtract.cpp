@@ -162,6 +162,8 @@ void ParallelBodyExtract::run(ir::Function* func, TopAnalysisInfoManager* tp) {
 
 #define NDEBUG
 bool ParallelBodyExtract::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
+  auto sideEffectInfo = tp->getSideEffectInfo();
+
   func->rename();
   // func->print(std::cerr);
 
@@ -196,7 +198,7 @@ bool ParallelBodyExtract::runImpl(ir::Function* func, TopAnalysisInfoManager* tp
 
     ParallelBodyInfo info;
     if (not extractParallelBody(func, loop, indVar, tp, info)) {
-      std::cerr << "failed to extract parallel body for loop" << std::endl;
+      // std::cerr << "failed to extract parallel body for loop" << std::endl;
       continue;
     }
     modified = true;

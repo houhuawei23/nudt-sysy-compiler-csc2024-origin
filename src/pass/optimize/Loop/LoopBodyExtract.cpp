@@ -19,7 +19,19 @@ void LoopBodyExtract::run(Function* func, TopAnalysisInfoManager* tp) {
   runImpl(func, tp);
 }
 
+bool hasCall(Loop* loop) {
+  for (auto block : loop->blocks()) {
+    for (auto inst : block->insts()) {
+      if (auto call = inst->dynCast<CallInst>()) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 bool LoopBodyExtract::runImpl(Function* func, TopAnalysisInfoManager* tp) {
+  auto sideEffectInfo = tp->getSideEffectInfo();
   CFGAnalysisHHW().run(func, tp);  // refresh CFG
 
   auto lpctx = tp->getLoopInfo(func);
@@ -48,6 +60,7 @@ bool LoopBodyExtract::runImpl(Function* func, TopAnalysisInfoManager* tp) {
   };
   for (auto loop : loops) {
     if (isBlocked(loop)) continue;
+    if (hasCall(loop)) continue;
     const auto indVar = indVarInfo->getIndvar(loop);
     const auto step = indVar->getStep()->i32();
 
@@ -127,6 +140,12 @@ bool extractLoopBody(Function* func,
   std::cerr << "extract loop body for: " << func->name() << std::endl;
   func->rename();
 #endif
+  if (func->attribute().hasAttr(FunctionAttribute::LoopBody)) {
+    return false;
+  }
+  if (hasCall(&loop)) {
+    return false;
+  }
   // make sure loop is correct
   auto oldLatch = loop.getLoopLatch();
   const auto splitLatch = [&]() {
@@ -257,7 +276,7 @@ bool extractLoopBody(Function* func,
   auto funcType = FunctionType::gen(Type::void_type(), {});
 
   auto bodyFunc = func->module()->addFunction(funcType, getUniqueID());
-
+  bodyFunc->attribute().addAttr(FunctionAttribute::LoopBody);
   // some operand used in loop must be passed by function arg, add to val2arg
   std::unordered_map<Value*, Value*> val2arg;
 

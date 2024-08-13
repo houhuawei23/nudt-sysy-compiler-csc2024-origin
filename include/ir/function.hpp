@@ -6,6 +6,7 @@
 #include "ir/value.hpp"
 #include "support/utils.hpp"
 #include "support/arena.hpp"
+#include "ir/Attribute.hpp"
 
 namespace ir {
 
@@ -50,10 +51,26 @@ public:
   }
   void print(std::ostream& os) const;
 
-  void setLatch(BasicBlock* latch)  {
+  void setLatch(BasicBlock* latch) {
     mLatchs.clear();
     mLatchs.insert(latch);
   }
+};
+
+enum class FunctionAttribute {
+  NoMemoryRead = 1 << 0,
+  NoMemoryWrite = 1 << 1,
+  NoSideEffect = 1 << 2,
+  Stateless = 1 << 3,
+  NoAlias = 1 << 4,
+  NoReturn = 1 << 5,
+  NoRecurse = 1 << 6,
+  Entry = 1 << 7,
+  Builtin = 1 << 8,
+  LoopBody = 1 << 9,
+  ParallelBody = 1 << 10,
+  AlignedParallelBody = 1 << 11,
+  InlineWrapped = 1 << 12,
 };
 
 class Function : public User {
@@ -70,6 +87,8 @@ protected:
   BasicBlock* mExit = nullptr;     // exit block
   size_t mVarCnt = 0;              // for local variables count
   size_t argCnt = 0;               // formal arguments count
+  Attribute<FunctionAttribute> mAttribute;
+
 public:
   Function(Type* TypeFunction, const_str_ref name = "", Module* parent = nullptr)
     : User(TypeFunction, vFUNCTION, name), mModule(parent) {
@@ -78,6 +97,7 @@ public:
   }
 
 public:  // get function
+  auto& attribute() { return mAttribute; }
   auto module() const { return mModule; }
 
   auto retValPtr() const { return mRetValueAddr; }
