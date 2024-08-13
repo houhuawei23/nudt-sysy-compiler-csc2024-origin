@@ -2,6 +2,7 @@
 #include "pass/optimize/Loop/LoopBodyExtract.hpp"
 #include "pass/analysis/ControlFlowGraph.hpp"
 #include "pass/optimize/Utils/BlockUtils.hpp"
+#include "pass/analysis/dependenceAnalysis/DependenceAnalysis.hpp"
 using namespace ir;
 
 namespace pass {
@@ -169,12 +170,12 @@ bool ParallelBodyExtract::runImpl(ir::Function* func, TopAnalysisInfoManager* tp
 
   CFGAnalysisHHW().run(func, tp);  // refresh CFG
 
-  auto lpctx = tp->getLoopInfo(func);         // fisrt loop analysis
-  auto indVarInfo = tp->getIndVarInfo(func);  // then indvar analysis
+  bool modified = false;
+  auto dpctx = tp->getDepInfo(func);
+  auto lpctx = tp->getLoopInfoWithoutRefresh(func);         // fisrt loop analysis
+  auto indVarInfo = tp->getIndVarInfoWithoutRefresh(func);  // then indvar analysis
 
   auto loops = lpctx->sortedLoops();
-  bool modified = false;
-
   std::unordered_set<Loop*> extractedLoops;
   const auto isBlocked = [&](Loop* lp) {
     for (auto extracted : extractedLoops) {
@@ -191,7 +192,9 @@ bool ParallelBodyExtract::runImpl(ir::Function* func, TopAnalysisInfoManager* tp
     return false;
   };
   for (auto loop : loops) {  // for all loops
+    // loop->print()
     if (isBlocked(loop)) continue;
+    if (not dpctx->getLoopDependenceInfo(loop)->getIsParallel())continue;
     const auto indVar = indVarInfo->getIndvar(loop);
     const auto step = indVar->getStep()->i32();
     if (step != 1) continue;  // only support step = 1

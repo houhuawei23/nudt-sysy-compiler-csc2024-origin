@@ -16,6 +16,7 @@ class callGraph;
 class indVarInfo;
 class TopAnalysisInfoManager;
 class dependenceAnalysis;
+class LoopDependenceInfo;
 
 
 template <typename PassUnit>
@@ -321,17 +322,17 @@ class sideEffectInfo : public ModuleACtx {
 
 class dependenceInfo:public FunctionACtx{
     private:
-        std::unordered_map<ir::Loop*,void*>funcToLoopDependenceInfo;
+        std::unordered_map<ir::Loop*,LoopDependenceInfo*>funcToLoopDependenceInfo;
     public:
         dependenceInfo(ir::Function* func, TopAnalysisInfoManager* tp) : FunctionACtx(func, tp) {}
-        void* getLoopDependenceInfo(ir::Loop* lp){
+        LoopDependenceInfo* getLoopDependenceInfo(ir::Loop* lp){
             if(funcToLoopDependenceInfo.count(lp))
                 return funcToLoopDependenceInfo[lp];
             else return nullptr;
         }
         void clearAll(){funcToLoopDependenceInfo.clear();}
         void refresh() override;
-        void setDepInfoLp(ir::Loop* lp,void* input){
+        void setDepInfoLp(ir::Loop* lp,LoopDependenceInfo* input){
             funcToLoopDependenceInfo[lp]=input;
         }
 };

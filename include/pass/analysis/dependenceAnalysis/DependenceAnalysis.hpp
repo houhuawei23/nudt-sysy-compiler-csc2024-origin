@@ -20,11 +20,11 @@ namespace pass{
             callGraph* cgctx;
             dependenceInfo* dpctx;
             void runOnLoop(ir::Loop* lp);
-            void makeGepIdx(ir::Loop* lp,ir::indVar* idv,gepIdx* gepidx);
+            void makeGepIdx(ir::Loop* lp,ir::IndVar* idv,gepIdx* gepidx);
             bool isSimplyLoopInvariant(ir::Loop* lp,ir::Value* val);
-            bool isIDVPLUSMINUSFORMULA(ir::indVar* idv,ir::Value* val,ir::Loop* lp);
-            int isTwoGepIdxPossiblySame(gepIdx*gepidx1,gepIdx*gepidx2,ir::Loop* lp,ir::indVar* idv);
-            int isTwoIdxPossiblySame(ir::Value* val1,ir::Value* val2,idxType type1,idxType type2,ir::Loop* lp,ir::indVar* idv);
+            bool isIDVPLUSMINUSFORMULA(ir::IndVar* idv,ir::Value* val,ir::Loop* lp);
+            int isTwoGepIdxPossiblySame(gepIdx*gepidx1,gepIdx*gepidx2,ir::Loop* lp,ir::IndVar* idv);
+            int isTwoIdxPossiblySame(ir::Value* val1,ir::Value* val2,idxType type1,idxType type2,ir::Loop* lp,ir::IndVar* idv);
     };
     
 };

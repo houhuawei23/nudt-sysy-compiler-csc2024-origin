@@ -149,6 +149,7 @@ bool extractLoopBody(Function* func,
   // make sure loop is correct
   auto oldLatch = loop.getLoopLatch();
   const auto splitLatch = [&]() {
+    std::cerr << oldLatch->insts().size() << std::endl;
     assert(oldLatch->insts().size() >= 2);
     auto newLatch = func->newBlock();
     newLatch->set_name("new_latch");

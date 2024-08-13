@@ -109,18 +109,19 @@ static const auto perfPassesList = std::vector<std::string>{
 
   "sccp",     
   "adce",     
-  "simplifycfg", 
+  // "simplifycfg", 
 
-  "loopsimplify",
-  "gcm",  // global code motion
-  "gvn",          // global value numbering: passed, slow
-  "licm",         // loop invariant code motion
-  // "indvar",
-  "dp",
+  // "loopsimplify",
+  // "gcm",  // global code motion
+  // "gvn",          // global value numbering: passed, slow
+  // "licm",         // loop invariant code motion
+  // // "indvar",
+  // "dp",
 
   // "instcombine",  //
   // "adce",     // passed all functional
-  // "loopsimplify",
+  "loopsimplify",
+  "ParallelBodyExtract",
   // "scev",
   // "inline",   
   // "tco",      // tail call optimization
