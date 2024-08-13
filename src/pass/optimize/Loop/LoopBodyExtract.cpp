@@ -15,6 +15,28 @@
 
 using namespace ir;
 namespace pass {
+
+void LoopBodyInfo::print(std::ostream& os) const {
+  os << "LoopBodyInfo: " << std::endl;
+  std::cout << "callInst: ";
+  callInst->print(os);
+  os << std::endl;
+  std::cout << "indVar: ";
+  indVar->print(os);
+  std::cout << std::endl;
+  std::cout << "preHeader: ";
+  preHeader->dumpAsOpernd(os);
+  os << std::endl;
+  std::cout << "header: ";
+  header->dumpAsOpernd(os);
+  os << std::endl;
+  std::cout << "body: ";
+  body->dumpAsOpernd(os);
+  os << std::endl;
+  std::cout << "latch: ";
+  latch->dumpAsOpernd(os);
+  os << std::endl;
+}
 void LoopBodyExtract::run(Function* func, TopAnalysisInfoManager* tp) {
   runImpl(func, tp);
 }
@@ -66,7 +88,7 @@ bool LoopBodyExtract::runImpl(Function* func, TopAnalysisInfoManager* tp) {
 
     if (step != 1) continue;  // only support step = 1
 
-    LoopBodyFuncInfo loopBodyInfo;
+    LoopBodyInfo loopBodyInfo;
     if (not extractLoopBody(func, *loop, indVar, tp, loopBodyInfo /* ret */)) continue;
     modified = true;
     extractedLoops.insert(loop);
@@ -135,7 +157,7 @@ bool extractLoopBody(Function* func,
                      Loop& loop,
                      IndVar* indVar,
                      TopAnalysisInfoManager* tp,
-                     LoopBodyFuncInfo& info) {
+                     LoopBodyInfo& info) {
 #ifndef NDEBUG
   std::cerr << "extract loop body for: " << func->name() << std::endl;
   func->rename();

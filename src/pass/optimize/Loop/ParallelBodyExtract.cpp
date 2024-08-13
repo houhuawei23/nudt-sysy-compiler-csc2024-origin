@@ -2,6 +2,9 @@
 #include "pass/optimize/Loop/LoopBodyExtract.hpp"
 #include "pass/analysis/ControlFlowGraph.hpp"
 #include "pass/optimize/Utils/BlockUtils.hpp"
+
+// #include "pass/analysis/dependenceAnalysis/dpaUtils.hpp"
+#include "pass/analysis/dependenceAnalysis/DependenceAnalysis.hpp"
 using namespace ir;
 
 namespace pass {
@@ -11,7 +14,22 @@ static auto getUniqueID() {
   const auto base = "sysyc_parallel_body";
   return base + std::to_string(id++);
 }
+/*
+after extract loop body:
+  preheader -> header -> call_block -> latch -> exit
+               header <--------------- latch
+  call_block: call loop_body(i, otherargs...)
 
+after extract parallel body:
+  preheader -> call_block -> exit
+  call parallel_body(beg, end)
+
+  parallel_body(beg, end)
+    for (i = beg; i < end; i++) {
+      loop_body(i, otherargs...)
+    }
+
+*/
 bool extractParallelBody(Function* func,
                          Loop* loop,
                          IndVar* indVar,
@@ -23,14 +41,8 @@ bool extractParallelBody(Function* func,
   if (step != 1) return false;                  // only support step = 1
   if (loop->exits().size() != 1) return false;  // only support single exit loop
   const auto loopExitBlock = *(loop->exits().begin());
-  // extact loop body as a new loop_body func from func.loop
-  /**
-   * before:
-   * entry -> body/header -> latch -> exit
-   * after:
-   * entry -> newLoop{phi, call loop_body, i.next, icmp, br} -> exit
-   */
-  LoopBodyFuncInfo loopBodyInfo;
+  // extact loop body as a new loop_body func from func loop
+  LoopBodyInfo loopBodyInfo;
   if (not extractLoopBody(func, *loop /* modified */, indVar, tp, loopBodyInfo /* ret */))
     return false;
 
@@ -42,9 +54,6 @@ bool extractParallelBody(Function* func,
   auto argBeg = parallelBody->new_arg(i32, "beg");
   auto argEnd = parallelBody->new_arg(i32, "end");
 
-  // update value with args
-  // auto beginVar =
-  // std::unordered_map<Value*, Value*> valueMap;
   auto newEntry = parallelBody->newEntry("new_entry");
   auto newExit = parallelBody->newExit("new_exit");
   std::unordered_set<BasicBlock*> bodyBlocks = {loopBodyInfo.header, loopBodyInfo.body,
@@ -96,7 +105,7 @@ bool extractParallelBody(Function* func,
     if (cmpInst == indVar->cmpInst()) {
       for (auto opuse : cmpInst->operands()) {
         auto op = opuse->value();
-        if(op == indVar->getEnd()) {
+        if (op == indVar->getEnd()) {
           cmpInst->setOperand(opuse->index(), argEnd);
           break;
         }

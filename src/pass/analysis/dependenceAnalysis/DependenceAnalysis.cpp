@@ -87,10 +87,10 @@ void dependenceAnalysis::runOnLoop(ir::Loop* lp){
         }
     }
     depInfoForLp->setIsParallel(isParallel);
-    depInfoForLp->print(std::cerr);
+    // depInfoForLp->print(std::cerr);
 }   
 
-void dependenceAnalysis::makeGepIdx(ir::Loop* lp,ir::indVar* idv,gepIdx* gepidx){
+void dependenceAnalysis::makeGepIdx(ir::Loop* lp,ir::IndVar* idv,gepIdx* gepidx){
     for(auto val:gepidx->idxList){
         if(gepidx->idxTypes[val]!=iELSE)continue;
         if(isSimplyLoopInvariant(lp,val))gepidx->idxTypes[val]=iLOOPINVARIANT;
@@ -113,7 +113,7 @@ bool dependenceAnalysis::isSimplyLoopInvariant(ir::Loop* lp,ir::Value* val){
     return false;
 }
 
-bool dependenceAnalysis::isIDVPLUSMINUSFORMULA(ir::indVar* idv,ir::Value* val,ir::Loop* lp){
+bool dependenceAnalysis::isIDVPLUSMINUSFORMULA(ir::IndVar* idv,ir::Value* val,ir::Loop* lp){
     if(auto binaryVal=val->dynCast<ir::BinaryInst>()){
         auto lval=binaryVal->lValue();
         auto rval=binaryVal->rValue();
@@ -133,7 +133,7 @@ bool dependenceAnalysis::isIDVPLUSMINUSFORMULA(ir::indVar* idv,ir::Value* val,ir
     return false;
 }
 
-int dependenceAnalysis::isTwoGepIdxPossiblySame(gepIdx* gepidx1,gepIdx* gepidx2,ir::Loop* lp,ir::indVar* idv){
+int dependenceAnalysis::isTwoGepIdxPossiblySame(gepIdx* gepidx1,gepIdx* gepidx2,ir::Loop* lp,ir::IndVar* idv){
     std::vector<dependenceType>compareAns;
     size_t lim=gepidx1->idxList.size();
     int res=0;
@@ -148,7 +148,7 @@ int dependenceAnalysis::isTwoGepIdxPossiblySame(gepIdx* gepidx1,gepIdx* gepidx2,
     return res;
 }
 
-int dependenceAnalysis::isTwoIdxPossiblySame(ir::Value* val1,ir::Value* val2,idxType type1,idxType type2,ir::Loop* lp,ir::indVar* idv){
+int dependenceAnalysis::isTwoIdxPossiblySame(ir::Value* val1,ir::Value* val2,idxType type1,idxType type2,ir::Loop* lp,ir::IndVar* idv){
     if(val1==val2){//自己跟自己进行比较
         switch (type1)
         {

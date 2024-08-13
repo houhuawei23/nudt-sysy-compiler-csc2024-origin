@@ -9,7 +9,7 @@
 using namespace ir;
 namespace pass {
 
-struct LoopBodyFuncInfo {
+struct LoopBodyInfo {
   CallInst* callInst;
   IndVar* indVar;
   BasicBlock* preHeader;
@@ -17,27 +17,7 @@ struct LoopBodyFuncInfo {
   BasicBlock* body;
   BasicBlock* latch;
 
-  void print(std::ostream& os) const {
-    os << "LoopBodyFuncInfo: " << std::endl;
-    std::cout << "callInst: ";
-    callInst->print(os);
-    os << std::endl;
-    std::cout << "indVar: ";
-    indVar->print(os);
-    std::cout << std::endl;
-    std::cout << "header: ";
-    header->dumpAsOpernd(os);
-    os << std::endl;
-    std::cout << "body: ";
-    body->dumpAsOpernd(os);
-    os << std::endl;
-    std::cout << "latch: ";
-    latch->dumpAsOpernd(os);
-    os << std::endl;
-    std::cout << "preHeader: ";
-    preHeader->dumpAsOpernd(os);
-    os << std::endl;
-  }
+  void print(std::ostream& os) const;
 };
 
 class LoopBodyExtract : public FunctionPass {
@@ -53,6 +33,6 @@ bool extractLoopBody(Function* func,
                      Loop& loop,
                      IndVar* indVar,
                      TopAnalysisInfoManager* tp,
-                     LoopBodyFuncInfo& loopBodyInfo);
+                     LoopBodyInfo& loopBodyInfo);
 
 }  // namespace pass
