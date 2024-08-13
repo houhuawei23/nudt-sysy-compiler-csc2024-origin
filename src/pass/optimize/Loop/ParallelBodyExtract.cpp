@@ -2,6 +2,8 @@
 #include "pass/optimize/Loop/LoopBodyExtract.hpp"
 #include "pass/analysis/ControlFlowGraph.hpp"
 #include "pass/optimize/Utils/BlockUtils.hpp"
+
+// #include "pass/analysis/dependenceAnalysis/dpaUtils.hpp"
 #include "pass/analysis/dependenceAnalysis/DependenceAnalysis.hpp"
 using namespace ir;
 
@@ -12,7 +14,22 @@ static auto getUniqueID() {
   const auto base = "sysyc_parallel_body";
   return base + std::to_string(id++);
 }
+/*
+after extract loop body:
+  preheader -> header -> call_block -> latch -> exit
+               header <--------------- latch
+  call_block: call loop_body(i, otherargs...)
 
+after extract parallel body:
+  preheader -> call_block -> exit
+  call parallel_body(beg, end)
+
+  parallel_body(beg, end)
+    for (i = beg; i < end; i++) {
+      loop_body(i, otherargs...)
+    }
+
+*/
 bool extractParallelBody(Function* func,
                          Loop* loop,
                          IndVar* indVar,
@@ -24,14 +41,8 @@ bool extractParallelBody(Function* func,
   if (step != 1) return false;                  // only support step = 1
   if (loop->exits().size() != 1) return false;  // only support single exit loop
   const auto loopExitBlock = *(loop->exits().begin());
-  // extact loop body as a new loop_body func from func.loop
-  /**
-   * before:
-   * entry -> body/header -> latch -> exit
-   * after:
-   * entry -> newLoop{phi, call loop_body, i.next, icmp, br} -> exit
-   */
-  LoopBodyFuncInfo loopBodyInfo;
+  // extact loop body as a new loop_body func from func loop
+  LoopBodyInfo loopBodyInfo;
   if (not extractLoopBody(func, *loop /* modified */, indVar, tp, loopBodyInfo /* ret */))
     return false;
 
@@ -43,9 +54,6 @@ bool extractParallelBody(Function* func,
   auto argBeg = parallelBody->new_arg(i32, "beg");
   auto argEnd = parallelBody->new_arg(i32, "end");
 
-  // update value with args
-  // auto beginVar =
-  // std::unordered_map<Value*, Value*> valueMap;
   auto newEntry = parallelBody->newEntry("new_entry");
   auto newExit = parallelBody->newExit("new_exit");
   std::unordered_set<BasicBlock*> bodyBlocks = {loopBodyInfo.header, loopBodyInfo.body,
@@ -97,7 +105,7 @@ bool extractParallelBody(Function* func,
     if (cmpInst == indVar->cmpInst()) {
       for (auto opuse : cmpInst->operands()) {
         auto op = opuse->value();
-        if(op == indVar->getEnd()) {
+        if (op == indVar->getEnd()) {
           cmpInst->setOperand(opuse->index(), argEnd);
           break;
         }
@@ -148,7 +156,7 @@ bool extractParallelBody(Function* func,
   const auto fixFunction = [&](Function* function) {
     CFGAnalysisHHW().run(function, tp);
     blockSortDFS(*function, tp);
-    function->rename();
+    // function->rename();
     // function->print(std::cerr);
   };
   // fic function
@@ -170,17 +178,20 @@ void ParallelBodyExtract::run(ir::Function* func, TopAnalysisInfoManager* tp) {
 bool ParallelBodyExtract::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
   auto sideEffectInfo = tp->getSideEffectInfo();
 
-  func->rename();
+  // func->rename();
+  std::cerr << "ParallelBodyExtract::runImpl: " << func->name() << std::endl;
   // func->print(std::cerr);
 
   CFGAnalysisHHW().run(func, tp);  // refresh CFG
 
   bool modified = false;
+  // WARNING: first getDepInfo, then getLoopInfoWithoutRefresh, then getIndVarInfoWithoutRefresh
   auto dpctx = tp->getDepInfo(func);
   auto lpctx = tp->getLoopInfoWithoutRefresh(func);         // fisrt loop analysis
   auto indVarInfo = tp->getIndVarInfoWithoutRefresh(func);  // then indvar analysis
 
-  auto loops = lpctx->sortedLoops();
+  // auto loops = lpctx->sortedLoops();
+  auto loops = lpctx->loops();
   std::unordered_set<Loop*> extractedLoops;
   const auto isBlocked = [&](Loop* lp) {
     for (auto extracted : extractedLoops) {
@@ -197,9 +208,12 @@ bool ParallelBodyExtract::runImpl(ir::Function* func, TopAnalysisInfoManager* tp
     return false;
   };
   for (auto loop : loops) {  // for all loops
-    // loop->print()
+    std::cerr << "loop level: " << lpctx->looplevel(loop->header());
+    loop->print(std::cerr);
     if (isBlocked(loop)) continue;
-    if (not dpctx->getLoopDependenceInfo(loop)->getIsParallel())continue;
+    auto depInfo = dpctx->getLoopDependenceInfo(loop);
+    depInfo->print(std::cerr);
+    if (not depInfo->getIsParallel()) continue;
     const auto indVar = indVarInfo->getIndvar(loop);
     const auto step = indVar->getStep()->i32();
     if (step != 1) continue;  // only support step = 1

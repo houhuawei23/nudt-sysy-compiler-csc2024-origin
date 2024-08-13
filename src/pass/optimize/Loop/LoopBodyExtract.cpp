@@ -1,5 +1,5 @@
-#define NDEBUG
-
+// #define NDEBUG
+// #define DEBUG
 #include "ir/ir.hpp"
 #include "pass/pass.hpp"
 #include "pass/analysis/ControlFlowGraph.hpp"
@@ -15,6 +15,28 @@
 
 using namespace ir;
 namespace pass {
+
+void LoopBodyInfo::print(std::ostream& os) const {
+  os << "LoopBodyInfo: " << std::endl;
+  std::cout << "callInst: ";
+  callInst->print(os);
+  os << std::endl;
+  std::cout << "indVar: ";
+  indVar->print(os);
+  std::cout << std::endl;
+  std::cout << "preHeader: ";
+  preHeader->dumpAsOpernd(os);
+  os << std::endl;
+  std::cout << "header: ";
+  header->dumpAsOpernd(os);
+  os << std::endl;
+  std::cout << "body: ";
+  body->dumpAsOpernd(os);
+  os << std::endl;
+  std::cout << "latch: ";
+  latch->dumpAsOpernd(os);
+  os << std::endl;
+}
 void LoopBodyExtract::run(Function* func, TopAnalysisInfoManager* tp) {
   runImpl(func, tp);
 }
@@ -37,7 +59,7 @@ bool LoopBodyExtract::runImpl(Function* func, TopAnalysisInfoManager* tp) {
   auto lpctx = tp->getLoopInfo(func);
   auto indVarInfo = tp->getIndVarInfo(func);
   bool modified = false;
-#ifndef NDEBUG
+#ifdef DEBUG
   func->rename();
   // func->print(std::cerr);
 #endif
@@ -47,7 +69,7 @@ bool LoopBodyExtract::runImpl(Function* func, TopAnalysisInfoManager* tp) {
   const auto isBlocked = [&](Loop* lp) {
     for (auto extracted : extractedLoops) {
       if (extracted->blocks().count(lp->header())) {
-#ifndef NDEBUG
+#ifdef DEBUG
         lp->header()->dumpAsOpernd(std::cerr);
         std::cerr << "is sub of ";
         extracted->header()->dumpAsOpernd(std::cerr);
@@ -66,11 +88,11 @@ bool LoopBodyExtract::runImpl(Function* func, TopAnalysisInfoManager* tp) {
 
     if (step != 1) continue;  // only support step = 1
 
-    LoopBodyFuncInfo loopBodyInfo;
+    LoopBodyInfo loopBodyInfo;
     if (not extractLoopBody(func, *loop, indVar, tp, loopBodyInfo /* ret */)) continue;
     modified = true;
     extractedLoops.insert(loop);
-#ifndef NDEBUG
+#ifdef DEBUG
     std::cerr << "extracted loop body: " << loopBodyInfo.callInst->callee()->name() << std::endl;
 #endif
     // break;
@@ -131,12 +153,51 @@ static auto getUniqueID() {
   const auto base = "sysyc_loop_body";
   return base + std::to_string(id++);
 }
+
+bool moveNext2NewLatch(Function* func, Loop* loop, IndVar* indVar, TopAnalysisInfoManager* tp) {
+  assert(loop->latchs().size() == 1);
+  const auto next = indVar->iterInst();
+  auto oldLatch = loop->getUniqueLatch();
+  auto newLatch = func->newBlock();
+  newLatch->set_name("new_latch");
+  newLatch->set_idx(func->blocks().size());
+  bool finded = false;
+  for (auto block : func->blocks()) {
+    for (auto inst : block->insts()) {
+      if (inst == next) {
+        block->move_inst(inst);
+        newLatch->emplace_back_inst(inst);
+        finded = true;
+        break;
+      }
+    }
+    if (finded) break;
+  }
+  IRBuilder builder;
+  oldLatch->insts().pop_back();  // pop jump to header
+  builder.set_pos(oldLatch, oldLatch->insts().end());
+  builder.makeInst<BranchInst>(newLatch);
+  builder.set_pos(newLatch, newLatch->insts().end());
+  builder.makeInst<BranchInst>(loop->header());
+  loop->setLatch(newLatch);
+  loop->blocks().insert(newLatch);
+  CFGAnalysisHHW().run(func, tp);
+  // loop->getUniqueLatch()->dumpAsOpernd(std::cerr);
+  // fix phi
+  for (auto inst : loop->header()->insts()) {
+    if (auto phiInst = inst->dynCast<PhiInst>()) {
+      phiInst->replaceoldtonew(oldLatch, newLatch);
+    }
+  }
+  return true;
+}
+
 bool extractLoopBody(Function* func,
                      Loop& loop,
                      IndVar* indVar,
                      TopAnalysisInfoManager* tp,
-                     LoopBodyFuncInfo& info) {
-#ifndef NDEBUG
+                     LoopBodyInfo& info) {
+#ifdef DEBUG
   std::cerr << "extract loop body for: " << func->name() << std::endl;
   func->rename();
 #endif
@@ -147,53 +208,27 @@ bool extractLoopBody(Function* func,
     return false;
   }
   // make sure loop is correct
-  auto oldLatch = loop.getLoopLatch();
-  const auto splitLatch = [&]() {
-    std::cerr << oldLatch->insts().size() << std::endl;
-    assert(oldLatch->insts().size() >= 2);
-    auto newLatch = func->newBlock();
-    newLatch->set_name("new_latch");
-    newLatch->set_idx(func->blocks().size());
-    auto lastIter = std::prev(oldLatch->insts().end());
-    auto lastButOneIter = std::prev(lastIter);
-    assert(*lastButOneIter == indVar->iterInst());
-    oldLatch->move_inst(*lastButOneIter);
-    newLatch->emplace_back_inst(*lastButOneIter);
-    oldLatch->move_inst(*lastIter);
-    newLatch->emplace_back_inst(*lastIter);
-    IRBuilder builder;
-    builder.set_pos(oldLatch, oldLatch->insts().end());
-    builder.makeInst<BranchInst>(newLatch);
-    loop.setLatch(newLatch);
-    loop.blocks().insert(newLatch);
-    CFGAnalysisHHW().run(func, tp);
-    // fix phi
-    for (auto inst : loop.header()->insts()) {
-      if (auto phiInst = inst->dynCast<PhiInst>()) {
-        phiInst->replaceoldtonew(oldLatch, newLatch);
-      }
-    }
-  };
-#ifndef NDEBUG
+  auto oldLatch = loop.getUniqueLatch();
+#ifdef DEBUG
   loop.print(std::cerr);
   std::cerr << "old latch: ";
-  loop.getLoopLatch()->dumpAsOpernd(std::cerr);
+  loop.getUniqueLatch()->dumpAsOpernd(std::cerr);
   std::cerr << std::endl;
   indVar->print(std::cerr);
 #endif
 
-  splitLatch();
+  moveNext2NewLatch(func, &loop, indVar, tp);
 
-#ifndef NDEBUG
+#ifdef DEBUG
   loop.print(std::cerr);
   std::cerr << "new latch: ";
-  loop.getLoopLatch()->dumpAsOpernd(std::cerr);
+  loop.getUniqueLatch()->dumpAsOpernd(std::cerr);
   std::cerr << std::endl;
 
   indVar->print(std::cerr);
 #endif
   assert((loop.latchs().size() == 1) && "Loop must have exactly one latch");
-  if (loop.header() == loop.getLoopLatch() and loop.exits().size() != 1) {
+  if (loop.header() == loop.getUniqueLatch() and loop.exits().size() != 1) {
     // header == latch, no loop body
     // only support loop with one exit
     return false;
@@ -208,7 +243,7 @@ bool extractLoopBody(Function* func,
   if (phiCount > 2) return false;
 
   for (auto block : loop.blocks()) {
-    // if (block == loop.getLoopLatch()) continue; cmmc
+    // if (block == loop.getUniqueLatch()) continue; cmmc
     if (block == loop.header()) continue;
 
     for (auto next : block->next_blocks()) {
@@ -303,19 +338,19 @@ bool extractLoopBody(Function* func,
   // }
   // std::cerr << "for all operands in loop, add to val2arg or pass by function arg" << std::endl;
   for (auto block : loop.blocks()) {
-#ifndef NDEBUG
+#ifdef DEBUG
     block->dumpAsOpernd(std::cerr);
     std::cerr << std::endl;
 #endif
-    if (block == loop.header() or block == loop.getLoopLatch()) continue;
+    if (block == loop.header() or block == loop.getUniqueLatch()) continue;
     for (auto inst : block->insts()) {
-#ifndef NDEBUG
+#ifdef DEBUG
       inst->print(std::cerr);
       std::cerr << std::endl;
 #endif
       for (auto opuse : inst->operands()) {
         auto op = opuse->value();
-#ifndef NDEBUG
+#ifdef DEBUG
         op->dumpAsOpernd(std::cerr);
         std::cerr << std::endl;
 #endif
@@ -332,7 +367,7 @@ bool extractLoopBody(Function* func,
       }
     }
   }
-#ifndef NDEBUG
+#ifdef DEBUG
   for (auto [val, arg] : val2arg) {
     std::cerr << "val: ";
     val->dumpAsOpernd(std::cerr);
@@ -352,22 +387,22 @@ bool extractLoopBody(Function* func,
   for (auto [val, arg] : val2arg) {
     arg2val.emplace(arg, val);
     auto uses = val->uses();  // avoid invalidating use iterator
-#ifndef NDEBUG
+#ifdef DEBUG
     std::cerr << "val: ";
     val->dumpAsOpernd(std::cerr);
     std::cerr << ", with uses size: " << uses.size() << std::endl;
 #endif
     for (auto use : uses) {
       const auto userInst = use->user()->dynCast<Instruction>();
-#ifndef NDEBUG
+#ifdef DEBUG
       userInst->print(std::cerr);
       std::cerr << std::endl;
 #endif
       // exclude head and iterInst
-      if (userInst->block() == loop.header() or userInst->block() == loop.getLoopLatch()) continue;
+      if (userInst->block() == loop.header() or userInst->block() == loop.getUniqueLatch()) continue;
       if (userInst == indVar->iterInst()) continue;
       if (loop.blocks().count(userInst->block())) {
-#ifndef NDEBUG
+#ifdef DEBUG
         std::cerr << "replace operand " << val->name() << " with arg " << arg->name() << std::endl;
 #endif
         // userInst is in loop, replace operand with arg
@@ -398,7 +433,7 @@ bool extractLoopBody(Function* func,
   // other blocks in loop
   for (auto block : loop.blocks()) {
     // exclue head and latch
-    if (block == loop.header() or block == loop.getLoopLatch()) continue;
+    if (block == loop.header() or block == loop.getUniqueLatch()) continue;
     if (block != bodyFunc->entry()) {
       block->set_parent(bodyFunc);
       bodyFunc->blocks().push_back(block);
@@ -429,7 +464,7 @@ bool extractLoopBody(Function* func,
   // buid callBlock: call loop_body + jump to latch
   builder.set_pos(callBlock, callBlock->insts().end());
   const auto callInst = builder.makeInst<CallInst>(bodyFunc, callRealArgs);
-  builder.makeInst<BranchInst>(loop.getLoopLatch());
+  builder.makeInst<BranchInst>(loop.getUniqueLatch());
 
   // fix constraints on entry and exit
   fixAllocaInEntry(*bodyFunc);
@@ -456,7 +491,7 @@ bool extractLoopBody(Function* func,
     info.indVar = indVar;
     info.header = loop.header();
     info.body = callBlock;
-    info.latch = loop.getLoopLatch();
+    info.latch = loop.getUniqueLatch();
     info.preHeader = loop.getLoopPreheader();
   }
   return true;

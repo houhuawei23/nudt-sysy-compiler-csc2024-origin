@@ -44,6 +44,12 @@ public:
   BasicBlock* getLoopPreheader() const;
 
   BasicBlock* getLoopLatch() const;
+
+  BasicBlock* getUniqueLatch() const {
+    assert(mLatchs.size() == 1);
+    return *(mLatchs.begin());
+  }
+
   bool hasDedicatedExits() const;
 
   bool isLoopSimplifyForm() const {
