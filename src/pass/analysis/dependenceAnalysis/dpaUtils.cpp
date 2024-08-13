@@ -181,6 +181,12 @@ void LoopDependenceInfo::clearAll(){
     subAddrToGepIdx.clear();
     subAddrToInst.clear();
     memInsts.clear();
+    baseAddrIsRead.clear();
+    baseAddrIsWrite.clear();
+    baseAddrIsCrossIterDep.clear();
+    subAddrIsRead.clear();
+    subAddrIsWrite.clear();
+    
 }
 
 bool pass::isTwoBaseAddrPossiblySame(ir::Value* ptr1,ir::Value* ptr2,ir::Function* func,callGraph* cgctx){

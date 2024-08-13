@@ -182,7 +182,7 @@ void PassManager::runPasses(std::vector<std::string> passes) {
       run(&parallelBodyExtractPass);
     } else if (pass_name == "blocksort") {
       run(&blockSortPass);
-    } else if (pass_name == "da") {
+    } else if (pass_name == "dp") {
       run(new pass::dependenceAnalysis());
     } else {
       std::cerr << "Invalid pass name: " << pass_name << std::endl;
