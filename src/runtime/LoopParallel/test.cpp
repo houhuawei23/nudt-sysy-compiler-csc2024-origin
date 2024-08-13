@@ -1,6 +1,6 @@
 #include <chrono>
 #include <iostream>
-#include "MultiThreads.hpp"
+#include "LoopParallel.hpp"
 
 using namespace std;
 
@@ -15,7 +15,7 @@ void exampleFunc(int32_t beg, int32_t end) {
   int localSum = 0;
   int tmp = 0;
   for (int32_t i = beg; i < end; ++i) {
-    for(int32_t j = 0; j < 5000; ++j) {
+    for(int32_t j = 0; j < 100; ++j) {
       tmp += j;
     }
 
@@ -24,15 +24,29 @@ void exampleFunc(int32_t beg, int32_t end) {
   globalSum += localSum;
 }
 
+const int N = 1e5;
+const int M = 1e3;
+
+void loopTest(int32_t beg, int32_t end) {
+  int i = beg;
+  while (i < end) {
+    int j = 0;
+    // j = 0;
+    while (j < M) {
+      j = j + 1;
+    }
+    i = i + 1;
+  }
+}
+
 int main() {
   int32_t beg = 0;
-  int32_t end = 1e7;
+  int32_t end = 1e5;
   TimePoint starttime = Clock::now();
 
   // for (auto i = 0; i < 200; ++i) {
-  //   parallelFor(beg, end, exampleFunc);
+  parallelFor(beg, end, loopTest);
   // }
-  parallelFor(beg, end, exampleFunc);
 
   TimePoint endtime = Clock::now();
   std::cout << "Parallel: " << std::endl;
@@ -45,9 +59,8 @@ int main() {
   globalSum = 0;
   starttime = Clock::now();
   // for (auto i = 0; i < 200; ++i) {
-  //   exampleFunc(beg, end);
+  loopTest(beg, end);
   // }
-  exampleFunc(beg, end);
 
   endtime = Clock::now();
 
