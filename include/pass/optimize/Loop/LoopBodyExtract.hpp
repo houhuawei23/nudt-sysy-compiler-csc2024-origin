@@ -10,23 +10,48 @@ using namespace ir;
 namespace pass {
 
 struct LoopBodyFuncInfo {
-  BasicBlock* loop;
   CallInst* callInst;
-  ir::indVar* indVar;
+  IndVar* indVar;
+  BasicBlock* preHeader;
+  BasicBlock* header;
+  BasicBlock* body;
+  BasicBlock* latch;
+
+  void print(std::ostream& os) const {
+    os << "LoopBodyFuncInfo: " << std::endl;
+    std::cout << "callInst: ";
+    callInst->print(os);
+    os << std::endl;
+    std::cout << "indVar: ";
+    indVar->print(os);
+    std::cout << std::endl;
+    std::cout << "header: ";
+    header->dumpAsOpernd(os);
+    os << std::endl;
+    std::cout << "body: ";
+    body->dumpAsOpernd(os);
+    os << std::endl;
+    std::cout << "latch: ";
+    latch->dumpAsOpernd(os);
+    os << std::endl;
+    std::cout << "preHeader: ";
+    preHeader->dumpAsOpernd(os);
+    os << std::endl;
+  }
 };
 
 class LoopBodyExtract : public FunctionPass {
 public:
-  void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
+  void run(Function* func, TopAnalysisInfoManager* tp) override;
   std::string name() const override { return "LoopBodyExtract"; }
 
 private:
-  void runImpl(ir::Function* func, TopAnalysisInfoManager* tp);
+  bool runImpl(Function* func, TopAnalysisInfoManager* tp);
 };
 
-bool extractLoopBody(ir::Function* func,
-                     ir::Loop& loop,
-                     ir::indVar* indVar,
+bool extractLoopBody(Function* func,
+                     Loop& loop,
+                     IndVar* indVar,
                      TopAnalysisInfoManager* tp,
                      LoopBodyFuncInfo& loopBodyInfo);
 

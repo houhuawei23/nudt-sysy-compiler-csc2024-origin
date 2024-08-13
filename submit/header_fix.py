@@ -25,9 +25,7 @@ for root, dirs, files in os.walk(submit_root):
                     # print(header)
                     newline = (
                         '#include "'
-                        + os.path.relpath(
-                            os.path.abspath(submit_root), os.path.abspath(root)
-                        )
+                        + os.path.relpath(os.path.abspath(submit_root), os.path.abspath(root))
                         + "/include/"
                         + header
                         + '"\n'

@@ -233,6 +233,8 @@ class loopInfo : public FunctionACtx {
         return innermost;
     }
     void refresh() override;
+    void print(std::ostream& os) const;
+    std::vector<ir::Loop*> sortedLoops(bool traverse = false); // looplevel small to big
 };
 
 class callGraph : public ModuleACtx {
@@ -284,18 +286,18 @@ class callGraph : public ModuleACtx {
 
 class indVarInfo : public FunctionACtx {
   private:
-    std::unordered_map<ir::Loop*, ir::indVar*> _loopToIndvar;
+    std::unordered_map<ir::Loop*, ir::IndVar*> _loopToIndvar;
 
   public:
     indVarInfo(ir::Function* fp, TopAnalysisInfoManager* tp) : FunctionACtx(fp, tp) {}
-    ir::indVar* getIndvar(ir::Loop* loop) {
+    ir::IndVar* getIndvar(ir::Loop* loop) {
         if (_loopToIndvar.count(loop) == 0)
             return nullptr;
         return _loopToIndvar[loop];
     }
     void clearAll() { _loopToIndvar.clear(); }
     void refresh() override;
-    void addIndVar(ir::Loop* lp, ir::indVar* idv) { _loopToIndvar[lp] = idv; }
+    void addIndVar(ir::Loop* lp, ir::IndVar* idv) { _loopToIndvar[lp] = idv; }
 };
 
 class sideEffectInfo : public ModuleACtx {

@@ -284,7 +284,7 @@ bool SCEV::isUsedOutsideLoop(ir::Loop* lp,ir::Value* val){
 }
 
 //如果endvar是常数，就直接计算出对应的迭代次数
-int SCEV::getConstantEndvarIndVarIterCnt(ir::Loop* lp,ir::indVar* idv){
+int SCEV::getConstantEndvarIndVarIterCnt(ir::Loop* lp,ir::IndVar* idv){
     //-1 不能计算
     assert(idv->isEndVarConst());
     auto beginVar=idv->getBeginI32();
@@ -411,7 +411,7 @@ int SCEV::getConstantEndvarIndVarIterCnt(ir::Loop* lp,ir::indVar* idv){
 
 //如果不是常数，就要在必要的时候生成计算迭代次数的指令
 //return nullptr if cannot calcuate
-ir::Value* SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv,ir::IRBuilder& builder){//-1 for cannot calc
+ir::Value* SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::IndVar* idv,ir::IRBuilder& builder){//-1 for cannot calc
     assert(not idv->isEndVarConst());
     auto beginVar=idv->getBeginI32();
     auto stepVar=idv->getStepI32();
@@ -599,7 +599,7 @@ ir::Value* SCEV::addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv,ir::IRB
 }
 
 //标准化:把idv放在op1 把endvar放在op2,icmp true就保持循环,false就跳出
-void SCEV::normalizeIcmpAndBr(ir::Loop* lp,ir::indVar* idv){
+void SCEV::normalizeIcmpAndBr(ir::Loop* lp,ir::IndVar* idv){
     auto endvar=idv->endValue();
     auto icmpInst=idv->cmpInst()->dynCast<ir::ICmpInst>();
     auto brInst=lp->header()->terminator()->dynCast<ir::BranchInst>();

@@ -13,17 +13,39 @@ runtime_dir = os.path.dirname(os.path.abspath(__file__))
 memset_cpp = os.path.join(runtime_dir, "memset.cpp")
 lookup_cpp = os.path.join(runtime_dir, "Lookup.cpp")
 
-infiles = [memset_cpp, lookup_cpp]
+# parallelFor_dir = os.path.join(runtime_dir, "./MultiThreads")
+# parallelFor_cpp = os.path.join(parallelFor_dir, "MultiThreads.cpp")
 
-gcc_ref_command_old = {
+parallelFor_dir = os.path.join(runtime_dir, "./LoopParallel")
+parallelFor_cpp = os.path.join(parallelFor_dir, "LoopParallel.cpp")
+infiles = [memset_cpp, lookup_cpp, parallelFor_cpp]
+
+gcc_ref_command = {
     "RISCV": "riscv64-linux-gnu-g++-12 -O3 -DNDEBUG -march=rv64gc_zba_zbb -fno-stack-protector -fomit-frame-pointer -mcpu=sifive-u74 -mabi=lp64d -mcmodel=medlow -ffp-contract=on -w ".split(),
     "ARM": "arm-linux-gnueabihf-g++-12 -O3 -DNDEBUG -march=armv7 -fno-stack-protector -fomit-frame-pointer -mcpu=cortex-a72 -mfpu=vfpv4 -ffp-contract=on -w -no-pie ".split(),
 }[target]
 
-gcc_ref_command = {
-    "RISCV": "riscv64-linux-gnu-g++-12 -O2 -DNDEBUG -march=rv64gc -fno-stack-protector -fomit-frame-pointer -mabi=lp64d -mcmodel=medlow -ffp-contract=on -w ".split(),
-    "ARM": "arm-linux-gnueabihf-g++-12 -O3 -DNDEBUG -march=armv7 -fno-stack-protector -fomit-frame-pointer -mcpu=cortex-a72 -mfpu=vfpv4 -ffp-contract=on -w -no-pie ".split(),
-}[target]
+# gcc_ref_command = {
+#     "RISCV": "riscv64-linux-gnu-g++-12 -O2 -DNDEBUG -march=rv64gc -fno-stack-protector -fomit-frame-pointer -mabi=lp64d -mcmodel=medlow -ffp-contract=on -w ".split(),
+#     "ARM": "arm-linux-gnueabihf-g++-12 -O3 -DNDEBUG -march=armv7 -fno-stack-protector -fomit-frame-pointer -mcpu=cortex-a72 -mfpu=vfpv4 -ffp-contract=on -w -no-pie ".split(),
+# }[target]
+
+
+def fixHeader(f) -> str:
+    lines = []
+    for line in f.readlines():
+        if line.startswith('#include "'):
+            header = line[10 : line[10:].find('"') + 10]
+            print(header)
+            print(runtime_dir)
+            print(parallelFor_dir)
+            newHeader = os.path.relpath(parallelFor_dir, runtime_dir) + "/" + header
+            newline = '#include "' + newHeader + '"\n'
+            lines.append(newline)
+        else:
+            lines.append(line)
+    return "".join(lines)
+
 
 merge = ""
 for infile in infiles:
@@ -32,7 +54,8 @@ for infile in infiles:
         sys.exit(1)
     with open(infile, "r") as f:
         merge += "// " + infile + "\n"
-        merge += f.read()
+        # merge += f.read()
+        merge += fixHeader(f)
 
 mergefile = os.path.join(runtime_dir, ".merge.cpp")
 with open(mergefile, "w") as f:

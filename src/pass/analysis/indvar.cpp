@@ -90,7 +90,7 @@ void indVarAnalysis::addIndVar(ir::Loop* lp,
                                ir::BinaryInst* iterinst,
                                ir::Instruction* cmpinst,
                                ir::PhiInst* phiinst) {
-    auto pnewIdv = new ir::indVar(mbegin, mend, mstep, iterinst, cmpinst,phiinst);
+    auto pnewIdv = new ir::IndVar(mbegin, mend, mstep, iterinst, cmpinst,phiinst);
     ivctx->addIndVar(lp, pnewIdv);
 }
 

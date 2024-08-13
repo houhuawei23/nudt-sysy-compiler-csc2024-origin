@@ -49,85 +49,88 @@ private:
   std::unordered_map<ir::Function*, dependenceInfo*> mDepInfo;
   // bb info
   // add new func
-  void addNewFunc(ir::Function* func){
-    auto pnewDomTree=new domTree(func,this);
-    mDomTree[func]=pnewDomTree;
-    auto pnewPDomTree=new pdomTree(func,this);
-    mPDomTree[func]=pnewPDomTree;
-    auto pnewLoopInfo=new loopInfo(func,this);
-    mLoopInfo[func]=pnewLoopInfo;
-    auto pnewIndVarInfo=new indVarInfo(func,this);
-    mIndVarInfo[func]=pnewIndVarInfo;
-    auto pnewDepInfo=new dependenceInfo(func,this);
-    mDepInfo[func]=pnewDepInfo;
+  void addNewFunc(ir::Function* func) {
+    auto pnewDomTree = new domTree(func, this);
+    mDomTree[func] = pnewDomTree;
+    auto pnewPDomTree = new pdomTree(func, this);
+    mPDomTree[func] = pnewPDomTree;
+    auto pnewLoopInfo = new loopInfo(func, this);
+    mLoopInfo[func] = pnewLoopInfo;
+    auto pnewIndVarInfo = new indVarInfo(func, this);
+    mIndVarInfo[func] = pnewIndVarInfo;
+    auto pnewDepInfo = new dependenceInfo(func, this);
+    mDepInfo[func] = pnewDepInfo;
   }
+
 public:
   TopAnalysisInfoManager(ir::Module* pm) : mModule(pm), mCallGraph(nullptr) {}
   domTree* getDomTree(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
-    auto domctx=mDomTree[func];
-    if(domctx==nullptr){
+    auto domctx = mDomTree[func];
+    if (domctx == nullptr) {
       addNewFunc(func);
     }
+    domctx = mDomTree[func];
     domctx->refresh();
     return domctx;
   }
   pdomTree* getPDomTree(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
-    auto domctx=mPDomTree[func];
-    if(domctx==nullptr){
+    auto domctx = mPDomTree[func];
+    if (domctx == nullptr) {
       addNewFunc(func);
     }
-    domctx->refresh();    
+    domctx = mPDomTree[func];
+    domctx->refresh();
     return domctx;
   }
   loopInfo* getLoopInfo(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
-    auto lpctx=mLoopInfo[func];
-    if(lpctx==nullptr){
+    auto lpctx = mLoopInfo[func];
+    if (lpctx == nullptr) {
       addNewFunc(func);
     }
+    lpctx = mLoopInfo[func];
     lpctx->refresh();
     return lpctx;
   }
   indVarInfo* getIndVarInfo(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
-    auto idvctx=mIndVarInfo[func];
-    if(idvctx==nullptr){
+    auto idvctx = mIndVarInfo[func];
+    if (idvctx == nullptr) {
       addNewFunc(func);
     }
+    idvctx = mIndVarInfo[func];
     idvctx->setOff();
     idvctx->refresh();
     return idvctx;
   }
   dependenceInfo* getDepInfo(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
-    auto dpctx=mDepInfo[func];
-    if(dpctx==nullptr){
+    auto dpctx = mDepInfo[func];
+    if (dpctx == nullptr) {
       addNewFunc(func);
     }
+    dpctx = mDepInfo[func];
     dpctx->setOff();
     dpctx->refresh();
     return dpctx;
   }
 
-
-
-  callGraph* getCallGraph() { 
+  callGraph* getCallGraph() {
     mCallGraph->refresh();
-    return mCallGraph; 
+    return mCallGraph;
   }
-  sideEffectInfo* getSideEffectInfo(){
-    mSideEffectInfo->setOff(); 
+  sideEffectInfo* getSideEffectInfo() {
+    mSideEffectInfo->setOff();
     mSideEffectInfo->refresh();
     return mSideEffectInfo;
   }
-  
-  
+
   domTree* getDomTreeWithoutRefresh(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
-    auto domctx=mDomTree[func];
-    if(domctx==nullptr){
+    auto domctx = mDomTree[func];
+    if (domctx == nullptr) {
       addNewFunc(func);
       domctx->refresh();
     }
@@ -135,8 +138,8 @@ public:
   }
   pdomTree* getPDomTreeWithoutRefresh(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
-    auto domctx=mPDomTree[func];
-    if(domctx==nullptr){
+    auto domctx = mPDomTree[func];
+    if (domctx == nullptr) {
       addNewFunc(func);
       domctx->refresh();
     }
@@ -144,8 +147,8 @@ public:
   }
   loopInfo* getLoopInfoWithoutRefresh(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
-    auto lpctx=mLoopInfo[func];
-    if(lpctx==nullptr){
+    auto lpctx = mLoopInfo[func];
+    if (lpctx == nullptr) {
       addNewFunc(func);
       lpctx->refresh();
     }
@@ -153,8 +156,8 @@ public:
   }
   indVarInfo* getIndVarInfoWithoutRefresh(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
-    auto idvctx=mIndVarInfo[func];
-    if(idvctx==nullptr){
+    auto idvctx = mIndVarInfo[func];
+    if (idvctx == nullptr) {
       addNewFunc(func);
       idvctx->refresh();
     }
@@ -162,25 +165,21 @@ public:
   }
   dependenceInfo* getDepInfoWithoutRefresh(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
-    auto dpctx=mDepInfo[func];
-    if(dpctx==nullptr){
+    auto dpctx = mDepInfo[func];
+    if (dpctx == nullptr) {
       addNewFunc(func);
       dpctx->refresh();
     }
     return dpctx;
   }
 
-  callGraph* getCallGraphWithoutRefresh() { 
-    return mCallGraph; 
-  }
-  sideEffectInfo* getSideEffectInfoWithoutRefresh(){
-    return mSideEffectInfo;
-  }
+  callGraph* getCallGraphWithoutRefresh() { return mCallGraph; }
+  sideEffectInfo* getSideEffectInfoWithoutRefresh() { return mSideEffectInfo; }
 
   void initialize();
   void CFGChange(ir::Function* func) {
     if (func->isOnlyDeclare()) return;
-    if(mDomTree.find(func) == mDomTree.cend()) {
+    if (mDomTree.find(func) == mDomTree.cend()) {
       std::cerr << "DomTree not found for function " << func->name() << std::endl;
       return;
     }

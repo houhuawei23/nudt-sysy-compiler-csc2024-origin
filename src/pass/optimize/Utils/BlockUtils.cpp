@@ -1,5 +1,6 @@
 #include "pass/optimize/Utils/BlockUtils.hpp"
 
+#include "pass/analysis/dom.hpp"
 using namespace ir;
 
 namespace pass {
@@ -8,8 +9,59 @@ void dumpFunction(Function& func) {
   func.print(std::cerr);
 }
 
+bool blockSortBFS(Function& func, TopAnalysisInfoManager* tAIM) {
+  auto domCtx = tAIM->getDomTree(&func);
+  domCtx->setOff();
+  domCtx->refresh();
+  domCtx->BFSDomTreeInfoRefresh();
+  auto irBlocks = domCtx->BFSDomTreeVector();
+  // std::cerr << "func Blocks: " << std::endl;
+  // for(auto block : func.blocks()) {
+  //   block->dumpAsOpernd(std::cerr);
+  //   std::cerr << " ";
+  // }
+  // std::cerr << std::endl;
+  // std::cerr << "IRBlocks: " << std::endl;
+  // for(auto block : irBlocks) {
+  //   block->dumpAsOpernd(std::cerr);
+  //   std::cerr << " ";
+  // }
+  // std::cerr << std::endl;
+  assert(irBlocks.size() == func.blocks().size());
+  func.blocks().clear();
+  for (auto block : irBlocks) {
+    func.blocks().push_back(block);
+  }
+  return true;
+}
+bool blockSortDFS(Function& func, TopAnalysisInfoManager* tAIM) {
+  auto domCtx = tAIM->getDomTree(&func);
+  domCtx->setOff();
+  domCtx->refresh();
+  domCtx->DFSDomTreeInfoRefresh();
+  auto irBlocks = domCtx->DFSDomTreeVector();
+  // std::cerr << "func Blocks: " << std::endl;
+  // for(auto block : func.blocks()) {
+  //   block->dumpAsOpernd(std::cerr);
+  //   std::cerr << " ";
+  // }
+  // std::cerr << std::endl;
+  // std::cerr << "IRBlocks: " << std::endl;
+  // for(auto block : irBlocks) {
+  //   block->dumpAsOpernd(std::cerr);
+  //   std::cerr << " ";
+  // }
+  // std::cerr << std::endl;
+  assert(irBlocks.size() == func.blocks().size());
+  func.blocks().clear();
+  for (auto block : irBlocks) {
+    func.blocks().push_back(block);
+  }
+  return true;
+}
+
 bool fixAllocaInEntry(Function& func) {
-  dumpFunction(func);
+  // dumpFunction(func);
   std::unordered_set<Instruction*> allocas;
   for (auto block : func.blocks()) {
     for (auto inst : block->insts()) {
@@ -36,7 +88,7 @@ bool fixAllocaInEntry(Function& func) {
   builder.set_pos(newEntry, newEntry->insts().end());
   builder.makeInst<BranchInst>(oldEntry);
 
-  dumpFunction(func);
+  // dumpFunction(func);
   return true;
 }
 

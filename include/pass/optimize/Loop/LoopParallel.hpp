@@ -9,12 +9,6 @@
 using namespace ir;
 namespace pass {
 
-// struct LoopBodyFuncInfo {
-//   BasicBlock* loop;
-//   CallInst* callInst;
-//   ir::indVar* indVar;
-// };
-
 class LoopParallel : public FunctionPass {
 public:
   void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
@@ -23,7 +17,7 @@ public:
 private:
   static ir::Function* loopupParallelFor(ir::Module* module);
   static bool isConstant(ir::Value* val);
-  void runImpl(ir::Function* func, TopAnalysisInfoManager* tp);
+  bool runImpl(ir::Function* func, TopAnalysisInfoManager* tp);
 };
 
 

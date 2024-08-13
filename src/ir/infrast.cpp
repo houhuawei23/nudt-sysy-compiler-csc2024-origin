@@ -39,26 +39,26 @@ void BasicBlock::print(std::ostream& os) const {
   } else {
     os << std::endl;
   }
-  if (not mPreBlocks.empty()) {
-    os << "    ; " << "pres: ";
-    for (auto it = pre_blocks().begin(); it != pre_blocks().end(); it++) {
-      os << (*it)->name();
-      if (std::next(it) != pre_blocks().end()) {
-        os << ", ";
-      }
-    }
-    os << std::endl;
-  }
-  if (not mNextBlocks.empty()) {
-    os << "    ; " << "nexts: ";
-    for (auto it = next_blocks().begin(); it != next_blocks().end(); it++) {
-      os << (*it)->name();
-      if (std::next(it) != next_blocks().end()) {
-        os << ", ";
-      }
-    }
-    os << std::endl;
-  }
+  // if (not mPreBlocks.empty()) {
+  //   os << "    ; " << "pres: ";
+  //   for (auto it = pre_blocks().begin(); it != pre_blocks().end(); it++) {
+  //     os << (*it)->name();
+  //     if (std::next(it) != pre_blocks().end()) {
+  //       os << ", ";
+  //     }
+  //   }
+  //   os << std::endl;
+  // }
+  // if (not mNextBlocks.empty()) {
+  //   os << "    ; " << "nexts: ";
+  //   for (auto it = next_blocks().begin(); it != next_blocks().end(); it++) {
+  //     os << (*it)->name();
+  //     if (std::next(it) != next_blocks().end()) {
+  //       os << ", ";
+  //     }
+  //   }
+  //   os << std::endl;
+  // }
   /* comment end */
 
   for (auto& inst : mInsts) {

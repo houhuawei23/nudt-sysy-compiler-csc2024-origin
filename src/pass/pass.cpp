@@ -33,7 +33,8 @@
 #include "pass/optimize/GepSplit.hpp"
 #include "pass/optimize/Misc/StatelessCache.hpp"
 #include "pass/optimize/Loop/LoopBodyExtract.hpp"
-
+#include "pass/optimize/Loop/ParallelBodyExtract.hpp"
+#include "pass/optimize/Misc/BlockSort.hpp"
 #include "support/config.hpp"
 #include "support/FileSystem.hpp"
 #include <fstream>
@@ -90,6 +91,9 @@ static StatelessCache cachePass;
 static irCheck irCheckPass;
 static CFGAnalysisHHW cfgAnalysisPass;
 static LoopBodyExtract loopBodyExtractPass;
+static ParallelBodyExtract parallelBodyExtractPass;
+static BlockSort blockSortPass;
+
 void PassManager::runPasses(std::vector<std::string> passes) {
   // if(passes.size() == 0) return;
 
@@ -174,7 +178,11 @@ void PassManager::runPasses(std::vector<std::string> passes) {
       run(new pass::GepSplit());
     } else if (pass_name == "LoopBodyExtract") {
       run(&loopBodyExtractPass);
-    } else if (pass_name == "dp") {
+    } else if (pass_name == "ParallelBodyExtract") {
+      run(&parallelBodyExtractPass);
+    } else if (pass_name == "blocksort") {
+      run(&blockSortPass);
+    } else if (pass_name == "da") {
       run(new pass::dependenceAnalysis());
     } else {
       std::cerr << "Invalid pass name: " << pass_name << std::endl;

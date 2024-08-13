@@ -1,3 +1,5 @@
+#define NDEBUG
+
 #include "ir/ir.hpp"
 #include "pass/pass.hpp"
 #include "pass/analysis/ControlFlowGraph.hpp"
@@ -13,34 +15,72 @@
 
 using namespace ir;
 namespace pass {
-void LoopBodyExtract::run(ir::Function* func, TopAnalysisInfoManager* tp) {
+void LoopBodyExtract::run(Function* func, TopAnalysisInfoManager* tp) {
   runImpl(func, tp);
 }
 
-void LoopBodyExtract::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
+bool hasCall(Loop* loop) {
+  for (auto block : loop->blocks()) {
+    for (auto inst : block->insts()) {
+      if (auto call = inst->dynCast<CallInst>()) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+bool LoopBodyExtract::runImpl(Function* func, TopAnalysisInfoManager* tp) {
+  auto sideEffectInfo = tp->getSideEffectInfo();
   CFGAnalysisHHW().run(func, tp);  // refresh CFG
-  auto indVarInfo = tp->getIndVarInfo(func);
-  indVarInfo->setOff();
-  indVarInfo->refresh();
+
   auto lpctx = tp->getLoopInfo(func);
-  for (auto loop : lpctx->loops()) {
-    loop->print(std::cerr);
+  auto indVarInfo = tp->getIndVarInfo(func);
+  bool modified = false;
+#ifndef NDEBUG
+  func->rename();
+  // func->print(std::cerr);
+#endif
+  auto loops = lpctx->sortedLoops();
+
+  std::unordered_set<Loop*> extractedLoops;
+  const auto isBlocked = [&](Loop* lp) {
+    for (auto extracted : extractedLoops) {
+      if (extracted->blocks().count(lp->header())) {
+#ifndef NDEBUG
+        lp->header()->dumpAsOpernd(std::cerr);
+        std::cerr << "is sub of ";
+        extracted->header()->dumpAsOpernd(std::cerr);
+        std::cerr << std::endl;
+#endif
+        return true;
+      }
+    }
+    return false;
+  };
+  for (auto loop : loops) {
+    if (isBlocked(loop)) continue;
+    if (hasCall(loop)) continue;
     const auto indVar = indVarInfo->getIndvar(loop);
     const auto step = indVar->getStep()->i32();
-    indVar->print(std::cerr);
 
     if (step != 1) continue;  // only support step = 1
 
     LoopBodyFuncInfo loopBodyInfo;
     if (not extractLoopBody(func, *loop, indVar, tp, loopBodyInfo /* ret */)) continue;
-
-    // std::cerr << "extracted loop body: " << loopBodyInfo.bodyFunc->name() << std::endl;
+    modified = true;
+    extractedLoops.insert(loop);
+#ifndef NDEBUG
+    std::cerr << "extracted loop body: " << loopBodyInfo.callInst->callee()->name() << std::endl;
+#endif
+    // break;
   }
   tp->CallChange();
   tp->CFGChange(func);
   tp->IndVarChange(func);
   // fix cfg
   CFGAnalysisHHW().run(func, tp);  // refresh CFG
+  return modified;
 }
 
 /**
@@ -72,10 +112,13 @@ void LoopBodyExtract::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
       other
         |
         v
-  --> newLoop --> loop.next
+  --> loop header --> loop.next
   |     |
   |     v
-  -- callBlock
+  |  callBlock
+  |     |
+  |     v
+  --  loop latch
 
 
 newLoop:
@@ -83,11 +126,26 @@ newLoop:
   -
  */
 // need iterInst in loop.latch
-bool extractLoopBody(ir::Function* func,
-                     ir::Loop& loop,
-                     ir::indVar* indVar,
+static auto getUniqueID() {
+  static size_t id = 0;
+  const auto base = "sysyc_loop_body";
+  return base + std::to_string(id++);
+}
+bool extractLoopBody(Function* func,
+                     Loop& loop,
+                     IndVar* indVar,
                      TopAnalysisInfoManager* tp,
                      LoopBodyFuncInfo& info) {
+#ifndef NDEBUG
+  std::cerr << "extract loop body for: " << func->name() << std::endl;
+  func->rename();
+#endif
+  if (func->attribute().hasAttr(FunctionAttribute::LoopBody)) {
+    return false;
+  }
+  if (hasCall(&loop)) {
+    return false;
+  }
   // make sure loop is correct
   auto oldLatch = loop.getLoopLatch();
   const auto splitLatch = [&]() {
@@ -104,23 +162,35 @@ bool extractLoopBody(ir::Function* func,
     newLatch->emplace_back_inst(*lastIter);
     IRBuilder builder;
     builder.set_pos(oldLatch, oldLatch->insts().end());
-    builder.makeInst<ir::BranchInst>(newLatch);
+    builder.makeInst<BranchInst>(newLatch);
     loop.setLatch(newLatch);
     loop.blocks().insert(newLatch);
     CFGAnalysisHHW().run(func, tp);
     // fix phi
-    for(auto inst : loop.header()->insts()) {
-      if(auto phiInst = inst->dynCast<ir::PhiInst>()) {
+    for (auto inst : loop.header()->insts()) {
+      if (auto phiInst = inst->dynCast<PhiInst>()) {
         phiInst->replaceoldtonew(oldLatch, newLatch);
       }
     }
-
   };
+#ifndef NDEBUG
+  loop.print(std::cerr);
+  std::cerr << "old latch: ";
+  loop.getLoopLatch()->dumpAsOpernd(std::cerr);
+  std::cerr << std::endl;
+  indVar->print(std::cerr);
+#endif
+
   splitLatch();
+
+#ifndef NDEBUG
   loop.print(std::cerr);
   std::cerr << "new latch: ";
   loop.getLoopLatch()->dumpAsOpernd(std::cerr);
   std::cerr << std::endl;
+
+  indVar->print(std::cerr);
+#endif
   assert((loop.latchs().size() == 1) && "Loop must have exactly one latch");
   if (loop.header() == loop.getLoopLatch() and loop.exits().size() != 1) {
     // header == latch, no loop body
@@ -130,7 +200,7 @@ bool extractLoopBody(ir::Function* func,
   // only support 2 phi insts: 1 for indvar, 1 for giv
   size_t phiCount = 0;
   for (auto inst : loop.header()->insts()) {
-    if (inst->isa<ir::PhiInst>()) {
+    if (inst->isa<PhiInst>()) {
       phiCount++;
     }
   }
@@ -142,7 +212,7 @@ bool extractLoopBody(ir::Function* func,
 
     for (auto next : block->next_blocks()) {
       if (not loop.contains(next)) {
-        std::cerr << block->name() << "->" << next->name() << " is not in loop" << std::endl;
+        // std::cerr << block->name() << "->" << next->name() << " is not in loop" << std::endl;
         return false;
       }
     }
@@ -150,10 +220,10 @@ bool extractLoopBody(ir::Function* func,
 
   // first phi inst != loop.inductionVar, giv = that phi inst
   // global induction var, such as n
-  ir::PhiInst* giv = nullptr;
+  PhiInst* giv = nullptr;
   for (auto inst : loop.header()->insts()) {
-    if (inst->isa<ir::PhiInst>() and inst != indVar->phiinst()) {
-      giv = inst->dynCast<ir::PhiInst>();
+    if (inst->isa<PhiInst>() and inst != indVar->phiinst()) {
+      giv = inst->dynCast<PhiInst>();
     } else {
       break;
     }
@@ -162,7 +232,7 @@ bool extractLoopBody(ir::Function* func,
 
   // not giv
 
-  std::unordered_set<ir::Value*> allowedToBeUsedByOuter;
+  std::unordered_set<Value*> allowedToBeUsedByOuter;
 
   allowedToBeUsedByOuter.insert(indVar->phiinst());
   // allowedToBeUsedByOuter.insert(loop.next)?
@@ -173,7 +243,7 @@ bool extractLoopBody(ir::Function* func,
     for (auto inst : block->insts()) {
       if (allowedToBeUsedByOuter.count(inst)) continue;
       for (auto user_use : inst->uses()) {
-        auto userInst = user_use->user()->dynCast<ir::Instruction>();
+        auto userInst = user_use->user()->dynCast<Instruction>();
         if (loop.blocks().count(userInst->block())) {
           continue;
         } else {
@@ -184,34 +254,34 @@ bool extractLoopBody(ir::Function* func,
   }
 
   // independent
-  // std::unordered_map<ir::Value*, uint32_t> loadStoreMap;
+  // std::unordered_map<Value*, uint32_t> loadStoreMap;
   // for (auto block : loop.blocks()) {
   //   for (auto inst : block->insts()) {
   //     if (inst->isTerminator()) continue;
-  //     if (auto loadInst = inst->dynCast<ir::LoadInst>()) {
+  //     if (auto loadInst = inst->dynCast<LoadInst>()) {
   //       const auto ptr = loadInst->ptr();
-  //     } else if (auto storeInst = inst->dynCast<ir::StoreInst>()) {
+  //     } else if (auto storeInst = inst->dynCast<StoreInst>()) {
   //       const auto ptr = storeInst->ptr();
   //     }
   //     // TODO:
   //   }
   // }
-  // std::vector<std::pair<ir::Instruction*, ir::Instruction*>> workList;
+  // std::vector<std::pair<Instruction*, Instruction*>> workList;
   // for (auto [k, v] : loadStoreMap) {
   //   if (v == 3) {
   //     // TODO:
   //   }
   // }
 
-  auto funcType = ir::FunctionType::gen(ir::Type::void_type(), {});
+  auto funcType = FunctionType::gen(Type::void_type(), {});
 
-  auto bodyFunc = func->module()->addFunction(funcType, "loop_body");
-
+  auto bodyFunc = func->module()->addFunction(funcType, getUniqueID());
+  bodyFunc->attribute().addAttr(FunctionAttribute::LoopBody);
   // some operand used in loop must be passed by function arg, add to val2arg
-  std::unordered_map<ir::Value*, ir::Value*> val2arg;
+  std::unordered_map<Value*, Value*> val2arg;
 
   // indvar phi -> body func first arg
-  val2arg.emplace(indVar->phiinst(), bodyFunc->new_arg(indVar->phiinst()->type()));
+  val2arg.emplace(indVar->phiinst(), bodyFunc->new_arg(indVar->phiinst()->type(), "indvar_arg"));
 
   // if giv, giv -> body func second arg
   if (giv) {
@@ -221,78 +291,101 @@ bool extractLoopBody(ir::Function* func,
   // duplicate cmp, true
   // for (auto block : loop.blocks()) {
   //   // TODO
-  //   auto branchInst = block->terminator()->dynCast<ir::BranchInst>();
+  //   auto branchInst = block->terminator()->dynCast<BranchInst>();
   //   assert(branchInst);
   //   if (branchInst->is_cond()) {
-  //     auto cond = branchInst->cond()->dynCast<ir::Instruction>();
+  //     auto cond = branchInst->cond()->dynCast<Instruction>();
   //     // if cond is in loop, skip
   //     if (loop.blocks().count(cond->block())) continue;
   //     // TODO:
   //   }
   // }
-  std::cerr << "for all operands in loop, add to val2arg or pass by function arg" << std::endl;
+  // std::cerr << "for all operands in loop, add to val2arg or pass by function arg" << std::endl;
   for (auto block : loop.blocks()) {
+#ifndef NDEBUG
     block->dumpAsOpernd(std::cerr);
+    std::cerr << std::endl;
+#endif
     if (block == loop.header() or block == loop.getLoopLatch()) continue;
     for (auto inst : block->insts()) {
+#ifndef NDEBUG
       inst->print(std::cerr);
       std::cerr << std::endl;
+#endif
       for (auto opuse : inst->operands()) {
         auto op = opuse->value();
+#ifndef NDEBUG
         op->dumpAsOpernd(std::cerr);
         std::cerr << std::endl;
+#endif
         if (op->type()->isLabel()) continue;
         if (val2arg.count(op)) continue;  // already mapped
-        if (op->dynCast<ir::ConstantValue>() or op->dynCast<ir::GlobalVariable>()) {
+        if (op->dynCast<ConstantValue>() or op->dynCast<GlobalVariable>()) {
           continue;  // constants and global variables can be used directly
         }
-        if (loop.blocks().count(op->dynCast<ir::Instruction>()->block())) continue;
+        if (auto opInst = op->dynCast<Instruction>()) {
+          if (loop.blocks().count(opInst->block())) continue;
+        }
         // else, this op must pass by function arg, add to val2arg
-        val2arg.emplace(op, bodyFunc->new_arg(op->type()));
+        val2arg.emplace(op, bodyFunc->new_arg(op->type(), op->name() + "_arg"));
       }
     }
   }
-
+#ifndef NDEBUG
+  for (auto [val, arg] : val2arg) {
+    std::cerr << "val: ";
+    val->dumpAsOpernd(std::cerr);
+    std::cerr << " -> ";
+    std::cerr << "arg: ";
+    arg->dumpAsOpernd(std::cerr);
+    std::cerr << std::endl;
+  }
+#endif
   bodyFunc->updateTypeFromArgs();
 
-  std::unordered_map<ir::Value*, ir::Value*> arg2val;
+  std::unordered_map<Value*, Value*> arg2val;
 
   // replace operands used in loop with corresponding args
   // update use
-  std::cerr << "replace operands used in loop with corresponding args" << std::endl;
+  // std::cerr << "replace operands used in loop with corresponding args" << std::endl;
   for (auto [val, arg] : val2arg) {
-    val->dumpAsOpernd(std::cerr);
-    std::cerr << std::endl;
     arg2val.emplace(arg, val);
     auto uses = val->uses();  // avoid invalidating use iterator
+#ifndef NDEBUG
+    std::cerr << "val: ";
+    val->dumpAsOpernd(std::cerr);
+    std::cerr << ", with uses size: " << uses.size() << std::endl;
+#endif
     for (auto use : uses) {
-      const auto userInst = use->user()->dynCast<ir::Instruction>();
+      const auto userInst = use->user()->dynCast<Instruction>();
+#ifndef NDEBUG
       userInst->print(std::cerr);
       std::cerr << std::endl;
+#endif
       // exclude head and iterInst
       if (userInst->block() == loop.header() or userInst->block() == loop.getLoopLatch()) continue;
       if (userInst == indVar->iterInst()) continue;
       if (loop.blocks().count(userInst->block())) {
-        // userInst is in loop, replace operand with arg
+#ifndef NDEBUG
         std::cerr << "replace operand " << val->name() << " with arg " << arg->name() << std::endl;
-        // use->set_value(arg);
+#endif
+        // userInst is in loop, replace operand with arg
         const auto idx = use->index();
         userInst->setOperand(idx, arg);
       }
-      std::cerr << "after replace, val: " << val->uses().size() << std::endl;
+      // std::cerr << "after replace, val: " << val->uses().size() << std::endl;
     }
   }
 
   // realArgs used by call inst
-  std::vector<ir::Value*> callRealArgs;
+  std::vector<Value*> callRealArgs;
   for (auto arg : bodyFunc->args()) {
     callRealArgs.push_back(arg2val[arg]);
   }
 
   // construct bodyFunc blocks
-  // push original loop header to bodyFunc blocks, as entry
-  // bodyFunc->blocks().push_back(loop.header());
-  std::unordered_set<ir::BasicBlock*> removeWorkList;
+  // push header.next as loop_body's entry
+  std::unordered_set<BasicBlock*> removeWorkList;
   for (auto next : loop.header()->next_blocks()) {
     if (loop.contains(next)) {
       bodyFunc->setEntry(next);
@@ -311,33 +404,33 @@ bool extractLoopBody(ir::Function* func,
       removeWorkList.insert(block);
     }
   }
+  assert(bodyFunc->blocks().size() == (loop.blocks().size() - 2));
   // remove loop blocks from func
-  func->blocks().remove_if([&](ir::BasicBlock* block) { return removeWorkList.count(block); });
+  func->blocks().remove_if([&](BasicBlock* block) { return removeWorkList.count(block); });
 
-  assert(oldLatch->terminator()->isa<ir::BranchInst>());
+  assert(oldLatch->terminator()->isa<BranchInst>());
 
+  IRBuilder builder;
+  // oldLatch now is the new loop_body's exit
   oldLatch->insts().pop_back();
-
-  ir::IRBuilder builder;
-  // make return inst?
+  // just return, caller will call next iter
   builder.set_pos(oldLatch, oldLatch->insts().end());
-  builder.makeInst<ir::ReturnInst>();
+  builder.makeInst<ReturnInst>();
   bodyFunc->setExit(oldLatch);
 
-  auto newLoop = func->newBlock();
-  auto headerBranch = loop.header()->terminator()->dynCast<ir::BranchInst>();
-  assert(loop.contains(headerBranch->iftrue()));
-  headerBranch->set_iftrue(newLoop);
-  // builder.set_pos(loop.header(), loop.header()->insts().end());
-  // builder.makeInst<ir::BranchInst>(newLoop);
+  // header -> callBlock -> latch
+  // fix branch relation
+  auto callBlock = func->newBlock();
+  auto headerBranch = loop.header()->terminator()->dynCast<BranchInst>();
+  assert(loop.contains(headerBranch->iftrue()));  // true is jump in loop
+  headerBranch->set_iftrue(callBlock);
 
-  // buid newLoop
-  builder.set_pos(newLoop, newLoop->insts().end());
-  const auto callInst = builder.makeInst<ir::CallInst>(bodyFunc, callRealArgs);
-  builder.makeInst<ir::BranchInst>(loop.getLoopLatch());
+  // buid callBlock: call loop_body + jump to latch
+  builder.set_pos(callBlock, callBlock->insts().end());
+  const auto callInst = builder.makeInst<CallInst>(bodyFunc, callRealArgs);
+  builder.makeInst<BranchInst>(loop.getLoopLatch());
 
   // fix constraints on entry and exit
-
   fixAllocaInEntry(*bodyFunc);
 
   tp->CallChange();
@@ -345,17 +438,26 @@ bool extractLoopBody(ir::Function* func,
   tp->IndVarChange(func);
 
   // fix cfg
-  CFGAnalysisHHW().run(func, tp);
-  CFGAnalysisHHW().run(bodyFunc, tp);
+  const auto fixFunction = [&](Function* function) {
+    CFGAnalysisHHW().run(function, tp);
+    blockSortDFS(*function, tp);
+    // function->rename();
+    // function->print(std::cerr);
+  };
 
-  std::cerr << "after extractLoopBody, func: " << std::endl;
-  func->rename();
-  func->print(std::cerr);
-  std::cerr << std::endl;
-  std::cerr << "bodyFunc: " << std::endl;
-  bodyFunc->rename();
-  bodyFunc->print(std::cerr);
+  std::cerr << "after extractLoopBody, func: " << func->name() << std::endl;
+  fixFunction(func);
+  fixFunction(bodyFunc);
 
+  {
+    // return LoopBodyInfo
+    info.callInst = callInst;
+    info.indVar = indVar;
+    info.header = loop.header();
+    info.body = callBlock;
+    info.latch = loop.getLoopLatch();
+    info.preHeader = loop.getLoopPreheader();
+  }
   return true;
 }
 

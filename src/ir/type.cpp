@@ -201,7 +201,7 @@ void FunctionType::print(std::ostream& os) const {
       os << ", ";
     arg_type->print(os);
   }
-  os << ")";
+  os << ")*"; // function is also a pointer
 }
 
 bool FunctionType::isSame(Type* rhs) const {

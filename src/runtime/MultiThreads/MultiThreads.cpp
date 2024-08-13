@@ -6,25 +6,25 @@
 #include <algorithm>
 #include <sys/mman.h>
 #include <sys/wait.h>
-#include <iostream>
-#include <fstream>
+// #include <iostream>
+// #include <fstream>
 #include <cassert>
 
 #define alignTo(size, align) ((size) + (align) - 1) / (align) * (align)
 
-void Worker::dump(std::ostream& os) const {
-  os << "worker: \n";
-  os << "  pid: " << pid << "\n";
-  os << "  stackAddr: " << stackAddr << "\n";
-  os << "  core: " << core << "\n";
-  os << "  status: " << status << "\n";
-  os << "  func: " << func << "\n";
-  os << "  beg: " << beg << "\n";
-  os << "  end: " << end << "\n";
-}
-void Worker::dump() const {
+// void Worker::dump(std::ostream& os) const {
+//   os << "worker: \n";
+//   os << "  pid: " << pid << "\n";
+//   os << "  stackAddr: " << stackAddr << "\n";
+//   os << "  core: " << core << "\n";
+//   os << "  status: " << status << "\n";
+//   os << "  func: " << func << "\n";
+//   os << "  beg: " << beg << "\n";
+//   os << "  end: " << end << "\n";
+// }
+// void Worker::dump() const {
 
-}
+// }
 
 Worker workers[maxThreads];
 
@@ -80,6 +80,8 @@ int workerRun(void* workerPtr) {
 }
 
 __attribute((constructor)) void initRuntime() {
+  // printf("initRuntime begin\n");
+  fprintf(stderr, "initRuntime begin\n");
   for (auto i = 0; i < maxThreads; i++) {
     auto& worker = workers[i];
     worker.status = 1;
@@ -93,15 +95,20 @@ __attribute((constructor)) void initRuntime() {
         clone(workerRun, static_cast<uint8_t*>(worker.stackAddr) + stackSize,
               threadCreationFlags, &worker);
   }
+  // printf("initRuntime end\n");
+  fprintf(stderr, "initRuntime end\n");
 }
 
 __attribute((destructor)) void destroyRuntime() {
-  for (auto& worker : workers) {
-    worker.status = 0;
-    worker.ready.post();
-    waitpid(worker.pid, nullptr, 0);
-    // munmap(worker.stackAddr, stackSize);
-  }
+  // printf("destroyRuntime begin\n");
+  fprintf(stderr, "destroyRuntime begin\n");
+  // for (auto& worker : workers) {
+  //   worker.status = 0;
+  //   worker.ready.post();
+  //   waitpid(worker.pid, nullptr, 0);
+  //   // munmap(worker.stackAddr, stackSize);
+  // }
+  // printf("destroyRuntime end\n");
   fprintf(stderr, "destroyRuntime\n");
 }
 

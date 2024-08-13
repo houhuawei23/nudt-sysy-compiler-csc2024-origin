@@ -32,9 +32,9 @@ class SCEV : public FunctionPass{
         bool isSimplyLoopInvariant(ir::Loop* lp,ir::Value* val);
         bool isSimplyNotInLoop(ir::Loop* lp,ir::Value* val);
         bool isUsedOutsideLoop(ir::Loop* lp,ir::Value* val);
-        int getConstantEndvarIndVarIterCnt(ir::Loop* lp,ir::indVar* idv);
-        ir::Value* addCalcIterCntInstructions(ir::Loop* lp,ir::indVar* idv,ir::IRBuilder& builder);
-        void normalizeIcmpAndBr(ir::Loop* lp,ir::indVar* idv);
+        int getConstantEndvarIndVarIterCnt(ir::Loop* lp,ir::IndVar* idv);
+        ir::Value* addCalcIterCntInstructions(ir::Loop* lp,ir::IndVar* idv,ir::IRBuilder& builder);
+        void normalizeIcmpAndBr(ir::Loop* lp,ir::IndVar* idv);
         void exchangeIcmpOp(ir::ICmpInst* icmpInst);
         void reverseIcmpOp(ir::ICmpInst* icmpInst);
         void exchangeBrDest(ir::BranchInst* brInst);
