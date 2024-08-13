@@ -29,13 +29,13 @@ public:
     mParent = parent;
   }
   auto header() const { return mHeader; }
-  auto parent() const { return mParent; }
+  auto function() const { return mParent; }
   auto& blocks() { return mBlocks; }
   auto& exits() { return mExits; }
   auto& latchs() { return mLatchs; }
   auto& subLoops() { return mSubLoops; }
 
-  Loop* parent() { return mParentLoop; }
+  Loop* parentloop() { return mParentLoop; }
   void setParent(Loop* lp) { mParentLoop = lp; }
   bool contains(BasicBlock* block) const { return mBlocks.find(block) != mBlocks.end(); }
 

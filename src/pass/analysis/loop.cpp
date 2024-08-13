@@ -31,6 +31,7 @@ namespace pass{
         auto findLoop=lpctx->head2loop(header);
         if(findLoop==nullptr){
             curLoop=new ir::Loop(header,func);
+            curLoop->setParent(nullptr);
             curLoop->latchs().insert(tail);
             
             // func->Loops().push_back(curLoop);
@@ -117,6 +118,10 @@ namespace pass{
                 cout<<sbLoop->header()->name()<<"\t";
             }
             cout<<endl<<endl;
+            cout<<"loop parent header:";
+            if(loop->parentloop()!=nullptr)cout<<loop->parentloop()->header()->name()<<endl;
+            else cout<<"No parent."<<endl;
+            cout<<endl;
         }
         cout<<"Loop Level:"<<endl;
         for(auto bb:func->blocks()){

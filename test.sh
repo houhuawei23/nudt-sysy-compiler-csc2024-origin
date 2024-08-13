@@ -170,7 +170,7 @@ function run_llvm_test() {
     cat "${sy_h}" >"${llvm_c}"
     cat "${single_file}" >>"${llvm_c}"
 
-    clang --no-warnings -emit-llvm -S "${llvm_c}" -o "${llvm_ll}"  -O0 -std=c90 
+    clang --no-warnings -emit-llvm -S "${llvm_c}" -o "${llvm_ll}"  -O3 -std=c90 
     # # ./compiler -f "${llvm_c}" -i -o "${llvm_ll}"
     # opt -O3 -debug-pass-manager "${llvm_ll}" -o "${llvm_ll}"
     # ./compiler -f "${single_file}" -i  -o "${llvm_ll}" "${OPT_LEVEL}" "${LOG_LEVEL}"
