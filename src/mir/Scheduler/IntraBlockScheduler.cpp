@@ -1,12 +1,10 @@
 #include "mir/utils.hpp"
 #include "mir/ScheduleModel.hpp"
-
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
 
 namespace mir {
-
 static void topDownScheduleBlock(MIRBlock& block,
                                   const CodeGenContext& ctx,
                                   BlockScheduleContext& scheduleCtx) {
