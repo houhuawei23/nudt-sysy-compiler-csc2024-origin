@@ -42,9 +42,9 @@ void pdomTree::refresh() {
 void loopInfo::refresh() {
     using namespace pass;
     loopAnalysis la = loopAnalysis();
-    loopInfoCheck lic = loopInfoCheck();
+    // loopInfoCheck lic = loopInfoCheck();
     la.run(passUnit,topManager);
-    lic.run(passUnit,topManager);
+    // lic.run(passUnit,topManager);
     setOn();
 }
 void loopInfo::print(std::ostream& os) const {
