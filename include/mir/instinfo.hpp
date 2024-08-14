@@ -100,9 +100,9 @@ constexpr bool isSignedImm(intmax_t imm) {
 
 template <uint32_t N>
 constexpr bool isUnsignedImm(intmax_t imm) {
-    static_assert(N < 63);
-    constexpr auto x = static_cast<intmax_t>(1) << N;
-    return 0 <= imm && imm < x;
+  static_assert(N < 63);
+  constexpr auto x = static_cast<intmax_t>(1) << N;
+  return 0 <= imm && imm < x;
 }
 
 // utils function
