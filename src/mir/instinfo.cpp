@@ -28,6 +28,11 @@ bool TargetInstInfo::matchUnconditionalBranch(MIRInst* inst, MIRBlock*& Target) 
          requireFlag(getInstInfo(inst).inst_flag(), InstFlagNoFallThrough);
 }
 
+bool TargetInstInfo::matchConditionalBranch(MIRInst* inst, MIRBlock*& target, double& prob) const {
+    return matchBranch(inst, target, prob) && 
+           !requireFlag(getInstInfo(inst).inst_flag(), InstFlagNoFallThrough);
+}
+
 void TargetInstInfo::redirectBranch(MIRInst* inst, MIRBlock* target) const {
   auto oldOpcode = inst->opcode();
   inst->set_opcode(oldOpcode + offset);

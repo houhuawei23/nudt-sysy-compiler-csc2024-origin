@@ -21,6 +21,7 @@ void TopAnalysisInfoManager::initialize() {
         mLoopInfo[func] = new loopInfo(func, this);
         mIndVarInfo[func] = new indVarInfo(func, this);
         mDepInfo[func] = new dependenceInfo(func,this);
+        mParallelInfo[func] = new parallelInfo(func,this);
     }
 }
 

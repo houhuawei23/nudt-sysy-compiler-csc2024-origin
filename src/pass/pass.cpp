@@ -29,6 +29,7 @@
 #include "pass/optimize/DAE.hpp"
 #include "pass/optimize/licm.hpp"
 #include "pass/analysis/dependenceAnalysis/DependenceAnalysis.hpp"
+#include "pass/analysis/MarkParallel.hpp"
 #include "pass/optimize/Loop/LoopParallel.hpp"
 #include "pass/optimize/GepSplit.hpp"
 #include "pass/optimize/Misc/StatelessCache.hpp"
@@ -184,6 +185,8 @@ void PassManager::runPasses(std::vector<std::string> passes) {
       run(&blockSortPass);
     } else if (pass_name == "dp") {
       run(new pass::dependenceAnalysis());
+    } else if (pass_name == "markpara") {
+      run(new pass::markParallel());
     } else {
       std::cerr << "Invalid pass name: " << pass_name << std::endl;
       assert(false && "Invalid pass name");

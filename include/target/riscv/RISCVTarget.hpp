@@ -30,6 +30,7 @@ public:
   size_t codeAlign() const override { return 4; }
   size_t memAlign() const override { return 8; }
 };
+
 /*
  * @brief: RISCVFrameInfo Class
  * @note: RISC-V帧相关信息

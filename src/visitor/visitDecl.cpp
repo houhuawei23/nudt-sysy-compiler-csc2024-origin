@@ -80,12 +80,8 @@ Value* SysYIRGenerator::visitGlobalArray(SysYParser::VarDefContext* ctx,
                                          const std::vector<size_t>& dims,
                                          size_t capacity) {
   const auto name = ctx->lValue()->ID()->getText();
-
-  std::vector<Value*> Arrayinit;
+  std::vector<Value*> Arrayinit(capacity, ConstantValue::get(btype, static_cast<intmax_t>(0)));
   bool is_init = false;
-  for (size_t i = 0; i < capacity; i++) {
-    Arrayinit.push_back(ConstantValue::get(btype, static_cast<intmax_t>(0)));
-  }
 
   //! get initial value (将数组元素的初始化值存储在Arrayinit中)
   if (ctx->ASSIGN()) {
@@ -94,14 +90,12 @@ Value* SysYIRGenerator::visitGlobalArray(SysYParser::VarDefContext* ctx,
     _current_type = btype;
     _is_alloca = true;
     for (auto expr : ctx->initValue()->initValue()) {
-      // std::cerr << "visitInitValue_Array: " << expr->getText() << std::endl;
       is_init |= visitInitValue_Array(expr, capacity, dims, Arrayinit);
     }
   }
 
   //! generate global variable and assign
-  auto global_var =
-    GlobalVariable::gen(btype, Arrayinit, mModule, name, is_const, dims, is_init, capacity);
+  auto global_var = GlobalVariable::gen(btype, Arrayinit, mModule, name, is_const, dims, is_init, capacity);
   mTables.insert(name, global_var);
   mModule->addGlobalVar(name, global_var);
 
@@ -281,11 +275,11 @@ bool SysYIRGenerator::visitInitValue_Array(SysYParser::InitValueContext* ctx,
     auto value = any_cast_Value(visit(ctx->exp()));
 
     //! 类型转换 (匹配左值与右值的数据类型)
-    if (value->isa<ConstantValue>())
+    if (value->isa<ConstantValue>()) {
       value = mBuilder.castConstantType(value, _current_type);
-    else
+    } else {
       value = mBuilder.makeTypeCast(value, _current_type);
-
+    }
     //! 获取当前数组元素的位置
     while (_d < dims.size() - 1) {
       _path[_d++] = _n;
