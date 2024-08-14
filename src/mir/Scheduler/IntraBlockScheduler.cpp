@@ -1,21 +1,19 @@
+// #define DEBUG
 #include "mir/utils.hpp"
 #include "mir/ScheduleModel.hpp"
-
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
 
 namespace mir {
-
 static void topDownScheduleBlock(MIRBlock& block,
-                                  const CodeGenContext& ctx,
-                                  BlockScheduleContext& scheduleCtx) {
+                                 const CodeGenContext& ctx,
+                                 BlockScheduleContext& scheduleCtx) {
   /* debug */
-  bool debugSched = false;
-  auto dumpIssue = [&](MIRInst* inst) {
+  bool debugSched = true;
+  auto dumpInst = [&](MIRInst* inst, std::ostream& os) {
     auto& instInfo = ctx.instInfo.getInstInfo(inst);
-    instInfo.print(std::cerr << "issue ", *inst, true);
-    std::cerr << std::endl;
+    instInfo.print(os, *inst, true);
   };
   auto dumpReady = [&](MIRInst* inst) {
     auto& instInfo = ctx.instInfo.getInstInfo(inst);
@@ -31,10 +29,11 @@ static void topDownScheduleBlock(MIRBlock& block,
   ScheduleState state{scheduleCtx.renameMap};
   MIRInstList schedulePlane; /* ready to schedule insts */
 
-  for (auto& inst : block.insts()) {
+  for (auto inst : block.insts()) {
     if (scheduleCtx.degrees[inst] == 0) {
-      if (debugSched)
-        dumpReady(inst);
+#ifdef DEBUG
+      dumpInst(inst, std::cerr << "ready: ");
+#endif
       schedulePlane.push_back(inst);
     }
   }
@@ -45,13 +44,13 @@ static void topDownScheduleBlock(MIRBlock& block,
 
   /* try to schedule all insts in block */
   while (scheduledInsts.size() < block.insts().size()) {
-    if (debugSched) {
-      std::cerr << "cycle " << cycle << std::endl;
-    }
+#ifdef DEBUG
+    std::cerr << "cycle " << cycle << std::endl;
+#endif
 
     std::vector<MIRInst*> newReadyInsts;
     /* Simulate issue in one cycle */
-    for (uint32_t idx = 0; idx < scheInfo.issueWidth; idx++) {
+    for (uint32_t slotIdx = 0; slotIdx < scheInfo.issueWidth; slotIdx++) {
       // uint32_t issuedCnt = 0;
       uint32_t failedCnt = 0;
       bool success = false;
@@ -61,37 +60,57 @@ static void topDownScheduleBlock(MIRBlock& block,
         return newRank;
       };
       schedulePlane.sort([&](MIRInst* lhs, MIRInst* rhs) { return evalRanl(lhs) > evalRanl(rhs); });
-
+#ifdef DEBUG
+      std::cerr << "slot idx: " << slotIdx << std::endl;
+      for (auto inst : schedulePlane) {
+        dumpInst(inst, std::cerr << "plane: ");
+        std::cerr << ", rank " << scheduleCtx.rank[inst];
+        std::cerr << ", ready time " << readyTime[inst];
+        std::cerr << ", new rank " << evalRanl(inst) << std::endl;
+      }
+#endif
       while (failedCnt < schedulePlane.size()) {
         auto inst = schedulePlane.front();
         schedulePlane.pop_front();
         auto& scheClass = model->getInstScheClass(inst->opcode());
 
         if (scheClass.schedule(state, *inst, ctx.instInfo.getInstInfo(inst))) {
-          /** inst success scheduled,
-           * add inst to scheduledInsts and update degrees
+#ifdef DEBUG
+          dumpInst(inst, std::cerr << "issue: ");
+          std::cerr << std::endl;
+#endif
+          /** inst success scheduled, add inst to scheduledInsts and update degrees
            * if new ready, add new to newReadyInsts */
-          if (debugSched)
-            dumpIssue(inst);
-
           scheduledInsts.push_back(inst);
           busyCycle = 0;
           for (auto target : scheduleCtx.antiDeps[inst]) {
             scheduleCtx.degrees[target]--;
             if (scheduleCtx.degrees[target] == 0) {
+              // Don't push to schedulePlane here, because there are data/control harzards.
+              // It should be scheduled in next cycle.
               newReadyInsts.push_back(target);
             }
           }
           success = true;
           break;
         }
+#ifdef DEBUG
+        dumpInst(inst, std::cerr << "failed: ");
+        std::cerr << ", ";
+        auto& instInfo = ctx.instInfo.getInstInfo(inst);
+        for (size_t idx = 0; idx < instInfo.operand_num(); idx++) {
+          auto op = inst->operand(idx);
+          auto latency = state.queryRegisterLatency(*inst, idx);
+          std::cerr << "(" << idx << ", " << GENERIC::OperandDumper{op} << ", " << latency << ") ";
+        }
+        std::cerr << std::endl;
+#endif
         /* failed schedule, readd to schedulePlane */
         failedCnt++;
         schedulePlane.push_back(inst);
       }
       /* if all inst in plane not success scheduled, directly break */
-      if (not success)
-        break;
+      if (not success) break;
     }
     /* Issued finished, cycle++ */
     cycle = state.nextCycle();
@@ -105,9 +124,11 @@ static void topDownScheduleBlock(MIRBlock& block,
       }
       assert(false && "busy cycle too long");
     }
-    for (auto& inst : newReadyInsts) {
-      if (debugSched)
-        dumpReady(inst);
+    for (auto inst : newReadyInsts) {
+#ifdef DEBUG
+      dumpInst(inst, std::cerr << "issue: ");
+      std::cerr << std::endl;
+#endif
       readyTime[inst] = cycle;
       schedulePlane.push_back(inst);
     }
@@ -124,7 +145,9 @@ static void preRAScheduleBlock(MIRBlock& block, const CodeGenContext& ctx) {
   auto& rank = scheduleCtx.rank;
   int32_t instIdx = 0;
   for (auto& inst : block.insts()) {
-    rank[inst] = --instIdx;
+    // rank[inst] = --instIdx;
+    instIdx -= 20;
+    rank[inst] = instIdx;
   }
   /* schedule block */
   scheduleCtx.waitPenalty = 2;

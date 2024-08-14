@@ -13,6 +13,7 @@
 #include "mir/utils.hpp"
 #include "mir/RegisterAllocator.hpp"
 #include "mir/RegisterCoalescing.hpp"
+#include "mir/BlockLayoutOpt.hpp"
 #include "target/riscv/RISCVTarget.hpp"
 #include "support/StaticReflection.hpp"
 #include "support/config.hpp"
@@ -207,9 +208,8 @@ void createMIRModule(ir::Module& ir_module,
 
     // /* stage6: Optimize: pre-RA scheduling, minimize register usage */
     {
-      // preRASchedule(*mir_func, codegen_ctx);
-      // preRASchedule(*mir_func, codegen_ctx);
-      // dumpStageResult("AfterPreRASchedule", mir_func, codegen_ctx);
+      preRASchedule(*mir_func, codegen_ctx);
+      dumpStageResult("AfterPreRASchedule", mir_func, codegen_ctx);
     }
 
     /* stage7: register allocation */
@@ -240,11 +240,22 @@ void createMIRModule(ir::Module& ir_module,
 
     {
       /* post-RA scheduling, minimize cycles */
-      // postRASchedule(*mir_func, codegen_ctx);
       postRASchedule(*mir_func, codegen_ctx);
       dumpStageResult("AfterPostRASchedule", mir_func, codegen_ctx);
     }
-    simplifyCFG(*mir_func, codegen_ctx);
+
+    /* stage10: code layout */
+    {
+      assert(mir_func->verify(std::cerr, codegen_ctx));
+      optimizeBlockLayout(mir_func, codegen_ctx);
+      assert(mir_func->verify(std::cerr, codegen_ctx));
+    }
+
+    /* stage11: simplify CFG */
+    {
+      simplifyCFG(*mir_func, codegen_ctx);
+    }
+
     /* post legalization */
     {
       utils::Stage stage{"postLegalization"sv};

@@ -1262,7 +1262,9 @@ InstSelInfo: {
       ],
   }
 
-ScheduleModel: { sifive_u74: {
+ScheduleModel: {
+    # sifive_u74
+    sifive_u74: {
         #
         Classes: {
             #
@@ -1390,7 +1392,8 @@ ScheduleModel: { sifive_u74: {
             FPCycle5:
               [FADD_S, FSUB_S, FMUL_S, FMADD_S, FMSUB_S, FNMADD_S, FNMSUB_S],
             FPDiv: [FDIV_S],
-            FPLoadStore: [FLW, FSW],
+            FPLoadStore: [FLW, FSW], # 2 cycles for FLW
             GeneralLoad: [InstLoadRegFromStack],
           },
-      } }
+      },
+  }

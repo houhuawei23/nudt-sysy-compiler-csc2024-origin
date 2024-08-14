@@ -23,16 +23,18 @@ void GepSplit::run(ir::Function* func, TopAnalysisInfoManager* tp) {
                 } else {
                     /* Array Op */
                     auto end = iter; end++;
+                    int num = 1;
                     while (end != instructions.end() && (*end)->isa<ir::GetElementPtrInst>()) {
                         auto preInst = std::prev(end);
                         auto curInst = dyn_cast<ir::GetElementPtrInst>(*end);
                         if (curInst->value() == (*preInst) && curInst->getid() != 0) {
-                            end++;
+                            end++; num++;
                         } else {
                             break;
                         }
                     }
                     iter = end;
+                    if (gep_inst->cur_dims_cnt() > num) continue;
                     split_array(begin, bb, end);  // [begin, end)
                 }
             } else {
@@ -178,7 +180,14 @@ void GepSplit::split_array(ir::inst_iterator begin,
 
         /* 4. 替换 */
         inst->replaceAllUseWith(op_ptr);
-        // insertBlock->force_delete_inst(inst);
+    }
+
+    /* 删除GetElementPtr指令 */
+    iter = begin;
+    while (iter != end) {
+        inst = dyn_cast<ir::GetElementPtrInst>(*iter);
+        iter++;
+        insertBlock->force_delete_inst(inst);
     }
 }
 };

@@ -12,6 +12,20 @@ enum RISCVIssueMask : uint32_t {
   RISCVPipelineAB = RISCVPipelineA | RISCVPipelineB  // 0b11
 };
 
+// LLVM: RISCVSchedSiFive7.td
+// The SiFive7 microarchitecture has three pipelines: A, B, V.
+// Pipe A can handle memory, integer alu and vector operations.
+// Pipe B can handle integer alu, control flow, integer multiply and divide,
+// and floating point computation.
+// The V pipeline is modeled by the VCQ, VA, VL, and VS resources.
+
+/*
+sifive-u74 S7/U7 Core:
+dual-issue, in-order pipeline, 8 stages:
+F1/F2 - D1/D2 - AG - M1/M2 - WB
+
+ */
+
 template <uint32_t ValidPipeline, bool Early, bool Late>
 class RISCVScheduleClassIntegerArithmeticGeneric final : public ScheduleClass {
   static_assert(ValidPipeline != 0 && (Early || Late));
@@ -31,20 +45,39 @@ public:
        availableInAG = false;
     else latency > 2:
        return false;
+
+    if all operands' laytency of inst is 0, then the dst of inst will avaliable in AG.
+    manual:
+    Integer arithmetic and branch instructions can execute in either the AG or M2 pipeline stage.
+    If such an instruction’s operands are available when the instruction enters the AG stage,
+    then it executes in AG; otherwise, it executes in M2.
+
+    in this cycle, the dst of inst will avalible in which stage?
+    if cant avalibel in any stages, schedule false.
     */
+    // for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
+    //   if (instInfo.operand_flag(idx) & OperandFlagUse) {
+    //     const auto latency = state.queryRegisterLatency(inst, idx);
+    //     switch (latency) {
+    //       case 0:
+    //         continue;
+    //       case 1:
+    //       case 2:
+    //         availableInAG = false;
+    //         break;
+    //       default:  // >2
+    //         return false;
+    //         break;
+    //     }
+    //   }
+    // }
     for (uint32_t idx = 0; idx < instInfo.operand_num(); idx++) {
       if (instInfo.operand_flag(idx) & OperandFlagUse) {
         const auto latency = state.queryRegisterLatency(inst, idx);
-        switch (latency) {
-          case 0:
-            break;
-          case 1:
-            availableInAG = false;
-            break;
-          default:
-            return false;
-            break;
-        }
+        if (latency <= 2) {
+          availableInAG &= (latency == 0);
+        } else
+          return false;
       }
     }
     // all operands laytency is 0 or 1, issue instruction
@@ -80,16 +113,21 @@ public:
     return false;
   }
 };
+
 /* Normal Integer Arithmetic, can issued in A/B, early and late scheduling */
 using RISCVScheduleClassIntegerArithmetic =
   RISCVScheduleClassIntegerArithmeticGeneric<RISCVPipelineAB, true, true>;
+
 /* LateB Integer Arithmetic, can issued in B, late scheduling */
 using RISCVScheduleClassIntegerArithmeticLateB =
   RISCVScheduleClassIntegerArithmeticGeneric<RISCVPipelineB, false, true>;
+
 using RISCVScheduleClassIntegerArithmeticEarlyB =
   RISCVScheduleClassIntegerArithmeticGeneric<RISCVPipelineB, true, false>;
+
 using RISCVScheduleClassIntegerArithmeticLateAB =
   RISCVScheduleClassIntegerArithmeticGeneric<RISCVPipelineAB, false, true>;
+
 using RISCVScheduleClassIntegerArithmeticEarlyLateB =
   RISCVScheduleClassIntegerArithmeticGeneric<RISCVPipelineB, true, true>;
 
@@ -296,6 +334,8 @@ public:
     if (instInfo.operand_flag(0) & OperandFlagDef) {
       // 2 cycles to use for FLW
       state.makeRegisterReady(inst, 0, 2);
+      auto la = state.queryRegisterLatency(inst, 0);
+      std::cerr << "FLoad laytency: " << la << std::endl;
     }
 
     state.setIssued(RISCVPipelineA);
