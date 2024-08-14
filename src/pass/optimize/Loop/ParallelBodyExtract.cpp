@@ -156,7 +156,7 @@ bool extractParallelBody(Function* func,
   const auto fixFunction = [&](Function* function) {
     CFGAnalysisHHW().run(function, tp);
     blockSortDFS(*function, tp);
-    function->rename();
+    // function->rename();
     // function->print(std::cerr);
   };
   // fic function
@@ -178,17 +178,20 @@ void ParallelBodyExtract::run(ir::Function* func, TopAnalysisInfoManager* tp) {
 bool ParallelBodyExtract::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
   auto sideEffectInfo = tp->getSideEffectInfo();
 
-  func->rename();
+  // func->rename();
+  std::cerr << "ParallelBodyExtract::runImpl: " << func->name() << std::endl;
   // func->print(std::cerr);
 
   CFGAnalysisHHW().run(func, tp);  // refresh CFG
 
   bool modified = false;
+  // WARNING: first getDepInfo, then getLoopInfoWithoutRefresh, then getIndVarInfoWithoutRefresh
   auto dpctx = tp->getDepInfo(func);
   auto lpctx = tp->getLoopInfoWithoutRefresh(func);         // fisrt loop analysis
   auto indVarInfo = tp->getIndVarInfoWithoutRefresh(func);  // then indvar analysis
 
-  auto loops = lpctx->sortedLoops();
+  // auto loops = lpctx->sortedLoops();
+  auto loops = lpctx->loops();
   std::unordered_set<Loop*> extractedLoops;
   const auto isBlocked = [&](Loop* lp) {
     for (auto extracted : extractedLoops) {
@@ -205,9 +208,12 @@ bool ParallelBodyExtract::runImpl(ir::Function* func, TopAnalysisInfoManager* tp
     return false;
   };
   for (auto loop : loops) {  // for all loops
-    // loop->print()
+    std::cerr << "loop level: " << lpctx->looplevel(loop->header());
+    loop->print(std::cerr);
     if (isBlocked(loop)) continue;
-    if (not dpctx->getLoopDependenceInfo(loop)->getIsParallel())continue;
+    auto depInfo = dpctx->getLoopDependenceInfo(loop);
+    depInfo->print(std::cerr);
+    if (not depInfo->getIsParallel()) continue;
     const auto indVar = indVarInfo->getIndvar(loop);
     const auto step = indVar->getStep()->i32();
     if (step != 1) continue;  // only support step = 1

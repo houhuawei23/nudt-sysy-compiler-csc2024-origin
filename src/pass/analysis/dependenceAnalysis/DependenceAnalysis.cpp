@@ -68,22 +68,27 @@ void dependenceAnalysis::runOnLoop(ir::Loop* lp){
     for(auto bd:depInfoForLp->getBaseAddrs()){
         auto& subAddrs=depInfoForLp->baseAddrToSubAddrSet(bd);
         //要么只有一个子地址，要么只有读，就说明不会有跨迭代的依赖
-        if(not depInfoForLp->getIsBaseAddrWrite(bd) or subAddrs.size()==1){
-            depInfoForLp->setBaseAddrIsCrossIterDep(bd,false);
-        }
+        depInfoForLp->setBaseAddrIsCrossIterDep(bd,false);
+        if(not depInfoForLp->getIsBaseAddrWrite(bd))
+            continue;
         
         for(auto setIter=subAddrs.begin();setIter!=subAddrs.end();setIter++){
-            for(auto setIter2=subAddrs.begin();setIter2!=setIter;setIter2++){
+            for(auto setIter2=subAddrs.begin();1;setIter2++){
                 //在进行依赖判断的时候，自己和自己也要进行比较，确保在不同的迭代里面他们二者并不相同，如果相同就有可能产生跨循环的依赖
                 auto gepidx1=depInfoForLp->getGepIdx(*setIter);
                 auto gepidx2=depInfoForLp->getGepIdx(*setIter2);
                 int depType=isTwoGepIdxPossiblySame(gepidx1,gepidx2,lp,defaultIdv);
-                if(((depType | dCrossIterPossiblySame) !=0) or ((depType | dCrossIterTotallySame)!=0)){
+                if((depType & dCrossIterTotallyNotSame) != 0){
+                    if(setIter2==setIter)break;
+                    continue;
+                }
+                if(((depType & dCrossIterPossiblySame) != 0) or ((depType & dCrossIterTotallySame) != 0)){
                     if(depInfoForLp->getIsSubAddrWrite(*setIter) or depInfoForLp->getIsSubAddrWrite(*setIter2)){
                         isParallel=false;
                         depInfoForLp->setBaseAddrIsCrossIterDep(bd,true);
                     }
                 }
+                if(setIter2==setIter)break;
             }
         }
     }

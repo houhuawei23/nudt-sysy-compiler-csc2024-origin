@@ -21,6 +21,7 @@ void TopAnalysisInfoManager::initialize() {
         mLoopInfo[func] = new loopInfo(func, this);
         mIndVarInfo[func] = new indVarInfo(func, this);
         mDepInfo[func] = new dependenceInfo(func,this);
+        mParallelInfo[func] = new parallelInfo(func,this);
     }
 }
 
@@ -41,9 +42,9 @@ void pdomTree::refresh() {
 void loopInfo::refresh() {
     using namespace pass;
     loopAnalysis la = loopAnalysis();
-    // loopInfoCheck lic = loopInfoCheck();
+    loopInfoCheck lic = loopInfoCheck();
     la.run(passUnit,topManager);
-    // lic.run(passUnit,topManager);
+    lic.run(passUnit,topManager);
     setOn();
 }
 void loopInfo::print(std::ostream& os) const {

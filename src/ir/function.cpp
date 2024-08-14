@@ -44,7 +44,7 @@ BasicBlock* Loop::getLoopPreheader() const {
 BasicBlock* Loop::getLoopLatch() const {
   BasicBlock* latch = nullptr;
   BasicBlock* Header = header();
-  for (auto* pred : Header->pre_blocks()) {
+  for (auto pred : Header->pre_blocks()) {
     if (contains(pred)) {
       if (latch) return nullptr;
       latch = pred;

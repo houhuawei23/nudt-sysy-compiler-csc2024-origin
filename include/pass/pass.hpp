@@ -47,6 +47,7 @@ private:
   std::unordered_map<ir::Function*, loopInfo*> mLoopInfo;
   std::unordered_map<ir::Function*, indVarInfo*> mIndVarInfo;
   std::unordered_map<ir::Function*, dependenceInfo*> mDepInfo;
+  std::unordered_map<ir::Function*, parallelInfo*> mParallelInfo;
   // bb info
   // add new func
   void addNewFunc(ir::Function* func) {
@@ -60,6 +61,8 @@ private:
     mIndVarInfo[func] = pnewIndVarInfo;
     auto pnewDepInfo = new dependenceInfo(func, this);
     mDepInfo[func] = pnewDepInfo;
+    auto pnewParallelInfo = new parallelInfo(func, this);
+    mParallelInfo[func] = pnewParallelInfo;
   }
 
 public:
@@ -175,6 +178,15 @@ public:
 
   callGraph* getCallGraphWithoutRefresh() { return mCallGraph; }
   sideEffectInfo* getSideEffectInfoWithoutRefresh() { return mSideEffectInfo; }
+  parallelInfo* getParallelInfo(ir::Function* func){
+    if (func->isOnlyDeclare()) return nullptr;
+    auto dpctx = mParallelInfo[func];
+    if (dpctx == nullptr) {
+      addNewFunc(func);
+    }
+    dpctx = mParallelInfo[func];
+    return dpctx;
+  }
 
   void initialize();
   void CFGChange(ir::Function* func) {

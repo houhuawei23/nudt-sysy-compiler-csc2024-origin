@@ -337,6 +337,21 @@ class dependenceInfo:public FunctionACtx{
         }
 };
 
+class parallelInfo:public FunctionACtx{
+    //你想并行的这里都有!
+    private:
+        std::unordered_map<ir::BasicBlock*,bool>_LpIsParallel;
+    public:
+        parallelInfo(ir::Function* func,TopAnalysisInfoManager* tp) : FunctionACtx(func,tp) {}
+        void setIsParallel(ir::BasicBlock* lp,bool b){_LpIsParallel[lp]=b;}
+        bool getIsParallel(ir::BasicBlock* lp){
+            if(_LpIsParallel.count(lp)){
+                return _LpIsParallel[lp];
+            }
+            assert(false and "input an unexistend loop in ");
+        }
+        void refresh(){}
 
+};
 
 };  // namespace pass
