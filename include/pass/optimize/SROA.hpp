@@ -11,5 +11,12 @@ namespace pass{
         public:
             void run(ir::Function* func,TopAnalysisInfoManager* tp)override;
             std::string name() const override;
+        private:
+            domTree* domctx;
+            loopInfo* lpctx;
+            sideEffectInfo* sectx;
+            dependenceInfo* dpctx;
+            indVarInfo* idvctx;
+            void runOnLoop(ir::Loop* lp);
     };
 }

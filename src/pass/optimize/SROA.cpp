@@ -7,5 +7,9 @@ std::string SROA::name() const {
 }
 
 void SROA::run(ir::Function* func,TopAnalysisInfoManager* tp){
-    
+    dpctx=tp->getDepInfo(func);
+    domctx=tp->getDomTreeWithoutRefresh(func);
+    idvctx=tp->getIndVarInfoWithoutRefresh(func);
+    lpctx=tp->getLoopInfoWithoutRefresh(func);
+    sectx=tp->getSideEffectInfoWithoutRefresh();
 }
