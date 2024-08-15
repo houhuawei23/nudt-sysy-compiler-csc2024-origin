@@ -17,6 +17,8 @@ namespace pass{
             sideEffectInfo* sectx;
             dependenceInfo* dpctx;
             indVarInfo* idvctx;
+            LoopDependenceInfo* depLpInfo;
             void runOnLoop(ir::Loop* lp);
+            void replaceOnlyLoadSubAddr(ir::GetElementPtrInst* gep,ir::Loop* lp);
     };
 }

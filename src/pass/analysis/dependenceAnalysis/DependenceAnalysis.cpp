@@ -9,6 +9,7 @@ void dependenceAnalysis::run(ir::Function* func,TopAnalysisInfoManager* tp){
     sectx=tp->getSideEffectInfo();
     cgctx=tp->getCallGraph();
     dpctx=tp->getDepInfoWithoutRefresh(func);
+    func->rename();
 
     for(auto lp:lpctx->loops()){//从最上层的循环开始遍历
         if(lp->parentloop()==nullptr)
@@ -93,7 +94,7 @@ void dependenceAnalysis::runOnLoop(ir::Loop* lp){
         }
     }
     depInfoForLp->setIsParallel(isParallel);
-    // depInfoForLp->print(std::cerr);
+    depInfoForLp->print(std::cerr);
 }   
 
 void dependenceAnalysis::makeGepIdx(ir::Loop* lp,ir::IndVar* idv,gepIdx* gepidx){
@@ -171,10 +172,10 @@ int dependenceAnalysis::isTwoIdxPossiblySame(ir::Value* val1,ir::Value* val2,idx
             return dTotallySame | dCrossIterTotallyNotSame;
             break;
         case iINNERIDV:
-            return dTotallySame | dCrossIterTotallyNotSame;
+            return dTotallySame | dCrossIterPossiblySame;
             break;
         case iINNERIDVPLUSMINUSFORMULA:
-            return dTotallySame | dCrossIterTotallyNotSame;
+            return dTotallySame | dCrossIterPossiblySame;
             break;
         case iLOAD:
             return dTotallySame | dCrossIterPossiblySame;//TODO, 依赖于副作用等分析

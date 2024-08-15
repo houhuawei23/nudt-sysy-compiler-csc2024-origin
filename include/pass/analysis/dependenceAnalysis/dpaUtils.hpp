@@ -38,6 +38,7 @@ namespace pass{
             //for outside info
             ir::Loop* parent;//当前循环
             bool isParallelConcerningArray;//是否应当并行(仅考虑数组间依赖)
+            bool hasSideEffectFunction;//后期使用副作用来细化
             //for baseaddr
             std::set<ir::Value*>baseAddrs;//存储该循环中用到的基址
             std::map<ir::Value*,bool>baseAddrIsRead;//当前基址是否读
