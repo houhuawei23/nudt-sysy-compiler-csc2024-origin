@@ -94,7 +94,7 @@ void dependenceAnalysis::runOnLoop(ir::Loop* lp){
         }
     }
     depInfoForLp->setIsParallel(isParallel);
-    depInfoForLp->print(std::cerr);
+    // depInfoForLp->print(std::cerr);
 }   
 
 void dependenceAnalysis::makeGepIdx(ir::Loop* lp,ir::IndVar* idv,gepIdx* gepidx){

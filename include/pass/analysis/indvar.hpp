@@ -13,8 +13,8 @@ private:
   domTree* domctx;
   sideEffectInfo* sectx;
   void addIndVar(ir::Loop* lp,
-                 ir::ConstantInteger* mbegin,
-                 ir::ConstantInteger* mstep,
+                 ir::Value* mbegin,
+                 ir::Value* mstep,
                  ir::Value* mend,
                  ir::BinaryInst* iterinst,
                  ir::Instruction* cmpinst,

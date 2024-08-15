@@ -505,39 +505,57 @@ private:  // only for constant beginvar and stepvar
   Value* mendVar;
 
   ConstantInteger* mstepVar;
-
+  Value* mbeginVarValue;
+  Value* mstepVarValue;
   bool mendIsConst;
 
   BinaryInst* miterInst;
   Instruction* mcmpInst;
   PhiInst* mphiinst;
 
+  bool isBeginAndStepConst;
+
 public:
-  IndVar(ConstantInteger* mbegin,
+  IndVar(Value* mbegin,
          Value* mend,
-         ConstantInteger* mstep,
+         Value* mstep,
          BinaryInst* bininst,
          Instruction* cmpinst,
          PhiInst* phiinst)
-    : mbeginVar(mbegin),
+    : mbeginVarValue(mbegin),
       mendVar(mend),
-      mstepVar(mstep),
+      mstepVarValue(mstep),
       miterInst(bininst),
       mcmpInst(cmpinst),
       mphiinst(phiinst) {
     mendIsConst = mendVar->isa<ConstantInteger>();
+    if(auto constBeginVar=mbeginVarValue->dynCast<ir::ConstantInteger>()){
+      mbeginVar=constBeginVar;
+    }
+    else{
+      mbeginVar=nullptr;
+    }
+    if(auto constStepVar=mstepVarValue->dynCast<ir::ConstantInteger>()){
+      mstepVar=constStepVar;
+    }
+    else{
+      mstepVar=nullptr;
+    }
+    isBeginAndStepConst=mstepVar!=nullptr and mbeginVar!=nullptr;
   }
   int getBeginI32() {
-    if (not mbeginVar->isInt32())
-      assert("BeginVar is not i32!");
+    if (mbeginVar==nullptr)
+      assert(false and "BeginVar is not i32!");
     return mbeginVar->i32();
   }
   int getStepI32() {
-    if (not mstepVar->isInt32())
-      assert("StepVar is not i32!");
+    if (mstepVar==nullptr)
+      assert(false and "StepVar is not i32!");
     return mstepVar->i32();
   }
   bool isEndVarConst() { return mendIsConst; }
+  bool isBeginVarConst() { return mbeginVar!=nullptr; }
+  bool isStepVarConst() { return mstepVar!=nullptr; }
   int getEndVarI32() {
     if (mendIsConst) {
       return mendVar->dynCast<ConstantValue>()->i32();
@@ -545,12 +563,15 @@ public:
       assert(false && "endVar is not constant");
   }
   Value* endValue() { return mendVar; }
+  Value* beginValue() { return mbeginVarValue; }
+  Value* stepValue() { return mstepVarValue; }
   BinaryInst* iterInst() { return miterInst; }
   Instruction* cmpInst() { return mcmpInst; }
   PhiInst* phiinst() { return mphiinst; }
   ConstantInteger* getBegin() { return mbeginVar; }
   ConstantInteger* getStep() { return mstepVar; }
   Value* getEnd() { return mendVar; }
+  bool getIsBeginAndStepConst(){return isBeginAndStepConst;}
   void print(std::ostream& os) const {
     os << "beginVar: ";
     mbeginVar->print(os);

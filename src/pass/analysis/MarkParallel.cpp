@@ -17,7 +17,7 @@ void markParallel::run(ir::Function* func,TopAnalysisInfoManager* tp){
     for(auto loop:lpctx->loops()){
         runOnLoop(loop);
     }
-    // printParallelInfo(func);
+    printParallelInfo(func);
 }
 
 void markParallel::runOnLoop(ir::Loop* lp){

@@ -44,28 +44,33 @@ void indVarAnalysis::run(ir::Function* func, TopAnalysisInfoManager* tp) {
         else
             continue;
         if(not isSimplyLoopInvariant(lp,mEndVar))continue;
-        auto mBeginVar = dyn_cast<ir::ConstantInteger>(keyPhiInst->getvalfromBB(lpPreHeader));
-        // if(mBeginVar==nullptr){//考虑内层循环嵌套问题
-        //     if(lpctx->looplevel(lpHeader)==1 or lpctx->looplevel(lpHeader)==0)continue;//如果这时本来就是最外层循环，那么就不适合分析indvar
-        //     auto mBeginVarPhi=dyn_cast<ir::PhiInst>(keyPhiInst->getvalfromBB(lpPreHeader));
-        //     if(mBeginVarPhi==nullptr)continue;
-        //     mBeginVar=getConstantBeginVarFromPhi(mBeginVarPhi,keyPhiInst,lp->parent());
-        // }
-        if(mBeginVar==nullptr)continue;
+        auto mBeginVar = keyPhiInst->getvalfromBB(lpPreHeader);
+        if(not isSimplyLoopInvariant(lp,mBeginVar))continue;
         auto iterInst=keyPhiInst->getValue(0)==keyPhiInst->getvalfromBB(lpPreHeader)?
             keyPhiInst->getValue(1):keyPhiInst->getValue(0);
         auto iterInstScid = iterInst->valueId();
-        ir::ConstantInteger* mstepVar;
+        ir::Value* mstepVar;
         if (not(iterInstScid == ir::vADD or iterInstScid == ir::vFADD or iterInstScid == ir::vSUB or
-                iterInstScid == ir::vFSUB or iterInstScid == ir::vMUL or iterInstScid == ir::vFMUL))
-            continue;
+                iterInstScid == ir::vFSUB or iterInstScid == ir::vMUL or iterInstScid == ir::vFMUL)){
+            if(not (iterInstScid==ir::vPHI))continue;
+            auto phiinst=iterInst->dynCast<ir::PhiInst>();
+            auto phiinstBlock=phiinst->block();
+            if(lp->latchs().count(phiinst->block())==0)continue;
+            iterInst=phiinst->getConstantRepl();
+            if(iterInst==nullptr)continue;
+            iterInstScid=iterInst->valueId();
+             if (not(iterInstScid == ir::vADD or iterInstScid == ir::vFADD or iterInstScid == ir::vSUB or
+                iterInstScid == ir::vFSUB or iterInstScid == ir::vMUL or iterInstScid == ir::vFMUL))continue;
+        }
         auto iterInstBinary = dyn_cast<ir::BinaryInst>(iterInst);
         if (iterInstBinary->lValue()->valueId() == ir::vPHI) {
             if (dyn_cast<ir::PhiInst>(iterInstBinary->lValue()) != keyPhiInst) continue;
-            mstepVar = dyn_cast<ir::ConstantInteger>(iterInstBinary->rValue());
+            mstepVar = iterInstBinary->rValue();
+            if(not isSimplyLoopInvariant(lp,mstepVar))continue;
         } else if (iterInstBinary->rValue()->valueId() == ir::vPHI) {
             if (dyn_cast<ir::PhiInst>(iterInstBinary->rValue()) != keyPhiInst) continue;
-            mstepVar = dyn_cast<ir::ConstantInteger>(iterInstBinary->lValue());
+            mstepVar = iterInstBinary->lValue();
+            if(not isSimplyLoopInvariant(lp,mstepVar))continue;
         } else
             continue;
         addIndVar(lp, mBeginVar, mstepVar, mEndVar, iterInstBinary,
@@ -84,13 +89,13 @@ void indVarAnalysis::run(ir::Function* func, TopAnalysisInfoManager* tp) {
 }
 
 void indVarAnalysis::addIndVar(ir::Loop* lp,
-                               ir::ConstantInteger* mbegin,
-                               ir::ConstantInteger* mstep,
+                               ir::Value* mbegin,
+                               ir::Value* mstep,
                                ir::Value* mend,
                                ir::BinaryInst* iterinst,
                                ir::Instruction* cmpinst,
                                ir::PhiInst* phiinst) {
-    auto pnewIdv = new ir::IndVar(mbegin, mend, mstep, iterinst, cmpinst,phiinst);
+    auto pnewIdv = new ir::IndVar(mbegin, mend, mstep, iterinst, cmpinst, phiinst);
     ivctx->addIndVar(lp, pnewIdv);
 }
 
