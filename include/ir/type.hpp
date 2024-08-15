@@ -113,6 +113,7 @@ protected:
   std::vector<size_t> mDims;  // dimensions
   Type* mBaseType;            // int or float
 public:
+  // capacity: by words
   ArrayType(Type* baseType, std::vector<size_t> dims, size_t capacity=1)
     : Type(BasicTypeRank::ARRAY, capacity * 4), mBaseType(baseType), mDims(dims) {}
 public:  // generate function

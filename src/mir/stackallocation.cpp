@@ -75,9 +75,6 @@ static void remove_unused_spill_stack_objects(MIRFunction* mfunc) {
  *  - 4
  */
 void allocateStackObjects(MIRFunction* func, CodeGenContext& ctx) {
-  auto alignTo = [](int32_t base, int32_t align) {
-    return (base + align - 1) / align * align;
-  };
 
   constexpr bool debugSA = false;
   auto dumpOperand = [&](MIROperand op) {
@@ -115,7 +112,7 @@ void allocateStackObjects(MIRFunction* func, CodeGenContext& ctx) {
 
   auto align_to = [&](int32_t alignment) {
     assert(alignment <= sp_alignment);
-    allocationBase = alignTo(allocationBase, alignment);
+    allocationBase = utils::alignTo(allocationBase, alignment);
   };
 
   /* 2. determine stack layout for callee arguments, calculate offset  */
@@ -176,7 +173,7 @@ void allocateStackObjects(MIRFunction* func, CodeGenContext& ctx) {
    */
   align_to(sp_alignment);
 
-  auto gap = alignTo(preAllocatedBase, sp_alignment) - preAllocatedBase;
+  auto gap = utils::alignTo(preAllocatedBase, sp_alignment) - preAllocatedBase;
 
   auto stack_size = allocationBase + gap;
   assert((stack_size + preAllocatedBase) % sp_alignment == 0);

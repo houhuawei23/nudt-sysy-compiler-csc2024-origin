@@ -1,5 +1,5 @@
 #include "mir/BlockLayoutOpt.hpp"
-
+#include <limits>
 namespace mir {
 static std::string blockPlacementAlgo = "Pettis-Hansen";
 

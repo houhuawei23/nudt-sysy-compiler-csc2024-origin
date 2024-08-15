@@ -493,6 +493,7 @@ bool extractLoopBody(Function* func,
     info.body = callBlock;
     info.latch = loop.getUniqueLatch();
     info.preHeader = loop.getLoopPreheader();
+    info.exit = *(loop.exits().begin());
   }
   return true;
 }

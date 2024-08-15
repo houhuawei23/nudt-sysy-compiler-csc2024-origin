@@ -1,3 +1,5 @@
+// #define DEBUG
+
 #include "mir/MIR.hpp"
 #include "mir/target.hpp"
 #include "mir/CFGAnalysis.hpp"
@@ -96,7 +98,6 @@ bool GraphColoringAllocateContext::collectConstantsRegisters(MIRFunction& mfunc,
 
   return true;
 }
-static bool debugRA = false;
 
 std::unordered_set<RegNum> GraphColoringAllocateContext::collectVirtualRegs(MIRFunction& mfunc,
                                                                             CodeGenContext& ctx) {
@@ -309,7 +310,9 @@ bool GraphColoringAllocateContext::assignRegisters(MIRFunction& mfunc,
       spillRegister = true;
       break;
     }
-    // if (debugRA) std::cerr << "push " << (u ^ virtualRegBegin) << std::endl;
+#ifdef DEBUG
+    std::cerr << "push: " << dumpVirtualReg(u) << std::endl;
+#endif
     assignStack.push(u);
   }
   return spillRegister;
@@ -424,7 +427,6 @@ bool GraphColoringAllocateContext::allocateRegisters(
         for (auto reg : list) {
           if (!exclude.count(reg)) {
             const auto curCost = evalCost(reg);
-            // if (debugRA) { std::cerr << reg << " cost " << curCost << std::endl; }
             if (curCost < cost) {
               cost = curCost;
               bestReg = reg;
@@ -438,7 +440,9 @@ bool GraphColoringAllocateContext::allocateRegisters(
       }
     }
     if (!assigned) assert(false);
-    // if (debugRA) { std::cerr << (u ^ virtualRegBegin) << " -> " << regMap.at(u) << std::endl; }
+#ifdef DEBUG
+    std::cerr << "assign " << (u ^ virtualRegBegin) << " -> " << regMap.at(u) << std::endl;
+#endif
   }
 
   // mfunc.dump(std::cerr, ctx);
@@ -453,12 +457,12 @@ bool GraphColoringAllocateContext::spillRegisters(MIRFunction& mfunc,
     ctx.registerInfo->getCanonicalizedRegisterTypeForClass(allocationClass);
   auto u = graph.pick_to_spill(blockList, weights, regCount);
   blockList.insert(u);
-  if (debugRA) {
-    std::cerr << "spill " << (u ^ virtualRegBegin) << std::endl;
-    // std::cerr << "block list " << blockList.size() << ' ' << graph.size() << '\n';
-  }
+#ifdef DEBUG
+  std::cerr << "spill: ";
+  dumpVirtualReg(u) << std::endl;
+  std::cerr << "block list " << blockList.size() << ' ' << graph.size() << '\n';
+#endif
   if (!isVirtualReg(u)) {
-    // std::cerr << mfunc.symbol() << std::endl;
     assert(false);
   }
   const auto size = getOperandSize(canonicalizedType);
@@ -640,19 +644,20 @@ static void graphColoringAllocateImpl(MIRFunction& mfunc,
                                       CodeGenContext& ctx,
                                       GraphColoringAllocateContext& allocateCtx) {
   const auto allocationClass = allocateCtx.allocationClass;
-  constexpr auto debugRA = true;
-
-  if (debugRA) {
-    std::cerr << "allocate for class " << allocationClass << std::endl;
-  }
+#ifdef DEBUG
+  std::cerr << "allocate for class " << allocationClass << std::endl;
+#endif
 
   size_t iterantion = 0;
   while (not runAllocate(mfunc, ctx, allocateCtx)) {
-    if (debugRA) {
-      std::cerr << "iteration " << iterantion++ << std::endl;
-    }
+    iterantion++;
+#ifdef DEBUG
+    std::cerr << "iteration " << iterantion << std::endl;
+#endif
   }
+#ifdef DEBUG
   std::cerr << "allocate for class " << allocationClass << " success" << std::endl;
+#endif
 }
 
 void graphColoringAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAUsageCache& infoIPRA) {
