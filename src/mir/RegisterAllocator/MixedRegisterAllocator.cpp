@@ -23,12 +23,12 @@ static size_t VregNumThreshold = 3000;
 
 void mixedRegisterAllocate(MIRFunction& mfunc, CodeGenContext& ctx, IPRAUsageCache& infoIPRA) {
   const auto vregNum = collectVregNumber(mfunc, ctx);
-  std::cerr << "vregNum: " << vregNum;
+  // std::cerr << "vregNum: " << vregNum;
   if (vregNum > VregNumThreshold) {
-    std::cerr << ", using fast allocator beta" << std::endl;
+    // std::cerr << ", using fast allocator beta" << std::endl;
     intraBlockAllocate(mfunc, ctx, infoIPRA);
   } else {
-    std::cerr << ", using graph coloring allocator" << std::endl;
+    // std::cerr << ", using graph coloring allocator" << std::endl;
     graphColoringAllocate(mfunc, ctx, infoIPRA);
   }
 }

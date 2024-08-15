@@ -15,7 +15,6 @@ public:
   std::string name() const override { return "LoopParallel"; }
 
 private:
-  static ir::Function* loopupParallelFor(ir::Module* module);
   static bool isConstant(ir::Value* val);
   bool runImpl(ir::Function* func, TopAnalysisInfoManager* tp);
 };

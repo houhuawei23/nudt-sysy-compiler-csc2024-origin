@@ -246,9 +246,9 @@ void createMIRModule(ir::Module& ir_module,
 
     /* stage10: code layout */
     {
-      assert(mir_func->verify(std::cerr, codegen_ctx));
-      optimizeBlockLayout(mir_func, codegen_ctx);
-      assert(mir_func->verify(std::cerr, codegen_ctx));
+      // assert(mir_func->verify(std::cerr, codegen_ctx));
+      // optimizeBlockLayout(mir_func, codegen_ctx);
+      // assert(mir_func->verify(std::cerr, codegen_ctx));
     }
 
     /* stage11: simplify CFG */

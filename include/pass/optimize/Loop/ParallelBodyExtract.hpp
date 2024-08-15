@@ -13,8 +13,14 @@ struct ParallelBodyInfo final {
   Function* parallelBody;
   CallInst* callInst;
   BasicBlock* callBlock;
+  
   Value* beg;
   Value* end;
+
+  std::vector<std::pair<Value*, size_t>> payload;
+  GlobalVariable* payloadStorage;
+
+  std::vector<Value*> payloadStoreInsts;
 };
 
 class ParallelBodyExtract : public FunctionPass {

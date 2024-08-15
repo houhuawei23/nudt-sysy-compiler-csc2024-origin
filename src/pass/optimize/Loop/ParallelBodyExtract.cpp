@@ -5,6 +5,11 @@
 
 // #include "pass/analysis/dependenceAnalysis/dpaUtils.hpp"
 #include "pass/analysis/dependenceAnalysis/DependenceAnalysis.hpp"
+#include "pass/analysis/MarkParallel.hpp"
+
+#include "support/arena.hpp"
+#include "support/utils.hpp"
+
 using namespace ir;
 
 namespace pass {
@@ -12,6 +17,12 @@ namespace pass {
 static auto getUniqueID() {
   static size_t id = 0;
   const auto base = "sysyc_parallel_body";
+  return base + std::to_string(id++);
+}
+
+static auto getStorageUniqueID() {
+  static size_t id = 0;
+  const auto base = "parallel_body_payload";
   return base + std::to_string(id++);
 }
 /*
@@ -30,26 +41,20 @@ after extract parallel body:
     }
 
 */
-bool extractParallelBody(Function* func,
-                         Loop* loop,
-                         IndVar* indVar,
-                         TopAnalysisInfoManager* tp,
-                         ParallelBodyInfo& parallelBodyInfo) {
-  const auto step = indVar->getStep()->i32();
-  // indVar->print(std::cerr);
+// build parallelBody function
+/*
+               |--> newExit
+newEntry -> header -> call_loop_body -> latch
+             |__________________________|
 
-  if (step != 1) return false;                  // only support step = 1
-  if (loop->exits().size() != 1) return false;  // only support single exit loop
-  const auto loopExitBlock = *(loop->exits().begin());
-  // extact loop body as a new loop_body func from func loop
-  LoopBodyInfo loopBodyInfo;
-  if (not extractLoopBody(func, *loop /* modified */, indVar, tp, loopBodyInfo /* ret */))
-    return false;
-
-  // loopBodyInfo.print(std::cerr);
+*/
+auto buildParallelBodyBeta(Module& module,
+                           IndVar* indVar,
+                           LoopBodyInfo& loopBodyInfo,
+                           ParallelBodyInfo& parallelBodyInfo /* ret */) {
   const auto i32 = Type::TypeInt32();
   auto funcType = FunctionType::gen(Type::void_type(), {i32, i32});
-  auto parallelBody = func->module()->addFunction(funcType, getUniqueID());
+  auto parallelBody = module.addFunction(funcType, getUniqueID());
 
   auto argBeg = parallelBody->new_arg(i32, "beg");
   auto argEnd = parallelBody->new_arg(i32, "end");
@@ -63,27 +68,78 @@ bool extractParallelBody(Function* func,
     block->set_parent(parallelBody);
     parallelBody->blocks().push_back(block);
   }
-  // remove loop from func
-  func->blocks().remove_if([&](BasicBlock* block) { return bodyBlocks.count(block); });
   // build parallel_body
   IRBuilder builder;
   builder.set_pos(newEntry, newEntry->insts().end());
-  builder.makeInst<BranchInst>(loopBodyInfo.header);
-  builder.set_pos(newExit, newExit->insts().end());
-  builder.makeInst<ReturnInst>();
+  // non constant, gloabal value used in loop_body, must pass by global payload
+  // fix loop_body(i, otherargs...)
+  // args must pass through global var, Value* -> offset
+  std::vector<std::pair<Value*, size_t>> payload;
+  size_t totalSize = 0;  // bytes
+  const auto f32 = Type::TypeFloat32();
 
-  // add new call block to func
-  auto callBlock = func->newBlock();
-  callBlock->setComment("call_parallel_body");
-  loopBodyInfo.preHeader->insts().pop_back();  // remove old br from preHeader
-  builder.set_pos(loopBodyInfo.preHeader, loopBodyInfo.preHeader->insts().end());
-  builder.makeInst<BranchInst>(callBlock);
-  builder.set_pos(callBlock, callBlock->insts().end());
-  // call parallel_body(beg, end)
-  auto callArgs = std::vector<Value*>{indVar->getBegin(), indVar->getEnd()};
-  auto callInst = builder.makeInst<CallInst>(parallelBody, callArgs);
-  assert(loop->exits().size() == 1);
-  builder.makeInst<BranchInst>(loopExitBlock);
+  std::unordered_set<Value*> inserted;
+  // align by 32 bits, 4 bytes
+  const size_t align = 4;
+
+  const auto addArgument = [&](Value* arg) {
+    if (arg == loopBodyInfo.indVar->phiinst()) return;
+    if (arg->isa<ConstantValue>() or arg->isa<GlobalVariable>()) return;
+    // giv?
+    if (inserted.count(arg)) return;  // already in
+    // pass by payload
+    const auto size = arg->type()->size();
+    totalSize = utils::alignTo(totalSize, align);
+    payload.emplace_back(arg, totalSize);  // arg -> offset
+    totalSize += size;
+  };
+
+  for (auto use : loopBodyInfo.callInst->rargs()) {
+    const auto realArg = use->value();
+    addArgument(realArg);
+  }
+  assert(totalSize % 4 == 0);  // by words
+  const auto totalWords = totalSize / 4;
+  const auto payloadType = ArrayType::gen(Type::TypeInt32(), {totalWords}, totalWords);  // by word?
+  const auto payloadStorage = utils::make<GlobalVariable>(payloadType, getStorageUniqueID());
+  module.addGlobalVar(payloadStorage->name(), payloadStorage);
+  const auto base = builder.makeUnary(ValueId::vPTRTOINT, payloadStorage, Type::TypeInt64());
+  // fix call loop_body(i, others)
+  // original value -> load payload
+  const auto remapArgument = [&](Use* use) {
+    const auto user = use->user();
+    const auto value = use->value();
+#ifdef DEBUG
+    std::cerr << "remap: ";
+    value->dumpAsOpernd(std::cerr);
+#endif
+    if (value == loopBodyInfo.indVar->phiinst()) return;
+    // giv
+    if (value->isa<ConstantValue>() or value->isa<GlobalVariable>()) return;
+
+    bool replaced = false;
+    for (auto [arg, offset] : payload) {
+      if (arg == value) {
+        auto ptr = builder.makeBinary(BinaryOp::ADD, base, ConstantInteger::gen_i64(offset));
+        ptr = builder.makeUnary(ValueId::vINTTOPTR, ptr, Type::TypePointer(arg->type()));
+        auto load = builder.makeLoad(ptr);
+        user->setOperand(use->index(), load);
+        replaced = true;
+      }
+    }
+    if (not replaced) {
+      assert(false);
+    }
+#ifdef DEBUG
+    std::cerr << "-> ";
+    user->operand(use->index())->dumpAsOpernd(std::cerr);
+    std::cerr << std::endl;
+#endif
+  };
+  auto uses = loopBodyInfo.callInst->rargs();
+  for (auto use : uses) {
+    remapArgument(use);
+  }
 
   // fix value in paraplel_body
   const auto fixPhi = [&](PhiInst* phi) {
@@ -116,7 +172,7 @@ bool extractParallelBody(Function* func,
     // std::cerr << std::endl;
   };
   std::unordered_map<BasicBlock*, BasicBlock*> blockMap;
-  blockMap.emplace(loopExitBlock, newExit);
+  blockMap.emplace(loopBodyInfo.exit, newExit);
   const auto fixBranch = [&](BranchInst* branch) {
     for (auto opuse : branch->operands()) {
       auto op = opuse->value();
@@ -127,8 +183,6 @@ bool extractParallelBody(Function* func,
       }
     }
   };
-  std::vector<std::pair<Value*, size_t>> payload;
-  // non constant, gloabal value used in loop_body, must pass by global payload
   const auto fixCall = [&](CallInst* call) {
     if (call == loopBodyInfo.callInst) {  // call loop_body(i, otherargs...)
       for (auto opuse : call->operands()) {
@@ -153,6 +207,80 @@ bool extractParallelBody(Function* func,
       }
     }
   }
+
+  builder.makeInst<BranchInst>(loopBodyInfo.header);  // newEntry -> header
+  fixAllocaInEntry(*parallelBody);
+
+  // newExit -> return
+  builder.set_pos(newExit, newExit->insts().end());
+  builder.makeInst<ReturnInst>();  // newExit [ret void]
+
+  parallelBodyInfo.parallelBody = parallelBody;
+  parallelBodyInfo.payload = payload;
+  parallelBodyInfo.payloadStorage = payloadStorage;
+
+  return parallelBody;
+}
+
+auto rebuildFunc(Function* func,
+                 IndVar* indVar,
+                 LoopBodyInfo& loopBodyInfo,
+                 ParallelBodyInfo& parallelBodyInfo) {
+  std::unordered_set<BasicBlock*> bodyBlocks = {loopBodyInfo.header, loopBodyInfo.body,
+                                                loopBodyInfo.latch};
+  func->blocks().remove_if([&](BasicBlock* block) { return bodyBlocks.count(block); });
+  IRBuilder builder;
+  // add new call block to func
+  // preHeader -> callBlock -> exit
+  auto callBlock = func->newBlock();
+  callBlock->setComment("call_parallel_body");
+  loopBodyInfo.preHeader->insts().pop_back();  // remove old br from preHeader
+  builder.set_pos(loopBodyInfo.preHeader, loopBodyInfo.preHeader->insts().end());
+  builder.makeInst<BranchInst>(callBlock);  // preHeader -> callBlock
+
+  // callBlock
+  builder.set_pos(callBlock, callBlock->insts().end());
+  // store payload
+  const auto base =
+    builder.makeUnary(ValueId::vPTRTOINT, parallelBodyInfo.payloadStorage, Type::TypeInt64());
+  parallelBodyInfo.payloadStoreInsts.emplace_back(base);
+  for (auto [value, offset] : parallelBodyInfo.payload) {
+    auto ptr = builder.makeBinary(BinaryOp::ADD, base, ConstantInteger::gen_i64(offset));
+    auto typeptr = builder.makeUnary(ValueId::vINTTOPTR, ptr, Type::TypePointer(value->type()));
+    auto store = builder.makeInst<StoreInst>(value, typeptr);
+    parallelBodyInfo.payloadStoreInsts.insert(parallelBodyInfo.payloadStoreInsts.end(),
+                                              {ptr, typeptr, store});
+  }
+
+  // call parallel_body(beg, end)
+  auto callArgs = std::vector<Value*>{indVar->getBegin(), indVar->getEnd()};
+  auto callInst = builder.makeInst<CallInst>(parallelBodyInfo.parallelBody, callArgs);
+  builder.makeInst<BranchInst>(loopBodyInfo.exit);
+
+  parallelBodyInfo.callInst = callInst;
+  parallelBodyInfo.callBlock = callBlock;
+}
+
+bool extractParallelBody(Function* func,
+                         Loop* loop,
+                         IndVar* indVar,
+                         TopAnalysisInfoManager* tp,
+                         ParallelBodyInfo& parallelBodyInfo) {
+  const auto step = indVar->getStep()->i32();
+  // indVar->print(std::cerr);
+  if (step != 1) return false;                  // only support step = 1
+  if (loop->exits().size() != 1) return false;  // only support single exit loop
+
+  // extact loop body as a new loop_body func from func loop
+  LoopBodyInfo loopBodyInfo;
+  if (not extractLoopBody(func, *loop /* modified */, indVar, tp, loopBodyInfo /* ret */))
+    return false;
+  // loopBodyInfo.print(std::cerr);
+
+  const auto parallelBody =
+    buildParallelBodyBeta(*func->module(), indVar, loopBodyInfo, parallelBodyInfo);
+
+  rebuildFunc(func, indVar, loopBodyInfo, parallelBodyInfo);
   const auto fixFunction = [&](Function* function) {
     CFGAnalysisHHW().run(function, tp);
     blockSortDFS(*function, tp);
@@ -162,9 +290,8 @@ bool extractParallelBody(Function* func,
   // fic function
   fixFunction(func);
   fixFunction(parallelBody);
-  parallelBodyInfo.parallelBody = parallelBody;
-  parallelBodyInfo.callInst = callInst;
-  parallelBodyInfo.callBlock = callBlock;
+
+  // parallelBodyInfo
   parallelBodyInfo.beg = indVar->getBegin();
   parallelBodyInfo.end = indVar->getEnd();
   return true;
@@ -183,15 +310,16 @@ bool ParallelBodyExtract::runImpl(ir::Function* func, TopAnalysisInfoManager* tp
   // func->print(std::cerr);
 
   CFGAnalysisHHW().run(func, tp);  // refresh CFG
+  markParallel().run(func, tp);
 
   bool modified = false;
-  // WARNING: first getDepInfo, then getLoopInfoWithoutRefresh, then getIndVarInfoWithoutRefresh
-  auto dpctx = tp->getDepInfo(func);
+
   auto lpctx = tp->getLoopInfoWithoutRefresh(func);         // fisrt loop analysis
   auto indVarInfo = tp->getIndVarInfoWithoutRefresh(func);  // then indvar analysis
+  auto parctx = tp->getParallelInfo(func);
 
-  // auto loops = lpctx->sortedLoops();
-  auto loops = lpctx->loops();
+  auto loops = lpctx->sortedLoops();
+
   std::unordered_set<Loop*> extractedLoops;
   const auto isBlocked = [&](Loop* lp) {
     for (auto extracted : extractedLoops) {
@@ -207,16 +335,20 @@ bool ParallelBodyExtract::runImpl(ir::Function* func, TopAnalysisInfoManager* tp
     }
     return false;
   };
-  for (auto loop : loops) {  // for all loops
-    std::cerr << "loop level: " << lpctx->looplevel(loop->header());
-    loop->print(std::cerr);
+
+  for (auto loop : loops) {
+    // check
     if (isBlocked(loop)) continue;
-    auto depInfo = dpctx->getLoopDependenceInfo(loop);
-    depInfo->print(std::cerr);
-    if (not depInfo->getIsParallel()) continue;
+    if (not parctx->getIsParallel(loop->header())) {
+      std::cerr << "cant parallel" << std::endl;
+      continue;
+    }
     const auto indVar = indVarInfo->getIndvar(loop);
     const auto step = indVar->getStep()->i32();
     if (step != 1) continue;  // only support step = 1
+
+    std::cerr << "loop level: " << lpctx->looplevel(loop->header());
+    loop->print(std::cerr);
 
     ParallelBodyInfo info;
     if (not extractParallelBody(func, loop, indVar, tp, info)) {

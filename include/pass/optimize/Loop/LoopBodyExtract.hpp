@@ -16,7 +16,7 @@ struct LoopBodyInfo {
   BasicBlock* header;
   BasicBlock* body;
   BasicBlock* latch;
-
+  BasicBlock* exit;
   void print(std::ostream& os) const;
 };
 
