@@ -290,24 +290,27 @@ bool extractLoopBody(Function* func,
   }
 
   // independent
-  // std::unordered_map<Value*, uint32_t> loadStoreMap;
-  // for (auto block : loop.blocks()) {
-  //   for (auto inst : block->insts()) {
-  //     if (inst->isTerminator()) continue;
-  //     if (auto loadInst = inst->dynCast<LoadInst>()) {
-  //       const auto ptr = loadInst->ptr();
-  //     } else if (auto storeInst = inst->dynCast<StoreInst>()) {
-  //       const auto ptr = storeInst->ptr();
-  //     }
-  //     // TODO:
-  //   }
-  // }
-  // std::vector<std::pair<Instruction*, Instruction*>> workList;
-  // for (auto [k, v] : loadStoreMap) {
-  //   if (v == 3) {
-  //     // TODO:
-  //   }
-  // }
+  // load-store pair to atomic add
+  const auto convertToAtomic = [&]() {
+    std::unordered_map<Value*, uint32_t> loadStoreMap;
+    for (auto block : loop.blocks()) {
+      for (auto inst : block->insts()) {
+        if (inst->isTerminator()) continue;
+        if (auto loadInst = inst->dynCast<LoadInst>()) {
+          const auto ptr = loadInst->ptr();
+        } else if (auto storeInst = inst->dynCast<StoreInst>()) {
+          const auto ptr = storeInst->ptr();
+        }
+        // TODO:
+      }
+    }
+    std::vector<std::pair<Instruction*, Instruction*>> workList;
+    for (auto [k, v] : loadStoreMap) {
+      if (v == 3) {
+        // TODO:
+      }
+    }
+  };
 
   auto funcType = FunctionType::gen(Type::void_type(), {});
 
@@ -399,7 +402,8 @@ bool extractLoopBody(Function* func,
       std::cerr << std::endl;
 #endif
       // exclude head and iterInst
-      if (userInst->block() == loop.header() or userInst->block() == loop.getUniqueLatch()) continue;
+      if (userInst->block() == loop.header() or userInst->block() == loop.getUniqueLatch())
+        continue;
       if (userInst == indVar->iterInst()) continue;
       if (loop.blocks().count(userInst->block())) {
 #ifdef DEBUG
