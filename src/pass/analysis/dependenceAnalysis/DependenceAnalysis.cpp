@@ -177,7 +177,7 @@ int dependenceAnalysis::isTwoIdxPossiblySame(ir::Value* val1,ir::Value* val2,idx
             return dTotallySame | dCrossIterTotallyNotSame;
             break;
         case iLOAD:
-            return dTotallyNotSame | dCrossIterPossiblySame;//TODO, 依赖于副作用等分析
+            return dTotallySame | dCrossIterPossiblySame;//TODO, 依赖于副作用等分析
             break;
         case iELSE:
             return dPossiblySame | dCrossIterPossiblySame;
@@ -342,6 +342,9 @@ int dependenceAnalysis::isTwoIdxPossiblySame(ir::Value* val1,ir::Value* val2,idx
         default:
             break;
         }
+    }
+    if((type1==iIDV and type2==iIDVPLUSMINUSFORMULA)or(type1==iIDVPLUSMINUSFORMULA and type2==iIDV)){
+        return dTotallyNotSame | dCrossIterPossiblySame;
     }
     return dPossiblySame | dCrossIterPossiblySame;
 }
