@@ -6,8 +6,11 @@ class sideEffectAnalysis : public ModulePass {
 public:
   std::string name() const override { return "sideEffectAnalysis"; }
   void run(ir::Module* md, TopAnalysisInfoManager* tp) override;
+private:
   void infoCheck(ir::Module* md);
-  ir::GlobalVariable* isGlobal(ir::GetElementPtrInst* gep);
+  ir::Value* getBaseAddr(ir::Value* subAddr);
+  bool propogateSideEffect(ir::Module* md);
+
 
 private:
   callGraph* cgctx;
