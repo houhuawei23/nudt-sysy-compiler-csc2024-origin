@@ -1,3 +1,4 @@
+// #define DEBUG
 #include "pass/optimize/Utils/BlockUtils.hpp"
 #include "pass/optimize/Misc/StatelessCache.hpp"
 #include "pass/analysis/ControlFlowGraph.hpp"
@@ -36,42 +37,39 @@ bool StatelessCache::has2MoreRecursiveCalls(Function* func) {
 }
 
 bool checkArgs(Function* func) {
-  if (func->args().empty() or func->args().size() > 2)
-    return false;
+  if (func->args().empty() or func->args().size() > 2) return false;
   for (auto argType : func->argTypes()) {
-    if (not(argType->isInt32() or argType->isFloat32()))
-      return false;
+    if (not(argType->isInt32() or argType->isFloat32())) return false;
   }
   return true;
 }
 
-constexpr bool debug = false;
 
 bool StatelessCache::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
   auto sideEffectInfo = tp->getSideEffectInfo();
   if (sideEffectInfo->hasSideEffect(func)) {
+#ifdef DEBUG
     std::cerr << "StatelessCache: " << func->name() << " has side effect" << std::endl;
+#endif
     return false;
   }
 
-  if (debug) {
+#ifdef DEBUG
     std::cerr << "StatelessCache: " << func->name() << std::endl;
     // func->print(std::cerr);
-  }
+#endif
+
   // check if function is Stateless: NoMemoryRead, NoSideEffect
   // check if function has 2 more recursive calls
-  if (not has2MoreRecursiveCalls(func))
-    return false;
+  if (not has2MoreRecursiveCalls(func)) return false;
   const auto i32 = Type::TypeInt32();
   const auto f32 = Type::TypeFloat32();
   const auto retType = func->retType();
 
   // only support i32 and f32 return types
-  if (not(retType->isInt32() or retType->isFloat32()))
-    return false;
+  if (not(retType->isInt32() or retType->isFloat32())) return false;
 
-  if (not checkArgs(func))
-    return false;
+  if (not checkArgs(func)) return false;
 
   /* split entry block to: alloca block, eval block */
   const auto entry = func->entry();

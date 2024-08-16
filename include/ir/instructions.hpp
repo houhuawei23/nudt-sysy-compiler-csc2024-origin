@@ -144,10 +144,11 @@ public:  // get function
 public:  // utils function
   void print(std::ostream& os) const override;
   Value* getConstantRepl(bool recursive = false) override;
-  Instruction* copy(std::function<Value*(Value*)> getValue) const override;
   static bool classof(const Value* v) {
     return v->valueId() >= vUNARY_BEGIN && v->valueId() <= vUNARY_END;
   }
+  Instruction* copy(std::function<Value*(Value*)> getValue) const override;
+  Instruction* clone() const override;
 };
 
 /*
@@ -178,6 +179,7 @@ public:  // utils function
   void print(std::ostream& os) const override;
   Value* getConstantRepl(bool recursive = false) override;
   Instruction* copy(std::function<Value*(Value*)> getValue) const override;
+  Instruction* clone() const override;
 };
 /* CallInst */
 class CallInst : public Instruction {
@@ -500,13 +502,15 @@ public:  // utils function
 };
 
 class IndVar {
-private:  // only for constant beginvar and stepvar
+public:  // only for constant beginvar and stepvar
   ConstantInteger* mbeginVar;
+  Value* mbeginVarValue;
+
   Value* mendVar;
 
   ConstantInteger* mstepVar;
-  Value* mbeginVarValue;
   Value* mstepVarValue;
+
   bool mendIsConst;
 
   BinaryInst* miterInst;
@@ -574,13 +578,13 @@ public:
   bool getIsBeginAndStepConst(){return isBeginAndStepConst;}
   void print(std::ostream& os) const {
     os << "beginVar: ";
-    mbeginVar->print(os);
+    mbeginVarValue->print(os);
 
     os << "\n endVar: ";
     mendVar->print(os);
 
     os << "\n stepVar: ";
-    mstepVar->print(os);
+    mstepVarValue->print(os);
 
     os << "\n iterInst: ";
     miterInst->print(os);

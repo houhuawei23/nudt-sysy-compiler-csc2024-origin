@@ -16,5 +16,6 @@ private:
   bool checkFuncInfo(ir::Function* func);
   bool checkAllocaOnlyInEntry(ir::Function* func);
   bool checkOnlyOneExit(ir::Function* func);
+  bool checkParentRelationship(ir::Function* func);
 };
 }  // namespace pass

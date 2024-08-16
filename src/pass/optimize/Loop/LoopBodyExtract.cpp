@@ -7,7 +7,7 @@
 // #include "pass/optimize/Loop/LoopParallel.hpp"
 #include "pass/optimize/Loop/LoopBodyExtract.hpp"
 #include "pass/optimize/Utils/BlockUtils.hpp"
-
+#include "pass/analysis/MarkParallel.hpp"
 #include <cassert>
 #include <unordered_map>
 #include <iostream>
@@ -55,9 +55,12 @@ bool hasCall(Loop* loop) {
 bool LoopBodyExtract::runImpl(Function* func, TopAnalysisInfoManager* tp) {
   auto sideEffectInfo = tp->getSideEffectInfo();
   CFGAnalysisHHW().run(func, tp);  // refresh CFG
+  markParallel().run(func, tp);
 
-  auto lpctx = tp->getLoopInfo(func);
-  auto indVarInfo = tp->getIndVarInfo(func);
+  auto lpctx = tp->getLoopInfoWithoutRefresh(func);         // fisrt loop analysis
+  auto indVarInfo = tp->getIndVarInfoWithoutRefresh(func);  // then indvar analysis
+  auto parctx = tp->getParallelInfo(func);
+
   bool modified = false;
 #ifdef DEBUG
   func->rename();
@@ -81,11 +84,27 @@ bool LoopBodyExtract::runImpl(Function* func, TopAnalysisInfoManager* tp) {
     return false;
   };
   for (auto loop : loops) {
+    // if (lpctx->looplevel(loop->header()) > 1) {
+    //   std::cerr << "loop level: " << lpctx->looplevel(loop->header());
+    //   std::cerr << " is too deep, skip" << std::endl;
+    //   continue;
+    // }
     if (isBlocked(loop)) continue;
+    if (not parctx->getIsParallel(loop->header())) {
+      std::cerr << "cant parallel: " << loop->header()->name() << std::endl;
+      continue;
+    }
     if (hasCall(loop)) continue;
     const auto indVar = indVarInfo->getIndvar(loop);
-    const auto step = indVar->getStep()->i32();
-
+    if(indVar == nullptr) {
+      std::cerr << "no indvar for loop: " << loop->header()->name() << std::endl;
+      return false;
+    }
+    if (not indVar->stepValue()->isa<ConstantValue>()) {
+      return false;
+    }
+    const auto step = indVar->stepValue()->dynCast<ConstantValue>()->i32();
+    // indVar->print(std::cerr);
     if (step != 1) continue;  // only support step = 1
 
     LoopBodyInfo loopBodyInfo;
@@ -157,6 +176,22 @@ static auto getUniqueID() {
 bool moveNext2NewLatch(Function* func, Loop* loop, IndVar* indVar, TopAnalysisInfoManager* tp) {
   assert(loop->latchs().size() == 1);
   const auto next = indVar->iterInst();
+
+  if (next->uses().size() != 1 and next->uses().front()->user() != indVar->phiinst()) {
+    std::cerr << "next is not used by indvar phi inst" << std::endl;
+    std::cerr << "next: ";
+    next->print(std::cerr);
+    std::cerr << std::endl;
+    std::cerr << "users: " << next->uses().size() << std::endl;
+    for (auto use : next->uses()) {
+      auto userInst = use->user()->dynCast<Instruction>();
+      std::cerr << "user: ";
+      userInst->print(std::cerr);
+      std::cerr << std::endl;
+    }
+    return false;
+  }
+
   auto oldLatch = loop->getUniqueLatch();
   auto newLatch = func->newBlock();
   newLatch->set_name("new_latch");
@@ -173,6 +208,42 @@ bool moveNext2NewLatch(Function* func, Loop* loop, IndVar* indVar, TopAnalysisIn
     }
     if (finded) break;
   }
+  IRBuilder builder;
+  oldLatch->insts().pop_back();  // pop jump to header
+  builder.set_pos(oldLatch, oldLatch->insts().end());
+  builder.makeInst<BranchInst>(newLatch);
+  builder.set_pos(newLatch, newLatch->insts().end());
+  builder.makeInst<BranchInst>(loop->header());
+  loop->setLatch(newLatch);
+  loop->blocks().insert(newLatch);
+  CFGAnalysisHHW().run(func, tp);
+  // loop->getUniqueLatch()->dumpAsOpernd(std::cerr);
+  // fix phi
+  for (auto inst : loop->header()->insts()) {
+    if (auto phiInst = inst->dynCast<PhiInst>()) {
+      phiInst->replaceoldtonew(oldLatch, newLatch);
+    }
+  }
+  return true;
+}
+/* move next to new latch, or clone next to new latch */
+bool fixLoopLatch(Function* func, Loop* loop, IndVar* indVar, TopAnalysisInfoManager* tp) {
+  assert(loop->latchs().size() == 1);
+  const auto next = indVar->iterInst();
+
+  auto nextClone = next->clone();
+  assert(nextClone != nullptr);
+  nextClone->setComment("clone of next");
+
+  auto oldLatch = loop->getUniqueLatch();
+  auto newLatch = func->newBlock();
+  newLatch->set_name("new_latch");
+  newLatch->set_idx(func->blocks().size());
+  newLatch->emplace_back_inst(nextClone);
+  auto phiOperandNext = indVar->phiinst()->getvalfromBB(oldLatch);
+  phiOperandNext->replaceAllUseWith(nextClone);
+  indVar->miterInst = nextClone->dynCast<BinaryInst>();
+
   IRBuilder builder;
   oldLatch->insts().pop_back();  // pop jump to header
   builder.set_pos(oldLatch, oldLatch->insts().end());
@@ -217,8 +288,8 @@ bool extractLoopBody(Function* func,
   indVar->print(std::cerr);
 #endif
 
-  moveNext2NewLatch(func, &loop, indVar, tp);
-
+  // if (not moveNext2NewLatch(func, &loop, indVar, tp)) return false;
+  if(not fixLoopLatch(func, &loop, indVar, tp)) return false;
 #ifdef DEBUG
   loop.print(std::cerr);
   std::cerr << "new latch: ";
@@ -268,21 +339,30 @@ bool extractLoopBody(Function* func,
 
   // not giv
 
-  std::unordered_set<Value*> allowedToBeUsedByOuter;
+  // std::unordered_set<Value*> allowedToBeUsedByOuter;
 
-  allowedToBeUsedByOuter.insert(indVar->phiinst());
+  // allowedToBeUsedByOuter.insert(indVar->phiinst());
+  // allowedToBeUsedByOuter.insert(indVar->iterInst());
   // allowedToBeUsedByOuter.insert(loop.next)?
 
   // only indvar, next, giv allowed to be used by outer
   // other inst in loop should not be used by outer
   for (auto block : loop.blocks()) {
     for (auto inst : block->insts()) {
-      if (allowedToBeUsedByOuter.count(inst)) continue;
+      // if (allowedToBeUsedByOuter.count(inst)) continue;
       for (auto user_use : inst->uses()) {
         auto userInst = user_use->user()->dynCast<Instruction>();
         if (loop.blocks().count(userInst->block())) {
           continue;
         } else {
+          std::cerr << "inst: ";
+          inst->print(std::cerr);
+          std::cerr << std::endl;
+          std::cerr << "userInst: ";
+          userInst->print(std::cerr);
+          std::cerr << std::endl;
+          std::cerr << "userInst block: ";
+          std::cerr << userInst->block()->name() << std::endl;
           return false;
         }
       }
@@ -485,7 +565,7 @@ bool extractLoopBody(Function* func,
     // function->print(std::cerr);
   };
 
-  std::cerr << "after extractLoopBody, func: " << func->name() << std::endl;
+  // std::cerr << "after extractLoopBody, func: " << func->name() << std::endl;
   fixFunction(func);
   fixFunction(bodyFunc);
 

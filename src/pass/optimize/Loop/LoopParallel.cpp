@@ -55,7 +55,7 @@ bool parallelLoop(Function* func, TopAnalysisInfoManager* tp, Loop* loop, IndVar
   ParallelBodyInfo parallelBodyInfo;
   if (not extractParallelBody(func, loop /* modified */, indVar, tp, parallelBodyInfo /* ret */))
     return false;
-  std::cerr << "parallel body extracted" << std::endl;
+  // std::cerr << "parallel body extracted" << std::endl;
   // func->print(std::cerr);
   const auto parallelBody = parallelBodyInfo.parallelBody;
   auto parallelFor = loopupParallelFor(func->module());
@@ -71,7 +71,6 @@ bool parallelLoop(Function* func, TopAnalysisInfoManager* tp, Loop* loop, IndVar
   builder.set_pos(callBlock, iter);
   builder.makeInst<CallInst>(parallelFor, args);
   callBlock->move_inst(parallelBodyInfo.callInst);  // remove call parallel_body
-
 
   const auto fixFunction = [&](Function* function) {
     CFGAnalysisHHW().run(function, tp);
@@ -113,17 +112,39 @@ bool LoopParallel::runImpl(Function* func, TopAnalysisInfoManager* tp) {
     }
     return false;
   };
+  const auto checkLoop = [&](Loop* loop, IndVar* indVar) {
+    if (lpctx->looplevel(loop->header()) > 2) {  // only consider loops with level <= 2
+      // std::cerr << "loop level: " << lpctx->looplevel(loop->header());
+      // std::cerr << " is too deep, skip" << std::endl;
+      return false;
+    }
+    if (isBlocked(loop)) return false;
+    if (not parctx->getIsParallel(loop->header())) {
+      // std::cerr << "cant parallel" << std::endl;
+      return false;
+    }
+    if (indVar == nullptr) {
+      // std::cerr << "no indvar for loop: " << loop->header()->name() << std::endl;
+      return false;
+    }
+    const auto step = indVar->getStep()->i32();
+    if (step != 1) return false;  // only support step = 1
+
+    if (indVar->beginValue()->isa<ConstantValue>() and indVar->endValue()->isa<ConstantValue>()) {
+      const auto begin = indVar->beginValue()->dynCast<ConstantValue>()->i32();
+      const auto end = indVar->endValue()->dynCast<ConstantValue>()->i32();
+      if (end - begin < 100) {
+        std::cerr << "loop too small: " << end - begin << std::endl;
+        return false;
+      }
+    }
+    return true;
+  };
 
   // lpctx->print(std::cerr);
   for (auto loop : loops) {  // for all loops
-    if (isBlocked(loop)) continue;
-    if (not parctx->getIsParallel(loop->header())) {
-      std::cerr << "cant parallel" << std::endl;
-      continue;
-    }
     const auto indVar = indVarInfo->getIndvar(loop);
-    const auto step = indVar->getStep()->i32();
-    if (step != 1) continue;  // only support step = 1
+    if(not checkLoop(loop, indVar)) continue;
 #ifdef DEBUG
     std::cerr << "loop level: " << lpctx->looplevel(loop->header());
     loop->print(std::cerr);

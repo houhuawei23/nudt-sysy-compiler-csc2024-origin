@@ -28,8 +28,16 @@ Instruction* UnaryInst::copy(std::function<Value*(Value*)> getValue) const {
   return utils::make<UnaryInst>(mValueId, mType, getValue(operand(0)));
 }
 
+Instruction* UnaryInst::clone() const {
+  return utils::make<UnaryInst>(mValueId, mType, operand(0));
+}
+
 Instruction* BinaryInst::copy(std::function<Value*(Value*)> getValue) const {
   return utils::make<BinaryInst>(mValueId, mType, getValue(operand(0)), getValue(operand(1)));
+}
+
+Instruction* BinaryInst::clone() const {
+  return utils::make<BinaryInst>(mValueId, mType, operand(0), operand(1));
 }
 
 Instruction* CallInst::copy(std::function<Value*(Value*)> getValue) const {

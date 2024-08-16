@@ -2,6 +2,15 @@
 #include "support/arena.hpp"
 namespace ir {
 //! Use
+void Use::print(std::ostream& os) const {
+  os << "use(" << mIndex << ", ";
+  mUser->dumpAsOpernd(os);
+  os << " -> ";
+  mValue->dumpAsOpernd(os);
+  os << ")";
+  os << std::endl;
+}
+
 size_t Use::index() const {
   return mIndex;
 }
@@ -27,14 +36,13 @@ void Use::set_value(Value* value) {
 //! Value
 
 void Value::replaceAllUseWith(Value* mValue) {
-  for (auto puseIter=mUses.begin();puseIter!=mUses.end();) {
-    auto puse=*puseIter;
+  for (auto puseIter = mUses.begin(); puseIter != mUses.end();) {
+    auto puse = *puseIter;
     puseIter++;
     puse->user()->setOperand(puse->index(), mValue);
   }
   mUses.clear();
 }
-
 
 Value* Value::setComment(const_str_ref comment) {
   if (!mComment.empty()) {
@@ -90,14 +98,14 @@ void User::refresh_operand_index() {
   }
 }
 void User::setOperand(size_t index, Value* value) {
-  if(index >= mOperands.size()){
-    std::cerr<<"index="<<index<<", but mOperands max size="<<mOperands.size()<<std::endl;
+  if (index >= mOperands.size()) {
+    std::cerr << "index=" << index << ", but mOperands max size=" << mOperands.size() << std::endl;
     assert(index < mOperands.size());
   }
-  auto oldVal=mOperands[index]->value();
+  auto oldVal = mOperands[index]->value();
   oldVal->uses().remove(mOperands[index]);
-  auto newUse=new Use(index, this, value);
-  mOperands[index]=newUse;
+  auto newUse = new Use(index, this, value);
+  mOperands[index] = newUse;
   value->uses().emplace_back(mOperands[index]);
 }
 
