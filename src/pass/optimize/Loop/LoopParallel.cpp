@@ -7,6 +7,8 @@
 #include "pass/optimize/Loop/ParallelBodyExtract.hpp"
 #include "pass/optimize/Utils/BlockUtils.hpp"
 #include "pass/analysis/MarkParallel.hpp"
+
+#include "pass/optimize/Loop/LoopUtils.hpp"
 #include <set>
 #include <cassert>
 #include <map>
@@ -89,62 +91,20 @@ bool LoopParallel::runImpl(Function* func, TopAnalysisInfoManager* tp) {
   CFGAnalysisHHW().run(func, tp);  // refresh CFG
   markParallel().run(func, tp);
 
-  auto lpctx = tp->getLoopInfoWithoutRefresh(func);         // fisrt loop analysis
-  auto indVarInfo = tp->getIndVarInfoWithoutRefresh(func);  // then indvar analysis
-  auto parctx = tp->getParallelInfo(func);
+  auto lpctx = tp->getLoopInfoWithoutRefresh(func);        // fisrt loop analysis
+  auto indVarctx = tp->getIndVarInfoWithoutRefresh(func);  // then indvar analysis
+  auto parallelctx = tp->getParallelInfo(func);
 
   auto loops = lpctx->sortedLoops();
 
   bool modified = false;
 
   std::unordered_set<Loop*> extractedLoops;
-  const auto isBlocked = [&](Loop* lp) {
-    for (auto extracted : extractedLoops) {
-      if (extracted->blocks().count(lp->header())) {
-#ifdef DEBUG
-        lp->header()->dumpAsOpernd(std::cerr);
-        std::cerr << "is sub of ";
-        extracted->header()->dumpAsOpernd(std::cerr);
-        std::cerr << std::endl;
-#endif
-        return true;
-      }
-    }
-    return false;
-  };
-  const auto checkLoop = [&](Loop* loop, IndVar* indVar) {
-    if (lpctx->looplevel(loop->header()) > 2) {  // only consider loops with level <= 2
-      // std::cerr << "loop level: " << lpctx->looplevel(loop->header());
-      // std::cerr << " is too deep, skip" << std::endl;
-      return false;
-    }
-    if (isBlocked(loop)) return false;
-    if (not parctx->getIsParallel(loop->header())) {
-      // std::cerr << "cant parallel" << std::endl;
-      return false;
-    }
-    if (indVar == nullptr) {
-      // std::cerr << "no indvar for loop: " << loop->header()->name() << std::endl;
-      return false;
-    }
-    const auto step = indVar->getStep()->i32();
-    if (step != 1) return false;  // only support step = 1
-
-    if (indVar->beginValue()->isa<ConstantValue>() and indVar->endValue()->isa<ConstantValue>()) {
-      const auto begin = indVar->beginValue()->dynCast<ConstantValue>()->i32();
-      const auto end = indVar->endValue()->dynCast<ConstantValue>()->i32();
-      if (end - begin < 100) {
-        std::cerr << "loop too small: " << end - begin << std::endl;
-        return false;
-      }
-    }
-    return true;
-  };
-
+  
   // lpctx->print(std::cerr);
   for (auto loop : loops) {  // for all loops
-    const auto indVar = indVarInfo->getIndvar(loop);
-    if(not checkLoop(loop, indVar)) continue;
+    const auto indVar = indVarctx->getIndvar(loop);
+    if (not checkLoopParallel(loop, lpctx, indVarctx, parallelctx, extractedLoops)) continue;
 #ifdef DEBUG
     std::cerr << "loop level: " << lpctx->looplevel(loop->header());
     loop->print(std::cerr);
