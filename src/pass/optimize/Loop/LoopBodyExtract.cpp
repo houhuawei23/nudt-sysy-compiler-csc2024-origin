@@ -193,42 +193,7 @@ bool moveNext2NewLatch(Function* func, Loop* loop, IndVar* indVar, TopAnalysisIn
   }
   return true;
 }
-/* move next to new latch, or clone next to new latch */
-bool fixLoopLatch(Function* func, Loop* loop, IndVar* indVar, TopAnalysisInfoManager* tp) {
-  assert(loop->latchs().size() == 1);
-  const auto next = indVar->iterInst();
 
-  auto nextClone = next->clone();
-  assert(nextClone != nullptr);
-  nextClone->setComment("clone of next");
-
-  auto oldLatch = loop->getUniqueLatch();
-  auto newLatch = func->newBlock();
-  newLatch->set_name("new_latch");
-  newLatch->set_idx(func->blocks().size());
-  newLatch->emplace_back_inst(nextClone);
-  auto phiOperandNext = indVar->phiinst()->getvalfromBB(oldLatch);
-  phiOperandNext->replaceAllUseWith(nextClone);
-  indVar->miterInst = nextClone->dynCast<BinaryInst>();
-
-  IRBuilder builder;
-  oldLatch->insts().pop_back();  // pop jump to header
-  builder.set_pos(oldLatch, oldLatch->insts().end());
-  builder.makeInst<BranchInst>(newLatch);
-  builder.set_pos(newLatch, newLatch->insts().end());
-  builder.makeInst<BranchInst>(loop->header());
-  loop->setLatch(newLatch);
-  loop->blocks().insert(newLatch);
-  CFGAnalysisHHW().run(func, tp);
-  // loop->getUniqueLatch()->dumpAsOpernd(std::cerr);
-  // fix phi
-  for (auto inst : loop->header()->insts()) {
-    if (auto phiInst = inst->dynCast<PhiInst>()) {
-      phiInst->replaceoldtonew(oldLatch, newLatch);
-    }
-  }
-  return true;
-}
 
 bool extractLoopBody(Function* func,
                      Loop& loop,

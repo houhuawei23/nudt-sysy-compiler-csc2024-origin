@@ -16,7 +16,6 @@ public:
   std::string name() const override { return "LoopInterChange"; }
 
 private:
-  static bool isConstant(ir::Value* val);
   bool runImpl(ir::Function* func, TopAnalysisInfoManager* tp);
 };
 

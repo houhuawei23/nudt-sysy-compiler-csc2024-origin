@@ -15,4 +15,6 @@ bool checkLoopParallel(Loop* loop,
                        indVarInfo* indVarctx,
                        parallelInfo* parallelctx,
                        std::unordered_set<Loop*>& extractedLoops);
+
+bool fixLoopLatch(Function* func, Loop* loop, IndVar* indVar, TopAnalysisInfoManager* tp);
 }  // namespace pass
