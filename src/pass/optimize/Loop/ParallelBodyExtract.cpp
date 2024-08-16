@@ -161,7 +161,7 @@ auto buildParallelBodyBeta(Module& module,
     if (cmpInst == indVar->cmpInst()) {
       for (auto opuse : cmpInst->operands()) {
         auto op = opuse->value();
-        if (op == indVar->getEnd()) {
+        if (op == indVar->endValue()) {
           cmpInst->setOperand(opuse->index(), argEnd);
           break;
         }
@@ -253,9 +253,21 @@ auto rebuildFunc(Function* func,
   }
 
   // call parallel_body(beg, end)
-  auto callArgs = std::vector<Value*>{indVar->getBegin(), indVar->getEnd()};
+  auto callArgs = std::vector<Value*>{indVar->beginValue(), indVar->endValue()};
   auto callInst = builder.makeInst<CallInst>(parallelBodyInfo.parallelBody, callArgs);
   builder.makeInst<BranchInst>(loopBodyInfo.exit);
+
+  // fix outuse of inner loop var
+  // for (auto block : func->blocks()) {
+  //   for (auto inst : block->insts()) {
+  //     auto operands = inst->operands();
+  //     for (auto operandUse : operands) {
+  //       if (operandUse.value() == indVar->phiinst()) {
+  //         inst->setOperand(operandUse.index(), indVar->endValue());
+  //       }
+  //     }
+  //   }
+  // }
 
   parallelBodyInfo.callInst = callInst;
   parallelBodyInfo.callBlock = callBlock;
@@ -266,7 +278,10 @@ bool extractParallelBody(Function* func,
                          IndVar* indVar,
                          TopAnalysisInfoManager* tp,
                          ParallelBodyInfo& parallelBodyInfo) {
-  const auto step = indVar->getStep()->i32();
+  if (not indVar->stepValue()->isa<ConstantValue>()) {
+    return false;
+  }
+  const auto step = indVar->stepValue()->dynCast<ConstantValue>()->i32();
   // indVar->print(std::cerr);
   if (step != 1) return false;                  // only support step = 1
   if (loop->exits().size() != 1) return false;  // only support single exit loop
@@ -276,6 +291,11 @@ bool extractParallelBody(Function* func,
   if (not extractLoopBody(func, *loop /* modified */, indVar, tp, loopBodyInfo /* ret */))
     return false;
   // loopBodyInfo.print(std::cerr);
+  // func->rename();
+  // func->print(std::cerr);
+  // const auto loopBodyFunc = loopBodyInfo.callInst->callee();
+  // loopBodyFunc->rename();
+  // loopBodyFunc->print(std::cerr);
 
   const auto parallelBody =
     buildParallelBodyBeta(*func->module(), indVar, loopBodyInfo, parallelBodyInfo);
@@ -292,8 +312,8 @@ bool extractParallelBody(Function* func,
   fixFunction(parallelBody);
 
   // parallelBodyInfo
-  parallelBodyInfo.beg = indVar->getBegin();
-  parallelBodyInfo.end = indVar->getEnd();
+  parallelBodyInfo.beg = indVar->beginValue();
+  parallelBodyInfo.end = indVar->endValue();
   return true;
 }
 
@@ -337,18 +357,28 @@ bool ParallelBodyExtract::runImpl(ir::Function* func, TopAnalysisInfoManager* tp
   };
 
   for (auto loop : loops) {
+    std::cerr << "loop level: " << lpctx->looplevel(loop->header());
+    loop->print(std::cerr);
     // check
     if (isBlocked(loop)) continue;
     if (not parctx->getIsParallel(loop->header())) {
-      std::cerr << "cant parallel" << std::endl;
+      std::cerr << "cant parallel: " << loop->header()->name() << std::endl;
       continue;
     }
     const auto indVar = indVarInfo->getIndvar(loop);
-    const auto step = indVar->getStep()->i32();
-    if (step != 1) continue;  // only support step = 1
+    if (indVar == nullptr) {
+      std::cerr << "no indvar for loop: " << loop->header()->name() << std::endl;
+      return false;
+    }
+    if (not indVar->stepValue()->isa<ConstantValue>()) {
+      return false;
+    }
+    const auto step = indVar->stepValue()->dynCast<ConstantValue>()->i32();
+    indVar->print(std::cerr);
+    if (step != 1) return false;
 
-    std::cerr << "loop level: " << lpctx->looplevel(loop->header());
-    loop->print(std::cerr);
+    // std::cerr << "loop level: " << lpctx->looplevel(loop->header());
+    // loop->print(std::cerr);
 
     ParallelBodyInfo info;
     if (not extractParallelBody(func, loop, indVar, tp, info)) {

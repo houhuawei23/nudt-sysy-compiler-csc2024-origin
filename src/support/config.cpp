@@ -115,6 +115,10 @@ static const auto perfPassesList = std::vector<std::string>{
   "gcm",  // global code motion
   "gvn",          // global value numbering: passed, slow
   "licm",         // loop invariant code motion
+  "loopsimplify",
+  "gcm",  // global code motion
+  "gvn",          // global value numbering: passed, slow
+  "licm",         // loop invariant code motion
   // // "indvar",
   // "dp",
   "markpara",
@@ -129,22 +133,22 @@ static const auto perfPassesList = std::vector<std::string>{
   // "cache", // cache the function that cant tco
   // "inline",   
 
-  // "g2l",      // global to local
+  "g2l",      // global to local
 
-  // "dle",
-  // "dse",
-  // "dle",
-  // "dse",
+  "dle",
+  "dse",
+  "dle",
+  "dse",
 
-  // "sccp",     //
-  // "adce", 
-  // "dae",    
-  // "simplifycfg",
+  "sccp",     //
+  "adce", 
+  "dae",    
+  "simplifycfg",
 
-  // "loopsimplify",
-  // "gcm",  // global code motion
-  // "gvn",          // global value numbering: passed, slow
-  // "licm",         // loop invariant code motion
+  "loopsimplify",
+  "gcm",  // global code motion
+  "gvn",          // global value numbering: passed, slow
+  "licm",         // loop invariant code motion
 
   // "instcombine",
   // "sccp",

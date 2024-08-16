@@ -335,7 +335,7 @@ public:
       // 2 cycles to use for FLW
       state.makeRegisterReady(inst, 0, 2);
       auto la = state.queryRegisterLatency(inst, 0);
-      std::cerr << "FLoad laytency: " << la << std::endl;
+      // std::cerr << "FLoad laytency: " << la << std::endl;
     }
 
     state.setIssued(RISCVPipelineA);

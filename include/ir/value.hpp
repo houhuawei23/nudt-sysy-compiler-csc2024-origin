@@ -90,6 +90,8 @@ public:
   void set_index(size_t index);
   void set_value(Value* value);
   void set_user(User* user);
+
+  void print(std::ostream& os) const;
 };
 
 SYSYC_ARENA_TRAIT(Use, IR)

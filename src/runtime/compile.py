@@ -13,11 +13,11 @@ runtime_dir = os.path.dirname(os.path.abspath(__file__))
 memset_cpp = os.path.join(runtime_dir, "memset.cpp")
 lookup_cpp = os.path.join(runtime_dir, "Lookup.cpp")
 
-# parallelFor_dir = os.path.join(runtime_dir, "./MultiThreads")
-# parallelFor_cpp = os.path.join(parallelFor_dir, "MultiThreads.cpp")
+parallelFor_dir = os.path.join(runtime_dir, "./MultiThreads")
+parallelFor_cpp = os.path.join(parallelFor_dir, "MultiThreads.cpp")
 
-parallelFor_dir = os.path.join(runtime_dir, "./LoopParallel")
-parallelFor_cpp = os.path.join(parallelFor_dir, "LoopParallel.cpp")
+# parallelFor_dir = os.path.join(runtime_dir, "./LoopParallel")
+# parallelFor_cpp = os.path.join(parallelFor_dir, "LoopParallel.cpp")
 infiles = [memset_cpp, lookup_cpp, parallelFor_cpp]
 
 gcc_ref_command = {
