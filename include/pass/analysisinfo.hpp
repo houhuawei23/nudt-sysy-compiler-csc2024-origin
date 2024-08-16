@@ -245,8 +245,8 @@ class callGraph : public ModuleACtx {
     std::unordered_map<ir::Function*, bool> _is_called;
     std::unordered_map<ir::Function*, bool> _is_inline;
     std::unordered_map<ir::Function*, bool> _is_lib;
-    std::unordered_map<ir::Function*, std::set<ir::CallInst*>>_callerCallInsts;
-    std::unordered_map<ir::Function*, std::set<ir::CallInst*>>_calleeCallInsts;
+    std::unordered_map<ir::Function*, std::set<ir::CallInst*>>_callerCallInsts;//func's caller insts are func's callers'
+    std::unordered_map<ir::Function*, std::set<ir::CallInst*>>_calleeCallInsts;//func's callee insts are func's
 
   public:
     callGraph(ir::Module* md, TopAnalysisInfoManager* tp) : ModuleACtx(md, tp) {}
@@ -303,21 +303,59 @@ class indVarInfo : public FunctionACtx {
 
 class sideEffectInfo : public ModuleACtx {
   private:
-    std::unordered_map<ir::Function*, bool> _hasSideEffect;
-    std::unordered_map<ir::Function*, std::set<ir::GlobalVariable*>> _GlobalVariableUse;
+    std::unordered_map<ir::Function*, std::set<ir::GlobalVariable*>> _FuncReadGlobals;
+    std::unordered_map<ir::Function*, std::set<ir::GlobalVariable*>> _FuncWriteGlobals;
+    std::unordered_map<ir::Argument*,bool> _isArgumentRead;
+    std::unordered_map<ir::Argument*,bool> _isArgumentWrite;
+    std::unordered_map<ir::Function*,bool> _isLib;
+    std::unordered_map<ir::Function*,std::set<ir::Argument*>> _funcPointerArgs; 
+    
 
   public:
     sideEffectInfo(ir::Module* ctx, TopAnalysisInfoManager* tp) : ModuleACtx(ctx, tp) {}
     void clearAll() {
-        _hasSideEffect.clear();
-        _GlobalVariableUse.clear();
+        _FuncReadGlobals.clear();
+        _FuncWriteGlobals.clear();
+        _isArgumentRead.clear();
+        _isArgumentWrite.clear();
+        _isLib.clear();
+        _funcPointerArgs.clear();
     }
     void refresh() override;
-    void setFuncSideEffect(ir::Function* func, bool b) { _hasSideEffect[func] = b; }
-    bool hasSideEffect(ir::Function* func) { return _hasSideEffect[func]; }
-    void setFuncGVUse(ir::Function* func, ir::GlobalVariable* gv) { _GlobalVariableUse[func].insert(gv); }
-    std::set<ir::GlobalVariable*>funcUseGv(ir::Function* func){return _GlobalVariableUse[func];}
-    bool isPureFunc(ir::Function* func) { return _GlobalVariableUse[func].empty() and not _hasSideEffect[func]; }
+    //get
+    bool getArgRead(ir::Argument* arg){return _isArgumentRead[arg];}
+    bool getArgWrite(ir::Argument* arg){return _isArgumentWrite[arg];}
+    bool getIsLIb(ir::Function* func){return _isLib[func];}
+    //set
+    void setArgRead(ir::Argument* arg,bool b){_isArgumentRead[arg]=b;}
+    void setArgWrite(ir::Argument* arg,bool b){_isArgumentWrite[arg]=b;}
+    void setFuncIsLIb(ir::Function* func,bool b){_isLib[func]=b;}
+    //reference
+    std::set<ir::GlobalVariable*>& funcReadGlobals(ir::Function* func){return _FuncReadGlobals[func];}
+    std::set<ir::GlobalVariable*>& funcWriteGlobals(ir::Function* func){return _FuncWriteGlobals[func];}
+    std::set<ir::Argument*>& funcArgSet(ir::Function* func){return _funcPointerArgs[func];}
+    //old API
+    bool hasSideEffect(ir::Function* func){
+        if(_isLib[func])return true;
+        if(not _FuncWriteGlobals[func].empty())return true;
+        for(auto arg:func->args()){
+            if(getArgWrite(arg))return true;
+        }
+        return false;
+    }
+    bool isPureFunc(ir::Function* func){
+        return (not hasSideEffect(func) and _FuncReadGlobals[func].empty()) and not _isLib[func];
+    }
+    void functionInit(ir::Function* func){
+        _FuncReadGlobals[func]=std::set<ir::GlobalVariable*>();
+        _FuncWriteGlobals[func]=std::set<ir::GlobalVariable*>();
+        for(auto arg:func->args()){
+            if(not arg->isPointer())continue;
+            _funcPointerArgs[func].insert(arg);
+            setArgRead(arg,false);
+            setArgWrite(arg,false);
+        }
+    }
 };
 
 class dependenceInfo:public FunctionACtx{

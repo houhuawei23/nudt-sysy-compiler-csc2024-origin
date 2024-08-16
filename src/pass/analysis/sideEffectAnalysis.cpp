@@ -2,8 +2,7 @@
 using namespace pass;
 
 static std::set<ir::Function*>worklist;
-static std::set<ir::Function*>hasSideEffectFunctions;
-static std::set<ir::Function*>vis;
+
 
 
 void sideEffectAnalysis::run(ir::Module* md,TopAnalysisInfoManager* tp){
@@ -17,105 +16,129 @@ void sideEffectAnalysis::run(ir::Module* md,TopAnalysisInfoManager* tp){
     // std::cerr<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<std::endl;
     
     worklist.clear();
-    vis.clear();
-    hasSideEffectFunctions.clear();
     sectx=tp->getSideEffectInfoWithoutRefresh();
     cgctx=tp->getCallGraph();
     sectx->clearAll();
-
+    
     for(auto func:md->funcs()){
-        sectx->setFuncSideEffect(func,false);
-        // sectx->setFuncGVUse(func,false);
-        if(cgctx->isLib(func)){//cond 4
-            sectx->setFuncSideEffect(func,true);
-            // sectx->setFuncGVUse(func,false);
-            hasSideEffectFunctions.insert(func);
-            worklist.insert(func);
-        }
-        else{
-            for(auto arg:func->args()){//cond 2
-                if(arg->isPointer()){
-                    sectx->setFuncSideEffect(func,true);
-                    hasSideEffectFunctions.insert(func);
-                    worklist.insert(func);
-                    break;
+        sectx->functionInit(func);
+        //isLib or not
+        if(cgctx->isLib(func))sectx->setFuncIsLIb(func,true);
+        else sectx->setFuncIsLIb(func,false);
+        //use Gv and arg
+        for(auto bb:func->blocks()){
+            for(auto inst:bb->insts()){
+                ir::Value* ptr;
+                if(auto ldInst=inst->dynCast<ir::LoadInst>()){
+                    ptr=getBaseAddr(ldInst->ptr());
+                    if(auto allocainst=ptr->dynCast<ir::AllocaInst>())continue;
+                    if(auto arg=ptr->dynCast<ir::Argument>())sectx->setArgRead(arg,true);
+                    if(auto gv=ptr->dynCast<ir::GlobalVariable>())sectx->funcReadGlobals(func).insert(gv);
                 }
+                else if(auto stInst=inst->dynCast<ir::StoreInst>()){
+                    ptr=getBaseAddr(stInst->ptr());
+                    if(auto allocainst=ptr->dynCast<ir::AllocaInst>())continue;
+                    if(auto arg=ptr->dynCast<ir::Argument>())sectx->setArgWrite(arg,true);
+                    if(auto gv=ptr->dynCast<ir::GlobalVariable>())sectx->funcWriteGlobals(func).insert(gv);
+                }
+                
             }
-            if(sectx->hasSideEffect(func))continue;
-            for(auto bb:func->blocks()){
-                for(auto inst:bb->insts()){
-                    if(auto storeInst=inst->dynCast<ir::StoreInst>()){//cond 1
-                        auto stptr=storeInst->ptr();
-                        if(auto gv=stptr->dynCast<ir::GlobalVariable>()){
-                            // std::cerr<<"In function \""<<func->name()<<"\", we got a store to gv\" "<<gv->name()<<"\""<<std::endl;
-                            sectx->setFuncSideEffect(func,true);
-                            hasSideEffectFunctions.insert(func);
-                            worklist.insert(func);
-                            break;
-                        }
-                        else if(auto gep=stptr->dynCast<ir::GetElementPtrInst>()){
-                            if(isGlobal(gep)){
-                                sectx->setFuncSideEffect(func,true);
-                                hasSideEffectFunctions.insert(func);
-                                worklist.insert(func);
-                                break;
-                            }
-                        }
-                    }
-                    else if(auto loadInst=inst->dynCast<ir::LoadInst>()){
-                        auto loadPtr=loadInst->ptr();
-                        if(auto gv=loadPtr->dynCast<ir::GlobalVariable>()){
-                            sectx->setFuncGVUse(func,gv);
-                        }
-                        else if(auto gep=loadPtr->dynCast<ir::GetElementPtrInst>()){
-                            if(isGlobal(gep)){
-                                sectx->setFuncGVUse(func,isGlobal(gep));
-                            }
-                        }
+        }
+    }
 
-                    }
-                }
-                if(sectx->hasSideEffect(func))break;
-            }
-        }
+    //propagate based on callgraph
+    bool isChange=false;
+    do{
+        isChange=propogateSideEffect(md);
     }
-    //cond 3
-    while(not worklist.empty()){
-        auto func=*worklist.begin();
-        worklist.erase(func);
-        if(not vis.count(func))
-            vis.insert(func);
-        else   
-            continue;
-        // std::cerr<<func->name()<<std::endl;
-        // infoCheck(md);
-        for(auto callerFunc:cgctx->callers(func)){
-            // std::cerr<<"call "<<callerFunc->name()<<std::endl;
-            if(not hasSideEffectFunctions.count(callerFunc)){
-                sectx->setFuncSideEffect(callerFunc,true);
-                hasSideEffectFunctions.insert(callerFunc);
-                for(auto gv:sectx->funcUseGv(func)){
-                    sectx->setFuncGVUse(callerFunc,gv);
-                }
-                worklist.insert(callerFunc);
-                // std::cerr<<"Side Effect "<<callerFunc->name()<<std::endl;
-            }
-        }
-    }
+    while(isChange);
+    
     sectx->setOn();
-    // infoCheck(md);
+    infoCheck(md);
 }
 
-ir::GlobalVariable* sideEffectAnalysis:: isGlobal(ir::GetElementPtrInst* gep){
-    if(auto gvbasePtr=gep->value()->dynCast<ir::GlobalVariable>())return gvbasePtr;
-    if(auto gepbasePtr=gep->value()->dynCast<ir::GetElementPtrInst>())return isGlobal(gepbasePtr);
+ir::Value* sideEffectAnalysis::getBaseAddr(ir::Value* subAddr){
+    if(auto allocainst=subAddr->dynCast<ir::AllocaInst>())return allocainst;
+    if(auto gv=subAddr->dynCast<ir::GlobalVariable>())return gv;
+    if(auto arg=subAddr->dynCast<ir::Argument>())return arg;
+    if(auto gep=subAddr->dynCast<ir::GetElementPtrInst>())return getBaseAddr(gep->value());
+    assert("Error! invalid type of input in function \"getBaseAddr\"!"&&false);
     return nullptr;
+}
+
+bool sideEffectAnalysis::propogateSideEffect(ir::Module* md){
+    bool isChange=false;
+    for(auto func:md->funcs()){
+        for(auto calleeFunc:cgctx->callees(func)){
+            //对于所有当前函数调用的函数
+            if(calleeFunc==func)continue;//全局使用，其递归无影响
+            //将被调用函数使用的全局变量添加到调用函数使用的全局变量中去
+            for(auto gv:sectx->funcReadGlobals(calleeFunc)){
+                auto resPair=sectx->funcReadGlobals(func).insert(gv);
+                isChange=isChange or resPair.second;
+            }
+            for(auto gv:sectx->funcWriteGlobals(calleeFunc)){
+                auto resPair=sectx->funcWriteGlobals(func).insert(gv);
+                isChange=isChange or resPair.second;
+            }
+        }
+        //calleeInst,探讨具体对于对应gv引起的修改
+        for(auto calleeInst:cgctx->calleeCallInsts(func)){
+            auto calleeFunc=calleeInst->callee();
+            for(auto pointerArg:sectx->funcArgSet(calleeFunc)){
+                auto pointerArgIdx=pointerArg->index();
+                auto pointerRArg=calleeInst->rargs()[pointerArgIdx];
+                auto pointerRArgBaseAddr=getBaseAddr(pointerRArg->value());
+                if(pointerRArgBaseAddr->dynCast<ir::AllocaInst>())continue;
+                if(auto gv=pointerRArgBaseAddr->dynCast<ir::GlobalVariable>()){
+                    if(sectx->getArgRead(pointerArg)){
+                        auto resPair=sectx->funcReadGlobals(func).insert(gv);
+                        isChange=isChange or resPair.second;
+                    }
+                    if(sectx->getArgWrite(pointerArg)){
+                        auto resPair=sectx->funcWriteGlobals(func).insert(gv);
+                        isChange=isChange or resPair.second;
+                    }
+                }
+                if(auto arg=pointerRArgBaseAddr->dynCast<ir::Argument>()){
+                    if(sectx->getArgRead(pointerArg)){
+                        if(not sectx->getArgRead(arg))isChange=true;
+                        sectx->setArgRead(arg,true);
+                    }
+                    if(sectx->getArgWrite(pointerArg)){
+                        if(not sectx->getArgWrite(arg))isChange=true;
+                        sectx->setArgWrite(arg,true);
+                    }
+                }
+            }
+        }
+    }
+    return isChange;
 }
 
 void sideEffectAnalysis::infoCheck(ir::Module* md){
     for(auto func:md->funcs()){
         using namespace std;
-        // if(func->isOnlyDeclare())continue;
-        cerr<<func->name()<<":"<<sectx->hasSideEffect(func)<<endl;
+        cerr<<"In Function \""<<func->name()<<"\":"<<endl;
+        cerr<<"Read Global Variables:"<<endl;
+        for(auto gv:sectx->funcReadGlobals(func)){
+            cerr<<gv->name()<<"\t";
+        }
+        cerr<<endl;
+        cerr<<"Write Global Variables:"<<endl;
+        for(auto gv:sectx->funcWriteGlobals(func)){
+            cerr<<gv->name()<<"\t";
+        }
+        cerr<<endl;
+        cerr<<"Function Pointer Args:"<<endl;
+        for(auto arg:sectx->funcArgSet(func)){
+            cerr<<"Arg "<<arg->name()<<": ";
+            if(sectx->getArgRead(arg))
+                cerr<<"\tRead";
+            if(sectx->getArgWrite(arg))
+                cerr<<"\tWrite";
+            cerr<<endl;
+        }
+        cerr<<endl;
     }
 }
