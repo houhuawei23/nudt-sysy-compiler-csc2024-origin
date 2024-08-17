@@ -303,12 +303,13 @@ class indVarInfo : public FunctionACtx {
 
 class sideEffectInfo : public ModuleACtx {
   private:
-    std::unordered_map<ir::Function*, std::set<ir::GlobalVariable*>> _FuncReadGlobals;
-    std::unordered_map<ir::Function*, std::set<ir::GlobalVariable*>> _FuncWriteGlobals;
-    std::unordered_map<ir::Argument*,bool> _isArgumentRead;
-    std::unordered_map<ir::Argument*,bool> _isArgumentWrite;
-    std::unordered_map<ir::Function*,bool> _isLib;
-    std::unordered_map<ir::Function*,std::set<ir::Argument*>> _funcPointerArgs; 
+    std::unordered_map<ir::Function*, std::set<ir::GlobalVariable*>> _FuncReadGlobals;//当前函数读取的全局变量
+    std::unordered_map<ir::Function*, std::set<ir::GlobalVariable*>> _FuncWriteGlobals;//当前函数写入的全局变量
+    std::unordered_map<ir::Argument*,bool> _isArgumentRead;//对于当前argument函数是否读取（仅限pointer）
+    std::unordered_map<ir::Argument*,bool> _isArgumentWrite;//对于当前argument哈数是否写入（仅限pointer）
+    std::unordered_map<ir::Function*,bool> _isLib;//当前函数是否为lib函数
+    std::unordered_map<ir::Function*,std::set<ir::Argument*>> _funcPointerArgs; //当前函数的参数中有哪些是指针参数
+    std::unordered_map<ir::Function*,bool> _isCallLibFunc;//当前函数有无调用库函数或者简介调用库函数
     
 
   public:
@@ -320,16 +321,19 @@ class sideEffectInfo : public ModuleACtx {
         _isArgumentWrite.clear();
         _isLib.clear();
         _funcPointerArgs.clear();
+        _isCallLibFunc.clear();
     }
     void refresh() override;
     //get
     bool getArgRead(ir::Argument* arg){return _isArgumentRead[arg];}
     bool getArgWrite(ir::Argument* arg){return _isArgumentWrite[arg];}
     bool getIsLIb(ir::Function* func){return _isLib[func];}
+    bool getIsCallLib(ir::Function* func){return _isCallLibFunc[func];}
     //set
     void setArgRead(ir::Argument* arg,bool b){_isArgumentRead[arg]=b;}
     void setArgWrite(ir::Argument* arg,bool b){_isArgumentWrite[arg]=b;}
     void setFuncIsLIb(ir::Function* func,bool b){_isLib[func]=b;}
+    void setFuncIsCallLib(ir::Function* func,bool b){_isCallLibFunc[func]=b;}
     //reference
     std::set<ir::GlobalVariable*>& funcReadGlobals(ir::Function* func){return _FuncReadGlobals[func];}
     std::set<ir::GlobalVariable*>& funcWriteGlobals(ir::Function* func){return _FuncWriteGlobals[func];}
@@ -337,6 +341,7 @@ class sideEffectInfo : public ModuleACtx {
     //old API
     bool hasSideEffect(ir::Function* func){
         if(_isLib[func])return true;
+        if(_isCallLibFunc[func])return true;
         if(not _FuncWriteGlobals[func].empty())return true;
         for(auto arg:func->args()){
             if(getArgWrite(arg))return true;
@@ -355,6 +360,7 @@ class sideEffectInfo : public ModuleACtx {
             setArgRead(arg,false);
             setArgWrite(arg,false);
         }
+        _isCallLibFunc[func]=false;
     }
 };
 

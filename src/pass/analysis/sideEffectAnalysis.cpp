@@ -23,7 +23,8 @@ void sideEffectAnalysis::run(ir::Module* md,TopAnalysisInfoManager* tp){
     for(auto func:md->funcs()){
         sectx->functionInit(func);
         //isLib or not
-        if(cgctx->isLib(func))sectx->setFuncIsLIb(func,true);
+        if(cgctx->isLib(func))
+            sectx->setFuncIsLIb(func,true);
         else sectx->setFuncIsLIb(func,false);
         //use Gv and arg
         for(auto bb:func->blocks()){
@@ -40,6 +41,38 @@ void sideEffectAnalysis::run(ir::Module* md,TopAnalysisInfoManager* tp){
                     if(auto allocainst=ptr->dynCast<ir::AllocaInst>())continue;
                     if(auto arg=ptr->dynCast<ir::Argument>())sectx->setArgWrite(arg,true);
                     if(auto gv=ptr->dynCast<ir::GlobalVariable>())sectx->funcWriteGlobals(func).insert(gv);
+                }
+                else if(auto callInst=inst->dynCast<ir::CallInst>()){
+                    auto calleeFunc=callInst->callee();
+                    if(not cgctx->isLib(calleeFunc))continue;
+                    if(calleeFunc->name()=="putarray"){
+                        auto rarg=callInst->rargs()[1];
+                        ptr=getBaseAddr(rarg->value());
+                        if(auto allocainst=ptr->dynCast<ir::AllocaInst>())continue;
+                        if(auto arg=ptr->dynCast<ir::Argument>())sectx->setArgRead(arg,true);
+                        if(auto gv=ptr->dynCast<ir::GlobalVariable>())sectx->funcReadGlobals(func).insert(gv);
+                    }
+                    if(calleeFunc->name()=="putfarray"){
+                        auto rarg=callInst->rargs()[1];
+                        ptr=getBaseAddr(rarg->value());
+                        if(auto allocainst=ptr->dynCast<ir::AllocaInst>())continue;
+                        if(auto arg=ptr->dynCast<ir::Argument>())sectx->setArgRead(arg,true);
+                        if(auto gv=ptr->dynCast<ir::GlobalVariable>())sectx->funcReadGlobals(func).insert(gv);
+                    }
+                    if(calleeFunc->name()=="getarray"){
+                        auto rarg=callInst->rargs()[0];
+                        ptr=getBaseAddr(rarg->value());
+                        if(auto allocainst=ptr->dynCast<ir::AllocaInst>())continue;
+                        if(auto arg=ptr->dynCast<ir::Argument>())sectx->setArgWrite(arg,true);
+                        if(auto gv=ptr->dynCast<ir::GlobalVariable>())sectx->funcWriteGlobals(func).insert(gv);
+                    }
+                    if(calleeFunc->name()=="getfarray"){
+                        auto rarg=callInst->rargs()[0];
+                        ptr=getBaseAddr(rarg->value());
+                        if(auto allocainst=ptr->dynCast<ir::AllocaInst>())continue;
+                        if(auto arg=ptr->dynCast<ir::Argument>())sectx->setArgWrite(arg,true);
+                        if(auto gv=ptr->dynCast<ir::GlobalVariable>())sectx->funcWriteGlobals(func).insert(gv);
+                    }
                 }
                 
             }
@@ -80,6 +113,14 @@ bool sideEffectAnalysis::propogateSideEffect(ir::Module* md){
             for(auto gv:sectx->funcWriteGlobals(calleeFunc)){
                 auto resPair=sectx->funcWriteGlobals(func).insert(gv);
                 isChange=isChange or resPair.second;
+            }
+            if(cgctx->isLib(calleeFunc) and not sectx->getIsCallLib(func)){
+                sectx->setFuncIsCallLib(func,true);
+                isChange=true;
+            }
+            if(sectx->getIsCallLib(calleeFunc) and not sectx->getIsCallLib(func)){
+                sectx->setFuncIsCallLib(func,true);
+                isChange=true;
             }
         }
         //calleeInst,探讨具体对于对应gv引起的修改
