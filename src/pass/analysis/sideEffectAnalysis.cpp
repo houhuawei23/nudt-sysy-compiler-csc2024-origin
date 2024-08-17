@@ -87,7 +87,7 @@ void sideEffectAnalysis::run(ir::Module* md,TopAnalysisInfoManager* tp){
     while(isChange);
     
     sectx->setOn();
-    infoCheck(md);
+    // infoCheck(md);
 }
 
 ir::Value* getIntToPtrBaseAddr(ir::UnaryInst* inst){ 

@@ -184,7 +184,7 @@ void Inline::run(ir::Module* module, TopAnalysisInfoManager* tp) {
     bool isFuncInline = false;
     while (!functiontoremove.empty()) {  // 找到所有调用了可以被内联优化展开的函数的call指令
         auto func = functiontoremove.back();
-        std::cerr << "inline function: " << func->name() << std::endl;
+        // std::cerr << "inline function: " << func->name() << std::endl;
         std::vector<ir::CallInst*> callList = getcall(module, func);
         for (auto call : callList) {
             callinline(call);
