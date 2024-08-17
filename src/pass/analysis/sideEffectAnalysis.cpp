@@ -91,7 +91,7 @@ void sideEffectAnalysis::run(ir::Module* md,TopAnalysisInfoManager* tp){
 }
 
 
-ir::Value* getIntToPtrBaseAddr(ir::UnaryInst* inst){ 
+ir::Value* sideEffectAnalysis::getIntToPtrBaseAddr(ir::UnaryInst* inst){ 
     if(auto binary = inst->value()->dynCast<ir::BinaryInst>()) {
         // if(auto lbase = getBaseAddr(binary->lValue())) return lbase;
         // if(auto rbase = getBaseAddr(binary->rValue())) return rbase;
@@ -105,7 +105,7 @@ ir::Value* getIntToPtrBaseAddr(ir::UnaryInst* inst){
     return nullptr;
 }
 
-ir::Value* getBaseAddr(ir::Value* subAddr){
+ir::Value* sideEffectAnalysis::getBaseAddr(ir::Value* subAddr){
     if(auto allocainst=subAddr->dynCast<ir::AllocaInst>())return allocainst;
     if(auto gv=subAddr->dynCast<ir::GlobalVariable>())return gv;
     if(auto arg=subAddr->dynCast<ir::Argument>())return arg;

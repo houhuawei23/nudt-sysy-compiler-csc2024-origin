@@ -11,7 +11,8 @@ private:
   void infoCheck(ir::Module* md);
   bool propogateSideEffect(ir::Module* md);
   TopAnalysisInfoManager* topmana;
-
+  ir::Value* getIntToPtrBaseAddr(ir::UnaryInst* inst);
+  ir::Value* getBaseAddr(ir::Value* subAddr);
 
 private:
   callGraph* cgctx;
