@@ -324,10 +324,9 @@ void ParallelBodyExtract::run(ir::Function* func, TopAnalysisInfoManager* tp) {
 }
 
 bool ParallelBodyExtract::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
-  auto sideEffectInfo = tp->getSideEffectInfo();
 
   // func->rename();
-  // std::cerr << "ParallelBodyExtract::runImpl: " << func->name() << std::endl;
+  std::cerr << "!! ParallelBodyExtract::runImpl: " << func->name() << std::endl;
   // func->print(std::cerr);
 
   CFGAnalysisHHW().run(func, tp);  // refresh CFG

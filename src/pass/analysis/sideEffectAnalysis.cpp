@@ -121,6 +121,13 @@ ir::Value* getBaseAddr(ir::Value* subAddr){
 bool sideEffectAnalysis::propogateSideEffect(ir::Module* md){
     bool isChange=false;
     for(auto func:md->funcs()){
+        if (func->attribute().hasAttr(ir::FunctionAttribute::LoopBody | ir::FunctionAttribute::ParallelBody)) {
+            assert(false);
+        }
+        // std::cerr << "propogateSideEffect: " << func->name() << std::endl;
+        // func->rename();
+        // func->print(std::cerr);
+
         for(auto calleeFunc:cgctx->callees(func)){
             //对于所有当前函数调用的函数
             if(calleeFunc==func)continue;//全局使用，其递归无影响
@@ -146,6 +153,8 @@ bool sideEffectAnalysis::propogateSideEffect(ir::Module* md){
         for(auto calleeInst:cgctx->calleeCallInsts(func)){
             auto calleeFunc=calleeInst->callee();
             for(auto pointerArg:sectx->funcArgSet(calleeFunc)){
+                // pointerArg->dumpAsOpernd(std::cerr);
+                // std::cerr<<std::endl;
                 auto pointerArgIdx=pointerArg->index();
                 auto pointerRArg=calleeInst->rargs()[pointerArgIdx];
                 auto pointerRArgBaseAddr=getBaseAddr(pointerRArg->value());

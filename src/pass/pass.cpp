@@ -71,7 +71,8 @@ void PassManager::run(FunctionPass* fp) {
   runPass(
     fp,
     [&]() {
-      for (auto func : irModule->funcs()) {
+      auto funcs = irModule->funcs();
+      for (auto func : funcs) {
         if (func->isOnlyDeclare()) continue;
         fp->run(func, tAIM);
       }
@@ -83,7 +84,8 @@ void PassManager::run(BasicBlockPass* bp) {
   runPass(
     bp,
     [&]() {
-      for (auto func : irModule->funcs()) {
+      auto funcs = irModule->funcs();
+      for (auto func : funcs) {
         for (auto bb : func->blocks()) {
           bp->run(bb, tAIM);
         }

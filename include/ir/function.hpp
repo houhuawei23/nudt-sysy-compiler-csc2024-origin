@@ -63,7 +63,7 @@ public:
   }
 };
 
-enum class FunctionAttribute {
+enum FunctionAttribute : uint32_t {
   NoMemoryRead = 1 << 0,
   NoMemoryWrite = 1 << 1,
   NoSideEffect = 1 << 2,

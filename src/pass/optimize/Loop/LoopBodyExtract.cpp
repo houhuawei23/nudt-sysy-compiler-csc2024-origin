@@ -70,8 +70,8 @@ bool LoopBodyExtract::runImpl(Function* func, TopAnalysisInfoManager* tp) {
   std::unordered_set<Loop*> extractedLoops;
 
   for (auto loop : loops) {
-    std::cerr << "loop level: " << lpctx->looplevel(loop->header());
-    loop->print(std::cerr);
+    // std::cerr << "loop level: " << lpctx->looplevel(loop->header());
+    // loop->print(std::cerr);
 
     if (not checkLoopParallel(loop, lpctx, indVarctx, parallelctx, extractedLoops)) continue;
     if (hasCall(loop)) continue;
@@ -143,60 +143,6 @@ static auto getUniqueID() {
   return base + std::to_string(id++);
 }
 
-bool moveNext2NewLatch(Function* func, Loop* loop, IndVar* indVar, TopAnalysisInfoManager* tp) {
-  assert(loop->latchs().size() == 1);
-  const auto next = indVar->iterInst();
-
-  if (next->uses().size() != 1 and next->uses().front()->user() != indVar->phiinst()) {
-    std::cerr << "next is not used by indvar phi inst" << std::endl;
-    std::cerr << "next: ";
-    next->print(std::cerr);
-    std::cerr << std::endl;
-    std::cerr << "users: " << next->uses().size() << std::endl;
-    for (auto use : next->uses()) {
-      auto userInst = use->user()->dynCast<Instruction>();
-      std::cerr << "user: ";
-      userInst->print(std::cerr);
-      std::cerr << std::endl;
-    }
-    return false;
-  }
-
-  auto oldLatch = loop->getUniqueLatch();
-  auto newLatch = func->newBlock();
-  newLatch->set_name("new_latch");
-  newLatch->set_idx(func->blocks().size());
-  bool finded = false;
-  for (auto block : func->blocks()) {
-    for (auto inst : block->insts()) {
-      if (inst == next) {
-        block->move_inst(inst);
-        newLatch->emplace_back_inst(inst);
-        finded = true;
-        break;
-      }
-    }
-    if (finded) break;
-  }
-  IRBuilder builder;
-  oldLatch->insts().pop_back();  // pop jump to header
-  builder.set_pos(oldLatch, oldLatch->insts().end());
-  builder.makeInst<BranchInst>(newLatch);
-  builder.set_pos(newLatch, newLatch->insts().end());
-  builder.makeInst<BranchInst>(loop->header());
-  loop->setLatch(newLatch);
-  loop->blocks().insert(newLatch);
-  CFGAnalysisHHW().run(func, tp);
-  // loop->getUniqueLatch()->dumpAsOpernd(std::cerr);
-  // fix phi
-  for (auto inst : loop->header()->insts()) {
-    if (auto phiInst = inst->dynCast<PhiInst>()) {
-      phiInst->replaceoldtonew(oldLatch, newLatch);
-    }
-  }
-  return true;
-}
-
 bool extractLoopBody(Function* func,
                      Loop& loop,
                      IndVar* indVar,
@@ -222,7 +168,6 @@ bool extractLoopBody(Function* func,
   indVar->print(std::cerr);
 #endif
 
-  // if (not moveNext2NewLatch(func, &loop, indVar, tp)) return false;
   if (not fixLoopLatch(func, &loop, indVar, tp)) return false;
 #ifdef DEBUG
   loop.print(std::cerr);
@@ -461,12 +406,13 @@ bool extractLoopBody(Function* func,
   assert(bodyFunc->blocks().size() == (loop.blocks().size() - 2));
   // remove loop blocks from func
   func->blocks().remove_if([&](BasicBlock* block) { return removeWorkList.count(block); });
+  // FIXME: update loop itself? dont do because loop.blocks() is used by next iter
   // remove loop body blocks from loop
   // c++20
   // std::erase_if(loop.blocks(), [&](BasicBlock* block) { return removeWorkList.count(block); });
-  for (auto block : removeWorkList) {
-    loop.blocks().erase(block);
-  }
+  // for (auto block : removeWorkList) {
+  //   loop.blocks().erase(block);
+  // }
   assert(oldLatch->terminator()->isa<BranchInst>());
 
   IRBuilder builder;
@@ -480,14 +426,14 @@ bool extractLoopBody(Function* func,
   // header -> callBlock -> latch
   // fix branch relation
   auto callBlock = func->newBlock();
-  loop.blocks().insert(callBlock);
+  // loop.blocks().insert(callBlock);
   auto headerBranch = loop.header()->terminator()->dynCast<BranchInst>();
   // assert(loop.contains(headerBranch->iftrue()));  // true is jump in loop
-  {
-    const auto iter =
-      std::find(bodyFunc->blocks().begin(), bodyFunc->blocks().end(), headerBranch->iftrue());
-    assert(iter != bodyFunc->blocks().end());
-  }
+  // {
+  //   const auto iter =
+  //     std::find(bodyFunc->blocks().begin(), bodyFunc->blocks().end(), headerBranch->iftrue());
+  //   assert(iter != bodyFunc->blocks().end());
+  // }
   headerBranch->set_iftrue(callBlock);
 
   // buid callBlock: call loop_body + jump to latch
