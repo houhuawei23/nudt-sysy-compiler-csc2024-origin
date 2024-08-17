@@ -90,11 +90,30 @@ void sideEffectAnalysis::run(ir::Module* md,TopAnalysisInfoManager* tp){
     infoCheck(md);
 }
 
-ir::Value* sideEffectAnalysis::getBaseAddr(ir::Value* subAddr){
+ir::Value* getIntToPtrBaseAddr(ir::UnaryInst* inst){ 
+    if(auto binary = inst->value()->dynCast<ir::BinaryInst>()) {
+        // if(auto lbase = getBaseAddr(binary->lValue())) return lbase;
+        // if(auto rbase = getBaseAddr(binary->rValue())) return rbase;
+        if(binary->lValue()->valueId() == ir::ValueId::vPTRTOINT) {
+            return binary->lValue()->dynCast<ir::UnaryInst>()->value();
+        } else if(binary->rValue()->valueId() == ir::ValueId::vPTRTOINT) {
+            return binary->rValue()->dynCast<ir::UnaryInst>()->value();
+        }
+    }
+    assert(false);
+    return nullptr;
+}
+
+ir::Value* getBaseAddr(ir::Value* subAddr){
     if(auto allocainst=subAddr->dynCast<ir::AllocaInst>())return allocainst;
     if(auto gv=subAddr->dynCast<ir::GlobalVariable>())return gv;
     if(auto arg=subAddr->dynCast<ir::Argument>())return arg;
     if(auto gep=subAddr->dynCast<ir::GetElementPtrInst>())return getBaseAddr(gep->value());
+    if(auto unary = subAddr->dynCast<ir::UnaryInst>()) {
+        if(unary->valueId() == ir::ValueId::vINTTOPTR) {
+            return getIntToPtrBaseAddr(unary);
+        }
+    }
     assert("Error! invalid type of input in function \"getBaseAddr\"!"&&false);
     return nullptr;
 }
