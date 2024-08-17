@@ -66,6 +66,11 @@ public:  // set function
     mBlock = block;
     mInsertPos = block->insts().begin();
   }
+  void setInsetPosEnd(BasicBlock* block) {
+    // assert(block != nullptr and block->insts().empty());
+    mBlock = block;
+    mInsertPos = block->insts().end();
+  }
   void push_header(BasicBlock* block) { _headers.push(block); }
   void push_exit(BasicBlock* block) { _exits.push(block); }
 
@@ -116,13 +121,12 @@ public:  // set function
   Value* makeTypeCast(Value* val, Type* target_type);
 
   Value* makeAlloca(Type* base_type, bool is_const = false, const_str_ref comment = "");
-  
+
   Value* makeCmp(CmpOp op, Value* lhs, Value* rhs);
 
   Value* makeBinary(BinaryOp op, Value* lhs, Value* rhs);
 
   Value* makeUnary(ValueId vid, Value* val, Type* ty = nullptr);
-
 
   Value* makeLoad(Value* ptr);
 

@@ -30,12 +30,16 @@
 #include "pass/optimize/licm.hpp"
 #include "pass/analysis/dependenceAnalysis/DependenceAnalysis.hpp"
 #include "pass/analysis/MarkParallel.hpp"
-#include "pass/optimize/Loop/LoopParallel.hpp"
 #include "pass/optimize/GepSplit.hpp"
+
 #include "pass/optimize/Misc/StatelessCache.hpp"
+
 #include "pass/optimize/Loop/LoopBodyExtract.hpp"
 #include "pass/optimize/Loop/ParallelBodyExtract.hpp"
+#include "pass/optimize/Loop/LoopInterChange.hpp"
+#include "pass/optimize/Loop/LoopParallel.hpp"
 #include "pass/optimize/Misc/BlockSort.hpp"
+
 #include "support/config.hpp"
 #include "support/FileSystem.hpp"
 #include <fstream>
@@ -94,6 +98,7 @@ static CFGAnalysisHHW cfgAnalysisPass;
 static LoopBodyExtract loopBodyExtractPass;
 static ParallelBodyExtract parallelBodyExtractPass;
 static BlockSort blockSortPass;
+static LoopInterChange loopInterChangePass;
 
 void PassManager::runPasses(std::vector<std::string> passes) {
   // if(passes.size() == 0) return;
@@ -181,6 +186,8 @@ void PassManager::runPasses(std::vector<std::string> passes) {
       run(&loopBodyExtractPass);
     } else if (pass_name == "ParallelBodyExtract") {
       run(&parallelBodyExtractPass);
+    } else if (pass_name == "LoopInterChange") {
+      run(&loopInterChangePass);
     } else if (pass_name == "blocksort") {
       run(&blockSortPass);
     } else if (pass_name == "dp") {

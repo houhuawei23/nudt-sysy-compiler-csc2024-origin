@@ -14,7 +14,7 @@
 #include <unordered_map>
 #include <iostream>
 #include <vector>
-
+#include <algorithm>  // For std::erase_if(but c++20)
 using namespace ir;
 namespace pass {
 
@@ -59,7 +59,7 @@ bool LoopBodyExtract::runImpl(Function* func, TopAnalysisInfoManager* tp) {
   CFGAnalysisHHW().run(func, tp);  // refresh CFG
   markParallel().run(func, tp);
 
-  auto lpctx = tp->getLoopInfoWithoutRefresh(func);         // fisrt loop analysis
+  auto lpctx = tp->getLoopInfoWithoutRefresh(func);        // fisrt loop analysis
   auto indVarctx = tp->getIndVarInfoWithoutRefresh(func);  // then indvar analysis
   auto parallelctx = tp->getParallelInfo(func);
 
@@ -70,6 +70,9 @@ bool LoopBodyExtract::runImpl(Function* func, TopAnalysisInfoManager* tp) {
   std::unordered_set<Loop*> extractedLoops;
 
   for (auto loop : loops) {
+    std::cerr << "loop level: " << lpctx->looplevel(loop->header());
+    loop->print(std::cerr);
+
     if (not checkLoopParallel(loop, lpctx, indVarctx, parallelctx, extractedLoops)) continue;
     if (hasCall(loop)) continue;
 
@@ -193,42 +196,6 @@ bool moveNext2NewLatch(Function* func, Loop* loop, IndVar* indVar, TopAnalysisIn
   }
   return true;
 }
-/* move next to new latch, or clone next to new latch */
-bool fixLoopLatch(Function* func, Loop* loop, IndVar* indVar, TopAnalysisInfoManager* tp) {
-  assert(loop->latchs().size() == 1);
-  const auto next = indVar->iterInst();
-
-  auto nextClone = next->clone();
-  assert(nextClone != nullptr);
-  nextClone->setComment("clone of next");
-
-  auto oldLatch = loop->getUniqueLatch();
-  auto newLatch = func->newBlock();
-  newLatch->set_name("new_latch");
-  newLatch->set_idx(func->blocks().size());
-  newLatch->emplace_back_inst(nextClone);
-  auto phiOperandNext = indVar->phiinst()->getvalfromBB(oldLatch);
-  phiOperandNext->replaceAllUseWith(nextClone);
-  indVar->miterInst = nextClone->dynCast<BinaryInst>();
-
-  IRBuilder builder;
-  oldLatch->insts().pop_back();  // pop jump to header
-  builder.set_pos(oldLatch, oldLatch->insts().end());
-  builder.makeInst<BranchInst>(newLatch);
-  builder.set_pos(newLatch, newLatch->insts().end());
-  builder.makeInst<BranchInst>(loop->header());
-  loop->setLatch(newLatch);
-  loop->blocks().insert(newLatch);
-  CFGAnalysisHHW().run(func, tp);
-  // loop->getUniqueLatch()->dumpAsOpernd(std::cerr);
-  // fix phi
-  for (auto inst : loop->header()->insts()) {
-    if (auto phiInst = inst->dynCast<PhiInst>()) {
-      phiInst->replaceoldtonew(oldLatch, newLatch);
-    }
-  }
-  return true;
-}
 
 bool extractLoopBody(Function* func,
                      Loop& loop,
@@ -256,7 +223,7 @@ bool extractLoopBody(Function* func,
 #endif
 
   // if (not moveNext2NewLatch(func, &loop, indVar, tp)) return false;
-  if(not fixLoopLatch(func, &loop, indVar, tp)) return false;
+  if (not fixLoopLatch(func, &loop, indVar, tp)) return false;
 #ifdef DEBUG
   loop.print(std::cerr);
   std::cerr << "new latch: ";
@@ -494,7 +461,12 @@ bool extractLoopBody(Function* func,
   assert(bodyFunc->blocks().size() == (loop.blocks().size() - 2));
   // remove loop blocks from func
   func->blocks().remove_if([&](BasicBlock* block) { return removeWorkList.count(block); });
-
+  // remove loop body blocks from loop
+  // c++20
+  // std::erase_if(loop.blocks(), [&](BasicBlock* block) { return removeWorkList.count(block); });
+  for (auto block : removeWorkList) {
+    loop.blocks().erase(block);
+  }
   assert(oldLatch->terminator()->isa<BranchInst>());
 
   IRBuilder builder;
@@ -508,8 +480,14 @@ bool extractLoopBody(Function* func,
   // header -> callBlock -> latch
   // fix branch relation
   auto callBlock = func->newBlock();
+  loop.blocks().insert(callBlock);
   auto headerBranch = loop.header()->terminator()->dynCast<BranchInst>();
-  assert(loop.contains(headerBranch->iftrue()));  // true is jump in loop
+  // assert(loop.contains(headerBranch->iftrue()));  // true is jump in loop
+  {
+    const auto iter =
+      std::find(bodyFunc->blocks().begin(), bodyFunc->blocks().end(), headerBranch->iftrue());
+    assert(iter != bodyFunc->blocks().end());
+  }
   headerBranch->set_iftrue(callBlock);
 
   // buid callBlock: call loop_body + jump to latch
@@ -535,7 +513,7 @@ bool extractLoopBody(Function* func,
   // std::cerr << "after extractLoopBody, func: " << func->name() << std::endl;
   fixFunction(func);
   fixFunction(bodyFunc);
-
+  // update
   {
     // return LoopBodyInfo
     info.callInst = callInst;

@@ -13,6 +13,7 @@ namespace pass {
 struct LoopBodyInfo {
   CallInst* callInst;
   IndVar* indVar;
+  
   BasicBlock* preHeader;
   BasicBlock* header;
   BasicBlock* body;

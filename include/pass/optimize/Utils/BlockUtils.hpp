@@ -18,4 +18,5 @@ bool fixAllocaInEntry(Function& func);
 bool blockSortBFS(Function& func, TopAnalysisInfoManager* tAIM);
 bool blockSortDFS(Function& func, TopAnalysisInfoManager* tAIM);
 
+bool fixPhiIncomingBlock(BasicBlock* target, BasicBlock* oldBlock, BasicBlock* newBlock);
 }  // namespace pass

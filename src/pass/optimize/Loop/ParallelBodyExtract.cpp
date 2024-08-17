@@ -323,7 +323,6 @@ void ParallelBodyExtract::run(ir::Function* func, TopAnalysisInfoManager* tp) {
   runImpl(func, tp);
 }
 
-#define NDEBUG
 bool ParallelBodyExtract::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
   auto sideEffectInfo = tp->getSideEffectInfo();
 
