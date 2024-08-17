@@ -1,3 +1,4 @@
+// #define DEBUG
 #include "pass/optimize/Loop/ParallelBodyExtract.hpp"
 #include "pass/optimize/Loop/LoopBodyExtract.hpp"
 #include "pass/analysis/ControlFlowGraph.hpp"
@@ -6,6 +7,7 @@
 // #include "pass/analysis/dependenceAnalysis/dpaUtils.hpp"
 #include "pass/analysis/dependenceAnalysis/DependenceAnalysis.hpp"
 #include "pass/analysis/MarkParallel.hpp"
+#include "pass/optimize/Loop/LoopUtils.hpp"
 
 #include "support/arena.hpp"
 #include "support/utils.hpp"
@@ -326,7 +328,7 @@ bool ParallelBodyExtract::runImpl(ir::Function* func, TopAnalysisInfoManager* tp
   auto sideEffectInfo = tp->getSideEffectInfo();
 
   // func->rename();
-  std::cerr << "ParallelBodyExtract::runImpl: " << func->name() << std::endl;
+  // std::cerr << "ParallelBodyExtract::runImpl: " << func->name() << std::endl;
   // func->print(std::cerr);
 
   CFGAnalysisHHW().run(func, tp);  // refresh CFG
@@ -335,51 +337,19 @@ bool ParallelBodyExtract::runImpl(ir::Function* func, TopAnalysisInfoManager* tp
   bool modified = false;
 
   auto lpctx = tp->getLoopInfoWithoutRefresh(func);         // fisrt loop analysis
-  auto indVarInfo = tp->getIndVarInfoWithoutRefresh(func);  // then indvar analysis
-  auto parctx = tp->getParallelInfo(func);
+  auto indVarctx = tp->getIndVarInfoWithoutRefresh(func);  // then indvar analysis
+  auto parallelctx = tp->getParallelInfo(func);
 
   auto loops = lpctx->sortedLoops();
 
   std::unordered_set<Loop*> extractedLoops;
-  const auto isBlocked = [&](Loop* lp) {
-    for (auto extracted : extractedLoops) {
-      if (extracted->blocks().count(lp->header())) {
-#ifndef NDEBUG
-        lp->header()->dumpAsOpernd(std::cerr);
-        std::cerr << "is sub of ";
-        extracted->header()->dumpAsOpernd(std::cerr);
-        std::cerr << std::endl;
-#endif
-        return true;
-      }
-    }
-    return false;
-  };
-
   for (auto loop : loops) {
-    std::cerr << "loop level: " << lpctx->looplevel(loop->header());
-    loop->print(std::cerr);
-    // check
-    if (isBlocked(loop)) continue;
-    if (not parctx->getIsParallel(loop->header())) {
-      std::cerr << "cant parallel: " << loop->header()->name() << std::endl;
-      continue;
-    }
-    const auto indVar = indVarInfo->getIndvar(loop);
-    if (indVar == nullptr) {
-      std::cerr << "no indvar for loop: " << loop->header()->name() << std::endl;
-      return false;
-    }
-    if (not indVar->stepValue()->isa<ConstantValue>()) {
-      return false;
-    }
-    const auto step = indVar->stepValue()->dynCast<ConstantValue>()->i32();
-    indVar->print(std::cerr);
-    if (step != 1) return false;
-
     // std::cerr << "loop level: " << lpctx->looplevel(loop->header());
     // loop->print(std::cerr);
 
+    if (not checkLoopParallel(loop, lpctx, indVarctx, parallelctx, extractedLoops)) continue;
+
+    const auto indVar = indVarctx->getIndvar(loop);
     ParallelBodyInfo info;
     if (not extractParallelBody(func, loop, indVar, tp, info)) {
       // std::cerr << "failed to extract parallel body for loop" << std::endl;
