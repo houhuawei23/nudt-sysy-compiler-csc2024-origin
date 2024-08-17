@@ -1,4 +1,4 @@
-#define DEBUG
+// #define DEBUG
 
 #include "pass/optimize/Loop/LoopInterChange.hpp"
 #include "pass/optimize/Loop/LoopBodyExtract.hpp"
@@ -15,13 +15,16 @@ bool detectPatternAndSwap(Function* func,
                           Loop* innerLoop,
                           loopInfo* lpctx,
                           indVarInfo* indVarctx,
+                          parallelInfo* parallelctx,
+                          // dependenceInfo* dependencyctx,
                           TopAnalysisInfoManager* tp);
 
-void LoopInterChange::run(ir::Function* func, TopAnalysisInfoManager* tp) {
+void LoopInterChange::run(Function* func, TopAnalysisInfoManager* tp) {
   runImpl(func, tp);
 }
 
-bool LoopInterChange::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
+bool LoopInterChange::runImpl(Function* func, TopAnalysisInfoManager* tp) {
+  std::cerr << "LoopInterChange: " << func->name() << std::endl;
   func->rename();
   // func->print(std::cerr);
 
@@ -31,7 +34,7 @@ bool LoopInterChange::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
   auto lpctx = tp->getLoopInfoWithoutRefresh(func);        // fisrt loop analysis
   auto indVarctx = tp->getIndVarInfoWithoutRefresh(func);  // then indvar analysis
   auto parallelctx = tp->getParallelInfo(func);
-
+  auto dependencyctx = tp->getDepInfoWithoutRefresh(func);
   auto loops = lpctx->sortedLoops();
 
   bool modified = false;
@@ -47,8 +50,7 @@ bool LoopInterChange::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
     loop->print(std::cerr);
     indVar->print(std::cerr);
 #endif
-    // auto success = detectPatternAndSwap(loop);
-    auto success = false;
+    auto success = detectPatternAndSwap(func, loop, lpctx, indVarctx, parallelctx, tp);
     modified |= success;
     if (success) extractedLoops.insert(loop);
   }
@@ -88,14 +90,15 @@ bool LoopInterChange::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
 |   call loop_body
 |       |
 --- outer latch
-
-
-
 */
+
+
 bool detectPatternAndSwap(Function* func,
                           Loop* innerLoop,
                           loopInfo* lpctx,
                           indVarInfo* indVarctx,
+                          // dependenceInfo* dependencyctx,
+                          parallelInfo* parallelctx,
                           TopAnalysisInfoManager* tp) {
   CFGAnalysisHHW().run(func, tp);  // refresh CFG
   const auto outerLoop = innerLoop->parentloop();
@@ -104,6 +107,33 @@ bool detectPatternAndSwap(Function* func,
   const auto outerLever = lpctx->looplevel(outerLoop->header());
   const auto innerLever = lpctx->looplevel(innerLoop->header());
   if (not(outerLever == 1 and innerLever == 2)) return false;
+
+  // inner can parallel, outer can not parallel
+  // inter change to let outer loop parallel
+  if (not(parallelctx->getIsParallel(innerLoop->header()) and
+          !parallelctx->getIsParallel(outerLoop->header()))) {
+    return false;
+  }
+
+  {
+    std::unordered_map<Instruction*, uint32_t> loadStoreMap;
+    // load 01, store 10
+    size_t loadCount = 0, storeCount = 0;
+    for (auto block : innerLoop->blocks()) {
+      for (auto inst : block->insts()) {
+        if (auto load = inst->dynCast<LoadInst>()) {
+          loadCount++;
+          // auto base = getBaseAddr(load->ptr());
+        } else if (auto store = inst->dynCast<StoreInst>()) {
+          storeCount++;
+        }
+      }
+    }
+    if (storeCount > 1) {
+      // only match one store, specific pattern
+      return false;
+    }
+  }
 
   // 1 extract inner loop body
   const auto innerIndVar = indVarctx->getIndvar(innerLoop);
@@ -128,11 +158,11 @@ bool detectPatternAndSwap(Function* func,
   if (iter == outerHeader->next_blocks().end()) return false;
 
   // 2 innerLoop.exit == outerLoop.latch
-  if (innerLoop->exits().size() != 1) return false;
-  if (outerLoop->exits().size() != 1) return false;
+  if (innerLoop->exits().size() != 1 or outerLoop->exits().size() != 1) return false;
+
   const auto innerExit = *(innerLoop->exits().begin());
   const auto outerExit = *(outerLoop->exits().begin());
-  if (innerLoop->latchs().size() != 1 and outerLoop->latchs().size() != 1) return false;
+  if (innerLoop->latchs().size() != 1 or outerLoop->latchs().size() != 1) return false;
   const auto innerLatch = innerLoop->getUniqueLatch();
   const auto outerLatch = outerLoop->getUniqueLatch();
 
@@ -147,6 +177,7 @@ bool detectPatternAndSwap(Function* func,
   outerPreheader->insts().pop_back();  // remove br outer header
   builder.setInsetPosEnd(outerPreheader);
   builder.makeInst<BranchInst>(innerHeader);
+  fixPhiIncomingBlock(innerHeader, innerPreheader, outerPreheader);
 
   // 2 inner header: br cond, outer header, outer exit
   innerHeader->insts().pop_back();  // remove br inner call loop_body
@@ -157,6 +188,8 @@ bool detectPatternAndSwap(Function* func,
     return false;
   }
   builder.makeInst<BranchInst>(innerCmpInst, outerHeader, outerExit);
+  fixPhiIncomingBlock(outerHeader, outerPreheader, innerHeader);
+  fixPhiIncomingBlock(outerExit, outerHeader, innerHeader);
 
   // 3 outer header: br outerCmpInst, inner preheader, inner latch
   outerHeader->insts().pop_back();  // remove br inner preheader
@@ -167,18 +200,21 @@ bool detectPatternAndSwap(Function* func,
   }
   builder.setInsetPosEnd(outerHeader);
   builder.makeInst<BranchInst>(outerCmpInst, innerPreheader, innerLatch);
-
-  // 4 inner preheader: br call loop_body
+  fixPhiIncomingBlock(innerPreheader, outerHeader, outerHeader);
   const auto innerBody = innerBodyInfo.callInst->block();  // innerBodyInfo->body?
+  fixPhiIncomingBlock(innerLatch, innerBody, outerHeader);
+  // 4 inner preheader: br call loop_body
 
   innerPreheader->insts().pop_back();  // remove br inner header
   builder.setInsetPosEnd(innerPreheader);
   builder.makeInst<BranchInst>(innerBody);
+  fixPhiIncomingBlock(innerBody, innerHeader, innerPreheader);
 
   // 5 call loop_body: br outer latch
   innerBody->insts().pop_back();  // remove br inner latch
   builder.setInsetPosEnd(innerBody);
   builder.makeInst<BranchInst>(outerLatch);
+  fixPhiIncomingBlock(outerLatch, innerHeader, innerBody);
 
   // 6 outer latch: br outer header, None
   // 7 inner latch: br inner header, None
