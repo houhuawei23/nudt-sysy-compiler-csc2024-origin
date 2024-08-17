@@ -1240,6 +1240,64 @@ InstSelInfo: {
         #   name: [InstFAdd, InstFSub, InstFMul, InstFDiv],
         # } },
         {
+          # FMADD.D rd, rs1, rs2, rs3: f[rd] = (f[rs1] × f[rs2]) + f[rs3]
+          pattern:
+            {
+              name: InstFAdd,
+              dst: $dst,
+              src1: { name: InstFMul, dst: $mulDst, src1: $x, src2: $y },
+              src2: $z,
+              predicate: "ctx.hasOneUse($mulDst)",
+            },
+          replace: { name: FMADD_S, rd: $dst, rs1: $x, rs2: $y, rs3: $z },
+        },
+        {
+          # FMSUB.D rd, rs1, rs2, rs3: f[rd] = (f[rs1] × f[rs2]) - f[rs3]
+          pattern:
+            {
+              name: InstFSub,
+              dst: $dst,
+              src1: { name: InstFMul, dst: $mulDst, src1: $x, src2: $y },
+              src2: $z,
+              predicate: "ctx.hasOneUse($mulDst)",
+            },
+          replace: { name: FMSUB_S, rd: $dst, rs1: $x, rs2: $y, rs3: $z },
+        },
+        {
+          # FNMADD.D rd, rs1, rs2, rs3: f[rd] = -(f[rs1] × f[rs2]) + f[rs3]
+          pattern:
+            {
+              name: InstFAdd,
+              dst: $dst,
+              src1:
+                {
+                  name: InstFNeg,
+                  dst: $negDst,
+                  src: { name: InstFMul, dst: $mulDst, src1: $x, src2: $y },
+                },
+              src2: $z,
+              predicate: "ctx.hasOneUse($negDst) && ctx.hasOneUse($mulDst)",
+            },
+          replace: { name: FNMSUB_S, rd: $dst, rs1: $x, rs2: $y, rs3: $z },
+        },
+        {
+          pattern:
+            {
+              name: InstFSub,
+              dst: $dst,
+              src1:
+                {
+                  name: InstFNeg,
+                  dst: $negDst,
+                  src: { name: InstFMul, dst: $mulDst, src1: $x, src2: $y },
+                },
+              src2: $z,
+              predicate: "ctx.hasOneUse($negDst) && ctx.hasOneUse($mulDst)",
+            },
+          replace: { name: FNMADD_S, rd: $dst, rs1: $x, rs2: $y, rs3: $z },
+        },
+
+        {
           pattern:
             {
               name: InstZExt,

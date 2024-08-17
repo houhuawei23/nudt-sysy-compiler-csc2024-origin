@@ -16,12 +16,12 @@ class Loop {
 protected:
   Function* mParent;
   Loop* mParentLoop;
-  std::set<Loop*> mSubLoops;
+  std::unordered_set<Loop*> mSubLoops;
 
-  std::set<BasicBlock*> mBlocks;
+  std::unordered_set<BasicBlock*> mBlocks;
   BasicBlock* mHeader;
-  std::set<BasicBlock*> mExits;
-  std::set<BasicBlock*> mLatchs;
+  std::unordered_set<BasicBlock*> mExits;
+  std::unordered_set<BasicBlock*> mLatchs;
 
 public:
   Loop(BasicBlock* header, Function* parent) {
@@ -63,7 +63,7 @@ public:
   }
 };
 
-enum class FunctionAttribute {
+enum FunctionAttribute : uint32_t {
   NoMemoryRead = 1 << 0,
   NoMemoryWrite = 1 << 1,
   NoSideEffect = 1 << 2,

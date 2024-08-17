@@ -87,11 +87,25 @@ void sideEffectAnalysis::run(ir::Module* md,TopAnalysisInfoManager* tp){
     while(isChange);
     
     sectx->setOn();
-    infoCheck(md);
+    // infoCheck(md);
 }
 
 
-ir::Value* sideEffectAnalysis::getBaseAddr(ir::Value* subAddr){
+ir::Value* getIntToPtrBaseAddr(ir::UnaryInst* inst){ 
+    if(auto binary = inst->value()->dynCast<ir::BinaryInst>()) {
+        // if(auto lbase = getBaseAddr(binary->lValue())) return lbase;
+        // if(auto rbase = getBaseAddr(binary->rValue())) return rbase;
+        if(binary->lValue()->valueId() == ir::ValueId::vPTRTOINT) {
+            return binary->lValue()->dynCast<ir::UnaryInst>()->value();
+        } else if(binary->rValue()->valueId() == ir::ValueId::vPTRTOINT) {
+            return binary->rValue()->dynCast<ir::UnaryInst>()->value();
+        }
+    }
+    assert(false);
+    return nullptr;
+}
+
+ir::Value* getBaseAddr(ir::Value* subAddr){
     if(auto allocainst=subAddr->dynCast<ir::AllocaInst>())return allocainst;
     if(auto gv=subAddr->dynCast<ir::GlobalVariable>())return gv;
     if(auto arg=subAddr->dynCast<ir::Argument>())return arg;
@@ -103,6 +117,11 @@ ir::Value* sideEffectAnalysis::getBaseAddr(ir::Value* subAddr){
         auto preHeaderVal=phi->getvalfromBB(lp->getLoopPreheader());
         return getBaseAddr(preHeaderVal);
     }
+    if(auto unary = subAddr->dynCast<ir::UnaryInst>()) {
+        if(unary->valueId() == ir::ValueId::vINTTOPTR) {
+            return getIntToPtrBaseAddr(unary);
+        }
+    }
     assert("Error! invalid type of input in function \"getBaseAddr\"!"&&false);
     return nullptr;
 }
@@ -110,6 +129,13 @@ ir::Value* sideEffectAnalysis::getBaseAddr(ir::Value* subAddr){
 bool sideEffectAnalysis::propogateSideEffect(ir::Module* md){
     bool isChange=false;
     for(auto func:md->funcs()){
+        if (func->attribute().hasAttr(ir::FunctionAttribute::LoopBody | ir::FunctionAttribute::ParallelBody)) {
+            assert(false);
+        }
+        // std::cerr << "propogateSideEffect: " << func->name() << std::endl;
+        // func->rename();
+        // func->print(std::cerr);
+
         for(auto calleeFunc:cgctx->callees(func)){
             //对于所有当前函数调用的函数
             if(calleeFunc==func)continue;//全局使用，其递归无影响
@@ -135,6 +161,8 @@ bool sideEffectAnalysis::propogateSideEffect(ir::Module* md){
         for(auto calleeInst:cgctx->calleeCallInsts(func)){
             auto calleeFunc=calleeInst->callee();
             for(auto pointerArg:sectx->funcArgSet(calleeFunc)){
+                // pointerArg->dumpAsOpernd(std::cerr);
+                // std::cerr<<std::endl;
                 auto pointerArgIdx=pointerArg->index();
                 auto pointerRArg=calleeInst->rargs()[pointerArgIdx];
                 auto pointerRArgBaseAddr=getBaseAddr(pointerRArg->value());

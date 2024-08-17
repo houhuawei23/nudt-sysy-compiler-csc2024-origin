@@ -127,8 +127,7 @@ static bool selectAddrOffset(MIROperand addr,
 
   const auto addrInst = ctx.lookupDefInst(addr);
   if (addrInst) {
-    if (debug)
-      dumpInst(addrInst);
+    if (debug) dumpInst(addrInst);
     if (addrInst->opcode() == InstLoadStackObjectAddr) {
       /* InstLoadStackObjectAddr dst, obj */
       base = addrInst->operand(1);  // obj
@@ -152,8 +151,7 @@ static bool isOperandI32(MIROperand op) {
 }
 
 static bool isZero(MIROperand operand) {
-  if (operand.isReg() && operand.reg() == RISCV::X0)
-    return true;
+  if (operand.isReg() && operand.reg() == RISCV::X0) return true;
   return operand.isImm() && operand.imm() == 0;
 }
 
@@ -362,6 +360,17 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
       break;
     }
     case InstFAdd: {
+      // make src1 is FMul Inst, for inst select
+      auto& src1 = inst->operand(1);
+      auto& src2 = inst->operand(2);
+      auto isFMul = [&](MIROperand& val) {
+        auto def = ctx.lookupDefInst(val);
+        return def && def->opcode() == InstFMul;
+      };
+      if (isFMul(src2) and !isFMul(src1)) {
+        std::swap(src1, src2);
+        modified = true;
+      }
       break;
     }
     default:
@@ -447,8 +456,7 @@ void RISCVISelInfo::legalizeInstWithStackOperand(const InstLegalizeContext& ctx,
        * addi rd, rs1, imm
        * x[rd] = x[rs1] + sext(imm)
        */
-      if (debugLISO)
-        std::cout << "addi rd, rs1, imm" << std::endl;
+      if (debugLISO) std::cout << "addi rd, rs1, imm" << std::endl;
 
       inst->set_opcode(ADDI);
       inst->set_operand(1, base);
@@ -466,8 +474,7 @@ void RISCVISelInfo::legalizeInstWithStackOperand(const InstLegalizeContext& ctx,
        * ->
        * sw src, offset(sp)
        */
-      if (debugLISO)
-        std::cout << "sw rs2, offset(rs1)" << std::endl;
+      if (debugLISO) std::cout << "sw rs2, offset(rs1)" << std::endl;
       inst->set_opcode(isOperandGR(inst->operand(1)) ? SD : FSW);
       auto oldSrc = inst->operand(1);
       inst->set_operand(0, oldSrc);                                          /* src2 := src */
@@ -486,8 +493,7 @@ void RISCVISelInfo::legalizeInstWithStackOperand(const InstLegalizeContext& ctx,
        * ->
        * lw dst, offset(sp)
        */
-      if (debugLISO)
-        std::cout << "lw rd, offset(rs1)" << std::endl;
+      if (debugLISO) std::cout << "lw rd, offset(rs1)" << std::endl;
 
       inst->set_opcode(isOperandGR(inst->operand(0)) ? LD : FLW);
 
@@ -508,8 +514,7 @@ void RISCVISelInfo::legalizeInstWithStackOperand(const InstLegalizeContext& ctx,
        * ->
        * sw rs2, offset(sp)
        */
-      if (debugLISO)
-        std::cout << "sw rs2, offset(rs1)" << std::endl;
+      if (debugLISO) std::cout << "sw rs2, offset(rs1)" << std::endl;
       inst->set_operand(1, offset);
       inst->set_operand(2, base);
       break;
@@ -529,8 +534,7 @@ void RISCVISelInfo::legalizeInstWithStackOperand(const InstLegalizeContext& ctx,
        * ->
        * lw rd, offset(sp)
        */
-      if (debugLISO)
-        std::cout << "lw rd, offset(rs1)" << std::endl;
+      if (debugLISO) std::cout << "lw rd, offset(rs1)" << std::endl;
       //! careful with the order of operands,
       //! sw and lw have different order
       inst->set_operand(1, offset);

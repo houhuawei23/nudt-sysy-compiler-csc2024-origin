@@ -9,6 +9,15 @@ void dumpFunction(Function& func) {
   func.print(std::cerr);
 }
 
+bool fixPhiIncomingBlock(BasicBlock* target, BasicBlock* oldBlock, BasicBlock* newBlock) {
+  for(auto inst : target->insts()) {
+    if(auto phi = inst->dynCast<PhiInst>()) {
+      phi->replaceoldtonew(oldBlock, newBlock);
+    }
+  }
+  return true;
+}
+
 bool blockSortBFS(Function& func, TopAnalysisInfoManager* tAIM) {
   auto domCtx = tAIM->getDomTree(&func);
   domCtx->setOff();

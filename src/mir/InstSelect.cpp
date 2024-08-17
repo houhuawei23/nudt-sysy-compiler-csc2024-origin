@@ -32,7 +32,7 @@ auto collectDefCount(MIRFunction* func, CodeGenContext& ctx) {
       }
     }
   }
-  return defCount;
+  return std::move(defCount);
 }
 auto collectUseCount(MIRFunction* func, CodeGenContext& ctx) {
   std::unordered_map<MIROperand, uint32_t, MIROperandHasher> useCount;
@@ -43,12 +43,21 @@ auto collectUseCount(MIRFunction* func, CodeGenContext& ctx) {
       for (uint32_t idx = 0; idx < instInfo.operand_num(); ++idx) {
         if (instInfo.operand_flag(idx) & OperandFlagUse) {
           auto& use = inst->operand(idx);
-          if (isOperandVReg(use)) ++useCount[use];
+          if (isOperandVReg(use)) {
+            ++useCount[use];
+          }
         }
       }
     }
   }
-  return useCount;
+  return std::move(useCount);
+}
+
+bool ISelContext::hasOneUse(MIROperand op) {
+  if (auto iter = mUseCnt.find(op); iter != mUseCnt.end()) {
+    return iter->second == 1;
+  }
+  return true;
 }
 
 void ISelContext::remove_inst(MIRInst* inst) {
@@ -76,7 +85,7 @@ MIROperand& ISelContext::getInstDefOperand(MIRInst* inst) {
 MIRInst* ISelContext::lookupDefInst(const MIROperand& op) const {
   assert(op.isInit());
   // const auto iter = mDefinedInst.find(op);
-  if (const auto iter = mDefinedInst.find(op);iter != mDefinedInst.end()) {
+  if (const auto iter = mDefinedInst.find(op); iter != mDefinedInst.end()) {
     return iter->second;
   }
   if (const auto iter = mConstantMap.find(op); iter != mConstantMap.end()) {
@@ -202,8 +211,7 @@ bool ISelContext::runInstSelectImpl(MIRFunction* func) {
   //! 指令移除和替换: 根据之前的分析结果，移除和替换旧的指令。
   auto removeAndReplaceOnBlock = [&](MIRBlock* block) {
     // remove old insts
-    block->insts().remove_if(
-      [&](auto inst) { return mRemoveWorkList.count(inst); });
+    block->insts().remove_if([&](auto inst) { return mRemoveWorkList.count(inst); });
 
     // replace defs
     for (auto& inst : block->insts()) {
@@ -258,10 +266,8 @@ void postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) {
         auto op = inst->operand(idx);
         if (isOperandStackObject(op)) {
           if (func.stackObjs().find(op) == func.stackObjs().end()) {
-            std::cerr << "stack object not found in function " << func.name()
-                      << "\n";
-            std::cerr << "stack object so" << (op.reg() ^ stackObjectBegin)
-                      << "\n";
+            std::cerr << "stack object not found in function " << func.name() << "\n";
+            std::cerr << "stack object so" << GENERIC::OperandDumper{op} << "\n";
             std::cerr << "instruction: ";
             info.print(std::cerr, *inst, false);
             std::cerr << "\n";

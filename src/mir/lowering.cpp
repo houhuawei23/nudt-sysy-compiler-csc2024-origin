@@ -234,9 +234,9 @@ void createMIRModule(ir::Module& ir_module,
       dumpStageResult("AfterStackAlloc", mir_func, codegen_ctx);
     }
 
-    // {
-    //   while (genericPeepholeOpt(*mir_func, codegen_ctx)) ;
-    // }
+    {
+      while (genericPeepholeOpt(*mir_func, codegen_ctx)) ;
+    }
 
     {
       /* post-RA scheduling, minimize cycles */
@@ -247,6 +247,7 @@ void createMIRModule(ir::Module& ir_module,
     /* stage10: code layout */
     {
       // assert(mir_func->verify(std::cerr, codegen_ctx));
+      // FIXME: error here, need fix
       // optimizeBlockLayout(mir_func, codegen_ctx);
       // assert(mir_func->verify(std::cerr, codegen_ctx));
     }
