@@ -343,12 +343,16 @@ class sideEffectInfo : public ModuleACtx {
         if(_isLib[func])return true;
         if(_isCallLibFunc[func])return true;
         if(not _FuncWriteGlobals[func].empty())return true;
-        for(auto arg:func->args()){
+        
+        for(auto arg:_funcPointerArgs[func]){
             if(getArgWrite(arg))return true;
         }
         return false;
     }
     bool isPureFunc(ir::Function* func){
+        for(auto arg:funcArgSet(func)){
+            if(getArgRead(arg))return false;
+        }
         return (not hasSideEffect(func) and _FuncReadGlobals[func].empty()) and not _isLib[func];
     }
     void functionInit(ir::Function* func){
@@ -385,6 +389,7 @@ class parallelInfo:public FunctionACtx{
     //你想并行的这里都有!
     private:
         std::unordered_map<ir::BasicBlock*,bool>_LpIsParallel;
+        std::unordered_map<ir::BasicBlock*,std::set<ir::PhiInst*>>_LpPhis;
     public:
         parallelInfo(ir::Function* func,TopAnalysisInfoManager* tp) : FunctionACtx(func,tp) {}
         void setIsParallel(ir::BasicBlock* lp,bool b){_LpIsParallel[lp]=b;}
@@ -393,6 +398,11 @@ class parallelInfo:public FunctionACtx{
                 return _LpIsParallel[lp];
             }
             assert(false and "input an unexistend loop in ");
+        }
+        std::set<ir::PhiInst*>& resPhi(ir::BasicBlock* bb){return _LpPhis[bb];}
+        void clearAll(){
+            _LpIsParallel.clear();
+            _LpPhis.clear();
         }
         void refresh(){}
 

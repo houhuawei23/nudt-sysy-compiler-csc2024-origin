@@ -14,7 +14,7 @@ void sideEffectAnalysis::run(ir::Module* md,TopAnalysisInfoManager* tp){
     4. 库函数，因为优化掉没有用的库函数会导致io出现错误
     */
     // std::cerr<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<std::endl;
-    
+    topmana=tp;
     worklist.clear();
     sectx=tp->getSideEffectInfoWithoutRefresh();
     cgctx=tp->getCallGraph();
@@ -90,11 +90,19 @@ void sideEffectAnalysis::run(ir::Module* md,TopAnalysisInfoManager* tp){
     infoCheck(md);
 }
 
+
 ir::Value* sideEffectAnalysis::getBaseAddr(ir::Value* subAddr){
     if(auto allocainst=subAddr->dynCast<ir::AllocaInst>())return allocainst;
     if(auto gv=subAddr->dynCast<ir::GlobalVariable>())return gv;
     if(auto arg=subAddr->dynCast<ir::Argument>())return arg;
     if(auto gep=subAddr->dynCast<ir::GetElementPtrInst>())return getBaseAddr(gep->value());
+    if(auto phi=subAddr->dynCast<ir::PhiInst>()){
+        auto func=phi->block()->function();
+        auto lpctx=topmana->getLoopInfo(func);
+        auto lp=lpctx->head2loop(phi->block());
+        auto preHeaderVal=phi->getvalfromBB(lp->getLoopPreheader());
+        return getBaseAddr(preHeaderVal);
+    }
     assert("Error! invalid type of input in function \"getBaseAddr\"!"&&false);
     return nullptr;
 }
@@ -160,6 +168,7 @@ bool sideEffectAnalysis::propogateSideEffect(ir::Module* md){
 void sideEffectAnalysis::infoCheck(ir::Module* md){
     for(auto func:md->funcs()){
         using namespace std;
+        if(func->isOnlyDeclare())continue;
         cerr<<"In Function \""<<func->name()<<"\":"<<endl;
         cerr<<"Read Global Variables:"<<endl;
         for(auto gv:sectx->funcReadGlobals(func)){
@@ -180,6 +189,16 @@ void sideEffectAnalysis::infoCheck(ir::Module* md){
                 cerr<<"\tWrite";
             cerr<<endl;
         }
+        cerr<<endl;
+    }
+    for(auto func:md->funcs()){
+        using namespace std;
+        cerr<<"Function \""<<func->name()<<"\" side effect: ";
+        if(sectx->hasSideEffect(func))cerr<<"YES";
+        else cerr<<"NO";
+        cerr<<"\tpure func: ";
+        if(sectx->isPureFunc(func))cerr<<"YES";
+        else cerr<<"NO";
         cerr<<endl;
     }
 }
