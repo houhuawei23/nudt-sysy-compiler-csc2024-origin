@@ -56,11 +56,13 @@ void loopInfo::print(std::ostream& os) const {
     std::cerr << std::endl;
 }
 // looplevel small to big
-std::vector<ir::Loop*> loopInfo::sortedLoops(bool traverse ) {
+std::vector<ir::Loop*> loopInfo::sortedLoops(bool reverse) {
     auto loops = _loops;
     std::sort(loops.begin(), loops.end(), [&](Loop* lhs, Loop* rhs) {
         return _looplevel.at(lhs->header()) < _looplevel.at(rhs->header());
     });
+    if (reverse)
+        std::reverse(loops.begin(), loops.end());
     return std::move(loops);
 }
 

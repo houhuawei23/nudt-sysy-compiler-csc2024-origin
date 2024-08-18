@@ -23,6 +23,248 @@ int loopUnroll::calunrolltime(ir::Loop* loop, int times) {
     return unrolltimes;
 }
 
+void loopUnroll::loopdivest(ir::Loop* loop, ir::IndVar* iv, ir::Function* func) {
+    headuseouts.clear();
+    ir::BasicBlock* head = loop->header();
+    ir::BasicBlock* latch = loop->getLoopLatch();
+    ir::BasicBlock* preheader = loop->getLoopPreheader();
+    ir::BasicBlock* exit;
+    ir::BasicBlock* headnext;
+    for (auto bb : loop->exits())
+        exit = bb;
+    for (auto bb : head->next_blocks()) {
+        if (loop->contains(bb)) headnext = bb;
+    }
+    getdefinuseout(loop);
+    insertremainderloop(loop, func);  // 插入尾循环
+    // 修改迭代上限
+    int ivbegin = iv->getBeginI32();
+    ir::Value* ivend = iv->endValue();  // 常数
+    int ivstep = iv->getStepI32();
+    ir::BinaryInst* ivbinary = iv->iterInst();
+    ir::Instruction* ivcmp = iv->cmpInst();
+    if (ivbinary->valueId() == ir::vADD) {
+        for (auto op : ivcmp->operands()) {
+            if (op->value() == ivend) {
+                ivcmp->setOperand(op->index(), ir::ConstantInteger::gen_i32(ivbegin + ivstep));
+                break;
+            }
+        }
+    } else if (ivbinary->valueId() == ir::vSUB) {
+        for (auto op : ivcmp->operands()) {
+            if (op->value() == ivend) {
+                ivcmp->setOperand(op->index(), ir::ConstantInteger::gen_i32(ivbegin - ivstep));
+                break;
+            }
+        }
+    }
+    auto copyhead = getValue(head)->dynCast<ir::BasicBlock>();
+    ir::BasicBlock::delete_block_link(latch, head);
+    ir::BasicBlock::block_link(latch, copyhead);
+    auto latchbr = latch->insts().back()->dynCast<ir::BranchInst>();
+    latchbr->replaceDest(head, copyhead);
+
+    std::unordered_map<ir::PhiInst*, ir::Value*> replacemap;
+    for (auto inst : head->insts()) {
+        if (auto phi = inst->dynCast<ir::PhiInst>()) {
+            auto val = phi->getvalfromBB(latch);
+            replacemap[phi] = val;
+            phi->delBlock(latch);
+        } else
+            break;
+    }
+
+    for (auto inst : copyhead->insts()) {
+        if (auto phi = inst->dynCast<ir::PhiInst>()) {
+            auto val = phi->getvalfromBB(head);
+            if (auto phival = val->dynCast<ir::PhiInst>()) {
+                phi->addIncoming(replacemap[phival], latch);
+            }
+        } else
+            break;
+    }
+}
+
+void loopUnroll::insertbranchloop(ir::BasicBlock* branch0,
+                                  ir::BasicBlock* branch1,
+                                  ir::ValueId id,
+                                  ir::Loop* loop,
+                                  ir::PhiInst* ivphi,
+                                  ir::ICmpInst* ivicmp,
+                                  ir::BinaryInst* iviter,
+                                  ir::Value* endvar,
+                                  ir::BasicBlock* condbb,
+                                  domTree* domctx,
+                                  TopAnalysisInfoManager* tp) {
+    headuseouts.clear();
+
+    ir::BasicBlock* head = loop->header();
+    ir::BasicBlock* latch = loop->getLoopLatch();
+    ir::BasicBlock* preheader = loop->getLoopPreheader();
+    ir::BasicBlock* exit;
+    ir::BasicBlock* headnext;
+    for (auto bb : loop->exits())
+        exit = bb;
+    for (auto bb : head->next_blocks()) {
+        if (loop->contains(bb)) headnext = bb;
+    }
+    auto func = head->function();
+    getdefinuseout(loop);
+    insertremainderloop(loop, func);  // 插入尾循环
+
+    domctx = tp->getDomTree(func);
+    std::vector<ir::BasicBlock*> pretoremove;
+    std::vector<ir::BasicBlock*> nexttoremove;
+
+    for (auto bb : loop->blocks()) {
+        if (domctx->dominate(branch1, bb)) pretoremove.push_back(bb);
+        if (domctx->dominate(branch0, bb)) nexttoremove.push_back(getValue(bb)->dynCast<ir::BasicBlock>());
+    }
+
+    // firstloop 修改迭代上限
+    ir::PhiInst* endphi;
+    ir::Value* lval;
+    ir::Value* rval;
+    ir::Value* ivend;
+    ir::ICmpInst* newicmp;
+
+    if (ivicmp->lhs() == ivphi) {
+        ivend = ivicmp->rhs();
+    } else if (ivicmp->rhs() == ivphi) {
+        ivend = ivicmp->lhs();
+    } else
+        assert(false && "wrong ivicmp");
+
+    if (ivicmp->valueId() == id) {
+        lval = ivend;
+        rval = endvar;
+        if (id == ir::vISLT || id == ir::vISLE) {
+            newicmp = utils::make<ir::ICmpInst>(ir::vISLT, lval, rval);
+            preheader->emplace_lastbutone_inst(newicmp);
+        } else if (id == ir::vISGE || id == ir::vISGT) {
+            newicmp = utils::make<ir::ICmpInst>(ir::vISGT, lval, rval);
+            preheader->emplace_lastbutone_inst(newicmp);
+        }
+    } else {
+        if (id == ir::vISLE) {  // TODO 危险,无法确定ivicmp哪个是endvar
+            ir::BinaryInst* subinst = utils::make<ir::BinaryInst>(ir::vSUB, ir::Type::TypeInt32(), ivicmp->rhs(), ir::ConstantInteger::gen_i32(1));
+            preheader->emplace_lastbutone_inst(subinst);
+            lval = subinst;
+            rval = endvar;
+            newicmp = utils::make<ir::ICmpInst>(ir::vISLT, lval, rval);
+            preheader->emplace_lastbutone_inst(newicmp);
+        } else if (id == ir::vISLT) {
+            ir::BinaryInst* addinst = utils::make<ir::BinaryInst>(ir::vADD, ir::Type::TypeInt32(), ivicmp->rhs(), ir::ConstantInteger::gen_i32(1));
+            preheader->emplace_lastbutone_inst(addinst);
+            lval = addinst;
+            rval = endvar;
+            newicmp = utils::make<ir::ICmpInst>(ir::vISLT, lval, rval);
+            preheader->emplace_lastbutone_inst(newicmp);
+        } else if (id == ir::vISGE) {
+            ir::BinaryInst* addinst = utils::make<ir::BinaryInst>(ir::vADD, ir::Type::TypeInt32(), ivicmp->rhs(), ir::ConstantInteger::gen_i32(1));
+            preheader->emplace_lastbutone_inst(addinst);
+            lval = addinst;
+            rval = endvar;
+            newicmp = utils::make<ir::ICmpInst>(ir::vISGT, lval, rval);
+            preheader->emplace_lastbutone_inst(newicmp);
+        } else if (id == ir::vISGT) {
+            ir::BinaryInst* subinst = utils::make<ir::BinaryInst>(ir::vSUB, ir::Type::TypeInt32(), ivicmp->rhs(), ir::ConstantInteger::gen_i32(1));
+            preheader->emplace_lastbutone_inst(subinst);
+            lval = subinst;
+            rval = endvar;
+            newicmp = utils::make<ir::ICmpInst>(ir::vISLT, lval, rval);
+            preheader->emplace_lastbutone_inst(newicmp);
+        }
+    }
+
+    auto ifture = func->newBlock();
+    auto iffalse = func->newBlock();
+    auto merge = func->newBlock();
+    auto ifturebr = utils::make<ir::BranchInst>(merge);
+    ifture->emplace_back_inst(ifturebr);
+    auto iffalsebr = utils::make<ir::BranchInst>(merge);
+    iffalse->emplace_back_inst(iffalsebr);
+
+    auto oldbr = preheader->insts().back()->dynCast<ir::BranchInst>();
+    preheader->move_inst(oldbr);
+    merge->emplace_back_inst(oldbr);
+    auto conditionalbr = utils::make<ir::BranchInst>(newicmp, ifture, iffalse);
+    preheader->emplace_back_inst(conditionalbr);
+    endphi = utils::make<ir::PhiInst>(nullptr, ir::Type::TypeInt32());
+    merge->emplace_first_inst(endphi);
+    endphi->addIncoming(lval, ifture);
+    endphi->addIncoming(rval, iffalse);
+    for (auto inst : head->insts()) {
+        if (auto phiinst = inst->dynCast<ir::PhiInst>()) {
+            phiinst->replaceoldtonew(preheader, merge);
+        } else
+            break;
+    }
+
+    if (ivicmp->lhs() == ivphi) {
+        ivicmp->setrhs(endphi);
+        ivicmp->setCmpOp(id);
+    } else if (ivicmp->rhs() == ivphi) {
+        ivicmp->setlhs(endphi);
+        ivicmp->setCmpOp(id);
+    } else
+        assert(false && "wrong ivicmp");
+
+    auto condbr = condbb->insts().back()->dynCast<ir::BranchInst>();
+    auto cond = condbr->cond()->dynCast<ir::Instruction>();
+    ir::BasicBlock* mergebb;
+    for (auto bb : domctx->domfrontier(branch0)) {
+        // assert(domctx->domfrontier(condbb).size() == 1 && "wrong mergebb number");
+        mergebb = bb;
+    }
+
+    condbb->delete_inst(condbr);
+    condbb->delete_inst(cond);
+    auto newbr = utils::make<ir::BranchInst>(branch0);
+    condbb->emplace_back_inst(newbr);
+
+    ir::BasicBlock* mergepre0;
+    for (auto bb : mergebb->pre_blocks()) {
+        if (domctx->dominate(branch1, bb)) mergepre0 = bb;
+    }
+    for (auto inst : mergebb->insts()) {
+        if (auto phiinst = inst->dynCast<ir::PhiInst>()) {
+            phiinst->delBlock(mergepre0);
+        } else
+            break;
+    }
+    for (auto bb : pretoremove) {
+        func->forceDelBlock(bb);
+    }
+
+    // secondloop
+    auto condbb1 = getValue(condbb)->dynCast<ir::BasicBlock>();
+    auto condbr1 = getValue(condbr)->dynCast<ir::BranchInst>();
+    auto cond1 = getValue(cond)->dynCast<ir::Instruction>();
+    auto mergebb1 = getValue(mergebb)->dynCast<ir::BasicBlock>();
+    ir::BasicBlock* mergepre1;
+    for (auto bb : mergebb->pre_blocks()) {
+        if (domctx->dominate(branch0, bb)) mergepre1 = getValue(bb)->dynCast<ir::BasicBlock>();
+    }
+
+    condbb1->delete_inst(condbr1);
+    condbb1->delete_inst(cond1);
+    auto newbr1 = utils::make<ir::BranchInst>(getValue(branch1)->dynCast<ir::BasicBlock>());
+    condbb1->emplace_back_inst(newbr1);
+
+    for (auto inst : mergebb1->insts()) {
+        if (auto phiinst = inst->dynCast<ir::PhiInst>()) {
+            phiinst->delBlock(mergepre1);
+        } else
+            break;
+    }
+
+    for (auto bb : nexttoremove) {
+        func->forceDelBlock(bb);
+    }
+    CFGAnalysisHHW().run(func, tp);  // refresh CFG
+}
+
 void loopUnroll::dynamicunroll(ir::Loop* loop, ir::IndVar* iv) {
     // return ;
     if (loop->exits().size() != 1)  // 只对单exit的loop做unroll
@@ -472,7 +714,7 @@ void loopUnroll::insertremainderloop(ir::Loop* loop, ir::Function* func) {
 
     for (auto inst : headuseouts) {
         if (getValue(inst) != inst) {
-            repalceuseout(inst, getValue(inst)->dynCast<ir::Instruction>(), loop);
+            replaceuseout(inst, getValue(inst)->dynCast<ir::Instruction>(), loop);
             // std::cerr<<"replace useout: "<<std::endl;
         }
     }
@@ -608,7 +850,7 @@ void loopUnroll::dofullunroll(ir::Loop* loop, ir::IndVar* iv, int times) {
 
     for (auto inst : headuseouts) {
         if (auto phiinst = inst->dynCast<ir::PhiInst>()) {
-            repalceuseout(inst, phiinst->getvalfromBB(oldlatchnext)->dynCast<ir::Instruction>(), loop);
+            replaceuseout(inst, phiinst->getvalfromBB(oldlatchnext)->dynCast<ir::Instruction>(), loop);
             // std::cerr<<"replace useout: "<<std::endl;
         }
     }
@@ -931,7 +1173,7 @@ void loopUnroll::getdefinuseout(ir::Loop* L) {
     }
 }
 
-void loopUnroll::repalceuseout(ir::Instruction* inst, ir::Instruction* copyinst, ir::Loop* L) {
+void loopUnroll::replaceuseout(ir::Instruction* inst, ir::Instruction* copyinst, ir::Loop* L) {
     std::vector<ir::Use*> usetoreplace;
     for (auto use : inst->uses()) {
         if (auto useinst = use->user()->dynCast<ir::Instruction>()) {
@@ -966,7 +1208,7 @@ void loopUnroll::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     ivctx = tp->getIndVarInfo(func);
     for (auto& loop : lpctx->loops()) {
         ir::IndVar* iv = ivctx->getIndvar(loop);
-        if (loop->subLoops().empty() && iv) {
+        if (loop->subLoops().empty() && iv && iv->isBeginVarConst()) {
             if (isconstant(iv))
                 constunroll(loop, iv);
             else
