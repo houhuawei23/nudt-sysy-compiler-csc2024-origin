@@ -21,6 +21,9 @@ class LICM : public FunctionPass {
     bool alias(ir::Instruction* inst0, ir::Instruction* inst1);
     ir::Value* getIntToPtrBaseAddr(ir::UnaryInst* inst);
     ir::Value* getbase(ir::Value* val);
+    bool iswrite(ir::Value* ptr, ir::CallInst* callinst);
+    bool isread(ir::Value* ptr, ir::CallInst* callinst);
+    bool isinvariantcall(ir::CallInst* callinst, ir::Loop* loop);
     bool safestore(ir::StoreInst* safestore, ir::Loop* loop);
     bool isinvariantop(ir::Instruction* inst, ir::Loop* loop);
     std::vector<ir::Instruction*> getinvariant(ir::BasicBlock* bb, ir::Loop* loop);
