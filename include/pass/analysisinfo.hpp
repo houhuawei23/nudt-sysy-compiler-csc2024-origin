@@ -358,6 +358,11 @@ class sideEffectInfo : public ModuleACtx {
         }
         return (not hasSideEffect(func) and _FuncReadGlobals[func].empty()) and not _isLib[func];
     }
+    bool isInputOnlyFunc(ir::Function* func){
+        if(hasSideEffect(func))return false;
+        if(not _FuncReadGlobals[func].empty())return false;
+        return true;
+    }
     void functionInit(ir::Function* func){
         _FuncReadGlobals[func]=std::set<ir::GlobalVariable*>();
         _FuncWriteGlobals[func]=std::set<ir::GlobalVariable*>();
