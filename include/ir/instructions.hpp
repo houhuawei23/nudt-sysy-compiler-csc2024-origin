@@ -301,6 +301,8 @@ public:  // set function
     assert(newv >= vICMP_BEGIN and newv <= vICMP_END);
     mValueId = newv;
   }
+  void setlhs(Value* v) { setOperand(0, v); }
+  void setrhs(Value* v) { setOperand(1, v); }
 public:  // utils function
   static bool classof(const Value* v) {
     return v->valueId() >= vICMP_BEGIN && v->valueId() <= vICMP_END;

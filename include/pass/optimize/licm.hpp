@@ -13,12 +13,17 @@ class LICM : public FunctionPass {
     loopInfo* loopctx;
     domTree* domctx;
     pdomTree* pdomcctx;
+    TopAnalysisInfoManager* tpm;
   public:
     std::string name() const override { return "LICM"; }
     bool checkstore(ir::LoadInst* loadinst, ir::Loop* loop);
     bool checkload(ir::StoreInst* storeinst, ir::Loop* loop);
     bool alias(ir::Instruction* inst0, ir::Instruction* inst1);
-    ir::Value* getbase(ir::Instruction* inst);
+    ir::Value* getIntToPtrBaseAddr(ir::UnaryInst* inst);
+    ir::Value* getbase(ir::Value* val);
+    bool iswrite(ir::Value* ptr, ir::CallInst* callinst);
+    bool isread(ir::Value* ptr, ir::CallInst* callinst);
+    bool isinvariantcall(ir::CallInst* callinst, ir::Loop* loop);
     bool safestore(ir::StoreInst* safestore, ir::Loop* loop);
     bool isinvariantop(ir::Instruction* inst, ir::Loop* loop);
     std::vector<ir::Instruction*> getinvariant(ir::BasicBlock* bb, ir::Loop* loop);

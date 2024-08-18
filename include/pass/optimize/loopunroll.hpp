@@ -3,17 +3,18 @@
 #include <cassert>
 #include <map>
 #include <vector>
+#include "pass/analysis/ControlFlowGraph.hpp"
 #include "ir/ir.hpp"
 #include "pass/pass.hpp"
 namespace pass {
 class loopUnroll : public FunctionPass {
   private:
+  public:
     loopInfo* lpctx;
     indVarInfo* ivctx;
     static std::unordered_map<ir::Value*, ir::Value*> copymap;
     std::vector<ir::Instruction*> headuseouts;
     ir::BasicBlock* nowlatchnext;
-  public:
     std::string name() const override { return "loopunroll"; }
     bool definuseout(ir::Instruction* inst, ir::Loop* L);
     void insertremainderloop(ir::Loop* loop, ir::Function* func);
@@ -27,7 +28,20 @@ class loopUnroll : public FunctionPass {
     void dofullunroll(ir::Loop* loop, ir::IndVar* iv, int times);
     bool isconstant(ir::IndVar* iv);
     void getdefinuseout(ir::Loop* L);
-    void repalceuseout(ir::Instruction* inst, ir::Instruction* copyinst, ir::Loop* L);
+    void replaceuseout(ir::Instruction* inst, ir::Instruction* copyinst, ir::Loop* L);
+
+    void loopdivest(ir::Loop* loop, ir::IndVar* iv, ir::Function* func);
+    void insertbranchloop(ir::BasicBlock* bb0,
+                          ir::BasicBlock* bb1,
+                          ir::ValueId id,
+                          ir::Loop* L,
+                          ir::PhiInst* ivphi,
+                          ir::ICmpInst* ivicmp,
+                          ir::BinaryInst* iviter,
+                          ir::Value* endvar,
+                          ir::BasicBlock* condbb,
+                          domTree* domctx,
+                          TopAnalysisInfoManager* tp);
     static ir::Value* getValue(ir::Value* val) {
         if (auto c = val->dynCast<ir::ConstantValue>()) {
             return c;
@@ -37,6 +51,8 @@ class loopUnroll : public FunctionPass {
         }
         return val;
     }
+    loopUnroll() : FunctionPass() {}
+    loopUnroll(loopInfo* lpinfo, indVarInfo* ivinfo) : FunctionPass(), lpctx(lpinfo), ivctx(ivinfo) {}
     void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
 };
 }  // namespace pass

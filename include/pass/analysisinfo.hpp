@@ -235,7 +235,7 @@ class loopInfo : public FunctionACtx {
     }
     void refresh() override;
     void print(std::ostream& os) const;
-    std::vector<ir::Loop*> sortedLoops(bool traverse = false); // looplevel small to big
+    std::vector<ir::Loop*> sortedLoops(bool reverse = false); // looplevel small to big
 };
 
 class callGraph : public ModuleACtx {
@@ -357,6 +357,11 @@ class sideEffectInfo : public ModuleACtx {
             if(getArgRead(arg))return false;
         }
         return (not hasSideEffect(func) and _FuncReadGlobals[func].empty()) and not _isLib[func];
+    }
+    bool isInputOnlyFunc(ir::Function* func){
+        if(hasSideEffect(func))return false;
+        if(not _FuncReadGlobals[func].empty())return false;
+        return true;
     }
     void functionInit(ir::Function* func){
         _FuncReadGlobals[func]=std::set<ir::GlobalVariable*>();
