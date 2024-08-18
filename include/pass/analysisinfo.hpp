@@ -310,7 +310,7 @@ class sideEffectInfo : public ModuleACtx {
     std::unordered_map<ir::Function*,bool> _isLib;//当前函数是否为lib函数
     std::unordered_map<ir::Function*,std::set<ir::Argument*>> _funcPointerArgs; //当前函数的参数中有哪些是指针参数
     std::unordered_map<ir::Function*,bool> _isCallLibFunc;//当前函数有无调用库函数或者简介调用库函数
-    
+    std::unordered_map<ir::Function*,bool> _hasPotentialSideEffect;//出现了无法分析基址的情况，含有潜在的副作用
 
   public:
     sideEffectInfo(ir::Module* ctx, TopAnalysisInfoManager* tp) : ModuleACtx(ctx, tp) {}
@@ -329,11 +329,13 @@ class sideEffectInfo : public ModuleACtx {
     bool getArgWrite(ir::Argument* arg){return _isArgumentWrite[arg];}
     bool getIsLIb(ir::Function* func){return _isLib[func];}
     bool getIsCallLib(ir::Function* func){return _isCallLibFunc[func];}
+    bool getPotentialSideEffect(ir::Function* func){return _hasPotentialSideEffect[func];}
     //set
     void setArgRead(ir::Argument* arg,bool b){_isArgumentRead[arg]=b;}
     void setArgWrite(ir::Argument* arg,bool b){_isArgumentWrite[arg]=b;}
     void setFuncIsLIb(ir::Function* func,bool b){_isLib[func]=b;}
     void setFuncIsCallLib(ir::Function* func,bool b){_isCallLibFunc[func]=b;}
+    void setPotentialSideEffect(ir::Function* func,bool b){_hasPotentialSideEffect[func]=b;}
     //reference
     std::set<ir::GlobalVariable*>& funcReadGlobals(ir::Function* func){return _FuncReadGlobals[func];}
     std::set<ir::GlobalVariable*>& funcWriteGlobals(ir::Function* func){return _FuncWriteGlobals[func];}
@@ -343,6 +345,7 @@ class sideEffectInfo : public ModuleACtx {
         if(_isLib[func])return true;
         if(_isCallLibFunc[func])return true;
         if(not _FuncWriteGlobals[func].empty())return true;
+        if(_hasPotentialSideEffect[func])return true;
         
         for(auto arg:_funcPointerArgs[func]){
             if(getArgWrite(arg))return true;
@@ -390,6 +393,11 @@ class parallelInfo:public FunctionACtx{
     private:
         std::unordered_map<ir::BasicBlock*,bool>_LpIsParallel;
         std::unordered_map<ir::BasicBlock*,std::set<ir::PhiInst*>>_LpPhis;
+        std::unordered_map<ir::PhiInst*,bool>_isPhiAdd;
+        std::unordered_map<ir::PhiInst*,bool>_isPhiSub;
+        std::unordered_map<ir::PhiInst*,bool>_isPhiMul;
+        std::unordered_map<ir::PhiInst*,ir::Value*>_ModuloVal;
+
     public:
         parallelInfo(ir::Function* func,TopAnalysisInfoManager* tp) : FunctionACtx(func,tp) {}
         void setIsParallel(ir::BasicBlock* lp,bool b){_LpIsParallel[lp]=b;}
@@ -405,6 +413,18 @@ class parallelInfo:public FunctionACtx{
             _LpPhis.clear();
         }
         void refresh(){}
+        //set
+        void setPhi(ir::PhiInst* phi,bool isadd,bool issub,bool ismul,ir::Value* mod){
+            _isPhiAdd[phi]=isadd;
+            _isPhiMul[phi]=ismul;
+            _isPhiSub[phi]=issub;
+            _ModuloVal[phi]=mod;
+        }
+        //get
+        bool getIsAdd(ir::PhiInst* phi){ return _isPhiAdd.at(phi); }
+        bool getIsSub(ir::PhiInst* phi){ return _isPhiSub.at(phi); }
+        bool getIsMul(ir::PhiInst* phi){ return _isPhiMul.at(phi); }
+        ir::Value* getMod(ir::PhiInst* phi){ return _ModuloVal.at(phi); }
 
 };
 
