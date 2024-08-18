@@ -35,7 +35,7 @@ static BlockSeq solvePettisHansen(const std::vector<uint32_t>& weights,
     std::sort(edgeInfo.begin(), edgeInfo.end(), // 按照递减的顺序进行排序
               [](auto& lhs, auto& rhs) { return lhs.second > rhs.second; });
     
-    utils::Graph graph;  // 邻接矩阵构造图
+    utils::Graph graph(blockCnt);  // 邻接矩阵构造图
     uint32_t p = 0;
     if (Debug) {
         std::cerr << "begin debug the algorithm\n";

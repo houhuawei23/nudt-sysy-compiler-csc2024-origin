@@ -42,33 +42,12 @@ ir::Value* LICM::getbase(ir::Value* subAddr) {
     return nullptr;
 }
 
-// ir::Value* LICM::getbase(ir::Instruction* inst) {
-//     ir::Value* ptr;
-//     ir::GetElementPtrInst* gep;
-//     if (inst->dynCast<ir::StoreInst>())
-//         ptr = inst->dynCast<ir::StoreInst>()->ptr();
-//     else if (inst->dynCast<ir::LoadInst>())
-//         ptr = inst->dynCast<ir::LoadInst>()->ptr();
-//     if (!ptr->dynCast<ir::GetElementPtrInst>()) {
-//         if (auto ptrphi = ptr->dynCast<ir::PhiInst>()) {
-//             gep = ptrphi->getValue(0)->dynCast<ir::GetElementPtrInst>();
-//         } else
-//             return ptr;
-//     }
-
-//     auto gep = ptr->dynCast<ir::GetElementPtrInst>();
-//     while (true) {
-//         if (!gep->value()->dynCast<ir::GetElementPtrInst>()) return gep->value();
-//         gep = gep->value()->dynCast<ir::GetElementPtrInst>();
-//     }
-// }
-
 ir::Value* getsubaddr(ir::Instruction* inst) {
     if (inst->dynCast<ir::StoreInst>())
         return inst->dynCast<ir::StoreInst>()->ptr();
     else if (inst->dynCast<ir::LoadInst>())
         return inst->dynCast<ir::LoadInst>()->ptr();
-    else    
+    else
         return nullptr;
 }
 
@@ -95,7 +74,65 @@ bool LICM::isinvariantop(ir::Instruction* inst, ir::Loop* loop) {
     return true;
 }
 
+bool LICM::iswrite(ir::Value* ptr, ir::CallInst* callinst) {
+    auto baseaddr = getbase(ptr);
+    auto callee = callinst->callee();
+    for (auto gv : sectx->funcWriteGlobals(callee)) {
+        if (baseaddr == gv) return true;
+    }
+
+    for (auto rarg : callinst->rargs()) {
+        if (baseaddr == rarg->value()) {
+            auto para = callee->arg_i(rarg->index());
+            if (sectx->getArgWrite(para)) return true;
+        }
+    }
+    return false;
+}
+
+bool LICM::isread(ir::Value* ptr, ir::CallInst* callinst) {
+    auto baseaddr = getbase(ptr);
+    auto callee = callinst->callee();
+    for (auto gv : sectx->funcReadGlobals(callee)) {
+        if (baseaddr == gv) return true;
+    }
+
+    for (auto rarg : callinst->rargs()) {
+        if (baseaddr == rarg->value()) {
+            auto para = callee->arg_i(rarg->index());
+            if (sectx->getArgRead(para)) return true;
+        }
+    }
+    return false;
+}
+
+bool LICM::isinvariantcall(ir::CallInst* callinst, ir::Loop* loop) {
+    if (!isinvariantop(callinst, loop)) return false;
+
+    auto callee = callinst->callee();
+    std::set<ir::Value*> loopStorePtrs;
+    for (auto bb : loop->blocks()) {
+        for (auto inst : bb->insts()) {
+            if (inst->dynCast<ir::StoreInst>()) {
+                auto ptr = getbase(getsubaddr(inst));
+                loopStorePtrs.insert(ptr);
+            }
+        }
+    }
+    for (auto rarg : callinst->rargs()) {
+        auto rarginst = rarg->value()->dynCast<ir::Instruction>();
+        if (rarginst) {
+            if (loopStorePtrs.count(getbase(rarginst))) {
+                auto para = callee->arg_i(rarg->index());
+                if (sectx->getArgRead(para)) return false;
+            }
+        }
+    }
+    return true;
+}
+
 bool LICM::checkload(ir::StoreInst* storeinst, ir::Loop* loop) {
+    auto ptr = getbase(getsubaddr(storeinst));
     for (auto bb : loop->blocks()) {
         for (auto inst : bb->insts()) {
             if (inst->dynCast<ir::LoadInst>()) {
@@ -114,9 +151,12 @@ bool LICM::checkload(ir::StoreInst* storeinst, ir::Loop* loop) {
                 }
             } else if (inst->dynCast<ir::CallInst>()) {
                 auto callee = inst->dynCast<ir::CallInst>()->callee();
-                if (!callee->isOnlyDeclare() && sectx->hasSideEffect(callee)) {
-                    // std::cerr << callee->name() << std::endl;
+                if (sectx->getPotentialSideEffect(callee))
                     return false;
+                else {
+                    if (isread(ptr, inst->dynCast<ir::CallInst>())) {
+                        return false;
+                    }
                 }
             }
         }
@@ -125,15 +165,19 @@ bool LICM::checkload(ir::StoreInst* storeinst, ir::Loop* loop) {
 }
 
 bool LICM::checkstore(ir::LoadInst* loadinst, ir::Loop* loop) {
+    auto ptr = getbase(getsubaddr(loadinst));
     for (auto bb : loop->blocks()) {
         for (auto inst : bb->insts()) {
             if (inst->dynCast<ir::StoreInst>()) {
                 if (alias(inst, loadinst)) return false;
             } else if (inst->dynCast<ir::CallInst>()) {
                 auto callee = inst->dynCast<ir::CallInst>()->callee();
-                if (!callee->isOnlyDeclare() && sectx->hasSideEffect(callee)) {
-                    // std::cerr << callee->name() << std::endl;
+                if (sectx->getPotentialSideEffect(callee))
                     return false;
+                else {
+                    if (iswrite(ptr, inst->dynCast<ir::CallInst>())) {
+                        return false;
+                    }
                 }
             }
         }
@@ -153,23 +197,23 @@ std::vector<ir::Instruction*> LICM::getinvariant(ir::BasicBlock* bb, ir::Loop* l
     }
     if (bb != head && !pdomcctx->pdominate(bb, headnext)) return res;
     for (auto inst : bb->insts()) {
-        if (auto storeinst = inst->dynCast<ir::StoreInst>()) {  // TODO
+        if (auto storeinst = inst->dynCast<ir::StoreInst>()) {
             if (isinvariantop(storeinst, loop))
                 if (checkload(storeinst, loop)) {  // 接下来检查循环体里有无对本数组的load
                     res.push_back(storeinst);
                     // std::cerr << "lift store" << std::endl;
                 }
 
-        } else if (auto loadinst = inst->dynCast<ir::LoadInst>()) {  // TODO
+        } else if (auto loadinst = inst->dynCast<ir::LoadInst>()) {
             if (isinvariantop(loadinst, loop))
                 if (checkstore(loadinst, loop)) {  // 接下来检查循环体里有无对本数组的store
                     res.push_back(loadinst);
                     // std::cerr << "lift load" << std::endl;
                 }
-        } else if (auto callinst = inst->dynCast<ir::CallInst>()) {  // TODO
+        } else if (auto callinst = inst->dynCast<ir::CallInst>()) {
             auto callee = callinst->callee();
-            if (sectx->isPureFunc(callee)) {
-                if (isinvariantop(callinst, loop)) {
+            if (sectx->isInputOnlyFunc(callee)) {
+                if (isinvariantcall(callinst, loop)) {
                     res.push_back(callinst);
                     // std::cerr << "lift call" << std::endl;
                 }

@@ -290,7 +290,7 @@ bool extractParallelBody(Function* func,
 
   // extact loop body as a new loop_body func from func loop
   LoopBodyInfo loopBodyInfo;
-  if (not extractLoopBody(func, *loop /* modified */, indVar, tp, loopBodyInfo /* ret */))
+  if (not extractLoopBody(func, loop /* modified */, indVar, tp, loopBodyInfo /* ret */))
     return false;
   // loopBodyInfo.print(std::cerr);
   // func->rename();

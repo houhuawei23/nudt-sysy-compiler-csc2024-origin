@@ -61,6 +61,16 @@ public:
     mLatchs.clear();
     mLatchs.insert(latch);
   }
+
+  BasicBlock* getFirstBodyBlock() const {
+    for (auto block : mHeader->next_blocks()) {
+      if (contains(block)) {
+        return block;
+      }
+    }
+    assert(false && "no body block found");
+    return nullptr;
+  }
 };
 
 enum FunctionAttribute : uint32_t {

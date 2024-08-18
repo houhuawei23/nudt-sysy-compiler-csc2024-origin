@@ -17,7 +17,7 @@ bool loopdivest::shoulddivest(ir::Loop* loop) {
     subloop = *(loop->subLoops().begin());
     if (subloop->subLoops().size() != 0) return false;
     ir::IndVar* siv = ivctx->getIndvar(subloop);
-    if (iv && (!siv)) return true;
+    if (iv && (!siv->getIsBeginAndStepConst())) return true;
     return false;
 }
 void loopdivest::runonloop(ir::Loop* loop, ir::Function* func) {
@@ -30,7 +30,7 @@ void loopdivest::runonloop(ir::Loop* loop, ir::Function* func) {
 }
 
 void loopdivest::run(ir::Function* func, TopAnalysisInfoManager* tp) {
-    std::cerr << func->name() << std::endl;
+    // std::cerr << func->name() << std::endl;
     lpctx = tp->getLoopInfo(func);
     // lpctx->setOff();
     // lpctx->refresh();

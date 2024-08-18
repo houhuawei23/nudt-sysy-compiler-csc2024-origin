@@ -40,7 +40,7 @@ public:  // 构造函数
              bool is_const = false,
              BasicBlock* parent = nullptr,
              const_str_ref name = "")
-    : Instruction(vALLOCA, ir::Type::TypePointer(base_type), parent, name), mIsConst(is_const) {}
+    : Instruction(vALLOCA, Type::TypePointer(base_type), parent, name), mIsConst(is_const) {}
 
 public:  // get function
   Type* baseType() const {
@@ -259,7 +259,7 @@ public:  // get function
     return operand(0)->as<BasicBlock>();
   }
 public:  // set function
-  void replaceDest(ir::BasicBlock* olddest, ir::BasicBlock* newdest);
+  void replaceDest(BasicBlock* olddest, BasicBlock* newdest);
   void set_iftrue(BasicBlock* bb) {
     assert(mIsCond and "not a conditional branch");
     setOperand(1, bb);
@@ -378,7 +378,7 @@ protected:
 public:
   //! 1. Pointer <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
   GetElementPtrInst(Type* base_type, Value* ptr, Value* idx, BasicBlock* parent = nullptr)
-    : Instruction(vGETELEMENTPTR, ir::Type::TypePointer(base_type), parent) {
+    : Instruction(vGETELEMENTPTR, Type::TypePointer(base_type), parent) {
     _id = 0;
     addOperand(ptr);
     addOperand(idx);
@@ -392,7 +392,7 @@ public:
                     std::vector<size_t> cur_dims,
                     BasicBlock* parent=nullptr)
     : Instruction(vGETELEMENTPTR,
-                  ir::Type::TypePointer(ir::Type::TypeArray(base_type, dims)),
+                  Type::TypePointer(Type::TypeArray(base_type, dims)),
                   parent),
       _cur_dims(cur_dims) {
     _id = 1;
@@ -406,7 +406,7 @@ public:
                     Value* idx,
                     std::vector<size_t> cur_dims,
                     BasicBlock* parent = nullptr)
-    : Instruction(vGETELEMENTPTR, ir::Type::TypePointer(base_type), parent), _cur_dims(cur_dims) {
+    : Instruction(vGETELEMENTPTR, Type::TypePointer(base_type), parent), _cur_dims(cur_dims) {
     _id = 2;
     addOperand(ptr);
     addOperand(idx);
@@ -432,7 +432,7 @@ public:  // utils function
 class PhiInst : public Instruction {
 protected:
   size_t mSize;
-  std::unordered_map<ir::BasicBlock*, ir::Value*> mbbToVal;
+  std::unordered_map<BasicBlock*, Value*> mbbToVal;
 
 public:
   PhiInst(BasicBlock* parent,
@@ -449,6 +449,9 @@ public:
   }
   auto getValue(size_t k) const { return operand(2 * k); }
   auto getBlock(size_t k) const { return operand(2 * k + 1)->dynCast<BasicBlock>(); }
+  
+  auto& incomings() const { return mbbToVal; }
+  
   Value* getvalfromBB(BasicBlock* bb);
   BasicBlock* getbbfromVal(Value* val);
 
@@ -535,13 +538,13 @@ public:
       mcmpInst(cmpinst),
       mphiinst(phiinst) {
     mendIsConst = mendVar->isa<ConstantInteger>();
-    if(auto constBeginVar=mbeginVarValue->dynCast<ir::ConstantInteger>()){
+    if(auto constBeginVar=mbeginVarValue->dynCast<ConstantInteger>()){
       mbeginVar=constBeginVar;
     }
     else{
       mbeginVar=nullptr;
     }
-    if(auto constStepVar=mstepVarValue->dynCast<ir::ConstantInteger>()){
+    if(auto constStepVar=mstepVarValue->dynCast<ConstantInteger>()){
       mstepVar=constStepVar;
     }
     else{
