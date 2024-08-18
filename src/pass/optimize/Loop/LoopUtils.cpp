@@ -50,6 +50,13 @@ bool checkLoopParallel(Loop* loop,
 
 /* move next to new latch, or clone next to new latch */
 bool fixLoopLatch(Function* func, Loop* loop, IndVar* indVar, TopAnalysisInfoManager* tp) {
+#ifdef DEBUG
+  loop.print(std::cerr);
+  std::cerr << "old latch: ";
+  loop.getUniqueLatch()->dumpAsOpernd(std::cerr);
+  std::cerr << std::endl;
+  indVar->print(std::cerr);
+#endif
   assert(loop->latchs().size() == 1);
   const auto next = indVar->iterInst();
 
@@ -82,6 +89,13 @@ bool fixLoopLatch(Function* func, Loop* loop, IndVar* indVar, TopAnalysisInfoMan
       phiInst->replaceoldtonew(oldLatch, newLatch);
     }
   }
+#ifdef DEBUG
+  loop.print(std::cerr);
+  std::cerr << "new latch: ";
+  loop.getUniqueLatch()->dumpAsOpernd(std::cerr);
+  std::cerr << std::endl;
+  indVar->print(std::cerr);
+#endif
   return true;
 }
 }  // namespace pass

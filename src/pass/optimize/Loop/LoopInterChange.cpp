@@ -141,7 +141,7 @@ bool detectPatternAndSwap(Function* func,
   if (innerIndVar == nullptr or outerIndVar == nullptr) return false;
 
   LoopBodyInfo innerBodyInfo;
-  if (not extractLoopBody(func, *innerLoop, innerIndVar, tp, innerBodyInfo)) return false;
+  if (not extractLoopBody(func, innerLoop, innerIndVar, tp, innerBodyInfo)) return false;
 
 #ifdef DEBUG
   innerBodyInfo.print(std::cerr);

@@ -32,7 +32,7 @@ private:
 };
 
 bool extractLoopBody(Function* func,
-                     Loop& loop,
+                     Loop* loop,
                      IndVar* indVar,
                      TopAnalysisInfoManager* tp,
                      LoopBodyInfo& loopBodyInfo);
