@@ -43,6 +43,7 @@ enum InstFlag : uint32_t {
   InstFlagInOrder = 1 << 17,
   InstFlagPadding = 1 << 18,
   InstFlagIndirectJump = 1 << 19,  // Jump Register Instruction - jr
+  InstFlagAtomic = 1 << 20,
   InstFlagSideEffect = InstFlagLoad | InstFlagStore | InstFlagTerminator | InstFlagBranch |
                        InstFlagCall | InstFlagPush | InstFlagRegDef | InstFlagReturn |
                        InstFlagWithDelaySlot | InstFlagPadding | InstFlagIndirectJump,

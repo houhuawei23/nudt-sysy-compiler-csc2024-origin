@@ -12,8 +12,7 @@ class CodeGenContext;
 class LoweringContext;
 class ISelContext : public MIRBuilder {
   CodeGenContext& mCodeGenCtx;
-  std::unordered_map<MIROperand, MIRInst*, MIROperandHasher> mDefinedInst,
-    mConstantMap;
+  std::unordered_map<MIROperand, MIRInst*, MIROperandHasher> mDefinedInst, mConstantMap;
 
   // mReplaceList
   std::unordered_map<MIROperand, MIROperand, MIROperandHasher> mReplaceMap;
@@ -67,19 +66,13 @@ public:
   MIRFunction& func;
 
 public:
-  InstLegalizeContext(
-    MIRInst*& i,
-    MIRInstList& insts,
-    MIRInstList::iterator iter,
-    CodeGenContext& ctx,
-    std::optional<std::list<std::unique_ptr<MIRBlock>>::iterator> biter,
-    MIRFunction& f)
-    : inst(i),
-      instructions(insts),
-      iter(iter),
-      codeGenCtx(ctx),
-      blockIter(biter),
-      func(f) {}
+  InstLegalizeContext(MIRInst*& i,
+                      MIRInstList& insts,
+                      MIRInstList::iterator iter,
+                      CodeGenContext& ctx,
+                      std::optional<std::list<std::unique_ptr<MIRBlock>>::iterator> biter,
+                      MIRFunction& f)
+    : inst(i), instructions(insts), iter(iter), codeGenCtx(ctx), blockIter(biter), func(f) {}
 };
 
 class TargetISelInfo {
@@ -94,9 +87,8 @@ public:
                                             StackObject& obj) const = 0;
 
   virtual void postLegalizeInst(const InstLegalizeContext& ctx) const = 0;
-  virtual MIROperand materializeFPConstant(
-    float fpVal,
-    LoweringContext& loweringCtx) const = 0;
+  virtual MIROperand materializeFPConstant(float fpVal, LoweringContext& loweringCtx) const = 0;
+  virtual bool lowerInst(ir::Instruction* inst, LoweringContext& loweringCtx) const = 0;
 };
 
 static bool isCompareOp(MIROperand operand, CompareOp cmpOp) {

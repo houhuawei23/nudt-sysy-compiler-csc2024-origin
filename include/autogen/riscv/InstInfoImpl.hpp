@@ -1804,6 +1804,166 @@ public:
   }
 };
 
+class RISCVInstInfoAMOSWAP_W final : public InstInfo {
+public:
+  RISCVInstInfoAMOSWAP_W() = default;
+
+  uint32_t operand_num() const override { return 3; }
+
+  OperandFlag operand_flag(uint32_t idx) const override {
+    switch (idx) {
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        return OperandFlagNone;
+        assert(false && "Invalid operand index");
+    }
+  }
+
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagLoad | InstFlagStore; }
+
+  std::string_view name() const override { return "RISCV.AMOSWAP_W"; }
+
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
+    out << "amoswap.w.aqrl"
+        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+        << mir::RISCV::OperandDumper{inst.operand(1)} << ", ("
+        << mir::RISCV::OperandDumper{inst.operand(2)} << ")";
+  }
+};
+
+class RISCVInstInfoAMOADD_W final : public InstInfo {
+public:
+  RISCVInstInfoAMOADD_W() = default;
+
+  uint32_t operand_num() const override { return 3; }
+
+  OperandFlag operand_flag(uint32_t idx) const override {
+    switch (idx) {
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        return OperandFlagNone;
+        assert(false && "Invalid operand index");
+    }
+  }
+
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagLoad | InstFlagStore; }
+
+  std::string_view name() const override { return "RISCV.AMOADD_W"; }
+
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
+    out << "amoadd.w.aqrl"
+        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+        << mir::RISCV::OperandDumper{inst.operand(1)} << ", ("
+        << mir::RISCV::OperandDumper{inst.operand(2)} << ")";
+  }
+};
+
+class RISCVInstInfoAMOAND_W final : public InstInfo {
+public:
+  RISCVInstInfoAMOAND_W() = default;
+
+  uint32_t operand_num() const override { return 3; }
+
+  OperandFlag operand_flag(uint32_t idx) const override {
+    switch (idx) {
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        return OperandFlagNone;
+        assert(false && "Invalid operand index");
+    }
+  }
+
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagLoad | InstFlagStore; }
+
+  std::string_view name() const override { return "RISCV.AMOAND_W"; }
+
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
+    out << "amoand.w.aqrl"
+        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+        << mir::RISCV::OperandDumper{inst.operand(1)} << ", ("
+        << mir::RISCV::OperandDumper{inst.operand(2)} << ")";
+  }
+};
+
+class RISCVInstInfoAMOOR_W final : public InstInfo {
+public:
+  RISCVInstInfoAMOOR_W() = default;
+
+  uint32_t operand_num() const override { return 3; }
+
+  OperandFlag operand_flag(uint32_t idx) const override {
+    switch (idx) {
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        return OperandFlagNone;
+        assert(false && "Invalid operand index");
+    }
+  }
+
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagLoad | InstFlagStore; }
+
+  std::string_view name() const override { return "RISCV.AMOOR_W"; }
+
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
+    out << "amoor.w.aqrl"
+        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+        << mir::RISCV::OperandDumper{inst.operand(1)} << ", ("
+        << mir::RISCV::OperandDumper{inst.operand(2)} << ")";
+  }
+};
+
+class RISCVInstInfoAMOXOR_W final : public InstInfo {
+public:
+  RISCVInstInfoAMOXOR_W() = default;
+
+  uint32_t operand_num() const override { return 3; }
+
+  OperandFlag operand_flag(uint32_t idx) const override {
+    switch (idx) {
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        return OperandFlagNone;
+        assert(false && "Invalid operand index");
+    }
+  }
+
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagLoad | InstFlagStore; }
+
+  std::string_view name() const override { return "RISCV.AMOXOR_W"; }
+
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
+    out << "amoxor.w.aqrl"
+        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+        << mir::RISCV::OperandDumper{inst.operand(1)} << ", ("
+        << mir::RISCV::OperandDumper{inst.operand(2)} << ")";
+  }
+};
+
 class RISCVInstInfoADD final : public InstInfo {
 public:
   RISCVInstInfoADD() = default;
@@ -3410,9 +3570,9 @@ public:
   }
 };
 
-class RISCVInstInfoLR final : public InstInfo {
+class RISCVInstInfoLR_W final : public InstInfo {
 public:
-  RISCVInstInfoLR() = default;
+  RISCVInstInfoLR_W() = default;
 
   uint32_t operand_num() const override { return 3; }
 
@@ -3430,9 +3590,9 @@ public:
     }
   }
 
-  uint32_t inst_flag() const override { return InstFlagNone; }
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagLoad; }
 
-  std::string_view name() const override { return "RISCV.LR"; }
+  std::string_view name() const override { return "RISCV.LR_W"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "lr.w"
@@ -3442,9 +3602,9 @@ public:
   }
 };
 
-class RISCVInstInfoSC final : public InstInfo {
+class RISCVInstInfoSC_W final : public InstInfo {
 public:
-  RISCVInstInfoSC() = default;
+  RISCVInstInfoSC_W() = default;
 
   uint32_t operand_num() const override { return 3; }
 
@@ -3462,172 +3622,12 @@ public:
     }
   }
 
-  uint32_t inst_flag() const override { return InstFlagNone; }
+  uint32_t inst_flag() const override { return InstFlagNone | InstFlagStore; }
 
-  std::string_view name() const override { return "RISCV.SC"; }
+  std::string_view name() const override { return "RISCV.SC_W"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
     out << "sc.w"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
-        << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
-        << mir::RISCV::OperandDumper{inst.operand(2)};
-  }
-};
-
-class RISCVInstInfoAMOSWAP final : public InstInfo {
-public:
-  RISCVInstInfoAMOSWAP() = default;
-
-  uint32_t operand_num() const override { return 3; }
-
-  OperandFlag operand_flag(uint32_t idx) const override {
-    switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        return OperandFlagNone;
-        assert(false && "Invalid operand index");
-    }
-  }
-
-  uint32_t inst_flag() const override { return InstFlagNone; }
-
-  std::string_view name() const override { return "RISCV.AMOSWAP"; }
-
-  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "amoswap.w"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
-        << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
-        << mir::RISCV::OperandDumper{inst.operand(2)};
-  }
-};
-
-class RISCVInstInfoAMOADD final : public InstInfo {
-public:
-  RISCVInstInfoAMOADD() = default;
-
-  uint32_t operand_num() const override { return 3; }
-
-  OperandFlag operand_flag(uint32_t idx) const override {
-    switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        return OperandFlagNone;
-        assert(false && "Invalid operand index");
-    }
-  }
-
-  uint32_t inst_flag() const override { return InstFlagNone; }
-
-  std::string_view name() const override { return "RISCV.AMOADD"; }
-
-  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "amoadd.w"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
-        << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
-        << mir::RISCV::OperandDumper{inst.operand(2)};
-  }
-};
-
-class RISCVInstInfoAMOAND final : public InstInfo {
-public:
-  RISCVInstInfoAMOAND() = default;
-
-  uint32_t operand_num() const override { return 3; }
-
-  OperandFlag operand_flag(uint32_t idx) const override {
-    switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        return OperandFlagNone;
-        assert(false && "Invalid operand index");
-    }
-  }
-
-  uint32_t inst_flag() const override { return InstFlagNone; }
-
-  std::string_view name() const override { return "RISCV.AMOAND"; }
-
-  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "amoand.w"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
-        << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
-        << mir::RISCV::OperandDumper{inst.operand(2)};
-  }
-};
-
-class RISCVInstInfoAMOOR final : public InstInfo {
-public:
-  RISCVInstInfoAMOOR() = default;
-
-  uint32_t operand_num() const override { return 3; }
-
-  OperandFlag operand_flag(uint32_t idx) const override {
-    switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        return OperandFlagNone;
-        assert(false && "Invalid operand index");
-    }
-  }
-
-  uint32_t inst_flag() const override { return InstFlagNone; }
-
-  std::string_view name() const override { return "RISCV.AMOOR"; }
-
-  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "amoor.w"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
-        << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
-        << mir::RISCV::OperandDumper{inst.operand(2)};
-  }
-};
-
-class RISCVInstInfoAMOXOR final : public InstInfo {
-public:
-  RISCVInstInfoAMOXOR() = default;
-
-  uint32_t operand_num() const override { return 3; }
-
-  OperandFlag operand_flag(uint32_t idx) const override {
-    switch (idx) {
-      case 0:
-        return OperandFlagDef;
-      case 1:
-        return OperandFlagUse;
-      case 2:
-        return OperandFlagUse;
-      default:
-        return OperandFlagNone;
-        assert(false && "Invalid operand index");
-    }
-  }
-
-  uint32_t inst_flag() const override { return InstFlagNone; }
-
-  std::string_view name() const override { return "RISCV.AMOXOR"; }
-
-  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "amoxor.w"
         << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
@@ -3871,6 +3871,11 @@ class RISCVInstInfo final : public TargetInstInfo {
   RISCVInstInfoFLT_S _instinfoFLT_S;
   RISCVInstInfoFLE_S _instinfoFLE_S;
   RISCVInstInfoFCVT_W_S _instinfoFCVT_W_S;
+  RISCVInstInfoAMOSWAP_W _instinfoAMOSWAP_W;
+  RISCVInstInfoAMOADD_W _instinfoAMOADD_W;
+  RISCVInstInfoAMOAND_W _instinfoAMOAND_W;
+  RISCVInstInfoAMOOR_W _instinfoAMOOR_W;
+  RISCVInstInfoAMOXOR_W _instinfoAMOXOR_W;
   RISCVInstInfoADD _instinfoADD;
   RISCVInstInfoADDW _instinfoADDW;
   RISCVInstInfoSUB _instinfoSUB;
@@ -3922,13 +3927,8 @@ class RISCVInstInfo final : public TargetInstInfo {
   RISCVInstInfoREM _instinfoREM;
   RISCVInstInfoREMW _instinfoREMW;
   RISCVInstInfoREMU _instinfoREMU;
-  RISCVInstInfoLR _instinfoLR;
-  RISCVInstInfoSC _instinfoSC;
-  RISCVInstInfoAMOSWAP _instinfoAMOSWAP;
-  RISCVInstInfoAMOADD _instinfoAMOADD;
-  RISCVInstInfoAMOAND _instinfoAMOAND;
-  RISCVInstInfoAMOOR _instinfoAMOOR;
-  RISCVInstInfoAMOXOR _instinfoAMOXOR;
+  RISCVInstInfoLR_W _instinfoLR_W;
+  RISCVInstInfoSC_W _instinfoSC_W;
   RISCVInstInfoFLW _instinfoFLW;
   RISCVInstInfoFSW _instinfoFSW;
   RISCVInstInfoLoadImm12 _instinfoLoadImm12;
@@ -4052,6 +4052,16 @@ public:
         return _instinfoFLE_S;
       case RISCVInst::FCVT_W_S:
         return _instinfoFCVT_W_S;
+      case RISCVInst::AMOSWAP_W:
+        return _instinfoAMOSWAP_W;
+      case RISCVInst::AMOADD_W:
+        return _instinfoAMOADD_W;
+      case RISCVInst::AMOAND_W:
+        return _instinfoAMOAND_W;
+      case RISCVInst::AMOOR_W:
+        return _instinfoAMOOR_W;
+      case RISCVInst::AMOXOR_W:
+        return _instinfoAMOXOR_W;
       case RISCVInst::ADD:
         return _instinfoADD;
       case RISCVInst::ADDW:
@@ -4154,20 +4164,10 @@ public:
         return _instinfoREMW;
       case RISCVInst::REMU:
         return _instinfoREMU;
-      case RISCVInst::LR:
-        return _instinfoLR;
-      case RISCVInst::SC:
-        return _instinfoSC;
-      case RISCVInst::AMOSWAP:
-        return _instinfoAMOSWAP;
-      case RISCVInst::AMOADD:
-        return _instinfoAMOADD;
-      case RISCVInst::AMOAND:
-        return _instinfoAMOAND;
-      case RISCVInst::AMOOR:
-        return _instinfoAMOOR;
-      case RISCVInst::AMOXOR:
-        return _instinfoAMOXOR;
+      case RISCVInst::LR_W:
+        return _instinfoLR_W;
+      case RISCVInst::SC_W:
+        return _instinfoSC_W;
       case RISCVInst::FLW:
         return _instinfoFLW;
       case RISCVInst::FSW:

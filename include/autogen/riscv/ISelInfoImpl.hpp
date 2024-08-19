@@ -396,6 +396,14 @@ static bool matchInstReturn(MIRInst* inst) {
   return true;
 }
 
+static bool matchInstAtomicAdd(MIRInst* inst, MIROperand& dst, MIROperand& addr, MIROperand& src) {
+  if (inst->opcode() != InstAtomicAdd) return false;
+  dst = inst->operand(0);
+  addr = inst->operand(1);
+  src = inst->operand(2);
+  return true;
+}
+
 /* InstLoadGlobalAddress matchAndSelectPatternInstLoadGlobalAddress begin */
 static bool matchAndSelectPattern1(MIRInst* inst1, ISelContext& ctx) {
   uint32_t rootOpcode = InstLoadGlobalAddress;
@@ -3175,6 +3183,7 @@ public:
                                     MIROperand op,
                                     StackObject& obj) const override;
   void postLegalizeInst(const InstLegalizeContext& ctx) const override;
+  bool lowerInst(ir::Instruction* inst, LoweringContext& loweringCtx) const override;
   MIROperand materializeFPConstant(float fpVal, LoweringContext& loweringCtx) const override;
 };
 

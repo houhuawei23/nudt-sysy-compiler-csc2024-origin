@@ -47,18 +47,18 @@ void markParallel::runOnLoop(ir::Loop* lp){
             }
         }
     }
-    if(lp->header()->phi_insts().size()>1){//接下来就开始处理每一个phi
-        for(auto pi:lp->header()->phi_insts()){
-            auto phi=pi->dynCast<ir::PhiInst>();
-            if(phi==defaultIdv->phiinst())continue;
-            auto res=getResPhi(phi,lp);
-            if(res==nullptr){
-                parctx->setIsParallel(lp->header(),false);
-                return;
-            }
-            parctx->setPhi(phi,res->isAdd,res->isSub,res->isMul,res->mod);
-        }
-    }
+    // if(lp->header()->phi_insts().size()>1){//接下来就开始处理每一个phi
+    //     for(auto pi:lp->header()->phi_insts()){
+    //         auto phi=pi->dynCast<ir::PhiInst>();
+    //         if(phi==defaultIdv->phiinst())continue;
+    //         auto res=getResPhi(phi,lp);
+    //         if(res==nullptr){
+    //             parctx->setIsParallel(lp->header(),false);
+    //             return;
+    //         }
+    //         parctx->setPhi(phi,res->isAdd,res->isSub,res->isMul,res->mod);
+    //     }
+    // }
     parctx->setIsParallel(lp->header(),true);
     return;
 }

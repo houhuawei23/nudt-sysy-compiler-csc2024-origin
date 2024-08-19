@@ -7,7 +7,7 @@ static BlockSeq solvePettisHansen(const std::vector<uint32_t>& weights,
                                   const std::vector<double>& freq, 
                                   const std::vector<BranchEdge>& edges) {
     const auto blockCnt = weights.size();
-    constexpr bool Debug = true;
+    constexpr bool Debug = false;
 
     /* Stage1: chain composition */
     std::vector<uint32_t> fa;  // 存储每个基本块的父亲节点
