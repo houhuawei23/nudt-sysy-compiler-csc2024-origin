@@ -85,6 +85,14 @@ void aggressiveG2L::run(ir::Module* md,TopAnalysisInfoManager* tp){
             }
         }
         else{//cond c
+            std::set<ir::Function*>readAndWrite;
+            for(auto func:md->funcs()){
+                if(sectx->funcDirectReadGvs(func).count(rwGv) or sectx->funcDirectWriteGvs(func).count(rwGv))
+                    readAndWrite.insert(func);
+            }
+            int funcUseSize=readAndWrite.size();
+            int gvUseSize=rwGv->uses().size();
+            if(gvUseSize/funcUseSize<4)continue;
             for(auto func:md->funcs()){
                 if(func->isOnlyDeclare())continue;
                 if(sectx->funcReadGlobals(func).count(rwGv)==0 and sectx->funcWriteGlobals(func).count(rwGv)==0)continue;

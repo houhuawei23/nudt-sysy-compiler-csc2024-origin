@@ -125,10 +125,10 @@ inline MIROperand getLowBits(MIROperand operand) {
 }
 
 /* 关于整数除法/取模运算的优化 */
-bool isOperandSDiv32ByConstantDivisor(const MIROperand& rhs) {
+static bool isOperandSDiv32ByConstantDivisor(const MIROperand& rhs) {
   return isOperandImm(rhs) && rhs.type() == OperandType::Int32 && isSignedImm<32>(rhs.imm()) && !(-1 <= rhs.imm() && rhs.imm() <= 1);
 }
-bool select_sdiv32_by_cconstant_divisor(const MIROperand& rhs, MIROperand& magic, MIROperand& shift, MIROperand& factor) {
+static bool select_sdiv32_by_cconstant_divisor(const MIROperand& rhs, MIROperand& magic, MIROperand& shift, MIROperand& factor) {
   /* only available for [-2^31, -2) U [2, 2^31) */
   if (!isOperandSDiv32ByConstantDivisor(rhs)) return false;
   const auto d = static_cast<int32_t>(rhs.imm());
@@ -178,10 +178,10 @@ bool select_sdiv32_by_cconstant_divisor(const MIROperand& rhs, MIROperand& magic
 }
 
 /* NOTE: 被除数是2的幂次常数 -> 移位指令 */
-bool isPowerOf2Divisor(const MIROperand& rhs) {
+static bool isPowerOf2Divisor(const MIROperand& rhs) {
   return isOperandImm(rhs) && rhs.type() == OperandType::Int32 && isSignedImm<32>(rhs.imm()) && rhs.imm() > 1 && utils::isPowerOf2(static_cast<size_t>(rhs.imm()));
 }
-bool select_sdiv32_by_powerof2(const MIROperand& rhs, MIROperand& shift) {
+static bool select_sdiv32_by_powerof2(const MIROperand& rhs, MIROperand& shift) {
   if (!isPowerOf2Divisor(rhs)) return false;
   shift = MIROperand::asImm(utils::log2(static_cast<size_t>(rhs.imm())), OperandType::Int32);
   return true;

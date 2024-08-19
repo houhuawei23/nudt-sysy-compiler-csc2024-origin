@@ -204,6 +204,8 @@ void PassManager::runPasses(std::vector<std::string> passes) {
             run(new pass::aggressiveG2L());
         } else if (pass_name == "idvrepl") {
             run(new pass::idvEdvRepl());
+        } else if (pass_name == "markpara") {
+            run(new pass::markParallel());
         } else {
             std::cerr << "Invalid pass name: " << pass_name << std::endl;
             assert(false && "Invalid pass name");
