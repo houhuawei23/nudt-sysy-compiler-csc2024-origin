@@ -161,7 +161,7 @@ public:  // get function
 public:  // emit_assembly
   void postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) override;
   void emit_assembly(std::ostream& out, MIRModule& module) override;
-
+  
   bool verify(MIRModule& module) override;
   bool verify(MIRFunction& func) override;
 };

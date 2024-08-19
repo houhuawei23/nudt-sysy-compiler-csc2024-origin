@@ -222,6 +222,25 @@ InstInfo: {
                 { name: FCVT_W_S, mnem: "fcvt.w.s" }, # x[rd] = sext(s32_f32(f[rs1])), rounding mode RTZ
               ],
           },
+        AMOType: {
+            #
+            format: [mnem, " ", 0, ", ", 1, ", (", 2, ")"],
+            operands:
+              {
+                0: { name: rd, type: GPR, flag: Def },
+                1: { name: val, type: GPR, flag: Use },
+                2: { name: rs1, type: GPR, flag: Use }, # BaseLike, addr reg
+              },
+            flag: [Load, Store],
+            instances:
+              [
+                { name: AMOSWAP_W, mnem: "amoswap.w.aqrl" },
+                { name: AMOADD_W, mnem: "amoadd.w.aqrl" },
+                { name: AMOAND_W, mnem: "amoand.w.aqrl" },
+                { name: AMOOR_W, mnem: "amoor.w.aqrl" },
+                { name: AMOXOR_W, mnem: "amoxor.w.aqrl" },
+              ],
+          },
       },
     # Instances
     Instances: {
@@ -345,13 +364,8 @@ InstInfo: {
         REMU: { mnem: "remu", template: Rtype },
 
         # RV32A Atomic Instructions
-        LR: { mnem: "lr.w", template: Rtype }, # Load Reserved
-        SC: { mnem: "sc.w", template: Rtype }, # Store Conditional
-        AMOSWAP: { mnem: "amoswap.w", template: Rtype },
-        AMOADD: { mnem: "amoadd.w", template: Rtype },
-        AMOAND: { mnem: "amoand.w", template: Rtype },
-        AMOOR: { mnem: "amoor.w", template: Rtype },
-        AMOXOR: { mnem: "amoxor.w", template: Rtype },
+        LR_W: { mnem: "lr.w", template: Rtype, flag: [Load] }, # Load Reserved
+        SC_W: { mnem: "sc.w", template: Rtype, flag: [Store] }, # Store Conditional
         # RV32F Single-Precision Floating-Point Instructions
         ## Single-Precision Floating-Point Load and Store Instructions
         FLW:
@@ -1317,6 +1331,17 @@ InstSelInfo: {
             },
           replace: { name: InstCopy, dst: $dst, src: $src },
         },
+        # {
+        #   pattern:
+        #     {
+        #       name: InstAtomicAdd,
+        #       dst: $dst,
+        #       addr: $addr,
+        #       src: $src,
+        #       predicate: "isOperandVRegORISAReg($val) && selectAddrOffset($addr, ctx, [$base], [$offset])",
+        #     },
+        #   replace: { name: AMOADD_W, rd: $dst, rs1: $addr, rs2: $src },
+        # },
       ],
   }
 
@@ -1420,7 +1445,14 @@ ScheduleModel: {
                 # LWU,
                 SD,
                 InstStoreRegToStack,
-                # AMOADD_W,
+                # atomic
+                LR_W,
+                SC_W,
+                AMOSWAP_W,
+                AMOADD_W,
+                AMOAND_W,
+                AMOOR_W,
+                AMOXOR_W,
               ],
             Multi: [MUL, MULH, MULHSU, MULHU, MULW],
             DivRem: [

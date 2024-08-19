@@ -19,6 +19,13 @@ struct LoopBodyInfo {
   BasicBlock* body;
   BasicBlock* latch;
   BasicBlock* exit;
+
+  PhiInst* giv;
+  // Value* givInit;
+  Value* givLoopInit;
+  bool givUsedByOuter;
+  bool givUsedByInner;
+
   void print(std::ostream& os) const;
 };
 

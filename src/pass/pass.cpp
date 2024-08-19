@@ -188,6 +188,8 @@ void PassManager::runPasses(std::vector<std::string> passes) {
             // run(&cfgAnalysisPass); run in cache pass
         } else if (pass_name == "GepSplit") {
             run(new pass::GepSplit());
+        } else if (pass_name == "LoopInterChange") {
+            run(&loopInterChangePass);
         } else if (pass_name == "LoopBodyExtract") {
             run(&loopBodyExtractPass);
         } else if (pass_name == "ParallelBodyExtract") {

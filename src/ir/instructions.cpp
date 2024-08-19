@@ -88,6 +88,8 @@ static const std::string getInstName(ValueId instID) {
       return "getelementptr";
     case vCALL:
       return "call";
+    case vATOMICRMW:
+      return "atomicrmw";
 
     default:
       std::cerr << "Error: Unknown instruction ID: " << instID << std::endl;
@@ -398,7 +400,7 @@ void CallInst::print(std::ostream& os) const {
     os << " = ";
   }
   if (mIsTail) os << "tail ";
-  os << getInstName(mValueId) << " "; // call 
+  os << getInstName(mValueId) << " ";  // call
   // retType
   os << *type() << " ";
   // func name
@@ -522,5 +524,54 @@ void MemsetInst::print(std::ostream& os) const {
 void FunctionPtrInst::print(std::ostream& os) const {}
 
 void PtrCastInst::print(std::ostream& os) const {}
+
+static const std::string getBinaryOpName(BinaryOp opcode) {
+  switch (opcode) {
+    case ADD:
+      return "add";
+    case SUB:
+      return "sub";
+    case MUL:
+      return "mul";
+    case DIV:
+      return "sdiv";
+    case REM:
+      return "srem";
+    default:
+      return "unknown";
+  }
+}
+static const std::string getOrderingName(AtomicOrdering ordering) {
+  switch (ordering) {
+    case AtomicOrdering::NotAtomic:
+      return "not atomic";
+    case AtomicOrdering::Unordered:
+      return "unordered";
+    case AtomicOrdering::Monotonic:
+      return "monotonic";
+    case AtomicOrdering::Acquire:
+      return "acquire";
+    case AtomicOrdering::Release:
+      return "release";
+    case AtomicOrdering::AcquireRelease:
+      return "acq_rel";
+    case AtomicOrdering::SequentiallyConsistent:
+      return "seq_cst";
+    default:
+      return "unknown";
+  }
+}
+
+void AtomicrmwInst::print(std::ostream& os) const {
+  dumpAsOpernd(os);
+  os << " = ";
+  os << getInstName(mValueId) << " ";
+  os << getBinaryOpName(mOpcode) << " ";
+  os << *(ptr()->type()) << " ";
+  ptr()->dumpAsOpernd(os);
+  os << ", " << *(val()->type()) << " ";
+  val()->dumpAsOpernd(os);
+  os << " " << getOrderingName(mOrdering);
+}
 
 }  // namespace ir

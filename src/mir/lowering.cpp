@@ -68,7 +68,7 @@ void createMIRModule(ir::Module& ir_module,
 
   //! 2. for all global variables, create MIRGlobalObject
   for (auto ir_gvar : ir_module.globalVars()) {
-    const auto name = ir_gvar->name().substr(1);  /* remove '@' */
+    const auto name = ir_gvar->name().substr(1); /* remove '@' */
     /* 基础类型 (int OR float) */
     auto type = ir_gvar->type()->dynCast<ir::PointerType>()->baseType();
     const size_t size = type->size();
@@ -124,8 +124,7 @@ void createMIRModule(ir::Module& ir_module,
   IPRAUsageCache infoIPRA; /* 缓存各个函数所用到的Caller-Saved Registers */
 
   auto dumpStageWithMsg = [&](std::ostream& os, std::string_view stage, std::string_view msg) {
-    if (!debugLowering)
-      return;
+    if (!debugLowering) return;
     enum class Style { RED, BOLD, RESET };
     static std::unordered_map<Style, std::string_view> styleMap = {
       {Style::RED, "\033[0;31m"}, {Style::BOLD, "\033[1m"}, {Style::RESET, "\033[0m"}};
@@ -142,14 +141,12 @@ void createMIRModule(ir::Module& ir_module,
   // TODO: in call graph scc order
   for (auto& ir_func : ir_module.funcs()) {
     codegen_ctx.flags = MIRFlags{};
-    if (ir_func->blocks().empty())
-      continue;
+    if (ir_func->blocks().empty()) continue;
     /* Just for Debug */
     size_t stageIdx = 0;
     auto dumpStageResult = [&](std::string stage, MIRFunction* mir_func,
                                CodeGenContext& codegen_ctx) {
-      if (!debugLowering)
-        return;
+      if (!debugLowering) return;
       auto fileName = mir_func->name() + std::to_string(stageIdx) + "_" + stage + ".ll";
       auto path = config.debugDir() / fs::path(fileName);
       std::ofstream fout(path);
@@ -235,7 +232,8 @@ void createMIRModule(ir::Module& ir_module,
     }
 
     {
-      while (genericPeepholeOpt(*mir_func, codegen_ctx)) ;
+      while (genericPeepholeOpt(*mir_func, codegen_ctx))
+        ;
     }
 
     {
@@ -254,9 +252,7 @@ void createMIRModule(ir::Module& ir_module,
     }
 
     /* stage11: simplify CFG */
-    {
-      simplifyCFG(*mir_func, codegen_ctx);
-    }
+    { simplifyCFG(*mir_func, codegen_ctx); }
 
     /* post legalization */
     {
@@ -293,7 +289,8 @@ void createMIRFunction(ir::Function* ir_func,
   // TODO: before lowering, get some analysis pass result
 
   auto domCtx = tAIM->getDomTree(ir_func);
-  domCtx->setOff(); domCtx->refresh();
+  domCtx->setOff();
+  domCtx->refresh();
   // TODO: DFS or BFS?
   domCtx->BFSDomTreeInfoRefresh();
   auto irBlocks = domCtx->BFSDomTreeVector();
@@ -390,7 +387,8 @@ void createMIRFunction(ir::Function* ir_func,
             iter = end;
           }
         } else {
-          createMIRInst(ir_inst, lowering_ctx);
+          if (!codegen_ctx.iselInfo->lowerInst(ir_inst, lowering_ctx))
+            createMIRInst(ir_inst, lowering_ctx);
           iter++;
         }
         if (DebugCreateMirFunction) {
@@ -417,6 +415,7 @@ void lower(ir::ReturnInst* ir_inst, LoweringContext& ctx);
 void lower(ir::BranchInst* ir_inst, LoweringContext& ctx);
 void lower(ir::MemsetInst* ir_inst, LoweringContext& ctx);
 void lower(ir::GetElementPtrInst* ir_inst, LoweringContext& ctx);
+void lower(ir::AtomicrmwInst* ir_inst, LoweringContext& ctx);
 
 void createMIRInst(ir::Instruction* ir_inst, LoweringContext& ctx) {
   switch (ir_inst->valueId()) {
@@ -488,6 +487,9 @@ void createMIRInst(ir::Instruction* ir_inst, LoweringContext& ctx) {
       break;
     case ir::ValueId::vPHI:
       break;
+    // case ir::ValueId::vATOMICRMW:
+    //   lower(dyn_cast<ir::AtomicrmwInst>(ir_inst), ctx);
+    // break;
     default:
       const auto valueIdEnumName = utils::enumName(static_cast<ir::ValueId>(ir_inst->valueId()));
       std::cerr << valueIdEnumName << ": not supported inst" << std::endl;
@@ -495,9 +497,31 @@ void createMIRInst(ir::Instruction* ir_inst, LoweringContext& ctx) {
   }
 }
 
+void lower(ir::AtomicrmwInst* ir_inst, LoweringContext& ctx) {
+  // TODO: support more atomicrmw inst and ordering
+  assert(ir_inst->ordering() == ir::AtomicOrdering::SequentiallyConsistent);
+  auto gcode = [opcode = ir_inst->opcode()] {
+    switch (opcode) {
+      case ir::BinaryOp::ADD:
+        return InstAtomicAdd;
+      case ir::BinaryOp::SUB:
+        return InstAtomicSub;
+      default:
+        assert(false && "not supported atomicrmw inst");
+        return InstUnreachable;
+    }
+  }();
+  /* amoadd.w.aqrl $rd, $val, $addr*/
+  auto dst = ctx.newVReg(ir_inst->type());
+  auto addr = ctx.map2operand(ir_inst->ptr());
+  auto val = ctx.map2operand(ir_inst->val());
+  ctx.emitMIRInst(gcode, {dst, val, addr});
+  ctx.addValueMap(ir_inst, dst);
+}
+
 /*
  * @brief: lower UnaryInst
- * @note: 
+ * @note:
  *    IR: ir_inst := value [valueId]
  *    -> MIR: InstXXX dst, src
  */
@@ -608,7 +632,7 @@ void lower(ir::CallInst* ir_inst, LoweringContext& ctx) {
 
 /*
  * @brief: lower BinaryInst
- * @note: 
+ * @note:
  *    IR: ir_inst := lValue, rValue [ValueId]
  *    -> MIR: InstXXX dst, src1, src2
  */
@@ -669,7 +693,8 @@ void lower(ir::BinaryInst* ir_inst, LoweringContext& ctx) {
           ctx.addValueMap(ir_inst, zeroOperand);
           return;
         }
-        default: break;
+        default:
+          break;
       }
     } else if (crhs->isOne()) {
       switch (code) {
@@ -680,7 +705,8 @@ void lower(ir::BinaryInst* ir_inst, LoweringContext& ctx) {
           ctx.addValueMap(ir_inst, lhsOpernd);
           return;
         }
-        default: break;
+        default:
+          break;
       }
     }
   }
@@ -773,8 +799,7 @@ void emitJump(ir::BasicBlock* srcblock, ir::BasicBlock* dstblock, LoweringContex
     std::unordered_set<MIROperand, MIROperandHasher> needStagingRegister;
     std::unordered_set<MIROperand, MIROperandHasher> dstSet(dstOperands.begin(), dstOperands.end());
     for (auto op : srcOperands)
-      if (dstSet.count(op))
-        needStagingRegister.insert(op);
+      if (dstSet.count(op)) needStagingRegister.insert(op);
 
     // setup phi values
     // calcuates the best order and create temporary variables for args
@@ -827,26 +852,26 @@ void emitJump(ir::BasicBlock* srcblock, ir::BasicBlock* dstblock, LoweringContex
 
 /*
  * @brief: lower LoadInst
- * @note: 
+ * @note:
  *    IR: inst := ptr [ValueId: vLOAD]
  *    -> MIR: InstLoad dst, src, align
  */
 void lower(ir::LoadInst* ir_inst, LoweringContext& ctx) {
   const uint32_t align = 4;
 
-  auto inst = ctx.emitMIRInst(
-    InstLoad, {
-                ctx.newVReg(ir_inst->type()),                     /* dst */
-                ctx.map2operand(ir_inst->ptr()),                  /* src */
-                MIROperand::asImm(align, OperandType::Alignment)  /* align*/
-              });
+  auto inst =
+    ctx.emitMIRInst(InstLoad, {
+                                ctx.newVReg(ir_inst->type()),                    /* dst */
+                                ctx.map2operand(ir_inst->ptr()),                 /* src */
+                                MIROperand::asImm(align, OperandType::Alignment) /* align*/
+                              });
 
   ctx.addValueMap(ir_inst, inst->operand(0));
 }
 
 /*
  * @brief: lower StoreInst
- * @note: 
+ * @note:
  *    IR: inst := value, ptr [ValueId: vSTORE]
  *    -> MIR: InstStore addr, src, align
  */
@@ -866,9 +891,9 @@ void lower(ir::ReturnInst* ir_inst, LoweringContext& ctx) {
 
 /*
  * @brief: lower MemsetInst
- * @note: 
+ * @note:
  *    memset(i8* <dest>, i8 <val>, i64 <len>, i1 <isvolatile>)
- * @details: 
+ * @details:
  *    NOTE: only support val = 0 and len is constant
  *    -> MIR: memset(dst, len)
  */

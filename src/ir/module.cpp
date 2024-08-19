@@ -35,9 +35,20 @@ void Module::delFunction(ir::Function* func) {
   assert(findFunction(func->name()) != nullptr && "delete unexisted function!");
   mFuncTable.erase(func->name());
   mFunctions.erase(std::find(mFunctions.begin(), mFunctions.end(), func));
-  // for (auto bb : func->blocks()) {
-  //     func->forceDelBlock(bb);
-  // }
+  for (auto bbiter=func->blocks().begin();bbiter!=func->blocks().end();) {
+    auto bb=*bbiter;
+    bbiter++;
+    for(auto institer=bb->insts().begin();institer!=bb->insts().end();) {
+      auto inst=*institer;
+      institer++;
+      bb->force_delete_inst(inst);
+    }
+  }
+  for (auto bbiter=func->blocks().begin();bbiter!=func->blocks().end();) {
+    auto bb=*bbiter;
+    bbiter++;
+    func->forceDelBlock(bb);
+  }
 }
 
 void Module::delGlobalVariable(ir::GlobalVariable* gv) {

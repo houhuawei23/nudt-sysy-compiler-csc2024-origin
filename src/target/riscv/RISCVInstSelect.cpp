@@ -184,6 +184,25 @@ bool RISCVISelInfo::isLegalInst(uint32_t opcode) const {
   return true;
 }
 
+bool RISCVISelInfo::lowerInst(ir::Instruction* inst, LoweringContext& loweringCtx) const {
+  if(auto atomicrmw = inst->dynCast<ir::AtomicrmwInst>()) {
+    assert(atomicrmw->opcode() == ir::BinaryOp::ADD);
+    auto dst = loweringCtx.map2operand(atomicrmw->ptr());
+    auto src = loweringCtx.map2operand(atomicrmw->val());
+    assert(src.type() == OperandType::Int32);
+    if(src.isImm()) {
+      // imm2reg
+      auto srcReg = loweringCtx.newVReg(src.type());
+      loweringCtx.emitCopy(srcReg, src);
+      src = srcReg;
+    }
+    auto res = loweringCtx.newVReg(src.type());
+    loweringCtx.emitMIRInst(AMOADD_W, {res, src, dst});
+    return true;
+  }
+  return false;
+}
+
 static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
   bool modified = false;
 
