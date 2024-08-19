@@ -20,7 +20,7 @@ struct ParallelBodyInfo final {
 
   std::vector<std::pair<Value*, size_t>> payload;
   GlobalVariable* payloadStorage;
-
+  Value* givOffset;
   std::vector<Value*> payloadStoreInsts;
 };
 

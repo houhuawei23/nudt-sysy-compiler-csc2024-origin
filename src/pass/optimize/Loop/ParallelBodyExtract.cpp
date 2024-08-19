@@ -83,16 +83,25 @@ auto buildParallelBodyBeta(Module& module,
   std::unordered_set<Value*> inserted;
   // align by 32 bits, 4 bytes
   const size_t align = 4;
+  Value* givOffset = nullptr;
 
   const auto addArgument = [&](Value* arg) {
     if (arg == loopBodyInfo.indVar->phiinst()) return;
     if (arg->isa<ConstantValue>() or arg->isa<GlobalVariable>()) return;
-    // giv?
+    // giv but not used by inner and outer
+    if (arg == loopBodyInfo.giv and !loopBodyInfo.givUsedByOuter and !loopBodyInfo.givUsedByInner) {
+      return;
+    }
     if (inserted.count(arg)) return;  // already in
     // pass by payload
     const auto size = arg->type()->size();
     totalSize = utils::alignTo(totalSize, align);
-    payload.emplace_back(arg, totalSize);  // arg -> offset
+
+    if (arg == loopBodyInfo.giv)
+      givOffset = ConstantInteger::gen_i64(totalSize);
+    else
+      payload.emplace_back(arg, totalSize);  // arg -> offset
+
     totalSize += size;
   };
 
@@ -105,24 +114,28 @@ auto buildParallelBodyBeta(Module& module,
   const auto payloadType = ArrayType::gen(Type::TypeInt32(), {totalWords}, totalWords);  // by word?
   const auto payloadStorage = utils::make<GlobalVariable>(payloadType, getStorageUniqueID());
   module.addGlobalVar(payloadStorage->name(), payloadStorage);
-  const auto base = builder.makeUnary(ValueId::vPTRTOINT, payloadStorage, Type::TypeInt64());
+  const auto payloadBase = builder.makeUnary(ValueId::vPTRTOINT, payloadStorage, Type::TypeInt64());
+
+  // const auto giv = (loopBodyInfo.giv ? )
   // fix call loop_body(i, others)
   // original value -> load payload
   const auto remapArgument = [&](Use* use) {
     const auto user = use->user();
     const auto value = use->value();
-#ifdef DEBUG
-    std::cerr << "remap: ";
-    value->dumpAsOpernd(std::cerr);
-#endif
+
+    dumpAsOperand(std::cerr << "remap: ", value);
+
     if (value == loopBodyInfo.indVar->phiinst()) return;
     // giv
+    if (value == loopBodyInfo.giv) {
+      return;
+    }
     if (value->isa<ConstantValue>() or value->isa<GlobalVariable>()) return;
 
     bool replaced = false;
     for (auto [arg, offset] : payload) {
       if (arg == value) {
-        auto ptr = builder.makeBinary(BinaryOp::ADD, base, ConstantInteger::gen_i64(offset));
+        auto ptr = builder.makeBinary(BinaryOp::ADD, payloadBase, ConstantInteger::gen_i64(offset));
         ptr = builder.makeUnary(ValueId::vINTTOPTR, ptr, Type::TypePointer(arg->type()));
         auto load = builder.makeLoad(ptr);
         user->setOperand(use->index(), load);
@@ -132,16 +145,14 @@ auto buildParallelBodyBeta(Module& module,
     if (not replaced) {
       assert(false);
     }
-#ifdef DEBUG
-    std::cerr << "-> ";
-    user->operand(use->index())->dumpAsOpernd(std::cerr);
-    std::cerr << std::endl;
-#endif
+    dumpAsOperand(std::cerr << "-> ", user->operand(use->index()));
   };
   auto uses = loopBodyInfo.callInst->rargs();
   for (auto use : uses) {
     remapArgument(use);
   }
+  // nextans = ans + xx, loopinit is 0
+  const auto givLoopInit = ConstantInteger::gen_i32(0);
 
   // fix value in paraplel_body
   const auto fixPhi = [&](PhiInst* phi) {
@@ -151,6 +162,10 @@ auto buildParallelBodyBeta(Module& module,
     if (phi == indVar->phiinst()) {
       phi->delBlock(loopBodyInfo.preHeader);
       phi->addIncoming(argBeg, newEntry);
+      return;
+    } else if (phi == loopBodyInfo.giv) {
+      phi->delBlock(loopBodyInfo.preHeader);
+      phi->addIncoming(givLoopInit, newEntry);
       return;
     }
     // std::cerr << "phi inst not indvar phi inst" << std::endl;
@@ -213,14 +228,20 @@ auto buildParallelBodyBeta(Module& module,
   builder.makeInst<BranchInst>(loopBodyInfo.header);  // newEntry -> header
   fixAllocaInEntry(*parallelBody);
 
-  // newExit -> return
+  // newExit -> store giv to payload, return
   builder.set_pos(newExit, newExit->insts().end());
+  if (loopBodyInfo.giv) {
+    auto ptr = builder.makeBinary(BinaryOp::ADD, payloadBase, givOffset);
+    ptr = builder.makeUnary(ValueId::vINTTOPTR, ptr, Type::TypePointer(loopBodyInfo.giv->type()));
+    // builder.makeInst<StoreInst>(loopBodyInfo.giv, ptr);
+    builder.makeInst<AtomicrmwInst>(BinaryOp::ADD, ptr, loopBodyInfo.giv);
+  }
   builder.makeInst<ReturnInst>();  // newExit [ret void]
 
   parallelBodyInfo.parallelBody = parallelBody;
   parallelBodyInfo.payload = payload;
   parallelBodyInfo.payloadStorage = payloadStorage;
-
+  parallelBodyInfo.givOffset = givOffset;
   return parallelBody;
 }
 
@@ -246,6 +267,7 @@ auto rebuildFunc(Function* func,
   const auto base =
     builder.makeUnary(ValueId::vPTRTOINT, parallelBodyInfo.payloadStorage, Type::TypeInt64());
   parallelBodyInfo.payloadStoreInsts.emplace_back(base);
+
   for (auto [value, offset] : parallelBodyInfo.payload) {
     auto ptr = builder.makeBinary(BinaryOp::ADD, base, ConstantInteger::gen_i64(offset));
     auto typeptr = builder.makeUnary(ValueId::vINTTOPTR, ptr, Type::TypePointer(value->type()));
@@ -257,19 +279,33 @@ auto rebuildFunc(Function* func,
   // call parallel_body(beg, end)
   auto callArgs = std::vector<Value*>{indVar->beginValue(), indVar->endValue()};
   auto callInst = builder.makeInst<CallInst>(parallelBodyInfo.parallelBody, callArgs);
-  builder.makeInst<BranchInst>(loopBodyInfo.exit);
 
-  // fix outuse of inner loop var
-  // for (auto block : func->blocks()) {
-  //   for (auto inst : block->insts()) {
-  //     auto operands = inst->operands();
-  //     for (auto operandUse : operands) {
-  //       if (operandUse.value() == indVar->phiinst()) {
-  //         inst->setOperand(operandUse.index(), indVar->endValue());
-  //       }
-  //     }
-  //   }
-  // }
+  // builder.set_pos(loopBodyInfo.exit, loopBodyInfo.exit->insts().begin());
+  // giv
+  Value* newGiv = nullptr;
+  if (loopBodyInfo.giv) {
+    const auto payloadBase =
+      builder.makeUnary(ValueId::vPTRTOINT, parallelBodyInfo.payloadStorage, Type::TypeInt64());
+    auto ptr = builder.makeBinary(BinaryOp::ADD, payloadBase, parallelBodyInfo.givOffset);
+    ptr = builder.makeUnary(ValueId::vINTTOPTR, ptr, Type::TypePointer(loopBodyInfo.giv->type()));
+    newGiv = builder.makeLoad(ptr);
+  }
+
+  // fix outuse of inner loop var: giv
+  for (auto block : func->blocks()) {
+    for (auto inst : block->insts()) {
+      auto operands = inst->operands();
+      for (auto operandUse : operands) {
+        // if (operandUse.value() == indVar->phiinst()) {
+        //   inst->setOperand(operandUse.index(), indVar->endValue());
+        // }
+        if (operandUse->value() == loopBodyInfo.giv) {
+          inst->setOperand(operandUse->index(), newGiv);
+        }
+      }
+    }
+  }
+  builder.makeInst<BranchInst>(loopBodyInfo.exit);
 
   parallelBodyInfo.callInst = callInst;
   parallelBodyInfo.callBlock = callBlock;
@@ -298,6 +334,9 @@ bool extractParallelBody(Function* func,
   // const auto loopBodyFunc = loopBodyInfo.callInst->callee();
   // loopBodyFunc->rename();
   // loopBodyFunc->print(std::cerr);
+  // if(loopBodyInfo.giv) {
+  //   loopBodyInfo.giv->delBlock(loopBodyInfo.)
+  // }
 
   const auto parallelBody =
     buildParallelBodyBeta(*func->module(), indVar, loopBodyInfo, parallelBodyInfo);
@@ -324,9 +363,8 @@ void ParallelBodyExtract::run(ir::Function* func, TopAnalysisInfoManager* tp) {
 }
 
 bool ParallelBodyExtract::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
-
   // func->rename();
-  std::cerr << "!! ParallelBodyExtract::runImpl: " << func->name() << std::endl;
+  // std::cerr << "!! ParallelBodyExtract::runImpl: " << func->name() << std::endl;
   // func->print(std::cerr);
 
   CFGAnalysisHHW().run(func, tp);  // refresh CFG
@@ -334,7 +372,7 @@ bool ParallelBodyExtract::runImpl(ir::Function* func, TopAnalysisInfoManager* tp
 
   bool modified = false;
 
-  auto lpctx = tp->getLoopInfoWithoutRefresh(func);         // fisrt loop analysis
+  auto lpctx = tp->getLoopInfoWithoutRefresh(func);        // fisrt loop analysis
   auto indVarctx = tp->getIndVarInfoWithoutRefresh(func);  // then indvar analysis
   auto parallelctx = tp->getParallelInfo(func);
 

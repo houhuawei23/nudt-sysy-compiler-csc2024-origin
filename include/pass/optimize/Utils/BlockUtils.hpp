@@ -7,6 +7,10 @@ using namespace ir;
 using BlockReducer = std::function<ir::Value*(ir::Instruction* inst)>;
 
 namespace pass {
+
+void dumpInst(std::ostream& os, Instruction* inst);
+void dumpAsOperand(std::ostream& os, Value* val);
+
 bool reduceBlock(IRBuilder& builder, BasicBlock& block, const BlockReducer& reducer);
 
 BasicBlock* splitBlock(BasicBlockList& blocks,
