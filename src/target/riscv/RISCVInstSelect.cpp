@@ -113,7 +113,6 @@ static bool selectFCmpOpcode(MIROperand opcode,
   // std::cerr << "newOpcode: " << newOpcode << std::endl;
   return true;
 }
-
 static bool selectAddrOffset(MIROperand addr,
                              ISelContext& ctx,
                              MIROperand& base,
@@ -141,6 +140,17 @@ static bool selectAddrOffset(MIROperand addr,
     return true;
   }
   return false;
+}
+static bool selectAddImm32(ISelContext& ctx, intmax_t val, MIROperand& rhs, MIROperand& op) {
+  if (isSignedImm<12>(val)) {
+    rhs = MIROperand::asImm(val, OperandType::Int32);
+    op = MIROperand::asImm(ADDIW, OperandType::Special);
+  } else {
+    rhs = MIROperand::asVReg(ctx.codegen_ctx().nextId(), OperandType::Int32);
+    ctx.insertMIRInst(InstLoadImm, {rhs, MIROperand::asImm(val, OperandType::Int32)});
+    op = MIROperand::asImm(ADDW, OperandType::Special);
+  }
+  return true;
 }
 
 static bool isOperandI64(MIROperand op) {
@@ -281,9 +291,8 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
       auto& src2 = inst->operand(2);
       imm2reg(src1);
       if (src2.isImm() and isOperandUImm6(src2) and utils::isPowerOf2(src2.imm())) {
-        /** InstMul dst, src1, imm[2^k]
-         * ->
-         * InstShl dst, src1, log2(imm)
+        /* InstMul dst, src1, imm[2^k]
+         * -> InstShl dst, src1, log2(imm)
          */
         auto shamt = utils::log2(src2.imm());
         inst->set_opcode(selectCode);
@@ -298,6 +307,7 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
     case InstSRem:
     case InstUDiv:
     case InstURem: {
+
       imm2reg(inst->operand(1));
       imm2reg(inst->operand(2));
 
@@ -464,15 +474,14 @@ void RISCVISelInfo::legalizeInstWithStackOperand(const InstLegalizeContext& ctx,
       break;
     }
     case InstStoreRegToStack: {
-      /**
+      /*
        * StoreRegToStack obj[0 Metadata], src[1 Use]
        *
        * sw rs2[0 Use], offset[1 Metadata](rs1[2 Use])
        * M[x[rs1] + sext(offset)] = x[rs2][31: 0]
        *
        * StoreRegToStack obj, src
-       * ->
-       * sw src, offset(sp)
+       * -> sw src, offset(sp)
        */
       if (debugLISO) std::cout << "sw rs2, offset(rs1)" << std::endl;
       inst->set_opcode(isOperandGR(inst->operand(1)) ? SD : FSW);
@@ -485,13 +494,12 @@ void RISCVISelInfo::legalizeInstWithStackOperand(const InstLegalizeContext& ctx,
       break;
     }
     case InstLoadRegFromStack: {
-      /**
+      /*
        * LoadRegFromStack dst[0 Def], obj[1 Metadata]
        * lw rd, offset(rs1)
        *
        * LoadRegFromStack dst, obj
-       * ->
-       * lw dst, offset(sp)
+       * -> lw dst, offset(sp)
        */
       if (debugLISO) std::cout << "lw rd, offset(rs1)" << std::endl;
 
