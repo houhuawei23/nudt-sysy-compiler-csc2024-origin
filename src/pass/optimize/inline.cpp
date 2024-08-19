@@ -168,15 +168,13 @@ std::vector<ir::CallInst*> Inline::getcall(ir::Module* module, ir::Function* fun
 std::vector<ir::Function*> Inline::getinlineFunc(ir::Module* module) {
     std::vector<ir::Function*> functiontoremove;
     for (auto func : module->funcs()) {
-        if (func->name() != "main" && !cgctx->isLib(func) &&
-            cgctx->isNoCallee(func)) {  //&& !func->get_is_inline() TODO 分析哪些函数可以被内联优化展开
+        if (func->name() != "main" && !cgctx->isLib(func) && cgctx->isNoCallee(func) && !func->attribute().hasAttr(ir::FunctionAttribute::ParallelBody)) {  //&& !func->get_is_inline() TODO 分析哪些函数可以被内联优化展开
             functiontoremove.push_back(func);
         }
     }
     return functiontoremove;
 }
 void Inline::run(ir::Module* module, TopAnalysisInfoManager* tp) {
-    
     cgctx = tp->getCallGraph();
     // cgctx->setOff();
     // cgctx->refresh();
@@ -195,7 +193,7 @@ void Inline::run(ir::Module* module, TopAnalysisInfoManager* tp) {
 
         functiontoremove.pop_back();
         if (functiontoremove.empty()) {
-            cgctx=tp->getCallGraph();
+            cgctx = tp->getCallGraph();
             functiontoremove = getinlineFunc(module);
         }
     }

@@ -197,7 +197,7 @@ bool Instruction::isNoName() {
 }
 bool Instruction::isAggressiveAlive() {
   return mValueId == vSTORE or mValueId == vCALL or mValueId == vMEMSET or
-         mValueId == vRETURN;
+         mValueId == vRETURN or mValueId==vATOMICRMW;
 }
 bool Instruction::hasSideEffect() {
   if(mValueId == vSTORE or mValueId == vMEMSET or mValueId == vRETURN)return true;
