@@ -924,7 +924,7 @@ InstSelInfo: {
               dst: $dst,
               src1: $src1,
               src2: $src2,
-              predicate: isOperandI32($dst) && isOperandIReg($src1) && isOperandIReg($src2),
+              predicate: isOperandI32($dst) && isOperandIReg($src1) && isOperandI32($src2),
             },
           replace: { name: SRAW, rd: $dst, rs1: $src1, rs2: $src2 },
         },
@@ -932,11 +932,104 @@ InstSelInfo: {
         {
           pattern:
             {
+              name: InstSDiv, 
+              dst: $dst, 
+              src1: $src1,
+              src2: $src2,
+              predicate: "isOperandI32($dst) && isOperandIReg($src1) && isOperandI32($src2) && ($src2).isImm() && ($src2).imm() == 2"
+            },
+          replace: { 
+            name: SRAIW,
+            rd: $dst,
+            rs1: {
+              name: ADD,
+              rd: "getVRegAs64(ctx, $dst)",
+              rs1: $src1,
+              rs2: {
+                name: SRLIW,
+                rd: "getVRegAs64(ctx, $dst)",
+                rs1: $src1,
+                imm: "MIROperand::asImm(31, OperandType::Int32)",
+              }
+            },
+            imm: "MIROperand::asImm(1, OperandType::Int32)"
+          },
+        },
+        {
+          pattern: 
+            {
+              name: InstSDiv,
+              dst: $dst, 
+              src1: $src1,
+              src2: $src2,
+              predicate: "isOperandI32($dst) && isOperandIReg($src1) && select_sdiv32_by_powerof2($src2, [$shift])"
+            },
+          replace: {
+            name: SRAIW,
+            rd: $dst,
+            rs1: {
+              name: ADD,
+              rd: "getVRegAs64(ctx, $dst)",
+              rs1: $src1,
+              rs2: {
+                name: SRLI,
+                rd: "getVRegAs64(ctx, $dst)",
+                rs1: {
+                  name: SLLI,
+                  rd: "getVRegAs64(ctx, $dst)",
+                  rs1: $src1,
+                  imm: "MIROperand::asImm(1, OperandType::Int32)"
+                },
+                imm: "MIROperand::asImm(64 - ($shift).imm(), OperandType::Int32)"
+              }
+            },
+            imm: $shift
+          },
+        },
+        {
+          pattern:
+            {
+              name: InstSDiv,
+              dst: $dst,
+              src1: $src1,
+              src2: { name: InstShl, src1: $One, src2: $shift },
+              predicate: "isOperandI32($dst) && isOperandIReg($src1) && isOne($One)",
+            },
+          replace: {
+            name: SRAW,
+            rd: $dst,
+            rs1: {
+              name: ADD,
+              rd: "getVRegAs64(ctx, $dst)",
+              rs1: $src1,
+              rs2: {
+                name: SRL,
+                rd: "getVRegAs64(ctx, $dst)",
+                rs1: {
+                  name: SLLI,
+                  rd: "getVRegAs64(ctx, $dst)",
+                  rs1: $src1,
+                  imm: "MIROperand::asImm(1, OperandType::Int32)"
+                },
+                rs2: {
+                  name: InstSub,
+                  dst: "getVRegAs(ctx, $dst)",
+                  src1: "MIROperand::asImm(64, OperandType::Int32)",
+                  src2: $shift
+                }
+              }
+            },
+            rs2: $shift
+          }
+        },
+        {
+          pattern:
+            {
               name: InstSDiv,
               dst: $dst,
               src1: $src1,
               src2: $src2,
-              predicate: isOperandI64($dst) && isOperandIReg($src1) && isOperandIReg($src2),
+              predicate: "isOperandI64($dst) && isOperandIReg($src1) && isOperandIReg($src2)",
             },
           replace: { name: DIV, rd: $dst, rs1: $src1, rs2: $src2 },
         },
@@ -952,6 +1045,52 @@ InstSelInfo: {
           replace: { name: DIVW, rd: $dst, rs1: $src1, rs2: $src2 },
         },
         # InstSRem
+        {
+          pattern:
+          {
+            name: InstSRem,
+            dst: $dst,
+            src1: $src1,
+            src2: $src2,
+            predicate: "isOperandI32($dst) && isOperandIReg($src1) && isOperandImm($src2) && select_sdiv32_by_cconstant_divisor($src2, [$magic], [$shift], [$factor])",
+          },
+          replace: {
+            name: SUBW,
+            rd: $dst,
+            rs1: $src1,
+            rs2: {
+              name: InstMul,
+              dst: "getVRegAs(ctx, $dst)",
+              src1: {
+                name: InstSDiv,
+                dst: "getVRegAs(ctx, $dst)",
+                src1: $src1,
+                src2: $src2
+              },
+              src2: $src2
+            }
+          },
+        },
+        {
+          pattern:
+            {
+              name: InstSRem,
+              dst: $dst,
+              src1: $src1,
+              src2: $src2,
+              predicate: "isOperandI32($dst) && isOperandIReg($src1) && !isOperandIReg($src2)",
+            },
+          replace: {
+            name: InstSRem,
+            dst: $dst,
+            src1: $src1,
+            src2: {
+              name: InstLoadImm,
+              dst: "getVRegAs(ctx, $dst)",
+              imm: $src2
+            }
+          },
+        },
         {
           pattern:
             {
