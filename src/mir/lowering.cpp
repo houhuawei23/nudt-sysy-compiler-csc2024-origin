@@ -244,11 +244,10 @@ void createMIRModule(ir::Module& ir_module,
 
     /* stage10: code layout */
     {
-      // assert(mir_func->verify(std::cerr, codegen_ctx));
-      // FIXME: error here, need fix
+      assert(mir_func->verify(std::cerr, codegen_ctx));
       optimizeBlockLayout(mir_func, codegen_ctx);
       dumpStageResult("After Block Schedule", mir_func, codegen_ctx);
-      // assert(mir_func->verify(std::cerr, codegen_ctx));
+      assert(mir_func->verify(std::cerr, codegen_ctx));
     }
 
     /* stage11: simplify CFG */
