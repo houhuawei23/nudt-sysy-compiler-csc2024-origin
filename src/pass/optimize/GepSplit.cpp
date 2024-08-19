@@ -16,8 +16,6 @@ void GepSplit::run(ir::Function* func, TopAnalysisInfoManager* tp) {
                 auto gep_inst = dyn_cast<ir::GetElementPtrInst>(inst);
                 int id = gep_inst->getid();
                 auto begin = iter;
-                gep_inst->print(std::cerr); std::cerr << "\n";
-                std::cerr << "id = " << id << "\n";
                 if (id == 0) {
                     /* Pointer Op */
                     iter++;
@@ -36,7 +34,6 @@ void GepSplit::run(ir::Function* func, TopAnalysisInfoManager* tp) {
                         }
                     }
                     iter = end;
-                    // if (gep_inst->cur_dims_cnt() > num) continue;
                     split_array(begin, bb, end);  // [begin, end)
                 }
             } else {
@@ -177,10 +174,7 @@ void GepSplit::split_array(ir::inst_iterator begin,
 
         iter++;
 
-        // inst->type()->print(std::cerr); std::cerr << "\n";
-
         /* 3. 转换成ptr进行数据存储 */
-        // op_ptr = builder.makeUnary(ir::ValueId::vINTTOPTR, op_ptr, ir::Type::TypePointer(btype));
         op_ptr = builder.makeUnary(ir::ValueId::vINTTOPTR, op_ptr, inst->type());
 
         /* 4. 替换 */
