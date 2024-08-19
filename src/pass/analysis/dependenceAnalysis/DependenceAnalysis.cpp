@@ -51,7 +51,9 @@ void dependenceAnalysis::runOnLoop(ir::Loop* lp){
     
     if(isSame){
         depInfoForLp->setIsBaseAddrPossiblySame(isSame);
-        assert(false and "No alias is allowed in dependenceAnalysis::runOnLoop()");
+        depInfoForLp->setIsParallel(false);
+        std::cerr<<"Alias!"<<std::endl;
+        return;
     }
     //为并行设计的依赖关系分析
     // depInfoForLp->print(std::cerr);
