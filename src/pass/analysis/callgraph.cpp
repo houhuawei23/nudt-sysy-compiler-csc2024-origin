@@ -33,6 +33,7 @@ void callGraphBuild::run(ir::Module* ctx, TopAnalysisInfoManager* tp) {
                     // if (cgctx->isLib(calleePtr)) continue;
                     // func->callees().insert(calleePtr);
                     // func->set_is_called(true);
+                    assert(std::find(instCall->block()->insts().begin(),instCall->block()->insts().end(),instCall)!=instCall->block()->insts().end());
                     cgctx->callees(func).insert(calleePtr);
                     cgctx->calleeCallInsts(func).insert(instCall);
                     cgctx->callers(calleePtr).insert(func);

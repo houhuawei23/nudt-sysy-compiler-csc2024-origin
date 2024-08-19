@@ -266,6 +266,8 @@ class callGraph : public ModuleACtx {
         _is_called.clear();
         _is_inline.clear();
         _is_lib.clear();
+        _callerCallInsts.clear();
+        _calleeCallInsts.clear();
     }
     void initialize() {
         for (auto func : passUnit->funcs()) {
@@ -424,6 +426,7 @@ class parallelInfo:public FunctionACtx{
         void clearAll(){
             _LpIsParallel.clear();
             _LpPhis.clear();
+            
         }
         void refresh(){}
         //set
@@ -434,10 +437,10 @@ class parallelInfo:public FunctionACtx{
             _ModuloVal[phi]=mod;
         }
         //get
-        bool getIsAdd(ir::PhiInst* phi){ return _isPhiAdd.at(phi); }
-        bool getIsSub(ir::PhiInst* phi){ return _isPhiSub.at(phi); }
-        bool getIsMul(ir::PhiInst* phi){ return _isPhiMul.at(phi); }
-        ir::Value* getMod(ir::PhiInst* phi){ return _ModuloVal.at(phi); }
+        bool getIsAdd(ir::PhiInst* phi){ assert(false and "can not use!");return _isPhiAdd.at(phi); }
+        bool getIsSub(ir::PhiInst* phi){ assert(false and "can not use!");return _isPhiSub.at(phi); }
+        bool getIsMul(ir::PhiInst* phi){ assert(false and "can not use!");return _isPhiMul.at(phi); }
+        ir::Value* getMod(ir::PhiInst* phi){ assert(false and "can not use!");return _ModuloVal.at(phi); }
 
 };
 

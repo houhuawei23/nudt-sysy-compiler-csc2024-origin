@@ -57,7 +57,7 @@ ir::Value* pass::getBaseAddr(ir::Value* subAddr,TopAnalysisInfoManager* topmana)
     if(auto gep=subAddr->dynCast<ir::GetElementPtrInst>())return getBaseAddr(gep->value(),topmana);
     if(auto phi=subAddr->dynCast<ir::PhiInst>()){
         auto func=phi->block()->function();
-        auto lpctx=topmana->getLoopInfo(func);
+        auto lpctx=topmana->getLoopInfoWithoutRefresh(func);
         auto lp=lpctx->head2loop(phi->block());
         auto preHeaderVal=phi->getvalfromBB(lp->getLoopPreheader());
         return getBaseAddr(preHeaderVal,topmana);

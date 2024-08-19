@@ -30,6 +30,7 @@ void dependenceAnalysis::runOnLoop(ir::Loop* lp){
     }
     auto depInfoForLp=depInfoForLpPtr;
     depInfoForLp->clearAll();
+    depInfoForLp->setTp(topmana);
     auto func=lp->header()->function();
     for(auto subLp:lp->subLoops()){//将子循环的信息合并到上层
         auto subLoopDepInfo=(LoopDependenceInfo*)(dpctx->getLoopDependenceInfo(subLp));

@@ -79,6 +79,7 @@ void tailCallOpt::run(ir::Function* func,TopAnalysisInfoManager* tp){
 }
 
 bool tailCallOpt::is_tail_rec(ir::Instruction* inst,ir::Function* func){
+    if(func->args().size()>5)return false;
     auto& bbInsts=inst->block()->insts();
     auto instPos=std::find(bbInsts.begin(),bbInsts.end(),inst);
     auto instValueId=inst->valueId();

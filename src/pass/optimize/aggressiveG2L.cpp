@@ -342,6 +342,7 @@ void aggressiveG2L::replaceGvInOneFunc(ir::GlobalVariable* gv,ir::Function* func
         //均有
         for(auto calleeInst:cgctx->calleeCallInsts(func)){
             auto calleeFunc=calleeInst->callee();
+            auto calleeInstBB=calleeInst->block();
             auto isCalleeFuncRead=sectx->funcReadGlobals(calleeFunc).count(gv)!=0;
             auto isCalleeFuncWrite=sectx->funcWriteGlobals(calleeFunc).count(gv)!=0;
             if(not isCalleeFuncRead and not isCalleeFuncWrite){//没有副作用

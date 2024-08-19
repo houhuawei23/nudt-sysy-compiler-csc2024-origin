@@ -61,6 +61,7 @@ namespace pass{
             void makeLoopDepInfo(ir::Loop* lp,TopAnalysisInfoManager* topmana);//直接根据循环相关信息对当前info进行构建
             void clearAll();
             void getInfoFromSubLoop(ir::Loop* subLoop,LoopDependenceInfo* subLoopDepInfo);
+            void setTp(TopAnalysisInfoManager* topmana){tp=topmana;}
             
             //get
             std::set<ir::Value*>& getBaseAddrs(){return baseAddrs;}
