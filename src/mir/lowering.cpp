@@ -215,19 +215,20 @@ void createMIRModule(ir::Module& ir_module,
       if (codegen_ctx.registerInfo) {
         mixedRegisterAllocate(*mir_func, codegen_ctx, infoIPRA);
         dumpStageWithMsg(std::cerr, "AfterRegisterAlloc", "Register Allocation " + ir_func->name());
-
         dumpStageResult("AfterGraphColoring", mir_func, codegen_ctx);
       }
     }
 
     /* stage8: stack allocation */
-    if (codegen_ctx.registerInfo) {
-      utils::Stage stage{"stackAllocation"sv};
-      /* after sa, all stack objects are allocated with .offset */
-      allocateStackObjects(mir_func, codegen_ctx);
-      codegen_ctx.flags.postSA = true;
-      dumpStageWithMsg(std::cerr, "AfterStackAlloc", "Stack Allocation " + ir_func->name());
-      dumpStageResult("AfterStackAlloc", mir_func, codegen_ctx);
+    {
+      if (codegen_ctx.registerInfo) {
+        utils::Stage stage{"stackAllocation"sv};
+        /* after sa, all stack objects are allocated with .offset */
+        allocateStackObjects(mir_func, codegen_ctx);
+        codegen_ctx.flags.postSA = true;
+        dumpStageWithMsg(std::cerr, "AfterStackAlloc", "Stack Allocation " + ir_func->name());
+        dumpStageResult("AfterStackAlloc", mir_func, codegen_ctx);
+      }
     }
 
     {

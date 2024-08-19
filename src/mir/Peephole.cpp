@@ -691,18 +691,23 @@ bool EliminateInvisibleInsts(MIRFunction& mfunc, CodeGenContext& ctx) {
 
 /* 窥孔优化 */
 bool genericPeepholeOpt(MIRFunction& mfunc, CodeGenContext& ctx) {
+    constexpr bool Debug = true;
     bool modified = false;
-    // modified |= EliminateStackLoads(mfunc, ctx);
+    modified |= EliminateStackLoads(mfunc, ctx);
     // modified |= EliminateIndirectCopy(mfunc, ctx);
-    // modified |= EliminateUnusedCopy(mfunc, ctx);
-    // modified |= EliminateUnusedInst(mfunc, ctx);
-    // modified |= ApplySSAPropagation(mfunc, ctx);
-    // modified |= EliminateConstantLoads(mfunc, ctx);
-    // modified |= ConstantHoist(mfunc, ctx);
-    // modified |= EliminateRedundantInst(mfunc, ctx);
-    // modified |= DeadInstElimination(mfunc, ctx);
-    // modified |= EliminateInvisibleInsts(mfunc, ctx);
-    // modified |= ctx.scheduleModel->peepholeOpt(mfunc, ctx);
+    modified |= EliminateUnusedCopy(mfunc, ctx);
+    modified |= EliminateUnusedInst(mfunc, ctx);
+    modified |= ApplySSAPropagation(mfunc, ctx);
+    modified |= EliminateConstantLoads(mfunc, ctx);
+    modified |= ConstantHoist(mfunc, ctx);
+    modified |= EliminateRedundantInst(mfunc, ctx);
+    modified |= DeadInstElimination(mfunc, ctx);
+    modified |= EliminateInvisibleInsts(mfunc, ctx);
+    modified |= ctx.scheduleModel->peepholeOpt(mfunc, ctx);
+    if (Debug) {
+        std::cerr << "genericPeepholeOpt function" << std::endl;
+        std::cerr << "modified = " << modified << std::endl;
+    }
     return modified;
 }
 }
