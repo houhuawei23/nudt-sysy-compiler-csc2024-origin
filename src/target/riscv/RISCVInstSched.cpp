@@ -253,26 +253,26 @@ static bool largeImmMaterialize(MIRBlock& block) {
 
       /* *3 -> sh1add */
       if (rhs * 3 == val) {
-        // inst->set_opcode(SH1ADD);
-        // inst->set_operand(1, rhsOp);
-        // inst->set_operand(2, rhsOp);
-        // return true;
+        inst->set_opcode(SH1ADD);
+        inst->set_operand(1, rhsOp);
+        inst->set_operand(2, rhsOp);
+        return true;
       }
 
       /* *5 -> sh2add */
       if (rhs * 5 == val) {
-        // inst->set_opcode(SH2ADD);
-        // inst->set_operand(1, rhsOp);
-        // inst->set_operand(2, rhsOp);
-        // return true;
+        inst->set_opcode(SH2ADD);
+        inst->set_operand(1, rhsOp);
+        inst->set_operand(2, rhsOp);
+        return true;
       }
 
       /* *9 -> sh3add */
       if (rhs * 9 == val) {
-        // inst->set_opcode(SH3ADD);
-        // inst->set_operand(1, rhsOp);
-        // inst->set_operand(2, rhsOp);
-        // return true;
+        inst->set_opcode(SH3ADD);
+        inst->set_operand(1, rhsOp);
+        inst->set_operand(2, rhsOp);
+        return true;
       }
     }
     return false;
@@ -472,7 +472,7 @@ static bool simplifyOpWithZero(MIRFunction& func, const CodeGenContext&) {
         // tmpInst.set_operand(0, inst->operand(0));
         // tmpInst.set_operand(1, inst->operand(idx));
         // *inst = tmpInst;
-        modified = true;
+        // modified = true;
       };
       const auto resetToLoadImm = [&](uint32_t idx) {
         auto tmpInst = MIRInst{ LoadImm12 };

@@ -157,7 +157,7 @@ enum MIRGenericInst : uint32_t {
   InstSub,
   InstMul,
   InstUDiv,
-  InstURem,
+  InstURem,  // 模运算 (无符号运算)
 
   // Bitwise
   InstAnd,
@@ -169,7 +169,7 @@ enum MIRGenericInst : uint32_t {
 
   // Signed Div/Rem
   InstSDiv,
-  InstSRem,
+  InstSRem,  // 模运算 (有符号运算)
 
   // MinMax
   InstSMin,
