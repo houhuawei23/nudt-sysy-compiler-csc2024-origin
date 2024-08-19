@@ -78,9 +78,11 @@ void aggressiveG2L::run(ir::Module* md,TopAnalysisInfoManager* tp){
         if(readfnset.size()==1 and writefnset.size()==1){
             auto onlyUseFunc=*readfnset.begin();
             if(onlyUseFunc->name()=="main"){//cond a
+                std::cerr<<rwGv->name()<<" local to main!"<<std::endl;
                 replaceGvInMain(rwGv,onlyUseFunc); 
             }
             else{//cond b
+                std::cerr<<rwGv->name()<<" local to \""<<onlyUseFunc->name()<<"\"!"<<std::endl;
                 replaceGvInNormalFunc(rwGv,onlyUseFunc);
             }
         }
@@ -93,6 +95,7 @@ void aggressiveG2L::run(ir::Module* md,TopAnalysisInfoManager* tp){
             int funcUseSize=readAndWrite.size();
             int gvUseSize=rwGv->uses().size();
             if(gvUseSize/funcUseSize<4)continue;
+            std::cerr<<rwGv->name()<<" local to all funcs!"<<std::endl;
             for(auto func:md->funcs()){
                 if(func->isOnlyDeclare())continue;
                 if(sectx->funcReadGlobals(func).count(rwGv)==0 and sectx->funcWriteGlobals(func).count(rwGv)==0)continue;
@@ -156,6 +159,15 @@ void aggressiveG2L::replaceGvInMain(ir::GlobalVariable* gv,ir::Function* func){
         auto newBrInNewBB=new ir::BranchInst(funcEntryNext,newBB,"");
         newBB->emplace_back_inst(newBrInNewBB);
         func->blocks().push_back(newBB);
+        for(auto entryUseIter=funcEntry->uses().begin();entryUseIter!=funcEntry->uses().end();){
+            auto puse=*entryUseIter;
+            auto useIdx=puse->index();
+            entryUseIter++;
+            auto puserInst=puse->user()->dynCast<ir::PhiInst>();
+            if(puserInst!=nullptr){
+                puserInst->setOperand(useIdx,newBB);
+            }
+        }
     }
     
     // 构造一个同类型的alloca在entry
@@ -209,6 +221,15 @@ void aggressiveG2L::replaceGvInNormalFunc(ir::GlobalVariable* gv,ir::Function* f
         auto newBrInNewBB=new ir::BranchInst(funcEntryNext,newBB,"");
         newBB->emplace_back_inst(newBrInNewBB);
         func->blocks().push_back(newBB);
+        for(auto entryUseIter=funcEntry->uses().begin();entryUseIter!=funcEntry->uses().end();){
+            auto puse=*entryUseIter;
+            auto useIdx=puse->index();
+            entryUseIter++;
+            auto puserInst=puse->user()->dynCast<ir::PhiInst>();
+            if(puserInst!=nullptr){
+                puserInst->setOperand(useIdx,newBB);
+            }
+        }
     }
     //构造一个同类型的alloca在entry
     auto gvType=gv->type();
@@ -270,6 +291,15 @@ void aggressiveG2L::replaceGvInOneFunc(ir::GlobalVariable* gv,ir::Function* func
         auto newBrInNewBB=new ir::BranchInst(funcEntryNext,newBB,"");
         newBB->emplace_back_inst(newBrInNewBB);
         func->blocks().push_back(newBB);
+        for(auto entryUseIter=funcEntry->uses().begin();entryUseIter!=funcEntry->uses().end();){
+            auto puse=*entryUseIter;
+            auto useIdx=puse->index();
+            entryUseIter++;
+            auto puserInst=puse->user()->dynCast<ir::PhiInst>();
+            if(puserInst!=nullptr){
+                puserInst->setOperand(useIdx,newBB);
+            }
+        }
     }
     //构造一个同类型的alloca在entry
     auto gvType=gv->type();
