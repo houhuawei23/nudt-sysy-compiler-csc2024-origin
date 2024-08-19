@@ -69,8 +69,9 @@ def perfTest():
     )
     test.set("riscv", "2024", perf_timeout, 1, 0)
     test.runPerformanceTest("performance")
-    # test.run_perf("final_performance")
-    # test.run_single_case("performance", "00_bitset1.sy")
+    # test.runSingleCase("performance", "01_mm1.sy")
+    # large_loop_array_2.sy
+    # test.runSingleCase("performance", "large_loop_array_2.sy")
 
 
 def compile_only():
@@ -85,11 +86,11 @@ def compile_only():
         sysy_link_for_riscv_gpp,
     )
 
-    test.set("riscv", "2024", our_compiler_timeout)
+    test.set("riscv", "2024", our_compiler_timeout, 1, 0)
     test.runCompileOnly("performance")
 
 if __name__ == "__main__":
     # submitTest()
     # perfTest()
-    functionalTest()
-    # compile_only()
+    # functionalTest()
+    compile_only()
