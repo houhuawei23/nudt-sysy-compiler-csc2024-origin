@@ -11,6 +11,8 @@ from utils import isZero, safeDivide
 from datetime import datetime
 
 import os
+
+
 class ResultType(Enum):
     PASSED = 0
     RUN_COMPILER_FAILED = 1
@@ -128,6 +130,22 @@ class TestResult:
             average_score = self.cal_average_score()
             f.write(f"averge score: {average_score:.2f}\n\n")
 
+            for type in ResultType:
+                if type == ResultType.PASSED:
+                    continue
+                f.write(f"\n{type.name}:\n")
+                for src, process in self.cases_result[type]:
+                    f.write(f"test: {src}\n")
+                    f.write(f"returncode: {process.returncode}\n")
+                    f.write("stdout:\n")
+                    f.write(repr(process.stdout[:100]))
+                    f.write("\n")
+                    f.write("stderr:\n")
+                    f.write(repr(process.stderr[:100]))
+                    f.write("\n")
+
+            f.write("\n")
+
             for src, (compiler_time, gcc_o3_time) in self.qemu_run_time.items():
                 f.write(f"test: {src}\n")
                 f.write(f"compiler time: {compiler_time:.2f}s\n")
@@ -151,7 +169,7 @@ class TestResult:
                 line = f"{src},{time_used: 6f},\n"
                 f.write(line)
                 # print(f"{filename}: {time_used:.4f}s")
-        
+
         with open(os.path.join("./record", filename), "w") as f:
             for src, time_used in self.board_run_time.items():
                 markdown_line = f"| {src} | {time_used:.4f}s |\n"

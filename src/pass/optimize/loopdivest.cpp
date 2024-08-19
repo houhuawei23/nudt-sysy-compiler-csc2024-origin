@@ -17,6 +17,8 @@ bool loopdivest::shoulddivest(ir::Loop* loop) {
     subloop = *(loop->subLoops().begin());
     if (subloop->subLoops().size() != 0) return false;
     ir::IndVar* siv = ivctx->getIndvar(subloop);
+    if (!siv) return false;
+    if (!iv->isBeginVarConst()) return false;
     if (iv && (!siv->getIsBeginAndStepConst())) return true;
     return false;
 }
