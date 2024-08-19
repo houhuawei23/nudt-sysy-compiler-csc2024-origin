@@ -25,6 +25,7 @@ namespace pass{
             bool isSimplyNotInLoop(ir::Loop* lp,ir::Value* val);
             bool isSimplyLoopInvariant(ir::Loop* lp,ir::Value* val);
             void replaceIndvarAfterLoop(ir::Loop* lp,ir::IndVar* idv,ir::Value* finalVar);
-            ir::Value* addFinalVarInstInLatch(ir::Value* edv,ir::Loop* lp);
+            ir::Value* addFinalVarInstInLatchSub1(ir::Value* edv,ir::Loop* lp);
+            ir::Value* addFinalVarInstInLatchAdd1(ir::Value* edv,ir::Loop* lp);
     };
 }

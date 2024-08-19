@@ -24,7 +24,7 @@ void idvEdvRepl::runOnLoop(ir::Loop* lp){
     if(idv->isEndVarConst() and idv->isBeginVarConst()){
         int iterCnt=getConstantEndvarIndVarIterCnt(lp,idv);
         if(iterCnt!=-1){
-            finalVar=ir::ConstantInteger::gen_i32(iterCnt);
+            finalVar=ir::ConstantInteger::gen_i32(iterCnt+idv->getBeginI32());
             replaceIndvarAfterLoop(lp,idv,finalVar);
             return;
         }
@@ -35,17 +35,17 @@ void idvEdvRepl::runOnLoop(ir::Loop* lp){
         auto endVar=idv->endValue();
         auto icmpInstId=idv->cmpInst()->valueId();
         if(icmpInstId==ir::vISLE){
-            finalVar=endVar;
+            finalVar=addFinalVarInstInLatchAdd1(endVar,lp);
         }
         else if(icmpInstId==ir::vISLT){
-            finalVar=addFinalVarInstInLatch(endVar,lp);
+            finalVar=endVar;
         }
         else if(icmpInstId==ir::vISGE){
-            finalVar=endVar;
+            finalVar=addFinalVarInstInLatchSub1(endVar,lp);
 
         }
         else if(icmpInstId==ir::vISGT){
-            finalVar=addFinalVarInstInLatch(endVar,lp);
+            finalVar=endVar;
         }
         if(finalVar==nullptr)return;
         replaceIndvarAfterLoop(lp,idv,finalVar);
@@ -294,7 +294,9 @@ bool idvEdvRepl::isSimplyNotInLoop(ir::Loop* lp,ir::Value* val){
 
 void idvEdvRepl::replaceIndvarAfterLoop(ir::Loop* lp,ir::IndVar* idv,ir::Value* finalVar){
     auto idvPhi=idv->phiinst();
-    for(auto puse:idvPhi->uses()){
+    for(auto puseiter=idvPhi->uses().begin();puseiter!=idvPhi->uses().end();){
+        auto puse=*puseiter;
+        puseiter++;
         auto puser=puse->user();
         auto userInst=puser->dynCast<ir::Instruction>();
         if(lp->blocks().count(userInst->block()))continue;
@@ -303,10 +305,18 @@ void idvEdvRepl::replaceIndvarAfterLoop(ir::Loop* lp,ir::IndVar* idv,ir::Value* 
     }
 }
 
-ir::Value* idvEdvRepl::addFinalVarInstInLatch(ir::Value* edv,ir::Loop* lp){
+ir::Value* idvEdvRepl::addFinalVarInstInLatchSub1(ir::Value* edv,ir::Loop* lp){
     if(lp->exits().size()>1)return nullptr;
     auto exitBB=*lp->exits().begin();
     auto pnewSubInst=new ir::BinaryInst(ir::vSUB,ir::Type::TypeInt32(),edv,ir::ConstantInteger::gen_i32(1),exitBB);
-    exitBB->emplace_back_inst(pnewSubInst);
+    exitBB->emplace_first_inst(pnewSubInst);
+    return pnewSubInst;
+}
+
+ir::Value* idvEdvRepl::addFinalVarInstInLatchAdd1(ir::Value* edv,ir::Loop* lp){
+    if(lp->exits().size()>1)return nullptr;
+    auto exitBB=*lp->exits().begin();
+    auto pnewSubInst=new ir::BinaryInst(ir::vADD,ir::Type::TypeInt32(),edv,ir::ConstantInteger::gen_i32(1),exitBB);
+    exitBB->emplace_first_inst(pnewSubInst);
     return pnewSubInst;
 }
