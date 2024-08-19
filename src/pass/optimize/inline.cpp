@@ -17,11 +17,13 @@ void Inline::callinline(ir::CallInst* call) {
     auto callerAllocaBB = caller->entry();
 
     // std::cerr << "caller: " << caller->name() << std::endl;
-    // std::cerr << "callerAllocaBB: " << callerAllocaBB->name() << ", size: " << callerAllocaBB->insts().size()
+    // std::cerr << "callerAllocaBB: " << callerAllocaBB->name() << ", size: " <<
+    // callerAllocaBB->insts().size()
     //           << std::endl;
 
     // std::cerr << "callee: " << callee->name() << std::endl;
-    // std::cerr << "calleeAllocaBB: " << calleeAllocaBB->name() << ", size: " << calleeAllocaBB->insts().size()
+    // std::cerr << "calleeAllocaBB: " << calleeAllocaBB->name() << ", size: " <<
+    // calleeAllocaBB->insts().size()
     //           << std::endl;
 
     if (nowBB == caller->exit()) {
@@ -96,7 +98,8 @@ void Inline::callinline(ir::CallInst* call) {
     for (size_t i = 0; i < copyfunc->args().size(); i++) {
         auto realArg = call->operand(i);
         auto formalArg = copyfunc->arg_i(i);
-        if (!formalArg->type()->isPointer()) {  // 如果传递参数不是高维数组等指针，直接替换TODO 加入一维数组的判断
+        if (!formalArg->type()
+               ->isPointer()) {  // 如果传递参数不是高维数组等指针，直接替换TODO 加入一维数组的判断
             formalArg->replaceAllUseWith(realArg);
         } else {  // 如果传递参数是数组等指针
             auto baseType = formalArg->type()->dynCast<ir::PointerType>()->baseType();
@@ -110,7 +113,8 @@ void Inline::callinline(ir::CallInst* call) {
                         auto allocainst = storeinst->ptr();
                         std::vector<ir::LoadInst*> loadtoremove;
                         for (auto allocause : allocainst->uses()) {
-                            if (ir::LoadInst* loadinst = dyn_cast<ir::LoadInst>(allocause->user())) {
+                            if (ir::LoadInst* loadinst =
+                                  dyn_cast<ir::LoadInst>(allocause->user())) {
                                 loadtoremove.push_back(loadinst);
                             }
                         }
@@ -167,11 +171,18 @@ std::vector<ir::CallInst*> Inline::getcall(ir::Module* module, ir::Function* fun
 
 std::vector<ir::Function*> Inline::getinlineFunc(ir::Module* module) {
     std::vector<ir::Function*> functiontoremove;
+    // std::cerr << "inline" << std::endl;
     for (auto func : module->funcs()) {
-        if (func->name() != "main" && !cgctx->isLib(func) && cgctx->isNoCallee(func) && !func->attribute().hasAttr(ir::FunctionAttribute::ParallelBody)) {  //&& !func->get_is_inline() TODO 分析哪些函数可以被内联优化展开
+        if (func->name() != "main" && !cgctx->isLib(func) && cgctx->isNoCallee(func) &&
+            !func->attribute().hasAttr(ir::FunctionAttribute::ParallelBody |
+                                       ir::FunctionAttribute::Builtin)) {
+            //&& !func->get_is_inline() TODO
+            // 分析哪些函数可以被内联优化展开
+            // std::cerr << func->name() << " ";
             functiontoremove.push_back(func);
         }
     }
+    // std::cerr << std::endl;
     return functiontoremove;
 }
 void Inline::run(ir::Module* module, TopAnalysisInfoManager* tp) {

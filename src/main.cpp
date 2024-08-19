@@ -110,5 +110,10 @@ int main(int argc, char* argv[]) {
   if (config.logLevel >= sysy::LogLevel::DEBUG) {
     utils::Profiler::get().printStatistics();
   }
+  // std::cerr << "passes: " << std::endl;
+  // for (auto pass : config.passes) {
+  //   std::cerr << pass << " ";
+  // }
+  // std::cerr << std::endl;
   return EXIT_SUCCESS;
 }

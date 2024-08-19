@@ -57,7 +57,7 @@ auto buildParallelBodyBeta(Module& module,
   const auto i32 = Type::TypeInt32();
   auto funcType = FunctionType::gen(Type::void_type(), {i32, i32});
   auto parallelBody = module.addFunction(funcType, getUniqueID());
-
+  parallelBody->attribute().addAttr(FunctionAttribute::ParallelBody);
   auto argBeg = parallelBody->new_arg(i32, "beg");
   auto argEnd = parallelBody->new_arg(i32, "end");
 

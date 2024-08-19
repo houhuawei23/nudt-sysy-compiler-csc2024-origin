@@ -101,8 +101,7 @@ void BasicBlock::emplace_first_inst(Instruction* inst) {
 
 void BasicBlock::emplace_back_inst(Instruction* i) {
   if (isTerminal()) {
-    std::cerr << "[Warning] emplace_back a non-terminal inst to a terminal bb"
-              << std::endl;
+    std::cerr << "[Warning] emplace_back a non-terminal inst to a terminal bb" << std::endl;
     assert(false);
     return;
   }
@@ -196,13 +195,20 @@ bool Instruction::isNoName() {
   return isTerminator() or mValueId == vSTORE or mValueId == vMEMSET;
 }
 bool Instruction::isAggressiveAlive() {
-  return mValueId == vSTORE or mValueId == vCALL or mValueId == vMEMSET or
-         mValueId == vRETURN or mValueId==vATOMICRMW;
+  return mValueId == vSTORE or mValueId == vCALL or mValueId == vMEMSET or mValueId == vRETURN or
+         mValueId == vATOMICRMW;
 }
 bool Instruction::hasSideEffect() {
-  if(mValueId == vSTORE or mValueId == vMEMSET or mValueId == vRETURN)return true;
-  return false;// 默认call没有
-  
+  if (mValueId == vSTORE or mValueId == vMEMSET or mValueId == vRETURN) return true;
+  return false;  // 默认call没有
 }
+
+// bool Instruction::verify(std::ostream& os) const{
+//   for(auto use: mUses) {
+//     assert(use);
+//     assert(use->value());
+//     assert(use->user());
+//   }
+// }
 
 }  // namespace ir

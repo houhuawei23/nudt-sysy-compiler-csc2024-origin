@@ -18,6 +18,7 @@ Function* StatelessCache::getLookupFunction(Module* module,
   const auto funcType =
     FunctionType::gen(PointerType::gen(entryType), {PointerType::gen(lutType), i32, i32});
   const auto func = module->addFunction(funcType, funcName);
+  func->attribute().addAttr(FunctionAttribute::Builtin);
   return func;
 }
 bool StatelessCache::has2MoreRecursiveCalls(Function* func) {

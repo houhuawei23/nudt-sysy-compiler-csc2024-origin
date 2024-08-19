@@ -17,5 +17,6 @@ private:
   bool checkAllocaOnlyInEntry(ir::Function* func);
   bool checkOnlyOneExit(ir::Function* func);
   bool checkParentRelationship(ir::Function* func);
+  bool checkOperands(ir::Function* func);
 };
 }  // namespace pass
