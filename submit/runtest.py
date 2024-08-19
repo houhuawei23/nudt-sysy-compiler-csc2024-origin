@@ -48,6 +48,18 @@ def functionalTest():
     )
     test.set("riscv", "2024", functional_timeout, 1, 0)
     test.runFunctionalTest("functional")
+
+    # test.set("riscv", "2023", functional_timeout, 1, 0)
+    # test.runFunctionalTest("functional")
+    # test.runFunctionalTest("hidden_functional")
+
+    # test.set("riscv", "2022", functional_timeout, 1, 0)
+    # test.runFunctionalTest("functional")
+    # test.runFunctionalTest("hidden_functional")
+
+    # test.set("riscv", "2021", functional_timeout, 1, 0)
+    # test.runFunctionalTest("functional")
+    # test.runFunctionalTest("hidden_functional")
     # test.run("hidden_functional")
     # test.run_single_case("functional", "00_main.sy")
     # test.run_single_case("functional", "11_BST.sy")
@@ -92,5 +104,5 @@ def compile_only():
 if __name__ == "__main__":
     # submitTest()
     # perfTest()
-    # functionalTest()
-    compile_only()
+    functionalTest()
+    # compile_only()
