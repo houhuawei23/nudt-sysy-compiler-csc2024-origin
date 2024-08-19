@@ -185,12 +185,12 @@ bool RISCVISelInfo::isLegalInst(uint32_t opcode) const {
 }
 
 bool RISCVISelInfo::lowerInst(ir::Instruction* inst, LoweringContext& loweringCtx) const {
-  if(auto atomicrmw = inst->dynCast<ir::AtomicrmwInst>()) {
+  if (auto atomicrmw = inst->dynCast<ir::AtomicrmwInst>()) {
     assert(atomicrmw->opcode() == ir::BinaryOp::ADD);
     auto dst = loweringCtx.map2operand(atomicrmw->ptr());
     auto src = loweringCtx.map2operand(atomicrmw->val());
     assert(src.type() == OperandType::Int32);
-    if(src.isImm()) {
+    if (src.isImm()) {
       // imm2reg
       auto srcReg = loweringCtx.newVReg(src.type());
       loweringCtx.emitCopy(srcReg, src);
@@ -326,7 +326,6 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
     case InstSRem:
     case InstUDiv:
     case InstURem: {
-
       imm2reg(inst->operand(1));
       imm2reg(inst->operand(2));
 
@@ -400,6 +399,10 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
         std::swap(src1, src2);
         modified = true;
       }
+      break;
+    }
+    case InstBranch: {
+      imm2reg(inst->operand(0));
       break;
     }
     default:

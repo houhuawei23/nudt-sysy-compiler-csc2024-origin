@@ -153,6 +153,7 @@ public:
   virtual Value* getConstantRepl(bool recursive = false) { return nullptr; };
   virtual Instruction* copy(std::function<Value*(Value*)> getValue) const = 0;
   virtual Instruction* clone() const { return nullptr; };
+  // bool verify(std::ostream& os) const override;
 };
 
 }  // namespace ir

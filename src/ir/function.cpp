@@ -219,10 +219,11 @@ Function* Function::copy_func() {
       copyBB->next_blocks().emplace_back(dyn_cast<BasicBlock>(ValueCopy[succ]));
     }
   }
-
+  // if cant find, return itself
   auto getValue = [&](Value* val) -> Value* {
     if (auto c = dyn_cast<ConstantValue>(val)) return c;
-    return ValueCopy[val];
+    if(auto iter = ValueCopy.find(val); iter != ValueCopy.end()) return iter->second;
+    return val;
   };
 
   // copy inst in bb

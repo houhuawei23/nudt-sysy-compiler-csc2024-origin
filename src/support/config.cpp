@@ -210,21 +210,61 @@ static const auto ifCombinePassesList = std::vector<std::string>{
 static const auto basePasses = std::vector<std::string>{"mem2reg", "reg2mem"};
 
 static const auto commonOptPasses =
-  std::vector<std::string>{"sccp", "adce", "simplifycfg", "instcombine"};
+  std::vector<std::string>{"sccp", "adce", "simplifycfg", "instcombine", "adce"};
+
+static const auto loopOptPasses = std::vector<std::string>{"loopsimplify", "gcm", "gvn", "licm"};
 
 static const auto parallelPasses =
   std::vector<std::string>{"loopsimplify", "gcm",          "gvn",      "licm",  "LoopInterChange",
                            "inline",       "loopsimplify", "parallel", "inline"};
 
+static const auto interProceduralPasses = std::vector<std::string>{// "inline",
+                                                                   "tco", "cache",
+                                                                   //  "inline", cant parallel
+                                                                   "ag2l", "mem2reg"};
+
+static const auto afterUnrollPasses = std::vector<std::string>{
+  "simplifycfg", "loopsimplify", "sccp", "adce",        "gcm",  "gvn",  "licm", "dle",
+  "dse",         "dle",          "dse",  "instcombine", "adce", "sccp", "dlae",
+};
+
+static const auto gepSplitPasses = std::vector<std::string>{// "GepSplit",
+                                                            // "dce",  wrong on mm
+                                                            "scp"};
+
+// static const auto
 auto collectPasses(OptLevel level) {
   if (level == OptLevel::O0) {
     return basePasses;
   }
+
   // O1
+  std::vector<std::string> clcPasses;
+  clcPasses.insert(clcPasses.end(), commonOptPasses.begin(), commonOptPasses.end());
+  clcPasses.insert(clcPasses.end(), loopOptPasses.begin(), loopOptPasses.end());
+  clcPasses.insert(clcPasses.end(), commonOptPasses.begin(), commonOptPasses.end());
+
   std::vector<std::string> passes;
+
   passes.push_back("mem2reg");
-  passes.insert(passes.end(), commonOptPasses.begin(), commonOptPasses.end());
+
+  passes.insert(passes.end(), clcPasses.begin(), clcPasses.end());
+
+  // IPO
+  passes.insert(passes.end(), interProceduralPasses.begin(), interProceduralPasses.end());
+
+  passes.insert(passes.end(), clcPasses.begin(), clcPasses.end());
+
+  // passes.push_back("markpara");
+  // passes.insert(passes.end(), {"loopsimplify", "unroll"});
+
+  passes.insert(passes.end(), clcPasses.begin(), clcPasses.end());
+
+  // dont add clc after
   passes.insert(passes.end(), parallelPasses.begin(), parallelPasses.end());
+
+  passes.insert(passes.end(), gepSplitPasses.begin(), gepSplitPasses.end());
+
   passes.push_back("reg2mem");
   return std::move(passes);
 }
@@ -269,8 +309,7 @@ void Config::parseCmdArgs(int argc, char* argv[]) {
     print_help();
     exit(EXIT_FAILURE);
   }
-
-  passes = collectPasses(optLevel);
+  if (passes.empty()) passes = collectPasses(optLevel);
 }
 
 }  // namespace sysy

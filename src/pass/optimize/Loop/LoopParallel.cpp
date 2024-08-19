@@ -45,6 +45,7 @@ static Function* loopupParallelFor(Module* module) {
   const auto parallelForType = FunctionType::gen(voidType, {i32, i32, parallelBodyPtrType});
 
   auto parallelFor = module->addFunction(parallelForType, "parallelFor");
+  parallelFor->attribute().addAttr(FunctionAttribute::Builtin);
 
   return parallelFor;
 }

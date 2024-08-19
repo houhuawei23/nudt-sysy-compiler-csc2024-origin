@@ -673,11 +673,11 @@ void loopUnroll::constunroll(ir::Loop* loop, ir::IndVar* iv) {
     if (times <= 0) {
         return;
     }
-    if (times <= 100) {
-        dofullunroll(loop, iv, times);
-    } else {
+    // if (times <= 100) {
+    //     dofullunroll(loop, iv, times);
+    // } else {
         doconstunroll(loop, iv, times);
-    }
+    // }
 }
 
 void loopUnroll::insertremainderloop(ir::Loop* loop, ir::Function* func) {

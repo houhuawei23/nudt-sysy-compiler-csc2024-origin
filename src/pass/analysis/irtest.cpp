@@ -19,6 +19,7 @@ void irCheck::run(ir::Module* ctx, TopAnalysisInfoManager* tp) {
     isPass &= checkAllocaOnlyInEntry(func);
     isPass &= checkOnlyOneExit(func);
     isPass &= checkParentRelationship(func);
+    isPass &= checkOperands(func);
   }
   if (not isPass) assert(false && "didn't pass irCheck!");
 }
@@ -132,6 +133,24 @@ bool irCheck::runPhiTest(ir::Function* func) {
     if (dyn_cast<ir::PhiInst>(*instIter) != nullptr) {
       cerr << "In BB\"" << bb->name() << "\", we got a phiinst not in phiinst list!" << endl;
       isPass = false;
+    }
+  }
+  // check incoming block and preblock
+  for (auto block : func->blocks()) {
+    for (auto inst : block->insts()) {
+      if (auto phi = inst->dynCast<ir::PhiInst>()) {
+        for (auto [pre, val] : phi->incomings()) {
+          const auto iter = std::find(pre->next_blocks().begin(), pre->next_blocks().end(), block);
+          if (iter == pre->next_blocks().end()) {
+            std::cerr << "phi incoming block not in pre block list!" << std::endl;
+            phi->print(std::cerr);
+            std::cerr << std::endl;
+            std::cerr << "block: " << block->name() << std::endl;
+            std::cerr << "pre block: " << pre->name() << std::endl;
+            isPass = false;
+          }
+        }
+      }
     }
   }
   return isPass;
@@ -297,5 +316,38 @@ bool irCheck::checkParentRelationship(ir::Function* func) {
 
   return isPass;
 }
-
+bool irCheck::checkOperands(ir::Function* func) {
+  bool isPass = true;
+  for (auto block : func->blocks()) {
+    for (auto inst : block->insts()) {
+      for (auto use : inst->operands()) {
+        if (use == nullptr) {
+          std::cerr << "Operand is null!" << std::endl;
+          std::cerr << "block: " << block->name() << ", inst: ";
+          inst->print(std::cerr);
+          std::cerr << std::endl;
+          isPass = false;
+          assert(false);
+        }
+        if (use->value() == nullptr) {
+          std::cerr << "Operand value is null!" << std::endl;
+          std::cerr << "block: " << block->name() << ", inst: ";
+          inst->print(std::cerr);
+          std::cerr << std::endl;
+          isPass = false;
+          assert(false);
+        }
+        if (use->user() == nullptr) {
+          std::cerr << "Operand user is null!" << std::endl;
+          std::cerr << "block: " << block->name() << ", inst: ";
+          inst->print(std::cerr);
+          std::cerr << std::endl;
+          isPass = false;
+          assert(false);
+        }
+      }
+    }
+  }
+  return isPass;
+}
 }  // namespace pass

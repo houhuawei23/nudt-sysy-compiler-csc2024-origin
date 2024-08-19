@@ -43,7 +43,9 @@ Instruction* BinaryInst::clone() const {
 Instruction* CallInst::copy(std::function<Value*(Value*)> getValue) const {
   std::vector<Value*> args;
   for (auto arg : mOperands) {
-    args.push_back(getValue(arg->value()));
+    auto val = getValue(arg->value());
+    assert(val);
+    args.push_back(val);
   }
   return utils::make<CallInst>(mCallee, args);
 }

@@ -269,6 +269,7 @@ public:  // utils function
     static_assert(std::is_base_of_v<Value, T>);
     return dynamic_cast<T*>(this);
   }
+  // virtual bool verify(std::ostream& os) const = 0;
 };
 
 /**
