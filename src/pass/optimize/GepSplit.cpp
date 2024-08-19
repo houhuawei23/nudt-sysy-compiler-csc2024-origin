@@ -16,6 +16,8 @@ void GepSplit::run(ir::Function* func, TopAnalysisInfoManager* tp) {
                 auto gep_inst = dyn_cast<ir::GetElementPtrInst>(inst);
                 int id = gep_inst->getid();
                 auto begin = iter;
+                gep_inst->print(std::cerr); std::cerr << "\n";
+                std::cerr << "id = " << id << "\n";
                 if (id == 0) {
                     /* Pointer Op */
                     iter++;
@@ -76,10 +78,10 @@ void GepSplit::split_pointer(ir::GetElementPtrInst* inst,
     ir::Value* offset = nullptr;
     if (index->isa<ir::ConstantValue>()) {
         auto cindex = index->dynCast<ir::ConstantValue>();
-        offset = ir::ConstantInteger::gen_i64(cindex->i32() * 4);
+        offset = ir::ConstantInteger::gen_i64(cindex->i32() * 4 * stride);
     } else {
         auto index_64 = builder.makeUnary(ir::ValueId::vSEXT, index, ir::Type::TypeInt64());
-        offset = builder.makeBinary(ir::BinaryOp::MUL, index_64, ir::ConstantInteger::gen_i64(4));
+        offset = builder.makeBinary(ir::BinaryOp::MUL, index_64, ir::ConstantInteger::gen_i64(4 * stride));
     }
 
     /* 3. 相加得到目标地址 */
