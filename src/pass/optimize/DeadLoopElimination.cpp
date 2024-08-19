@@ -43,6 +43,7 @@ void DeadLoopElimination::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     for (auto loop : lpctx->loops()) {
         if (loop->exits().size() > 1) continue;
         auto iv = ivctx->getIndvar(loop);
+        if (!iv) continue;
         if (isDeadLoop(iv, loop)) {
             std::cerr << "find dead loop!" << std::endl;
             deleteDeadLoop(loop);
