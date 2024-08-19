@@ -196,7 +196,6 @@ void createMIRModule(ir::Module& ir_module,
       while (genericPeepholeOpt(*mir_func, codegen_ctx))
         ;
       dumpStageWithMsg(std::cerr, "AfterPeephole", "Peephole Optimization " + ir_func->name());
-
       dumpStageResult("AfterPeephole", mir_func, codegen_ctx);
     }
 

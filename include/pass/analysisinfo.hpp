@@ -311,7 +311,8 @@ class sideEffectInfo : public ModuleACtx {
     std::unordered_map<ir::Function*,std::set<ir::Argument*>> _funcPointerArgs; //当前函数的参数中有哪些是指针参数
     std::unordered_map<ir::Function*,bool> _isCallLibFunc;//当前函数有无调用库函数或者简介调用库函数
     std::unordered_map<ir::Function*,bool> _hasPotentialSideEffect;//出现了无法分析基址的情况，含有潜在的副作用
-
+    std::unordered_map<ir::Function*,std::set<ir::GlobalVariable*>> _FuncReadDirectGvs;//当前函数直接读取的gv
+    std::unordered_map<ir::Function*,std::set<ir::GlobalVariable*>> _FuncWriteDirectGvs;//当前函数直接写入的gv
   public:
     sideEffectInfo(ir::Module* ctx, TopAnalysisInfoManager* tp) : ModuleACtx(ctx, tp) {}
     void clearAll() {
@@ -322,6 +323,9 @@ class sideEffectInfo : public ModuleACtx {
         _isLib.clear();
         _funcPointerArgs.clear();
         _isCallLibFunc.clear();
+        _hasPotentialSideEffect.clear();
+        _FuncReadDirectGvs.clear();
+        _FuncWriteDirectGvs.clear();
     }
     void refresh() override;
     //get
@@ -340,6 +344,8 @@ class sideEffectInfo : public ModuleACtx {
     std::set<ir::GlobalVariable*>& funcReadGlobals(ir::Function* func){return _FuncReadGlobals[func];}
     std::set<ir::GlobalVariable*>& funcWriteGlobals(ir::Function* func){return _FuncWriteGlobals[func];}
     std::set<ir::Argument*>& funcArgSet(ir::Function* func){return _funcPointerArgs[func];}
+    std::set<ir::GlobalVariable*>& funcDirectReadGvs(ir::Function* func){return _FuncReadDirectGvs[func];}
+    std::set<ir::GlobalVariable*>& funcDirectWriteGvs(ir::Function* func){return _FuncWriteDirectGvs[func];}
     //old API
     bool hasSideEffect(ir::Function* func){
         if(_isLib[func])return true;
@@ -366,6 +372,8 @@ class sideEffectInfo : public ModuleACtx {
     void functionInit(ir::Function* func){
         _FuncReadGlobals[func]=std::set<ir::GlobalVariable*>();
         _FuncWriteGlobals[func]=std::set<ir::GlobalVariable*>();
+        _FuncWriteDirectGvs[func]=std::set<ir::GlobalVariable*>();
+        _FuncReadDirectGvs[func]=std::set<ir::GlobalVariable*>();
         for(auto arg:func->args()){
             if(not arg->isPointer())continue;
             _funcPointerArgs[func].insert(arg);
