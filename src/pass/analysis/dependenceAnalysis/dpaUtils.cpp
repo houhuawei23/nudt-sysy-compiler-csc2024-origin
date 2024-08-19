@@ -3,8 +3,9 @@
 
 using namespace pass;
 //初始化lpDepInfo
-void LoopDependenceInfo::makeLoopDepInfo(ir::Loop* lp){
+void LoopDependenceInfo::makeLoopDepInfo(ir::Loop* lp,TopAnalysisInfoManager* topmana){
     parent=lp;
+    tp=topmana;
     //遍历所有语句
     for(auto bb:lp->blocks()){
         for(auto inst:bb->insts()){
@@ -35,19 +36,39 @@ void LoopDependenceInfo::getInfoFromSubLoop(ir::Loop* subLoop,LoopDependenceInfo
 }
 
 
-//取出基址
-ir::Value* pass::getBaseAddr(ir::Value* val){
-    if(auto gep=val->dynCast<ir::GetElementPtrInst>()){
-        return getBaseAddr(gep->value());
+ir::Value* pass::getIntToPtrBaseAddr(ir::UnaryInst* inst){ 
+    if(auto binary = inst->value()->dynCast<ir::BinaryInst>()) {
+        // if(auto lbase = getBaseAddr(binary->lValue())) return lbase;
+        // if(auto rbase = getBaseAddr(binary->rValue())) return rbase;
+        if(binary->lValue()->valueId() == ir::ValueId::vPTRTOINT) {
+            return binary->lValue()->dynCast<ir::UnaryInst>()->value();
+        } else if(binary->rValue()->valueId() == ir::ValueId::vPTRTOINT) {
+            return binary->rValue()->dynCast<ir::UnaryInst>()->value();
+        }
     }
-    else{
-        if(val->dynCast<ir::GlobalVariable>())return val;
-        if(val->dynCast<ir::Argument>())return val;
-        if(val->dynCast<ir::AllocaInst>())return val;
-    }
-    assert("Error occur in function \"getBaseAddr\"!" and false);
+    assert(false);
     return nullptr;
-    
+}
+
+ir::Value* pass::getBaseAddr(ir::Value* subAddr,TopAnalysisInfoManager* topmana){
+    if(auto allocainst=subAddr->dynCast<ir::AllocaInst>())return allocainst;
+    if(auto gv=subAddr->dynCast<ir::GlobalVariable>())return gv;
+    if(auto arg=subAddr->dynCast<ir::Argument>())return arg;
+    if(auto gep=subAddr->dynCast<ir::GetElementPtrInst>())return getBaseAddr(gep->value(),topmana);
+    if(auto phi=subAddr->dynCast<ir::PhiInst>()){
+        auto func=phi->block()->function();
+        auto lpctx=topmana->getLoopInfo(func);
+        auto lp=lpctx->head2loop(phi->block());
+        auto preHeaderVal=phi->getvalfromBB(lp->getLoopPreheader());
+        return getBaseAddr(preHeaderVal,topmana);
+    }
+    if(auto unary = subAddr->dynCast<ir::UnaryInst>()) {
+        if(unary->valueId() == ir::ValueId::vINTTOPTR) {
+            return getIntToPtrBaseAddr(unary);
+        }
+    }
+    // assert("Error! invalid type of input in function \"getBaseAddr\"!"&&false);
+    return nullptr;
 }
 
 //取出基址的类型
@@ -64,7 +85,7 @@ baseAddrType pass::getBaseAddrType(ir::Value* val){
 //加入单个ptr的接口
 void LoopDependenceInfo::addPtr(ir::Value* ptr,ir::Instruction* inst){
     if(memInsts.count(inst)!=0)return;
-    auto baseAddr=getBaseAddr(ptr);
+    auto baseAddr=getBaseAddr(ptr,tp);
     auto subAddr=ptr->dynCast<ir::GetElementPtrInst>();
     if(subAddr==nullptr)return;//这实际上排除全局变量
     if(inst->dynCast<ir::LoadInst>()!=nullptr and inst->dynCast<ir::StoreInst>()!=nullptr)return;
@@ -120,7 +141,7 @@ void LoopDependenceInfo::addPtr(ir::Value* ptr,ir::Instruction* inst){
 void LoopDependenceInfo::addPtrFromSubLoop(ir::Value* ptr,ir::Instruction* inst,LoopDependenceInfo* subLoopDepInfo){
     //基地址
     if(memInsts.count(inst)!=0)return;
-    auto baseAddr=getBaseAddr(ptr);
+    auto baseAddr=getBaseAddr(ptr,tp);
     auto subAddr=ptr->dynCast<ir::GetElementPtrInst>();
     if(subAddr==nullptr)return;//这实际上排除全局变量
     if(inst->dynCast<ir::LoadInst>()!=nullptr and inst->dynCast<ir::StoreInst>()!=nullptr)return;
@@ -189,7 +210,7 @@ void LoopDependenceInfo::clearAll(){
     
 }
 
-bool pass::isTwoBaseAddrPossiblySame(ir::Value* ptr1,ir::Value* ptr2,ir::Function* func,callGraph* cgctx){
+bool pass::isTwoBaseAddrPossiblySame(ir::Value* ptr1,ir::Value* ptr2,ir::Function* func,callGraph* cgctx,TopAnalysisInfoManager* tp){
     auto type1=getBaseAddrType(ptr1);
     auto type2=getBaseAddrType(ptr2);
     if(type1==type2){
@@ -207,7 +228,7 @@ bool pass::isTwoBaseAddrPossiblySame(ir::Value* ptr1,ir::Value* ptr2,ir::Functio
             for(auto callInst:cgctx->callerCallInsts(func)){
                 auto rarg1=callInst->rargs()[idx1]->value();
                 auto rarg2=callInst->rargs()[idx2]->value();
-                if(getBaseAddr(rarg1)!=getBaseAddr(rarg2))continue;
+                if(getBaseAddr(rarg1,tp)!=getBaseAddr(rarg2,tp))continue;
                 else
                     return true;//简单的认为他们一致
             }  
@@ -233,7 +254,7 @@ bool pass::isTwoBaseAddrPossiblySame(ir::Value* ptr1,ir::Value* ptr2,ir::Functio
             auto idx=arg->index();
             for(auto callinst:cgctx->callerCallInsts(func)){
                 auto rarg=callinst->rargs()[idx]->value();
-                auto rargBaseAddr=getBaseAddr(rarg);
+                auto rargBaseAddr=getBaseAddr(rarg,tp);
                 if(rargBaseAddr!=gv)continue;
                 else
                     return true;

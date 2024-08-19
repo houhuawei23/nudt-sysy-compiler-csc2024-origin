@@ -13,6 +13,7 @@ namespace pass{
             void run(ir::Function* func,TopAnalysisInfoManager* tp)override;
             std::string name() const override { return "dependence analysis"; }
         private:
+            TopAnalysisInfoManager* topmana;
             domTree* domctx;
             loopInfo* lpctx;
             indVarInfo* idvctx;

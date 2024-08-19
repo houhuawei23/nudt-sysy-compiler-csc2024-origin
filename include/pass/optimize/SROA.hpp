@@ -19,6 +19,6 @@ namespace pass{
             indVarInfo* idvctx;
             LoopDependenceInfo* depLpInfo;
             void runOnLoop(ir::Loop* lp);
-            void replaceOnlyLoadSubAddr(ir::GetElementPtrInst* gep,ir::Loop* lp);
+            
     };
 }

@@ -3,6 +3,7 @@
 using namespace pass;
 
 void dependenceAnalysis::run(ir::Function* func,TopAnalysisInfoManager* tp){
+    topmana=tp;
     domctx=tp->getDomTree(func);
     lpctx=tp->getLoopInfo(func);
     idvctx=tp->getIndVarInfo(func);
@@ -35,13 +36,13 @@ void dependenceAnalysis::runOnLoop(ir::Loop* lp){
         depInfoForLp->getInfoFromSubLoop(subLp,subLoopDepInfo);
     }
     //分析所有的inst
-    depInfoForLp->makeLoopDepInfo(lp);
+    depInfoForLp->makeLoopDepInfo(lp,topmana);
     //别名分析测试
     bool isSame=false;
     for(auto setIter=depInfoForLp->getBaseAddrs().begin();setIter!=depInfoForLp->getBaseAddrs().end();setIter++){
         for(auto setIter2=depInfoForLp->getBaseAddrs().begin();setIter2!=setIter;setIter2++){
             if(setIter2==setIter)continue;
-            if(isTwoBaseAddrPossiblySame(*setIter,*setIter2,func,cgctx)){
+            if(isTwoBaseAddrPossiblySame(*setIter,*setIter2,func,cgctx,topmana)){
                 isSame=true;
                 break;
             }
