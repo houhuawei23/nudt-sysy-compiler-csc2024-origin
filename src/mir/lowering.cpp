@@ -248,7 +248,8 @@ void createMIRModule(ir::Module& ir_module,
     {
       // assert(mir_func->verify(std::cerr, codegen_ctx));
       // FIXME: error here, need fix
-      // optimizeBlockLayout(mir_func, codegen_ctx);
+      optimizeBlockLayout(mir_func, codegen_ctx);
+      dumpStageResult("After Block Schedule", mir_func, codegen_ctx);
       // assert(mir_func->verify(std::cerr, codegen_ctx));
     }
 

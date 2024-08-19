@@ -21,6 +21,7 @@ namespace pass{
             void run(ir::Function* func,TopAnalysisInfoManager* tp)override;
             std::string name() const override;
         private:
+            TopAnalysisInfoManager* topmana;
             dependenceInfo* dpctx;
             domTree* domctx;
             loopInfo* lpctx;
@@ -32,5 +33,7 @@ namespace pass{
             void printParallelInfo(ir::Function* func);
             resPhi* getResPhi(ir::PhiInst* phi,ir::Loop* lp);
             bool isSimplyLpInvariant(ir::Loop* lp,ir::Value* val);
+            bool isFuncParallel(ir::Loop* lp,ir::CallInst* callinst);
+            ir::Value* getBaseAddr(ir::Value* ptr);
     };
 };

@@ -7,6 +7,7 @@ std::string markParallel::name() const {
 }
 
 void markParallel::run(ir::Function* func,TopAnalysisInfoManager* tp){
+    topmana=tp;
     dpctx=tp->getDepInfo(func);
     domctx=tp->getDomTreeWithoutRefresh(func);
     lpctx=tp->getLoopInfoWithoutRefresh(func);
@@ -32,7 +33,7 @@ void markParallel::runOnLoop(ir::Loop* lp){
         for(auto inst:bb->insts()){
             if(auto callInst=inst->dynCast<ir::CallInst>()){
                 auto callee=callInst->callee();
-                if(not sectx->isPureFunc(callee)){
+                if(not isFuncParallel(lp,callInst)){
                     parctx->setIsParallel(lp->header(),false);
                     return;
                 }
@@ -171,4 +172,44 @@ bool markParallel::isSimplyLpInvariant(ir::Loop* lp,ir::Value* val){
         return domctx->dominate(inst->block(),lp->header()) and inst->block()!=lp->header();
     }
     return false;
+}
+
+bool markParallel::isFuncParallel(ir::Loop* lp,ir::CallInst* callinst){
+    auto func=callinst->callee();
+    auto lpDepInfo=dpctx->getLoopDependenceInfo(lp);
+    if(sectx->hasSideEffect(func))return false;
+    //只读内存不写的函数，看读的和人家写的一不一样
+    std::set<ir::Value*>readLocs;
+    //读取的几个部分：数组，只会读取arg数组和全局数组，分别使用副作用来判断
+    for(auto arrArg:sectx->funcArgSet(func)){
+        auto arrArgIdx=arrArg->index();
+        auto arrRArg=callinst->rargs()[arrArgIdx]->value();
+        readLocs.insert(getBaseAddr(arrRArg));//getBaseAddr;
+    }
+    for(auto readGv:sectx->funcReadGlobals(func)){
+        readLocs.insert(readGv);
+    }
+    //查看当前循环写的地址中有无对应的地址
+    for(auto writeGv:lpDepInfo->getBaseAddrs()){
+        if(lpDepInfo->getIsBaseAddrWrite(writeGv)){
+            if(readLocs.count(writeGv))return false;
+        }
+    }
+    return true;
+}
+
+ir::Value* markParallel::getBaseAddr(ir::Value* subAddr){
+    if(auto allocainst=subAddr->dynCast<ir::AllocaInst>())return allocainst;
+    if(auto gv=subAddr->dynCast<ir::GlobalVariable>())return gv;
+    if(auto arg=subAddr->dynCast<ir::Argument>())return arg;
+    if(auto gep=subAddr->dynCast<ir::GetElementPtrInst>())return getBaseAddr(gep->value());
+    if(auto phi=subAddr->dynCast<ir::PhiInst>()){
+        auto func=phi->block()->function();
+        auto lpctx=topmana->getLoopInfo(func);
+        auto lp=lpctx->head2loop(phi->block());
+        auto preHeaderVal=phi->getvalfromBB(lp->getLoopPreheader());
+        return getBaseAddr(preHeaderVal);
+    }
+    // assert("Error! invalid type of input in function \"getBaseAddr\"!"&&false);
+    return nullptr;
 }
