@@ -14,6 +14,10 @@ namespace mir::RISCV {
 static MIROperand getVRegAs(ISelContext& ctx, MIROperand ref) {
   return MIROperand::asVReg(ctx.codegen_ctx().nextId(), ref.type());
 }
+static MIROperand getVRegAs64(ISelContext& ctx, MIROperand ref) {
+  assert(isIntType(ref.type()));
+  return MIROperand::asVReg(ctx.codegen_ctx().nextId(), OperandType::Int64);
+}
 
 constexpr RISCVInst getIntegerBinaryRegOpcode(uint32_t opcode) {
   switch (opcode) {
@@ -159,12 +163,13 @@ static bool isOperandI64(MIROperand op) {
 static bool isOperandI32(MIROperand op) {
   return op.type() == OperandType::Int32;
 }
-
 static bool isZero(MIROperand operand) {
   if (operand.isReg() && operand.reg() == RISCV::X0) return true;
   return operand.isImm() && operand.imm() == 0;
 }
-
+static bool isOne(MIROperand operand) {
+  return operand.isImm() && operand.imm() == 1;
+}
 static MIROperand getZero(MIROperand operand) {
   return MIROperand::asISAReg(RISCV::X0, operand.type());
 }

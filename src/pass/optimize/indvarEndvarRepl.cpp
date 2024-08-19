@@ -17,6 +17,7 @@ void idvEdvRepl::runOnLoop(ir::Loop* lp){
         runOnLoop(subLoop);
     }
     auto idv=idvctx->getIndvar(lp);
+    if(idv==nullptr)return;
     if(not idv->isStepVarConst())return;
     auto stepConstVal=idv->getStepI32();
     ir::Value* finalVar=nullptr;
@@ -24,8 +25,11 @@ void idvEdvRepl::runOnLoop(ir::Loop* lp){
     if(idv->isEndVarConst() and idv->isBeginVarConst()){
         int iterCnt=getConstantEndvarIndVarIterCnt(lp,idv);
         if(iterCnt!=-1){
-            finalVar=ir::ConstantInteger::gen_i32(iterCnt+idv->getBeginI32());
+            finalVar=ir::ConstantInteger::gen_i32(iterCnt*idv->getStepI32()+idv->getBeginI32());
             replaceIndvarAfterLoop(lp,idv,finalVar);
+            return;
+        }
+        else{
             return;
         }
     }

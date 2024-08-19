@@ -35,6 +35,7 @@ namespace pass{
     };
     class LoopDependenceInfo{
         private:
+            TopAnalysisInfoManager* tp;
             //for outside info
             ir::Loop* parent;//当前循环
             bool isParallelConcerningArray;//是否应当并行(仅考虑数组间依赖)
@@ -57,7 +58,7 @@ namespace pass{
 
         public:
             //utils
-            void makeLoopDepInfo(ir::Loop* lp);//直接根据循环相关信息对当前info进行构建
+            void makeLoopDepInfo(ir::Loop* lp,TopAnalysisInfoManager* topmana);//直接根据循环相关信息对当前info进行构建
             void clearAll();
             void getInfoFromSubLoop(ir::Loop* subLoop,LoopDependenceInfo* subLoopDepInfo);
             
@@ -85,9 +86,10 @@ namespace pass{
             void addPtrFromSubLoop(ir::Value* ptr,ir::Instruction* inst,LoopDependenceInfo* subLoopDepInfo);//用于从子循环添加一个ptr进入
             
     };      
-    ir::Value* getBaseAddr(ir::Value* val);
+    ir::Value* getBaseAddr(ir::Value* val,TopAnalysisInfoManager* tp);
+    ir::Value* getIntToPtrBaseAddr(ir::UnaryInst* inst);
     baseAddrType getBaseAddrType(ir::Value* val);
-    bool isTwoBaseAddrPossiblySame(ir::Value* ptr1,ir::Value* ptr2,ir::Function* func,callGraph* cgctx);
+    bool isTwoBaseAddrPossiblySame(ir::Value* ptr1,ir::Value* ptr2,ir::Function* func,callGraph* cgctx,TopAnalysisInfoManager* tp);
     void printIdxType(idxType idxtype,std::ostream& os);
 };
 
