@@ -65,6 +65,8 @@ InstInfo: {
         StoreRegToStack,
         # hhw add
         Return,
+        AtomicAdd,
+        AtomicSub,
         # ISA specific
         # ISASpecificBegin,
       ],
@@ -145,6 +147,16 @@ InstInfo: {
     # instruction instances
     Instances: {
         # Instances
+        AtomicAdd: {
+          format: ["AtomicAdd", " ", 0, ", ", 1, ", ", 2],
+          operands: 
+          {
+          0: { name: dst, type: INTREG, flag: Def },
+          1: { name: addr, type: RELOC, flag: Use },
+          2: { name: src, type: INTVAL, flag: Use },
+          },
+          flag: [Atomic, Load, Store]
+        },
         Jump: {
             # format: "Jump {target}"
             format: ["Jump", " ", 0],
@@ -439,4 +451,3 @@ InstInfo: {
           },
       },
   }
-

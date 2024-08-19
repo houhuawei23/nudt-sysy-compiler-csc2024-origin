@@ -220,6 +220,10 @@ enum MIRGenericInst : uint32_t {
   // Return
   InstReturn,
 
+  // Atomic inst
+  InstAtomicAdd,
+  InstAtomicSub,
+
   // ISA Specific
   ISASpecificBegin,
 };

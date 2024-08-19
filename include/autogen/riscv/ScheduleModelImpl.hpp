@@ -119,6 +119,13 @@ public:
       case LD:
       case SD:
       case InstStoreRegToStack:
+      case LR_W:
+      case SC_W:
+      case AMOSWAP_W:
+      case AMOADD_W:
+      case AMOAND_W:
+      case AMOOR_W:
+      case AMOXOR_W:
         return mScheduleClass_LoadStore;
 
       case MUL:

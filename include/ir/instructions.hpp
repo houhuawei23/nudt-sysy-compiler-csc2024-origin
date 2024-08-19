@@ -580,6 +580,7 @@ public:
   auto ptr() const { return operand(0); }
   auto val() const { return operand(1); }
   auto opcode() const { return mOpcode; }
+  auto ordering() const { return mOrdering; }
   void print(std::ostream& os) const override;
   Instruction* copy(std::function<Value*(Value*)> getValue) const override { return nullptr; }
 };

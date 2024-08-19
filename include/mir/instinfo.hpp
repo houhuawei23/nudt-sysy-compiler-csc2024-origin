@@ -43,6 +43,7 @@ enum InstFlag : uint32_t {
   InstFlagInOrder = 1 << 17,
   InstFlagPadding = 1 << 18,
   InstFlagIndirectJump = 1 << 19,  // Jump Register Instruction - jr
+  InstFlagAtomic = 1 << 20,
   InstFlagSideEffect = InstFlagLoad | InstFlagStore | InstFlagTerminator | InstFlagBranch |
                        InstFlagCall | InstFlagPush | InstFlagRegDef | InstFlagReturn |
                        InstFlagWithDelaySlot | InstFlagPadding | InstFlagIndirectJump,
@@ -91,8 +92,7 @@ public:  // match function
   virtual void redirectBranch(MIRInst* inst, MIRBlock* target) const;
 };
 
-template <uint32_t N>
-constexpr bool isSignedImm(intmax_t imm) {
+template <uint32_t N> constexpr bool isSignedImm(intmax_t imm) {
   static_assert(N < 64);
   constexpr auto x = static_cast<intmax_t>(1) << (N - 1);
   return -x <= imm && imm < x;
@@ -137,6 +137,9 @@ constexpr bool isOperandReloc(const MIROperand& operand) {
 }
 constexpr bool isOperandStackObject(const MIROperand& operand) {
   return operand.isReg() && isStackObject(operand.reg());
+}
+constexpr bool isOperandImm(const MIROperand& operand) {
+  return operand.isImm();
 }
 
 static std::string_view getType(OperandType type) {

@@ -60,6 +60,8 @@ enum GENERICInst {
   LoadRegFromStack,
   StoreRegToStack,
   Return,
+  AtomicAdd,
+  AtomicSub, /* not implemented yet */
 
   GENERICInstEnd
 };

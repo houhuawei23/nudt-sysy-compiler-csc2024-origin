@@ -1531,6 +1531,40 @@ public:
   void print(std::ostream& out, MIRInst& inst, bool comment) const override { out << "Return"; }
 };
 
+class GENERICInstInfoAtomicAdd final : public InstInfo {
+public:
+  GENERICInstInfoAtomicAdd() = default;
+
+  uint32_t operand_num() const override { return 3; }
+
+  OperandFlag operand_flag(uint32_t idx) const override {
+    switch (idx) {
+      case 0:
+        return OperandFlagDef;
+      case 1:
+        return OperandFlagUse;
+      case 2:
+        return OperandFlagUse;
+      default:
+        return OperandFlagNone;
+        assert(false && "Invalid operand index");
+    }
+  }
+
+  uint32_t inst_flag() const override {
+    return InstFlagNone | InstFlagAtomic | InstFlagLoad | InstFlagStore;
+  }
+
+  std::string_view name() const override { return "GENERIC.AtomicAdd"; }
+
+  void print(std::ostream& out, MIRInst& inst, bool comment) const override {
+    out << "AtomicAdd"
+        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+        << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
+        << mir::GENERIC::OperandDumper{inst.operand(2)};
+  }
+};
+
 class GENERICInstInfo final : public TargetInstInfo {
   GENERICInstInfoJump _instinfoJump;
   GENERICInstInfoBranch _instinfoBranch;
@@ -1582,6 +1616,7 @@ class GENERICInstInfo final : public TargetInstInfo {
   GENERICInstInfoLoadRegFromStack _instinfoLoadRegFromStack;
   GENERICInstInfoStoreRegToStack _instinfoStoreRegToStack;
   GENERICInstInfoReturn _instinfoReturn;
+  GENERICInstInfoAtomicAdd _instinfoAtomicAdd;
 
 public:
   GENERICInstInfo() = default;
@@ -1687,6 +1722,10 @@ public:
         return _instinfoStoreRegToStack;
       case GENERICInst::Return:
         return _instinfoReturn;
+      case GENERICInst::AtomicAdd:
+        return _instinfoAtomicAdd;
+      case GENERICInst::AtomicSub:
+        break; /* not supported */
       default:
         return TargetInstInfo::getInstInfo(opcode);
     }
