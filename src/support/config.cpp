@@ -214,23 +214,30 @@ static const auto commonOptPasses =
 
 static const auto loopOptPasses = std::vector<std::string>{"loopsimplify", "gcm", "gvn", "licm"};
 
-static const auto parallelPasses =
-  std::vector<std::string>{"loopsimplify", "gcm",          "gvn",      "licm",  "LoopInterChange",
-                           "inline",       "loopsimplify", "parallel", "inline"};
+static const auto parallelPasses = std::vector<std::string>{
+  "loopsimplify", "gcm", "gvn", "licm", "LoopInterChange", "inline", "loopsimplify", "parallel",
+  // "ParallelBodyExtract",
+  "inline"};
 
 static const auto interProceduralPasses = std::vector<std::string>{// "inline",
                                                                    "tco", "cache",
                                                                    //  "inline", cant parallel
-                                                                   "ag2l", "mem2reg"};
+                                                                   //  "ag2l",
+                                                                   "g2l", "mem2reg"};
 
 static const auto afterUnrollPasses = std::vector<std::string>{
   "simplifycfg", "loopsimplify", "sccp", "adce",        "gcm",  "gvn",  "licm", "dle",
   "dse",         "dle",          "dse",  "instcombine", "adce", "sccp", "dlae",
 };
 
-static const auto gepSplitPasses = std::vector<std::string>{// "GepSplit",
-                                                            // "dce",  wrong on mm
-                                                            "scp"};
+static const auto gepSplitPasses =
+  std::vector<std::string>{// "GepSplit",
+                           // "dce",  wrong on mm
+                           "scp", "simplifycfg", "instcombine", "dce"};
+static const auto deadLoopPasses = std::vector<std::string>{
+  "g2l",     "loopdivest",   "sccp", "adce",        "instcombine", "simplifycfg", "loopsimplify",
+  "idvrepl", "sccp",         "adce", "simplifycfg", "DeadLoop",    "simplifycfg", "adce",
+  "sccp",    "loopsimplify", "gcm",  "gvn",         "licm",        "gvn"};
 
 // static const auto
 auto collectPasses(OptLevel level) {
@@ -249,6 +256,8 @@ auto collectPasses(OptLevel level) {
   passes.push_back("mem2reg");
 
   passes.insert(passes.end(), clcPasses.begin(), clcPasses.end());
+
+  passes.insert(passes.end(), deadLoopPasses.begin(), deadLoopPasses.end());
 
   // IPO
   passes.insert(passes.end(), interProceduralPasses.begin(), interProceduralPasses.end());

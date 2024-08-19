@@ -13,6 +13,7 @@ bool loopdivest::shoulddivest(ir::Loop* loop) {
     if (loop->exits().size() != 1) return false;
     if (loop->subLoops().size() != 1) return false;
     ir::IndVar* iv = ivctx->getIndvar(loop);
+    if (!iv) return false;
     ir::Loop* subloop;
     subloop = *(loop->subLoops().begin());
     if (subloop->subLoops().size() != 0) return false;

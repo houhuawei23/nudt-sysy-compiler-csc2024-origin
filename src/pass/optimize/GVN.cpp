@@ -42,7 +42,7 @@ ir::Value* GVN::getValueNumber(ir::Instruction* inst) {
         return getValueNumber(ptrcast);
     else if (auto call = dynamic_cast<ir::CallInst*>(inst)) {
         auto callee = call->callee();
-        if (sectx->isPureFunc(callee)) {
+        if (sectx->isInputOnlyFunc(callee)) {
             return getValueNumber(call);
         }
         return nullptr;
@@ -167,6 +167,27 @@ void GVN::visitinst(ir::Instruction* inst) {
     if (inst != value) {
         if (auto instvalue = dyn_cast<ir::Instruction>(value)) {
             auto vbb = instvalue->block();
+            auto ibb = inst->block();
+            if (auto callinst = instvalue->dynCast<ir::CallInst>()){
+                auto callee = callinst->callee();
+                if (!sectx->isPureFunc(callee)) {
+                    if (vbb != ibb) 
+                        return;
+                    int cnt = 0;
+                    int icnt;
+                    int vcnt;
+                    for (auto i : ibb->insts()){
+                        if (i == inst)
+                            icnt = cnt;
+                        if (i == callinst)
+                            vcnt = cnt;
+                        cnt++;
+                    }
+                    if (abs(icnt - vcnt) != 1)
+                        return;
+                }
+            }
+            
             if (domctx->dominate(vbb, bb))  // vbb->dominate(bb)
             {
                 inst->replaceAllUseWith(instvalue);

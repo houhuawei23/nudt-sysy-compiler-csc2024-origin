@@ -37,7 +37,7 @@ void DeadLoopElimination::deleteDeadLoop(ir::Loop* loop) {
 }
 
 void DeadLoopElimination::run(ir::Function* func, TopAnalysisInfoManager* tp) {
-    std::cerr << func->name() << std::endl;
+    // std::cerr << func->name() << std::endl;
     lpctx = tp->getLoopInfo(func);
     ivctx = tp->getIndVarInfo(func);
     for (auto loop : lpctx->loops()) {
@@ -45,9 +45,10 @@ void DeadLoopElimination::run(ir::Function* func, TopAnalysisInfoManager* tp) {
         auto iv = ivctx->getIndvar(loop);
         if (!iv) continue;
         if (isDeadLoop(iv, loop)) {
-            std::cerr << "find dead loop!" << std::endl;
+            // std::cerr << "find dead loop!" << std::endl;
             deleteDeadLoop(loop);
         }
+        
     }
 }
 }  // namespace pass
