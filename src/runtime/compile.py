@@ -13,16 +13,16 @@ runtime_dir = os.path.dirname(os.path.abspath(__file__))
 memset_cpp = os.path.join(runtime_dir, "memset.cpp")
 lookup_cpp = os.path.join(runtime_dir, "Lookup.cpp")
 
-parallelFor_dir = os.path.join(runtime_dir, "./MultiThreads")
-parallelFor_cpp = os.path.join(parallelFor_dir, "MultiThreads.cpp")
+# parallelFor_dir = os.path.join(runtime_dir, "./MultiThreads")
+# parallelFor_cpp = os.path.join(parallelFor_dir, "MultiThreads.cpp")
 
-# parallelFor_dir = os.path.join(runtime_dir, "./LoopParallel")
-# parallelFor_cpp = os.path.join(parallelFor_dir, "LoopParallel.cpp")
+parallelFor_dir = os.path.join(runtime_dir, "./LoopParallel")
+parallelFor_cpp = os.path.join(parallelFor_dir, "LoopParallel.cpp")
 infiles = [memset_cpp, lookup_cpp, parallelFor_cpp]
 
 gcc_ref_command = {
-    "RISCV": "riscv64-linux-gnu-g++-12 -O3 -DNDEBUG -march=rv64gc_zba_zbb -fno-stack-protector -fomit-frame-pointer -mcpu=sifive-u74 -mabi=lp64d -mcmodel=medlow -ffp-contract=on -w ".split(),
-    "ARM": "arm-linux-gnueabihf-g++-12 -O3 -DNDEBUG -march=armv7 -fno-stack-protector -fomit-frame-pointer -mcpu=cortex-a72 -mfpu=vfpv4 -ffp-contract=on -w -no-pie ".split(),
+    "RISCV": "riscv64-linux-gnu-g++-12 -Ofast -DNDEBUG -march=rv64gc_zba_zbb -fno-stack-protector -fomit-frame-pointer -mcpu=sifive-u74 -mabi=lp64d -mcmodel=medlow -ffp-contract=on -w ".split(),
+    "ARM": "arm-linux-gnueabihf-g++-12 -Ofast -DNDEBUG -march=armv7 -fno-stack-protector -fomit-frame-pointer -mcpu=cortex-a72 -mfpu=vfpv4 -ffp-contract=on -w -no-pie ".split(),
 }[target]
 
 # gcc_ref_command = {
@@ -65,9 +65,11 @@ runtime = subprocess.check_output(
     gcc_ref_command + [mergefile, "-S", "-o", "/dev/stdout"]
 ).decode("utf-8")
 
+command = gcc_ref_command + [mergefile, "-S", "-o", "/dev/stdout"]
 
 with open(outfile, "w") as f:
     f.write("// Automatically generated file, do not edit!\n")
+    f.write("// Command: " + " ".join(command) + "\n")
     f.write('R"(')
     f.write(runtime)
     f.write(')"')

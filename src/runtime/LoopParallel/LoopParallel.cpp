@@ -53,7 +53,7 @@ constexpr uint32_t entryCount = 16;
 static ParallelForEntry parallelCache[entryCount];  // NOLINT
 static uint32_t lookupPtr;                          // NOLINT
 static ParallelForEntry& selectEntry(CmmcForLoop func, uint32_t size) {
-  fprintf(stderr, "lookup %p %d\n", func, size);
+  // fprintf(stderr, "lookup %p %d\n", func, size);
   for (uint32_t i = 0; i < entryCount; ++i, ++lookupPtr) {
     if (lookupPtr == entryCount)
       lookupPtr = 0;
@@ -104,20 +104,20 @@ static ParallelForEntry& selectNumberOfThreads(CmmcForLoop func,
                                                bool& sample) {
 
   auto& entry = selectEntry(func, size);
-  fprintf(stderr, "hitCount %d\n", entry.hitCount);
+  // fprintf(stderr, "hitCount %d\n", entry.hitCount);
   if (entry.hitCount < ParallelForEntry::sampleThreshold) {
     threads = 2;
     sample = false;
     return entry;
   }
-  fprintf(stdout, "here\n");
+  // fprintf(stdout, "here\n");
   if (entry.hitCount < ParallelForEntry::stopSampleThreshold) {
     threads = ((entry.hitCount - ParallelForEntry::sampleThreshold) /
                ParallelForEntry::sampleCount);
     sample = true;
     return entry;
   }
-  fprintf(stderr, "hitCount %d\n", entry.hitCount);
+  // fprintf(stderr, "hitCount %d\n", entry.hitCount);
   if (!entry.bestThreads) {
     uint32_t best = 0;
     Time minTime = std::numeric_limits<Time>::max();
@@ -132,7 +132,8 @@ static ParallelForEntry& selectNumberOfThreads(CmmcForLoop func,
   sample = false;
   return entry;
 }
-void parallelFor(int32_t beg, int32_t end, CmmcForLoop func) {
+void parallelForOld(int32_t beg, int32_t end, CmmcForLoop func) {
+  // TODO: support end <= beg
   if (end <= beg)
     return;
   const auto size = static_cast<uint32_t>(end - beg);
@@ -193,6 +194,93 @@ void parallelFor(int32_t beg, int32_t end, CmmcForLoop func) {
     entry.times[threads] += diff;
   }
 }
+void parallelFor(int32_t beg, int32_t end, CmmcForLoop func) {
+  // Handle the case where end <= beg
+  if (end == beg) {
+    return;
+  }
+
+  // Determine if we are iterating forwards or backwards
+  const bool isForward = end > beg;
+
+  // Calculate the size of the range
+  const auto size = static_cast<uint32_t>(isForward ? end - beg : beg - end);
+  constexpr uint32_t smallTask = 16;
+
+  // If the range is too small, execute it directly in the main thread
+  if (size < smallTask) {
+    func(beg, end);
+    return;
+  }
+
+  auto spawnAndJoin = [&](uint32_t threads) {
+    if (threads == 1) {
+      func(beg, end);
+      return;
+    }
+
+    // fprintf(stderr, "parallel for %d %d\n", beg, end);
+    std::atomic_thread_fence(std::memory_order_seq_cst);
+
+    constexpr uint32_t alignment = 4;
+    const auto inc = static_cast<int32_t>(((size / threads) + alignment - 1) / alignment * alignment);
+    std::array<bool, maxThreads> assigned{};
+
+    for (int32_t i = 0; i < static_cast<int32_t>(threads); ++i) {
+      int32_t subBeg, subEnd;
+
+      if (isForward) {
+        subBeg = beg + i * inc;
+        subEnd = std::min(subBeg + inc, end);
+      } else {
+        subBeg = beg - i * inc;
+        subEnd = std::max(subBeg - inc, end);
+      }
+
+      if (static_cast<uint32_t>(i) == threads - 1)
+        subEnd = end;
+
+      if (isForward ? subBeg >= subEnd : subBeg <= subEnd)
+        continue;
+
+      // fprintf(stderr, "launch %d %d\n", subBeg, subEnd);
+      auto& worker = workers[static_cast<size_t>(i)];
+      worker.func = func;
+      worker.beg = subBeg;
+      worker.end = subEnd;
+
+      // Signal worker
+      worker.ready.post(); /* run sub threads */
+      assigned[static_cast<size_t>(i)] = true;
+    }
+
+    for (uint32_t i = 0; i < threads; ++i) {
+      if (assigned[i])
+        workers[i].done.wait();
+    }
+
+    std::atomic_thread_fence(std::memory_order_seq_cst);
+  };
+
+  bool sample;
+  uint32_t threads;
+  auto& entry = selectNumberOfThreads(func, size, threads, sample);
+  // fprintf(stderr, "threads %d\n", threads);
+  Time start;
+
+  if (sample)
+    start = getTimePoint();
+
+  spawnAndJoin(1 << threads);
+
+  if (sample) {
+    const auto stop = getTimePoint();
+    const auto diff = stop - start;
+    entry.times[threads] += diff;
+  }
+}
+
+
 // constexpr uint32_t m1 = 1021, m2 = 1019;
 // struct LUTEntry final {
 //   uint64_t key;

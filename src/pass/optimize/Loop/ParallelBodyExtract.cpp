@@ -123,7 +123,7 @@ auto buildParallelBodyBeta(Module& module,
     const auto user = use->user();
     const auto value = use->value();
 
-    dumpAsOperand(std::cerr << "remap: ", value);
+    // dumpAsOperand(std::cerr << "remap: ", value);
 
     if (value == loopBodyInfo.indVar->phiinst()) return;
     // giv
@@ -296,8 +296,8 @@ auto rebuildFunc(Function* func,
     for (auto inst : block->insts()) {
       auto operands = inst->operands();
       for (auto operandUse : operands) {
-        // if (operandUse.value() == indVar->phiinst()) {
-        //   inst->setOperand(operandUse.index(), indVar->endValue());
+        // if (operandUse->value() == indVar->phiinst()) {
+        //   inst->setOperand(operandUse->index(), indVar->endValue());
         // }
         if (operandUse->value() == loopBodyInfo.giv) {
           inst->setOperand(operandUse->index(), newGiv);

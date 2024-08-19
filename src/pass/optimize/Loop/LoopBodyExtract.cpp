@@ -83,8 +83,8 @@ bool LoopBodyExtract::runImpl(Function* func, TopAnalysisInfoManager* tp) {
   std::unordered_set<Loop*> extractedLoops;
 
   for (auto loop : loops) {
-    std::cerr << "loop level: " << lpctx->looplevel(loop->header());
-    loop->print(std::cerr);
+    // std::cerr << "loop level: " << lpctx->looplevel(loop->header());
+    // loop->print(std::cerr);
 
     if (not checkLoopParallel(loop, lpctx, indVarctx, parallelctx, extractedLoops)) continue;
 
@@ -157,11 +157,18 @@ static auto getUniqueID() {
 
 #include "pass/optimize/Utils/PatternMatch.hpp"
 
+static size_t count;
+
 static bool matchAddRec(Value* giv, BasicBlock* latch, std::unordered_set<Value*>& values) {
+  // count++;
+  // if (count > 10)  {
+  //   std::cerr << "matchAddRec: too many iterations" << std::endl;
+  //   assert(false);
+  // }
   if (not giv->isa<PhiInst>()) return false;
   if (not giv->dynCast<PhiInst>()->incomings().count(latch)) return false;
   const auto givNext = giv->dynCast<PhiInst>()->getvalfromBB(latch);
-
+  // dumpAsOperand(std::cerr << "givNext: ", givNext);
   if (givNext->isa<Instruction>()) {
     Value* v2;
     if (givNext->isa<PhiInst>()) {
@@ -172,7 +179,8 @@ static bool matchAddRec(Value* giv, BasicBlock* latch, std::unordered_set<Value*
         if (!add(phi(base), any(v2))(MatchContext<Value>{val})) {
           return false;
         }
-        if (!matchAddRec(base, latch, values)) return false;
+        // recursive match base
+        if (!matchAddRec(base, pre, values)) return false;
         values.insert(val);
         values.insert(base);
       }
@@ -243,11 +251,11 @@ auto checkGivUsedByOuter(Value* GIndVar, Loop* loop) {
   // dumpAsOperand(std::cerr << "checkGivUsedByOuter: ", GIndVar);
 
   for (auto inst : {GIndVar, GIndVar->dynCast<PhiInst>()->getvalfromBB(loop->getUniqueLatch())}) {
-    dumpInst(std::cerr << "inst: ", inst->dynCast<Instruction>());
+    // dumpInst(std::cerr << "inst: ", inst->dynCast<Instruction>());
     if (not inst->isa<Instruction>()) continue;
     for (auto userUse : inst->uses()) {
       auto userInst = userUse->user()->dynCast<Instruction>();
-      dumpInst(std::cerr << "userInst: ", userInst);
+      // dumpInst(std::cerr << "userInst: ", userInst);
       if (not loop->blocks().count(userInst->block())) {
         return true;
       }
@@ -503,8 +511,8 @@ static bool rebuildFunc(Function* func,
   // fix phiGiv
   if (giv) {
     auto phiGiv = giv->dynCast<PhiInst>();
-    phiGiv->print(std::cerr);
-    std::cerr << std::endl;
+    // phiGiv->print(std::cerr);
+    // std::cerr << std::endl;
     assert(phiGiv->incomings().count(loop->getUniqueLatch()));
     phiGiv->delBlock(loop->getUniqueLatch());
 
@@ -525,8 +533,8 @@ static bool checkInstUsedByOuter(Function* func,
   // other inst in loop should not be used by outer
   // std::unordered_set<Value*> allowedToBeUsedByOuter;
 
-  allowedToBeUsedByOuter.insert(indVar->phiinst());
-  allowedToBeUsedByOuter.insert(indVar->iterInst());
+  // allowedToBeUsedByOuter.insert(indVar->phiinst());
+  // allowedToBeUsedByOuter.insert(indVar->iterInst());
   if (giv) {
     allowedToBeUsedByOuter.insert(giv);
     // next_giv
@@ -538,7 +546,8 @@ static bool checkInstUsedByOuter(Function* func,
       if (allowedToBeUsedByOuter.count(inst)) continue;
       for (auto user_use : inst->uses()) {
         auto userInst = user_use->user()->dynCast<Instruction>();
-        if (loop->blocks().count(userInst->block())) {  // used in loop
+        // used in loop: header - body - latch
+        if (loop->blocks().count(userInst->block())) {  
           continue;
         }
         // else

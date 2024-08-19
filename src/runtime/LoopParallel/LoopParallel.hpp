@@ -93,7 +93,7 @@ int cmmcWorker(void* ptr) {
     worker.func.load()(worker.beg.load(), worker.end.load());
     std::atomic_thread_fence(std::memory_order_seq_cst);
 
-    fprintf(stderr, "finish %d %d\n", worker.beg.load(), worker.end.load());
+    // fprintf(stderr, "finish %d %d\n", worker.beg.load(), worker.end.load());
     // isignal completion
     worker.done.post();
   }

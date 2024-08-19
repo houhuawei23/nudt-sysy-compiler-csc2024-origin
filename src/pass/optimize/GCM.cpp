@@ -10,7 +10,7 @@ namespace pass {
 // 通过指令类型判断该指令是否固定
 bool GCM::ispinned(ir::Instruction* instruction) {
     if (dyn_cast<ir::BinaryInst>(instruction)) {
-        if (instruction->valueId() == ir::vSDIV || instruction->valueId() == ir::vSREM)  // 二元运算指令不固定(除法取余固定，因为除法取余指令可能产生除零错误)
+        if (instruction->valueId() == ir::vSDIV || instruction->valueId() == ir::vSREM || instruction->valueId() == ir::vFDIV || instruction->valueId() == ir::vFREM)  // 二元运算指令不固定(除法取余固定，因为除法取余指令可能产生除零错误)
             return true;
         return false;
     } else if (dyn_cast<ir::UnaryInst>(instruction))  // 一元运算指令不固定

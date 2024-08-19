@@ -223,9 +223,11 @@ static ParallelForEntry& selectNumberOfThreads(CmmcForLoop func,
   sample = false;
   return entry;
 }
-void ParallelFor(int32_t beg, int32_t end, CmmcForLoop func) {
-  if (end <= beg)
+void parallelFor(int32_t beg, int32_t end, CmmcForLoop func) {
+  if (end <= beg) {
+    func(beg, end);
     return;
+  }
   const auto size = static_cast<uint32_t>(end - beg);
   constexpr uint32_t smallTask = 16;
   if (size < smallTask) {

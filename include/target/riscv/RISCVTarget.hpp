@@ -17,10 +17,7 @@ namespace mir {
  * @note: RISC-V数据信息 (64位)
  */
 static const std::string SysYRuntime =
-// #include "autogen/riscv/Runtime.hpp"
-// #include "autogen/riscv/RuntimeWithoutZ.hpp"
-// #include "autogen/riscv/RuntimeWithParallelFor.hpp"
-#include "autogen/riscv/RuntimeWithCMMCParallelFor.hpp"
+#include "autogen/riscv/RuntimeWithParallelFor.hpp"
   ;
 class RISCVDataLayout final : public DataLayout {
 public:
@@ -161,7 +158,7 @@ public:  // get function
 public:  // emit_assembly
   void postLegalizeFunc(MIRFunction& func, CodeGenContext& ctx) override;
   void emit_assembly(std::ostream& out, MIRModule& module) override;
-  
+
   bool verify(MIRModule& module) override;
   bool verify(MIRFunction& func) override;
 };

@@ -499,6 +499,9 @@ void PhiInst::replaceoldtonew(BasicBlock* oldbb, BasicBlock* newbb) {
 void PhiInst::refreshMap() {
   mbbToVal.clear();
   for (size_t i = 0; i < mSize; i++) {
+    // auto block =  getBlock(i);
+    // auto value = getValue(i);
+    // std::cerr << "i: " << i  << " " <<  block->name() << " " << value->name() << std::endl;
     mbbToVal[getBlock(i)] = getValue(i);
   }
 }

@@ -174,7 +174,7 @@ function run_compiler_test() {
     local result_file="$3"
 
     local in_file="${single_file%.*}.in"
-    echo $in_file
+
     local gen_c="${output_dir}/gen_test.c"
 
     local gen_s="${output_dir}/gen.s"

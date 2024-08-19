@@ -41,8 +41,21 @@ bool checkLoopParallel(Loop* loop,
     const auto begin = indVar->beginValue()->dynCast<ConstantValue>()->i32();
     const auto end = indVar->endValue()->dynCast<ConstantValue>()->i32();
     if (end - begin < 100) {
-      std::cerr << "loop too small: " << end - begin << std::endl;
+      // std::cerr << "loop too small: " << end - begin << std::endl;
       return false;
+    }
+  }
+  // check loop header
+
+  for (auto inst : loop->header()->insts()) {
+    if (not inst->isa<PhiInst>()) {
+      for (auto userUse : inst->uses()) {
+        auto user = userUse->user()->dynCast<Instruction>();
+        if (user->block() == loop->header())
+          continue;
+        else
+          return false;
+      }
     }
   }
   return true;
@@ -70,7 +83,14 @@ bool fixLoopLatch(Function* func, Loop* loop, IndVar* indVar, TopAnalysisInfoMan
   newLatch->set_idx(func->blocks().size());
   newLatch->emplace_back_inst(nextClone);
   auto phiOperandNext = indVar->phiinst()->getvalfromBB(oldLatch);
-  phiOperandNext->replaceAllUseWith(nextClone);
+  // phiOperandNext->replaceAllUseWith(nextClone);
+  auto uses = phiOperandNext->uses();
+  for(auto use : uses) {
+    auto userInst = use->user()->dynCast<Instruction>();
+    if(userInst->block() == loop->header()) {
+      userInst->setOperand(use->index(), nextClone);
+    }
+  }
   indVar->miterInst = nextClone->dynCast<BinaryInst>();
 
   IRBuilder builder;
