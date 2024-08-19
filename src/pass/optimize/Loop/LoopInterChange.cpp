@@ -24,7 +24,7 @@ void LoopInterChange::run(Function* func, TopAnalysisInfoManager* tp) {
 }
 
 bool LoopInterChange::runImpl(Function* func, TopAnalysisInfoManager* tp) {
-  std::cerr << "LoopInterChange: " << func->name() << std::endl;
+  // std::cerr << "LoopInterChange: " << func->name() << std::endl;
   func->rename();
   // func->print(std::cerr);
 

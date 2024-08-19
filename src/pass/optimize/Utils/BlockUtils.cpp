@@ -1,3 +1,4 @@
+// #define DEBUG
 #include "pass/optimize/Utils/BlockUtils.hpp"
 
 #include "pass/analysis/dom.hpp"

@@ -1,6 +1,5 @@
 // Automatically generated file, do not edit!
-// parallelFor: support reverse loop
-// gcc -Ofast
+// Command: riscv64-linux-gnu-g++-12 -Ofast -DNDEBUG -march=rv64gc_zba_zbb -fno-stack-protector -fomit-frame-pointer -mcpu=sifive-u74 -mabi=lp64d -mcmodel=medlow -ffp-contract=on -w /home/hhw/Desktop/compilers/sys-ycompiler/src/runtime/.merge.cpp -S -o /dev/stdout
 R"(	.file	".merge.cpp"
 	.option pic
 	.attribute arch, "rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zba1p0_zbb1p0"

@@ -223,40 +223,40 @@ std::vector<ir::Instruction*> LICM::getinvariant(ir::BasicBlock* bb, ir::Loop* l
             if (isinvariantop(storeinst, loop))
                 if (checkload(storeinst, loop)) {  // 接下来检查循环体里有无对本数组的load
                     res.push_back(storeinst);
-                    std::cerr << "lift store" << std::endl;
+                    // std::cerr << "lift store" << std::endl;
                 }
 
         } else if (auto loadinst = inst->dynCast<ir::LoadInst>()) {
             if (isinvariantop(loadinst, loop))
                 if (checkstore(loadinst, loop)) {  // 接下来检查循环体里有无对本数组的store
                     res.push_back(loadinst);
-                    std::cerr << "lift load" << std::endl;
+                    // std::cerr << "lift load" << std::endl;
                 }
         } else if (auto callinst = inst->dynCast<ir::CallInst>()) {
             auto callee = callinst->callee();
             if (sectx->isInputOnlyFunc(callee)) {
                 if (isinvariantcall(callinst, loop)) {
                     res.push_back(callinst);
-                    std::cerr << "lift call" << std::endl;
+                    // std::cerr << "lift call" << std::endl;
                 }
             }
         } else if (auto UnaryInst = inst->dynCast<ir::UnaryInst>()) {
             if (isinvariantop(UnaryInst, loop)) {
                 res.push_back(UnaryInst);
-                std::cerr << "lift Unary" << std::endl;
+                // std::cerr << "lift Unary" << std::endl;
             }
         } else if (auto BinaryInst = inst->dynCast<ir::BinaryInst>()) {
             if (isinvariantop(BinaryInst, loop)) {
                 if (BinaryInst->valueId() != ir::vSDIV && BinaryInst->valueId() != ir::vSREM && BinaryInst->valueId() != ir::vFDIV &&
                     BinaryInst->valueId() != ir::vFREM) {
                     res.push_back(BinaryInst);
-                    std::cerr << "lift Binary" << std::endl;
+                    // std::cerr << "lift Binary" << std::endl;
                 }
             }
         } else if (auto GepInst = inst->dynCast<ir::GetElementPtrInst>()) {
             if (isinvariantop(GepInst, loop)) {
                 res.push_back(GepInst);
-                std::cerr << "lift Gep" << std::endl;
+                // std::cerr << "lift Gep" << std::endl;
             }
         }
     }

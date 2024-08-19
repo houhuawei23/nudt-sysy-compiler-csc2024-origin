@@ -10,8 +10,11 @@ void parallelFor(int32_t beg, int32_t end, LoopFuncHeader parallelBody) {
   // Determine the number of threads you want to use
   const int32_t numThreads = 4;
 
-  // Calculate the number of iterations each thread should handle
-  int32_t totalIterations = end - beg;
+  // Determine if we're going forward or backward
+  bool isForward = beg < end;
+
+  // Calculate the total number of iterations
+  int32_t totalIterations = isForward ? end - beg : beg - end;
   int32_t iterationsPerThread = totalIterations / numThreads;
   int32_t remainderIterations = totalIterations % numThreads;
 
@@ -21,16 +24,24 @@ void parallelFor(int32_t beg, int32_t end, LoopFuncHeader parallelBody) {
   int32_t currentBeg = beg;
 
   for (int32_t i = 0; i < numThreads; ++i) {
-    int32_t currentEnd = currentBeg + iterationsPerThread;
+    int32_t currentEnd;
 
-    // Distribute remainder iterations
-    if (i < remainderIterations) {
-      currentEnd++;
+    // Calculate the end of the current thread's range
+    if (isForward) {
+      currentEnd = currentBeg + iterationsPerThread;
+      if (i < remainderIterations) {
+        currentEnd++;
+      }
+    } else {
+      currentEnd = currentBeg - iterationsPerThread;
+      if (i < remainderIterations) {
+        currentEnd--;
+      }
     }
 
     // Create and launch the thread
-    std::cerr << "Launching thread " << i << " with range [" << currentBeg << ", " << currentEnd
-              << ")\n";
+    std::cerr << "Launching thread " << i << " with range ["
+              << currentBeg << ", " << currentEnd << ")\n";
     threads.emplace_back(parallelBody, currentBeg, currentEnd);
 
     // Move to the next range of iterations
