@@ -4,14 +4,31 @@
 using namespace ir;
 
 namespace pass {
+void dumpInst(std::ostream& os, Instruction* inst) {
+#ifdef DEBUG
+  if (not inst) {
+    os << "nullptr";
+    return;
+  }
+  inst->print(os);
+  os << std::endl;
+#endif
+}
+void dumpAsOperand(std::ostream& os, Value* val) {
+#ifdef DEBUG
+  val->dumpAsOpernd(os);
+  os << std::endl;
+#endif
+}
+
 void dumpFunction(Function& func) {
   func.rename();
   func.print(std::cerr);
 }
 
 bool fixPhiIncomingBlock(BasicBlock* target, BasicBlock* oldBlock, BasicBlock* newBlock) {
-  for(auto inst : target->insts()) {
-    if(auto phi = inst->dynCast<PhiInst>()) {
+  for (auto inst : target->insts()) {
+    if (auto phi = inst->dynCast<PhiInst>()) {
       phi->replaceoldtonew(oldBlock, newBlock);
     }
   }

@@ -116,7 +116,7 @@ enum BinaryOp {
   SUB, /* - */
   MUL, /* * */
   DIV, /* / */
-  REM  /* %*/
+  REM,  /* % */
 };
 enum UnaryOp {
   NEG,
@@ -199,6 +199,7 @@ enum ValueId {
   vPHI,
   vFUNCPTR,
   vPTRCAST,
+  vATOMICRMW,
   vInvalid,
 };
 class Value {
