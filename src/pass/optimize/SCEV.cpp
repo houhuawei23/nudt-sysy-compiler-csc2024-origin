@@ -232,6 +232,8 @@ void SCEV::getSCEVValue(ir::Loop* lp,ir::PhiInst* phiinst,
     if(initVal->isFloat32())pnewSCEV->isFloat=true;
     pnewSCEV->phiinst=phiinst;
     for(auto binst:instsChain){
+        // std::cerr << "binst->isFloat32(): " << binst->isFloat32() << std::endl;
+        // std::cerr << "pnewSCEV->isFloat: " << pnewSCEV->isFloat << std::endl;
         assert(binst->isFloat32()==pnewSCEV->isFloat and "Different types of SCEV steps!");
         if(binst->valueId()==ir::vADD or binst->valueId()==ir::vFADD){
             if(isSimplyLoopInvariant(lp,binst->lValue()))

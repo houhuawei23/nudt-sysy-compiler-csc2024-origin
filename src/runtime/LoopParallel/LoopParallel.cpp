@@ -20,9 +20,8 @@ __attribute((constructor)) void cmmcInitRuntime() {
     worker.stack = mmap(nullptr, stackSize, PROT_READ | PROT_WRITE,
                         MAP_PRIVATE | MAP_ANONYMOUS | MAP_STACK, -1, 0);
     worker.core = i;
-    worker.pid =
-        clone(cmmcWorker, static_cast<uint8_t*>(worker.stack) + stackSize,
-              threadCreationFlags, &worker);
+    worker.pid = clone(cmmcWorker, static_cast<uint8_t*>(worker.stack) + stackSize,
+                       threadCreationFlags, &worker);
   }
 }
 /* execute after main() */
@@ -44,8 +43,7 @@ struct ParallelForEntry final {
   uint32_t hitCount;
   static constexpr uint32_t sampleThreshold = 100;
   static constexpr uint32_t sampleCount = 20;
-  static constexpr uint32_t stopSampleThreshold =
-      sampleThreshold + 3 * sampleCount;
+  static constexpr uint32_t stopSampleThreshold = sampleThreshold + 3 * sampleCount;
   Time times[3];  // 1T 2T 4T
   uint32_t bestThreads;
 };
@@ -55,8 +53,7 @@ static uint32_t lookupPtr;                          // NOLINT
 static ParallelForEntry& selectEntry(CmmcForLoop func, uint32_t size) {
   // fprintf(stderr, "lookup %p %d\n", func, size);
   for (uint32_t i = 0; i < entryCount; ++i, ++lookupPtr) {
-    if (lookupPtr == entryCount)
-      lookupPtr = 0;
+    if (lookupPtr == entryCount) lookupPtr = 0;
     auto& entry = parallelCache[lookupPtr];
     if (entry.valid && entry.func == func && entry.size == size) {
       entry.hitCount++;
@@ -102,7 +99,6 @@ static ParallelForEntry& selectNumberOfThreads(CmmcForLoop func,
                                                uint32_t size,
                                                uint32_t& threads,
                                                bool& sample) {
-
   auto& entry = selectEntry(func, size);
   // fprintf(stderr, "hitCount %d\n", entry.hitCount);
   if (entry.hitCount < ParallelForEntry::sampleThreshold) {
@@ -112,8 +108,8 @@ static ParallelForEntry& selectNumberOfThreads(CmmcForLoop func,
   }
   // fprintf(stdout, "here\n");
   if (entry.hitCount < ParallelForEntry::stopSampleThreshold) {
-    threads = ((entry.hitCount - ParallelForEntry::sampleThreshold) /
-               ParallelForEntry::sampleCount);
+    threads =
+      ((entry.hitCount - ParallelForEntry::sampleThreshold) / ParallelForEntry::sampleCount);
     sample = true;
     return entry;
   }
@@ -132,68 +128,7 @@ static ParallelForEntry& selectNumberOfThreads(CmmcForLoop func,
   sample = false;
   return entry;
 }
-void parallelForOld(int32_t beg, int32_t end, CmmcForLoop func) {
-  // TODO: support end <= beg
-  if (end <= beg)
-    return;
-  const auto size = static_cast<uint32_t>(end - beg);
-  constexpr uint32_t smallTask = 16;
-  if (size < smallTask) {
-    func(beg, end);
-    return;
-  }
 
-  auto spawnAndJoin = [&](uint32_t threads) {
-    if (threads == 1) {
-      func(beg, end);
-      return;
-    }
-
-    fprintf(stderr, "parallel for %d %d\n", beg, end);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
-    constexpr uint32_t alignment = 4;
-    const auto inc = static_cast<int32_t>(((size / threads) + alignment - 1) /
-                                          alignment * alignment);
-    std::array<bool, maxThreads> assigned{};
-    for (int32_t i = 0; i < static_cast<int32_t>(threads); ++i) {
-      const auto subBeg = beg + i * inc;
-      auto subEnd = std::min(subBeg + inc, end);
-      if (static_cast<uint32_t>(i) == threads - 1)
-        subEnd = end;
-      if (subBeg >= subEnd)
-        continue;
-      fprintf(stderr, "launch %d %d\n", subBeg, subEnd);
-      // cmmc_exec_for(subBeg, subEnd, func, payload);
-      auto& worker = workers[static_cast<size_t>(i)];
-      worker.func = func;
-      worker.beg = subBeg;
-      worker.end = subEnd;
-      // signal worker
-      worker.ready.post(); /* run sub threads */
-      assigned[static_cast<size_t>(i)] = true;
-    }
-    for (uint32_t i = 0; i < threads; ++i) {
-      if (assigned[i])
-        workers[i].done.wait();
-    }
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-  };
-
-  bool sample;
-  uint32_t threads;
-  auto& entry = selectNumberOfThreads(func, size, threads, sample);
-  fprintf(stderr, "threads %d\n", threads);
-  Time start;
-  if (sample)
-    start = getTimePoint();
-  spawnAndJoin(1 << threads);
-  if (sample) {
-    const auto stop = getTimePoint();
-    const auto diff = stop - start;
-    entry.times[threads] += diff;
-  }
-}
 void parallelFor(int32_t beg, int32_t end, CmmcForLoop func) {
   // Handle the case where end <= beg
   if (end == beg) {
@@ -223,7 +158,8 @@ void parallelFor(int32_t beg, int32_t end, CmmcForLoop func) {
     std::atomic_thread_fence(std::memory_order_seq_cst);
 
     constexpr uint32_t alignment = 4;
-    const auto inc = static_cast<int32_t>(((size / threads) + alignment - 1) / alignment * alignment);
+    const auto inc =
+      static_cast<int32_t>(((size / threads) + alignment - 1) / alignment * alignment);
     std::array<bool, maxThreads> assigned{};
 
     for (int32_t i = 0; i < static_cast<int32_t>(threads); ++i) {
@@ -237,11 +173,9 @@ void parallelFor(int32_t beg, int32_t end, CmmcForLoop func) {
         subEnd = std::max(subBeg - inc, end);
       }
 
-      if (static_cast<uint32_t>(i) == threads - 1)
-        subEnd = end;
+      if (static_cast<uint32_t>(i) == threads - 1) subEnd = end;
 
-      if (isForward ? subBeg >= subEnd : subBeg <= subEnd)
-        continue;
+      if (isForward ? subBeg >= subEnd : subBeg <= subEnd) continue;
 
       // fprintf(stderr, "launch %d %d\n", subBeg, subEnd);
       auto& worker = workers[static_cast<size_t>(i)];
@@ -255,8 +189,7 @@ void parallelFor(int32_t beg, int32_t end, CmmcForLoop func) {
     }
 
     for (uint32_t i = 0; i < threads; ++i) {
-      if (assigned[i])
-        workers[i].done.wait();
+      if (assigned[i]) workers[i].done.wait();
     }
 
     std::atomic_thread_fence(std::memory_order_seq_cst);
@@ -268,8 +201,7 @@ void parallelFor(int32_t beg, int32_t end, CmmcForLoop func) {
   // fprintf(stderr, "threads %d\n", threads);
   Time start;
 
-  if (sample)
-    start = getTimePoint();
+  if (sample) start = getTimePoint();
 
   spawnAndJoin(1 << threads);
 
@@ -279,7 +211,6 @@ void parallelFor(int32_t beg, int32_t end, CmmcForLoop func) {
     entry.times[threads] += diff;
   }
 }
-
 
 // constexpr uint32_t m1 = 1021, m2 = 1019;
 // struct LUTEntry final {

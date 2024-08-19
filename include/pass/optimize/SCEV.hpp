@@ -14,7 +14,7 @@ struct SCEVValue{
     std::vector<ir::Value*>addsteps;
     std::vector<ir::Value*>substeps;
     ir::PhiInst* phiinst;
-    bool isFloat;
+    bool isFloat = false;
 };
 
 

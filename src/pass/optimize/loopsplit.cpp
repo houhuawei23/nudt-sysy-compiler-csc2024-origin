@@ -153,7 +153,7 @@ void loopsplit::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     ivctx = tp->getIndVarInfo(func);
     domctx = tp->getDomTree(func);
     tpctx = tp;
-    std::cerr << func->name() << std::endl;
+    // std::cerr << func->name() << std::endl;
     while (dosplit(func, tp))
         ;
 }
