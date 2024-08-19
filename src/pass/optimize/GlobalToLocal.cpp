@@ -101,9 +101,12 @@ void global2local::addIndirectGlobalUseFunc(ir::GlobalVariable* gv, ir::Function
 3. 在多个函数中被使用的global
 */
 bool global2local::processGlobalVariables(ir::GlobalVariable* gv,ir::Module* md,TopAnalysisInfoManager* tp){
+    std::cerr<<gv->name()<<"!!!"<<std::endl;
     auto gvUseFuncSize=globalDirectUsedFunc[gv].size();
     if(gv->isArray())return false;
+    std::cerr<<gv->name()<<"!!!"<<std::endl;
     if(not globalHasStore[gv]){
+        std::cerr<<gv->name()<<"no!!!"<<std::endl;
         //如果一个gv没有store,那么所有的值都可以被初始值直接替换！
         for(auto puseIter=gv->uses().begin();puseIter!=gv->uses().end();){
             auto puse=*puseIter;
@@ -118,10 +121,12 @@ bool global2local::processGlobalVariables(ir::GlobalVariable* gv,ir::Module* md,
     }
     //如果对应的gv没有被使用过一次，那么就直接删除了
     if(gvUseFuncSize==0){
+        std::cerr<<gv->name()<<"000!!!"<<std::endl;
         md->delGlobalVariable(gv);
         return true;
     }
     if(gvUseFuncSize==1){
+        std::cerr<<gv->name()<<"111!!!"<<std::endl;
         auto func=*globalDirectUsedFunc[gv].begin();
         if(cgctx->callees(func).count(func))return false;//is recursive
         if(func->name()!="main")return false;//目前只支持对main使用的全局变量的tolocal
@@ -143,6 +148,7 @@ bool global2local::processGlobalVariables(ir::GlobalVariable* gv,ir::Module* md,
             newEntry->emplace_back_inst(newBrInst);
             funcToMem2Reg.insert(func);
         }
+        std::cerr<<gv->name()<<"!!!"<<std::endl;
         auto gvType=gv->baseType();
         auto funcEntry=func->entry();
         auto newAlloca=new ir::AllocaInst(gvType,funcEntry);
@@ -160,6 +166,10 @@ bool global2local::processGlobalVariables(ir::GlobalVariable* gv,ir::Module* md,
         }
         md->delGlobalVariable(gv);
         return true;
+    }
+    std::cerr<<gvUseFuncSize<<std::endl;
+    for(auto func:globalDirectUsedFunc[gv]){
+        std::cerr<<func->name()<<std::endl;
     }
     return false;
     

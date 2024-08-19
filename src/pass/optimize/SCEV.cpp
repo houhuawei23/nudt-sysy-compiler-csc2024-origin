@@ -250,6 +250,9 @@ void SCEV::getSCEVValue(ir::Loop* lp,ir::PhiInst* phiinst,
 //简单的判断一下对应的value是不是循环不变量
 bool SCEV::isSimplyLoopInvariant(ir::Loop* lp,ir::Value* val){
     if(auto conVal=val->dynCast<ir::ConstantValue>())return true;
+    if(auto inst=val->dynCast<ir::Instruction>()){
+        return domctx->dominate(inst->block(),lp->header()) and inst->block()!=lp->header();
+    }
     if(auto binaryVal=val->dynCast<ir::BinaryInst>()){
         return isSimplyNotInLoop(lp,binaryVal->lValue()) and isSimplyNotInLoop(lp,binaryVal->rValue());
     }

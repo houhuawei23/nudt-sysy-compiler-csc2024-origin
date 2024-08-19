@@ -33,6 +33,8 @@
 #include "pass/analysis/dependenceAnalysis/DependenceAnalysis.hpp"
 #include "pass/analysis/MarkParallel.hpp"
 #include "pass/optimize/GepSplit.hpp"
+#include "pass/optimize/aggressiveG2L.hpp"
+#include "pass/optimize/indvarEndvarRepl.hpp"
 
 #include "pass/optimize/Misc/StatelessCache.hpp"
 
@@ -196,6 +198,10 @@ void PassManager::runPasses(std::vector<std::string> passes) {
             run(&blockSortPass);
         } else if (pass_name == "da") {
             run(new pass::dependenceAnalysis());
+        } else if (pass_name == "ag2l") {
+            run(new pass::aggressiveG2L());
+        } else if (pass_name == "idvrepl") {
+            run(new pass::idvEdvRepl());
         } else {
             std::cerr << "Invalid pass name: " << pass_name << std::endl;
             assert(false && "Invalid pass name");

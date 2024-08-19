@@ -35,14 +35,20 @@ void sideEffectAnalysis::run(ir::Module* md,TopAnalysisInfoManager* tp){
                     if(ptr==nullptr)sectx->setPotentialSideEffect(func,true);
                     else if(auto allocainst=ptr->dynCast<ir::AllocaInst>())continue;
                     else if(auto arg=ptr->dynCast<ir::Argument>())sectx->setArgRead(arg,true);
-                    else if(auto gv=ptr->dynCast<ir::GlobalVariable>())sectx->funcReadGlobals(func).insert(gv);
+                    else if(auto gv=ptr->dynCast<ir::GlobalVariable>()){
+                        sectx->funcReadGlobals(func).insert(gv);
+                        sectx->funcDirectReadGvs(func).insert(gv);
+                    }
                 }
                 else if(auto stInst=inst->dynCast<ir::StoreInst>()){
                     ptr=getBaseAddr(stInst->ptr());
                     if(ptr==nullptr)sectx->setPotentialSideEffect(func,true);
                     else if(auto allocainst=ptr->dynCast<ir::AllocaInst>())continue;
                     else if(auto arg=ptr->dynCast<ir::Argument>())sectx->setArgWrite(arg,true);
-                    else if(auto gv=ptr->dynCast<ir::GlobalVariable>())sectx->funcWriteGlobals(func).insert(gv);
+                    else if(auto gv=ptr->dynCast<ir::GlobalVariable>()){
+                        sectx->funcWriteGlobals(func).insert(gv);
+                        sectx->funcDirectWriteGvs(func).insert(gv);
+                    }
                 }
                 else if(auto callInst=inst->dynCast<ir::CallInst>()){
                     auto calleeFunc=callInst->callee();
@@ -53,7 +59,10 @@ void sideEffectAnalysis::run(ir::Module* md,TopAnalysisInfoManager* tp){
                         if(ptr==nullptr)sectx->setPotentialSideEffect(func,true);
                         else if(auto allocainst=ptr->dynCast<ir::AllocaInst>())continue;
                         else if(auto arg=ptr->dynCast<ir::Argument>())sectx->setArgRead(arg,true);
-                        else if(auto gv=ptr->dynCast<ir::GlobalVariable>())sectx->funcReadGlobals(func).insert(gv);
+                        else if(auto gv=ptr->dynCast<ir::GlobalVariable>()){
+                            sectx->funcDirectReadGvs(func).insert(gv);
+                            sectx->funcReadGlobals(func).insert(gv);
+                        }
                     }
                     if(calleeFunc->name()=="putfarray"){
                         auto rarg=callInst->rargs()[1];
@@ -61,7 +70,10 @@ void sideEffectAnalysis::run(ir::Module* md,TopAnalysisInfoManager* tp){
                         if(ptr==nullptr)sectx->setPotentialSideEffect(func,true);
                         else if(auto allocainst=ptr->dynCast<ir::AllocaInst>())continue;
                         else if(auto arg=ptr->dynCast<ir::Argument>())sectx->setArgRead(arg,true);
-                        else if(auto gv=ptr->dynCast<ir::GlobalVariable>())sectx->funcReadGlobals(func).insert(gv);
+                        else if(auto gv=ptr->dynCast<ir::GlobalVariable>()){
+                            sectx->funcDirectReadGvs(func).insert(gv);
+                            sectx->funcReadGlobals(func).insert(gv);
+                        }
                     }
                     if(calleeFunc->name()=="getarray"){
                         auto rarg=callInst->rargs()[0];
@@ -69,7 +81,10 @@ void sideEffectAnalysis::run(ir::Module* md,TopAnalysisInfoManager* tp){
                         if(ptr==nullptr)sectx->setPotentialSideEffect(func,true);
                         else if(auto allocainst=ptr->dynCast<ir::AllocaInst>())continue;
                         else if(auto arg=ptr->dynCast<ir::Argument>())sectx->setArgWrite(arg,true);
-                        else if(auto gv=ptr->dynCast<ir::GlobalVariable>())sectx->funcWriteGlobals(func).insert(gv);
+                        else if(auto gv=ptr->dynCast<ir::GlobalVariable>()){
+                            sectx->funcWriteGlobals(func).insert(gv);
+                            sectx->funcDirectWriteGvs(func).insert(gv);
+                        }
                     }
                     if(calleeFunc->name()=="getfarray"){
                         auto rarg=callInst->rargs()[0];
@@ -77,7 +92,10 @@ void sideEffectAnalysis::run(ir::Module* md,TopAnalysisInfoManager* tp){
                         if(ptr==nullptr)sectx->setPotentialSideEffect(func,true);
                         else if(auto allocainst=ptr->dynCast<ir::AllocaInst>())continue;
                         else if(auto arg=ptr->dynCast<ir::Argument>())sectx->setArgWrite(arg,true);
-                        else if(auto gv=ptr->dynCast<ir::GlobalVariable>())sectx->funcWriteGlobals(func).insert(gv);
+                        else if(auto gv=ptr->dynCast<ir::GlobalVariable>()){
+                            sectx->funcWriteGlobals(func).insert(gv);
+                            sectx->funcDirectWriteGvs(func).insert(gv);
+                        }
                     }
                 }
                 

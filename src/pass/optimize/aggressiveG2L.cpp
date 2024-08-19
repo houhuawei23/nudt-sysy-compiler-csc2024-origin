@@ -1,4 +1,6 @@
 #include "pass/optimize/aggressiveG2L.hpp"
+#include "pass/optimize/mem2reg.hpp"
+#include "pass/optimize/simplifyCFG.hpp"
 
 using namespace pass;
 
@@ -13,17 +15,27 @@ using namespace pass;
 a 只是被main函数使用的
 b 被一个其他的函数使用的
 c 被多个函数使用的
+其中第三种又再细分：
+i) 在当前函数中被读的
+ii) 在当前函数中被写的
+iii) 在当前函数中又读又写的
 
-在结束之后内部调用ADCE
+在结束之后内部调用ADCE-mem2reg
 */
 
+std::unordered_map<ir::Function*,bool>isFuncInsertBB;
+
 void aggressiveG2L::run(ir::Module* md,TopAnalysisInfoManager* tp){
+    // std::cerr<<"Here"<<std::endl;
+    cgctx=tp->getCallGraph();
+    isFuncInsertBB.clear();
     //1. 分析读写情况;
     std::unordered_map<ir::GlobalVariable*,std::set<ir::Function*>>funcGvRead;
     std::unordered_map<ir::GlobalVariable*,std::set<ir::Function*>>funcGvWrite;
     std::set<ir::GlobalVariable*>readAndWriteGvs;
     std::set<ir::GlobalVariable*>readOnlyGvs;
     std::set<ir::GlobalVariable*>writeOnlyGvs;
+    std::set<ir::GlobalVariable*>noUseGvs;
     for(auto gv:md->globalVars()){
         if(gv->isArray())continue;
         funcGvRead[gv]=std::set<ir::Function*>();
@@ -31,6 +43,7 @@ void aggressiveG2L::run(ir::Module* md,TopAnalysisInfoManager* tp){
     }
     sectx=tp->getSideEffectInfo();
     for(auto func:md->funcs()){
+        isFuncInsertBB[func]=false;
         for(auto readGv:sectx->funcReadGlobals(func)){
             if(readGv->isArray())continue;
             funcGvRead[readGv].insert(func);
@@ -46,31 +59,50 @@ void aggressiveG2L::run(ir::Module* md,TopAnalysisInfoManager* tp){
             readOnlyGvs.insert(gv);
         else if(funcGvWrite[gv].size() and not funcGvRead[gv].size())
             writeOnlyGvs.insert(gv);
+        else if(not funcGvWrite[gv].size() and not funcGvRead[gv].size())
+            noUseGvs.insert(gv);
         else
             readAndWriteGvs.insert(gv);
     }
+    for(auto nuGv:noUseGvs)md->delGlobalVariable(nuGv);
     for(auto ROGv:readOnlyGvs)replaceReadOnlyGv(ROGv);
     for(auto WOGv:writeOnlyGvs)deleteWriteOnlyGv(WOGv);
-    //处理cond 3
+    // 处理cond 3
     std::set<ir::GlobalVariable*>multipleRWGvs;
     for(auto rwGv:readAndWriteGvs){
         auto& readfnset=funcGvRead[rwGv];
         auto& writefnset=funcGvWrite[rwGv];
-        //cond a and cond b
+        std::cerr<<rwGv->name()<<std::endl;
+        // cond a and cond b
+        if(rwGv->isArray())assert(false);
         if(readfnset.size()==1 and writefnset.size()==1){
-            
+            auto onlyUseFunc=*readfnset.begin();
+            if(onlyUseFunc->name()=="main"){//cond a
+                replaceGvInMain(rwGv,onlyUseFunc); 
+            }
+            else{//cond b
+                replaceGvInNormalFunc(rwGv,onlyUseFunc);
+            }
         }
         else{//cond c
-
+            for(auto func:md->funcs()){
+                if(func->isOnlyDeclare())continue;
+                if(sectx->funcReadGlobals(func).count(rwGv)==0 and sectx->funcWriteGlobals(func).count(rwGv)==0)continue;
+                if(sectx->funcDirectReadGvs(func).count(rwGv)==0 and sectx->funcDirectWriteGvs(func).count(rwGv)==0)continue;
+                replaceGvInOneFunc(rwGv,func);
+            }
         }
-
+        //call mem2reg
+        
 
     }
 }
 
 void aggressiveG2L::replaceReadOnlyGv(ir::GlobalVariable* gv){
     auto gvInitVal=gv->init(0);
-    for(auto puse:gv->uses()){
+    for(auto puseiter=gv->uses().begin();puseiter!=gv->uses().end();){
+        auto puse=*puseiter;
+        puseiter++;
         auto puser=puse->user();
         if(auto ldinst=puser->dynCast<ir::LoadInst>()){
             ldinst->replaceAllUseWith(gvInitVal);
@@ -82,7 +114,9 @@ void aggressiveG2L::replaceReadOnlyGv(ir::GlobalVariable* gv){
 }
 
 void aggressiveG2L::deleteWriteOnlyGv(ir::GlobalVariable* gv){
-    for(auto puse:gv->uses()){
+    for(auto puseiter=gv->uses().begin();puseiter!=gv->uses().end();){
+        auto puse=*puseiter;
+        puseiter++;
         auto puser=puse->user();
         if(auto stInst=puser->dynCast<ir::StoreInst>()){
             stInst->block()->delete_inst(stInst);
@@ -92,3 +126,238 @@ void aggressiveG2L::deleteWriteOnlyGv(ir::GlobalVariable* gv){
         }
     }
 }
+
+void aggressiveG2L::replaceGvInMain(ir::GlobalVariable* gv,ir::Function* func){
+    //在entry和唯一后继之间插入一个bb
+    ir::BasicBlock* newBB;
+    ir::BasicBlock* funcEntry;
+    if(isFuncInsertBB[func]){
+        funcEntry=func->entry();
+        newBB=func->entry()->next_blocks().front();
+    }
+    else{
+        isFuncInsertBB[func]=true;
+        newBB=new ir::BasicBlock("",func);
+        funcEntry=func->entry();
+        auto funcEntryNext=funcEntry->next_blocks().front();
+        ir::BasicBlock::delete_block_link(funcEntry,funcEntryNext);
+        ir::BasicBlock::block_link(funcEntry,newBB);
+        ir::BasicBlock::block_link(newBB,funcEntryNext);
+        auto funcEntryTerminator=funcEntry->terminator()->dynCast<ir::BranchInst>();
+        funcEntryTerminator->set_dest(newBB);
+        auto newBrInNewBB=new ir::BranchInst(funcEntryNext,newBB,"");
+        newBB->emplace_back_inst(newBrInNewBB);
+        func->blocks().push_back(newBB);
+    }
+    
+    // 构造一个同类型的alloca在entry
+    auto gvType=gv->type();
+    auto newAlloca=new ir::AllocaInst(gv->baseType(),false,funcEntry,"");
+    funcEntry->emplace_lastbutone_inst(newAlloca);
+    //在函数中所有对于这个gv的store都转化成对alloca的，load也是一样
+    gv->replaceAllUseWith(newAlloca);
+    //在新的bb中加入对当前gv的初始值的store,如果没有就不加
+    if(gv->isInit()){
+        auto newStore=new ir::StoreInst(gv->init(0),newAlloca,newBB);
+        newBB->emplace_lastbutone_inst(newStore);
+    }
+    else{
+        ir::Value* initVal;
+        if(gv->baseType()->isInt32()){
+            initVal=ir::ConstantInteger::gen_i32(0);
+        }
+        if(gv->baseType()->isFloat32()){
+            initVal=ir::ConstantFloating::gen_f32(0.0);
+        }
+
+        auto newStore=new ir::StoreInst(initVal,newAlloca,newBB);
+        newBB->emplace_first_inst(newStore);
+    }
+    
+    //最后将gv删除
+    auto md=gv->parent();
+    md->delGlobalVariable(gv);
+}
+
+
+void aggressiveG2L::replaceGvInNormalFunc(ir::GlobalVariable* gv,ir::Function* func){
+    //在entry和唯一后继之间插入一个bb
+    ir::BasicBlock* newBB;
+    ir::BasicBlock* funcEntry;
+    if(isFuncInsertBB[func]){
+        funcEntry=func->entry();
+        newBB=func->entry()->next_blocks().front();
+    }
+    else{
+        isFuncInsertBB[func]=true;
+        newBB=new ir::BasicBlock("",func);
+        funcEntry=func->entry();
+        auto funcEntryNext=funcEntry->next_blocks().front();
+        ir::BasicBlock::delete_block_link(funcEntry,funcEntryNext);
+        ir::BasicBlock::block_link(funcEntry,newBB);
+        ir::BasicBlock::block_link(newBB,funcEntryNext);
+        auto funcEntryTerminator=funcEntry->terminator()->dynCast<ir::BranchInst>();
+        funcEntryTerminator->set_dest(newBB);
+        auto newBrInNewBB=new ir::BranchInst(funcEntryNext,newBB,"");
+        newBB->emplace_back_inst(newBrInNewBB);
+        func->blocks().push_back(newBB);
+    }
+    //构造一个同类型的alloca在entry
+    auto gvType=gv->type();
+    auto newAlloca=new ir::AllocaInst(gv->type(),false,funcEntry,"");
+    funcEntry->emplace_lastbutone_inst(newAlloca);
+    //在函数中所有对于这个gv的store都转化成对alloca的，load也是一样
+    gv->replaceAllUseWith(newAlloca);
+    //在新的bb中load gv的值，store到新的alloca中
+    auto loadGvInNewBB=new ir::LoadInst(gv,gv->type(),newBB);
+    newBB->emplace_first_inst(loadGvInNewBB);
+    auto storeGvInNewBB=new ir::StoreInst(loadGvInNewBB,newAlloca,newBB);
+    newBB->emplace_lastbutone_inst(storeGvInNewBB);
+    //如果有递归，在call指令的之前：将alloca的load值store给gv，在之后：将gvload的值store给alloca
+    for(auto calleeInst:cgctx->calleeCallInsts(func)){
+        auto calleeFunc=calleeInst->callee();
+        if(calleeFunc==func){
+            auto curBB=calleeInst->block();
+            auto callInstPos=std::find(curBB->insts().begin(),curBB->insts().end(),calleeInst);
+            auto newLoadAlloca=new ir::LoadInst(newAlloca,newAlloca->baseType(),curBB);
+            auto newStoreToGv=new ir::StoreInst(newLoadAlloca,gv,curBB);
+            auto newLoadGv=new ir::LoadInst(gv,gv->baseType(),curBB);
+            auto newStoreToAlloca=new ir::StoreInst(newLoadGv,newAlloca,curBB);
+            //TODO:这里将前面两句插在call前面，后面两句插在call后面
+            curBB->emplace_inst(callInstPos,newLoadAlloca);
+            curBB->emplace_inst(callInstPos,newStoreToGv);
+            callInstPos++;
+            curBB->emplace_inst(callInstPos,newLoadGv);
+            curBB->emplace_inst(callInstPos,newStoreToAlloca);
+        }
+    }
+    //在函数ret之前插入load alloca store gv
+    auto funcExit=func->exit();
+    auto loadAllocaInExit=new ir::LoadInst(newAlloca,newAlloca->baseType(),funcExit);
+    auto storeLoadToGv=new ir::StoreInst(loadAllocaInExit,gv,funcExit);
+    funcExit->emplace_lastbutone_inst(loadAllocaInExit);
+    funcExit->emplace_lastbutone_inst(storeLoadToGv);
+
+}//配合mem2reg使用
+
+void aggressiveG2L::replaceGvInOneFunc(ir::GlobalVariable* gv,ir::Function* func){
+    std::cerr<<"gv:"<<gv->name()<<" func:"<<func->name()<<std::endl;
+    //在entry和唯一后继之间插入一个bb
+    ir::BasicBlock* newBB;
+    ir::BasicBlock* funcEntry;
+    if(isFuncInsertBB[func]){
+        funcEntry=func->entry();
+        newBB=func->entry()->next_blocks().front();
+    }
+    else{
+        isFuncInsertBB[func]=true;
+        newBB=new ir::BasicBlock("",func);
+        funcEntry=func->entry();
+        auto funcEntryNext=funcEntry->next_blocks().front();
+        ir::BasicBlock::delete_block_link(funcEntry,funcEntryNext);
+        ir::BasicBlock::block_link(funcEntry,newBB);
+        ir::BasicBlock::block_link(newBB,funcEntryNext);
+        auto funcEntryTerminator=funcEntry->terminator()->dynCast<ir::BranchInst>();
+        funcEntryTerminator->set_dest(newBB);
+        auto newBrInNewBB=new ir::BranchInst(funcEntryNext,newBB,"");
+        newBB->emplace_back_inst(newBrInNewBB);
+        func->blocks().push_back(newBB);
+    }
+    //构造一个同类型的alloca在entry
+    auto gvType=gv->type();
+    auto newAlloca=new ir::AllocaInst(gv->baseType(),false,funcEntry,"");
+    funcEntry->emplace_lastbutone_inst(newAlloca);
+    //在函数中所有对于这个gv的store都转化成对alloca的，load也是一样
+    // gv->replaceAllUseWith(newAlloca);
+    for(auto gvUseIter=gv->uses().begin();gvUseIter!=gv->uses().end();){
+        auto gvUse=*gvUseIter;
+        gvUseIter++;
+        auto user=gvUse->user();
+        auto useIdx=gvUse->index();
+        auto inst=user->dynCast<ir::Instruction>();
+        if(inst->block()->function()==func){
+            inst->setOperand(useIdx,newAlloca);
+        }
+    }
+    //在新的bb中load gv的值，store到新的alloca中
+    auto loadGvInNewBB=new ir::LoadInst(gv,gv->baseType(),newBB);
+    newBB->emplace_first_inst(loadGvInNewBB);
+    auto storeGvInNewBB=new ir::StoreInst(loadGvInNewBB,newAlloca,newBB);
+    newBB->emplace_lastbutone_inst(storeGvInNewBB);
+    //计算当前函数对于当前的gv是否只读 只写
+    auto isFuncReadGv=sectx->funcReadGlobals(func).count(gv)!=0;
+    auto isFuncWriteGv=sectx->funcWriteGlobals(func).count(gv)!=0;
+    if(isFuncReadGv and not isFuncWriteGv){//根据副作用分析，这里说的只读和只写分别是在当前函数及其被调用者中
+        //只对gv读取
+        return;
+    }
+    else if(isFuncWriteGv and not isFuncReadGv){
+        //只对gv写入
+        auto funcExit=func->exit();
+        auto loadAllocaInExit=new ir::LoadInst(newAlloca,newAlloca->baseType(),funcExit);
+        auto storeLoadToGv=new ir::StoreInst(loadAllocaInExit,gv,funcExit);
+        funcExit->emplace_lastbutone_inst(loadAllocaInExit);
+        funcExit->emplace_lastbutone_inst(storeLoadToGv);
+        return;
+    }
+    else{
+        //均有
+        for(auto calleeInst:cgctx->calleeCallInsts(func)){
+            auto calleeFunc=calleeInst->callee();
+            auto isCalleeFuncRead=sectx->funcReadGlobals(calleeFunc).count(gv)!=0;
+            auto isCalleeFuncWrite=sectx->funcWriteGlobals(calleeFunc).count(gv)!=0;
+            if(not isCalleeFuncRead and not isCalleeFuncWrite){//没有副作用
+                continue;//not processed
+            }
+            else if(not isCalleeFuncWrite and isCalleeFuncRead){//只读
+                //load alloca val
+                //store load val 
+                auto curBB=calleeInst->block();
+                auto callInstPos=std::find(curBB->insts().begin(),curBB->insts().end(),calleeInst);
+                auto newLoadAlloca=new ir::LoadInst(newAlloca,newAlloca->baseType(),curBB);
+                auto newStoreToGv=new ir::StoreInst(newLoadAlloca,gv,curBB);
+                curBB->emplace_inst(callInstPos,newLoadAlloca);
+                curBB->emplace_inst(callInstPos,newStoreToGv);
+                callInstPos++;
+            }
+            else if(not isCalleeFuncRead and isCalleeFuncWrite){//只写
+                //load gv val
+                //store load val
+                auto curBB=calleeInst->block();
+                auto callInstPos=std::find(curBB->insts().begin(),curBB->insts().end(),calleeInst);
+                auto newLoadGv=new ir::LoadInst(gv,gv->baseType(),curBB);
+                auto newStoreToAlloca=new ir::StoreInst(newLoadGv,newAlloca,curBB);
+                //TODO:这里将前面两句插在call前面，后面两句插在call后面
+                callInstPos++;
+                curBB->emplace_inst(callInstPos,newLoadGv);
+                curBB->emplace_inst(callInstPos,newStoreToAlloca);
+            }
+            else{//又读又写
+                //load alloca val
+                //store load val
+                //load gv val
+                //store load val
+                auto curBB=calleeInst->block();
+                auto callInstPos=std::find(curBB->insts().begin(),curBB->insts().end(),calleeInst);
+                auto newLoadAlloca=new ir::LoadInst(newAlloca,newAlloca->baseType(),curBB);
+                auto newStoreToGv=new ir::StoreInst(newLoadAlloca,gv,curBB);
+                auto newLoadGv=new ir::LoadInst(gv,gv->baseType(),curBB);
+                auto newStoreToAlloca=new ir::StoreInst(newLoadGv,newAlloca,curBB);
+                //TODO:这里将前面两句插在call前面，后面两句插在call后面
+                curBB->emplace_inst(callInstPos,newLoadAlloca);
+                curBB->emplace_inst(callInstPos,newStoreToGv);
+                callInstPos++;
+                curBB->emplace_inst(callInstPos,newLoadGv);
+                curBB->emplace_inst(callInstPos,newStoreToAlloca);
+            }
+        }
+    }
+    //在函数ret之前插入load alloca store gv
+    auto funcExit=func->exit();
+    auto loadAllocaInExit=new ir::LoadInst(newAlloca,newAlloca->baseType(),funcExit);
+    auto storeLoadToGv=new ir::StoreInst(loadAllocaInExit,gv,funcExit);
+    funcExit->emplace_lastbutone_inst(loadAllocaInExit);
+    funcExit->emplace_lastbutone_inst(storeLoadToGv);
+    
+    
+}//配合mem2reg使用
