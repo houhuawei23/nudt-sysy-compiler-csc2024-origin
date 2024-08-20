@@ -1,3 +1,4 @@
+// #define DEBUG
 #include "pass/optimize/Loop/LoopUtils.hpp"
 namespace pass {
 bool checkLoopParallel(Loop* loop,
@@ -19,11 +20,11 @@ bool checkLoopParallel(Loop* loop,
     }
     return false;
   };
-  if (lpctx->looplevel(loop->header()) > 2) {  // only consider loops with level <= 2
-    // std::cerr << "loop level: " << lpctx->looplevel(loop->header());
-    // std::cerr << " is too deep, skip" << std::endl;
-    return false;
-  }
+  // if (lpctx->looplevel(loop->header()) > 2) {  // only consider loops with level <= 2
+  //   // std::cerr << "loop level: " << lpctx->looplevel(loop->header());
+  //   // std::cerr << " is too deep, skip" << std::endl;
+  //   return false;
+  // }
   if (isBlocked(loop)) return false;
   if (not parallelctx->getIsParallel(loop->header())) {
     // std::cerr << "cant parallel" << std::endl;
@@ -65,17 +66,25 @@ bool checkLoopParallel(Loop* loop,
 /* move next to new latch, or clone next to new latch */
 bool fixLoopLatch(Function* func, Loop* loop, IndVar* indVar, TopAnalysisInfoManager* tp) {
 #ifdef DEBUG
-  loop.print(std::cerr);
+  loop->print(std::cerr);
   std::cerr << "old latch: ";
-  loop.getUniqueLatch()->dumpAsOpernd(std::cerr);
+  loop->getUniqueLatch()->dumpAsOpernd(std::cerr);
   std::cerr << std::endl;
   indVar->print(std::cerr);
 #endif
-  assert(loop->latchs().size() == 1);
+  // assert(loop->latchs().size() == 1);
+  if (loop->latchs().size() != 1) {
+    std::cerr << "loop has more than one latch" << std::endl;
+    return false;
+  }
   const auto next = indVar->iterInst();
 
   auto nextClone = next->clone();
-  assert(nextClone != nullptr);
+  // assert(nextClone != nullptr);
+  if (nextClone == nullptr) {
+    std::cerr << "failed to clone next" << std::endl;
+    return false;
+  }
   nextClone->setComment("clone of next");
 
   auto oldLatch = loop->getUniqueLatch();
@@ -86,9 +95,9 @@ bool fixLoopLatch(Function* func, Loop* loop, IndVar* indVar, TopAnalysisInfoMan
   auto phiOperandNext = indVar->phiinst()->getvalfromBB(oldLatch);
   // phiOperandNext->replaceAllUseWith(nextClone);
   auto uses = phiOperandNext->uses();
-  for(auto use : uses) {
+  for (auto use : uses) {
     auto userInst = use->user()->dynCast<Instruction>();
-    if(userInst->block() == loop->header()) {
+    if (userInst->block() == loop->header()) {
       userInst->setOperand(use->index(), nextClone);
     }
   }
@@ -111,9 +120,9 @@ bool fixLoopLatch(Function* func, Loop* loop, IndVar* indVar, TopAnalysisInfoMan
     }
   }
 #ifdef DEBUG
-  loop.print(std::cerr);
+  loop->print(std::cerr);
   std::cerr << "new latch: ";
-  loop.getUniqueLatch()->dumpAsOpernd(std::cerr);
+  loop->getUniqueLatch()->dumpAsOpernd(std::cerr);
   std::cerr << std::endl;
   indVar->print(std::cerr);
 #endif

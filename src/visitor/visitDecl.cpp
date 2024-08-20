@@ -232,7 +232,9 @@ Value* SysYIRGenerator::visitLocalScalar(SysYParser::VarDefContext* ctx,
     if (!ctx->ASSIGN())
       assert(false && "const without initialization");
     auto init = any_cast_Value(visit(ctx->initValue()->exp()));
-
+    if(auto inst = init->dynCast<Instruction>()) {
+      init = inst->getConstantRepl(true);
+    }
     assert(init->isa<ConstantValue>() && "const must be initialized by constant");
 
     // init is Constant

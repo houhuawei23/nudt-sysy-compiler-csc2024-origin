@@ -166,7 +166,11 @@ bool StatelessCache::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
   // remove retInst from originalExit
   const auto retInst = originalExit->terminator()->as<ReturnInst>();
   const auto originalRetVal = retInst->returnValue();
-  assert(retInst and originalRetVal);
+  // assert(retInst and originalRetVal);
+  if(!retInst or !originalRetVal) {
+    std::cerr << "StatelessCache: " << func->name() << " has no return value" << std::endl;
+    return false;
+  }
   originalExit->insts().remove(retInst);
 
   builder.set_pos(originalExit, originalExit->insts().end());

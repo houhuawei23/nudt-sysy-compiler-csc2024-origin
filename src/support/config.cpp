@@ -215,26 +215,23 @@ static const auto commonOptPasses =
 static const auto loopOptPasses = std::vector<std::string>{"loopsimplify", "gcm", "gvn", "licm"};
 
 static const auto parallelPasses = std::vector<std::string>{
-  "loopsimplify", "gcm", "gvn", "licm", "LoopInterChange", "inline", "loopsimplify", "parallel",
-  // "ParallelBodyExtract",
-  "inline"};
+  "loopsimplify", "gcm",          "gvn",      "licm",     "markpara", "LoopInterChange",
+  "inline",       "loopsimplify", "markpara", "parallel",  // "ParallelBodyExtract",
+  "inline",       "simplifycfg"};
 
-static const auto interProceduralPasses = std::vector<std::string>{// "inline",
-                                                                   "tco", "cache",
-                                                                   //  "inline",  // cant parallel
-                                                                   //  "ag2l",
-                                                                  //  "mem2reg"
-                                                                   };
+static const auto interProceduralPasses = std::vector<std::string>{
+  "inline", "tco", "cache", "inline",  // cant parallel
+};
 
 static const auto afterUnrollPasses = std::vector<std::string>{
   "simplifycfg", "loopsimplify", "sccp", "adce",        "gcm",  "gvn",  "licm", "dle",
   "dse",         "dle",          "dse",  "instcombine", "adce", "sccp", "dlae",
 };
 
-static const auto gepSplitPasses =
-  std::vector<std::string>{        // "GepSplit",
-                           "dce",  // wrong on mm
-                           "scp", "simplifycfg", "instcombine", "dce"};
+static const auto gepSplitPasses = std::vector<std::string>{
+  // "GepSplit",
+  "scp", "dce", "simplifycfg", "instcombine", "scp", "dce",
+};
 static const auto deadLoopPasses = std::vector<std::string>{
   "ag2l",         "mem2reg", "loopdivest",   "sccp", "adce",        "instcombine", "simplifycfg",
   "loopsimplify", "idvrepl", "sccp",         "adce", "simplifycfg", "DeadLoop",    "simplifycfg",
