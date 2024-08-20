@@ -69,7 +69,11 @@ bool parallelLoop(Function* func, TopAnalysisInfoManager* tp, Loop* loop, IndVar
   std::vector<Value*> args = {parallelBodyInfo.beg, parallelBodyInfo.end, parallelBody};
 
   const auto iter = std::find(insts.begin(), insts.end(), parallelBodyInfo.callInst);
-  assert(iter != insts.end());  // must find
+  // assert(iter != insts.end());  // must find
+  if (iter == insts.end()) {
+    std::cerr << "cannot find call inst" << std::endl;
+    return false;
+  }
 
   builder.set_pos(callBlock, iter);
   builder.makeInst<CallInst>(parallelFor, args);
@@ -101,7 +105,7 @@ bool LoopParallel::runImpl(Function* func, TopAnalysisInfoManager* tp) {
   bool modified = false;
 
   std::unordered_set<Loop*> extractedLoops;
-  
+
   // lpctx->print(std::cerr);
   for (auto loop : loops) {  // for all loops
     const auto indVar = indVarctx->getIndvar(loop);

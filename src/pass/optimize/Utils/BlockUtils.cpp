@@ -54,7 +54,11 @@ bool blockSortBFS(Function& func, TopAnalysisInfoManager* tAIM) {
   //   std::cerr << " ";
   // }
   // std::cerr << std::endl;
-  assert(irBlocks.size() == func.blocks().size());
+  // assert(irBlocks.size() == func.blocks().size());
+  if (irBlocks.size() != func.blocks().size()) {
+    std::cerr << "Error: blockSortBFS: irBlocks.size() != func.blocks().size()" << std::endl;
+    return false;
+  }
   func.blocks().clear();
   for (auto block : irBlocks) {
     func.blocks().push_back(block);
@@ -79,7 +83,11 @@ bool blockSortDFS(Function& func, TopAnalysisInfoManager* tAIM) {
   //   std::cerr << " ";
   // }
   // std::cerr << std::endl;
-  assert(irBlocks.size() == func.blocks().size());
+  // assert(irBlocks.size() == func.blocks().size());
+  if (irBlocks.size() != func.blocks().size()) {
+    std::cerr << "Error: blockSortDFS: irBlocks.size() != func.blocks().size()" << std::endl;
+    return false;
+  }
   func.blocks().clear();
   for (auto block : irBlocks) {
     func.blocks().push_back(block);
@@ -128,7 +136,11 @@ bool reduceBlock(IRBuilder& builder, BasicBlock& block, const BlockReducer& redu
 
     builder.set_pos(&block, iter);
     if (auto value = reducer(inst)) {
-      assert(value != inst);
+      // assert(value != inst);
+      if(value == inst) {
+        std::cerr << "Warning: reduceBlock: value == inst" << std::endl;
+        assert(false);
+      }
       // modified |= ins
       inst->replaceAllUseWith(value);
       modified = true;

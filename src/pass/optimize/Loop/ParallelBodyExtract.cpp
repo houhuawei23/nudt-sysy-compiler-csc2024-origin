@@ -109,7 +109,11 @@ auto buildParallelBodyBeta(Module& module,
     const auto realArg = use->value();
     addArgument(realArg);
   }
-  assert(totalSize % 4 == 0);  // by words
+  // assert(totalSize % 4 == 0);  // by words
+  if (totalSize % 4 != 0) {
+    std::cerr << "totalSize not aligned by 4 bytes" << std::endl;
+    assert(false);
+  }
   const auto totalWords = totalSize / 4;
   const auto payloadType = ArrayType::gen(Type::TypeInt32(), {totalWords}, totalWords);  // by word?
   const auto payloadStorage = utils::make<GlobalVariable>(payloadType, getStorageUniqueID());
@@ -143,6 +147,7 @@ auto buildParallelBodyBeta(Module& module,
       }
     }
     if (not replaced) {
+      std::cerr << "arg not found in payload" << std::endl;
       assert(false);
     }
     // dumpAsOperand(std::cerr << "-> ", user->operand(use->index()));

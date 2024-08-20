@@ -230,9 +230,7 @@ static const auto afterUnrollPasses = std::vector<std::string>{
 
 static const auto gepSplitPasses = std::vector<std::string>{
   // "GepSplit",
-  "scp",
-  "dce",  // wrong on mm
-  "simplifycfg", "instcombine", "scp", "dce",
+  "scp", "dce", "simplifycfg", "instcombine", "scp", "dce",
 };
 static const auto deadLoopPasses = std::vector<std::string>{
   "ag2l",         "mem2reg", "loopdivest",   "sccp", "adce",        "instcombine", "simplifycfg",

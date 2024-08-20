@@ -72,11 +72,19 @@ bool fixLoopLatch(Function* func, Loop* loop, IndVar* indVar, TopAnalysisInfoMan
   std::cerr << std::endl;
   indVar->print(std::cerr);
 #endif
-  assert(loop->latchs().size() == 1);
+  // assert(loop->latchs().size() == 1);
+  if (loop->latchs().size() != 1) {
+    std::cerr << "loop has more than one latch" << std::endl;
+    return false;
+  }
   const auto next = indVar->iterInst();
 
   auto nextClone = next->clone();
-  assert(nextClone != nullptr);
+  // assert(nextClone != nullptr);
+  if (nextClone == nullptr) {
+    std::cerr << "failed to clone next" << std::endl;
+    return false;
+  }
   nextClone->setComment("clone of next");
 
   auto oldLatch = loop->getUniqueLatch();
@@ -87,9 +95,9 @@ bool fixLoopLatch(Function* func, Loop* loop, IndVar* indVar, TopAnalysisInfoMan
   auto phiOperandNext = indVar->phiinst()->getvalfromBB(oldLatch);
   // phiOperandNext->replaceAllUseWith(nextClone);
   auto uses = phiOperandNext->uses();
-  for(auto use : uses) {
+  for (auto use : uses) {
     auto userInst = use->user()->dynCast<Instruction>();
-    if(userInst->block() == loop->header()) {
+    if (userInst->block() == loop->header()) {
       userInst->setOperand(use->index(), nextClone);
     }
   }
