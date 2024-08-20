@@ -10,8 +10,8 @@ int64_t ConstantValue::i64() const {
   const auto val = getValue();
   if (std::holds_alternative<intmax_t>(val)) {
     return static_cast<int64_t>(std::get<intmax_t>(val));
-  } else if (std::holds_alternative<double>(val)) {
-    return static_cast<int64_t>(std::get<double>(val));
+  } else if (std::holds_alternative<float>(val)) {
+    return static_cast<int64_t>(std::get<float>(val));
   }
   assert(false);
 }
@@ -19,15 +19,15 @@ int32_t ConstantValue::i32() const {
   const auto val = getValue();
   if (std::holds_alternative<intmax_t>(val)) {
     return static_cast<int32_t>(std::get<intmax_t>(val));
-  } else if (std::holds_alternative<double>(val)) {
-    return static_cast<int32_t>(std::get<double>(val));
+  } else if (std::holds_alternative<float>(val)) {
+    return static_cast<int32_t>(std::get<float>(val));
   }
   assert(false);
 }
 float ConstantValue::f32() const {
   const auto val = getValue();
-  if (std::holds_alternative<double>(val)) {
-    return static_cast<float>(std::get<double>(val));
+  if (std::holds_alternative<float>(val)) {
+    return static_cast<float>(std::get<float>(val));
   } else if (std::holds_alternative<intmax_t>(val)) {
     return static_cast<float>(std::get<intmax_t>(val));
   }
@@ -68,16 +68,16 @@ ConstantValue* ConstantValue::get(Type* type, ConstantValVariant val) {
     intmax_t intval = 0;
     if (std::holds_alternative<intmax_t>(val)) {
       intval = std::get<intmax_t>(val);
-    } else if (std::holds_alternative<double>(val)) {
-      intval = std::get<double>(val);
+    } else if (std::holds_alternative<float>(val)) {
+      intval = std::get<float>(val);
     }
     return ConstantInteger::get(type, intval);
   } else if (type->isFloatPoint()) {
-    double floatval = 0.0;
+    float floatval = 0.0;
     if (std::holds_alternative<intmax_t>(val)) {
       floatval = std::get<intmax_t>(val);
-    } else if (std::holds_alternative<double>(val)) {
-      floatval = std::get<double>(val);
+    } else if (std::holds_alternative<float>(val)) {
+      floatval = std::get<float>(val);
     }
     return ConstantFloating::get(type, floatval);
   }
@@ -132,11 +132,11 @@ void ConstantInteger::dumpAsOpernd(std::ostream& os) const {
   os << mVal;
 }
 
-ConstantFloating* ConstantFloating::gen_f32(double val) {
+ConstantFloating* ConstantFloating::gen_f32(float val) {
   return ConstantFloating::get(Type::TypeFloat32(), val);
 }
 
-ConstantFloating* ConstantFloating::get(Type* type, double val) {
+ConstantFloating* ConstantFloating::get(Type* type, float val) {
   const auto key = std::make_pair(type, val);
   if (const auto iter = mConstantPool.find(key); iter != mConstantPool.cend()) {
     return iter->second->dynCast<ConstantFloating>();
@@ -158,7 +158,7 @@ void ConstantFloating::dumpAsOpernd(std::ostream& os) const {
 }
 
 size_t ConstantFloating::hash() const {
-  return std::hash<double>{}(mVal);
+  return std::hash<float>{}(mVal);
 }
 
 UndefinedValue* UndefinedValue::get(Type* type) {

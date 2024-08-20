@@ -124,8 +124,9 @@ void PassManager::runPasses(std::vector<std::string> passes) {
     }
 
     run(new pass::CFGAnalysisHHW());
-
+    std::cerr << "passes: " ;
     for (auto pass_name : passes) {
+        std::cerr << pass_name << " ";
         if (pass_name.compare("dom") == 0) {
             run(new pass::domInfoPass());
             // run(new pass::domInfoCheck());
@@ -226,6 +227,7 @@ void PassManager::runPasses(std::vector<std::string> passes) {
         }
         run(&irCheckPass);
     }
+    std::cerr << std::endl;
     run(new pass::CFGAnalysisHHW());
 
     if (config.logLevel >= sysy::LogLevel::DEBUG) {

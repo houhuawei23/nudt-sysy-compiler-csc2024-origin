@@ -221,8 +221,10 @@ static const auto parallelPasses = std::vector<std::string>{
 
 static const auto interProceduralPasses = std::vector<std::string>{// "inline",
                                                                    "tco", "cache",
-                                                                  //  "inline",  // cant parallel
-                                                                   "ag2l", "mem2reg"};
+                                                                   //  "inline",  // cant parallel
+                                                                   //  "ag2l",
+                                                                  //  "mem2reg"
+                                                                   };
 
 static const auto afterUnrollPasses = std::vector<std::string>{
   "simplifycfg", "loopsimplify", "sccp", "adce",        "gcm",  "gvn",  "licm", "dle",
@@ -230,13 +232,13 @@ static const auto afterUnrollPasses = std::vector<std::string>{
 };
 
 static const auto gepSplitPasses =
-  std::vector<std::string>{// "GepSplit",
-                           "dce", // wrong on mm
+  std::vector<std::string>{        // "GepSplit",
+                           "dce",  // wrong on mm
                            "scp", "simplifycfg", "instcombine", "dce"};
 static const auto deadLoopPasses = std::vector<std::string>{
-  "g2l",     "loopdivest",   "sccp", "adce",        "instcombine", "simplifycfg", "loopsimplify",
-  "idvrepl", "sccp",         "adce", "simplifycfg", "DeadLoop",    "simplifycfg", "adce",
-  "sccp",    "loopsimplify", "gcm",  "gvn",         "licm",        "gvn"};
+  "ag2l",         "mem2reg", "loopdivest",   "sccp", "adce",        "instcombine", "simplifycfg",
+  "loopsimplify", "idvrepl", "sccp",         "adce", "simplifycfg", "DeadLoop",    "simplifycfg",
+  "adce",         "sccp",    "loopsimplify", "gcm",  "gvn",         "licm",        "gvn"};
 
 // static const auto
 auto collectPasses(OptLevel level) {

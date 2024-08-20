@@ -388,8 +388,8 @@ class Test:
             print(f"Test file not found: {src_path}")
             return False
 
-        compiler_res = self.__ourcompiler_runon_qemu(src_path, target)
         gcc_res = self.__gcc_runon_qemu(src_path, target)
+        compiler_res = self.__ourcompiler_runon_qemu(src_path, target)
         if not (compiler_res and gcc_res):
             raise Exception("Compiler or gcc failed")
         return compiler_res and gcc_res
@@ -556,8 +556,8 @@ class Test:
             f"\nCompile {self.year} {test_kind} {self.target} -O{self.opt_level} -L{self.log_level}"
         )
         self.result.print_result_overview()
-        # dt_string = datetime.now().strftime("%Y_%m_%d_%H:%M")
-        # self.result.save_result(f"./{self.year}_{test_kind}_{dt_string}.md")
+        dt_string = datetime.now().strftime("%Y_%m_%d_%H:%M")
+        self.result.save_result(f"./{self.year}_{test_kind}_{dt_string}_compile.md")
 
     def runOnVisionFive(self, test_kind: str):
         """
