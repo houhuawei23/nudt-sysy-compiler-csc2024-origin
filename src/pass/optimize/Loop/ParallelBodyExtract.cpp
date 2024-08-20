@@ -145,7 +145,7 @@ auto buildParallelBodyBeta(Module& module,
     if (not replaced) {
       assert(false);
     }
-    dumpAsOperand(std::cerr << "-> ", user->operand(use->index()));
+    // dumpAsOperand(std::cerr << "-> ", user->operand(use->index()));
   };
   auto uses = loopBodyInfo.callInst->rargs();
   for (auto use : uses) {
