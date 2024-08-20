@@ -6,7 +6,7 @@
 #include <variant>
 namespace ir {
 
-using ConstantValVariant = std::variant<intmax_t, double>;
+using ConstantValVariant = std::variant<intmax_t, float>;
 using ConstantValueKey = std::pair<Type*, ConstantValVariant>;
 
 struct ConstantValueHash {
@@ -69,15 +69,15 @@ public:
 };
 
 class ConstantFloating : public ConstantValue {
-  double mVal;
+  float mVal;
 public:
-  ConstantFloating(Type* type, double val) : ConstantValue(type), mVal(val) {}
+  ConstantFloating(Type* type, float val) : ConstantValue(type), mVal(val) {}
   size_t hash() const override;
-  double getVal() const { return mVal; }
+  float getVal() const { return mVal; }
   ConstantValVariant getValue() const override { return mVal; }
 
-  static ConstantFloating* get(Type* type, double val);
-  static ConstantFloating* gen_f32(double val);
+  static ConstantFloating* get(Type* type, float val);
+  static ConstantFloating* gen_f32(float val);
   ConstantFloating* getNeg() const;
 public:
   void print(std::ostream& os) const override;

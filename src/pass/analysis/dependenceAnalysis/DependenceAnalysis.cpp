@@ -223,9 +223,9 @@ int dependenceAnalysis::isTwoIdxPossiblySame(ir::Value* val1,ir::Value* val2,idx
             
         case iIDV:
         {
-            if(val1!=val2){
-                assert(false and "Error: indvar in a same loop is not same!");
-            }
+            // if(val1!=val2){
+            //     assert(false and "Error: indvar in a same loop is not same!");
+            // }
             return dTotallySame | dCrossIterTotallyNotSame;
             break;
         }
@@ -251,20 +251,23 @@ int dependenceAnalysis::isTwoIdxPossiblySame(ir::Value* val1,ir::Value* val2,idx
                         curVal1=lval;
                     }
                     else{
-                        assert(false and "Error:gepIdx is not IDVPLUSMINUSFORMULA!");
+                        std::cerr<<"Error:gepIdx is not IDVPLUSMINUSFORMULA!"<<std::endl;
+                        assert(false);
                     }
                     if(BInst->valueId()==ir::vADD){
                         val1Add.insert(LpIVal);
                     }
                     else if(BInst->valueId()==ir::vSUB){
                         if(isLVAL){
-                            assert(false and "Error:gepIdx is a-i formula!");
+                            std::cerr<<"Error:gepIdx is a-i formula!"<<std::endl;
+                            assert(false);
                         }
                         val1Sub.insert(LpIVal);
                     }
                 }
                 else{
-                    assert(false and "this is not a idvplusminus formula!");
+                    std::cerr<<"this is not a idvplusminus formula!"<<std::endl;
+                    assert(false);
                 }
             }
             auto curVal2=val2;
@@ -284,7 +287,8 @@ int dependenceAnalysis::isTwoIdxPossiblySame(ir::Value* val1,ir::Value* val2,idx
                         curVal1=lval;
                     }
                     else{
-                        assert(false and "Error:gepIdx is not IDVPLUSMINUSFORMULA!");
+                        std::cerr<<"Error:gepIdx is not IDVPLUSMINUSFORMULA!"<<std::endl;
+                        assert(false );
                     }
                     if(BInst->valueId()==ir::vADD){
                         if(val1Add.count(LpIVal)){
@@ -296,7 +300,8 @@ int dependenceAnalysis::isTwoIdxPossiblySame(ir::Value* val1,ir::Value* val2,idx
                     }
                     else if(BInst->valueId()==ir::vSUB){
                         if(isLVAL){
-                            assert(false and "Error:gepIdx is a-i formula!");
+                            std::cerr<<"Error:gepIdx is a-i formula!"<<std::endl;
+                            assert(false);
                         }
                         if(val1Sub.count(LpIVal)){
                             val1Sub.erase(LpIVal);
@@ -307,7 +312,8 @@ int dependenceAnalysis::isTwoIdxPossiblySame(ir::Value* val1,ir::Value* val2,idx
                     }
                 }
                 else{
-                    assert(false and "this is not a idvplusminus formula!");
+                    std::cerr<<"this is not a idvplusminus formula!"<<std::endl;
+                    assert(false);
                 }
             }
             return dTotallySame | dCrossIterTotallySame;

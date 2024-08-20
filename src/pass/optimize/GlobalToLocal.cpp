@@ -167,7 +167,7 @@ bool global2local::processGlobalVariables(ir::GlobalVariable* gv,ir::Module* md,
         md->delGlobalVariable(gv);
         return true;
     }
-    std::cerr<<gvUseFuncSize<<std::endl;
+    // std::cerr<<gvUseFuncSize<<std::endl;
     for(auto func:globalDirectUsedFunc[gv]){
         // std::cerr<<func->name()<<std::endl;
     }
