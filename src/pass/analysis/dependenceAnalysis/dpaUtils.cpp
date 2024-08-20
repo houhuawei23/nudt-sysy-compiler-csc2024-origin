@@ -30,7 +30,8 @@ void LoopDependenceInfo::getInfoFromSubLoop(ir::Loop* subLoop,LoopDependenceInfo
             addPtrFromSubLoop(stInst->ptr(),stInst,subLoopDepInfo);
         }
         else{
-            assert("error in function \"getInfoFromSubLoop\"!" and false);
+            std::cerr<<"error in function \"getInfoFromSubLoop\"!"<<std::endl;
+            assert(false);
         }
     }
 }
@@ -46,6 +47,7 @@ ir::Value* pass::getIntToPtrBaseAddr(ir::UnaryInst* inst){
             return binary->rValue()->dynCast<ir::UnaryInst>()->value();
         }
     }
+    std::cerr<<"getIntToPtrBaseAddr!"<<std::endl;
     assert(false);
     return nullptr;
 }
@@ -79,7 +81,8 @@ baseAddrType pass::getBaseAddrType(ir::Value* val){
         return argType;
     if(val->dynCast<ir::AllocaInst>())
         return localType;
-    assert(false and "invalid input in function \"getBaseAddrTtype\"!");
+    std::cerr<<"invalid input in function \"getBaseAddrTtype\"!"<<std::endl;
+    assert(false);
 }
 
 //加入单个ptr的接口
@@ -102,7 +105,8 @@ void LoopDependenceInfo::addPtr(ir::Value* ptr,ir::Instruction* inst){
         baseAddrIsWrite[baseAddr]=true;
     }
     else{
-        assert(false and "error in function\"addPtr\", invalid input inst type!");
+        std::cerr<<"error in function\"addPtr\", invalid input inst type!"<<std::endl;
+        assert(false);
     }
     //子地址
     if(baseAddrToSubAddrs[baseAddr].count(subAddr)==0){
@@ -117,7 +121,8 @@ void LoopDependenceInfo::addPtr(ir::Value* ptr,ir::Instruction* inst){
         subAddrIsWrite[subAddr]=true;
     }
     else{
-        assert(false and "error in function\"addPtr\", invalid input inst type!");
+        std::cerr<<"error in function\"addPtr\", invalid input inst type!"<<std::endl;
+        assert(false);
     }
     if(subAddrToGepIdx.count(subAddr)==0){
         auto pnewGepIdx=new gepIdx;
@@ -158,7 +163,8 @@ void LoopDependenceInfo::addPtrFromSubLoop(ir::Value* ptr,ir::Instruction* inst,
         baseAddrIsWrite[baseAddr]=true;
     }
     else{
-        assert(false and "error in function\"addPtr\", invalid input inst type!");
+        std::cerr<<"error in function\"addPtr\", invalid input inst type!"<<std::endl;
+        assert(false);
     }
     //子地址
     if(baseAddrToSubAddrs[baseAddr].count(subAddr)==0){
@@ -173,7 +179,8 @@ void LoopDependenceInfo::addPtrFromSubLoop(ir::Value* ptr,ir::Instruction* inst,
         subAddrIsWrite[subAddr]=true;
     }
     else{
-        assert(false and "error in function\"addPtr\", invalid input inst type!");
+        std::cerr<<"error in function\"addPtr\", invalid input inst type!"<<std::endl;
+        assert(false);
     }
     if(subAddrToGepIdx.count(subAddr)==0){
         auto oldGepIdx=subLoopDepInfo->getGepIdx(subAddr);
@@ -262,7 +269,8 @@ bool pass::isTwoBaseAddrPossiblySame(ir::Value* ptr1,ir::Value* ptr2,ir::Functio
             return false;
         }
     }   
-    assert("error occur in function \"isTwoBaseAddrPossiblySame\"");
+    std::cerr<<"error occur in function \"isTwoBaseAddrPossiblySame\""<<std::endl;
+    assert(false);
     return true;
 }
 
@@ -332,7 +340,8 @@ void pass::printIdxType(idxType idxtype,std::ostream& os){
         os<<"InnerIdvAddMinusFormula";
         break;
     default:
-        assert(false and "wrong idx type!");
+        std::cerr<<"wrong idx type!"<<std::endl;
+        assert(false);
         break;
     }
 }

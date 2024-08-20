@@ -37,6 +37,7 @@
 #include "pass/optimize/GepSplit.hpp"
 #include "pass/optimize/aggressiveG2L.hpp"
 #include "pass/optimize/indvarEndvarRepl.hpp"
+#include "pass/optimize/SROA.hpp"
 
 #include "pass/optimize/Misc/StatelessCache.hpp"
 
@@ -213,6 +214,8 @@ void PassManager::runPasses(std::vector<std::string> passes) {
             run(new pass::idvEdvRepl());
         } else if (pass_name == "markpara") {
             run(new pass::markParallel());
+        } else if (pass_name == "sroa") {
+            run(new pass::SROA());
         } else {
             std::cerr << "Invalid pass name: " << pass_name << std::endl;
             assert(false && "Invalid pass name");

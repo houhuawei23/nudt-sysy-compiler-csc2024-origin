@@ -19,8 +19,11 @@ namespace pass{
             indVarInfo* idvctx;
             LoopDependenceInfo* depInfoForLp;
             void runOnLoop(ir::Loop* lp);
-            ir::Value* createNewLocal(ir::Type* allocaType,ir::Function* func);
+            ir::AllocaInst* createNewLocal(ir::Type* allocaType,ir::Function* func);
             bool replaceAllUseInLpIdv(ir::GetElementPtrInst* gep,ir::Loop* lp,ir::AllocaInst* newAlloca,bool isOnlyRead,bool isOnlyWrite);
             bool replaceAllUseInLpForLpI(ir::GetElementPtrInst* gep,ir::Loop* lp,ir::AllocaInst* newAlloca,bool isOnlyRead,bool isOnlyWrite);
+            int isTwoGepIdxPossiblySame(gepIdx* gepidx1,gepIdx* gepidx2,ir::Loop* lp,ir::IndVar* idv);
+            int isTwoIdxPossiblySame(ir::Value* val1,ir::Value* val2,idxType type1,idxType type2,ir::Loop* lp,ir::IndVar* idv);
+            bool isSimplyLoopInvariant(ir::Loop* lp,ir::Value* val);
     };
 }
