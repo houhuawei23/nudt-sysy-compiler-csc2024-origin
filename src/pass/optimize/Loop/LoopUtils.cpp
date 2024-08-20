@@ -1,3 +1,4 @@
+// #define DEBUG
 #include "pass/optimize/Loop/LoopUtils.hpp"
 namespace pass {
 bool checkLoopParallel(Loop* loop,
@@ -19,11 +20,11 @@ bool checkLoopParallel(Loop* loop,
     }
     return false;
   };
-  if (lpctx->looplevel(loop->header()) > 2) {  // only consider loops with level <= 2
-    // std::cerr << "loop level: " << lpctx->looplevel(loop->header());
-    // std::cerr << " is too deep, skip" << std::endl;
-    return false;
-  }
+  // if (lpctx->looplevel(loop->header()) > 2) {  // only consider loops with level <= 2
+  //   // std::cerr << "loop level: " << lpctx->looplevel(loop->header());
+  //   // std::cerr << " is too deep, skip" << std::endl;
+  //   return false;
+  // }
   if (isBlocked(loop)) return false;
   if (not parallelctx->getIsParallel(loop->header())) {
     // std::cerr << "cant parallel" << std::endl;
@@ -65,9 +66,9 @@ bool checkLoopParallel(Loop* loop,
 /* move next to new latch, or clone next to new latch */
 bool fixLoopLatch(Function* func, Loop* loop, IndVar* indVar, TopAnalysisInfoManager* tp) {
 #ifdef DEBUG
-  loop.print(std::cerr);
+  loop->print(std::cerr);
   std::cerr << "old latch: ";
-  loop.getUniqueLatch()->dumpAsOpernd(std::cerr);
+  loop->getUniqueLatch()->dumpAsOpernd(std::cerr);
   std::cerr << std::endl;
   indVar->print(std::cerr);
 #endif
@@ -111,9 +112,9 @@ bool fixLoopLatch(Function* func, Loop* loop, IndVar* indVar, TopAnalysisInfoMan
     }
   }
 #ifdef DEBUG
-  loop.print(std::cerr);
+  loop->print(std::cerr);
   std::cerr << "new latch: ";
-  loop.getUniqueLatch()->dumpAsOpernd(std::cerr);
+  loop->getUniqueLatch()->dumpAsOpernd(std::cerr);
   std::cerr << std::endl;
   indVar->print(std::cerr);
 #endif

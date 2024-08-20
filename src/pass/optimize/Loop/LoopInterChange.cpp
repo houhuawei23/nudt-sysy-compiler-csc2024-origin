@@ -44,15 +44,20 @@ bool LoopInterChange::runImpl(Function* func, TopAnalysisInfoManager* tp) {
   // lpctx->print(std::cerr);
   for (auto loop : loops) {  // for all loops
     const auto indVar = indVarctx->getIndvar(loop);
-    if (not checkLoopParallel(loop, lpctx, indVarctx, parallelctx, extractedLoops)) continue;
 #ifdef DEBUG
     std::cerr << "loop level: " << lpctx->looplevel(loop->header());
     loop->print(std::cerr);
     indVar->print(std::cerr);
 #endif
+    if (not checkLoopParallel(loop, lpctx, indVarctx, parallelctx, extractedLoops)) continue;
+    // inner can parallel, outer can not parallel
     auto success = detectPatternAndSwap(func, loop, lpctx, indVarctx, parallelctx, tp);
     modified |= success;
-    if (success) extractedLoops.insert(loop);
+    if (success) {
+      extractedLoops.insert(loop);
+      // std::cerr << "LoopInterChange success: " << loop->header()->name()
+      //           << ", level: " << lpctx->looplevel(loop->header()) << std::endl;
+    }
   }
 
   return modified;
@@ -92,7 +97,6 @@ bool LoopInterChange::runImpl(Function* func, TopAnalysisInfoManager* tp) {
 --- outer latch
 */
 
-
 bool detectPatternAndSwap(Function* func,
                           Loop* innerLoop,
                           loopInfo* lpctx,
@@ -103,10 +107,10 @@ bool detectPatternAndSwap(Function* func,
   CFGAnalysisHHW().run(func, tp);  // refresh CFG
   const auto outerLoop = innerLoop->parentloop();
   if (outerLoop == nullptr) return false;
-
+  if (innerLoop->subLoops().size() != 1) return false;
   const auto outerLever = lpctx->looplevel(outerLoop->header());
   const auto innerLever = lpctx->looplevel(innerLoop->header());
-  if (not(outerLever == 1 and innerLever == 2)) return false;
+  // if (not(outerLever == 1 and innerLever == 2)) return false;
 
   // inner can parallel, outer can not parallel
   // inter change to let outer loop parallel
@@ -143,6 +147,31 @@ bool detectPatternAndSwap(Function* func,
   LoopBodyInfo innerBodyInfo;
   if (not extractLoopBody(func, innerLoop, innerIndVar, tp, innerBodyInfo)) return false;
 
+  // check dom relation
+  const auto innerHeader = innerLoop->header();
+  const auto outerHeader = outerLoop->header();
+  const auto innerPreheader = innerLoop->getLoopPreheader();
+
+  const auto innerLatch = innerLoop->getUniqueLatch();
+  const auto outerLatch = outerLoop->getUniqueLatch();
+
+  const auto blockToLift = {innerHeader, innerLatch};
+  const auto blockToLower =
+    std::unordered_set<BasicBlock*>{outerHeader, outerLatch, innerPreheader};
+
+  for (auto block : blockToLift) {
+    for (auto inst : innerHeader->insts()) {
+      for (auto operandUse : inst->operands()) {
+        auto operand = operandUse->value();
+        if (auto operandInst = operand->dynCast<Instruction>()) {
+          if (blockToLower.count(operandInst->block())) {
+            return false;
+          }
+        }
+      }
+    }
+  }
+
 #ifdef DEBUG
   innerBodyInfo.print(std::cerr);
   func->print(std::cerr);
@@ -151,8 +180,6 @@ bool detectPatternAndSwap(Function* func,
 
   // pattern match
   // 1 innerLoop.preheader in outerLoop.header.next_blocks()
-  const auto innerPreheader = innerLoop->getLoopPreheader();
-  const auto outerHeader = outerLoop->header();
   const auto iter =
     std::find(outerHeader->next_blocks().begin(), outerHeader->next_blocks().end(), innerPreheader);
   if (iter == outerHeader->next_blocks().end()) return false;
@@ -163,8 +190,6 @@ bool detectPatternAndSwap(Function* func,
   const auto innerExit = *(innerLoop->exits().begin());
   const auto outerExit = *(outerLoop->exits().begin());
   if (innerLoop->latchs().size() != 1 or outerLoop->latchs().size() != 1) return false;
-  const auto innerLatch = innerLoop->getUniqueLatch();
-  const auto outerLatch = outerLoop->getUniqueLatch();
 
   if (innerExit != outerLatch) return false;
 
@@ -173,7 +198,6 @@ bool detectPatternAndSwap(Function* func,
   // rebuild branch relationship, fix phi insts
   // 1 outer preheader -> inner header
   const auto outerPreheader = outerLoop->getLoopPreheader();
-  const auto innerHeader = innerLoop->header();
   outerPreheader->insts().pop_back();  // remove br outer header
   builder.setInsetPosEnd(outerPreheader);
   builder.makeInst<BranchInst>(innerHeader);

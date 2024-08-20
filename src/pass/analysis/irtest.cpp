@@ -10,7 +10,7 @@ void irCheck::run(ir::Module* ctx, TopAnalysisInfoManager* tp) {
   bool isPass = true;
   for (auto func : ctx->funcs()) {
     if (func->isOnlyDeclare()) continue;
-    if (debug) cerr << "Testing function \"" << func->name() << "\" ..." << endl;
+    if (debug) cerr << "Testing function " << func->name() << " ..." << endl;
 
     isPass &= runDefUseTest(func);
     isPass &= runCFGTest(func);
@@ -31,8 +31,8 @@ bool irCheck::checkDefUse(ir::Value* val) {
     auto mindex = puse->index();
     auto mvalue = puse->value();
     if (muser->operands()[mindex]->value() != mvalue) {
-      cerr << "Value \"" << muser->name() << "\" use index " << mindex << " operand \""
-           << mvalue->name() << "\" got an error!" << endl;
+      cerr << "Value " << muser->name() << " use index " << mindex << " operand " << mvalue->name()
+           << " got an error!" << endl;
       isPass = false;
     }
   }
@@ -44,7 +44,7 @@ bool irCheck::checkDefUse(ir::Value* val) {
     auto mvalue = op->value();
     auto mindex = op->index();
     if (mindex != realIdx) {
-      cerr << "User \"" << muser->name() << "\" real idx=" << realIdx
+      cerr << "User " << muser->name() << " real idx=" << realIdx
            << " op got a wrong idx=" << mindex << endl;
       isPass = false;
     }
@@ -55,13 +55,13 @@ bool irCheck::checkDefUse(ir::Value* val) {
       }
     }
     if (not isfound) {
-      cerr << "User \"" << muser->name() << "\" operand idx=" << realIdx << " not found in value \""
-           << mvalue->name() << "\" 's uses()." << endl;
+      cerr << "User " << muser->name() << " operand idx=" << realIdx << " not found in value "
+           << mvalue->name() << " 's uses()." << endl;
       isPass = false;
     }
     if (isfound > 1) {
-      cerr << "User \"" << muser->name() << "\" operand idx=" << realIdx
-           << " got multiple found in value \"" << mvalue->name() << "\" 's uses()." << endl;
+      cerr << "User " << muser->name() << " operand idx=" << realIdx
+           << " got multiple found in value " << mvalue->name() << " 's uses()." << endl;
       isPass = false;
     }
     realIdx++;
@@ -81,15 +81,15 @@ bool irCheck::runDefUseTest(ir::Function* func) {
       }
       if (inst->valueId() == ir::vALLOCA and bb != func->entry()) {
         isPass = false;
-        cerr << "AllocaInst occur in BB:\"" << bb->name() << "\" but it's not entry block!" << endl;
+        cerr << "AllocaInst occur in BB:" << bb->name() << " but it's not entry block!" << endl;
       }
       if (inst->block() != bb) {
         isPass = false;
-        cerr << "Inst in BB:\"" << bb->name() << "\" and can't match its parent block!" << endl;
+        cerr << "Inst in BB:" << bb->name() << " and can't match its parent block!" << endl;
       }
       if (not bbOK) {
         isPass = false;
-        cerr << "Error occur in BB:\"" << bb->name() << "\"!" << endl;
+        cerr << "Error occur in BB:" << bb->name() << "!" << endl;
       }
     }
   }
@@ -101,13 +101,12 @@ bool irCheck::checkPhi(ir::PhiInst* phi) {
   int lim = phi->getsize();
   auto operandSize = phi->operands().size();
   if (lim != operandSize / 2) {
-    cerr << "In phi \"" << phi->name() << "\", operandsize/2 is uneqaul to phi Incoming size."
-         << endl;
+    cerr << "In phi " << phi->name() << ", operandsize/2 is uneqaul to phi Incoming size." << endl;
     isPass = false;
   }
   for (size_t i = 0; i < lim; i++) {
     if (phi->getvalfromBB(phi->getBlock(i)) != phi->getValue(i)) {
-      cerr << "In phi \"" << phi->name() << "\" incoming has a mismatch!" << endl;
+      cerr << "In phi " << phi->name() << " incoming has a mismatch!" << endl;
       isPass = false;
     }
   }
@@ -123,7 +122,7 @@ bool irCheck::runPhiTest(ir::Function* func) {
     while (1) {
       if (phiIter == bb->phi_insts().end()) break;
       if (*instIter != *phiIter) {
-        cerr << "In BB\"" << bb->name() << "\", we got a phiinst list error!" << endl;
+        cerr << "In BB" << bb->name() << ", we got a phiinst list error!" << endl;
         isPass = false;
       }
       isPass = isPass and checkPhi(dyn_cast<ir::PhiInst>(*phiIter));
@@ -131,7 +130,7 @@ bool irCheck::runPhiTest(ir::Function* func) {
       instIter++;
     }
     if (dyn_cast<ir::PhiInst>(*instIter) != nullptr) {
-      cerr << "In BB\"" << bb->name() << "\", we got a phiinst not in phiinst list!" << endl;
+      cerr << "In BB" << bb->name() << ", we got a phiinst not in phiinst list!" << endl;
       isPass = false;
     }
   }
@@ -174,15 +173,15 @@ bool irCheck::runCFGTest(ir::Function* func) {
       }
     }
     if (bb->next_blocks().size() != succSet.size()) {
-      cerr << "Block \"" << bb->name() << "\" got invalid succBlock size!" << endl;
+      cerr << "Block " << bb->name() << " got invalid succBlock size!" << endl;
       isPass = false;
     }
     for (auto bbnext : bb->next_blocks()) {
       if (succSet.count(bbnext) == 0) {
-        cerr << "Block \"" << bb->name() << "\" have a wrong succsecor" << endl;
+        cerr << "Block " << bb->name() << " have a wrong succsecor" << endl;
         isPass = false;
       } else if (succSet.count(bbnext) == 2) {
-        cerr << "Block \"" << bb->name() << "\" have a multiple succsecor" << endl;
+        cerr << "Block " << bb->name() << " have a multiple succsecor" << endl;
         isPass = false;
       } else {
         bbPreSize[bbnext]++;
@@ -191,10 +190,46 @@ bool irCheck::runCFGTest(ir::Function* func) {
   }
   for (auto bb : func->blocks()) {
     if (bb->pre_blocks().size() != bbPreSize[bb]) {
-      cerr << "Block \"" << bb->name() << "\" got invalid preBlock size!" << endl;
+      cerr << "Block " << bb->name() << " got invalid preBlock size!" << endl;
+      std::cerr << "pre.size() = " << bb->pre_blocks().size()
+                << ", bbPreSize[bb] = " << bbPreSize[bb] << std::endl;
+      for (auto bbpre : bb->pre_blocks()) {
+        std::cerr << bbpre->name() << " ";
+      }
+      std::cerr << std::endl;
       isPass = false;
     }
   }
+  for (auto block : func->blocks()) {
+    if (not block->verify(std::cerr)) {
+      std::cerr << "block->verify() failed" << std::endl;
+    }
+    const auto backInst = block->insts().back();
+    if (auto brInst = backInst->dynCast<ir::BranchInst>()) {
+      if (brInst->is_cond()) {
+        // block -> block.iftrue / block.iffalse
+        auto trueIter = std::find(func->blocks().begin(), func->blocks().end(), brInst->iftrue());
+        auto falseIter = std::find(func->blocks().begin(), func->blocks().end(), brInst->iffalse());
+
+        if (trueIter == func->blocks().end() and falseIter == func->blocks().end()) {
+          std::cerr << "BranchInst's succ block not in function!" << std::endl;
+          std::cerr << "BranchInst: ";
+          brInst->print(std::cerr);
+          std::cerr << std::endl;
+        }
+      } else {
+        // block -> block.next
+        auto nextIter = std::find(func->blocks().begin(), func->blocks().end(), brInst->dest());
+        if (nextIter == func->blocks().end()) {
+          std::cerr << "BranchInst's dest block not in function!" << std::endl;
+          std::cerr << "BranchInst: ";
+          brInst->print(std::cerr);
+          std::cerr << std::endl;
+        }
+      }
+    }
+  }
+
   return isPass;
 }
 
@@ -218,7 +253,7 @@ bool irCheck::checkAllocaOnlyInEntry(ir::Function* func) {
     for (auto inst : bb->insts()) {
       if (inst->isa<ir::AllocaInst>() and bb != func->entry()) {
         isPass = false;
-        cerr << "AllocaInst occur in BB:\"" << bb->name() << "\" but it's not entry block!" << endl;
+        cerr << "AllocaInst occur in BB:" << bb->name() << " but it's not entry block!" << endl;
       }
     }
   }
