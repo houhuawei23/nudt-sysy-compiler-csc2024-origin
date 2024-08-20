@@ -3,6 +3,7 @@
 using namespace pass;
 
 void dependenceAnalysis::run(ir::Function* func,TopAnalysisInfoManager* tp){
+    std::cerr<<"in Function\""<<func->name()<<"\" running da"<<std::endl;
     topmana=tp;
     domctx=tp->getDomTree(func);
     lpctx=tp->getLoopInfo(func);
@@ -80,8 +81,18 @@ void dependenceAnalysis::runOnLoop(ir::Loop* lp){
         for(auto setIter=subAddrs.begin();setIter!=subAddrs.end();setIter++){
             for(auto setIter2=subAddrs.begin();1;setIter2++){
                 //在进行依赖判断的时候，自己和自己也要进行比较，确保在不同的迭代里面他们二者并不相同，如果相同就有可能产生跨循环的依赖
-                auto gepidx1=depInfoForLp->getGepIdx(*setIter);
-                auto gepidx2=depInfoForLp->getGepIdx(*setIter2);
+                auto gep1=*setIter;
+                auto gep2=*setIter2;
+                // auto func=gep1->block()->function();
+                // func->print(std::cerr);
+                auto bd1=getBaseAddr(gep1,topmana);
+                auto bd2=getBaseAddr(gep2,topmana);
+                assert(bd1==bd);
+                assert(bd2==bd);
+
+                auto gepidx1=depInfoForLp->getGepIdx(gep1);
+                auto gepidx2=depInfoForLp->getGepIdx(gep2);
+                assert(gepidx1->idxList.size()==gepidx2->idxList.size());
                 int depType=isTwoGepIdxPossiblySame(gepidx1,gepidx2,lp,defaultIdv);
                 if((depType & dCrossIterTotallyNotSame) != 0){
                     if(setIter2==setIter)break;

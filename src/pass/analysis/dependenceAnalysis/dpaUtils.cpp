@@ -125,12 +125,71 @@ void LoopDependenceInfo::addPtr(ir::Value* ptr,ir::Instruction* inst){
         assert(false);
     }
     if(subAddrToGepIdx.count(subAddr)==0){
+        auto curFunc=subAddr->block()->function();
+        constexpr bool Debug = false;
+        int curIdx=0;
         auto pnewGepIdx=new gepIdx;
-        auto curSubAddr=subAddr;
-        while(curSubAddr!=nullptr){
-            pnewGepIdx->idxList.push_back(curSubAddr->index());
-            curSubAddr=curSubAddr->value()->dynCast<ir::GetElementPtrInst>();
+        auto curSubAddr = subAddr;
+        pnewGepIdx->idxList.push_back(nullptr);
+        ir::Value* index = nullptr;
+        if (Debug) {
+            std::cerr << "===================\n";
         }
+        while (curSubAddr != nullptr){
+            if (Debug) {
+                curSubAddr->print(std::cerr);
+                std::cerr << "\n";
+            }
+            if (curSubAddr->getid() == 0) {
+                if (index) {
+                    auto new_index = curSubAddr->index();
+                    assert(new_index->isa<ir::ConstantInteger>());
+                    assert(index->isa<ir::ConstantInteger>());
+                    auto cons_index = index->dynCast<ir::ConstantValue>();
+                    auto cons_new_index = new_index->dynCast<ir::ConstantValue>();
+                    index = ir::ConstantInteger::gen_i32(cons_index->i32() + cons_new_index->i32());
+                } else {
+                    index = curSubAddr->index();
+                }
+            }
+            else {
+                auto new_index = curSubAddr->index();
+                if (index) {
+                    assert(new_index->isa<ir::ConstantInteger>());
+                    auto cons_new_index = new_index->dynCast<ir::ConstantValue>();
+                    if (cons_new_index->i32() != 0) {
+                        assert(index->isa<ir::ConstantInteger>());
+                        auto cons_index = index->dynCast<ir::ConstantValue>();
+                        index = ir::ConstantInteger::gen_i32(cons_index->i32() + cons_new_index->i32());
+                    }
+                    pnewGepIdx->idxList.push_back(index);
+                    index = nullptr;
+                } else {
+                    pnewGepIdx->idxList.push_back(new_index);
+                }
+            }
+            
+            auto base = curSubAddr->value();
+            if (base->isa<ir::GetElementPtrInst>()) {
+                curSubAddr = base->dynCast<ir::GetElementPtrInst>();
+            } 
+            else if(base->dynCast<ir::PhiInst>()){
+                auto lpctx=tp->getLoopInfoWithoutRefresh(curFunc);
+                auto phiBase=base->dynCast<ir::PhiInst>();
+                auto phiBaseBB=phiBase->block();
+                auto phiBaseLp=lpctx->head2loop(phiBaseBB);
+                auto phiBaseLpPreHeader=phiBaseLp->getLoopPreheader();
+                curSubAddr=phiBase->getvalfromBB(phiBaseLpPreHeader)->dynCast<ir::GetElementPtrInst>();
+
+            }  
+            else {
+                curSubAddr = nullptr;
+            }
+        }
+        if (index) {
+            pnewGepIdx->idxList.push_back(index);
+        }
+
         std::reverse(pnewGepIdx->idxList.begin(),pnewGepIdx->idxList.end());
         for(auto idxVal:pnewGepIdx->idxList){
             pnewGepIdx->idxTypes[idxVal]=iELSE;//初始值都是ELSE
@@ -201,20 +260,6 @@ void LoopDependenceInfo::addPtrFromSubLoop(ir::Value* ptr,ir::Instruction* inst,
     }
     subAddrToInst[subAddr].insert(inst);
     memInsts.insert(inst);
-}
-
-void LoopDependenceInfo::clearAll(){
-    baseAddrs.clear();
-    baseAddrToSubAddrs.clear();
-    subAddrToGepIdx.clear();
-    subAddrToInst.clear();
-    memInsts.clear();
-    baseAddrIsRead.clear();
-    baseAddrIsWrite.clear();
-    baseAddrIsCrossIterDep.clear();
-    subAddrIsRead.clear();
-    subAddrIsWrite.clear();
-    
 }
 
 bool pass::isTwoBaseAddrPossiblySame(ir::Value* ptr1,ir::Value* ptr2,ir::Function* func,callGraph* cgctx,TopAnalysisInfoManager* tp){

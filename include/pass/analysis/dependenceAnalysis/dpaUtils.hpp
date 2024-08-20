@@ -59,7 +59,18 @@ namespace pass{
         public:
             //utils
             void makeLoopDepInfo(ir::Loop* lp,TopAnalysisInfoManager* topmana);//直接根据循环相关信息对当前info进行构建
-            void clearAll();
+            void clearAll(){
+                baseAddrs.clear();
+                baseAddrToSubAddrs.clear();
+                subAddrToGepIdx.clear();
+                subAddrToInst.clear();
+                memInsts.clear();
+                baseAddrIsRead.clear();
+                baseAddrIsWrite.clear();
+                baseAddrIsCrossIterDep.clear();
+                subAddrIsRead.clear();
+                subAddrIsWrite.clear();
+            }
             void getInfoFromSubLoop(ir::Loop* subLoop,LoopDependenceInfo* subLoopDepInfo);
             void setTp(TopAnalysisInfoManager* topmana){tp=topmana;}
             

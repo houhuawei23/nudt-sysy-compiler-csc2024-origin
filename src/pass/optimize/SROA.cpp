@@ -32,7 +32,7 @@ void SROA::run(ir::Function* func,TopAnalysisInfoManager* tp){
         runOnLoop(lp);
     }
     Mem2Reg m2r=Mem2Reg();
-    m2r.run(func,tp);
+    // m2r.run(func,tp);
 
 }
 
