@@ -17,8 +17,10 @@ namespace pass{
             sideEffectInfo* sectx;
             dependenceInfo* dpctx;
             indVarInfo* idvctx;
-            LoopDependenceInfo* depLpInfo;
+            LoopDependenceInfo* depInfoForLp;
             void runOnLoop(ir::Loop* lp);
-            
+            ir::Value* createNewLocal(ir::Type* allocaType,ir::Function* func);
+            bool replaceAllUseInLpIdv(ir::GetElementPtrInst* gep,ir::Loop* lp,ir::AllocaInst* newAlloca,bool isOnlyRead,bool isOnlyWrite);
+            bool replaceAllUseInLpForLpI(ir::GetElementPtrInst* gep,ir::Loop* lp,ir::AllocaInst* newAlloca,bool isOnlyRead,bool isOnlyWrite);
     };
 }

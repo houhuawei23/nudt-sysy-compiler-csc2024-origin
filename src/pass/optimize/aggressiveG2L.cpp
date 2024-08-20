@@ -72,17 +72,17 @@ void aggressiveG2L::run(ir::Module* md,TopAnalysisInfoManager* tp){
     for(auto rwGv:readAndWriteGvs){
         auto& readfnset=funcGvRead[rwGv];
         auto& writefnset=funcGvWrite[rwGv];
-        std::cerr<<rwGv->name()<<std::endl;
+        // std::cerr<<rwGv->name()<<std::endl;
         // cond a and cond b
         if(rwGv->isArray())assert(false);
         if(readfnset.size()==1 and writefnset.size()==1){
             auto onlyUseFunc=*readfnset.begin();
             if(onlyUseFunc->name()=="main"){//cond a
-                std::cerr<<rwGv->name()<<" local to main!"<<std::endl;
+                // std::cerr<<rwGv->name()<<" local to main!"<<std::endl;
                 replaceGvInMain(rwGv,onlyUseFunc); 
             }
             else{//cond b
-                std::cerr<<rwGv->name()<<" local to \""<<onlyUseFunc->name()<<"\"!"<<std::endl;
+                // std::cerr<<rwGv->name()<<" local to \""<<onlyUseFunc->name()<<"\"!"<<std::endl;
                 replaceGvInNormalFunc(rwGv,onlyUseFunc);
             }
         }
@@ -95,7 +95,7 @@ void aggressiveG2L::run(ir::Module* md,TopAnalysisInfoManager* tp){
             int funcUseSize=readAndWrite.size();
             int gvUseSize=rwGv->uses().size();
             if(gvUseSize/funcUseSize<4)continue;
-            std::cerr<<rwGv->name()<<" local to all funcs!"<<std::endl;
+            // std::cerr<<rwGv->name()<<" local to all funcs!"<<std::endl;
             for(auto func:md->funcs()){
                 if(func->isOnlyDeclare())continue;
                 if(sectx->funcReadGlobals(func).count(rwGv)==0 and sectx->funcWriteGlobals(func).count(rwGv)==0)continue;
@@ -270,7 +270,7 @@ void aggressiveG2L::replaceGvInNormalFunc(ir::GlobalVariable* gv,ir::Function* f
 }//配合mem2reg使用
 
 void aggressiveG2L::replaceGvInOneFunc(ir::GlobalVariable* gv,ir::Function* func){
-    std::cerr<<"gv:"<<gv->name()<<" func:"<<func->name()<<std::endl;
+    // std::cerr<<"gv:"<<gv->name()<<" func:"<<func->name()<<std::endl;
     //在entry和唯一后继之间插入一个bb
     ir::BasicBlock* newBB;
     ir::BasicBlock* funcEntry;
