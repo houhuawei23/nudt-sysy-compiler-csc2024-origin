@@ -73,10 +73,6 @@ int main(int argc, char* argv[]) {
     pm->runPasses(config.passes);
   }
 
-  // for (auto pass : config.passes) {
-  //   std::cerr << "Pass: " << pass << std::endl;
-  // }
-
   if (config.genIR) {  // ir print
     if (config.outfile.empty()) {
       module.print(std::cout);

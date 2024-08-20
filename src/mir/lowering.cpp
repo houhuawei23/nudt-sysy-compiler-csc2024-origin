@@ -138,10 +138,10 @@ void createMIRModule(ir::Module& ir_module,
 
   //! 4. Lower all Functions
   addExternalIPRAInfo(infoIPRA);
-  // TODO: in call graph scc order
   for (auto& ir_func : ir_module.funcs()) {
     codegen_ctx.flags = MIRFlags{};
     if (ir_func->blocks().empty()) continue;
+   
     /* Just for Debug */
     size_t stageIdx = 0;
     auto dumpStageResult = [&](std::string stage, MIRFunction* mir_func,
@@ -153,6 +153,7 @@ void createMIRModule(ir::Module& ir_module,
       mir_func->print(fout, codegen_ctx);
       stageIdx++;
     };
+
     if (debugLowering) {
       auto fileName = ir_func->name() + std::to_string(stageIdx) + "_" + "BeforeLowering.ll";
       auto path = config.debugDir() / fs::path(fileName);
@@ -253,7 +254,7 @@ void createMIRModule(ir::Module& ir_module,
     /* stage11: simplify CFG */
     { simplifyCFG(*mir_func, codegen_ctx); }
 
-    /* post legalization */
+    /* stage12: post legalization */
     {
       utils::Stage stage{"postLegalization"sv};
       postLegalizeFunc(*mir_func, codegen_ctx);
@@ -290,15 +291,8 @@ void createMIRFunction(ir::Function* ir_func,
   auto domCtx = tAIM->getDomTree(ir_func);
   domCtx->setOff();
   domCtx->refresh();
-  // TODO: DFS or BFS?
   domCtx->BFSDomTreeInfoRefresh();
   auto irBlocks = domCtx->BFSDomTreeVector();
-  // domCtx->DFSDomTreeInfoRefresh();
-  // auto irBlocks = domCtx->DFSDomTreeVector();
-  // std::cerr << ir_func->name() << " blocks: " << irBlocks.size() << std::endl;
-  // for(auto block : irBlocks) {
-  //   std::cerr << "block: " << block->name() << std::endl;
-  // }
   //! 1. map from ir to mir
   auto& block_map = lowering_ctx.blockMap;
   auto& target = codegen_ctx.target;
