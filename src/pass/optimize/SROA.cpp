@@ -45,8 +45,9 @@ void SROA::runOnLoop(ir::Loop* lp){
                 
             }
             //如果与其他的在当前循环迭代均不一样，就可以进行Sroa
-            if(isCurIterIndependent)
-                SROAGeps.insert()
+            if(isCurIterIndependent) {
+                // SROAGeps.insert()
+            }
         }
     }
     
