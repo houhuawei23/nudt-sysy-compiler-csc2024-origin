@@ -73,6 +73,7 @@ namespace pass{
             bool getIsBaseAddrWrite(ir::Value* val){return baseAddrIsWrite[val];}
             std::set<ir::GetElementPtrInst*>& baseAddrToSubAddrSet(ir::Value* baseaddr){return baseAddrToSubAddrs[baseaddr];}
             gepIdx* getGepIdx(ir::GetElementPtrInst* subaddr){return subAddrToGepIdx[subaddr];}
+            std::set<ir::Instruction*>getSubAddrInsts(ir::GetElementPtrInst* gep){return subAddrToInst[gep];}
 
             //print for dbg
             void print(std::ostream& os);
