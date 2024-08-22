@@ -224,8 +224,9 @@ static const auto interProceduralPasses = std::vector<std::string>{
 };
 
 static const auto afterUnrollPasses = std::vector<std::string>{
-  "simplifycfg", "loopsimplify", "sccp", "adce",        "gcm",  "gvn",  "licm", "dle",
-  "dse",         "dle",          "dse",  "instcombine", "adce", "sccp", "dlae",
+  "simplifycfg", "loopsimplify", "sccp", "adce",        "gcm",  "gvn",  "licm",
+  //  "dle", "dse",         "dle",          "dse",  
+  "instcombine", "adce", "sccp", "dlae",
 };
 
 static const auto gepSplitPasses = std::vector<std::string>{

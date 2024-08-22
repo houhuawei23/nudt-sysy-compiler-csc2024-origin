@@ -159,18 +159,31 @@ class TestResult:
 
     def print_board_overview(self):
         print(Fore.RED + f"perf on board")
-        for filename, time in self.board_run_time.items():
-            print(f"{filename}: {time:.4f}s")
+        # for filename, time in self.board_run_time.items():
+        #     print(f"{filename}: {time:.4f}s")
+        print("src,             compiler_time,       gcc_o3_time,         speedup")
+        for src, (compiler_time, gcc_o3_time) in self.qemu_run_time.items():
+            speedup = safeDivide(gcc_o3_time, compiler_time)
+            print(f"{src: <20} {compiler_time: 6f}s {gcc_o3_time: 6f}s, {speedup:.2f}x")
 
     def save_board_result(self, filename: str):
         ds = datetime.now().strftime("%Y_%m_%d_%H:%M")
         with open(os.path.join("./record", f"{ds}.csv"), "w") as f:
-            for src, time_used in self.board_run_time.items():
-                line = f"{src},{time_used: 6f},\n"
+            f.write("src,compiler_time,gcc_o3_time,speedup\n")
+            for src, (compiler_time, gcc_o3_time) in self.qemu_run_time.items():
+                speedup = safeDivide(gcc_o3_time, compiler_time)
+                line = f"{src},{compiler_time: 6f},{gcc_o3_time: 6f}, {speedup:.3f}\n"
                 f.write(line)
+            # for src, time_used in self.board_run_time.items():
+            #     line = f"{src},{time_used: 6f},\n"
+            #     f.write(line)
                 # print(f"{filename}: {time_used:.4f}s")
 
         with open(os.path.join("./record", filename), "w") as f:
-            for src, time_used in self.board_run_time.items():
-                markdown_line = f"| {src} | {time_used:.4f}s |\n"
+            # for src, time_used in self.board_run_time.items():
+            #     markdown_line = f"| {src} | {time_used:.4f}s |\n"
+            #     f.write(markdown_line)
+            for src, (compiler_time, gcc_o3_time) in self.qemu_run_time.items():
+                markdown_line = f"| {src} | {compiler_time:.4f}s | {gcc_o3_time:.4f}s |\n"
                 f.write(markdown_line)
+                

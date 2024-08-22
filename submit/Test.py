@@ -36,9 +36,9 @@ gcc_ref_command = "gcc -x c++ -O3 -DNDEBUG -march=native -fno-tree-vectorize -s 
 
 clang_ref_command = "clang -Qn -O3 -DNDEBUG -emit-llvm -fno-slp-vectorize -fno-vectorize -mllvm -vectorize-loops=false -S -ffp-contract=on -w ".split()
 
-qemu_gcc_ref_command = "riscv64-linux-gnu-gcc-12 -O2 -DNDEBUG -march=rv64gc -mabi=lp64d -mcmodel=medlow -ffp-contract=on -w ".split()
+riscv64_gcc_ref_command = "riscv64-linux-gnu-gcc-12 -DNDEBUG -march=rv64gc -mabi=lp64d -mcmodel=medlow -ffp-contract=on -w ".split()
 
-qemu_gpp_ref_command = "riscv64-linux-gnu-g++-12 -O2 -DNDEBUG -march=rv64gc -mabi=lp64d -mcmodel=medlow -ffp-contract=on -w ".split()
+riscv64_gpp_ref_command = "riscv64-linux-gnu-g++-12 -DNDEBUG -march=rv64gc -mabi=lp64d -mcmodel=medlow -ffp-contract=on -w ".split()
 
 
 def testsDriver(path: str, suffix: str, tester):
@@ -97,10 +97,17 @@ def run_riscv_gcc(src, target, output, opt_level=0, log_level=0, timeout=1):
     """
     riscv64-linux-gnu-gcc-12 -S -o output src
     """
-    command = qemu_gpp_ref_command + ["-S", "-o", output, src, f"-O{opt_level}"]
-    # print(*command, sep=" ")
-    # print(*command, sep=" ")
+    command = riscv64_gpp_ref_command + ["-S", "-o", output, src, f"-O{opt_level}"]
+    print(*command, sep=" ")
     process = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
+
+    if process.returncode != 0:
+        command = riscv64_gcc_ref_command + ["-S", "-o", output, src, f"-O{opt_level}"]
+        # print(*command, sep=" ")
+        print(*command, sep=" ")
+        process = subprocess.run(
+            command, capture_output=True, text=True, timeout=timeout
+        )
     return process
 
 
@@ -108,19 +115,39 @@ def link_executable(src: str, target: str, output: str, runtime, timeout=1):
     """
     riscv64-linux-gnu-gcc-12
     """
-    command = qemu_gcc_ref_command + ["-o", output, runtime, src]
-    # print(*command, sep=" ")
+    command = riscv64_gpp_ref_command + ["-o", output, src, runtime]
+    print(*command, sep=" ")
     process = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
+
+    if process.returncode != 0:
+        command = riscv64_gcc_ref_command + ["-o", output, runtime, src]
+        print(*command, sep=" ")
+        process = subprocess.run(
+            command, capture_output=True, text=True, timeout=timeout
+        )
     return process
 
 
-def link_ricvgpp_executable(src: str, target: str, output: str, timeout=1):
+def link_ricvgpp_executable(src: str, target: str, output: str, opt_level=0, timeout=1):
     """
     riscv64-linux-gnu-gcc-12
     """
-    command = qemu_gpp_ref_command + ["-o", output, src]
-    # print(*command, sep=" ")
+    # command = qemu_gcc_ref_command + ["-o", output, src]
+    # # print(*command, sep=" ")
+    # process = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
+
+    command = riscv64_gpp_ref_command + ["-o", output, src, f"-O{opt_level}"]
+    print(*command, sep=" ")
+
     process = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
+
+    if process.returncode != 0:
+        command = riscv64_gcc_ref_command + ["-o", output, src, f"-O{opt_level}"]
+        print(*command, sep=" ")
+        process = subprocess.run(
+            command, capture_output=True, text=True, timeout=timeout
+        )
+
     return process
 
 
@@ -484,10 +511,83 @@ class Test:
         print(f"compare output and perf data for {src}")
         time_used = compare_and_parse_perf(src, process)
 
+        if src in self.result.qemu_run_time:
+            self.result.qemu_run_time[src] = (
+                time_used,
+                self.result.qemu_run_time[src][1],
+            )
+        else:
+            self.result.qemu_run_time[src] = (time_used, 0)
+
         # run
         self.result.board_run_time[filename] = time_used
 
-    # def __gccrun
+    def __gccrun_on_visionfive(self, src_path: str, target: str = "riscv"):
+        """
+        compile use gcc-O3, run on vision five
+        """
+        if os.path.exists(src_path) is False:
+            return False
+        print(f"compile {src_path} with gcc-O3")
+        filename = os.path.basename(src_path)
+        cpath = os.path.join(self.output_c_path, removePathSuffix(filename) + ".c")
+        raw_name = os.path.splitext(filename)[0]
+        output_exe = os.path.join(self.output_exe_path, raw_name + "_gcc_O3")
+        output_asm = os.path.join(self.output_asm_path, raw_name + "_gcc_O3.s")
+
+        with open(self.sysy_link_for_riscv_gpp, "r", encoding="utf-8") as f:
+            link_code = f.read()
+        with open(src_path, "r", encoding="utf-8") as f:
+            sy_code = f.read()
+        with open(cpath, "w", encoding="utf-8") as f:
+            f.write(link_code + "\n\n" + sy_code)
+
+        process = run_riscv_gcc(
+            cpath, target, output_asm, opt_level=3, timeout=self.timeout
+        )
+        if process.returncode != 0:
+            print(f"compile {src_path} failed")
+            print(process.stderr)
+            return False
+
+        process = link_ricvgpp_executable(
+            cpath, target, output_exe, opt_level=3, timeout=self.timeout
+        )
+        if process.returncode != 0:
+            print(f"link {src_path} failed")
+            return False
+        res, process = run_executable([output_exe], src_path, timeout=self.timeout)
+        if process.returncode != 0:
+            print(f"run {src_path} failed")
+            return False
+
+        time_used = compare_and_parse_perf(src_path, process)
+        if src_path in self.result.qemu_run_time:
+            self.result.qemu_run_time[src_path] = (
+                self.result.qemu_run_time[src_path][0],
+                time_used,
+            )
+        else:
+            self.result.qemu_run_time[src_path] = (0, time_used)
+
+        return res
+
+    def __compare_on_board(self, src_path: str, target: str = "riscv"):
+        if os.path.exists(src_path) is False:
+            print(f"Test file not found: {src_path}")
+            return False
+        filename = os.path.basename(src_path)
+        raw_name = os.path.splitext(filename)[0]  # abc.sy -> abc
+        asm_path = os.path.join(self.output_asm_path, raw_name + ".s")
+        exe_path = os.path.join(self.output_exe_path, raw_name)
+        if os.path.exists(asm_path) is False:
+            print(f"Test file not found: {asm_path}")
+            return False
+        compiler_res = self.__linkrun_on_visionfive(src_path, target)
+        gcc_res = self.__gccrun_on_visionfive(src_path, target)
+        if not (compiler_res and gcc_res):
+            raise Exception("Compiler or gcc failed")
+        return compiler_res and gcc_res
 
     def runSingleCase(self, test_kind: str, filename: str):
         """
@@ -582,7 +682,7 @@ class Test:
         testsDriver(
             year_kind_path,
             ".sy",
-            lambda x: self.__linkrun_on_visionfive(x, self.target),
+            lambda x: self.__compare_on_board(x, self.target),
         )
         print(
             f"\nTest {self.year} {self.target} {test_kind} -O{self.opt_level} -L{self.log_level}"
@@ -597,6 +697,6 @@ class Test:
         """
         pass
 
-    def runOnVisionFive(self, test_kind: str, cases_list: List[str]):
-        print(Fore.RED + f"Testing {self.year} {test_kind} on VisionFive...")
-        year_kind_path = os.path.join(self.tests_path, self.year, test_kind)
+    # def runOnVisionFive(self, test_kind: str, cases_list: List[str]):
+    #     print(Fore.RED + f"Testing {self.year} {test_kind} on VisionFive...")
+    #     year_kind_path = os.path.join(self.tests_path, self.year, test_kind)
