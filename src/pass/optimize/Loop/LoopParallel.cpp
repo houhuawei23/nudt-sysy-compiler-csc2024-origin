@@ -117,7 +117,12 @@ bool LoopParallel::runImpl(Function* func, TopAnalysisInfoManager* tp) {
 #endif
     auto success = parallelLoop(func, tp, loop, indVar);
     modified |= success;
-    if (success) extractedLoops.insert(loop);
+    if (success) {
+      extractedLoops.insert(loop);
+      // std::cerr << "parallel loop: " << std::endl;
+      // loop->print(std::cerr);
+      // indVar->print(std::cerr);
+    }
   }
 
   return modified;

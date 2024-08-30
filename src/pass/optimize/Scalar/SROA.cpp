@@ -8,7 +8,7 @@ static std::set<ir::GetElementPtrInst*>processedSubAddrs;
 std::string SROA::name() const {
     return "SROA";
 }
-
+// Scalar Replacement of Aggregates
 //SROA基本逻辑：
 /*
 处理的是对于循环内的变量
