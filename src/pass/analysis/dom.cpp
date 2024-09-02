@@ -20,7 +20,7 @@ static int dfc;
 
 namespace pass {
 // pre process for dom calc
-void preProcDom::run(ir::Function* func, TopAnalysisInfoManager* tp) {
+void PreProcDom::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     if (func->isOnlyDeclare()) return;
     auto blocklist = func->blocks();
     std::vector<ir::BasicBlock*> worklist;
@@ -44,7 +44,7 @@ void preProcDom::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     }
 }
 // LT algorithm to get idom and sdom
-void idomGen::compress(ir::BasicBlock* bb) {
+void IDomGen::compress(ir::BasicBlock* bb) {
     auto ancestorBB = ancestor[bb];
     if (ancestor[ancestorBB]) {
         compress(ancestorBB);
@@ -55,7 +55,7 @@ void idomGen::compress(ir::BasicBlock* bb) {
     }
 }
 
-void idomGen::link(ir::BasicBlock* v, ir::BasicBlock* w) {
+void IDomGen::link(ir::BasicBlock* v, ir::BasicBlock* w) {
     auto s = w;
     while (semi[label[w]] < semi[label[child[s]]]) {
         if (size[s] + size[child[child[s]]] >= 2 * size[child[s]]) {
@@ -79,7 +79,7 @@ void idomGen::link(ir::BasicBlock* v, ir::BasicBlock* w) {
     }
 }
 
-ir::BasicBlock* idomGen::eval(ir::BasicBlock* bb) {
+ir::BasicBlock* IDomGen::eval(ir::BasicBlock* bb) {
     if (ancestor[bb] == 0) {
         return label[bb];
     }
@@ -88,7 +88,7 @@ ir::BasicBlock* idomGen::eval(ir::BasicBlock* bb) {
                                                           : label[ancestor[bb]];
 }
 
-void idomGen::dfsBlocks(ir::BasicBlock* bb) {
+void IDomGen::dfsBlocks(ir::BasicBlock* bb) {
     semi[bb] = dfc++;
     vertex.push_back(bb);
     for (auto bbnext : bb->next_blocks()) {
@@ -99,7 +99,7 @@ void idomGen::dfsBlocks(ir::BasicBlock* bb) {
     }
 }
 
-void idomGen::run(ir::Function* func, TopAnalysisInfoManager* tp) {
+void IDomGen::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     if (func->isOnlyDeclare()) return;
     domctx = tp->getDomTreeWithoutRefresh(func);
     domctx->clearAll();
@@ -168,27 +168,27 @@ void idomGen::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     }
 }
 
-void domFrontierGen::getDomTree(ir::Function* func) {
+void DomFrontierGen::getDomTree(ir::Function* func) {
     // for(auto bb : func->blocks())
-    //     bb->domTree.clear();
+    //     bb->DomTree.clear();
     for (auto bb : func->blocks()) {
         // if(bb->idom)
-        //     bb->idom->domTree.push_back(bb);
+        //     bb->idom->DomTree.push_back(bb);
         if (domctx->idom(bb)) {
             domctx->domson(domctx->idom(bb)).push_back(bb);
         }
     }
 }
 
-void domFrontierGen::getDomInfo(ir::BasicBlock* bb, int level) {
+void DomFrontierGen::getDomInfo(ir::BasicBlock* bb, int level) {
     // bb->domLevel=level;
     domctx->set_domlevel(bb, level);
-    for (auto bbnext : domctx->domson(bb)) {  //: bb->domTree
+    for (auto bbnext : domctx->domson(bb)) {  //: bb->DomTree
         getDomInfo(bbnext, level + 1);
     }
 }
 
-void domFrontierGen::getDomFrontier(ir::Function* func) {
+void DomFrontierGen::getDomFrontier(ir::Function* func) {
     // for(auto bb : func->blocks())
     //     bb->domFrontier.clear();
     // func->print(std::cout);
@@ -210,7 +210,7 @@ void domFrontierGen::getDomFrontier(ir::Function* func) {
 }
 
 // generate dom tree
-void domFrontierGen::run(ir::Function* func, TopAnalysisInfoManager* tp) {
+void DomFrontierGen::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     if (func->isOnlyDeclare()) return;
     domctx = tp->getDomTreeWithoutRefresh(func);
     getDomTree(func);
@@ -219,7 +219,7 @@ void domFrontierGen::run(ir::Function* func, TopAnalysisInfoManager* tp) {
 }
 
 // debug info print pass
-void domInfoCheck::run(ir::Function* func, TopAnalysisInfoManager* tp) {
+void DomInfoCheck::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     if (func->isOnlyDeclare()) return;
     func->rename();
     domctx = tp->getDomTreeWithoutRefresh(func);
@@ -289,11 +289,11 @@ void domInfoCheck::run(ir::Function* func, TopAnalysisInfoManager* tp) {
     cout << endl << endl;    
 }
 
-void domInfoPass::run(ir::Function* func, TopAnalysisInfoManager* tp) {
-    preProcDom ppd = preProcDom();
-    idomGen idg = idomGen();
-    domFrontierGen dfg = domFrontierGen();
-    domInfoCheck dic = domInfoCheck();
+void DomInfoPass::run(ir::Function* func, TopAnalysisInfoManager* tp) {
+    PreProcDom ppd = PreProcDom();
+    IDomGen idg = IDomGen();
+    DomFrontierGen dfg = DomFrontierGen();
+    DomInfoCheck dic = DomInfoCheck();
     ppd.run(func, tp);
     idg.run(func, tp);
     dfg.run(func, tp);

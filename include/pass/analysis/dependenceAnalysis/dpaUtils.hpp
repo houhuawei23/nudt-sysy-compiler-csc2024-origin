@@ -102,7 +102,7 @@ namespace pass{
     ir::Value* getBaseAddr(ir::Value* val,TopAnalysisInfoManager* tp);
     ir::Value* getIntToPtrBaseAddr(ir::UnaryInst* inst);
     baseAddrType getBaseAddrType(ir::Value* val);
-    bool isTwoBaseAddrPossiblySame(ir::Value* ptr1,ir::Value* ptr2,ir::Function* func,callGraph* cgctx,TopAnalysisInfoManager* tp);
+    bool isTwoBaseAddrPossiblySame(ir::Value* ptr1,ir::Value* ptr2,ir::Function* func,CallGraph* cgctx,TopAnalysisInfoManager* tp);
     void printIdxType(idxType idxtype,std::ostream& os);
 };
 

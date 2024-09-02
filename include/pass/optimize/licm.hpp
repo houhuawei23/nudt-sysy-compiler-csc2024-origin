@@ -10,9 +10,9 @@ namespace pass {
 class LICM : public FunctionPass {
   private:
     sideEffectInfo* sectx;
-    loopInfo* loopctx;
-    domTree* domctx;
-    pdomTree* pdomcctx;
+    LoopInfo* loopctx;
+    DomTree* domctx;
+    PDomTree* pdomcctx;
     TopAnalysisInfoManager* tpm;
     std::set<ir::Value*> loopStorePtrs;
 

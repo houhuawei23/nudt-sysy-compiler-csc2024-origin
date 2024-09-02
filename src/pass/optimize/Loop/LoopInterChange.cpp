@@ -13,8 +13,8 @@ using namespace pass;
 
 bool detectPatternAndSwap(Function* func,
                           Loop* innerLoop,
-                          loopInfo* lpctx,
-                          indVarInfo* indVarctx,
+                          LoopInfo* lpctx,
+                          IndVarInfo* indVarctx,
                           parallelInfo* parallelctx,
                           // dependenceInfo* dependencyctx,
                           TopAnalysisInfoManager* tp);
@@ -99,8 +99,8 @@ bool LoopInterChange::runImpl(Function* func, TopAnalysisInfoManager* tp) {
 
 bool detectPatternAndSwap(Function* func,
                           Loop* innerLoop,
-                          loopInfo* lpctx,
-                          indVarInfo* indVarctx,
+                          LoopInfo* lpctx,
+                          IndVarInfo* indVarctx,
                           // dependenceInfo* dependencyctx,
                           parallelInfo* parallelctx,
                           TopAnalysisInfoManager* tp) {

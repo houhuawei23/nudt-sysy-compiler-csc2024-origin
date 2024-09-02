@@ -10,10 +10,10 @@ namespace pass {
 
 class loopdivest : public FunctionPass {
   private:
-    domTree* domctx;
+    DomTree* domctx;
     sideEffectInfo* sectx;
-    loopInfo* lpctx;
-    indVarInfo* ivctx;
+    LoopInfo* lpctx;
+    IndVarInfo* ivctx;
 
   public:
     std::string name() const override { return "loopdivest"; }

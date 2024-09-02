@@ -11,7 +11,7 @@ class ADCE : public FunctionPass {
     void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
 
   private:
-    pdomTree* pdctx;
+    PDomTree* pdctx;
     void ADCEInfoCheck(ir::Function* func);
     ir::BasicBlock* getTargetBB(ir::BasicBlock* bb);
 };

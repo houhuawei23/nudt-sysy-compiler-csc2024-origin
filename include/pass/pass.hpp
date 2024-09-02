@@ -39,25 +39,25 @@ class TopAnalysisInfoManager {
 private:
   ir::Module* mModule;
   // ir::Module info
-  callGraph* mCallGraph;
+  CallGraph* mCallGraph;
   sideEffectInfo* mSideEffectInfo;
   // ir::Function info
-  std::unordered_map<ir::Function*, domTree*> mDomTree;
-  std::unordered_map<ir::Function*, pdomTree*> mPDomTree;
-  std::unordered_map<ir::Function*, loopInfo*> mLoopInfo;
-  std::unordered_map<ir::Function*, indVarInfo*> mIndVarInfo;
+  std::unordered_map<ir::Function*, DomTree*> mDomTree;
+  std::unordered_map<ir::Function*, PDomTree*> mPDomTree;
+  std::unordered_map<ir::Function*, LoopInfo*> mLoopInfo;
+  std::unordered_map<ir::Function*, IndVarInfo*> mIndVarInfo;
   std::unordered_map<ir::Function*, dependenceInfo*> mDepInfo;
   std::unordered_map<ir::Function*, parallelInfo*> mParallelInfo;
   // bb info
   // add new func
   void addNewFunc(ir::Function* func) {
-    auto pnewDomTree = new domTree(func, this);
+    auto pnewDomTree = new DomTree(func, this);
     mDomTree[func] = pnewDomTree;
-    auto pnewPDomTree = new pdomTree(func, this);
+    auto pnewPDomTree = new PDomTree(func, this);
     mPDomTree[func] = pnewPDomTree;
-    auto pnewLoopInfo = new loopInfo(func, this);
+    auto pnewLoopInfo = new LoopInfo(func, this);
     mLoopInfo[func] = pnewLoopInfo;
-    auto pnewIndVarInfo = new indVarInfo(func, this);
+    auto pnewIndVarInfo = new IndVarInfo(func, this);
     mIndVarInfo[func] = pnewIndVarInfo;
     auto pnewDepInfo = new dependenceInfo(func, this);
     mDepInfo[func] = pnewDepInfo;
@@ -67,7 +67,7 @@ private:
 
 public:
   TopAnalysisInfoManager(ir::Module* pm) : mModule(pm), mCallGraph(nullptr) {}
-  domTree* getDomTree(ir::Function* func) {
+  DomTree* getDomTree(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
     auto domctx = mDomTree[func];
     if (domctx == nullptr) {
@@ -77,7 +77,7 @@ public:
     domctx->refresh();
     return domctx;
   }
-  pdomTree* getPDomTree(ir::Function* func) {
+  PDomTree* getPDomTree(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
     auto domctx = mPDomTree[func];
     if (domctx == nullptr) {
@@ -87,7 +87,7 @@ public:
     domctx->refresh();
     return domctx;
   }
-  loopInfo* getLoopInfo(ir::Function* func) {
+  LoopInfo* getLoopInfo(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
     auto lpctx = mLoopInfo[func];
     if (lpctx == nullptr) {
@@ -97,7 +97,7 @@ public:
     lpctx->refresh();
     return lpctx;
   }
-  indVarInfo* getIndVarInfo(ir::Function* func) {
+  IndVarInfo* getIndVarInfo(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
     auto idvctx = mIndVarInfo[func];
     if (idvctx == nullptr) {
@@ -120,7 +120,7 @@ public:
     return dpctx;
   }
 
-  callGraph* getCallGraph() {
+  CallGraph* getCallGraph() {
     mCallGraph->refresh();
     return mCallGraph;
   }
@@ -130,7 +130,7 @@ public:
     return mSideEffectInfo;
   }
 
-  domTree* getDomTreeWithoutRefresh(ir::Function* func) {
+  DomTree* getDomTreeWithoutRefresh(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
     auto domctx = mDomTree[func];
     if (domctx == nullptr) {
@@ -139,7 +139,7 @@ public:
     }
     return domctx;
   }
-  pdomTree* getPDomTreeWithoutRefresh(ir::Function* func) {
+  PDomTree* getPDomTreeWithoutRefresh(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
     auto domctx = mPDomTree[func];
     if (domctx == nullptr) {
@@ -148,7 +148,7 @@ public:
     }
     return domctx;
   }
-  loopInfo* getLoopInfoWithoutRefresh(ir::Function* func) {
+  LoopInfo* getLoopInfoWithoutRefresh(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
     auto lpctx = mLoopInfo[func];
     if (lpctx == nullptr) {
@@ -157,7 +157,7 @@ public:
     }
     return lpctx;
   }
-  indVarInfo* getIndVarInfoWithoutRefresh(ir::Function* func) {
+  IndVarInfo* getIndVarInfoWithoutRefresh(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
     auto idvctx = mIndVarInfo[func];
     if (idvctx == nullptr) {
@@ -176,7 +176,7 @@ public:
     return dpctx;
   }
 
-  callGraph* getCallGraphWithoutRefresh() { return mCallGraph; }
+  CallGraph* getCallGraphWithoutRefresh() { return mCallGraph; }
   sideEffectInfo* getSideEffectInfoWithoutRefresh() { return mSideEffectInfo; }
   parallelInfo* getParallelInfo(ir::Function* func){
     if (func->isOnlyDeclare()) return nullptr;

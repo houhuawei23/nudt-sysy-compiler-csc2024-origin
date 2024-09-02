@@ -15,7 +15,7 @@ private:
   ir::Value* getBaseAddr(ir::Value* subAddr);
 
 private:
-  callGraph* cgctx;
+  CallGraph* cgctx;
   sideEffectInfo* sectx;
 };
 }

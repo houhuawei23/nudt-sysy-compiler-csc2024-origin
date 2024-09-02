@@ -9,7 +9,7 @@
 namespace pass {
 class Mem2Reg : public FunctionPass {
   private:
-    domTree* domctx;
+    DomTree* domctx;
     std::vector<ir::AllocaInst*> Allocas;
     std::map<ir::AllocaInst*, std::set<ir::BasicBlock*>> DefsBlock;
     std::map<ir::AllocaInst*, std::set<ir::BasicBlock*>> UsesBlock;

@@ -128,8 +128,8 @@ void PassManager::runPasses(std::vector<std::string> passes) {
     for (auto pass_name : passes) {
         std::cerr << pass_name << " ";
         if (pass_name.compare("dom") == 0) {
-            run(new pass::domInfoPass());
-            // run(new pass::domInfoCheck());
+            run(new pass::DomInfoPass());
+            // run(new pass::DomInfoCheck());
         } else if (pass_name.compare("mem2reg") == 0) {
             run(new pass::Mem2Reg());
         } else if (pass_name.compare("pdom") == 0) {
@@ -208,7 +208,7 @@ void PassManager::runPasses(std::vector<std::string> passes) {
         } else if (pass_name == "blocksort") {
             run(&blockSortPass);
         } else if (pass_name == "da") {
-            run(new pass::dependenceAnalysis());
+            run(new pass::DependenceAnalysis());
         } else if (pass_name == "ag2l") {
             run(new pass::aggressiveG2L());
         } else if (pass_name == "idvrepl") {

@@ -12,11 +12,11 @@ namespace pass{
             void run(ir::Function* func,TopAnalysisInfoManager* tp)override;
             std::string name() const override;
         private:
-            domTree* domctx;
-            loopInfo* lpctx;
+            DomTree* domctx;
+            LoopInfo* lpctx;
             sideEffectInfo* sectx;
             dependenceInfo* dpctx;
-            indVarInfo* idvctx;
+            IndVarInfo* idvctx;
             LoopDependenceInfo* depInfoForLp;
             void runOnLoop(ir::Loop* lp);
             ir::AllocaInst* createNewLocal(ir::Type* allocaType,ir::Function* func);

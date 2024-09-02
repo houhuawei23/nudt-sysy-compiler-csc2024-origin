@@ -94,7 +94,7 @@ void loopUnroll::insertbranchloop(ir::BasicBlock* branch0,
                                   ir::BinaryInst* iviter,
                                   ir::Value* endvar,
                                   ir::BasicBlock* condbb,
-                                  domTree* domctx,
+                                  DomTree* domctx,
                                   TopAnalysisInfoManager* tp) {
     headuseouts.clear();
 

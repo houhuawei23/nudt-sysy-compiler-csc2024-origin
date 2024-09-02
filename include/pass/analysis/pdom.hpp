@@ -9,7 +9,7 @@ public:
   std::string name() const override { return "PostDomInfoPass"; }
 
 private:
-  pdomTree* pdctx;
+  PDomTree* pdctx;
 };
 
 class preProcPostDom : public FunctionPass {
@@ -18,7 +18,7 @@ public:
   std::string name() const override { return "preProcPostDom"; }
 
 private:
-  pdomTree* pdctx;
+  PDomTree* pdctx;
 };
 
 class ipostDomGen : public FunctionPass {
@@ -33,7 +33,7 @@ public:
   std::string name() const override { return "ipostDomGen"; }
 
 private:
-  pdomTree* pdctx;
+  PDomTree* pdctx;
 };
 
 class postDomFrontierGen : public FunctionPass {
@@ -47,7 +47,7 @@ public:
   std::string name() const override { return "postDomFrontierGen"; }
 
 private:
-  pdomTree* pdctx;
+  PDomTree* pdctx;
 };
 
 class postDomInfoCheck : public FunctionPass {
@@ -56,7 +56,7 @@ public:
   std::string name() const override { return "postDomInfoCheck"; }
 
 private:
-  pdomTree* pdctx;
+  PDomTree* pdctx;
 };
 
 }  // namespace pass

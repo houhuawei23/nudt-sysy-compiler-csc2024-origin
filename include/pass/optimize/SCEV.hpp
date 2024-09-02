@@ -24,10 +24,10 @@ class SCEV : public FunctionPass{
         void run(ir::Function* func,TopAnalysisInfoManager* tp)override;
         std::string name() const override{return "scev";}
     private:
-        loopInfo* lpctx;
-        indVarInfo* idvctx;
+        LoopInfo* lpctx;
+        IndVarInfo* idvctx;
         sideEffectInfo* sectx;
-        domTree* domctx;
+        DomTree* domctx;
         void runOnLoop(ir::Loop* lp,TopAnalysisInfoManager* tp);
         bool isSimplyLoopInvariant(ir::Loop* lp,ir::Value* val);
         bool isSimplyNotInLoop(ir::Loop* lp,ir::Value* val);

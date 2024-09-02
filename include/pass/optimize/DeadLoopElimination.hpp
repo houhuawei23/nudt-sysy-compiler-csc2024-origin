@@ -9,10 +9,10 @@ namespace pass {
 
 class DeadLoopElimination : public FunctionPass {
   private:
-    domTree* domctx;
+    DomTree* domctx;
     sideEffectInfo* sectx;
-    loopInfo* lpctx;
-    indVarInfo* ivctx;
+    LoopInfo* lpctx;
+    IndVarInfo* ivctx;
 
   public:
     bool isDeadLoop(ir::IndVar* iv, ir::Loop* loop);

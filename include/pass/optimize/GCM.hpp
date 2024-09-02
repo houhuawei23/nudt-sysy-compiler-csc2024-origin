@@ -13,8 +13,8 @@ private:
 
 public:
   void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
-  domTree* domctx;
-  loopInfo* lpctx;
+  DomTree* domctx;
+  LoopInfo* lpctx;
   sideEffectInfo* sectx;
   void scheduleEarly(ir::Instruction* instruction, ir::BasicBlock* entry);
   // void scheduleLate(ir::Instruction *instruction, ir::BasicBlock* exit);

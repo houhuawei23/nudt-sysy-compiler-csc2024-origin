@@ -23,11 +23,11 @@ namespace pass{
         private:
             TopAnalysisInfoManager* topmana;
             dependenceInfo* dpctx;
-            domTree* domctx;
-            loopInfo* lpctx;
+            DomTree* domctx;
+            LoopInfo* lpctx;
             sideEffectInfo* sectx;
-            callGraph* cgctx;
-            indVarInfo* idvctx;
+            CallGraph* cgctx;
+            IndVarInfo* idvctx;
             parallelInfo* parctx;
             void runOnLoop(ir::Loop* lp);
             void printParallelInfo(ir::Function* func);

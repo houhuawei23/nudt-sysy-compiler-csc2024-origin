@@ -11,8 +11,8 @@ using namespace ir;
 
 namespace pass {
 bool checkLoopParallel(Loop* loop,
-                       loopInfo* lpctx,
-                       indVarInfo* indVarctx,
+                       LoopInfo* lpctx,
+                       IndVarInfo* indVarctx,
                        parallelInfo* parallelctx,
                        std::unordered_set<Loop*>& extractedLoops);
 

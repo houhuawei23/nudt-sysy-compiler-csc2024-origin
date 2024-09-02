@@ -7,38 +7,43 @@
 
 namespace pass {
 template <typename PassUnit>
-class analysisInfo;
+class AnalysisInfo;
 
-class domTree;
-class pdomTree;
-class loopInfo;
-class callGraph;
-class indVarInfo;
+class DomTree;
+class PDomTree;
+class LoopInfo;
+class CallGraph;
+class IndVarInfo;
 class TopAnalysisInfoManager;
-class dependenceAnalysis;
+class DependenceAnalysis;
 class LoopDependenceInfo;
 
 
 template <typename PassUnit>
-class analysisInfo {
+class AnalysisInfo {
   protected:
     PassUnit* passUnit;
     TopAnalysisInfoManager* topManager;
     bool isValid;
 
   public:
-    analysisInfo(PassUnit* mp, TopAnalysisInfoManager* mtp, bool v = false)
+    AnalysisInfo(PassUnit* mp, TopAnalysisInfoManager* mtp, bool v = false)
       : isValid(v), passUnit(mp), topManager(mtp) {}
     void setOn() { isValid = true; }
     void setOff() { isValid = false; }
     virtual void refresh() = 0;
 };
-using ModuleACtx = analysisInfo<ir::Module>;
-using FunctionACtx = analysisInfo<ir::Function>;
+using ModuleACtx = AnalysisInfo<ir::Module>;
+using FunctionACtx = AnalysisInfo<ir::Function>;
 
 // add new analysis info of ir here!
 // dom Tree
-class domTree : public FunctionACtx {
+/*
+Dominate Tree
+idom: immediate dominator
+sdom: strict dominator
+*/
+class DomTree : public FunctionACtx {
   protected:
     std::unordered_map<ir::BasicBlock*, ir::BasicBlock*> _idom;
     std::unordered_map<ir::BasicBlock*, ir::BasicBlock*> _sdom;
@@ -49,7 +54,7 @@ class domTree : public FunctionACtx {
     std::vector<ir::BasicBlock*> _DFSDomTreeVector;
 
   public:
-    domTree(ir::Function* func, TopAnalysisInfoManager* tp) : FunctionACtx(func, tp) {}
+    DomTree(ir::Function* func, TopAnalysisInfoManager* tp) : FunctionACtx(func, tp) {}
     ir::BasicBlock* idom(ir::BasicBlock* bb) { return _idom[bb]; }
     void set_idom(ir::BasicBlock* bb, ir::BasicBlock* idbb) { _idom[bb] = idbb; }
     ir::BasicBlock* sdom(ir::BasicBlock* bb) { return _sdom[bb]; }
@@ -57,13 +62,13 @@ class domTree : public FunctionACtx {
     int domlevel(ir::BasicBlock* bb) { return _domlevel[bb]; }
     void set_domlevel(ir::BasicBlock* bb, int lv) { _domlevel[bb] = lv; }
 
-    std::vector<ir::BasicBlock*>& domson(ir::BasicBlock* bb) { return _domson[bb]; }
+    auto& domson(ir::BasicBlock* bb) { return _domson[bb]; }
 
-    std::vector<ir::BasicBlock*>& domfrontier(ir::BasicBlock* bb) { return _domfrontier[bb]; }
+    auto& domfrontier(ir::BasicBlock* bb) { return _domfrontier[bb]; }
 
-    std::vector<ir::BasicBlock*>& BFSDomTreeVector() { return _BFSDomTreeVector; }
+    auto& BFSDomTreeVector() { return _BFSDomTreeVector; }
 
-    std::vector<ir::BasicBlock*>& DFSDomTreeVector() { return _DFSDomTreeVector; }
+    auto& DFSDomTreeVector() { return _DFSDomTreeVector; }
 
     void clearAll() {
         _idom.clear();
@@ -135,7 +140,7 @@ class domTree : public FunctionACtx {
     }
 };
 
-class pdomTree : public FunctionACtx {  // also used as pdom
+class PDomTree : public FunctionACtx {  // also used as pdom
   protected:
     std::unordered_map<ir::BasicBlock*, ir::BasicBlock*> _ipdom;
     std::unordered_map<ir::BasicBlock*, ir::BasicBlock*> _spdom;
@@ -144,7 +149,7 @@ class pdomTree : public FunctionACtx {  // also used as pdom
     std::unordered_map<ir::BasicBlock*, std::vector<ir::BasicBlock*>> _pdomfrontier;
 
   public:
-    pdomTree(ir::Function* func, TopAnalysisInfoManager* tp) : FunctionACtx(func, tp) {}
+    PDomTree(ir::Function* func, TopAnalysisInfoManager* tp) : FunctionACtx(func, tp) {}
     ir::BasicBlock* ipdom(ir::BasicBlock* bb) {
         assert(bb && "bb is null");
         return _ipdom[bb];
@@ -196,14 +201,14 @@ class pdomTree : public FunctionACtx {  // also used as pdom
     void refresh() override;
 };
 
-class loopInfo : public FunctionACtx {
+class LoopInfo : public FunctionACtx {
   protected:
     std::vector<ir::Loop*> _loops;
     std::unordered_map<ir::BasicBlock*, ir::Loop*> _head2loop;
     std::unordered_map<ir::BasicBlock*, size_t> _looplevel;
 
   public:
-    loopInfo(ir::Function* fp, TopAnalysisInfoManager* tp) : FunctionACtx(fp, tp) {}
+    LoopInfo(ir::Function* fp, TopAnalysisInfoManager* tp) : FunctionACtx(fp, tp) {}
     std::vector<ir::Loop*>& loops() { return _loops; }
     ir::Loop* head2loop(ir::BasicBlock* bb) {
         if (_head2loop.count(bb) == 0)
@@ -238,7 +243,7 @@ class loopInfo : public FunctionACtx {
     std::vector<ir::Loop*> sortedLoops(bool reverse = false); // looplevel small to big
 };
 
-class callGraph : public ModuleACtx {
+class CallGraph : public ModuleACtx {
   protected:
     std::unordered_map<ir::Function*, std::set<ir::Function*>> _callees;
     std::unordered_map<ir::Function*, std::set<ir::Function*>> _callers;
@@ -249,7 +254,7 @@ class callGraph : public ModuleACtx {
     std::unordered_map<ir::Function*, std::set<ir::CallInst*>>_calleeCallInsts;//func's callee insts are func's
 
   public:
-    callGraph(ir::Module* md, TopAnalysisInfoManager* tp) : ModuleACtx(md, tp) {}
+    CallGraph(ir::Module* md, TopAnalysisInfoManager* tp) : ModuleACtx(md, tp) {}
     std::set<ir::Function*>& callees(ir::Function* func) { return _callees[func]; }
     std::set<ir::Function*>& callers(ir::Function* func) { return _callers[func]; }
     std::set<ir::CallInst*>& callerCallInsts(ir::Function* func) { return _callerCallInsts[func]; }
@@ -287,12 +292,12 @@ class callGraph : public ModuleACtx {
     void refresh() override;
 };
 
-class indVarInfo : public FunctionACtx {
+class IndVarInfo : public FunctionACtx {
   private:
     std::unordered_map<ir::Loop*, ir::IndVar*> _loopToIndvar;
 
   public:
-    indVarInfo(ir::Function* fp, TopAnalysisInfoManager* tp) : FunctionACtx(fp, tp) {}
+    IndVarInfo(ir::Function* fp, TopAnalysisInfoManager* tp) : FunctionACtx(fp, tp) {}
     ir::IndVar* getIndvar(ir::Loop* loop) {
         if (_loopToIndvar.count(loop) == 0)
             return nullptr;

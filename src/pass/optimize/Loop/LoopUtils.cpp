@@ -2,8 +2,8 @@
 #include "pass/optimize/Loop/LoopUtils.hpp"
 namespace pass {
 bool checkLoopParallel(Loop* loop,
-                       loopInfo* lpctx,
-                       indVarInfo* indVarctx,
+                       LoopInfo* lpctx,
+                       IndVarInfo* indVarctx,
                        parallelInfo* parallelctx,
                        std::unordered_set<Loop*>& extractedLoops) {
   const auto isBlocked = [&](Loop* lp) {

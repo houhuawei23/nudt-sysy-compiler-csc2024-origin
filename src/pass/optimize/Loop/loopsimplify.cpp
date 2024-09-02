@@ -204,7 +204,7 @@ void loopsimplify::run(ir::Function* func, TopAnalysisInfoManager* tp) {
   if (func->isOnlyDeclare()) return;
     // func->rename();
   // func->print(std::cerr);
-  loopInfo* LI = tp->getLoopInfo(func);
+  LoopInfo* LI = tp->getLoopInfo(func);
   func->rename();
       // func->rename();
   // func->print(std::cerr);

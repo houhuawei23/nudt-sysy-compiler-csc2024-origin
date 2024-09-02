@@ -11,9 +11,9 @@ namespace pass{
             void run(ir::Module* md,TopAnalysisInfoManager* tp)override;
             std::string name()const override{return "AG2L";}
         private:
-            domTree* domctx;
+            DomTree* domctx;
             sideEffectInfo* sectx;
-            callGraph* cgctx;
+            CallGraph* cgctx;
             void replaceReadOnlyGv(ir::GlobalVariable* gv);
             void deleteWriteOnlyGv(ir::GlobalVariable* gv);
             void replaceGvInMain(ir::GlobalVariable* gv,ir::Function* func);//配合mem2reg使用

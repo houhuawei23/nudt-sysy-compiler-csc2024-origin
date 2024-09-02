@@ -17,7 +17,7 @@ private:
   void dfsFuncCallGraph(ir::Function* func);
 
 private:
-  callGraph* cgctx;
+  CallGraph* cgctx;
 };
 
 class callGraphCheck : public ModulePass {
@@ -26,6 +26,6 @@ public:
   void run(ir::Module* ctx, TopAnalysisInfoManager* tp) override;
 
 private:
-  callGraph* cgctx;
+  CallGraph* cgctx;
 };
 }  // namespace pass

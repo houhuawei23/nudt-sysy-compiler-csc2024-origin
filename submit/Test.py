@@ -98,13 +98,13 @@ def run_riscv_gcc(src, target, output, opt_level=0, log_level=0, timeout=1):
     riscv64-linux-gnu-gcc-12 -S -o output src
     """
     command = riscv64_gpp_ref_command + ["-S", "-o", output, src, f"-O{opt_level}"]
-    print(*command, sep=" ")
+    # print(*command, sep=" ")
     process = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
 
     if process.returncode != 0:
         command = riscv64_gcc_ref_command + ["-S", "-o", output, src, f"-O{opt_level}"]
         # print(*command, sep=" ")
-        print(*command, sep=" ")
+        # print(*command, sep=" ")
         process = subprocess.run(
             command, capture_output=True, text=True, timeout=timeout
         )
@@ -116,12 +116,12 @@ def link_executable(src: str, target: str, output: str, runtime, timeout=1):
     riscv64-linux-gnu-gcc-12
     """
     command = riscv64_gpp_ref_command + ["-o", output, src, runtime]
-    print(*command, sep=" ")
+    # print(*command, sep=" ")
     process = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
 
     if process.returncode != 0:
         command = riscv64_gcc_ref_command + ["-o", output, runtime, src]
-        print(*command, sep=" ")
+        # print(*command, sep=" ")
         process = subprocess.run(
             command, capture_output=True, text=True, timeout=timeout
         )
@@ -137,13 +137,13 @@ def link_ricvgpp_executable(src: str, target: str, output: str, opt_level=0, tim
     # process = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
 
     command = riscv64_gpp_ref_command + ["-o", output, src, f"-O{opt_level}"]
-    print(*command, sep=" ")
+    # print(*command, sep=" ")
 
     process = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
 
     if process.returncode != 0:
         command = riscv64_gcc_ref_command + ["-o", output, src, f"-O{opt_level}"]
-        print(*command, sep=" ")
+        # print(*command, sep=" ")
         process = subprocess.run(
             command, capture_output=True, text=True, timeout=timeout
         )

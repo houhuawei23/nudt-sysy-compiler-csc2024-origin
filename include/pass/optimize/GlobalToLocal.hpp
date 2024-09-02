@@ -9,7 +9,7 @@
 namespace pass {
 class global2local : public ModulePass {
 private:
-  callGraph* cgctx;
+  CallGraph* cgctx;
   void globalCallAnalysis(ir::Module* md);
   void addIndirectGlobalUseFunc(ir::GlobalVariable* gv, ir::Function* func);
   bool processGlobalVariables(ir::GlobalVariable* gv,

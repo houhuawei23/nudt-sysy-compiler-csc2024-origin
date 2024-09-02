@@ -29,7 +29,7 @@ public:
   ir::Value* getValueNumber(ir::PtrCastInst* ptrcast);
 
   void visitinst(ir::Instruction* inst);
-  domTree* domctx;
+  DomTree* domctx;
   sideEffectInfo* sectx;
   std::string name() const override { return "GVN"; }
 };

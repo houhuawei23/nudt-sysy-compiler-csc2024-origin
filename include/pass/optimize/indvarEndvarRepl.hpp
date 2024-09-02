@@ -12,9 +12,9 @@ namespace pass{
             std::string name() const override { return "idvEdvRepl"; }
             void run(ir::Function* func,TopAnalysisInfoManager* tp)override;
         private:
-            loopInfo* lpctx;
-            indVarInfo* idvctx;
-            domTree* domctx;
+            LoopInfo* lpctx;
+            IndVarInfo* idvctx;
+            DomTree* domctx;
             sideEffectInfo* sectx;
             void runOnLoop(ir::Loop* lp);
             int getConstantEndvarIndVarIterCnt(ir::Loop* lp,ir::IndVar* idv);

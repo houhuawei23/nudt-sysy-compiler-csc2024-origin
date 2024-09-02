@@ -10,8 +10,8 @@ namespace pass {
 class loopUnroll : public FunctionPass {
   private:
   public:
-    loopInfo* lpctx;
-    indVarInfo* ivctx;
+    LoopInfo* lpctx;
+    IndVarInfo* ivctx;
     static std::unordered_map<ir::Value*, ir::Value*> copymap;
     std::vector<ir::Instruction*> headuseouts;
     ir::BasicBlock* nowlatchnext;
@@ -40,7 +40,7 @@ class loopUnroll : public FunctionPass {
                           ir::BinaryInst* iviter,
                           ir::Value* endvar,
                           ir::BasicBlock* condbb,
-                          domTree* domctx,
+                          DomTree* domctx,
                           TopAnalysisInfoManager* tp);
     static ir::Value* getValue(ir::Value* val) {
         if (auto c = val->dynCast<ir::ConstantValue>()) {
@@ -52,7 +52,7 @@ class loopUnroll : public FunctionPass {
         return val;
     }
     loopUnroll() : FunctionPass() {}
-    loopUnroll(loopInfo* lpinfo, indVarInfo* ivinfo) : FunctionPass(), lpctx(lpinfo), ivctx(ivinfo) {}
+    loopUnroll(LoopInfo* lpinfo, IndVarInfo* ivinfo) : FunctionPass(), lpctx(lpinfo), ivctx(ivinfo) {}
     void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
 };
 }  // namespace pass

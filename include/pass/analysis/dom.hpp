@@ -3,24 +3,24 @@
 
 namespace pass {
 
-class domInfoPass : public FunctionPass {
+class DomInfoPass : public FunctionPass {
   public:
     void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
     std::string name() const override { return "DomInfoPass"; }
 };
 
-class preProcDom : public FunctionPass {
+class PreProcDom : public FunctionPass {
   private:
-    domTree* domctx;
+    DomTree* domctx;
 
   public:
     void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
     std::string name() const override { return "PreProcDom"; }
 };
 
-class idomGen : public FunctionPass {
+class IDomGen : public FunctionPass {
   private:
-    domTree* domctx;
+    DomTree* domctx;
 
   private:
     void dfsBlocks(ir::BasicBlock* bb);
@@ -33,9 +33,9 @@ class idomGen : public FunctionPass {
     std::string name() const override { return "IdomGen"; }
 };
 
-class domFrontierGen : public FunctionPass {
+class DomFrontierGen : public FunctionPass {
   private:
-    domTree* domctx;
+    DomTree* domctx;
 
   private:
     void getDomTree(ir::Function* func);
@@ -47,9 +47,9 @@ class domFrontierGen : public FunctionPass {
     std::string name() const override { return "DomFrontierGen"; }
 };
 
-class domInfoCheck : public FunctionPass {
+class DomInfoCheck : public FunctionPass {
   private:
-    domTree* domctx;
+    DomTree* domctx;
 
   public:
     void run(ir::Function* func, TopAnalysisInfoManager* tp) override;

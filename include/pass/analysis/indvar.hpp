@@ -8,9 +8,9 @@ public:
   void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
 
 private:
-  loopInfo* lpctx;
-  indVarInfo* ivctx;
-  domTree* domctx;
+  LoopInfo* lpctx;
+  IndVarInfo* ivctx;
+  DomTree* domctx;
   sideEffectInfo* sectx;
   void addIndVar(ir::Loop* lp,
                  ir::Value* mbegin,
@@ -32,7 +32,7 @@ public:
   std::string name() const override { return "indVarCheckInfo"; }
 
 private:
-  loopInfo* lpctx;
-  indVarInfo* ivctx;
+  LoopInfo* lpctx;
+  IndVarInfo* ivctx;
 };
 }  // namespace pass

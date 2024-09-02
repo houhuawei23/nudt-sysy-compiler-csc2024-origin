@@ -9,10 +9,10 @@ namespace pass {
 
 class loopsplit : public FunctionPass {
   private:
-    domTree* domctx;
+    DomTree* domctx;
     sideEffectInfo* sectx;
-    loopInfo* lpctx;
-    indVarInfo* ivctx;
+    LoopInfo* lpctx;
+    IndVarInfo* ivctx;
     TopAnalysisInfoManager* tpctx;
     ir::BranchInst* brinst = nullptr;
     ir::ICmpInst* icmpinst = nullptr;

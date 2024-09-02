@@ -9,7 +9,7 @@
 namespace pass {
 class Inline : public ModulePass {
    private:
-    callGraph* cgctx;
+    CallGraph* cgctx;
    public:
     std::string name() const override { return "inline"; }
 

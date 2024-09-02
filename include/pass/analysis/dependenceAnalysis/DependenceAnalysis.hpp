@@ -5,20 +5,20 @@
 
 namespace pass{
 
-    class dependenceAnalysis;
+    class DependenceAnalysis;
     // class dependenceAnalysisInfoCheck;
 
-    class dependenceAnalysis:public FunctionPass{
+    class DependenceAnalysis:public FunctionPass{
         public:
             void run(ir::Function* func,TopAnalysisInfoManager* tp)override;
             std::string name() const override { return "dependence analysis"; }
         private:
             TopAnalysisInfoManager* topmana;
-            domTree* domctx;
-            loopInfo* lpctx;
-            indVarInfo* idvctx;
+            DomTree* domctx;
+            LoopInfo* lpctx;
+            IndVarInfo* idvctx;
             sideEffectInfo* sectx;
-            callGraph* cgctx;
+            CallGraph* cgctx;
             dependenceInfo* dpctx;
             void runOnLoop(ir::Loop* lp);
             void makeGepIdx(ir::Loop* lp,ir::IndVar* idv,gepIdx* gepidx);

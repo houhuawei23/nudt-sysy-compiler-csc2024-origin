@@ -115,7 +115,7 @@ void ipostDomGen::run(ir::Function* func, TopAnalysisInfoManager* tp) {
         size[bb] = 1;
         // bb->ipdom=nullptr;
         // bb->spdom=nullptr;
-        // bb->pdomTree.clear();
+        // bb->PDomTree.clear();
         // bb->pdomFrontier.clear();
         pdctx->set_ipdom(bb, nullptr);
         pdctx->set_spdom(bb, nullptr);
@@ -166,10 +166,10 @@ void ipostDomGen::run(ir::Function* func, TopAnalysisInfoManager* tp) {
 
 void postDomFrontierGen::getDomTree(ir::Function* func) {
     // for(auto bb : func->blocks())
-    //     bb->pdomTree.clear();
+    //     bb->PDomTree.clear();
     for (auto bb : func->blocks()) {
         // if(bb->ipdom)
-        //     bb->ipdom->pdomTree.push_back(bb);
+        //     bb->ipdom->PDomTree.push_back(bb);
         if (pdctx->ipdom(bb)) {
             pdctx->pdomson(pdctx->ipdom(bb)).push_back(bb);
         }
@@ -179,7 +179,7 @@ void postDomFrontierGen::getDomTree(ir::Function* func) {
 void postDomFrontierGen::getDomInfo(ir::BasicBlock* bb, int level) {
     // bb->pdomLevel=level;
     pdctx->set_pdomlevel(bb, level);
-    for (auto bbnext : pdctx->pdomson(bb)) {  // bb->pdomTree
+    for (auto bbnext : pdctx->pdomson(bb)) {  // bb->PDomTree
         getDomInfo(bbnext, level + 1);
     }
 }

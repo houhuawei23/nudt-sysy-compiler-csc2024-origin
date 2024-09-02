@@ -12,34 +12,34 @@ using namespace ir;
 using namespace pass;
 
 void TopAnalysisInfoManager::initialize() {
-    mCallGraph = new callGraph(mModule, this);
+    mCallGraph = new CallGraph(mModule, this);
     mSideEffectInfo = new sideEffectInfo(mModule, this);
     for (auto func : mModule->funcs()) {
         if (func->blocks().empty()) continue;
-        mDomTree[func] = new domTree(func, this);
-        mPDomTree[func] = new pdomTree(func, this);
-        mLoopInfo[func] = new loopInfo(func, this);
-        mIndVarInfo[func] = new indVarInfo(func, this);
+        mDomTree[func] = new DomTree(func, this);
+        mPDomTree[func] = new PDomTree(func, this);
+        mLoopInfo[func] = new LoopInfo(func, this);
+        mIndVarInfo[func] = new IndVarInfo(func, this);
         mDepInfo[func] = new dependenceInfo(func,this);
         mParallelInfo[func] = new parallelInfo(func,this);
     }
 }
 
-void domTree::refresh() {
+void DomTree::refresh() {
     using namespace pass;
-    domInfoPass dip = domInfoPass();
+    DomInfoPass dip = DomInfoPass();
     dip.run(passUnit,topManager);
     setOn();
 }
 
-void pdomTree::refresh() {
+void PDomTree::refresh() {
     using namespace pass;
     postDomInfoPass pdi = postDomInfoPass();
     pdi.run(passUnit,topManager);
     setOn();
 }
 
-void loopInfo::refresh() {
+void LoopInfo::refresh() {
     using namespace pass;
     loopAnalysis la = loopAnalysis();
     // loopInfoCheck lic = loopInfoCheck();
@@ -47,7 +47,7 @@ void loopInfo::refresh() {
     // lic.run(passUnit,topManager);
     setOn();
 }
-void loopInfo::print(std::ostream& os) const {
+void LoopInfo::print(std::ostream& os) const {
     os << "Loop Info:\n";
     for (auto loop : _loops) {
         std::cerr << "level: " << _looplevel.at(loop->header()) << std::endl;
@@ -56,7 +56,7 @@ void loopInfo::print(std::ostream& os) const {
     std::cerr << std::endl;
 }
 // looplevel small to big
-std::vector<ir::Loop*> loopInfo::sortedLoops(bool reverse) {
+std::vector<ir::Loop*> LoopInfo::sortedLoops(bool reverse) {
     auto loops = _loops;
     std::sort(loops.begin(), loops.end(), [&](Loop* lhs, Loop* rhs) {
         return _looplevel.at(lhs->header()) < _looplevel.at(rhs->header());
@@ -66,7 +66,7 @@ std::vector<ir::Loop*> loopInfo::sortedLoops(bool reverse) {
     return std::move(loops);
 }
 
-void callGraph::refresh() {
+void CallGraph::refresh() {
     using namespace pass;
     callGraphBuild cgb = callGraphBuild();
     cgb.run(passUnit,topManager);
@@ -74,7 +74,7 @@ void callGraph::refresh() {
     setOn();
 }
 
-void indVarInfo::refresh() {
+void IndVarInfo::refresh() {
     using namespace pass;
     // PassManager pm = PassManager(passUnit->module(), topManager);
     indVarAnalysis iva = indVarAnalysis();
@@ -94,7 +94,7 @@ void sideEffectInfo::refresh() {
 
 void dependenceInfo::refresh() {
     using namespace pass;
-    dependenceAnalysis da=dependenceAnalysis();
+    DependenceAnalysis da=DependenceAnalysis();
     da.run(passUnit,topManager);
     setOn();
 }

@@ -12,8 +12,8 @@ private:
                      ir::BasicBlock* header,
                      ir::BasicBlock* tail);
   void loopGetExits(ir::Loop* plp);
-  loopInfo* lpctx;
-  domTree* domctx;
+  LoopInfo* lpctx;
+  DomTree* domctx;
 };
 
 class loopInfoCheck : public FunctionPass {
@@ -22,6 +22,6 @@ public:
   std::string name() const override { return "Loop Info Check"; }
 
 private:
-  loopInfo* lpctx;
+  LoopInfo* lpctx;
 };
 }  // namespace pass

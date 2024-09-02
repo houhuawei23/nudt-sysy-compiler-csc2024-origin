@@ -262,7 +262,7 @@ void LoopDependenceInfo::addPtrFromSubLoop(ir::Value* ptr,ir::Instruction* inst,
     memInsts.insert(inst);
 }
 
-bool pass::isTwoBaseAddrPossiblySame(ir::Value* ptr1,ir::Value* ptr2,ir::Function* func,callGraph* cgctx,TopAnalysisInfoManager* tp){
+bool pass::isTwoBaseAddrPossiblySame(ir::Value* ptr1,ir::Value* ptr2,ir::Function* func,CallGraph* cgctx,TopAnalysisInfoManager* tp){
     auto type1=getBaseAddrType(ptr1);
     auto type2=getBaseAddrType(ptr2);
     if(type1==type2){
