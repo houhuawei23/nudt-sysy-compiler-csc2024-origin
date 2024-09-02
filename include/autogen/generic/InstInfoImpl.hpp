@@ -29,8 +29,7 @@ public:
   std::string_view name() const override { return "GENERIC.Jump"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "Jump"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)};
+    out << "Jump" << " " << mir::GENERIC::OperandDumper{inst.operand(0)};
   }
 };
 
@@ -59,8 +58,7 @@ public:
   std::string_view name() const override { return "GENERIC.Branch"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "Branch"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "Branch" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(2)};
   }
@@ -116,8 +114,7 @@ public:
   std::string_view name() const override { return "GENERIC.Load"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "Load"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "Load" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(2)};
   }
@@ -148,8 +145,7 @@ public:
   std::string_view name() const override { return "GENERIC.Store"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "Store"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "Store" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(2)};
   }
@@ -180,8 +176,7 @@ public:
   std::string_view name() const override { return "GENERIC.Add"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "Add"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "Add" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(2)};
   }
@@ -212,8 +207,7 @@ public:
   std::string_view name() const override { return "GENERIC.Sub"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "Sub"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "Sub" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(2)};
   }
@@ -244,8 +238,7 @@ public:
   std::string_view name() const override { return "GENERIC.Mul"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "Mul"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "Mul" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(2)};
   }
@@ -276,8 +269,7 @@ public:
   std::string_view name() const override { return "GENERIC.UDiv"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "UDiv"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "UDiv" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(2)};
   }
@@ -308,8 +300,7 @@ public:
   std::string_view name() const override { return "GENERIC.URem"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "URem"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "URem" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(2)};
   }
@@ -340,8 +331,7 @@ public:
   std::string_view name() const override { return "GENERIC.And"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "And"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "And" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(2)};
   }
@@ -372,8 +362,7 @@ public:
   std::string_view name() const override { return "GENERIC.Or"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "Or"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "Or" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(2)};
   }
@@ -404,8 +393,7 @@ public:
   std::string_view name() const override { return "GENERIC.Xor"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "Xor"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "Xor" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(2)};
   }
@@ -436,8 +424,7 @@ public:
   std::string_view name() const override { return "GENERIC.Shl"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "Shl"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "Shl" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(2)};
   }
@@ -468,8 +455,7 @@ public:
   std::string_view name() const override { return "GENERIC.LShr"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "LShr"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "LShr" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(2)};
   }
@@ -500,8 +486,7 @@ public:
   std::string_view name() const override { return "GENERIC.AShr"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "AShr"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "AShr" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(2)};
   }
@@ -532,8 +517,7 @@ public:
   std::string_view name() const override { return "GENERIC.SDiv"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "SDiv"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "SDiv" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(2)};
   }
@@ -564,8 +548,7 @@ public:
   std::string_view name() const override { return "GENERIC.SRem"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "SRem"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "SRem" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(2)};
   }
@@ -596,8 +579,7 @@ public:
   std::string_view name() const override { return "GENERIC.SMin"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "SMin"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "SMin" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(2)};
   }
@@ -628,8 +610,7 @@ public:
   std::string_view name() const override { return "GENERIC.SMax"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "SMax"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "SMax" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(2)};
   }
@@ -658,8 +639,7 @@ public:
   std::string_view name() const override { return "GENERIC.Neg"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "Neg"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "Neg" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
   }
 };
@@ -687,8 +667,7 @@ public:
   std::string_view name() const override { return "GENERIC.Abs"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "Abs"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "Abs" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
   }
 };
@@ -718,8 +697,7 @@ public:
   std::string_view name() const override { return "GENERIC.FAdd"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "FAdd"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "FAdd" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(2)};
   }
@@ -750,8 +728,7 @@ public:
   std::string_view name() const override { return "GENERIC.FSub"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "FSub"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "FSub" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(2)};
   }
@@ -782,8 +759,7 @@ public:
   std::string_view name() const override { return "GENERIC.FMul"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "FMul"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "FMul" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(2)};
   }
@@ -814,8 +790,7 @@ public:
   std::string_view name() const override { return "GENERIC.FDiv"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "FDiv"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "FDiv" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(2)};
   }
@@ -844,8 +819,7 @@ public:
   std::string_view name() const override { return "GENERIC.FNeg"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "FNeg"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "FNeg" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
   }
 };
@@ -873,8 +847,7 @@ public:
   std::string_view name() const override { return "GENERIC.FAbs"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "FAbs"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "FAbs" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
   }
 };
@@ -906,8 +879,7 @@ public:
   std::string_view name() const override { return "GENERIC.FFma"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "FFma"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "FFma" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(2)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(3)};
@@ -941,8 +913,7 @@ public:
   std::string_view name() const override { return "GENERIC.ICmp"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "ICmp"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "ICmp" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(2)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(3)};
@@ -976,8 +947,7 @@ public:
   std::string_view name() const override { return "GENERIC.FCmp"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "FCmp"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "FCmp" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(2)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(3)};
@@ -1007,8 +977,7 @@ public:
   std::string_view name() const override { return "GENERIC.SExt"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "SExt"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "SExt" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
   }
 };
@@ -1036,8 +1005,7 @@ public:
   std::string_view name() const override { return "GENERIC.ZExt"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "ZExt"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "ZExt" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
   }
 };
@@ -1065,8 +1033,7 @@ public:
   std::string_view name() const override { return "GENERIC.Trunc"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "Trunc"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "Trunc" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
   }
 };
@@ -1094,8 +1061,7 @@ public:
   std::string_view name() const override { return "GENERIC.F2U"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "F2U"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "F2U" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
   }
 };
@@ -1123,8 +1089,7 @@ public:
   std::string_view name() const override { return "GENERIC.F2S"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "F2S"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "F2S" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
   }
 };
@@ -1152,8 +1117,7 @@ public:
   std::string_view name() const override { return "GENERIC.U2F"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "U2F"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "U2F" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
   }
 };
@@ -1181,8 +1145,7 @@ public:
   std::string_view name() const override { return "GENERIC.S2F"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "S2F"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "S2F" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
   }
 };
@@ -1208,8 +1171,7 @@ public:
   std::string_view name() const override { return "GENERIC.FCast"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "FCast"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "FCast" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
   }
 };
@@ -1237,8 +1199,7 @@ public:
   std::string_view name() const override { return "GENERIC.Copy"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "Copy"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "Copy" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
   }
 };
@@ -1270,8 +1231,7 @@ public:
   std::string_view name() const override { return "GENERIC.Select"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "Select"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "Select" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(2)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(3)};
@@ -1301,8 +1261,7 @@ public:
   std::string_view name() const override { return "GENERIC.LoadGlobalAddress"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "LoadGlobalAddress"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "LoadGlobalAddress" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
   }
 };
@@ -1330,8 +1289,7 @@ public:
   std::string_view name() const override { return "GENERIC.LoadImm"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "LoadImm"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "LoadImm" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
   }
 };
@@ -1359,8 +1317,7 @@ public:
   std::string_view name() const override { return "GENERIC.LoadStackObjectAddr"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "LoadStackObjectAddr"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "LoadStackObjectAddr" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
   }
 };
@@ -1388,8 +1345,7 @@ public:
   std::string_view name() const override { return "GENERIC.CopyFromReg"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "CopyFromReg"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "CopyFromReg" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
   }
 };
@@ -1417,8 +1373,7 @@ public:
   std::string_view name() const override { return "GENERIC.CopyToReg"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "CopyToReg"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "CopyToReg" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
   }
 };
@@ -1446,8 +1401,7 @@ public:
   std::string_view name() const override { return "GENERIC.LoadImmToReg"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "LoadImmToReg"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "LoadImmToReg" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
   }
 };
@@ -1475,8 +1429,7 @@ public:
   std::string_view name() const override { return "GENERIC.LoadRegFromStack"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "LoadRegFromStack"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "LoadRegFromStack" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
   }
 };
@@ -1504,8 +1457,7 @@ public:
   std::string_view name() const override { return "GENERIC.StoreRegToStack"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "StoreRegToStack"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "StoreRegToStack" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)};
   }
 };
@@ -1558,8 +1510,7 @@ public:
   std::string_view name() const override { return "GENERIC.AtomicAdd"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "AtomicAdd"
-        << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
+    out << "AtomicAdd" << " " << mir::GENERIC::OperandDumper{inst.operand(0)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(1)} << ", "
         << mir::GENERIC::OperandDumper{inst.operand(2)};
   }

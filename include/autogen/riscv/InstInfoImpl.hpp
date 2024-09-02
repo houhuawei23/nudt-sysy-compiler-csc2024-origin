@@ -31,8 +31,7 @@ public:
   std::string_view name() const override { return "RISCV.ADD_UW"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "add.uw"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "add.uw" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -63,8 +62,7 @@ public:
   std::string_view name() const override { return "RISCV.SH1ADD"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "sh1add"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "sh1add" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -95,8 +93,7 @@ public:
   std::string_view name() const override { return "RISCV.SH1ADD_UW"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "sh1add.uw"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "sh1add.uw" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -127,8 +124,7 @@ public:
   std::string_view name() const override { return "RISCV.SH2ADD"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "sh2add"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "sh2add" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -159,8 +155,7 @@ public:
   std::string_view name() const override { return "RISCV.SH2ADD_UW"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "sh2add.uw"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "sh2add.uw" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -191,8 +186,7 @@ public:
   std::string_view name() const override { return "RISCV.SH3ADD"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "sh3add"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "sh3add" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -223,8 +217,7 @@ public:
   std::string_view name() const override { return "RISCV.SH3ADD_UW"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "sh3add.uw"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "sh3add.uw" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -255,8 +248,7 @@ public:
   std::string_view name() const override { return "RISCV.ANDN"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "andn"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "andn" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -287,8 +279,7 @@ public:
   std::string_view name() const override { return "RISCV.ORN"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "orn"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "orn" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -319,8 +310,7 @@ public:
   std::string_view name() const override { return "RISCV.XNOR"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "xnor"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "xnor" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -351,8 +341,7 @@ public:
   std::string_view name() const override { return "RISCV.MIN"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "min"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "min" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -383,8 +372,7 @@ public:
   std::string_view name() const override { return "RISCV.MAX"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "max"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "max" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -415,8 +403,7 @@ public:
   std::string_view name() const override { return "RISCV.MINU"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "minu"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "minu" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -447,8 +434,7 @@ public:
   std::string_view name() const override { return "RISCV.MAXU"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "maxu"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "maxu" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -479,8 +465,7 @@ public:
   std::string_view name() const override { return "RISCV.DIVUW"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "divuw"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "divuw" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -511,8 +496,7 @@ public:
   std::string_view name() const override { return "RISCV.REMUW"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "remuw"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "remuw" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -543,8 +527,7 @@ public:
   std::string_view name() const override { return "RISCV.SLLW"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "sllw"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "sllw" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -575,8 +558,7 @@ public:
   std::string_view name() const override { return "RISCV.SRLW"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "srlw"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "srlw" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -607,8 +589,7 @@ public:
   std::string_view name() const override { return "RISCV.SRAW"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "sraw"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "sraw" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -639,8 +620,7 @@ public:
   std::string_view name() const override { return "RISCV.SLLI_UW"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "slli.uw"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "slli.uw" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -671,8 +651,7 @@ public:
   std::string_view name() const override { return "RISCV.ADDIW"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "addiw"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "addiw" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -705,8 +684,7 @@ public:
   std::string_view name() const override { return "RISCV.BEQ"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "beq"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "beq" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)} << " # "
         << mir::RISCV::OperandDumper{inst.operand(3)};
@@ -740,8 +718,7 @@ public:
   std::string_view name() const override { return "RISCV.BNE"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "bne"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "bne" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)} << " # "
         << mir::RISCV::OperandDumper{inst.operand(3)};
@@ -775,8 +752,7 @@ public:
   std::string_view name() const override { return "RISCV.BLE"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "ble"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "ble" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)} << " # "
         << mir::RISCV::OperandDumper{inst.operand(3)};
@@ -810,8 +786,7 @@ public:
   std::string_view name() const override { return "RISCV.BGT"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "bgt"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "bgt" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)} << " # "
         << mir::RISCV::OperandDumper{inst.operand(3)};
@@ -845,8 +820,7 @@ public:
   std::string_view name() const override { return "RISCV.BLT"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "blt"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "blt" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)} << " # "
         << mir::RISCV::OperandDumper{inst.operand(3)};
@@ -880,8 +854,7 @@ public:
   std::string_view name() const override { return "RISCV.BGE"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "bge"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "bge" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)} << " # "
         << mir::RISCV::OperandDumper{inst.operand(3)};
@@ -915,8 +888,7 @@ public:
   std::string_view name() const override { return "RISCV.BLEU"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "bleu"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "bleu" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)} << " # "
         << mir::RISCV::OperandDumper{inst.operand(3)};
@@ -950,8 +922,7 @@ public:
   std::string_view name() const override { return "RISCV.BGTU"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "bgtu"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "bgtu" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)} << " # "
         << mir::RISCV::OperandDumper{inst.operand(3)};
@@ -985,8 +956,7 @@ public:
   std::string_view name() const override { return "RISCV.BLTU"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "bltu"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "bltu" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)} << " # "
         << mir::RISCV::OperandDumper{inst.operand(3)};
@@ -1020,8 +990,7 @@ public:
   std::string_view name() const override { return "RISCV.BGEU"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "bgeu"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "bgeu" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)} << " # "
         << mir::RISCV::OperandDumper{inst.operand(3)};
@@ -1053,8 +1022,7 @@ public:
   std::string_view name() const override { return "RISCV.FADD_S"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "fadd.s"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "fadd.s" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -1085,8 +1053,7 @@ public:
   std::string_view name() const override { return "RISCV.FSUB_S"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "fsub.s"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "fsub.s" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -1117,8 +1084,7 @@ public:
   std::string_view name() const override { return "RISCV.FMUL_S"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "fmul.s"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "fmul.s" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -1149,8 +1115,7 @@ public:
   std::string_view name() const override { return "RISCV.FDIV_S"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "fdiv.s"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "fdiv.s" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -1181,8 +1146,7 @@ public:
   std::string_view name() const override { return "RISCV.FMIN_S"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "fmin.s"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "fmin.s" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -1213,8 +1177,7 @@ public:
   std::string_view name() const override { return "RISCV.FMAX_S"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "fmax.s"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "fmax.s" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -1247,8 +1210,7 @@ public:
   std::string_view name() const override { return "RISCV.FMADD_S"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "fmadd.s"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "fmadd.s" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(3)};
@@ -1282,8 +1244,7 @@ public:
   std::string_view name() const override { return "RISCV.FMSUB_S"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "fmsub.s"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "fmsub.s" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(3)};
@@ -1317,8 +1278,7 @@ public:
   std::string_view name() const override { return "RISCV.FNMADD_S"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "fnmadd.s"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "fnmadd.s" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(3)};
@@ -1352,8 +1312,7 @@ public:
   std::string_view name() const override { return "RISCV.FNMSUB_S"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "fnmsub.s"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "fnmsub.s" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(3)};
@@ -1383,8 +1342,7 @@ public:
   std::string_view name() const override { return "RISCV.FNEG_S"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "fneg.s"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "fneg.s" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
   }
 };
@@ -1412,8 +1370,7 @@ public:
   std::string_view name() const override { return "RISCV.FABS_S"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "fabs.s"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "fabs.s" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
   }
 };
@@ -1441,8 +1398,7 @@ public:
   std::string_view name() const override { return "RISCV.FMV_S"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "fmv.s"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "fmv.s" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
   }
 };
@@ -1470,8 +1426,7 @@ public:
   std::string_view name() const override { return "RISCV.FSQRT_S"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "fsqrt.s"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "fsqrt.s" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
   }
 };
@@ -1499,8 +1454,7 @@ public:
   std::string_view name() const override { return "RISCV.FSGNJ_S"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "fsgnj.s"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "fsgnj.s" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
   }
 };
@@ -1528,8 +1482,7 @@ public:
   std::string_view name() const override { return "RISCV.FCLASS_S"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "fclass.s"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "fclass.s" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
   }
 };
@@ -1557,8 +1510,7 @@ public:
   std::string_view name() const override { return "RISCV.FMV_X_W"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "fmv.x.w"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "fmv.x.w" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
   }
 };
@@ -1586,8 +1538,7 @@ public:
   std::string_view name() const override { return "RISCV.FCVT_WU_S"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "fcvt.wu.s"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "fcvt.wu.s" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
   }
 };
@@ -1615,8 +1566,7 @@ public:
   std::string_view name() const override { return "RISCV.FMV_W_X"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "fmv.w.x"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "fmv.w.x" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
   }
 };
@@ -1644,8 +1594,7 @@ public:
   std::string_view name() const override { return "RISCV.FCVT_S_W"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "fcvt.s.w"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "fcvt.s.w" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
   }
 };
@@ -1673,8 +1622,7 @@ public:
   std::string_view name() const override { return "RISCV.FCVT_S_WU"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "fcvt.s.wu"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "fcvt.s.wu" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
   }
 };
@@ -1704,8 +1652,7 @@ public:
   std::string_view name() const override { return "RISCV.FEQ_S"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "feq.s"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "feq.s" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -1736,8 +1683,7 @@ public:
   std::string_view name() const override { return "RISCV.FLT_S"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "flt.s"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "flt.s" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -1768,8 +1714,7 @@ public:
   std::string_view name() const override { return "RISCV.FLE_S"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "fle.s"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "fle.s" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -1798,8 +1743,7 @@ public:
   std::string_view name() const override { return "RISCV.FCVT_W_S"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "fcvt.w.s"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "fcvt.w.s" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", rtz";
   }
 };
@@ -1829,8 +1773,7 @@ public:
   std::string_view name() const override { return "RISCV.AMOSWAP_W"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "amoswap.w.aqrl"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "amoswap.w.aqrl" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", ("
         << mir::RISCV::OperandDumper{inst.operand(2)} << ")";
   }
@@ -1861,8 +1804,7 @@ public:
   std::string_view name() const override { return "RISCV.AMOADD_W"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "amoadd.w.aqrl"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "amoadd.w.aqrl" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", ("
         << mir::RISCV::OperandDumper{inst.operand(2)} << ")";
   }
@@ -1893,8 +1835,7 @@ public:
   std::string_view name() const override { return "RISCV.AMOAND_W"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "amoand.w.aqrl"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "amoand.w.aqrl" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", ("
         << mir::RISCV::OperandDumper{inst.operand(2)} << ")";
   }
@@ -1925,8 +1866,7 @@ public:
   std::string_view name() const override { return "RISCV.AMOOR_W"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "amoor.w.aqrl"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "amoor.w.aqrl" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", ("
         << mir::RISCV::OperandDumper{inst.operand(2)} << ")";
   }
@@ -1957,8 +1897,7 @@ public:
   std::string_view name() const override { return "RISCV.AMOXOR_W"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "amoxor.w.aqrl"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "amoxor.w.aqrl" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", ("
         << mir::RISCV::OperandDumper{inst.operand(2)} << ")";
   }
@@ -1989,8 +1928,7 @@ public:
   std::string_view name() const override { return "RISCV.ADD"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "add"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "add" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -2021,8 +1959,7 @@ public:
   std::string_view name() const override { return "RISCV.ADDW"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "addw"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "addw" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -2053,8 +1990,7 @@ public:
   std::string_view name() const override { return "RISCV.SUB"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "sub"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "sub" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -2085,8 +2021,7 @@ public:
   std::string_view name() const override { return "RISCV.SUBW"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "subw"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "subw" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -2117,8 +2052,7 @@ public:
   std::string_view name() const override { return "RISCV.XOR"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "xor"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "xor" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -2149,8 +2083,7 @@ public:
   std::string_view name() const override { return "RISCV.OR"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "or"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "or" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -2181,8 +2114,7 @@ public:
   std::string_view name() const override { return "RISCV.AND"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "and"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "and" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -2213,8 +2145,7 @@ public:
   std::string_view name() const override { return "RISCV.SLL"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "sll"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "sll" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -2245,8 +2176,7 @@ public:
   std::string_view name() const override { return "RISCV.SRL"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "srl"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "srl" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -2277,8 +2207,7 @@ public:
   std::string_view name() const override { return "RISCV.SRA"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "sra"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "sra" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -2309,8 +2238,7 @@ public:
   std::string_view name() const override { return "RISCV.SLT"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "slt"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "slt" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -2341,8 +2269,7 @@ public:
   std::string_view name() const override { return "RISCV.SLTU"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "sltu"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "sltu" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -2373,8 +2300,7 @@ public:
   std::string_view name() const override { return "RISCV.ADDI"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "addi"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "addi" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -2405,8 +2331,7 @@ public:
   std::string_view name() const override { return "RISCV.XORI"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "xori"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "xori" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -2437,8 +2362,7 @@ public:
   std::string_view name() const override { return "RISCV.ORI"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "ori"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "ori" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -2469,8 +2393,7 @@ public:
   std::string_view name() const override { return "RISCV.ANDI"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "andi"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "andi" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -2501,8 +2424,7 @@ public:
   std::string_view name() const override { return "RISCV.SLTI"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "slti"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "slti" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -2533,8 +2455,7 @@ public:
   std::string_view name() const override { return "RISCV.SLTIU"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "sltiu"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "sltiu" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -2565,8 +2486,7 @@ public:
   std::string_view name() const override { return "RISCV.SLLI"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "slli"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "slli" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -2597,8 +2517,7 @@ public:
   std::string_view name() const override { return "RISCV.SRLI"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "srli"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "srli" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -2629,8 +2548,7 @@ public:
   std::string_view name() const override { return "RISCV.SRAI"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "srai"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "srai" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -2661,8 +2579,7 @@ public:
   std::string_view name() const override { return "RISCV.SLLIW"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "slliw"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "slliw" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -2693,8 +2610,7 @@ public:
   std::string_view name() const override { return "RISCV.SRLIW"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "srliw"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "srliw" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -2725,8 +2641,7 @@ public:
   std::string_view name() const override { return "RISCV.SRAIW"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "sraiw"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "sraiw" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -2757,8 +2672,7 @@ public:
   std::string_view name() const override { return "RISCV.LB"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "lb"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "lb" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << "("
         << mir::RISCV::OperandDumper{inst.operand(2)} << ")";
   }
@@ -2789,8 +2703,7 @@ public:
   std::string_view name() const override { return "RISCV.LH"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "lh"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "lh" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << "("
         << mir::RISCV::OperandDumper{inst.operand(2)} << ")";
   }
@@ -2821,8 +2734,7 @@ public:
   std::string_view name() const override { return "RISCV.LW"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "lw"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "lw" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << "("
         << mir::RISCV::OperandDumper{inst.operand(2)} << ")";
   }
@@ -2853,8 +2765,7 @@ public:
   std::string_view name() const override { return "RISCV.LBU"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "lbu"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "lbu" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << "("
         << mir::RISCV::OperandDumper{inst.operand(2)} << ")";
   }
@@ -2885,8 +2796,7 @@ public:
   std::string_view name() const override { return "RISCV.LHU"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "lhu"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "lhu" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << "("
         << mir::RISCV::OperandDumper{inst.operand(2)} << ")";
   }
@@ -2917,8 +2827,7 @@ public:
   std::string_view name() const override { return "RISCV.LD"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "ld"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "ld" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << "("
         << mir::RISCV::OperandDumper{inst.operand(2)} << ")";
   }
@@ -2949,8 +2858,7 @@ public:
   std::string_view name() const override { return "RISCV.SB"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "sb"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "sb" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << "("
         << mir::RISCV::OperandDumper{inst.operand(2)} << ")";
   }
@@ -2981,8 +2889,7 @@ public:
   std::string_view name() const override { return "RISCV.SH"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "sh"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "sh" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << "("
         << mir::RISCV::OperandDumper{inst.operand(2)} << ")";
   }
@@ -3013,8 +2920,7 @@ public:
   std::string_view name() const override { return "RISCV.SW"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "sw"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "sw" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << "("
         << mir::RISCV::OperandDumper{inst.operand(2)} << ")";
   }
@@ -3045,8 +2951,7 @@ public:
   std::string_view name() const override { return "RISCV.SD"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "sd"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "sd" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << "("
         << mir::RISCV::OperandDumper{inst.operand(2)} << ")";
   }
@@ -3073,8 +2978,7 @@ public:
   std::string_view name() const override { return "RISCV.JAL"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "jal"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)};
+    out << "jal" << " " << mir::RISCV::OperandDumper{inst.operand(0)};
   }
 };
 
@@ -3101,8 +3005,7 @@ public:
   std::string_view name() const override { return "RISCV.J"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "j"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)};
+    out << "j" << " " << mir::RISCV::OperandDumper{inst.operand(0)};
   }
 };
 
@@ -3152,8 +3055,7 @@ public:
   std::string_view name() const override { return "RISCV.LUI"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "lui"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "lui" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
   }
 };
@@ -3183,8 +3085,7 @@ public:
   std::string_view name() const override { return "RISCV.AUIPC"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "auipc"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "auipc" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
   }
 };
@@ -3212,8 +3113,7 @@ public:
   std::string_view name() const override { return "RISCV.LLA"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "lla"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "lla" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
   }
 };
@@ -3243,8 +3143,7 @@ public:
   std::string_view name() const override { return "RISCV.MUL"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "mul"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "mul" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -3275,8 +3174,7 @@ public:
   std::string_view name() const override { return "RISCV.MULW"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "mulw"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "mulw" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -3307,8 +3205,7 @@ public:
   std::string_view name() const override { return "RISCV.MULH"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "mulh"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "mulh" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -3339,8 +3236,7 @@ public:
   std::string_view name() const override { return "RISCV.MULHSU"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "mulhsu"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "mulhsu" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -3371,8 +3267,7 @@ public:
   std::string_view name() const override { return "RISCV.MULHU"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "mulhu"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "mulhu" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -3403,8 +3298,7 @@ public:
   std::string_view name() const override { return "RISCV.DIV"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "div"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "div" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -3435,8 +3329,7 @@ public:
   std::string_view name() const override { return "RISCV.DIVW"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "divw"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "divw" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -3467,8 +3360,7 @@ public:
   std::string_view name() const override { return "RISCV.DIVU"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "divu"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "divu" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -3499,8 +3391,7 @@ public:
   std::string_view name() const override { return "RISCV.REM"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "rem"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "rem" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -3531,8 +3422,7 @@ public:
   std::string_view name() const override { return "RISCV.REMW"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "remw"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "remw" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -3563,8 +3453,7 @@ public:
   std::string_view name() const override { return "RISCV.REMU"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "remu"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "remu" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -3595,8 +3484,7 @@ public:
   std::string_view name() const override { return "RISCV.LR_W"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "lr.w"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "lr.w" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -3627,8 +3515,7 @@ public:
   std::string_view name() const override { return "RISCV.SC_W"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "sc.w"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "sc.w" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(2)};
   }
@@ -3659,8 +3546,7 @@ public:
   std::string_view name() const override { return "RISCV.FLW"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "flw"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "flw" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << "("
         << mir::RISCV::OperandDumper{inst.operand(2)} << ")";
   }
@@ -3691,8 +3577,7 @@ public:
   std::string_view name() const override { return "RISCV.FSW"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "fsw"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "fsw" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)} << "("
         << mir::RISCV::OperandDumper{inst.operand(2)} << ")";
   }
@@ -3721,8 +3606,7 @@ public:
   std::string_view name() const override { return "RISCV.LoadImm12"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "li"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "li" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
   }
 };
@@ -3750,8 +3634,7 @@ public:
   std::string_view name() const override { return "RISCV.LoadImm32"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "li"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "li" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
   }
 };
@@ -3779,8 +3662,7 @@ public:
   std::string_view name() const override { return "RISCV.LoadImm64"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "li"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "li" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
   }
 };
@@ -3808,8 +3690,7 @@ public:
   std::string_view name() const override { return "RISCV.MV"; }
 
   void print(std::ostream& out, MIRInst& inst, bool comment) const override {
-    out << "mv"
-        << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
+    out << "mv" << " " << mir::RISCV::OperandDumper{inst.operand(0)} << ", "
         << mir::RISCV::OperandDumper{inst.operand(1)};
   }
 };

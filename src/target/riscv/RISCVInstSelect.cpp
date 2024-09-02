@@ -298,8 +298,7 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
       imm2reg(inst->operand(1));
       break;
     }
-    case InstMul:
-    case InstSDiv: {
+    case InstMul: {
       auto selectCode = [code = inst->opcode()] {
         switch (code) {
           case InstMul:
@@ -318,9 +317,18 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
         /* InstMul dst, src1, imm[2^k]
          * -> InstShl dst, src1, log2(imm)
          */
+        // instInfo.print(std::cerr, *inst, false);
+        // std::cerr << std::endl;
+
         auto shamt = utils::log2(src2.imm());
         inst->set_opcode(selectCode);
         inst->set_operand(2, MIROperand::asImm(shamt, OperandType::Int32));
+
+        // std::cerr << "shamt: " << shamt << std::endl;
+        // auto& newInstInfo = ctx.codegen_ctx().instInfo.getInstInfo(selectCode);
+        // newInstInfo.print(std::cerr, *inst, false);
+        // std::cerr << std::endl;
+
         modified = true;
       } else {
         imm2reg(src2);
@@ -328,6 +336,7 @@ static bool legalizeInst(MIRInst* inst, ISelContext& ctx) {
 
       break;
     }
+    case InstSDiv:
     case InstSRem:
     case InstUDiv:
     case InstURem: {
