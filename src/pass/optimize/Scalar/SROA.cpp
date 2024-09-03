@@ -258,8 +258,8 @@ bool SROA::replaceAllUseInLpForLpI(ir::GetElementPtrInst* gep,ir::Loop* lp,ir::A
     }
 }
 
-int SROA::isTwoGepIdxPossiblySame(gepIdx* gepidx1,gepIdx* gepidx2,ir::Loop* lp,ir::IndVar* idv){
-    std::vector<dependenceType>compareAns;
+int SROA::isTwoGepIdxPossiblySame(GepIdx* gepidx1,GepIdx* gepidx2,ir::Loop* lp,ir::IndVar* idv){
+    std::vector<DependenceType>compareAns;
     size_t lim=gepidx1->idxList.size();
     int res=0;
     for(size_t i=0;i<lim;i++){
@@ -273,7 +273,7 @@ int SROA::isTwoGepIdxPossiblySame(gepIdx* gepidx1,gepIdx* gepidx2,ir::Loop* lp,i
     return res;
 }
 
-int SROA::isTwoIdxPossiblySame(ir::Value* val1,ir::Value* val2,idxType type1,idxType type2,ir::Loop* lp,ir::IndVar* idv){
+int SROA::isTwoIdxPossiblySame(ir::Value* val1,ir::Value* val2,IdxType type1,IdxType type2,ir::Loop* lp,ir::IndVar* idv){
     if(val1==val2){//自己跟自己进行比较
         switch (type1)
         {
@@ -365,14 +365,14 @@ int SROA::isTwoIdxPossiblySame(ir::Value* val1,ir::Value* val2,idxType type1,idx
                         curVal1=lval;
                     }
                     else{
-                        assert(false and "Error:gepIdx is not IDVPLUSMINUSFORMULA!");
+                        assert(false and "Error:GepIdx is not IDVPLUSMINUSFORMULA!");
                     }
                     if(BInst->valueId()==ir::vADD){
                         val1Add.insert(LpIVal);
                     }
                     else if(BInst->valueId()==ir::vSUB){
                         if(isLVAL){
-                            assert(false and "Error:gepIdx is a-i formula!");
+                            assert(false and "Error:GepIdx is a-i formula!");
                         }
                         val1Sub.insert(LpIVal);
                     }
@@ -398,7 +398,7 @@ int SROA::isTwoIdxPossiblySame(ir::Value* val1,ir::Value* val2,idxType type1,idx
                         curVal1=lval;
                     }
                     else{
-                        assert(false and "Error:gepIdx is not IDVPLUSMINUSFORMULA!");
+                        assert(false and "Error:GepIdx is not IDVPLUSMINUSFORMULA!");
                     }
                     if(BInst->valueId()==ir::vADD){
                         if(val1Add.count(LpIVal)){
@@ -410,7 +410,7 @@ int SROA::isTwoIdxPossiblySame(ir::Value* val1,ir::Value* val2,idxType type1,idx
                     }
                     else if(BInst->valueId()==ir::vSUB){
                         if(isLVAL){
-                            assert(false and "Error:gepIdx is a-i formula!");
+                            assert(false and "Error:GepIdx is a-i formula!");
                         }
                         if(val1Sub.count(LpIVal)){
                             val1Sub.erase(LpIVal);

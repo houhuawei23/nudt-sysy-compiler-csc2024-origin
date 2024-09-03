@@ -396,6 +396,7 @@ static bool foldStoreZero(MIRFunction& func, MIRBlock& block, const CodeGenConte
         auto baseOff = func.stackObjs().at(base).offset;
         return (baseOff + off) % static_cast<int32_t>(sizeof(uint64_t)) == offset;
       }
+      return false;
     };
 
     auto inst = *iter;
@@ -630,6 +631,7 @@ static bool relaxWInst(MIRFunction& func, const CodeGenContext& ctx) {
       }
     }
   }
+  return false;
 }
 
 bool RISCVScheduleModel_sifive_u74::peepholeOpt(MIRFunction& func, CodeGenContext& context) {

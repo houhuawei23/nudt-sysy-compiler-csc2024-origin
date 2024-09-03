@@ -118,9 +118,9 @@ static const auto commonOptPasses =
 static const auto loopOptPasses = std::vector<std::string>{"loopsimplify", "gcm", "gvn", "licm"};
 
 static const auto parallelPasses = std::vector<std::string>{
-  "loopsimplify", "gcm",          "gvn",      "licm",     "markpara", "LoopInterChange",
-  "inline",       "loopsimplify", "markpara", "parallel",  // "ParallelBodyExtract",
-  "inline",       "simplifycfg"};
+  "loopsimplify",    "gcm",        "gvn",          "licm",     "markpara",
+  "LoopInterChange", "inline",     "loopsimplify", "parallel",  // "ParallelBodyExtract",
+  "inline",          "simplifycfg"};
 
 static const auto interProceduralPasses = std::vector<std::string>{
   "inline", "tco", "cache", "inline",  // cant parallel
@@ -159,8 +159,8 @@ auto collectPasses(OptLevel level) {
   // O1
   std::vector<std::string> clcPasses;
   clcPasses.insert(clcPasses.end(), commonOptPasses.begin(), commonOptPasses.end());
-  clcPasses.insert(clcPasses.end(), loopOptPasses.begin(), loopOptPasses.end());
-  clcPasses.insert(clcPasses.end(), commonOptPasses.begin(), commonOptPasses.end());
+  // clcPasses.insert(clcPasses.end(), loopOptPasses.begin(), loopOptPasses.end());
+  // clcPasses.insert(clcPasses.end(), commonOptPasses.begin(), commonOptPasses.end());
 
   std::vector<std::string> passes;
 
@@ -168,22 +168,22 @@ auto collectPasses(OptLevel level) {
 
   passes.insert(passes.end(), clcPasses.begin(), clcPasses.end());
 
-  passes.insert(passes.end(), deadLoopPasses.begin(), deadLoopPasses.end());
+  // passes.insert(passes.end(), deadLoopPasses.begin(), deadLoopPasses.end());
 
   // IPO
-  passes.insert(passes.end(), interProceduralPasses.begin(), interProceduralPasses.end());
+  // passes.insert(passes.end(), interProceduralPasses.begin(), interProceduralPasses.end());
 
-  passes.insert(passes.end(), clcPasses.begin(), clcPasses.end());
+  // passes.insert(passes.end(), clcPasses.begin(), clcPasses.end());
 
   // passes.push_back("markpara");
   // passes.insert(passes.end(), {"loopsimplify", "unroll"});
 
-  passes.insert(passes.end(), clcPasses.begin(), clcPasses.end());
+  // passes.insert(passes.end(), clcPasses.begin(), clcPasses.end());
 
   // dont add clc after
   passes.insert(passes.end(), parallelPasses.begin(), parallelPasses.end());
 
-  passes.insert(passes.end(), gepSplitPasses.begin(), gepSplitPasses.end());
+  // passes.insert(passes.end(), gepSplitPasses.begin(), gepSplitPasses.end());
 
   passes.push_back("reg2mem");
   return std::move(passes);
@@ -203,7 +203,7 @@ void Config::parseSubmitArgs(int argc, char* argv[]) {
   infile = argv[4];
 
   if (argc == 6) {
-    if (argv[5] == "-O0"sv) optLevel = OptLevel::O0;
+    if (argv[5] == "-O0"sv) optLevel = OptLevel::O1;
     if (argv[5] == "-O1"sv) optLevel = OptLevel::O1;
   }
 

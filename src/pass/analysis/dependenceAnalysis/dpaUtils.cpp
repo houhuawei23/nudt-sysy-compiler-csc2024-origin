@@ -74,7 +74,7 @@ ir::Value* pass::getBaseAddr(ir::Value* subAddr,TopAnalysisInfoManager* topmana)
 }
 
 //取出基址的类型
-baseAddrType pass::getBaseAddrType(ir::Value* val){
+BaseAddrType pass::getBaseAddrType(ir::Value* val){
     if(val->dynCast<ir::GlobalVariable>())
         return globalType;
     if(val->dynCast<ir::Argument>())
@@ -128,7 +128,7 @@ void LoopDependenceInfo::addPtr(ir::Value* ptr,ir::Instruction* inst){
         auto curFunc=subAddr->block()->function();
         constexpr bool Debug = false;
         int curIdx=0;
-        auto pnewGepIdx=new gepIdx;
+        auto pnewGepIdx=new GepIdx;
         auto curSubAddr = subAddr;
         pnewGepIdx->idxList.push_back(nullptr);
         ir::Value* index = nullptr;
@@ -243,7 +243,7 @@ void LoopDependenceInfo::addPtrFromSubLoop(ir::Value* ptr,ir::Instruction* inst,
     }
     if(subAddrToGepIdx.count(subAddr)==0){
         auto oldGepIdx=subLoopDepInfo->getGepIdx(subAddr);
-        auto pnewGepIdx=new gepIdx;
+        auto pnewGepIdx=new GepIdx;
         for(auto indexValOld:oldGepIdx->idxList){
             pnewGepIdx->idxList.push_back(indexValOld);
             auto valType=oldGepIdx->idxTypes[indexValOld];
@@ -357,7 +357,7 @@ void LoopDependenceInfo::print(std::ostream& os){
     os<<endl;
 }
 
-void pass::printIdxType(idxType idxtype,std::ostream& os){
+void pass::printIdxType(IdxType idxtype,std::ostream& os){
     switch (idxtype)
     {
     case iLOOPINVARIANT:

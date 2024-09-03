@@ -62,7 +62,7 @@ void frontendPipeline(const string& infile, ir::Module& module) {
     utils::ensure_directory_exists(config.debugDir());
   }
 
-  utils::Stage antlrStage("ANTLR Parse"sv);
+  // utils::Stage antlrStage("ANTLR Parse"sv);
 
   ifstream fin(config.infile);
   auto input = antlr4::ANTLRInputStream{fin};
@@ -71,14 +71,14 @@ void frontendPipeline(const string& infile, ir::Module& module) {
   auto parser = SysYParser{&tokens};
   auto ast_root = parser.compUnit();
 
-  antlrStage.~Stage();
+  // antlrStage.~Stage();
 
-  utils::Stage emitIRStage("IR Generation"sv);
+  // utils::Stage emitIRStage("IR Generation"sv);
 
   auto irGenerator = sysy::SysYIRGenerator(&module, ast_root);
   irGenerator.buildIR();
 
-  emitIRStage.~Stage();
+  // emitIRStage.~Stage();
   if (not module.verify(std::cerr)) {
     module.print(std::cerr);
     std::cerr << "IR verification failed" << std::endl;
