@@ -13,5 +13,6 @@ for root, dirs, files in os.walk(cmmc_root):
             or file.endswith(".cpp")
             or file.startswith("LICENSE")
             or file.startswith("Makefile")
+            or file.startswith("CMakeLists.txt")
         ):
             os.remove(root + "/" + file)

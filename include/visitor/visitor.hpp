@@ -35,7 +35,6 @@ public:
 
 public:
   ir::Module* buildIR() {
-    utils::Stage stage("IR Generation"sv);
     visit(mAstRoot);
     mModule->rename();
     return mModule;

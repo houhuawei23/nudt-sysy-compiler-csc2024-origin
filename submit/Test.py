@@ -414,7 +414,7 @@ class Test:
         if os.path.exists(src_path) is False:
             print(f"Test file not found: {src_path}")
             return False
-
+        print(f"Test: {src_path}")
         gcc_res = self.__gcc_runon_qemu(src_path, target)
         compiler_res = self.__ourcompiler_runon_qemu(src_path, target)
         if not (compiler_res and gcc_res):

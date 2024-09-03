@@ -17,6 +17,7 @@ using TimePoint = Clock::time_point;
 
 class Stage final {
 public:
+  bool mAlive = false;
   explicit Stage(const std::string& name) = delete;
   explicit Stage(const std::string_view& name);
   ~Stage();

@@ -13,6 +13,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
 include_directories(/usr/local/include/antlr4-runtime/)
 link_directories(/usr/local/lib/)
 
+# include_directories(/usr/local/include/antlr4-runtime/)
+# link_directories(/usr/local/lib/)
+
 # Source files
 file(GLOB_RECURSE SOURCES
     "src/*.cpp"

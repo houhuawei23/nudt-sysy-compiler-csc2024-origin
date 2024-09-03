@@ -8,11 +8,17 @@ using namespace std::string_view_literals;
 namespace utils {
 Stage::Stage(const std::string_view& name) {
   const auto& config = sysy::Config::getInstance();
-  if (config.logLevel >= sysy::LogLevel::DEBUG) Profiler::get().pushStage(name);
+  if (config.logLevel >= sysy::LogLevel::DEBUG) {
+    mAlive = true;
+    Profiler::get().pushStage(name);
+  }
 }
 Stage::~Stage() {
   const auto& config = sysy::Config::getInstance();
-  if (config.logLevel >= sysy::LogLevel::DEBUG) Profiler::get().popStage();
+  if (config.logLevel >= sysy::LogLevel::DEBUG and mAlive) {
+    Profiler::get().popStage();
+    mAlive = false;
+  }
 }
 
 StageStorage::StageStorage() : mCreationTime{Clock::now()}, mTotalDuration{}, mCount{0} {}

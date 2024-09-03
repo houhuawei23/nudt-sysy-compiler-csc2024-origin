@@ -30,31 +30,6 @@ config.parseSubmitArgs
  */
 static auto& config = sysy::Config::getInstance();
 
-void frontendPipeline(const string& infile, ir::Module& module) {
-  // mkdir ./.debug/xxx/ for debug info
-  if (config.logLevel == sysy::LogLevel::DEBUG) {
-    utils::ensure_directory_exists(config.debugDir());
-  }
-
-  ifstream fin(config.infile);
-
-  auto input = antlr4::ANTLRInputStream{fin};
-  auto lexer = SysYLexer{&input};
-  auto tokens = antlr4::CommonTokenStream{&lexer};
-  auto parser = SysYParser{&tokens};
-
-  auto ast_root = parser.compUnit();
-
-  auto irGenerator = sysy::SysYIRGenerator(&module, ast_root);
-
-  irGenerator.buildIR();
-
-  if (not module.verify(std::cerr)) {
-    module.print(std::cerr);
-    std::cerr << "IR verification failed" << std::endl;
-  }
-}
-
 void dumpModule(ir::Module& module, const string& filename) {
   if (not config.genIR) return;
   if (filename.empty()) {
@@ -79,23 +54,60 @@ void dumpMIRModule(mir::MIRModule& module, mir::Target& target, const string& fi
   }
 }
 
+void frontendPipeline(const string& infile, ir::Module& module) {
+  utils::Stage stage("Frontend Pipeline"sv);
+
+  // mkdir ./.debug/xxx/ for debug info
+  if (config.logLevel == sysy::LogLevel::DEBUG) {
+    utils::ensure_directory_exists(config.debugDir());
+  }
+
+  utils::Stage antlrStage("ANTLR Parse"sv);
+
+  ifstream fin(config.infile);
+  auto input = antlr4::ANTLRInputStream{fin};
+  auto lexer = SysYLexer{&input};
+  auto tokens = antlr4::CommonTokenStream{&lexer};
+  auto parser = SysYParser{&tokens};
+  auto ast_root = parser.compUnit();
+
+  antlrStage.~Stage();
+
+  utils::Stage emitIRStage("IR Generation"sv);
+
+  auto irGenerator = sysy::SysYIRGenerator(&module, ast_root);
+  irGenerator.buildIR();
+
+  emitIRStage.~Stage();
+  if (not module.verify(std::cerr)) {
+    module.print(std::cerr);
+    std::cerr << "IR verification failed" << std::endl;
+  }
+}
+
+
+
 void backendPipeline(ir::Module& module, pass::TopAnalysisInfoManager& tAIM) {
+  utils::Stage stage("Backend Pipeline"sv);
   if (not config.genASM) return;
   auto target = mir::RISCVTarget();
   auto mir_module = mir::createMIRModule(module, target, &tAIM);
   dumpMIRModule(*mir_module, target, config.outfile);
 }
 
+void midendPipeline(ir::Module& module, pass::TopAnalysisInfoManager& tAIM) {
+  utils::Stage stage("Midend Pipeline"sv);
+  auto pm = pass::PassManager(&module, &tAIM);
+  pm.runPasses(config.passes);
+}
 void compilerPipeline() {
   auto module = ir::Module();
 
   frontendPipeline(config.infile, module);
 
-
   auto tAIM = pass::TopAnalysisInfoManager(&module);
   tAIM.initialize();
-  auto pm = pass::PassManager(&module, &tAIM);
-  pm.runPasses(config.passes);
+  midendPipeline(module, tAIM);
 
   dumpModule(module, config.outfile);
 
@@ -105,4 +117,3 @@ void compilerPipeline() {
     utils::Profiler::get().printStatistics();
   }
 }
-
