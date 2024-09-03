@@ -9,7 +9,7 @@
 #include "ir/ir.hpp"
 
 #include "support/utils.hpp"
-
+#include "support/Profiler.hpp"
 namespace sysy {
 class SysYIRGenerator : public SysYBaseVisitor {
 private:
@@ -34,7 +34,8 @@ public:
   auto& builder() { return mBuilder; }
 
 public:
-  ir::Module* build_ir() {
+  ir::Module* buildIR() {
+    utils::Stage stage("IR Generation"sv);
     visit(mAstRoot);
     mModule->rename();
     return mModule;

@@ -66,7 +66,7 @@ private:
   }
 
 public:
-  TopAnalysisInfoManager(ir::Module* pm) : mModule(pm), mCallGraph(nullptr) {}
+  TopAnalysisInfoManager(ir::Module* pm = nullptr) : mModule(pm), mCallGraph(nullptr) {}
   DomTree* getDomTree(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
     auto domctx = mDomTree[func];
@@ -178,7 +178,7 @@ public:
 
   CallGraph* getCallGraphWithoutRefresh() { return mCallGraph; }
   sideEffectInfo* getSideEffectInfoWithoutRefresh() { return mSideEffectInfo; }
-  parallelInfo* getParallelInfo(ir::Function* func){
+  parallelInfo* getParallelInfo(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
     auto dpctx = mParallelInfo[func];
     if (dpctx == nullptr) {

@@ -50,6 +50,8 @@
 #include "pass/optimize/DLAE.hpp"
 #include "support/config.hpp"
 #include "support/FileSystem.hpp"
+#include "support/Profiler.hpp"
+
 #include <fstream>
 #include <iostream>
 #include <cassert>
@@ -110,6 +112,7 @@ static LoopInterChange loopInterChangePass;
 
 void PassManager::runPasses(std::vector<std::string> passes) {
     // if(passes.size() == 0) return;
+    utils::Stage stage("Optimization Passes"sv);
 
     const auto& config = sysy::Config::getInstance();
 

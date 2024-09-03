@@ -1,4 +1,6 @@
 #include "support/config.hpp"
+#include "support/Profiler.hpp"
+
 #include "ir/ir.hpp"
 
 #include <cstring>
@@ -103,109 +105,10 @@ void Config::dumpModule(ir::Module* module, const std::string& filename) const {
   module->print(out);
 }
 
-// clang-format off
-static const auto perfPassesList = std::vector<std::string>{
-  "mem2reg", 
-
-  "sccp",     
-  "adce",     
-  "simplifycfg", 
-
-  "loopsimplify",
-  "gcm", 
-  "gvn",          
-  "licm",         
-  "loopsimplify",
-  "gcm", 
-  "gvn",          
-  "licm",        
-  "LoopInterChange",
-  "instcombine",  
-  "adce",    
-  "loopsimplify",
-  // "scev",
-  "inline",  
-  "parallel",
-  "inline", 
-  // "tco",      
-  "cache", 
-  "inline",   
-
-  "g2l",      
-
-  // "dle",
-  // "dse",
-  // "dle",
-  // "dse",
-
-  "sccp",     //
-  "adce", 
-  "dae",    
-  "simplifycfg",
-
-  "loopsimplify",
-  "gcm",  
-  "gvn",         
-  "licm",         
-
-  "instcombine",
-  "sccp",
-  "adce",
-  "simplifycfg",    
-  "loopsimplify",
-  "unroll",
-  
-  "simplifycfg",
-  "loopsimplify",
-  "sccp",
-  "adce",
-  "gcm",
-  "gvn",
-  "licm",
-
-  "dle",
-  "dse",
-  "dle",
-  "dse",
-  "instcombine",
-  "adce",
-  "sccp", 
-  "dlae", 
-
-  "simplifycfg",    
-  // "scev",
-  "GepSplit",
-  "sccp",     
-  "adce",
-  "loopsimplify",
-  "gcm",  
-  "gvn",         
-  "licm",  
-  "simplifycfg",    
-
-  "reg2mem",
-};
-
 static const auto ifCombinePassesList = std::vector<std::string>{
- "simplifycfg",
- "loopsimplify",
- "sccp",
- "adce",
- "gcm",
- "gvn",
- "licm",
-
- "dle",
- "dse",
- "dle",
- "dse",
- "instcombine",
- "adce",
- "sccp", 
- "dlae", 
+  "simplifycfg", "loopsimplify", "sccp", "adce",        "gcm",  "gvn",  "licm", "dle",
+  "dse",         "dle",          "dse",  "instcombine", "adce", "sccp", "dlae",
 };
-
-// clang-format on
 
 static const auto basePasses = std::vector<std::string>{"mem2reg", "reg2mem"};
 
@@ -224,9 +127,18 @@ static const auto interProceduralPasses = std::vector<std::string>{
 };
 
 static const auto afterUnrollPasses = std::vector<std::string>{
-  "simplifycfg", "loopsimplify", "sccp", "adce",        "gcm",  "gvn",  "licm",
-  //  "dle", "dse",         "dle",          "dse",  
-  "instcombine", "adce", "sccp", "dlae",
+  "simplifycfg",
+  "loopsimplify",
+  "sccp",
+  "adce",
+  "gcm",
+  "gvn",
+  "licm",
+  //  "dle", "dse",         "dle",          "dse",
+  "instcombine",
+  "adce",
+  "sccp",
+  "dlae",
 };
 
 static const auto gepSplitPasses = std::vector<std::string>{

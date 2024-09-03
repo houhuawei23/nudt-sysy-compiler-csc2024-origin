@@ -19,6 +19,7 @@
 #include "support/config.hpp"
 #include "support/Profiler.hpp"
 #include "support/Graph.hpp"
+#include "support/FileSystem.hpp"
 namespace fs = std::filesystem;
 namespace mir {
 
@@ -141,7 +142,7 @@ void createMIRModule(ir::Module& ir_module,
   for (auto& ir_func : ir_module.funcs()) {
     codegen_ctx.flags = MIRFlags{};
     if (ir_func->blocks().empty()) continue;
-   
+
     /* Just for Debug */
     size_t stageIdx = 0;
     auto dumpStageResult = [&](std::string stage, MIRFunction* mir_func,
@@ -273,6 +274,12 @@ void createMIRModule(ir::Module& ir_module,
     }
   }
   /* module verify */
+  {
+    auto filename = utils::preName(config.infile) + ".s";
+    auto path = config.debugDir() / filename;
+    std::ofstream fout(path);
+    target.emit_assembly(fout, mir_module);
+  }
 }
 
 void createMIRFunction(ir::Function* ir_func,
