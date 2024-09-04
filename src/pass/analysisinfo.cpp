@@ -13,7 +13,7 @@ using namespace pass;
 
 void TopAnalysisInfoManager::initialize() {
     mCallGraph = new CallGraph(mModule, this);
-    mSideEffectInfo = new sideEffectInfo(mModule, this);
+    mSideEffectInfo = new SideEffectInfo(mModule, this);
     for (auto func : mModule->funcs()) {
         if (func->blocks().empty()) continue;
         mDomTree[func] = new DomTree(func, this);
@@ -27,21 +27,21 @@ void TopAnalysisInfoManager::initialize() {
 
 void DomTree::refresh() {
     using namespace pass;
-    DomInfoPass dip = DomInfoPass();
+    DomInfoAnalysis dip = DomInfoAnalysis();
     dip.run(passUnit,topManager);
     setOn();
 }
 
 void PDomTree::refresh() {
     using namespace pass;
-    postDomInfoPass pdi = postDomInfoPass();
+    PostDomInfoPass pdi = PostDomInfoPass();
     pdi.run(passUnit,topManager);
     setOn();
 }
 
 void LoopInfo::refresh() {
     using namespace pass;
-    loopAnalysis la = loopAnalysis();
+    LoopAnalysis la = LoopAnalysis();
     // loopInfoCheck lic = loopInfoCheck();
     la.run(passUnit,topManager);
     // lic.run(passUnit,topManager);
@@ -68,7 +68,7 @@ std::vector<ir::Loop*> LoopInfo::sortedLoops(bool reverse) {
 
 void CallGraph::refresh() {
     using namespace pass;
-    callGraphBuild cgb = callGraphBuild();
+    CallGraphBuild cgb = CallGraphBuild();
     cgb.run(passUnit,topManager);
 
     setOn();
@@ -77,17 +77,17 @@ void CallGraph::refresh() {
 void IndVarInfo::refresh() {
     using namespace pass;
     // PassManager pm = PassManager(passUnit->module(), topManager);
-    indVarAnalysis iva = indVarAnalysis();
+    IndVarAnalysis iva = IndVarAnalysis();
     // indVarInfoCheck ivc = indVarInfoCheck();
     iva.run(passUnit,topManager);
     // ivc.run(passUnit,topManager);
     setOn();
 }
 
-void sideEffectInfo::refresh() {
+void SideEffectInfo::refresh() {
     using namespace pass;
     // PassManager pm = PassManager(passUnit, topManager);
-    sideEffectAnalysis sea = sideEffectAnalysis();
+    SideEffectAnalysis sea = SideEffectAnalysis();
     sea.run(passUnit,topManager);
     setOn();
 }

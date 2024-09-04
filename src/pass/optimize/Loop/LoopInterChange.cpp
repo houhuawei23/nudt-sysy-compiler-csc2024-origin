@@ -29,7 +29,7 @@ bool LoopInterChange::runImpl(Function* func, TopAnalysisInfoManager* tp) {
   // func->print(std::cerr);
 
   CFGAnalysisHHW().run(func, tp);  // refresh CFG
-  markParallel().run(func, tp);
+  MarkParallel().run(func, tp);
 
   auto lpctx = tp->getLoopInfoWithoutRefresh(func);        // fisrt loop analysis
   auto indVarctx = tp->getIndVarInfoWithoutRefresh(func);  // then indvar analysis

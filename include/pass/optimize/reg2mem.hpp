@@ -6,9 +6,10 @@
 #include "ir/ir.hpp"
 #include "pass/pass.hpp"
 
+using namespace ir;
 namespace pass {
-class Reg2Mem : public FunctionPass {
-private:
+
+struct Reg2MemContext final {
   std::vector<ir::PhiInst*> allphi;
   std::vector<size_t> parent;
   std::vector<size_t> rank;
@@ -18,19 +19,7 @@ private:
   std::unordered_map<ir::BasicBlock*, std::vector<ir::PhiInst*>> bbphismap;
   std::vector<ir::BasicBlock*> phiblocks;
 
-public:
-  std::string name() const override { return "Reg2Mem"; }
-  void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
-  void clear() {
-    allphi.clear();
-    parent.clear();
-    rank.clear();
-    phiweb.clear();
-    allocasToinsert.clear();
-    philoadmap.clear();
-    bbphismap.clear();
-    phiblocks.clear();
-  };
+  void run(Function* func, TopAnalysisInfoManager* tp);
   void getallphi(ir::Function* func);
   // 并查集算法
   int getindex(ir::PhiInst* phiinst) {
@@ -56,25 +45,12 @@ public:
       }
     }
   }
-  void DisjSet() {
-    for (int i = 0; i < allphi.size(); i++) {
-      parent.push_back(i);
-      rank.push_back(1);
-    }
-    for (ir::PhiInst* phiinst : allphi) {
-      for (size_t i = 0; i < phiinst->getsize(); i++) {
-        ir::Value* val = phiinst->getValue(i);
-        if (ir::PhiInst* phival = dyn_cast<ir::PhiInst>(val)) {
-          int id0 = getindex(phiinst);
-          int id1 = getindex(phival);
-          if (issame(id0, id1)) {
-            continue;
-          } else {
-            tounion(id0, id1);
-          }
-        }
-      }
-    }
-  }
+  void DisjSet();
+};
+
+class Reg2Mem : public FunctionPass {
+public:
+  std::string name() const override { return "Reg2Mem"; }
+  void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
 };
 }  // namespace pass

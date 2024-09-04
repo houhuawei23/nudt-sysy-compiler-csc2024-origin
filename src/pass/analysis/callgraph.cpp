@@ -1,12 +1,16 @@
 #include "pass/analysis/callgraph.hpp"
 
 namespace pass {
-void callGraphBuild::run(ir::Module* ctx, TopAnalysisInfoManager* tp) {
+void CallGraphBuild::run(ir::Module* module, TopAnalysisInfoManager* tp) {
+  CallGraphBuildContext ctx;
+  ctx.run(module, tp);
+}
+void CallGraphBuildContext::run(ir::Module* module, TopAnalysisInfoManager* tp) {
   cgctx = tp->getCallGraphWithoutRefresh();
   cgctx->clearAll();
   cgctx->initialize();
 
-  for (auto func : ctx->funcs()) {  // initialize call info for functions
+  for (auto func : module->funcs()) {  // initialize call info for functions
     if (func->isOnlyDeclare())
       // func->set_is_lib(true);
       cgctx->set_isLib(func, true);
@@ -23,7 +27,7 @@ void callGraphBuild::run(ir::Module* ctx, TopAnalysisInfoManager* tp) {
     vis.emplace(func, false);
   }
 
-  for (auto func : ctx->funcs()) {  // travel all inst and collect call information
+  for (auto func : module->funcs()) {  // travel all inst and collect call information
     for (auto bb : func->blocks()) {
       for (auto inst : bb->insts()) {
         auto instCall = dyn_cast<ir::CallInst>(inst);
@@ -48,7 +52,7 @@ void callGraphBuild::run(ir::Module* ctx, TopAnalysisInfoManager* tp) {
   // assert(funcSet.empty());
   // dfsFuncCallGraph(ctx->mainFunction());
 }
-void callGraphBuild::dfsFuncCallGraph(ir::Function* func) {
+void CallGraphBuildContext::dfsFuncCallGraph(ir::Function* func) {
   funcStack.push_back(func);
   funcSet.insert(func);
   for (auto calleeFunc : cgctx->callees(func)) {
@@ -60,18 +64,18 @@ void callGraphBuild::dfsFuncCallGraph(ir::Function* func) {
         cgctx->set_isInline(*funcIter, false);
       }
     } else {  // normal edge, and we continue recursive
-    //   if (not vis[calleeFunc]) dfsFuncCallGraph(calleeFunc);
-    if (not vis.at(calleeFunc)) dfsFuncCallGraph(calleeFunc);
+      //   if (not vis[calleeFunc]) dfsFuncCallGraph(calleeFunc);
+      if (not vis.at(calleeFunc)) dfsFuncCallGraph(calleeFunc);
     }
   }
   funcStack.pop_back();
   funcSet.erase(func);
 }
 
-void callGraphCheck::run(ir::Module* ctx, TopAnalysisInfoManager* tp) {
-  cgctx = tp->getCallGraphWithoutRefresh();
+void CallGraphCheck::run(ir::Module* module, TopAnalysisInfoManager* tp) {
+  auto cgctx = tp->getCallGraphWithoutRefresh();
   using namespace std;
-  for (auto func : ctx->funcs()) {
+  for (auto func : module->funcs()) {
     if (cgctx->isLib(func)) continue;
     cout << "Function " << func->name() << "(" << cgctx->isInline(func)
          << " for inline) called :" << endl;

@@ -9,44 +9,49 @@
 #include <queue>
 #include <algorithm>
 namespace pass {
-bool loopsplit::couldsplit(ir::Loop* loop) {
+
+void LoopSplit::run(Function* func, TopAnalysisInfoManager* tp) {
+  LoopSplitContext ctx;
+  ctx.run(func, tp);
+}
+bool LoopSplitContext::couldsplit(Loop* loop) {
   if (loop->subLoops().size() != 0) return false;
   auto iv = ivctx->getIndvar(loop);
   if (iv) {
     // std::cerr << "get iv in func" << std::endl;
     iviter = iv->iterInst();
     // auto ivid = iviter->valueId();
-    if ((iviter->valueId() != ir::vADD) && (iviter->valueId() != ir::vSUB)) return false;
+    if ((iviter->valueId() != vADD) && (iviter->valueId() != vSUB)) return false;
     ivphi = iv->phiinst();
-    ivicmp = iv->cmpInst()->dynCast<ir::ICmpInst>();
+    ivicmp = iv->cmpInst()->dynCast<ICmpInst>();
   } else {
     // std::cerr << "no iv in func" << std::endl;
     return false;
   }
 
   auto head = loop->header();
-  ir::BasicBlock* headnext;
+  BasicBlock* headnext;
   for (auto bb : head->next_blocks()) {
     if (loop->contains(bb)) headnext = bb;
   }
   // 找到条件指令
-  std::unordered_set<ir::BasicBlock*> vis;
-  ir::BasicBlock::BasicBlockDfs(headnext, [&](ir::BasicBlock* bb) -> bool {
+  std::unordered_set<BasicBlock*> vis;
+  BasicBlock::BasicBlockDfs(headnext, [&](BasicBlock* bb) -> bool {
     if (vis.count(bb) || (!loop->contains(bb)) || (bb == head)) return true;
     vis.insert(bb);
     if (bb->next_blocks().size() > 1) {
       condbb = bb;
-      brinst = bb->insts().back()->dynCast<ir::BranchInst>();
+      brinst = bb->insts().back()->dynCast<BranchInst>();
       return true;
     }
     return false;
   });
 
-  std::unordered_set<ir::ValueId> cd = {ir::vISGE, ir::vISLE, ir::vISLT, ir::vISGT};
+  std::unordered_set<ValueId> cd = {vISGE, vISLE, vISLT, vISGT};
   if (!brinst) return false;
 
-  std::vector<ir::BasicBlock*> branchture;
-  std::vector<ir::BasicBlock*> branchfalse;
+  std::vector<BasicBlock*> branchture;
+  std::vector<BasicBlock*> branchfalse;
 
   auto ift = brinst->iftrue();
   auto iff = brinst->iffalse();
@@ -63,7 +68,7 @@ bool loopsplit::couldsplit(ir::Loop* loop) {
   }
 
   auto cond = brinst->cond();
-  if (icmpinst = cond->dynCast<ir::ICmpInst>()) {
+  if (icmpinst = cond->dynCast<ICmpInst>()) {
     if (icmpinst->lhs() == ivphi) {
       if (cd.count(icmpinst->valueId())) {
         endval = icmpinst->rhs();
@@ -79,67 +84,67 @@ bool loopsplit::couldsplit(ir::Loop* loop) {
   return false;
 }
 
-void loopsplit::splitloop(ir::Loop* loop) {
-  loopUnroll unroll(lpctx, ivctx);
-  if (iviter->valueId() == ir::vADD) {
+void LoopSplitContext::splitloop(Loop* loop) {
+  LoopUnrollContext unroll(lpctx, ivctx);
+  if (iviter->valueId() == vADD) {
     if (icmpinst->rhs() == ivphi) {
-      if (icmpinst->valueId() == ir::vISGE) {
-        unroll.insertbranchloop(brinst->iftrue(), brinst->iffalse(), ir::vISLE, loop, ivphi, ivicmp,
+      if (icmpinst->valueId() == vISGE) {
+        unroll.insertbranchloop(brinst->iftrue(), brinst->iffalse(), vISLE, loop, ivphi, ivicmp,
                                 iviter, endval, condbb, domctx, tpctx);
-      } else if (icmpinst->valueId() == ir::vISGT) {
-        unroll.insertbranchloop(brinst->iftrue(), brinst->iffalse(), ir::vISLT, loop, ivphi, ivicmp,
+      } else if (icmpinst->valueId() == vISGT) {
+        unroll.insertbranchloop(brinst->iftrue(), brinst->iffalse(), vISLT, loop, ivphi, ivicmp,
                                 iviter, endval, condbb, domctx, tpctx);
-      } else if (icmpinst->valueId() == ir::vISLE) {
-        unroll.insertbranchloop(brinst->iffalse(), brinst->iftrue(), ir::vISLT, loop, ivphi, ivicmp,
+      } else if (icmpinst->valueId() == vISLE) {
+        unroll.insertbranchloop(brinst->iffalse(), brinst->iftrue(), vISLT, loop, ivphi, ivicmp,
                                 iviter, endval, condbb, domctx, tpctx);
-      } else if (icmpinst->valueId() == ir::vISLT) {
-        unroll.insertbranchloop(brinst->iffalse(), brinst->iftrue(), ir::vISLE, loop, ivphi, ivicmp,
+      } else if (icmpinst->valueId() == vISLT) {
+        unroll.insertbranchloop(brinst->iffalse(), brinst->iftrue(), vISLE, loop, ivphi, ivicmp,
                                 iviter, endval, condbb, domctx, tpctx);
       }
     } else if (ivicmp->lhs() == ivphi) {
-      if (icmpinst->valueId() == ir::vISGE) {
-        unroll.insertbranchloop(brinst->iffalse(), brinst->iftrue(), ir::vISLT, loop, ivphi, ivicmp,
+      if (icmpinst->valueId() == vISGE) {
+        unroll.insertbranchloop(brinst->iffalse(), brinst->iftrue(), vISLT, loop, ivphi, ivicmp,
                                 iviter, endval, condbb, domctx, tpctx);
-      } else if (icmpinst->valueId() == ir::vISGT) {
-        unroll.insertbranchloop(brinst->iffalse(), brinst->iftrue(), ir::vISLE, loop, ivphi, ivicmp,
+      } else if (icmpinst->valueId() == vISGT) {
+        unroll.insertbranchloop(brinst->iffalse(), brinst->iftrue(), vISLE, loop, ivphi, ivicmp,
                                 iviter, endval, condbb, domctx, tpctx);
-      } else if (icmpinst->valueId() == ir::vISLE) {
-        unroll.insertbranchloop(brinst->iftrue(), brinst->iffalse(), ir::vISLE, loop, ivphi, ivicmp,
+      } else if (icmpinst->valueId() == vISLE) {
+        unroll.insertbranchloop(brinst->iftrue(), brinst->iffalse(), vISLE, loop, ivphi, ivicmp,
                                 iviter, endval, condbb, domctx, tpctx);
-      } else if (icmpinst->valueId() == ir::vISLT) {
-        unroll.insertbranchloop(brinst->iftrue(), brinst->iffalse(), ir::vISLT, loop, ivphi, ivicmp,
+      } else if (icmpinst->valueId() == vISLT) {
+        unroll.insertbranchloop(brinst->iftrue(), brinst->iffalse(), vISLT, loop, ivphi, ivicmp,
                                 iviter, endval, condbb, domctx, tpctx);
       }
     } else {
       assert(false && "wrong ivphi");
     }
-  } else if (iviter->valueId() == ir::vSUB) {
+  } else if (iviter->valueId() == vSUB) {
     if (icmpinst->rhs() == ivphi) {
-      if (icmpinst->valueId() == ir::vISGE) {
-        unroll.insertbranchloop(brinst->iffalse(), brinst->iftrue(), ir::vISGT, loop, ivphi, ivicmp,
+      if (icmpinst->valueId() == vISGE) {
+        unroll.insertbranchloop(brinst->iffalse(), brinst->iftrue(), vISGT, loop, ivphi, ivicmp,
                                 iviter, endval, condbb, domctx, tpctx);
-      } else if (icmpinst->valueId() == ir::vISGT) {
-        unroll.insertbranchloop(brinst->iffalse(), brinst->iftrue(), ir::vISGE, loop, ivphi, ivicmp,
+      } else if (icmpinst->valueId() == vISGT) {
+        unroll.insertbranchloop(brinst->iffalse(), brinst->iftrue(), vISGE, loop, ivphi, ivicmp,
                                 iviter, endval, condbb, domctx, tpctx);
-      } else if (icmpinst->valueId() == ir::vISLE) {
-        unroll.insertbranchloop(brinst->iftrue(), brinst->iffalse(), ir::vISGE, loop, ivphi, ivicmp,
+      } else if (icmpinst->valueId() == vISLE) {
+        unroll.insertbranchloop(brinst->iftrue(), brinst->iffalse(), vISGE, loop, ivphi, ivicmp,
                                 iviter, endval, condbb, domctx, tpctx);
-      } else if (icmpinst->valueId() == ir::vISLT) {
-        unroll.insertbranchloop(brinst->iftrue(), brinst->iffalse(), ir::vISGT, loop, ivphi, ivicmp,
+      } else if (icmpinst->valueId() == vISLT) {
+        unroll.insertbranchloop(brinst->iftrue(), brinst->iffalse(), vISGT, loop, ivphi, ivicmp,
                                 iviter, endval, condbb, domctx, tpctx);
       }
     } else if (ivicmp->lhs() == ivphi) {
-      if (icmpinst->valueId() == ir::vISGE) {
-        unroll.insertbranchloop(brinst->iftrue(), brinst->iffalse(), ir::vISGE, loop, ivphi, ivicmp,
+      if (icmpinst->valueId() == vISGE) {
+        unroll.insertbranchloop(brinst->iftrue(), brinst->iffalse(), vISGE, loop, ivphi, ivicmp,
                                 iviter, endval, condbb, domctx, tpctx);
-      } else if (icmpinst->valueId() == ir::vISGT) {
-        unroll.insertbranchloop(brinst->iftrue(), brinst->iffalse(), ir::vISGT, loop, ivphi, ivicmp,
+      } else if (icmpinst->valueId() == vISGT) {
+        unroll.insertbranchloop(brinst->iftrue(), brinst->iffalse(), vISGT, loop, ivphi, ivicmp,
                                 iviter, endval, condbb, domctx, tpctx);
-      } else if (icmpinst->valueId() == ir::vISLE) {
-        unroll.insertbranchloop(brinst->iffalse(), brinst->iftrue(), ir::vISGT, loop, ivphi, ivicmp,
+      } else if (icmpinst->valueId() == vISLE) {
+        unroll.insertbranchloop(brinst->iffalse(), brinst->iftrue(), vISGT, loop, ivphi, ivicmp,
                                 iviter, endval, condbb, domctx, tpctx);
-      } else if (icmpinst->valueId() == ir::vISLT) {
-        unroll.insertbranchloop(brinst->iffalse(), brinst->iftrue(), ir::vISGE, loop, ivphi, ivicmp,
+      } else if (icmpinst->valueId() == vISLT) {
+        unroll.insertbranchloop(brinst->iffalse(), brinst->iftrue(), vISGE, loop, ivphi, ivicmp,
                                 iviter, endval, condbb, domctx, tpctx);
       }
     } else {
@@ -149,7 +154,7 @@ void loopsplit::splitloop(ir::Loop* loop) {
     return;
 }
 
-bool loopsplit::dosplit(ir::Function* func, TopAnalysisInfoManager* tp) {
+bool LoopSplitContext::dosplit(Function* func, TopAnalysisInfoManager* tp) {
   lpctx = tp->getLoopInfo(func);
   ivctx = tp->getIndVarInfo(func);
   lpctx->sortedLoops(true);
@@ -164,7 +169,7 @@ bool loopsplit::dosplit(ir::Function* func, TopAnalysisInfoManager* tp) {
   return false;
 }
 
-void loopsplit::run(ir::Function* func, TopAnalysisInfoManager* tp) {
+void LoopSplitContext::run(Function* func, TopAnalysisInfoManager* tp) {
   lpctx = tp->getLoopInfo(func);
   ivctx = tp->getIndVarInfo(func);
   domctx = tp->getDomTree(func);

@@ -12,11 +12,11 @@ namespace pass {
 
 class LoopInterChange : public FunctionPass {
 public:
-  void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
+  void run(Function* func, TopAnalysisInfoManager* tp) override;
   std::string name() const override { return "LoopInterChange"; }
 
 private:
-  bool runImpl(ir::Function* func, TopAnalysisInfoManager* tp);
+  bool runImpl(Function* func, TopAnalysisInfoManager* tp);
 };
 
 }  // namespace pass

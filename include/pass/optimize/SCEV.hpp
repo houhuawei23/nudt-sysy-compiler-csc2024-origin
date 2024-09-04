@@ -7,41 +7,44 @@
 #include "ir/ir.hpp"
 #include "pass/pass.hpp"
 
-namespace pass{
+using namespace ir;
+namespace pass {
 class SCEV;
-struct SCEVValue{
-    ir::Value* initVal;
-    std::vector<ir::Value*>addsteps;
-    std::vector<ir::Value*>substeps;
-    ir::PhiInst* phiinst;
-    bool isFloat = false;
+struct SCEVValue {
+  Value* initVal;
+  std::vector<Value*> addsteps;
+  std::vector<Value*> substeps;
+  PhiInst* phiinst;
+  bool isFloat = false;
 };
 
+struct SCEVContext final {
+  LoopInfo* lpctx;
+  IndVarInfo* idvctx;
+  SideEffectInfo* sectx;
+  DomTree* domctx;
 
+  void run(Function* func, TopAnalysisInfoManager* tp);
 
-class SCEV : public FunctionPass{
-    public:
-        void run(ir::Function* func,TopAnalysisInfoManager* tp)override;
-        std::string name() const override{return "scev";}
-    private:
-        LoopInfo* lpctx;
-        IndVarInfo* idvctx;
-        sideEffectInfo* sectx;
-        DomTree* domctx;
-        void runOnLoop(ir::Loop* lp,TopAnalysisInfoManager* tp);
-        bool isSimplyLoopInvariant(ir::Loop* lp,ir::Value* val);
-        bool isSimplyNotInLoop(ir::Loop* lp,ir::Value* val);
-        bool isUsedOutsideLoop(ir::Loop* lp,ir::Value* val);
-        int getConstantEndvarIndVarIterCnt(ir::Loop* lp,ir::IndVar* idv);
-        ir::Value* addCalcIterCntInstructions(ir::Loop* lp,ir::IndVar* idv,ir::IRBuilder& builder);
-        void normalizeIcmpAndBr(ir::Loop* lp,ir::IndVar* idv);
-        void exchangeIcmpOp(ir::ICmpInst* icmpInst);
-        void reverseIcmpOp(ir::ICmpInst* icmpInst);
-        void exchangeBrDest(ir::BranchInst* brInst);
-        void visitPhi(ir::Loop* lp,ir::PhiInst* phiinst);
-        int findAddSubChain(ir::Loop* lp,ir::PhiInst* phiinst,ir::BinaryInst* nowInst);
-        void getSCEVValue(ir::Loop* lp,ir::PhiInst* phiinst,
-            std::vector<ir::BinaryInst*>&instsChain);
-        void SCEVReduceInstr(ir::Loop* lp,SCEVValue* scevVal,ir::Value* itercnt,ir::IRBuilder& builder);
+  void runOnLoop(Loop* lp, TopAnalysisInfoManager* tp);
+  bool isSimplyLoopInvariant(Loop* lp, Value* val);
+  bool isSimplyNotInLoop(Loop* lp, Value* val);
+  bool isUsedOutsideLoop(Loop* lp, Value* val);
+  int getConstantEndvarIndVarIterCnt(Loop* lp, IndVar* idv);
+  Value* addCalcIterCntInstructions(Loop* lp, IndVar* idv, IRBuilder& builder);
+  void normalizeIcmpAndBr(Loop* lp, IndVar* idv);
+  void exchangeIcmpOp(ICmpInst* icmpInst);
+  void reverseIcmpOp(ICmpInst* icmpInst);
+  void exchangeBrDest(BranchInst* brInst);
+  void visitPhi(Loop* lp, PhiInst* phiinst);
+  int findAddSubChain(Loop* lp, PhiInst* phiinst, BinaryInst* nowInst);
+  void getSCEVValue(Loop* lp, PhiInst* phiinst, std::vector<BinaryInst*>& instsChain);
+  void SCEVReduceInstr(Loop* lp, SCEVValue* scevVal, Value* itercnt, IRBuilder& builder);
 };
-}
+
+class SCEV : public FunctionPass {
+public:
+  void run(Function* func, TopAnalysisInfoManager* tp) override;
+  std::string name() const override { return "scev"; }
+};
+}  // namespace pass

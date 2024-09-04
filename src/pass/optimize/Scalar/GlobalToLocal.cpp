@@ -14,7 +14,12 @@ static std::unordered_map<ir::Function*, std::unordered_set<ir::GlobalVariable*>
 static std::unordered_map<ir::GlobalVariable*, bool> globalHasStore;
 static std::unordered_set<ir::Function*> funcToMem2Reg;
 
-void global2local::run(ir::Module* md, TopAnalysisInfoManager* tp) {
+void Global2Local::run(ir::Module* md, TopAnalysisInfoManager* tp) {
+  Global2LocalContext ctx;
+  ctx.run(md, tp);
+}
+
+void Global2LocalContext::run(ir::Module* md, TopAnalysisInfoManager* tp) {
   bool isChange = false;
   cgctx = tp->getCallGraph();
   globalCallAnalysis(md);
@@ -52,7 +57,7 @@ void global2local::run(ir::Module* md, TopAnalysisInfoManager* tp) {
   }
 }
 
-void global2local::globalCallAnalysis(ir::Module* md) {
+void Global2LocalContext::globalCallAnalysis(ir::Module* md) {
   /*
   这里进行分析, 判断每一个函数是否调用了对应的全局变量
   如果func A B C存在这样的调用链：A call B call C,
@@ -88,7 +93,7 @@ void global2local::globalCallAnalysis(ir::Module* md) {
 }
 
 // 对于间接调用结果，需要基于直接调用进行传播
-void global2local::addIndirectGlobalUseFunc(ir::GlobalVariable* gv, ir::Function* func) {
+void Global2LocalContext::addIndirectGlobalUseFunc(ir::GlobalVariable* gv, ir::Function* func) {
   funcIndirectUseGlobal[func].insert(gv);
   for (auto callerfunc : cgctx->callers(func)) {
     if (funcIndirectUseGlobal[func].count(gv) == 0) addIndirectGlobalUseFunc(gv, callerfunc);
@@ -101,9 +106,9 @@ void global2local::addIndirectGlobalUseFunc(ir::GlobalVariable* gv, ir::Function
 2. 只在一个函数中被使用的global
 3. 在多个函数中被使用的global
 */
-bool global2local::processGlobalVariables(ir::GlobalVariable* gv,
-                                          ir::Module* md,
-                                          TopAnalysisInfoManager* tp) {
+bool Global2LocalContext::processGlobalVariables(ir::GlobalVariable* gv,
+                                                 ir::Module* md,
+                                                 TopAnalysisInfoManager* tp) {
   // std::cerr<<gv->name()<<"!!!"<<std::endl;
   auto gvUseFuncSize = globalDirectUsedFunc[gv].size();
   if (gv->isArray()) return false;

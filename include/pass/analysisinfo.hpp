@@ -5,6 +5,7 @@
 #include <vector>
 #include <queue>
 
+using namespace ir;
 namespace pass {
 template <typename PassUnit>
 class AnalysisInfo;
@@ -32,8 +33,8 @@ public:
   void setOff() { isValid = false; }
   virtual void refresh() = 0;
 };
-using ModuleACtx = AnalysisInfo<ir::Module>;
-using FunctionACtx = AnalysisInfo<ir::Function>;
+using ModuleACtx = AnalysisInfo<Module>;
+using FunctionACtx = AnalysisInfo<Function>;
 
 // add new analysis info of ir here!
 // dom Tree
@@ -44,26 +45,26 @@ sdom: strict dominator
 */
 class DomTree : public FunctionACtx {
 protected:
-  std::unordered_map<ir::BasicBlock*, ir::BasicBlock*> _idom;
-  std::unordered_map<ir::BasicBlock*, ir::BasicBlock*> _sdom;
-  std::unordered_map<ir::BasicBlock*, int> _domlevel;
-  std::unordered_map<ir::BasicBlock*, std::vector<ir::BasicBlock*>> _domson;
-  std::unordered_map<ir::BasicBlock*, std::vector<ir::BasicBlock*>> _domfrontier;
-  std::vector<ir::BasicBlock*> _BFSDomTreeVector;
-  std::vector<ir::BasicBlock*> _DFSDomTreeVector;
+  std::unordered_map<BasicBlock*, BasicBlock*> _idom;
+  std::unordered_map<BasicBlock*, BasicBlock*> _sdom;
+  std::unordered_map<BasicBlock*, int> _domlevel;
+  std::unordered_map<BasicBlock*, std::vector<BasicBlock*>> _domson;
+  std::unordered_map<BasicBlock*, std::vector<BasicBlock*>> _domfrontier;
+  std::vector<BasicBlock*> _BFSDomTreeVector;
+  std::vector<BasicBlock*> _DFSDomTreeVector;
 
 public:
-  DomTree(ir::Function* func, TopAnalysisInfoManager* tp) : FunctionACtx(func, tp) {}
-  ir::BasicBlock* idom(ir::BasicBlock* bb) { return _idom[bb]; }
-  void set_idom(ir::BasicBlock* bb, ir::BasicBlock* idbb) { _idom[bb] = idbb; }
-  ir::BasicBlock* sdom(ir::BasicBlock* bb) { return _sdom[bb]; }
-  void set_sdom(ir::BasicBlock* bb, ir::BasicBlock* sdbb) { _sdom[bb] = sdbb; }
-  int domlevel(ir::BasicBlock* bb) { return _domlevel[bb]; }
-  void set_domlevel(ir::BasicBlock* bb, int lv) { _domlevel[bb] = lv; }
+  DomTree(Function* func, TopAnalysisInfoManager* tp) : FunctionACtx(func, tp) {}
+  BasicBlock* idom(BasicBlock* bb) { return _idom[bb]; }
+  void set_idom(BasicBlock* bb, BasicBlock* idbb) { _idom[bb] = idbb; }
+  BasicBlock* sdom(BasicBlock* bb) { return _sdom[bb]; }
+  void set_sdom(BasicBlock* bb, BasicBlock* sdbb) { _sdom[bb] = sdbb; }
+  int domlevel(BasicBlock* bb) { return _domlevel[bb]; }
+  void set_domlevel(BasicBlock* bb, int lv) { _domlevel[bb] = lv; }
 
-  auto& domson(ir::BasicBlock* bb) { return _domson[bb]; }
+  auto& domson(BasicBlock* bb) { return _domson[bb]; }
 
-  auto& domfrontier(ir::BasicBlock* bb) { return _domfrontier[bb]; }
+  auto& domfrontier(BasicBlock* bb) { return _domfrontier[bb]; }
 
   auto& BFSDomTreeVector() { return _BFSDomTreeVector; }
 
@@ -81,12 +82,12 @@ public:
   void initialize() {
     clearAll();
     for (auto bb : passUnit->blocks()) {
-      _domson[bb] = std::vector<ir::BasicBlock*>();
-      _domfrontier[bb] = std::vector<ir::BasicBlock*>();
+      _domson[bb] = std::vector<BasicBlock*>();
+      _domfrontier[bb] = std::vector<BasicBlock*>();
     }
   }
   void refresh() override;
-  bool dominate(ir::BasicBlock* bb1, ir::BasicBlock* bb2) {
+  bool dominate(BasicBlock* bb1, BasicBlock* bb2) {
     if (bb1 == bb2) return true;
     auto bbIdom = _idom[bb2];
     while (bbIdom != nullptr) {
@@ -96,8 +97,8 @@ public:
     return false;
   }
   void BFSDomTreeInfoRefresh() {
-    std::queue<ir::BasicBlock*> bbqueue;
-    std::unordered_map<ir::BasicBlock*, bool> vis;
+    std::queue<BasicBlock*> bbqueue;
+    std::unordered_map<BasicBlock*, bool> vis;
     for (auto bb : passUnit->blocks())
       vis[bb] = false;
 
@@ -116,8 +117,8 @@ public:
     }
   }
   void DFSDomTreeInfoRefresh() {
-    std::stack<ir::BasicBlock*> bbstack;
-    std::unordered_map<ir::BasicBlock*, bool> vis;
+    std::stack<BasicBlock*> bbstack;
+    std::unordered_map<BasicBlock*, bool> vis;
     for (auto bb : passUnit->blocks())
       vis[bb] = false;
 
@@ -139,31 +140,31 @@ public:
 
 class PDomTree : public FunctionACtx {  // also used as pdom
 protected:
-  std::unordered_map<ir::BasicBlock*, ir::BasicBlock*> _ipdom;
-  std::unordered_map<ir::BasicBlock*, ir::BasicBlock*> _spdom;
-  std::unordered_map<ir::BasicBlock*, int> _pdomlevel;
-  std::unordered_map<ir::BasicBlock*, std::vector<ir::BasicBlock*>> _pdomson;
-  std::unordered_map<ir::BasicBlock*, std::vector<ir::BasicBlock*>> _pdomfrontier;
+  std::unordered_map<BasicBlock*, BasicBlock*> _ipdom;
+  std::unordered_map<BasicBlock*, BasicBlock*> _spdom;
+  std::unordered_map<BasicBlock*, int> _pdomlevel;
+  std::unordered_map<BasicBlock*, std::vector<BasicBlock*>> _pdomson;
+  std::unordered_map<BasicBlock*, std::vector<BasicBlock*>> _pdomfrontier;
 
 public:
-  PDomTree(ir::Function* func, TopAnalysisInfoManager* tp) : FunctionACtx(func, tp) {}
-  ir::BasicBlock* ipdom(ir::BasicBlock* bb) {
+  PDomTree(Function* func, TopAnalysisInfoManager* tp) : FunctionACtx(func, tp) {}
+  BasicBlock* ipdom(BasicBlock* bb) {
     assert(bb && "bb is null");
     return _ipdom[bb];
   }
-  void set_ipdom(ir::BasicBlock* bb, ir::BasicBlock* idbb) { _ipdom[bb] = idbb; }
-  ir::BasicBlock* spdom(ir::BasicBlock* bb) {
+  void set_ipdom(BasicBlock* bb, BasicBlock* idbb) { _ipdom[bb] = idbb; }
+  BasicBlock* spdom(BasicBlock* bb) {
     assert(bb && "bb is null");
     return _spdom[bb];
   }
-  void set_spdom(ir::BasicBlock* bb, ir::BasicBlock* sdbb) { _spdom[bb] = sdbb; }
-  int pdomlevel(ir::BasicBlock* bb) {
+  void set_spdom(BasicBlock* bb, BasicBlock* sdbb) { _spdom[bb] = sdbb; }
+  int pdomlevel(BasicBlock* bb) {
     assert(bb && "bb is null");
     return _pdomlevel[bb];
   }
-  void set_pdomlevel(ir::BasicBlock* bb, int lv) { _pdomlevel[bb] = lv; }
-  std::vector<ir::BasicBlock*>& pdomson(ir::BasicBlock* bb) { return _pdomson[bb]; }
-  std::vector<ir::BasicBlock*>& pdomfrontier(ir::BasicBlock* bb) { return _pdomfrontier[bb]; }
+  void set_pdomlevel(BasicBlock* bb, int lv) { _pdomlevel[bb] = lv; }
+  std::vector<BasicBlock*>& pdomson(BasicBlock* bb) { return _pdomson[bb]; }
+  std::vector<BasicBlock*>& pdomfrontier(BasicBlock* bb) { return _pdomfrontier[bb]; }
   void clearAll() {
     _ipdom.clear();
     _spdom.clear();
@@ -174,12 +175,12 @@ public:
   void initialize() {
     clearAll();
     for (auto bb : passUnit->blocks()) {
-      _pdomson[bb] = std::vector<ir::BasicBlock*>();
-      _pdomfrontier[bb] = std::vector<ir::BasicBlock*>();
+      _pdomson[bb] = std::vector<BasicBlock*>();
+      _pdomfrontier[bb] = std::vector<BasicBlock*>();
     }
   }
 
-  bool pdominate(ir::BasicBlock* bb1, ir::BasicBlock* bb2) {
+  bool pdominate(BasicBlock* bb1, BasicBlock* bb2) {
     if (bb1 == bb2) return true;
     auto bbIdom = _ipdom[bb2];
     while (bbIdom != nullptr) {
@@ -194,28 +195,28 @@ public:
 
 class LoopInfo : public FunctionACtx {
 protected:
-  std::vector<ir::Loop*> _loops;
-  std::unordered_map<ir::BasicBlock*, ir::Loop*> _head2loop;
-  std::unordered_map<ir::BasicBlock*, size_t> _looplevel;
+  std::vector<Loop*> _loops;
+  std::unordered_map<BasicBlock*, Loop*> _head2loop;
+  std::unordered_map<BasicBlock*, size_t> _looplevel;
 
 public:
-  LoopInfo(ir::Function* fp, TopAnalysisInfoManager* tp) : FunctionACtx(fp, tp) {}
-  std::vector<ir::Loop*>& loops() { return _loops; }
-  ir::Loop* head2loop(ir::BasicBlock* bb) {
+  LoopInfo(Function* fp, TopAnalysisInfoManager* tp) : FunctionACtx(fp, tp) {}
+  std::vector<Loop*>& loops() { return _loops; }
+  Loop* head2loop(BasicBlock* bb) {
     if (_head2loop.count(bb) == 0) return nullptr;
     return _head2loop[bb];
   }
-  void set_head2loop(ir::BasicBlock* bb, ir::Loop* lp) { _head2loop[bb] = lp; }
-  int looplevel(ir::BasicBlock* bb) { return _looplevel[bb]; }
-  void set_looplevel(ir::BasicBlock* bb, int lv) { _looplevel[bb] = lv; }
+  void set_head2loop(BasicBlock* bb, Loop* lp) { _head2loop[bb] = lp; }
+  int looplevel(BasicBlock* bb) { return _looplevel[bb]; }
+  void set_looplevel(BasicBlock* bb, int lv) { _looplevel[bb] = lv; }
   void clearAll() {
     _loops.clear();
     _head2loop.clear();
     _looplevel.clear();
   }
-  bool isHeader(ir::BasicBlock* bb) { return _head2loop.count(bb); }
-  ir::Loop* getinnermostLoop(ir::BasicBlock* bb) {  // 返回最内层的循环
-    ir::Loop* innermost = nullptr;
+  bool isHeader(BasicBlock* bb) { return _head2loop.count(bb); }
+  Loop* getinnermostLoop(BasicBlock* bb) {  // 返回最内层的循环
+    Loop* innermost = nullptr;
     for (auto L : _loops) {
       if (L->contains(bb)) {
         if (innermost == nullptr)
@@ -229,33 +230,33 @@ public:
   }
   void refresh() override;
   void print(std::ostream& os) const;
-  std::vector<ir::Loop*> sortedLoops(bool reverse = false);  // looplevel small to big
+  std::vector<Loop*> sortedLoops(bool reverse = false);  // looplevel small to big
 };
 
 class CallGraph : public ModuleACtx {
 protected:
-  std::unordered_map<ir::Function*, std::set<ir::Function*>> _callees;
-  std::unordered_map<ir::Function*, std::set<ir::Function*>> _callers;
-  std::unordered_map<ir::Function*, bool> _is_called;
-  std::unordered_map<ir::Function*, bool> _is_inline;
-  std::unordered_map<ir::Function*, bool> _is_lib;
-  std::unordered_map<ir::Function*, std::set<ir::CallInst*>>
+  std::unordered_map<Function*, std::set<Function*>> _callees;
+  std::unordered_map<Function*, std::set<Function*>> _callers;
+  std::unordered_map<Function*, bool> _is_called;
+  std::unordered_map<Function*, bool> _is_inline;
+  std::unordered_map<Function*, bool> _is_lib;
+  std::unordered_map<Function*, std::set<CallInst*>>
     _callerCallInsts;  // func's caller insts are func's callers'
-  std::unordered_map<ir::Function*, std::set<ir::CallInst*>>
+  std::unordered_map<Function*, std::set<CallInst*>>
     _calleeCallInsts;  // func's callee insts are func's
 
 public:
-  CallGraph(ir::Module* md, TopAnalysisInfoManager* tp) : ModuleACtx(md, tp) {}
-  std::set<ir::Function*>& callees(ir::Function* func) { return _callees[func]; }
-  std::set<ir::Function*>& callers(ir::Function* func) { return _callers[func]; }
-  std::set<ir::CallInst*>& callerCallInsts(ir::Function* func) { return _callerCallInsts[func]; }
-  std::set<ir::CallInst*>& calleeCallInsts(ir::Function* func) { return _calleeCallInsts[func]; }
-  bool isCalled(ir::Function* func) { return _is_called[func]; }
-  bool isInline(ir::Function* func) { return _is_inline[func]; }
-  bool isLib(ir::Function* func) { return _is_lib[func]; }
-  void set_isCalled(ir::Function* func, bool b) { _is_called[func] = b; }
-  void set_isInline(ir::Function* func, bool b) { _is_inline[func] = b; }
-  void set_isLib(ir::Function* func, bool b) { _is_lib[func] = b; }
+  CallGraph(Module* md, TopAnalysisInfoManager* tp) : ModuleACtx(md, tp) {}
+  std::set<Function*>& callees(Function* func) { return _callees[func]; }
+  std::set<Function*>& callers(Function* func) { return _callers[func]; }
+  std::set<CallInst*>& callerCallInsts(Function* func) { return _callerCallInsts[func]; }
+  std::set<CallInst*>& calleeCallInsts(Function* func) { return _calleeCallInsts[func]; }
+  bool isCalled(Function* func) { return _is_called[func]; }
+  bool isInline(Function* func) { return _is_inline[func]; }
+  bool isLib(Function* func) { return _is_lib[func]; }
+  void set_isCalled(Function* func, bool b) { _is_called[func] = b; }
+  void set_isInline(Function* func, bool b) { _is_inline[func] = b; }
+  void set_isLib(Function* func, bool b) { _is_lib[func] = b; }
   void clearAll() {
     _callees.clear();
     _callers.clear();
@@ -267,11 +268,11 @@ public:
   }
   void initialize() {
     for (auto func : passUnit->funcs()) {
-      _callees[func] = std::set<ir::Function*>();
-      _callers[func] = std::set<ir::Function*>();
+      _callees[func] = std::set<Function*>();
+      _callers[func] = std::set<Function*>();
     }
   }
-  bool isNoCallee(ir::Function* func) {
+  bool isNoCallee(Function* func) {
     if (_callees[func].size() == 0) return true;
     for (auto f : _callees[func]) {
       if (not isLib(f)) return false;
@@ -283,42 +284,43 @@ public:
 
 class IndVarInfo : public FunctionACtx {
 private:
-  std::unordered_map<ir::Loop*, ir::IndVar*> _loopToIndvar;
+  std::unordered_map<Loop*, IndVar*> _loopToIndvar;
 
 public:
-  IndVarInfo(ir::Function* fp, TopAnalysisInfoManager* tp) : FunctionACtx(fp, tp) {}
-  ir::IndVar* getIndvar(ir::Loop* loop) {
+  IndVarInfo(Function* fp, TopAnalysisInfoManager* tp) : FunctionACtx(fp, tp) {}
+  IndVar* getIndvar(Loop* loop) {
     if (_loopToIndvar.count(loop) == 0) return nullptr;
     return _loopToIndvar.at(loop);
   }
   void clearAll() { _loopToIndvar.clear(); }
   void refresh() override;
-  void addIndVar(ir::Loop* lp, ir::IndVar* idv) { _loopToIndvar[lp] = idv; }
+  void addIndVar(Loop* lp, IndVar* idv) { _loopToIndvar[lp] = idv; }
 };
 
-class sideEffectInfo : public ModuleACtx {
+class SideEffectInfo : public ModuleACtx {
 private:
-  std::unordered_map<ir::Function*, std::set<ir::GlobalVariable*>>
-    _FuncReadGlobals;  // 当前函数读取的全局变量
-  std::unordered_map<ir::Function*, std::set<ir::GlobalVariable*>>
-    _FuncWriteGlobals;  // 当前函数写入的全局变量
-  std::unordered_map<ir::Argument*, bool>
-    _isArgumentRead;  // 对于当前argument函数是否读取（仅限pointer）
-  std::unordered_map<ir::Argument*, bool>
-    _isArgumentWrite;  // 对于当前argument哈数是否写入（仅限pointer）
-  std::unordered_map<ir::Function*, bool> _isLib;  // 当前函数是否为lib函数
-  std::unordered_map<ir::Function*, std::set<ir::Argument*>>
-    _funcPointerArgs;  // 当前函数的参数中有哪些是指针参数
-  std::unordered_map<ir::Function*, bool>
-    _isCallLibFunc;  // 当前函数有无调用库函数或者简介调用库函数
-  std::unordered_map<ir::Function*, bool>
-    _hasPotentialSideEffect;  // 出现了无法分析基址的情况，含有潜在的副作用
-  std::unordered_map<ir::Function*, std::set<ir::GlobalVariable*>>
-    _FuncReadDirectGvs;  // 当前函数直接读取的gv
-  std::unordered_map<ir::Function*, std::set<ir::GlobalVariable*>>
-    _FuncWriteDirectGvs;  // 当前函数直接写入的gv
+  // 当前函数读取的全局变量
+  std::unordered_map<Function*, std::set<GlobalVariable*>> _FuncReadGlobals;
+  // 当前函数写入的全局变量
+  std::unordered_map<Function*, std::set<GlobalVariable*>> _FuncWriteGlobals;
+  // 对于当前argument函数是否读取（仅限pointer）
+  std::unordered_map<Argument*, bool> _isArgumentRead;
+  // 对于当前argument哈数是否写入（仅限pointer）
+  std::unordered_map<Argument*, bool> _isArgumentWrite;
+  std::unordered_map<Function*, bool> _isLib;  // 当前函数是否为lib函数
+  // 当前函数的参数中有哪些是指针参数
+  std::unordered_map<Function*, std::set<Argument*>> _funcPointerArgs;
+  // 当前函数有无调用库函数或者简介调用库函数
+  std::unordered_map<Function*, bool> _isCallLibFunc;
+  // 出现了无法分析基址的情况，含有潜在的副作用
+  std::unordered_map<Function*, bool> _hasPotentialSideEffect;
+  // 当前函数直接读取的gv
+  std::unordered_map<Function*, std::set<GlobalVariable*>> _FuncReadDirectGvs;
+  // 当前函数直接写入的gv
+  std::unordered_map<Function*, std::set<GlobalVariable*>> _FuncWriteDirectGvs;
+
 public:
-  sideEffectInfo(ir::Module* ctx, TopAnalysisInfoManager* tp) : ModuleACtx(ctx, tp) {}
+  SideEffectInfo(Module* ctx, TopAnalysisInfoManager* tp) : ModuleACtx(ctx, tp) {}
   void clearAll() {
     _FuncReadGlobals.clear();
     _FuncWriteGlobals.clear();
@@ -333,33 +335,33 @@ public:
   }
   void refresh() override;
   // get
-  bool getArgRead(ir::Argument* arg) { return _isArgumentRead[arg]; }
-  bool getArgWrite(ir::Argument* arg) { return _isArgumentWrite[arg]; }
-  bool getIsLIb(ir::Function* func) { return _isLib[func]; }
-  bool getIsCallLib(ir::Function* func) { return _isCallLibFunc[func]; }
-  bool getPotentialSideEffect(ir::Function* func) { return _hasPotentialSideEffect[func]; }
+  bool getArgRead(Argument* arg) { return _isArgumentRead[arg]; }
+  bool getArgWrite(Argument* arg) { return _isArgumentWrite[arg]; }
+  bool getIsLIb(Function* func) { return _isLib[func]; }
+  bool getIsCallLib(Function* func) { return _isCallLibFunc[func]; }
+  bool getPotentialSideEffect(Function* func) { return _hasPotentialSideEffect[func]; }
   // set
-  void setArgRead(ir::Argument* arg, bool b) { _isArgumentRead[arg] = b; }
-  void setArgWrite(ir::Argument* arg, bool b) { _isArgumentWrite[arg] = b; }
-  void setFuncIsLIb(ir::Function* func, bool b) { _isLib[func] = b; }
-  void setFuncIsCallLib(ir::Function* func, bool b) { _isCallLibFunc[func] = b; }
-  void setPotentialSideEffect(ir::Function* func, bool b) { _hasPotentialSideEffect[func] = b; }
+  void setArgRead(Argument* arg, bool b) { _isArgumentRead[arg] = b; }
+  void setArgWrite(Argument* arg, bool b) { _isArgumentWrite[arg] = b; }
+  void setFuncIsLIb(Function* func, bool b) { _isLib[func] = b; }
+  void setFuncIsCallLib(Function* func, bool b) { _isCallLibFunc[func] = b; }
+  void setPotentialSideEffect(Function* func, bool b) { _hasPotentialSideEffect[func] = b; }
   // reference
-  std::set<ir::GlobalVariable*>& funcReadGlobals(ir::Function* func) {
+  std::set<GlobalVariable*>& funcReadGlobals(Function* func) {
     return _FuncReadGlobals[func];
   }
-  std::set<ir::GlobalVariable*>& funcWriteGlobals(ir::Function* func) {
+  std::set<GlobalVariable*>& funcWriteGlobals(Function* func) {
     return _FuncWriteGlobals[func];
   }
-  std::set<ir::Argument*>& funcArgSet(ir::Function* func) { return _funcPointerArgs[func]; }
-  std::set<ir::GlobalVariable*>& funcDirectReadGvs(ir::Function* func) {
+  std::set<Argument*>& funcArgSet(Function* func) { return _funcPointerArgs[func]; }
+  std::set<GlobalVariable*>& funcDirectReadGvs(Function* func) {
     return _FuncReadDirectGvs[func];
   }
-  std::set<ir::GlobalVariable*>& funcDirectWriteGvs(ir::Function* func) {
+  std::set<GlobalVariable*>& funcDirectWriteGvs(Function* func) {
     return _FuncWriteDirectGvs[func];
   }
   // old API
-  bool hasSideEffect(ir::Function* func) {
+  bool hasSideEffect(Function* func) {
     if (_isLib[func]) return true;
     if (_isCallLibFunc[func]) return true;
     if (not _FuncWriteGlobals[func].empty()) return true;
@@ -370,22 +372,22 @@ public:
     }
     return false;
   }
-  bool isPureFunc(ir::Function* func) {
+  bool isPureFunc(Function* func) {
     for (auto arg : funcArgSet(func)) {
       if (getArgRead(arg)) return false;
     }
     return (not hasSideEffect(func) and _FuncReadGlobals[func].empty()) and not _isLib[func];
   }
-  bool isInputOnlyFunc(ir::Function* func) {
+  bool isInputOnlyFunc(Function* func) {
     if (hasSideEffect(func)) return false;
     if (not _FuncReadGlobals[func].empty()) return false;
     return true;
   }
-  void functionInit(ir::Function* func) {
-    _FuncReadGlobals[func] = std::set<ir::GlobalVariable*>();
-    _FuncWriteGlobals[func] = std::set<ir::GlobalVariable*>();
-    _FuncWriteDirectGvs[func] = std::set<ir::GlobalVariable*>();
-    _FuncReadDirectGvs[func] = std::set<ir::GlobalVariable*>();
+  void functionInit(Function* func) {
+    _FuncReadGlobals[func] = std::set<GlobalVariable*>();
+    _FuncWriteGlobals[func] = std::set<GlobalVariable*>();
+    _FuncWriteDirectGvs[func] = std::set<GlobalVariable*>();
+    _FuncReadDirectGvs[func] = std::set<GlobalVariable*>();
     for (auto arg : func->args()) {
       if (not arg->isPointer()) continue;
       _funcPointerArgs[func].insert(arg);
@@ -398,11 +400,11 @@ public:
 
 class dependenceInfo : public FunctionACtx {
 private:
-  std::unordered_map<ir::Loop*, LoopDependenceInfo*> funcToLoopDependenceInfo;
+  std::unordered_map<Loop*, LoopDependenceInfo*> funcToLoopDependenceInfo;
 
 public:
-  dependenceInfo(ir::Function* func, TopAnalysisInfoManager* tp) : FunctionACtx(func, tp) {}
-  LoopDependenceInfo* getLoopDependenceInfo(ir::Loop* lp) {
+  dependenceInfo(Function* func, TopAnalysisInfoManager* tp) : FunctionACtx(func, tp) {}
+  LoopDependenceInfo* getLoopDependenceInfo(Loop* lp) {
     if (funcToLoopDependenceInfo.count(lp))
       return funcToLoopDependenceInfo[lp];
     else
@@ -410,7 +412,7 @@ public:
   }
   void clearAll() { funcToLoopDependenceInfo.clear(); }
   void refresh() override;
-  void setDepInfoLp(ir::Loop* lp, LoopDependenceInfo* input) {
+  void setDepInfoLp(Loop* lp, LoopDependenceInfo* input) {
     funcToLoopDependenceInfo[lp] = input;
   }
 };
@@ -418,49 +420,49 @@ public:
 class parallelInfo : public FunctionACtx {
   // 你想并行的这里都有!
 private:
-  std::unordered_map<ir::BasicBlock*, bool> _LpIsParallel;
-  std::unordered_map<ir::BasicBlock*, std::set<ir::PhiInst*>> _LpPhis;
-  std::unordered_map<ir::PhiInst*, bool> _isPhiAdd;
-  std::unordered_map<ir::PhiInst*, bool> _isPhiSub;
-  std::unordered_map<ir::PhiInst*, bool> _isPhiMul;
-  std::unordered_map<ir::PhiInst*, ir::Value*> _ModuloVal;
+  std::unordered_map<BasicBlock*, bool> _LpIsParallel;
+  std::unordered_map<BasicBlock*, std::set<PhiInst*>> _LpPhis;
+  std::unordered_map<PhiInst*, bool> _isPhiAdd;
+  std::unordered_map<PhiInst*, bool> _isPhiSub;
+  std::unordered_map<PhiInst*, bool> _isPhiMul;
+  std::unordered_map<PhiInst*, Value*> _ModuloVal;
 
 public:
-  parallelInfo(ir::Function* func, TopAnalysisInfoManager* tp) : FunctionACtx(func, tp) {}
-  void setIsParallel(ir::BasicBlock* lp, bool b) { _LpIsParallel[lp] = b; }
-  bool getIsParallel(ir::BasicBlock* lp) {
+  parallelInfo(Function* func, TopAnalysisInfoManager* tp) : FunctionACtx(func, tp) {}
+  void setIsParallel(BasicBlock* lp, bool b) { _LpIsParallel[lp] = b; }
+  bool getIsParallel(BasicBlock* lp) {
     if (_LpIsParallel.count(lp)) {
       return _LpIsParallel[lp];
     }
     assert(false and "input an unexistend loop in ");
   }
-  std::set<ir::PhiInst*>& resPhi(ir::BasicBlock* bb) { return _LpPhis[bb]; }
+  std::set<PhiInst*>& resPhi(BasicBlock* bb) { return _LpPhis[bb]; }
   void clearAll() {
     _LpIsParallel.clear();
     _LpPhis.clear();
   }
   void refresh() {}
   // set
-  void setPhi(ir::PhiInst* phi, bool isadd, bool issub, bool ismul, ir::Value* mod) {
+  void setPhi(PhiInst* phi, bool isadd, bool issub, bool ismul, Value* mod) {
     _isPhiAdd[phi] = isadd;
     _isPhiMul[phi] = ismul;
     _isPhiSub[phi] = issub;
     _ModuloVal[phi] = mod;
   }
   // get
-  bool getIsAdd(ir::PhiInst* phi) {
+  bool getIsAdd(PhiInst* phi) {
     assert(false and "can not use!");
     return _isPhiAdd.at(phi);
   }
-  bool getIsSub(ir::PhiInst* phi) {
+  bool getIsSub(PhiInst* phi) {
     assert(false and "can not use!");
     return _isPhiSub.at(phi);
   }
-  bool getIsMul(ir::PhiInst* phi) {
+  bool getIsMul(PhiInst* phi) {
     assert(false and "can not use!");
     return _isPhiMul.at(phi);
   }
-  ir::Value* getMod(ir::PhiInst* phi) {
+  Value* getMod(PhiInst* phi) {
     assert(false and "can not use!");
     return _ModuloVal.at(phi);
   }

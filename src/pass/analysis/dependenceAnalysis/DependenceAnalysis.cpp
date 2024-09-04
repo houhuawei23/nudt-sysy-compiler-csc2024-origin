@@ -1,8 +1,14 @@
 #include "pass/analysis/dependenceAnalysis/DependenceAnalysis.hpp"
 #include "pass/analysis/dependenceAnalysis/dpaUtils.hpp"
-using namespace pass;
 
-void DependenceAnalysis::run(ir::Function* func, TopAnalysisInfoManager* tp) {
+using namespace pass;
+using namespace ir;
+
+void DependenceAnalysis::run(Function* func, TopAnalysisInfoManager* tp) {
+  DependenceAnalysisContext ctx;
+  ctx.run(func, tp);
+}
+void DependenceAnalysisContext::run(Function* func, TopAnalysisInfoManager* tp) {
   std::cerr << "\nda(" << func->name() << ") ";
   topmana = tp;
   domctx = tp->getDomTree(func);
@@ -18,7 +24,7 @@ void DependenceAnalysis::run(ir::Function* func, TopAnalysisInfoManager* tp) {
   }
 }
 
-void DependenceAnalysis::runOnLoop(ir::Loop* lp) {
+void DependenceAnalysisContext::runOnLoop(Loop* lp) {
   if (lp == nullptr) {
     std::cerr << "rLp(lp is nullptr) ";
     return;
@@ -123,7 +129,7 @@ void DependenceAnalysis::runOnLoop(ir::Loop* lp) {
   // depInfoForLp->print(std::cerr);
 }
 
-void DependenceAnalysis::makeGepIdx(ir::Loop* lp, ir::IndVar* idv, GepIdx* gepidx) {
+void DependenceAnalysisContext::makeGepIdx(Loop* lp, IndVar* idv, GepIdx* gepidx) {
   if (lp == nullptr or idv == nullptr or gepidx == nullptr) {
     std::cerr << "mGI(";
     if (lp == nullptr) std::cerr << "lp ";
@@ -147,16 +153,16 @@ void DependenceAnalysis::makeGepIdx(ir::Loop* lp, ir::IndVar* idv, GepIdx* gepid
         gepidx->idxTypes.emplace(val, iIDVPLUSMINUSFORMULA);
       }
     }
-    if (val->dynCast<ir::CallInst>()) {
+    if (val->dynCast<CallInst>()) {
       gepidx->idxTypes.emplace(val, iCALL);
     }
-    if (val->dynCast<ir::LoadInst>()) {
+    if (val->dynCast<LoadInst>()) {
       gepidx->idxTypes.emplace(val, iLOAD);
     }
   }
 }
 
-bool DependenceAnalysis::isSimplyLoopInvariant(ir::Loop* lp, ir::Value* val) {
+bool DependenceAnalysisContext::isSimplyLoopInvariant(Loop* lp, Value* val) {
   std::cerr << "isSLI(" << lp->header()->name() << ") ";
   if (lp == nullptr) {
     std::cerr << "isSLI(lp is nullptr) ";
@@ -166,19 +172,19 @@ bool DependenceAnalysis::isSimplyLoopInvariant(ir::Loop* lp, ir::Value* val) {
     std::cerr << "isSLI(val is nullptr) ";
     return false;
   }
-  if (auto constVal = val->dynCast<ir::ConstantValue>()) {
+  if (auto constVal = val->dynCast<ConstantValue>()) {
     return true;  // 常数
   }
-  if (auto argVal = val->dynCast<ir::Argument>()) {
+  if (auto argVal = val->dynCast<Argument>()) {
     return true;  // 参数
   }
-  if (auto instVal = val->dynCast<ir::Instruction>()) {
+  if (auto instVal = val->dynCast<Instruction>()) {
     return domctx->dominate(instVal->block(), lp->header()) and instVal->block() != lp->header();
   }
   return false;
 }
 
-bool DependenceAnalysis::isIDVPLUSMINUSFORMULA(ir::IndVar* idv, ir::Value* val, ir::Loop* lp) {
+bool DependenceAnalysisContext::isIDVPLUSMINUSFORMULA(IndVar* idv, Value* val, Loop* lp) {
   if (idv == nullptr or val == nullptr or lp == nullptr) {
     std::cerr << "isIPM(";
     if (idv == nullptr) std::cerr << "idv ";
@@ -188,10 +194,10 @@ bool DependenceAnalysis::isIDVPLUSMINUSFORMULA(ir::IndVar* idv, ir::Value* val, 
     return false;
   }
   std::cerr << "isIA(" << lp->header()->name() << ") ";
-  if (auto binaryVal = val->dynCast<ir::BinaryInst>()) {
+  if (auto binaryVal = val->dynCast<BinaryInst>()) {
     auto lval = binaryVal->lValue();
     auto rval = binaryVal->rValue();
-    if (binaryVal->valueId() != ir::vADD and binaryVal->valueId() != ir::vSUB) return false;
+    if (binaryVal->valueId() != vADD and binaryVal->valueId() != vSUB) return false;
     bool isLValLpI = isSimplyLoopInvariant(lp, lval);
     bool isRValLpI = isSimplyLoopInvariant(lp, rval);
     if (not isRValLpI and not isLValLpI) return false;
@@ -210,10 +216,10 @@ bool DependenceAnalysis::isIDVPLUSMINUSFORMULA(ir::IndVar* idv, ir::Value* val, 
   return false;
 }
 
-int DependenceAnalysis::isTwoGepIdxPossiblySame(GepIdx* gepidx1,
-                                                GepIdx* gepidx2,
-                                                ir::Loop* lp,
-                                                ir::IndVar* idv) {
+int DependenceAnalysisContext::isTwoGepIdxPossiblySame(GepIdx* gepidx1,
+                                                       GepIdx* gepidx2,
+                                                       Loop* lp,
+                                                       IndVar* idv) {
   if (gepidx1 == nullptr or gepidx2 == nullptr or lp == nullptr or idv == nullptr) {
     std::cerr << "isGPSame(";
     if (gepidx1 == nullptr) std::cerr << "gepidx1 ";
@@ -239,12 +245,12 @@ int DependenceAnalysis::isTwoGepIdxPossiblySame(GepIdx* gepidx1,
   return res;
 }
 
-int DependenceAnalysis::isTwoIdxPossiblySame(ir::Value* val1,
-                                             ir::Value* val2,
-                                             IdxType type1,
-                                             IdxType type2,
-                                             ir::Loop* lp,
-                                             ir::IndVar* idv) {
+int DependenceAnalysisContext::isTwoIdxPossiblySame(Value* val1,
+                                                    Value* val2,
+                                                    IdxType type1,
+                                                    IdxType type2,
+                                                    Loop* lp,
+                                                    IndVar* idv) {
   if (val1 == nullptr or val2 == nullptr or lp == nullptr or idv == nullptr) {
     std::cerr << "isIPSame(";
     if (val1 == nullptr) std::cerr << "val1 ";
@@ -288,8 +294,8 @@ int DependenceAnalysis::isTwoIdxPossiblySame(ir::Value* val1,
   if (type1 == type2) {
     switch (type1) {
       case iCALL: {
-        auto callInst1 = val1->dynCast<ir::CallInst>();
-        auto callInst2 = val2->dynCast<ir::CallInst>();
+        auto callInst1 = val1->dynCast<CallInst>();
+        auto callInst2 = val2->dynCast<CallInst>();
         auto callFunc1 = callInst1->callee();
         auto callFunc2 = callInst2->callee();
         if (callFunc1 != callFunc2) return dPossiblySame | dCrossIterPossiblySame;
@@ -302,8 +308,8 @@ int DependenceAnalysis::isTwoIdxPossiblySame(ir::Value* val1,
       }
 
       case iLOOPINVARIANT: {
-        auto constval1 = val1->dynCast<ir::ConstantInteger>();
-        auto constval2 = val2->dynCast<ir::ConstantInteger>();
+        auto constval1 = val1->dynCast<ConstantInteger>();
+        auto constval2 = val2->dynCast<ConstantInteger>();
         if (constval1 != nullptr and constval2 != nullptr) {
           if (constval1->i32() == constval2->i32())
             return dTotallySame | dCrossIterTotallySame;
@@ -324,14 +330,14 @@ int DependenceAnalysis::isTwoIdxPossiblySame(ir::Value* val1,
       }
 
       case iIDVPLUSMINUSFORMULA: {
-        std::set<ir::Value*> val1Add;
-        std::set<ir::Value*> val1Sub;
+        std::set<Value*> val1Add;
+        std::set<Value*> val1Sub;
         auto curVal1 = val1;
         while (curVal1 != idv->phiinst()) {
-          if (auto BInst = curVal1->dynCast<ir::BinaryInst>()) {
+          if (auto BInst = curVal1->dynCast<BinaryInst>()) {
             auto lval = BInst->lValue();
             auto rval = BInst->rValue();
-            ir::Value* LpIVal;
+            Value* LpIVal;
             bool isLVAL = false;
             if (isSimplyLoopInvariant(lp, lval)) {
               LpIVal = lval;
@@ -344,9 +350,9 @@ int DependenceAnalysis::isTwoIdxPossiblySame(ir::Value* val1,
               std::cerr << "Error:GepIdx is not IDVPLUSMINUSFORMULA!" << std::endl;
               assert(false);
             }
-            if (BInst->valueId() == ir::vADD) {
+            if (BInst->valueId() == vADD) {
               val1Add.insert(LpIVal);
-            } else if (BInst->valueId() == ir::vSUB) {
+            } else if (BInst->valueId() == vSUB) {
               if (isLVAL) {
                 std::cerr << "Error:GepIdx is a-i formula!" << std::endl;
                 assert(false);
@@ -360,10 +366,10 @@ int DependenceAnalysis::isTwoIdxPossiblySame(ir::Value* val1,
         }
         auto curVal2 = val2;
         while (curVal2 != idv->phiinst()) {
-          if (auto BInst = curVal2->dynCast<ir::BinaryInst>()) {
+          if (auto BInst = curVal2->dynCast<BinaryInst>()) {
             auto lval = BInst->lValue();
             auto rval = BInst->rValue();
-            ir::Value* LpIVal;
+            Value* LpIVal;
             bool isLVAL = false;
             if (isSimplyLoopInvariant(lp, lval)) {
               LpIVal = lval;
@@ -376,13 +382,13 @@ int DependenceAnalysis::isTwoIdxPossiblySame(ir::Value* val1,
               std::cerr << "Error:GepIdx is not IDVPLUSMINUSFORMULA!" << std::endl;
               assert(false);
             }
-            if (BInst->valueId() == ir::vADD) {
+            if (BInst->valueId() == vADD) {
               if (val1Add.count(LpIVal)) {
                 val1Add.erase(LpIVal);
               } else {
                 return dPossiblySame | dCrossIterPossiblySame;
               }
-            } else if (BInst->valueId() == ir::vSUB) {
+            } else if (BInst->valueId() == vSUB) {
               if (isLVAL) {
                 std::cerr << "Error:GepIdx is a-i formula!" << std::endl;
                 assert(false);
@@ -412,8 +418,8 @@ int DependenceAnalysis::isTwoIdxPossiblySame(ir::Value* val1,
       }
 
       case iLOAD: {
-        auto loadInst1 = val1->dynCast<ir::LoadInst>();
-        auto loadInst2 = val2->dynCast<ir::LoadInst>();
+        auto loadInst1 = val1->dynCast<LoadInst>();
+        auto loadInst2 = val2->dynCast<LoadInst>();
         auto ptr1 = loadInst1->ptr();
         auto ptr2 = loadInst2->ptr();
         if (ptr1 != ptr2) {

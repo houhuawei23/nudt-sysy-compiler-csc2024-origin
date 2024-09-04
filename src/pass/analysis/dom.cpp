@@ -288,7 +288,7 @@ void DomInfoCheck::run(ir::Function* func, TopAnalysisInfoManager* tp) {
   cout << endl << endl;
 }
 
-void DomInfoPass::run(ir::Function* func, TopAnalysisInfoManager* tp) {
+void DomInfoAnalysis::run(ir::Function* func, TopAnalysisInfoManager* tp) {
   PreProcDom ppd = PreProcDom();
   IDomGen idg = IDomGen();
   DomFrontierGen dfg = DomFrontierGen();

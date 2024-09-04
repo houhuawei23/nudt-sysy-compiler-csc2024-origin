@@ -12,14 +12,12 @@ namespace pass {
 
 class LoopParallel : public FunctionPass {
 public:
-  void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
+  void run(Function* func, TopAnalysisInfoManager* tp) override;
   std::string name() const override { return "LoopParallel"; }
 
 private:
-  static bool isConstant(ir::Value* val);
-  bool runImpl(ir::Function* func, TopAnalysisInfoManager* tp);
+  static bool isConstant(Value* val);
+  bool runImpl(Function* func, TopAnalysisInfoManager* tp);
 };
-
-
 
 }  // namespace pass

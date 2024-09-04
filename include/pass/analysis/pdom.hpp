@@ -3,7 +3,7 @@
 
 namespace pass {
 
-class postDomInfoPass : public FunctionPass {
+class PostDomInfoPass : public FunctionPass {
 public:
   void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
   std::string name() const override { return "PostDomInfoPass"; }
@@ -12,7 +12,7 @@ private:
   PDomTree* pdctx;
 };
 
-class preProcPostDom : public FunctionPass {
+class PreProcPostDom : public FunctionPass {
 public:
   void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
   std::string name() const override { return "preProcPostDom"; }
@@ -21,7 +21,7 @@ private:
   PDomTree* pdctx;
 };
 
-class ipostDomGen : public FunctionPass {
+class IPostDomGen : public FunctionPass {
 private:
   void dfsBlocks(ir::BasicBlock* bb);
   ir::BasicBlock* eval(ir::BasicBlock* bb);
@@ -36,7 +36,7 @@ private:
   PDomTree* pdctx;
 };
 
-class postDomFrontierGen : public FunctionPass {
+class PostDomFrontierGen : public FunctionPass {
 private:
   void getDomTree(ir::Function* func);
   void getDomFrontier(ir::Function* func);
@@ -50,7 +50,7 @@ private:
   PDomTree* pdctx;
 };
 
-class postDomInfoCheck : public FunctionPass {
+class PostDomInfoCheck : public FunctionPass {
 public:
   void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
   std::string name() const override { return "postDomInfoCheck"; }

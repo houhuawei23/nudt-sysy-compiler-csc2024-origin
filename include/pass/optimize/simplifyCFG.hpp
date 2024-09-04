@@ -9,7 +9,7 @@
 #include "pass/pass.hpp"
 
 namespace pass {
-class simplifyCFG : public FunctionPass {
+class SimplifyCFG : public FunctionPass {
 public:
   void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
   std::string name() const override { return "simplifyCFG"; }

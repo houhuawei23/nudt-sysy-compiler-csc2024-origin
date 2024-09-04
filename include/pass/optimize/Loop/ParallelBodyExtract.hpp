@@ -14,7 +14,7 @@ struct ParallelBodyInfo final {
   Function* parallelBody;
   CallInst* callInst;
   BasicBlock* callBlock;
-  
+
   Value* beg;
   Value* end;
 
@@ -26,11 +26,11 @@ struct ParallelBodyInfo final {
 
 class ParallelBodyExtract : public FunctionPass {
 public:
-  void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
+  void run(Function* func, TopAnalysisInfoManager* tp) override;
   std::string name() const override { return "ParallelBodyExtract"; }
 
 private:
-  bool runImpl(ir::Function* func, TopAnalysisInfoManager* tp);
+  bool runImpl(Function* func, TopAnalysisInfoManager* tp);
 };
 
 bool extractParallelBody(Function* func,

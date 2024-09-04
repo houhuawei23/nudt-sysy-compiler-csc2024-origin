@@ -5,30 +5,32 @@
 #include <vector>
 #include "ir/ir.hpp"
 #include "pass/pass.hpp"
+using namespace ir;
 namespace pass {
 
-class loopsplit : public FunctionPass {
-  private:
-    DomTree* domctx;
-    sideEffectInfo* sectx;
-    LoopInfo* lpctx;
-    IndVarInfo* ivctx;
-    TopAnalysisInfoManager* tpctx;
-    ir::BranchInst* brinst = nullptr;
-    ir::ICmpInst* icmpinst = nullptr;
-    ir::Value* endval = nullptr;
-    ir::BasicBlock* condbb = nullptr;
+struct LoopSplitContext final {
+  DomTree* domctx;
+  SideEffectInfo* sectx;
+  LoopInfo* lpctx;
+  IndVarInfo* ivctx;
+  TopAnalysisInfoManager* tpctx;
+  BranchInst* brinst = nullptr;
+  ICmpInst* icmpinst = nullptr;
+  Value* endval = nullptr;
+  BasicBlock* condbb = nullptr;
 
-    ir::PhiInst* ivphi = nullptr;
-    ir::ICmpInst* ivicmp = nullptr;
-    ir::BinaryInst* iviter = nullptr;
+  PhiInst* ivphi = nullptr;
+  ICmpInst* ivicmp = nullptr;
+  BinaryInst* iviter = nullptr;
 
-  public:
-    // bool getinfo(ir::Loop* L);
-    void splitloop(ir::Loop* L);
-    bool dosplit(ir::Function* func, TopAnalysisInfoManager* tp);
-    bool couldsplit(ir::Loop* loop);
-    std::string name() const override { return "loopsplit"; }
-    void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
+  void splitloop(Loop* L);
+  bool dosplit(Function* func, TopAnalysisInfoManager* tp);
+  bool couldsplit(Loop* loop);
+  void run(Function* func, TopAnalysisInfoManager* tp);
+};
+
+class LoopSplit : public FunctionPass {
+  std::string name() const override { return "loopsplit"; }
+  void run(Function* func, TopAnalysisInfoManager* tp) override;
 };
 }  // namespace pass

@@ -10,16 +10,20 @@
 #include "pass/pass.hpp"
 
 namespace pass {
-class DLAE : public FunctionPass {
-  public:
-    std::vector<ir::GetElementPtrInst*> geps;
-    std::vector<ir::StoreInst*> stores;
-    std::vector<ir::LoadInst*> loads;
-    std::vector<ir::CallInst*> calls;
-    std::vector<ir::UnaryInst*> bitcasts;
-    std::vector<ir::MemsetInst*> memsets;
-    void dfs(ir::AllocaInst* alloca, ir::Instruction* inst);
-    void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
-    std::string name() const override { return "dlae";}
+struct DLAEContext final {
+  std::vector<ir::GetElementPtrInst*> geps;
+  std::vector<ir::StoreInst*> stores;
+  std::vector<ir::LoadInst*> loads;
+  std::vector<ir::CallInst*> calls;
+  std::vector<ir::UnaryInst*> bitcasts;
+  std::vector<ir::MemsetInst*> memsets;
+  void dfs(ir::AllocaInst* alloca, ir::Instruction* inst);
+  void run(ir::Function* func, TopAnalysisInfoManager* tp);
 };
-}  // namespace pass\
+
+class DLAE : public FunctionPass {
+public:
+  void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
+  std::string name() const override { return "dlae"; }
+};
+}  // namespace pass

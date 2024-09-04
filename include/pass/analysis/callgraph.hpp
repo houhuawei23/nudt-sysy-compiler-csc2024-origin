@@ -5,27 +5,25 @@
 #include <set>
 
 namespace pass {
-class callGraphBuild : public ModulePass {
-public:
-  std::string name() const override { return "callGraphBuild"; }
-  void run(ir::Module* ctx, TopAnalysisInfoManager* tp) override;
-
-private:
+struct CallGraphBuildContext final {
   std::vector<ir::Function*> funcStack;
   std::set<ir::Function*> funcSet;
   std::map<ir::Function*, bool> vis;
-  void dfsFuncCallGraph(ir::Function* func);
 
-private:
   CallGraph* cgctx;
+  
+  void dfsFuncCallGraph(ir::Function* func);
+  void run(ir::Module* ctx, TopAnalysisInfoManager* tp);
+};
+class CallGraphBuild : public ModulePass {
+public:
+  std::string name() const override { return "callGraphBuild"; }
+  void run(ir::Module* ctx, TopAnalysisInfoManager* tp) override;
 };
 
-class callGraphCheck : public ModulePass {
+class CallGraphCheck : public ModulePass {
 public:
   std::string name() const override { return "callGraphCheck"; }
   void run(ir::Module* ctx, TopAnalysisInfoManager* tp) override;
-
-private:
-  CallGraph* cgctx;
 };
 }  // namespace pass

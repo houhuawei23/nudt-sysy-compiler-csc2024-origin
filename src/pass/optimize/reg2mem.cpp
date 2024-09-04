@@ -10,7 +10,7 @@
 
 using namespace ir;
 namespace pass {
-void Reg2Mem::getallphi(Function* func) {
+void Reg2MemContext::getallphi(Function* func) {
   for (BasicBlock* bb : func->blocks()) {
     if (bb->phi_insts().empty()) {
       continue;
@@ -25,8 +25,7 @@ void Reg2Mem::getallphi(Function* func) {
   }
 }
 
-void Reg2Mem::run(Function* func, TopAnalysisInfoManager* tp) {
-  clear();
+void Reg2MemContext::run(Function* func, TopAnalysisInfoManager* tp) {
   getallphi(func);
   BasicBlock* entry = func->entry();
   for (PhiInst* phiinst : allphi) {
@@ -90,75 +89,31 @@ void Reg2Mem::run(Function* func, TopAnalysisInfoManager* tp) {
   //     phibb->emplace_first_inst(loadinst);
   // }
 }
+
+void Reg2MemContext::DisjSet() {
+  for (int i = 0; i < allphi.size(); i++) {
+    parent.push_back(i);
+    rank.push_back(1);
+  }
+  for (ir::PhiInst* phiinst : allphi) {
+    for (size_t i = 0; i < phiinst->getsize(); i++) {
+      ir::Value* val = phiinst->getValue(i);
+      if (ir::PhiInst* phival = dyn_cast<ir::PhiInst>(val)) {
+        int id0 = getindex(phiinst);
+        int id1 = getindex(phival);
+        if (issame(id0, id1)) {
+          continue;
+        } else {
+          tounion(id0, id1);
+        }
+      }
+    }
+  }
+}
+
+void Reg2Mem::run(Function* func, TopAnalysisInfoManager* tp) {
+  Reg2MemContext ctx;
+  ctx.run(func, tp);
+}
+
 }  // namespace pass
-
-// void Reg2Mem::run(Function* func) {
-//     clear();
-//     getallphi(func);
-//     DisjSet();
-//     for (PhiInst* phiinst : allphi){
-//         int idx = getindex(phiinst);
-//         PhiInst* root = allphi[find(idx)];
-//         if (phiweb.find(root) == phiweb.end()){
-//             AllocaInst* var = new AllocaInst(phiinst->type());
-//             allocasToinsert.push_back(var);
-//             phiweb[root] = var;
-//         }
-//     }
-//     for (auto alloca : allocasToinsert){
-//         BasicBlock* entry = func->entry();
-//         entry->emplace_first_inst(alloca);
-//         alloca->setBlock(entry);
-//     }
-//     for (PhiInst* phiinst : allphi){
-//         BasicBlock* nextbb = phiinst->block();
-//         int idx = getindex(phiinst);
-//         PhiInst* root = allphi[find(idx)];
-//         AllocaInst* variable = phiweb[root];
-//         LoadInst* phiload = new
-//         LoadInst(variable,phiinst->type(),nullptr);//用这条load替换所有对phiinst的使用
-//         philoadmap[phiinst] = phiload;//记录phiinst与load的映射
-
-//         for (size_t i = 0; i < phiinst->getsize(); i++){
-
-//             BasicBlock* prebb = phiinst->getBlock(i);
-//             Value* phival = phiinst->getValue(i);
-//             StoreInst* phistore = new StoreInst(phival,variable);
-//             if (auto inst = dyn_cast<PhiInst>(phival) ||
-//             phival->type()->isUndef()){//如果是phi或则undef则不插入store
-//                     continue;
-//             }
-//             if(prebb->next_blocks().size() ==
-//             1){//如果前驱块只有一个后继，直接在前驱块末尾插入store
-//                 inst_iterator it = --(prebb->insts().end());
-//                 prebb->emplace_inst(it,phistore);
-//                 phistore->setBlock(prebb);
-//             }
-//             else{//有多个后继则需要在前驱块与当前块中插入一个新的块，在新块中插入store与br指令
-//                 BasicBlock* newbb = func->newBlock();
-//                 newbb->set_parent(func);
-//                 BranchInst* br = new BranchInst(nextbb);
-//                 newbb->emplace_back_inst(phistore);
-//                 newbb->emplace_back_inst(br);
-//                 phistore->setBlock(newbb);
-//                 br->set_parent(newbb);
-//                 Instruction* lastinst = *(--(prebb->insts().end()));
-//                 BranchInst* oldbr = dyn_cast<BranchInst>(lastinst);
-//                 oldbr->replaceDest(nextbb,newbb);
-//                 BasicBlock::delete_block_link(prebb,nextbb);
-//                 BasicBlock::block_link(prebb,newbb);
-//                 BasicBlock::block_link(newbb,nextbb);
-//             }
-//         }
-//     }
-//     //删除phi，并将对phi的使用替换为load
-//     for (PhiInst* phitoremove : allphi){
-//         BasicBlock* phibb = phitoremove->block();
-//         LoadInst* loadinst = philoadmap[phitoremove];
-//         phitoremove->replaceAllUseWith(loadinst);
-//         phibb->delete_inst(phitoremove);
-//         phibb->emplace_first_inst(loadinst);
-//         loadinst->set_parent(phibb);
-//     }
-// }
-// }  // namespace pass

@@ -70,7 +70,7 @@ bool hasCall(Loop* loop) {
 bool LoopBodyExtract::runImpl(Function* func, TopAnalysisInfoManager* tp) {
   auto sideEffectInfo = tp->getSideEffectInfo();
   CFGAnalysisHHW().run(func, tp);  // refresh CFG
-  markParallel().run(func, tp);
+  MarkParallel().run(func, tp);
 
   auto lpctx = tp->getLoopInfoWithoutRefresh(func);        // fisrt loop analysis
   auto indVarctx = tp->getIndVarInfoWithoutRefresh(func);  // then indvar analysis
@@ -531,7 +531,7 @@ static bool rebuildFunc(Function* func,
     // phiGiv->print(std::cerr);
     // std::cerr << std::endl;
     // assert(phiGiv->incomings().count(loop->getUniqueLatch()));
-    if(not phiGiv->incomings().count(loop->getUniqueLatch())) {
+    if (not phiGiv->incomings().count(loop->getUniqueLatch())) {
       std::cerr << "giv not incomings with loop latch" << std::endl;
       assert(false);
     }

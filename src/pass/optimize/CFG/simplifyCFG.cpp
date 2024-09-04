@@ -11,7 +11,7 @@ Performs dead code elimination and basic block merging. Specifically
 
 namespace pass {
 
-void simplifyCFG::run(ir::Function* func, TopAnalysisInfoManager* tp) {
+void SimplifyCFG::run(ir::Function* func, TopAnalysisInfoManager* tp) {
   if (func->isOnlyDeclare()) return;
   // func->print(std::cout);
   bool isChange = false;
@@ -36,7 +36,7 @@ void simplifyCFG::run(ir::Function* func, TopAnalysisInfoManager* tp) {
 }
 // condition 1
 // 移除所有没有从前驱和从末尾不可达的块
-bool simplifyCFG::removeNoPreBlock(ir::Function* func) {
+bool SimplifyCFG::removeNoPreBlock(ir::Function* func) {
   bool ischanged = false;
   std::stack<ir::BasicBlock*> bbStack;
   std::unordered_map<ir::BasicBlock*, bool> vis1;
@@ -93,7 +93,7 @@ bool simplifyCFG::removeNoPreBlock(ir::Function* func) {
 }
 // condition 2 合并只有前驱和只有后继的块
 
-ir::BasicBlock* simplifyCFG::getMergeBlock(ir::BasicBlock* bb) {  // condition 2
+ir::BasicBlock* SimplifyCFG::getMergeBlock(ir::BasicBlock* bb) {  // condition 2
   if (bb->next_blocks().size() == 1)
     if ((*(bb->next_blocks().begin()))->pre_blocks().size() == 1)
       return *(bb->next_blocks().begin());
@@ -101,7 +101,7 @@ ir::BasicBlock* simplifyCFG::getMergeBlock(ir::BasicBlock* bb) {  // condition 2
   return nullptr;
 }
 
-bool simplifyCFG::MergeBlock(ir::Function* func) {
+bool SimplifyCFG::MergeBlock(ir::Function* func) {
   bool ischanged = false;
   for (auto bb : func->blocks()) {
     // func->print(std::cout);
@@ -140,7 +140,7 @@ bool simplifyCFG::MergeBlock(ir::Function* func) {
   return ischanged;
 }
 // condition 3 removing phiNodes with only one incoming
-bool simplifyCFG::removeSingleIncomingPhi(ir::Function* func) {
+bool SimplifyCFG::removeSingleIncomingPhi(ir::Function* func) {
   bool ischanged = false;
   for (auto bb : func->blocks()) {
     for (auto instIter = bb->phi_insts().begin(); instIter != bb->phi_insts().end();) {
@@ -158,7 +158,7 @@ bool simplifyCFG::removeSingleIncomingPhi(ir::Function* func) {
 }
 // condition 4 处理只含有一个br uncond 的块
 // 判断符合条件的块--只有一条指令, 是无条件跳转, 不是entry
-bool simplifyCFG::getSingleDest(ir::BasicBlock* bb) {  // condition 4
+bool SimplifyCFG::getSingleDest(ir::BasicBlock* bb) {  // condition 4
   if (bb->insts().size() != 1) return false;
   if (bb == bb->function()->entry()) return false;
   auto brInst = dyn_cast<ir::BranchInst>(bb->terminator());
@@ -166,7 +166,7 @@ bool simplifyCFG::getSingleDest(ir::BasicBlock* bb) {  // condition 4
   return not brInst->is_cond();
 }
 
-bool simplifyCFG::removeSingleBrBlock(ir::Function* func) {
+bool SimplifyCFG::removeSingleBrBlock(ir::Function* func) {
   // 这里移除只有一条跳转指令的block
   // 原则如下:
   /*

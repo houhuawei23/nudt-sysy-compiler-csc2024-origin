@@ -6,10 +6,10 @@ using namespace ir;
 
 namespace pass {
 class BlockSort : public FunctionPass {
-  bool runImpl(ir::Function* func, TopAnalysisInfoManager* tp) { return blockSortDFS(*func, tp); }
+  bool runImpl(Function* func, TopAnalysisInfoManager* tp) { return blockSortDFS(*func, tp); }
 
 public:
-  void run(ir::Function* func, TopAnalysisInfoManager* tp) override { runImpl(func, tp); }
+  void run(Function* func, TopAnalysisInfoManager* tp) override { runImpl(func, tp); }
   std::string name() const override { return "BlockSort"; }
 };
 }  // namespace pass

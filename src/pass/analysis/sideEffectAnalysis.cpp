@@ -2,8 +2,11 @@
 using namespace pass;
 
 static std::set<ir::Function*> worklist;
-
-void sideEffectAnalysis::run(ir::Module* md, TopAnalysisInfoManager* tp) {
+void SideEffectAnalysis::run(ir::Module* md, TopAnalysisInfoManager* tp) {
+  SideEffectAnalysisContext context;
+  context.run(md, tp);
+}
+void SideEffectAnalysisContext::run(ir::Module* md, TopAnalysisInfoManager* tp) {
   /*
   这样的函数有副作用：
   1. 对全局量做存
@@ -127,7 +130,7 @@ void sideEffectAnalysis::run(ir::Module* md, TopAnalysisInfoManager* tp) {
   // infoCheck(md);
 }
 
-ir::Value* sideEffectAnalysis::getIntToPtrBaseAddr(ir::UnaryInst* inst) {
+ir::Value* SideEffectAnalysisContext::getIntToPtrBaseAddr(ir::UnaryInst* inst) {
   if (auto binary = inst->value()->dynCast<ir::BinaryInst>()) {
     // if(auto lbase = getBaseAddr(binary->lValue())) return lbase;
     // if(auto rbase = getBaseAddr(binary->rValue())) return rbase;
@@ -141,7 +144,7 @@ ir::Value* sideEffectAnalysis::getIntToPtrBaseAddr(ir::UnaryInst* inst) {
   return nullptr;
 }
 
-ir::Value* sideEffectAnalysis::getBaseAddr(ir::Value* subAddr) {
+ir::Value* SideEffectAnalysisContext::getBaseAddr(ir::Value* subAddr) {
   if (auto allocainst = subAddr->dynCast<ir::AllocaInst>()) return allocainst;
   if (auto gv = subAddr->dynCast<ir::GlobalVariable>()) return gv;
   if (auto arg = subAddr->dynCast<ir::Argument>()) return arg;
@@ -162,7 +165,7 @@ ir::Value* sideEffectAnalysis::getBaseAddr(ir::Value* subAddr) {
   return nullptr;
 }
 
-bool sideEffectAnalysis::propogateSideEffect(ir::Module* md) {
+bool SideEffectAnalysisContext::propogateSideEffect(ir::Module* md) {
   bool isChange = false;
   for (auto func : md->funcs()) {
     // if (func->attribute().hasAttr(ir::FunctionAttribute::LoopBody |
@@ -239,7 +242,7 @@ bool sideEffectAnalysis::propogateSideEffect(ir::Module* md) {
   return isChange;
 }
 
-void sideEffectAnalysis::infoCheck(ir::Module* md) {
+void SideEffectAnalysisContext::infoCheck(ir::Module* md) {
   for (auto func : md->funcs()) {
     using namespace std;
     if (func->isOnlyDeclare()) continue;

@@ -8,15 +8,16 @@
 
 namespace pass {
 
-class GVN : public FunctionPass {
-private:
+struct GVNContext {
   std::vector<ir::BasicBlock*> RPOblocks;
   std::set<ir::BasicBlock*> visited;
   std::set<ir::Instruction*> NeedRemove;
   std::unordered_map<ir::Value*, ir::Value*> _Hashtable;
+  DomTree* domctx;
+  SideEffectInfo* sectx;
 
-public:
-  void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
+  void run(ir::Function* func, TopAnalysisInfoManager* tp);
+
   void RPO(ir::Function* F);  // 逆后序遍历
   void dfs(ir::BasicBlock* bb);
   ir::Value* checkHashtable(ir::Value* v);
@@ -29,8 +30,10 @@ public:
   ir::Value* getValueNumber(ir::PtrCastInst* ptrcast);
 
   void visitinst(ir::Instruction* inst);
-  DomTree* domctx;
-  sideEffectInfo* sectx;
+};
+
+class GVN : public FunctionPass {
+  void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
   std::string name() const override { return "GVN"; }
 };
 }  // namespace pass

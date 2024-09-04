@@ -6,19 +6,25 @@
 #include "ir/ir.hpp"
 #include "pass/pass.hpp"
 #include "pass/optimize/loopunroll.hpp"
+
+using namespace ir;
 namespace pass {
 
-class loopdivest : public FunctionPass {
-  private:
-    DomTree* domctx;
-    sideEffectInfo* sectx;
-    LoopInfo* lpctx;
-    IndVarInfo* ivctx;
+struct LoopDivestContext final {
+  DomTree* domctx;
+  SideEffectInfo* sectx;
+  LoopInfo* lpctx;
+  IndVarInfo* ivctx;
 
-  public:
-    std::string name() const override { return "loopdivest"; }
-    bool shoulddivest(ir::Loop* loop);
-    void runonloop(ir::Loop* loop, ir::Function* func);
-    void run(ir::Function* func, TopAnalysisInfoManager* tp) override;
+  bool shoulddivest(Loop* loop);
+  void runonloop(Loop* loop, Function* func);
+  void run(Function* func, TopAnalysisInfoManager* tp);
+};
+
+class LoopDivest : public FunctionPass {
+
+public:
+  std::string name() const override { return "LoopDivestContext"; }
+  void run(Function* func, TopAnalysisInfoManager* tp) override;
 };
 }  // namespace pass

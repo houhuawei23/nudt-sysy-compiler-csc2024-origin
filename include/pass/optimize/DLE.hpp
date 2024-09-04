@@ -8,10 +8,10 @@
 #include "ir/ir.hpp"
 #include "pass/pass.hpp"
 
-namespace pass{
-    class simpleDLE : public BasicBlockPass{
-    public:
-        void run(ir::BasicBlock* bb,TopAnalysisInfoManager* tp) override;
-        std::string name() const override { return "simpleDLE"; }
-    };
-}
+namespace pass {
+class SimpleDLE : public BasicBlockPass {
+public:
+  void run(ir::BasicBlock* bb, TopAnalysisInfoManager* tp) override;
+  std::string name() const override { return "simpleDLE"; }
+};
+}  // namespace pass

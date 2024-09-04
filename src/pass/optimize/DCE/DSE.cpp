@@ -5,7 +5,7 @@ using namespace pass;
 static std::unordered_map<ir::Value*, ir::StoreInst*> ptrMap;
 static std::unordered_set<ir::StoreInst*> removeInsts;
 
-void simpleDSE::run(ir::BasicBlock* bb, TopAnalysisInfoManager* tp) {
+void SimpleDSE::run(ir::BasicBlock* bb, TopAnalysisInfoManager* tp) {
   auto sectx = tp->getSideEffectInfo();
   ptrMap.clear();
   removeInsts.clear();

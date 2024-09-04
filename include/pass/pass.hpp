@@ -6,13 +6,28 @@
 #include <chrono>
 namespace pass {
 
+class BasePass {
+public:
+  virtual void run(void* pass_unit, TopAnalysisInfoManager* tp) = 0;
+  virtual std::string name() const = 0;
+
+  // Virtual destructor for proper cleanup
+  virtual ~BasePass() = default;
+};
+
 //! Pass Template
 template <typename PassUnit>
-class Pass {
+class Pass : public BasePass {
 public:
+  // Override run to match BasePass, using static_cast to ensure type safety
+  void run(void* pass_unit, TopAnalysisInfoManager* tp) override {
+    run(static_cast<PassUnit*>(pass_unit), tp);
+  }
   // pure virtual function, define the api
   virtual void run(PassUnit* pass_unit, TopAnalysisInfoManager* tp) = 0;
   virtual std::string name() const = 0;
+  // Virtual destructor to allow proper cleanup of derived classes
+  virtual ~Pass() = default;
 };
 
 // Instantiate Pass Class for Module, Function and BB
@@ -40,7 +55,7 @@ private:
   ir::Module* mModule;
   // ir::Module info
   CallGraph* mCallGraph;
-  sideEffectInfo* mSideEffectInfo;
+  SideEffectInfo* mSideEffectInfo;
   // ir::Function info
   std::unordered_map<ir::Function*, DomTree*> mDomTree;
   std::unordered_map<ir::Function*, PDomTree*> mPDomTree;
@@ -124,7 +139,7 @@ public:
     mCallGraph->refresh();
     return mCallGraph;
   }
-  sideEffectInfo* getSideEffectInfo() {
+  SideEffectInfo* getSideEffectInfo() {
     mSideEffectInfo->setOff();
     mSideEffectInfo->refresh();
     return mSideEffectInfo;
@@ -177,7 +192,7 @@ public:
   }
 
   CallGraph* getCallGraphWithoutRefresh() { return mCallGraph; }
-  sideEffectInfo* getSideEffectInfoWithoutRefresh() { return mSideEffectInfo; }
+  SideEffectInfo* getSideEffectInfoWithoutRefresh() { return mSideEffectInfo; }
   parallelInfo* getParallelInfo(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
     auto dpctx = mParallelInfo[func];

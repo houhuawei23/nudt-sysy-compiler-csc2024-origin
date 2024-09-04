@@ -5,7 +5,7 @@ static std::unordered_map<ir::Value*, ir::LoadInst*> loadedPtrSet;
 static std::unordered_set<ir::LoadInst*> removeInsts;
 static std::unordered_map<ir::Value*, ir::Value*> ptrToValue;
 
-void simpleDLE::run(ir::BasicBlock* bb, TopAnalysisInfoManager* tp) {
+void SimpleDLE::run(ir::BasicBlock* bb, TopAnalysisInfoManager* tp) {
   auto sectx = tp->getSideEffectInfo();
   loadedPtrSet.clear();
   removeInsts.clear();

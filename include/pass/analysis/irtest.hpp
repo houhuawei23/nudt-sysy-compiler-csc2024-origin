@@ -2,7 +2,7 @@
 #include "pass/pass.hpp"
 
 namespace pass {
-class irCheck : public ModulePass {
+class IRCheck : public ModulePass {
 public:
   std::string name() const override { return "IR Check"; }
   void run(ir::Module* ctx, TopAnalysisInfoManager* tp) override;

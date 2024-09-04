@@ -363,17 +363,17 @@ bool extractParallelBody(Function* func,
   return true;
 }
 
-void ParallelBodyExtract::run(ir::Function* func, TopAnalysisInfoManager* tp) {
+void ParallelBodyExtract::run(Function* func, TopAnalysisInfoManager* tp) {
   runImpl(func, tp);
 }
 
-bool ParallelBodyExtract::runImpl(ir::Function* func, TopAnalysisInfoManager* tp) {
+bool ParallelBodyExtract::runImpl(Function* func, TopAnalysisInfoManager* tp) {
   // func->rename();
   // std::cerr << "!! ParallelBodyExtract::runImpl: " << func->name() << std::endl;
   // func->print(std::cerr);
 
   CFGAnalysisHHW().run(func, tp);  // refresh CFG
-  markParallel().run(func, tp);
+  MarkParallel().run(func, tp);
 
   bool modified = false;
 

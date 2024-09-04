@@ -3,7 +3,7 @@
 using std::cerr, std::endl;
 using namespace ir;
 namespace pass {
-void irCheck::run(ir::Module* ctx, TopAnalysisInfoManager* tp) {
+void IRCheck::run(ir::Module* ctx, TopAnalysisInfoManager* tp) {
   const auto& config = sysy::Config::getInstance();
   const bool debug = config.logLevel >= sysy::LogLevel::DEBUG;
   ctx->rename();
@@ -24,7 +24,7 @@ void irCheck::run(ir::Module* ctx, TopAnalysisInfoManager* tp) {
   if (not isPass) assert(false && "didn't pass irCheck!");
 }
 
-bool irCheck::checkDefUse(ir::Value* val) {
+bool IRCheck::checkDefUse(ir::Value* val) {
   bool isPass = true;
   for (auto puse : val->uses()) {
     auto muser = puse->user();
@@ -69,7 +69,7 @@ bool irCheck::checkDefUse(ir::Value* val) {
   return isPass;
 }
 
-bool irCheck::runDefUseTest(ir::Function* func) {
+bool IRCheck::runDefUseTest(ir::Function* func) {
   bool isPass = true;
   for (auto bb : func->blocks()) {
     bool bbOK = checkDefUse(bb);
@@ -96,7 +96,7 @@ bool irCheck::runDefUseTest(ir::Function* func) {
   return isPass;
 }
 
-bool irCheck::checkPhi(ir::PhiInst* phi) {
+bool IRCheck::checkPhi(ir::PhiInst* phi) {
   bool isPass = true;
   int lim = phi->getsize();
   auto operandSize = phi->operands().size();
@@ -113,7 +113,7 @@ bool irCheck::checkPhi(ir::PhiInst* phi) {
   return isPass;
 }
 
-bool irCheck::runPhiTest(ir::Function* func) {
+bool IRCheck::runPhiTest(ir::Function* func) {
   bool isPass = true;
   for (auto bb : func->blocks()) {
     int lim = bb->phi_insts().size();
@@ -155,7 +155,7 @@ bool irCheck::runPhiTest(ir::Function* func) {
   return isPass;
 }
 
-bool irCheck::runCFGTest(ir::Function* func) {
+bool IRCheck::runCFGTest(ir::Function* func) {
   std::unordered_map<ir::BasicBlock*, int> bbPreSize;
   for (auto bb : func->blocks())
     bbPreSize.emplace(bb, 0);
@@ -233,7 +233,7 @@ bool irCheck::runCFGTest(ir::Function* func) {
   return isPass;
 }
 
-bool irCheck::checkFuncInfo(ir::Function* func) {
+bool IRCheck::checkFuncInfo(ir::Function* func) {
   bool isPass = true;
   if (func->entry()->pre_blocks().size() != 0) {
     isPass = false;
@@ -246,7 +246,7 @@ bool irCheck::checkFuncInfo(ir::Function* func) {
   return isPass;
 }
 
-bool irCheck::checkAllocaOnlyInEntry(ir::Function* func) {
+bool IRCheck::checkAllocaOnlyInEntry(ir::Function* func) {
   bool isPass = true;
 
   for (auto bb : func->blocks()) {
@@ -260,7 +260,7 @@ bool irCheck::checkAllocaOnlyInEntry(ir::Function* func) {
   return isPass;
 }
 
-bool irCheck::checkOnlyOneExit(ir::Function* func) {
+bool IRCheck::checkOnlyOneExit(ir::Function* func) {
   bool isPass = true;
   int exitNum = 0;
   for (auto bb : func->blocks()) {
@@ -288,7 +288,7 @@ bool irCheck::checkOnlyOneExit(ir::Function* func) {
   return isPass;
 }
 
-bool irCheck::checkParentRelationship(ir::Function* func) {
+bool IRCheck::checkParentRelationship(ir::Function* func) {
   bool isPass = true;
   for (auto block : func->blocks()) {
     if (block->function() != func) {
@@ -351,7 +351,7 @@ bool irCheck::checkParentRelationship(ir::Function* func) {
 
   return isPass;
 }
-bool irCheck::checkOperands(ir::Function* func) {
+bool IRCheck::checkOperands(ir::Function* func) {
   bool isPass = true;
   for (auto block : func->blocks()) {
     for (auto inst : block->insts()) {

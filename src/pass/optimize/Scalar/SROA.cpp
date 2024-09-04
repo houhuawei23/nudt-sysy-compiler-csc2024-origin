@@ -5,9 +5,6 @@ using namespace pass;
 
 static std::unordered_set<ir::GetElementPtrInst*> processedSubAddrs;
 
-std::string SROA::name() const {
-  return "SROA";
-}
 // Scalar Replacement of Aggregates
 // SROA基本逻辑：
 /*
@@ -17,8 +14,11 @@ std::string SROA::name() const {
 2. 对于循环不变量，直接创建临时变量进行修改(从外到内，尽可能在外层做，将load-store紧贴在对应gep之后)
 3. 对于当前循环内的量，只要没有possiblySame，都可以进行替换，从外到内即可
 */
-
 void SROA::run(ir::Function* func, TopAnalysisInfoManager* tp) {
+  SROAContext sroaContext;
+  sroaContext.run(func, tp);
+}
+void SROAContext::run(ir::Function* func, TopAnalysisInfoManager* tp) {
   if (func->isOnlyDeclare()) return;
   dpctx = tp->getDepInfo(func);
   domctx = tp->getDomTreeWithoutRefresh(func);
@@ -34,7 +34,7 @@ void SROA::run(ir::Function* func, TopAnalysisInfoManager* tp) {
   // m2r.run(func,tp);
 }
 
-void SROA::runOnLoop(ir::Loop* lp) {
+void SROAContext::runOnLoop(ir::Loop* lp) {
   auto idv = idvctx->getIndvar(lp);
 
   depInfoForLp = dpctx->getLoopDependenceInfo(lp);
@@ -102,7 +102,7 @@ void SROA::runOnLoop(ir::Loop* lp) {
   }
 }
 
-ir::AllocaInst* SROA::createNewLocal(ir::Type* allocaType, ir::Function* func) {
+ir::AllocaInst* SROAContext::createNewLocal(ir::Type* allocaType, ir::Function* func) {
   // 创建一个新的局部变量（alloca）
   auto funcEntry = func->entry();
   auto newAlloca = new ir::AllocaInst(allocaType, false, funcEntry);
@@ -111,11 +111,11 @@ ir::AllocaInst* SROA::createNewLocal(ir::Type* allocaType, ir::Function* func) {
 }
 
 // 对迭代内起作用,如果是真正的LpI指针,还有另外的做法
-bool SROA::replaceAllUseInLpIdv(ir::GetElementPtrInst* gep,
-                                ir::Loop* lp,
-                                ir::AllocaInst* newAlloca,
-                                bool isOnlyRead,
-                                bool isOnlyWrite) {
+bool SROAContext::replaceAllUseInLpIdv(ir::GetElementPtrInst* gep,
+                                       ir::Loop* lp,
+                                       ir::AllocaInst* newAlloca,
+                                       bool isOnlyRead,
+                                       bool isOnlyWrite) {
   auto gepBB = gep->block();
   auto gepPos = std::find(gepBB->insts().begin(), gepBB->insts().end(), gep);
   gepPos++;
@@ -185,11 +185,11 @@ bool SROA::replaceAllUseInLpIdv(ir::GetElementPtrInst* gep,
   }
 }
 
-bool SROA::replaceAllUseInLpForLpI(ir::GetElementPtrInst* gep,
-                                   ir::Loop* lp,
-                                   ir::AllocaInst* newAlloca,
-                                   bool isOnlyRead,
-                                   bool isOnlyWrite) {
+bool SROAContext::replaceAllUseInLpForLpI(ir::GetElementPtrInst* gep,
+                                          ir::Loop* lp,
+                                          ir::AllocaInst* newAlloca,
+                                          bool isOnlyRead,
+                                          bool isOnlyWrite) {
   auto gepBB = gep->block();
   auto gepPos = std::find(gepBB->insts().begin(), gepBB->insts().end(), gep);
   gepPos++;
@@ -258,7 +258,10 @@ bool SROA::replaceAllUseInLpForLpI(ir::GetElementPtrInst* gep,
   }
 }
 
-int SROA::isTwoGepIdxPossiblySame(GepIdx* gepidx1, GepIdx* gepidx2, ir::Loop* lp, ir::IndVar* idv) {
+int SROAContext::isTwoGepIdxPossiblySame(GepIdx* gepidx1,
+                                         GepIdx* gepidx2,
+                                         ir::Loop* lp,
+                                         ir::IndVar* idv) {
   std::vector<DependenceType> compareAns;
   size_t lim = gepidx1->idxList.size();
   int res = 0;
@@ -273,12 +276,12 @@ int SROA::isTwoGepIdxPossiblySame(GepIdx* gepidx1, GepIdx* gepidx2, ir::Loop* lp
   return res;
 }
 
-int SROA::isTwoIdxPossiblySame(ir::Value* val1,
-                               ir::Value* val2,
-                               IdxType type1,
-                               IdxType type2,
-                               ir::Loop* lp,
-                               ir::IndVar* idv) {
+int SROAContext::isTwoIdxPossiblySame(ir::Value* val1,
+                                      ir::Value* val2,
+                                      IdxType type1,
+                                      IdxType type2,
+                                      ir::Loop* lp,
+                                      ir::IndVar* idv) {
   if (val1 == val2) {  // 自己跟自己进行比较
     switch (type1) {
       case iLOOPINVARIANT:
@@ -456,7 +459,7 @@ int SROA::isTwoIdxPossiblySame(ir::Value* val1,
   return dPossiblySame | dCrossIterPossiblySame;
 }
 
-bool SROA::isSimplyLoopInvariant(ir::Loop* lp, ir::Value* val) {
+bool SROAContext::isSimplyLoopInvariant(ir::Loop* lp, ir::Value* val) {
   if (auto constVal = val->dynCast<ir::ConstantValue>()) return true;  // 常数
   if (auto argVal = val->dynCast<ir::Argument>()) return true;         // 参数
   if (auto instVal = val->dynCast<ir::Instruction>()) {

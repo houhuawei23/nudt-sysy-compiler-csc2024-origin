@@ -1,4 +1,4 @@
-// #include "pass/optimize/Misc/BlockSort.hpp"
+#include "pass/optimize/Misc/BlockSort.hpp"
 // #include 
 // using namespace ir;
 

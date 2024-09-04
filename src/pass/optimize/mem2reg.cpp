@@ -11,14 +11,14 @@ using namespace ir;
 
 namespace pass {
 // 删除Allocas中指定下标的变量
-void Mem2Reg::RemoveFromAllocasList(unsigned& AllocaIdx) {
+void Mem2RegContext::RemoveFromAllocasList(unsigned& AllocaIdx) {
   Allocas[AllocaIdx] = Allocas.back();
   Allocas.pop_back();
   AllocaIdx--;
 }
 
 // 分析一个变量，遍历其使用，是store就把store的BB插入到定义块集合，是load就把load的BB插入到定义块集合
-void Mem2Reg::allocaAnalysis(AllocaInst* alloca) {
+void Mem2RegContext::allocaAnalysis(AllocaInst* alloca) {
   for (auto use : alloca->uses()) {
     Instruction* User = dyn_cast<Instruction>(use->user());
     if (auto store = dynamic_cast<StoreInst*>(User)) {
@@ -30,8 +30,8 @@ void Mem2Reg::allocaAnalysis(AllocaInst* alloca) {
     }
   }
 }
-// 判断变量能否被mem2reg，主要是判断类型是否符合
-bool Mem2Reg::is_promoted(AllocaInst* alloca) {
+// 判断变量能否被Mem2RegContext，主要是判断类型是否符合
+bool Mem2RegContext::is_promoted(AllocaInst* alloca) {
   auto allocapt = dyn_cast<PointerType>(alloca->type())->baseType();
   for (const auto& use : alloca->uses()) {
     if (auto load = dynamic_cast<LoadInst*>(use->user())) {
@@ -50,7 +50,7 @@ bool Mem2Reg::is_promoted(AllocaInst* alloca) {
   return true;
 }
 // // 计算BB中的一条store指令是第几条指令(序号从0开始)
-// int Mem2Reg::getStoreinstindexinBB(BasicBlock *BB, StoreInst *I)
+// int Mem2RegContext::getStoreinstindexinBB(BasicBlock *BB, StoreInst *I)
 // {
 //     int index = 0;
 //     for (auto &inst : BB->insts())
@@ -62,7 +62,7 @@ bool Mem2Reg::is_promoted(AllocaInst* alloca) {
 //     return -1;
 // }
 // // 计算BB中的一条load指令是第几条指令(序号从0开始)
-// int Mem2Reg::getLoadeinstindexinBB(BasicBlock *BB, LoadInst *I)
+// int Mem2RegContext::getLoadeinstindexinBB(BasicBlock *BB, LoadInst *I)
 // {
 //     int index = 0;
 //     for (auto &inst : BB->insts())
@@ -74,7 +74,7 @@ bool Mem2Reg::is_promoted(AllocaInst* alloca) {
 //     return -1;
 // }
 // // 计算一个BB中变量AI有多少个store
-// int Mem2Reg::getStoreNuminBB(BasicBlock *BB, AllocaInst *AI)
+// int Mem2RegContext::getStoreNuminBB(BasicBlock *BB, AllocaInst *AI)
 // {
 //     int num = 0;
 //     for (auto inst : BB->insts())
@@ -88,7 +88,7 @@ bool Mem2Reg::is_promoted(AllocaInst* alloca) {
 //     return num;
 // }
 // // 找出一个BB中变量AI的最后一个store
-// StoreInst *Mem2Reg::getLastStoreinBB(BasicBlock *BB, AllocaInst
+// StoreInst *Mem2RegContext::getLastStoreinBB(BasicBlock *BB, AllocaInst
 // *AI)
 // {
 //     StoreInst *LastStoreinst;
@@ -113,7 +113,7 @@ bool Mem2Reg::is_promoted(AllocaInst* alloca) {
 // 同一块需要判断store是不是在load之前，之前才能替换load的所有使用然后删除load，不然就跳过
 // 不在同一块需要判断store所在块是否支配load所在块，支配才能替换load的所有使用然后删除load，不然就跳过
 // 如果最后这个变量变成useempty的，说明rewrite成功
-// bool Mem2Reg::rewriteSingleStoreAlloca(AllocaInst *alloca)
+// bool Mem2RegContext::rewriteSingleStoreAlloca(AllocaInst *alloca)
 // {
 //     bool not_globalstore;
 //     int StoreIndex;
@@ -170,12 +170,12 @@ bool Mem2Reg::is_promoted(AllocaInst* alloca) {
 //     return true;
 // }
 
-// bool Mem2Reg::pormoteSingleBlockAlloca(AllocaInst *alloca)
+// bool Mem2RegContext::pormoteSingleBlockAlloca(AllocaInst *alloca)
 // {
 //     // std::vector<std::pair<int,StoreInst*>> StoresByIndex;
 //     return false;
 // }
-void Mem2Reg::insertphi() {
+void Mem2RegContext::insertphi() {
   // 遍历所有alloca，对于每个alloca，在所有定义块的支配边界中插入phi指令
   std::unordered_set<BasicBlock*> Phiset;
   std::vector<BasicBlock*> W;
@@ -208,7 +208,7 @@ void Mem2Reg::insertphi() {
   }
 }
 
-void Mem2Reg::rename(Function* F) {
+void Mem2RegContext::rename(Function* F) {
   // rename:填充phi指令内容
   std::vector<Instruction*> instRemovelist;
   // std::stack<std::pair<BasicBlock*, std::map<AllocaInst*, Value*>>> Worklist;
@@ -305,7 +305,7 @@ void Mem2Reg::rename(Function* F) {
   }
 }
 
-void Mem2Reg::simplifyphi(PhiInst* phi) {
+void Mem2RegContext::simplifyphi(PhiInst* phi) {
   Value* preval = nullptr;
   BasicBlock* bb = phi->block();
   for (size_t i = 0; i < phi->getsize(); i++) {
@@ -320,7 +320,7 @@ void Mem2Reg::simplifyphi(PhiInst* phi) {
   bb->delete_inst(phi);
   return;
 }
-void Mem2Reg::promotememToreg(Function* F) {
+void Mem2RegContext::promotememToreg(Function* F) {
   // 预处理Allocas中不能被mem2reg的变量(没有use的变量和onlystore的变量，onlystore的变量只有唯一的到达定义，不能形成phi指令)
   for (unsigned int AllocaNum = 0; AllocaNum != Allocas.size(); AllocaNum++) {
     AllocaInst* ai = Allocas[AllocaNum];
@@ -357,7 +357,7 @@ void Mem2Reg::promotememToreg(Function* F) {
 // 主函数
 // 首先遍历函数F的第一个块取出所有alloca，如果alloca的basetype是float32或i32或i1，再判断这个alloca是否可做mem2reg，可以就加入Allocas；
 // 如果Allocas是empty的就直接break，否则进入promotememToreg函数对F做mem2reg；
-bool Mem2Reg::promotemem2reg(Function* F) {
+bool Mem2RegContext::promotemem2reg(Function* F) {
   bool changed = false;
   while (true) {
     Allocas.clear();
@@ -396,14 +396,16 @@ bool Mem2Reg::promotemem2reg(Function* F) {
 void Mem2Reg::run(Function* F, TopAnalysisInfoManager* tp) {
   if (not F->entry())
     return;
-  domctx = tp->getDomTree(F);
+  // domctx = tp->getDomTree(F);
   // std::cerr << "after domtree\n";
-  Allocas.clear();
-  DefsBlock.clear();
-  UsesBlock.clear();
-  PhiMap.clear();
-  ValueMap.clear();
-  allphi.clear();
-  promotemem2reg(F);
+  // Allocas.clear();
+  // DefsBlock.clear();
+  // UsesBlock.clear();
+  // PhiMap.clear();
+  // ValueMap.clear();
+  // allphi.clear();
+  Mem2RegContext ctx;
+  ctx.domctx = tp->getDomTree(F);
+  ctx.promotemem2reg(F);
 }
 }  // namespace pass
