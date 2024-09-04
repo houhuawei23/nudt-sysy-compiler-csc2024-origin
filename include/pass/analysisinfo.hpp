@@ -347,16 +347,10 @@ public:
   void setFuncIsCallLib(Function* func, bool b) { _isCallLibFunc[func] = b; }
   void setPotentialSideEffect(Function* func, bool b) { _hasPotentialSideEffect[func] = b; }
   // reference
-  std::set<GlobalVariable*>& funcReadGlobals(Function* func) {
-    return _FuncReadGlobals[func];
-  }
-  std::set<GlobalVariable*>& funcWriteGlobals(Function* func) {
-    return _FuncWriteGlobals[func];
-  }
+  std::set<GlobalVariable*>& funcReadGlobals(Function* func) { return _FuncReadGlobals[func]; }
+  std::set<GlobalVariable*>& funcWriteGlobals(Function* func) { return _FuncWriteGlobals[func]; }
   std::set<Argument*>& funcArgSet(Function* func) { return _funcPointerArgs[func]; }
-  std::set<GlobalVariable*>& funcDirectReadGvs(Function* func) {
-    return _FuncReadDirectGvs[func];
-  }
+  std::set<GlobalVariable*>& funcDirectReadGvs(Function* func) { return _FuncReadDirectGvs[func]; }
   std::set<GlobalVariable*>& funcDirectWriteGvs(Function* func) {
     return _FuncWriteDirectGvs[func];
   }
@@ -398,73 +392,74 @@ public:
   }
 };
 
-class dependenceInfo : public FunctionACtx {
+class DependenceInfo : public FunctionACtx {
 private:
-  std::unordered_map<Loop*, LoopDependenceInfo*> funcToLoopDependenceInfo;
+  std::unordered_map<Loop*, LoopDependenceInfo*> mFunc2LoopDepInfo;
 
 public:
-  dependenceInfo(Function* func, TopAnalysisInfoManager* tp) : FunctionACtx(func, tp) {}
+  DependenceInfo(Function* func, TopAnalysisInfoManager* tp) : FunctionACtx(func, tp) {}
   LoopDependenceInfo* getLoopDependenceInfo(Loop* lp) {
-    if (funcToLoopDependenceInfo.count(lp))
-      return funcToLoopDependenceInfo[lp];
+    if (mFunc2LoopDepInfo.count(lp))
+      return mFunc2LoopDepInfo[lp];
     else
       return nullptr;
   }
-  void clearAll() { funcToLoopDependenceInfo.clear(); }
+  void clearAll() { mFunc2LoopDepInfo.clear(); }
   void refresh() override;
-  void setDepInfoLp(Loop* lp, LoopDependenceInfo* input) {
-    funcToLoopDependenceInfo[lp] = input;
-  }
+  void setDepInfoLp(Loop* lp, LoopDependenceInfo* input) { mFunc2LoopDepInfo[lp] = input; }
 };
 
-class parallelInfo : public FunctionACtx {
+class ParallelInfo : public FunctionACtx {
   // 你想并行的这里都有!
 private:
-  std::unordered_map<BasicBlock*, bool> _LpIsParallel;
-  std::unordered_map<BasicBlock*, std::set<PhiInst*>> _LpPhis;
-  std::unordered_map<PhiInst*, bool> _isPhiAdd;
-  std::unordered_map<PhiInst*, bool> _isPhiSub;
-  std::unordered_map<PhiInst*, bool> _isPhiMul;
-  std::unordered_map<PhiInst*, Value*> _ModuloVal;
+  std::unordered_map<BasicBlock*, bool> mLpIsParallel;
+  std::unordered_map<BasicBlock*, std::set<PhiInst*>> mLpPhis;
+  std::unordered_map<PhiInst*, bool> mIsPhiAdd;
+  std::unordered_map<PhiInst*, bool> mIsPhiSub;
+  std::unordered_map<PhiInst*, bool> mIsPhiMul;
+  std::unordered_map<PhiInst*, Value*> mModuloVal;
 
 public:
-  parallelInfo(Function* func, TopAnalysisInfoManager* tp) : FunctionACtx(func, tp) {}
-  void setIsParallel(BasicBlock* lp, bool b) { _LpIsParallel[lp] = b; }
+  ParallelInfo(Function* func, TopAnalysisInfoManager* tp) : FunctionACtx(func, tp) {}
+  void setIsParallel(BasicBlock* header, bool b) {
+    std::cerr << "set " << header->name() << " is parallel " << b << std::endl;
+    mLpIsParallel[header] = b;
+  }
   bool getIsParallel(BasicBlock* lp) {
-    if (_LpIsParallel.count(lp)) {
-      return _LpIsParallel[lp];
+    if (mLpIsParallel.count(lp)) {
+      return mLpIsParallel[lp];
     }
     assert(false and "input an unexistend loop in ");
   }
-  std::set<PhiInst*>& resPhi(BasicBlock* bb) { return _LpPhis[bb]; }
+  std::set<PhiInst*>& resPhi(BasicBlock* bb) { return mLpPhis[bb]; }
   void clearAll() {
-    _LpIsParallel.clear();
-    _LpPhis.clear();
+    mLpIsParallel.clear();
+    mLpPhis.clear();
   }
   void refresh() {}
   // set
   void setPhi(PhiInst* phi, bool isadd, bool issub, bool ismul, Value* mod) {
-    _isPhiAdd[phi] = isadd;
-    _isPhiMul[phi] = ismul;
-    _isPhiSub[phi] = issub;
-    _ModuloVal[phi] = mod;
+    mIsPhiAdd[phi] = isadd;
+    mIsPhiMul[phi] = ismul;
+    mIsPhiSub[phi] = issub;
+    mModuloVal[phi] = mod;
   }
   // get
   bool getIsAdd(PhiInst* phi) {
     assert(false and "can not use!");
-    return _isPhiAdd.at(phi);
+    return mIsPhiAdd.at(phi);
   }
   bool getIsSub(PhiInst* phi) {
     assert(false and "can not use!");
-    return _isPhiSub.at(phi);
+    return mIsPhiSub.at(phi);
   }
   bool getIsMul(PhiInst* phi) {
     assert(false and "can not use!");
-    return _isPhiMul.at(phi);
+    return mIsPhiMul.at(phi);
   }
   Value* getMod(PhiInst* phi) {
     assert(false and "can not use!");
-    return _ModuloVal.at(phi);
+    return mModuloVal.at(phi);
   }
 };
 

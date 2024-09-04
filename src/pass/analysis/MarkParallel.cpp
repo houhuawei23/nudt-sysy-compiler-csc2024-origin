@@ -18,7 +18,7 @@ void MarkParallelContext::run(Function* func, TopAnalysisInfoManager* tp) {
   for (auto loop : lpctx->loops()) {
     runOnLoop(loop);
   }
-  // printParallelInfo(func);
+  printParallelInfo(func);
 }
 
 void MarkParallelContext::runOnLoop(Loop* lp) {
@@ -26,6 +26,8 @@ void MarkParallelContext::runOnLoop(Loop* lp) {
   bool isParallelConcerningArray = lpDepInfo->getIsParallel();
   auto defaultIdv = idvctx->getIndvar(lp);
   if (isParallelConcerningArray == false) {
+    std::cerr << "Loop " << lp->header()->name() << " is not parallel concerning array."
+              << std::endl;
     parctx->setIsParallel(lp->header(), false);
     return;
   }
@@ -34,12 +36,16 @@ void MarkParallelContext::runOnLoop(Loop* lp) {
       if (auto callInst = inst->dynCast<CallInst>()) {
         auto callee = callInst->callee();
         if (not isFuncParallel(lp, callInst)) {
+          std::cerr << "Loop " << lp->header()->name() << " is not parallel concerning function "
+                    << callee->name() << std::endl;
           parctx->setIsParallel(lp->header(), false);
           return;
         }
       } else if (auto storeInst = inst->dynCast<StoreInst>()) {
         auto ptr = storeInst->ptr();
         if (ptr->dynCast<GlobalVariable>()) {
+          std::cerr << "Loop " << lp->header()->name()
+                    << " is not parallel concerning global variable " << ptr->name() << std::endl;
           parctx->setIsParallel(lp->header(), false);
           return;
         }
@@ -63,10 +69,10 @@ void MarkParallelContext::runOnLoop(Loop* lp) {
 }
 
 void MarkParallelContext::printParallelInfo(Function* func) {
-  std::cerr << "In Function \"" << func->name() << "\":" << std::endl;
+  std::cerr << "In Function " << func->name() << ":" << std::endl;
   for (auto lp : lpctx->loops()) {
     using namespace std;
-    cerr << "Parallize Loop whose header is \"" << lp->header()->name() << "\" :";
+    cerr << "Parallize Loop whose header is " << lp->header()->name() << " :";
     if (parctx->getIsParallel(lp->header())) {
       cerr << "YES";
     } else {
@@ -205,6 +211,6 @@ Value* MarkParallelContext::getBaseAddr(Value* subAddr) {
     auto preHeaderVal = phi->getvalfromBB(lp->getLoopPreheader());
     return getBaseAddr(preHeaderVal);
   }
-  // assert("Error! invalid type of input in function \"getBaseAddr\"!"&&false);
+  // assert("Error! invalid type of input in function getBaseAddr!"&&false);
   return nullptr;
 }

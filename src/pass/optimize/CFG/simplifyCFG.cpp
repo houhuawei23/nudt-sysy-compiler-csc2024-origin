@@ -67,7 +67,7 @@ bool SimplifyCFG::removeNoPreBlock(ir::Function* func) {
       bbStack.push(curBBPre);
     }
   }
-  // std::cout<<"In Fucntion\""<<func->name()<<"\""<<std::endl;
+  // std::cout<<"In Fucntion"<<func->name()<<""<<std::endl;
   // for(auto bb:func->blocks()){
   //     using namespace std;
   //     std::cout<<"bb "<<bb->name()<<": "<<vis1[bb]<<' '<<vis2[bb]<<endl;

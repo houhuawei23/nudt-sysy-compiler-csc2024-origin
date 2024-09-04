@@ -89,7 +89,7 @@ void AggressiveG2LContext::run(ir::Module* md, TopAnalysisInfoManager* tp) {
         // std::cerr<<rwGv->name()<<" local to main!"<<std::endl;
         replaceGvInMain(rwGv, onlyUseFunc);
       } else {  // cond b
-        // std::cerr<<rwGv->name()<<" local to \""<<onlyUseFunc->name()<<"\"!"<<std::endl;
+        // std::cerr<<rwGv->name()<<" local to "<<onlyUseFunc->name()<<"!"<<std::endl;
         replaceGvInNormalFunc(rwGv, onlyUseFunc);
       }
     } else {  // cond c

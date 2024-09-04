@@ -161,7 +161,7 @@ ir::Value* SideEffectAnalysisContext::getBaseAddr(ir::Value* subAddr) {
       return getIntToPtrBaseAddr(unary);
     }
   }
-  // assert("Error! invalid type of input in function \"getBaseAddr\"!"&&false);
+  // assert("Error! invalid type of input in function getBaseAddr!"&&false);
   return nullptr;
 }
 
@@ -246,7 +246,7 @@ void SideEffectAnalysisContext::infoCheck(ir::Module* md) {
   for (auto func : md->funcs()) {
     using namespace std;
     if (func->isOnlyDeclare()) continue;
-    cerr << "In Function \"" << func->name() << "\":" << endl;
+    cerr << "In Function " << func->name() << ":" << endl;
     cerr << "Read Global Variables:" << endl;
     for (auto gv : sectx->funcReadGlobals(func)) {
       cerr << gv->name() << "\t";
@@ -268,7 +268,7 @@ void SideEffectAnalysisContext::infoCheck(ir::Module* md) {
   }
   for (auto func : md->funcs()) {
     using namespace std;
-    cerr << "Function \"" << func->name() << "\" side effect: ";
+    cerr << "Function " << func->name() << " side effect: ";
     if (sectx->hasSideEffect(func))
       cerr << "YES";
     else

@@ -26,7 +26,7 @@ void LoopDependenceInfo::getInfoFromSubLoop(ir::Loop* subLoop, LoopDependenceInf
     } else if (auto stInst = memInst->dynCast<ir::StoreInst>()) {
       addPtrFromSubLoop(stInst->ptr(), stInst, subLoopDepInfo);
     } else {
-      std::cerr << "error in function \"getInfoFromSubLoop\"!" << std::endl;
+      std::cerr << "error in function getInfoFromSubLoop!" << std::endl;
       assert(false);
     }
   }
@@ -65,7 +65,7 @@ ir::Value* pass::getBaseAddr(ir::Value* subAddr, TopAnalysisInfoManager* topmana
       return getIntToPtrBaseAddr(unary);
     }
   }
-  // assert("Error! invalid type of input in function \"getBaseAddr\"!"&&false);
+  // assert("Error! invalid type of input in function getBaseAddr!"&&false);
   return nullptr;
 }
 
@@ -74,7 +74,7 @@ BaseAddrType pass::getBaseAddrType(ir::Value* val) {
   if (val->dynCast<ir::GlobalVariable>()) return globalType;
   if (val->dynCast<ir::Argument>()) return argType;
   if (val->dynCast<ir::AllocaInst>()) return localType;
-  std::cerr << "invalid input in function \"getBaseAddrTtype\"!" << std::endl;
+  std::cerr << "invalid input in function getBaseAddrTtype!" << std::endl;
   assert(false);
 }
 
@@ -97,7 +97,7 @@ void LoopDependenceInfo::addPtr(ir::Value* ptr, ir::Instruction* inst) {
   } else if (inst->valueId() == ir::vSTORE) {
     baseAddrIsWrite[baseAddr] = true;
   } else {
-    std::cerr << "error in function\"addPtr\", invalid input inst type!" << std::endl;
+    std::cerr << "error in functionaddPtr, invalid input inst type!" << std::endl;
     assert(false);
   }
   // 子地址
@@ -111,7 +111,7 @@ void LoopDependenceInfo::addPtr(ir::Value* ptr, ir::Instruction* inst) {
   } else if (inst->valueId() == ir::vSTORE) {
     subAddrIsWrite[subAddr] = true;
   } else {
-    std::cerr << "error in function\"addPtr\", invalid input inst type!" << std::endl;
+    std::cerr << "error in functionaddPtr, invalid input inst type!" << std::endl;
     assert(false);
   }
   if (subAddrToGepIdx.count(subAddr) == 0) {
@@ -209,7 +209,7 @@ void LoopDependenceInfo::addPtrFromSubLoop(ir::Value* ptr,
   } else if (inst->valueId() == ir::vSTORE) {
     baseAddrIsWrite[baseAddr] = true;
   } else {
-    std::cerr << "error in function\"addPtr\", invalid input inst type!" << std::endl;
+    std::cerr << "error in functionaddPtr, invalid input inst type!" << std::endl;
     assert(false);
   }
   // 子地址
@@ -223,7 +223,7 @@ void LoopDependenceInfo::addPtrFromSubLoop(ir::Value* ptr,
   } else if (inst->valueId() == ir::vSTORE) {
     subAddrIsWrite[subAddr] = true;
   } else {
-    std::cerr << "error in function\"addPtr\", invalid input inst type!" << std::endl;
+    std::cerr << "error in functionaddPtr, invalid input inst type!" << std::endl;
     assert(false);
   }
   if (subAddrToGepIdx.count(subAddr) == 0) {
@@ -300,15 +300,15 @@ bool pass::isTwoBaseAddrPossiblySame(ir::Value* ptr1,
       return false;
     }
   }
-  std::cerr << "error occur in function \"isTwoBaseAddrPossiblySame\"" << std::endl;
+  std::cerr << "error occur in function isTwoBaseAddrPossiblySame" << std::endl;
   assert(false);
   return true;
 }
 
 void LoopDependenceInfo::print(std::ostream& os) {
   using namespace std;
-  os << "In function \"" << parent->header()->function()->name() << "\":" << endl;
-  os << "In loop whose header is\"" << parent->header()->name() << "\":\n";
+  os << "In function " << parent->header()->function()->name() << ":" << endl;
+  os << "In loop whose header is" << parent->header()->name() << ":\n";
   if (baseAddrs.empty()) {
     os << "No mem read or write." << endl << endl;
     return;

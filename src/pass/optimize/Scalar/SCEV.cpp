@@ -578,7 +578,7 @@ ir::Value* SCEVContext::addCalcIterCntInstructions(ir::Loop* lp,
     default:
       break;
   }
-  assert(false and "something error happened in func\" addCalCntInstuctions \"");
+  assert(false and "something error happened in func addCalCntInstuctions ");
   return nullptr;
 }
 

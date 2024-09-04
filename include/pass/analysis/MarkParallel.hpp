@@ -19,13 +19,13 @@ struct ResPhi {
 
 struct MarkParallelContext final {
   TopAnalysisInfoManager* topmana;
-  dependenceInfo* dpctx;
+  DependenceInfo* dpctx;
   DomTree* domctx;
   LoopInfo* lpctx;
   SideEffectInfo* sectx;
   CallGraph* cgctx;
   IndVarInfo* idvctx;
-  parallelInfo* parctx;
+  ParallelInfo* parctx;
 
   void runOnLoop(Loop* lp);
   void printParallelInfo(Function* func);

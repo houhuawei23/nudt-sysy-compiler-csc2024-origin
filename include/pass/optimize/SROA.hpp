@@ -16,7 +16,7 @@ private:
   DomTree* domctx;
   LoopInfo* lpctx;
   SideEffectInfo* sectx;
-  dependenceInfo* dpctx;
+  DependenceInfo* dpctx;
   IndVarInfo* idvctx;
   LoopDependenceInfo* depInfoForLp;
   void runOnLoop(Loop* lp);

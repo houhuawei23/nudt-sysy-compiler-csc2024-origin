@@ -92,7 +92,7 @@ void LoopInfoCheck::run(ir::Function* func, TopAnalysisInfoManager* tp) {
   using namespace std;
   if (func->isOnlyDeclare()) return;
   LoopInfo* lpctx = tp->getLoopInfoWithoutRefresh(func);
-  cout << "In Function \"" << func->name() << "\": " << endl;
+  cout << "In Function " << func->name() << ": " << endl;
   int cnt = 0;
   for (auto loop : lpctx->loops()) {  // func->Loops()
     cout << "Loop " << cnt << ":" << endl;

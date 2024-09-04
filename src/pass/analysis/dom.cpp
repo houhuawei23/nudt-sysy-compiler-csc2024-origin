@@ -223,7 +223,7 @@ void DomInfoCheck::run(ir::Function* func, TopAnalysisInfoManager* tp) {
   func->rename();
   domctx = tp->getDomTreeWithoutRefresh(func);
   using namespace std;
-  cout << "In Function \"" << func->name() << "\"" << endl;
+  cout << "In Function " << func->name() << "" << endl;
   for (auto bb : func->blocks()) {
     cout << bb->name() << " Prec: ";
     for (auto bbpre : bb->pre_blocks()) {

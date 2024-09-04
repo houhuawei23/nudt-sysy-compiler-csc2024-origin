@@ -1,4 +1,4 @@
-// #define DEBUG
+#define DEBUG
 
 #include "pass/optimize/optimize.hpp"
 #include "pass/optimize/Loop/LoopParallel.hpp"

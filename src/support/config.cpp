@@ -121,7 +121,10 @@ static const auto parallelPasses = std::vector<std::string>{
   "loopsimplify", "gcm", "gvn", "licm",
   // "markpara",
   // "LoopInterChange", "inline", 
-  "loopsimplify", "parallel",  // "ParallelBodyExtract",
+  "loopsimplify", 
+  "blocksort",
+  "cfgprint",
+  "parallel",  // "ParallelBodyExtract",
   "inline", "simplifycfg"};
 
 static const auto interProceduralPasses = std::vector<std::string>{
@@ -170,6 +173,7 @@ auto collectPasses(OptLevel level) {
 
   passes.insert(passes.end(), clcPasses.begin(), clcPasses.end());
 
+  // passes.insert(passes.end(), ifCombinePassesList.begin(), ifCombinePassesList.end());
   // passes.insert(passes.end(), deadLoopPasses.begin(), deadLoopPasses.end());
 
   // IPO
@@ -204,7 +208,7 @@ void Config::parseSubmitArgs(int argc, char* argv[]) {
   outfile = argv[3];
   infile = argv[4];
 
-  if (argc == 6) {
+  if (argc >= 6) {
     if (argv[5] == "-O0"sv) optLevel = OptLevel::O1;
     if (argv[5] == "-O1"sv) optLevel = OptLevel::O1;
   }

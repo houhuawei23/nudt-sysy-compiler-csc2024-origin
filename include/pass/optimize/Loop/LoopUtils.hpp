@@ -13,7 +13,7 @@ namespace pass {
 bool checkLoopParallel(Loop* loop,
                        LoopInfo* lpctx,
                        IndVarInfo* indVarctx,
-                       parallelInfo* parallelctx,
+                       ParallelInfo* parallelctx,
                        std::unordered_set<Loop*>& extractedLoops);
 
 bool fixLoopLatch(Function* func, Loop* loop, IndVar* indVar, TopAnalysisInfoManager* tp);

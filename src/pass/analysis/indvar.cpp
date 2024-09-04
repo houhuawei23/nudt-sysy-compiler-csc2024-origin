@@ -107,7 +107,7 @@ void IndVarInfoCheck::run(ir::Function* func, TopAnalysisInfoManager* tp) {
   auto lpctx = tp->getLoopInfoWithoutRefresh(func);
   auto ivctx = tp->getIndVarInfoWithoutRefresh(func);
   using namespace std;
-  cerr << "In Function \"" << func->name() << "\":" << endl;
+  cerr << "In Function " << func->name() << ":" << endl;
   for (auto lp : lpctx->loops()) {
     cerr << "In loop whose header is " << lp->header()->name() << ":" << endl;
     // cerr<<lp<<endl;

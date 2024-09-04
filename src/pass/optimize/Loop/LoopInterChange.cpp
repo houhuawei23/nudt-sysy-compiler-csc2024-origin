@@ -15,7 +15,7 @@ bool detectPatternAndSwap(Function* func,
                           Loop* innerLoop,
                           LoopInfo* lpctx,
                           IndVarInfo* indVarctx,
-                          parallelInfo* parallelctx,
+                          ParallelInfo* parallelctx,
                           // dependenceInfo* dependencyctx,
                           TopAnalysisInfoManager* tp);
 
@@ -102,7 +102,7 @@ bool detectPatternAndSwap(Function* func,
                           LoopInfo* lpctx,
                           IndVarInfo* indVarctx,
                           // dependenceInfo* dependencyctx,
-                          parallelInfo* parallelctx,
+                          ParallelInfo* parallelctx,
                           TopAnalysisInfoManager* tp) {
   CFGAnalysisHHW().run(func, tp);  // refresh CFG
   const auto outerLoop = innerLoop->parentloop();

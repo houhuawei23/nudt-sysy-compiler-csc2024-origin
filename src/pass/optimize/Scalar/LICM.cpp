@@ -38,7 +38,7 @@ ir::Value* LICMContext::getbase(ir::Value* subAddr) {
       return getIntToPtrBaseAddr(unary);
     }
   }
-  assert("Error! invalid type of input in function \"getBaseAddr\"!" && false);
+  assert("Error! invalid type of input in function getBaseAddr!" && false);
   return nullptr;
 }
 
@@ -264,7 +264,7 @@ std::vector<ir::Instruction*> LICMContext::getinvariant(ir::BasicBlock* bb, ir::
 }
 
 void LICMContext::run(ir::Function* func, TopAnalysisInfoManager* tp) {
-  // std::cout<<"In Function \""<<func->name()<<"\": "<<std::endl;
+  // std::cout<<"In Function "<<func->name()<<": "<<std::endl;
   loopctx = tp->getLoopInfo(func);
   loopctx->refresh();
   domctx = tp->getDomTree(func);

@@ -16,7 +16,7 @@ struct DependenceAnalysisContext final {
   IndVarInfo* idvctx;
   SideEffectInfo* sectx;
   CallGraph* cgctx;
-  dependenceInfo* dpctx;
+  DependenceInfo* dpctx;
   void runOnLoop(Loop* lp);
   void makeGepIdx(Loop* lp, IndVar* idv, GepIdx* gepidx);
   bool isSimplyLoopInvariant(Loop* lp, Value* val);
@@ -34,7 +34,7 @@ struct DependenceAnalysisContext final {
 class DependenceAnalysis : public FunctionPass {
 public:
   void run(Function* func, TopAnalysisInfoManager* tp) override;
-  std::string name() const override { return "dependence analysis"; }
+  std::string name() const override { return "DepAnalysis"; }
 };
 
 };  // namespace pass

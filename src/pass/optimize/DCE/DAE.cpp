@@ -43,7 +43,7 @@ void DAE::run(ir::Module* md, TopAnalysisInfoManager* tp) {
       idx++;
     }
     if (delArgs.empty()) continue;
-    std::cerr << "Function \"" << func->name() << "\" has " << delArgs.size() << " dead args."
+    std::cerr << "Function " << func->name() << " has " << delArgs.size() << " dead args."
               << std::endl;
     for (auto argIter = delArgs.rbegin(); argIter != delArgs.rend(); argIter++) {
       // for(auto argIter=delArgs.begin();argIter!=delArgs.end();argIter++){

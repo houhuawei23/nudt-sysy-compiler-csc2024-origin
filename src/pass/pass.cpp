@@ -276,6 +276,10 @@ void PassManager::runPasses(std::vector<std::string> passNames) {
     } else {
       assert(false && "Invalid pass type");
     }
+    if (config.logLevel >= sysy::LogLevel::DEBUG) {
+      auto fileName = utils::preName(config.infile) + "_after_" + pass->name() + ".ll";
+      config.dumpModule(irModule, fileName);
+    }
   }
 
   if (config.logLevel >= sysy::LogLevel::DEBUG) {

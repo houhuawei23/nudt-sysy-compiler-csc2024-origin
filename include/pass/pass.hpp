@@ -61,8 +61,8 @@ private:
   std::unordered_map<ir::Function*, PDomTree*> mPDomTree;
   std::unordered_map<ir::Function*, LoopInfo*> mLoopInfo;
   std::unordered_map<ir::Function*, IndVarInfo*> mIndVarInfo;
-  std::unordered_map<ir::Function*, dependenceInfo*> mDepInfo;
-  std::unordered_map<ir::Function*, parallelInfo*> mParallelInfo;
+  std::unordered_map<ir::Function*, DependenceInfo*> mDepInfo;
+  std::unordered_map<ir::Function*, ParallelInfo*> mParallelInfo;
   // bb info
   // add new func
   void addNewFunc(ir::Function* func) {
@@ -74,9 +74,9 @@ private:
     mLoopInfo[func] = pnewLoopInfo;
     auto pnewIndVarInfo = new IndVarInfo(func, this);
     mIndVarInfo[func] = pnewIndVarInfo;
-    auto pnewDepInfo = new dependenceInfo(func, this);
+    auto pnewDepInfo = new DependenceInfo(func, this);
     mDepInfo[func] = pnewDepInfo;
-    auto pnewParallelInfo = new parallelInfo(func, this);
+    auto pnewParallelInfo = new ParallelInfo(func, this);
     mParallelInfo[func] = pnewParallelInfo;
   }
 
@@ -123,7 +123,7 @@ public:
     idvctx->refresh();
     return idvctx;
   }
-  dependenceInfo* getDepInfo(ir::Function* func) {
+  DependenceInfo* getDepInfo(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
     auto dpctx = mDepInfo[func];
     if (dpctx == nullptr) {
@@ -181,7 +181,7 @@ public:
     }
     return idvctx;
   }
-  dependenceInfo* getDepInfoWithoutRefresh(ir::Function* func) {
+  DependenceInfo* getDepInfoWithoutRefresh(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
     auto dpctx = mDepInfo[func];
     if (dpctx == nullptr) {
@@ -193,7 +193,7 @@ public:
 
   CallGraph* getCallGraphWithoutRefresh() { return mCallGraph; }
   SideEffectInfo* getSideEffectInfoWithoutRefresh() { return mSideEffectInfo; }
-  parallelInfo* getParallelInfo(ir::Function* func) {
+  ParallelInfo* getParallelInfo(ir::Function* func) {
     if (func->isOnlyDeclare()) return nullptr;
     auto dpctx = mParallelInfo[func];
     if (dpctx == nullptr) {
