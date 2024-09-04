@@ -217,6 +217,10 @@ Function* Function::copy_func() {
   }
   // if cant find, return itself
   auto getValue = [&](Value* val) -> Value* {
+    if (val == nullptr) {
+      std::cerr << "getValue(nullptr)" << std::endl;
+      return nullptr;
+    }
     if (val->isa<ConstantValue>()) return val;
     if (auto iter = valueMap.find(val); iter != valueMap.end()) return iter->second;
     return val;
@@ -225,11 +229,14 @@ Function* Function::copy_func() {
   // copy inst in bb
   std::vector<PhiInst*> phis;
   std::set<BasicBlock*> vis;
-  BasicBlock::BasicBlockDfs(mEntry, [&](BasicBlock* bb) -> bool {
+
+  const auto copyBlock = [&](BasicBlock* bb) -> bool {
     if (vis.count(bb)) return true;
     vis.insert(bb);
     auto bbCpy = valueMap.at(bb)->dynCast<BasicBlock>();
     for (auto inst : bb->insts()) {
+      // inst->print(std::cerr);
+      // std::cerr << std::endl;
       auto copyinst = inst->copy(getValue);
       copyinst->setBlock(bbCpy);
       valueMap.emplace(inst, copyinst);
@@ -237,7 +244,9 @@ Function* Function::copy_func() {
       if (auto phi = inst->dynCast<PhiInst>()) phis.emplace_back(phi);
     }
     return false;
-  });
+  };
+  BasicBlock::BasicBlockDfs(mEntry, copyBlock);
+
   for (auto phi : phis) {
     auto copyphi = valueMap.at(phi)->dynCast<PhiInst>();
     for (size_t i = 0; i < phi->getsize(); i++) {

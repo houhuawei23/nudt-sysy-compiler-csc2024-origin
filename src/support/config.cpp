@@ -120,7 +120,8 @@ static const auto loopOptPasses = std::vector<std::string>{"loopsimplify", "gcm"
 static const auto parallelPasses = std::vector<std::string>{
   "loopsimplify", "gcm", "gvn", "licm",
   // "markpara",
-  "LoopInterChange", "inline", "loopsimplify", "parallel",  // "ParallelBodyExtract",
+  // "LoopInterChange", "inline", 
+  "loopsimplify", "parallel",  // "ParallelBodyExtract",
   "inline", "simplifycfg"};
 
 static const auto interProceduralPasses = std::vector<std::string>{

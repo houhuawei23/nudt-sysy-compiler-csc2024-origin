@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.19)
 # cmake_policy(SET CMP0135 OLD)
 
 # Set C++ standard
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Compiler flags
@@ -17,11 +17,9 @@ project(sysy
   LANGUAGES CXX
 )
 
-# set(CMAKE_BUILD_TYPE Debug)
-# set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
+set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
 # set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -g")
-set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ standard to conform to")
-set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # written by TXS
@@ -76,7 +74,7 @@ find_package(Python3 REQUIRED)
 
 set(SUBMIT_DIR ${CMAKE_CURRENT_BINARY_DIR}/submit)
 
-add_custom_target(submit
+add_custom_target(submit 
   COMMAND ${CMAKE_COMMAND} -E rm -rf ${SUBMIT_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${SUBMIT_DIR}
   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/submit/CMakeLists.txt ${SUBMIT_DIR}/CMakeLists.txt
