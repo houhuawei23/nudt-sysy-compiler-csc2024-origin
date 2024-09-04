@@ -1063,7 +1063,7 @@ void loopUnroll::copyloop(std::vector<ir::BasicBlock*> bbs, ir::BasicBlock* begi
         }
     }
 
-    std::set<ir::BasicBlock*> vis;
+    std::unordered_set<ir::BasicBlock*> vis;
     std::vector<ir::PhiInst*> phis;
     ir::BasicBlock::BasicBlockDfs(begin, [&](ir::BasicBlock* bb) -> bool {
         if (vis.count(bb) || (std::count(bbs.begin(), bbs.end(), bb) == 0)) return true;
@@ -1118,7 +1118,7 @@ void loopUnroll::copyloopremainder(std::vector<ir::BasicBlock*> bbs, ir::BasicBl
         }
     }
 
-    std::set<ir::BasicBlock*> vis;
+    std::unordered_set<ir::BasicBlock*> vis;
     std::vector<ir::PhiInst*> phis;
     ir::BasicBlock::BasicBlockDfs(begin, [&](ir::BasicBlock* bb) -> bool {
         if (vis.count(bb) || (std::count(bbs.begin(), bbs.end(), bb) == 0)) return true;

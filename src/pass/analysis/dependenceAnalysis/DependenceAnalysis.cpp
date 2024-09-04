@@ -3,21 +3,14 @@
 using namespace pass;
 
 void DependenceAnalysis::run(ir::Function* func, TopAnalysisInfoManager* tp) {
-  std::cerr << "da(" << func->name() << ") ";
+  std::cerr << "\nda(" << func->name() << ") ";
   topmana = tp;
-  std::cerr << "1 ";
   domctx = tp->getDomTree(func);
-  std::cerr << "2 ";
   lpctx = tp->getLoopInfo(func);
-  std::cerr << "3 ";
   idvctx = tp->getIndVarInfo(func);
-  std::cerr << "4 ";
   sectx = tp->getSideEffectInfo();
-  std::cerr << "5 ";
   cgctx = tp->getCallGraph();
-  std::cerr << "6 ";
   dpctx = tp->getDepInfoWithoutRefresh(func);
-  std::cerr << "7 ";
   func->rename();
 
   for (auto lp : lpctx->loops()) {  // 从最上层的循环开始遍历
@@ -27,7 +20,7 @@ void DependenceAnalysis::run(ir::Function* func, TopAnalysisInfoManager* tp) {
 
 void DependenceAnalysis::runOnLoop(ir::Loop* lp) {
   if (lp == nullptr) {
-    std::cerr << "rLp(nullptr) ";
+    std::cerr << "rLp(lp is nullptr) ";
     return;
   }
   std::cerr << "rLp(" << lp->header()->name() << ") ";
@@ -70,74 +63,96 @@ void DependenceAnalysis::runOnLoop(ir::Loop* lp) {
   }
   // 为并行设计的依赖关系分析
   //  depInfoForLp->print(std::cerr);
-  bool isParallel = true;
-  auto defaultIdv = idvctx->getIndvar(lp);
-  for (auto bd : depInfoForLp->getBaseAddrs()) {
-    auto& subAddrs = depInfoForLp->baseAddrToSubAddrSet(bd);
-    for (auto subAd : subAddrs) {
-      auto gepidx = depInfoForLp->getGepIdx(subAd);
-      makeGepIdx(lp, defaultIdv, gepidx);
-    }
-  }
+  const auto checkParallel = [&] {
+    auto defaultIdv = idvctx->getIndvar(lp);
 
-  // depInfoForLp->print(std::cerr);
-  // 进行针对并行化的依赖关系
-  for (auto bd : depInfoForLp->getBaseAddrs()) {
-    auto& subAddrs = depInfoForLp->baseAddrToSubAddrSet(bd);
-    // 要么只有一个子地址，要么只有读，就说明不会有跨迭代的依赖
-    depInfoForLp->setBaseAddrIsCrossIterDep(bd, false);
-    if (not depInfoForLp->getIsBaseAddrWrite(bd)) continue;
+    if (defaultIdv == nullptr) return false;
 
-    for (auto setIter = subAddrs.begin(); setIter != subAddrs.end(); setIter++) {
-      for (auto setIter2 = subAddrs.begin(); 1; setIter2++) {
-        // 在进行依赖判断的时候，自己和自己也要进行比较，确保在不同的迭代里面他们二者并不相同，如果相同就有可能产生跨循环的依赖
-        auto gep1 = *setIter;
-        auto gep2 = *setIter2;
-        // auto func=gep1->block()->function();
-        // func->print(std::cerr);
-        auto bd1 = getBaseAddr(gep1, topmana);
-        auto bd2 = getBaseAddr(gep2, topmana);
-        assert(bd1 == bd);
-        assert(bd2 == bd);
-
-        auto gepidx1 = depInfoForLp->getGepIdx(gep1);
-        auto gepidx2 = depInfoForLp->getGepIdx(gep2);
-        assert(gepidx1->idxList.size() == gepidx2->idxList.size());
-        int depType = isTwoGepIdxPossiblySame(gepidx1, gepidx2, lp, defaultIdv);
-        if ((depType & dCrossIterTotallyNotSame) != 0) {
-          if (setIter2 == setIter) break;
-          continue;
-        }
-        if (((depType & dCrossIterPossiblySame) != 0) or ((depType & dCrossIterTotallySame) != 0)) {
-          if (depInfoForLp->getIsSubAddrWrite(*setIter) or
-              depInfoForLp->getIsSubAddrWrite(*setIter2)) {
-            isParallel = false;
-            depInfoForLp->setBaseAddrIsCrossIterDep(bd, true);
-          }
-        }
-        if (setIter2 == setIter) break;
+    for (auto bd : depInfoForLp->getBaseAddrs()) {
+      auto& subAddrs = depInfoForLp->baseAddrToSubAddrSet(bd);
+      for (auto subAd : subAddrs) {
+        auto gepidx = depInfoForLp->getGepIdx(subAd);
+        makeGepIdx(lp, defaultIdv, gepidx);
       }
     }
-  }
+    bool isParallel = true;
+    // depInfoForLp->print(std::cerr);
+    // 进行针对并行化的依赖关系
+    for (auto bd : depInfoForLp->getBaseAddrs()) {
+      auto& subAddrs = depInfoForLp->baseAddrToSubAddrSet(bd);
+      // 要么只有一个子地址，要么只有读，就说明不会有跨迭代的依赖
+      depInfoForLp->setBaseAddrIsCrossIterDep(bd, false);
+      if (not depInfoForLp->getIsBaseAddrWrite(bd)) continue;
+
+      for (auto setIter = subAddrs.begin(); setIter != subAddrs.end(); setIter++) {
+        for (auto setIter2 = subAddrs.begin(); 1; setIter2++) {
+          // 在进行依赖判断的时候，自己和自己也要进行比较，确保在不同的迭代里面他们二者并不相同，如果相同就有可能产生跨循环的依赖
+          auto gep1 = *setIter;
+          auto gep2 = *setIter2;
+          // auto func=gep1->block()->function();
+          // func->print(std::cerr);
+          auto bd1 = getBaseAddr(gep1, topmana);
+          auto bd2 = getBaseAddr(gep2, topmana);
+          assert(bd1 == bd);
+          assert(bd2 == bd);
+
+          auto gepidx1 = depInfoForLp->getGepIdx(gep1);
+          auto gepidx2 = depInfoForLp->getGepIdx(gep2);
+          assert(gepidx1->idxList.size() == gepidx2->idxList.size());
+          int depType = isTwoGepIdxPossiblySame(gepidx1, gepidx2, lp, defaultIdv);
+          if ((depType & dCrossIterTotallyNotSame) != 0) {
+            if (setIter2 == setIter) break;
+            continue;
+          }
+          if (((depType & dCrossIterPossiblySame) != 0) or
+              ((depType & dCrossIterTotallySame) != 0)) {
+            if (depInfoForLp->getIsSubAddrWrite(*setIter) or
+                depInfoForLp->getIsSubAddrWrite(*setIter2)) {
+              isParallel = false;
+              depInfoForLp->setBaseAddrIsCrossIterDep(bd, true);
+            }
+          }
+          if (setIter2 == setIter) break;
+        }
+      }
+    }
+    return isParallel;
+  };
+  bool isParallel = checkParallel();
   depInfoForLp->setIsParallel(isParallel);
   // depInfoForLp->print(std::cerr);
 }
 
 void DependenceAnalysis::makeGepIdx(ir::Loop* lp, ir::IndVar* idv, GepIdx* gepidx) {
   if (lp == nullptr or idv == nullptr or gepidx == nullptr) {
-    std::cerr << "mGI(nullptr) ";
+    std::cerr << "mGI(";
+    if (lp == nullptr) std::cerr << "lp ";
+    if (idv == nullptr) std::cerr << "idv ";
+    if (gepidx == nullptr) std::cerr << "gepidx ";
+    std::cerr << "is nullptr) ";
     return;
   }
   std::cerr << "mGI(" << lp->header()->name() << ") ";
   for (auto val : gepidx->idxList) {
-    if (gepidx->idxTypes[val] != iELSE) continue;
-    if (isSimplyLoopInvariant(lp, val)) gepidx->idxTypes[val] = iLOOPINVARIANT;
-    if (idv != nullptr) {
-      if (val == idv->phiinst()) gepidx->idxTypes[val] = iIDV;
-      if (isIDVPLUSMINUSFORMULA(idv, val, lp)) gepidx->idxTypes[val] = iIDVPLUSMINUSFORMULA;
+    if (val == nullptr) continue;
+    if (gepidx->idxTypes.at(val) != iELSE) continue;
+    if (isSimplyLoopInvariant(lp, val)) {
+      gepidx->idxTypes.emplace(val, iLOOPINVARIANT);
     }
-    if (val->dynCast<ir::CallInst>()) gepidx->idxTypes[val] = iCALL;
-    if (val->dynCast<ir::LoadInst>()) gepidx->idxTypes[val] = iLOAD;
+    if (idv != nullptr) {
+      if (val == idv->phiinst()) {
+        gepidx->idxTypes.emplace(val, iIDV);
+      }
+      if (isIDVPLUSMINUSFORMULA(idv, val, lp)) {
+        gepidx->idxTypes.emplace(val, iIDVPLUSMINUSFORMULA);
+      }
+    }
+    if (val->dynCast<ir::CallInst>()) {
+      gepidx->idxTypes.emplace(val, iCALL);
+    }
+    if (val->dynCast<ir::LoadInst>()) {
+      gepidx->idxTypes.emplace(val, iLOAD);
+    }
   }
 }
 
@@ -158,15 +173,18 @@ bool DependenceAnalysis::isSimplyLoopInvariant(ir::Loop* lp, ir::Value* val) {
     return true;  // 参数
   }
   if (auto instVal = val->dynCast<ir::Instruction>()) {
-    return domctx->dominate(instVal->block(), lp->header()) and instVal->block() !=
-    lp->header();
+    return domctx->dominate(instVal->block(), lp->header()) and instVal->block() != lp->header();
   }
   return false;
 }
 
 bool DependenceAnalysis::isIDVPLUSMINUSFORMULA(ir::IndVar* idv, ir::Value* val, ir::Loop* lp) {
   if (idv == nullptr or val == nullptr or lp == nullptr) {
-    std::cerr << "isIPM(nullptr) ";
+    std::cerr << "isIPM(";
+    if (idv == nullptr) std::cerr << "idv ";
+    if (val == nullptr) std::cerr << "val ";
+    if (lp == nullptr) std::cerr << "lp ";
+    std::cerr << "is nullptr) ";
     return false;
   }
   std::cerr << "isIA(" << lp->header()->name() << ") ";
@@ -197,7 +215,12 @@ int DependenceAnalysis::isTwoGepIdxPossiblySame(GepIdx* gepidx1,
                                                 ir::Loop* lp,
                                                 ir::IndVar* idv) {
   if (gepidx1 == nullptr or gepidx2 == nullptr or lp == nullptr or idv == nullptr) {
-    std::cerr << "isGPSame(nullptr) ";
+    std::cerr << "isGPSame(";
+    if (gepidx1 == nullptr) std::cerr << "gepidx1 ";
+    if (gepidx2 == nullptr) std::cerr << "gepidx2 ";
+    if (lp == nullptr) std::cerr << "lp ";
+    if (idv == nullptr) std::cerr << "idv ";
+    std::cerr << "is nullptr) ";
     return 0;
   }
   std::cerr << "isGPSame(" << lp->header()->name() << ") ";
@@ -205,10 +228,11 @@ int DependenceAnalysis::isTwoGepIdxPossiblySame(GepIdx* gepidx1,
   size_t lim = gepidx1->idxList.size();
   int res = 0;
   for (size_t i = 0; i < lim; i++) {
-    auto val1 = gepidx1->idxList[i];
-    auto val2 = gepidx2->idxList[i];
-    auto type1 = gepidx1->idxTypes[val1];
-    auto type2 = gepidx2->idxTypes[val2];
+    auto val1 = gepidx1->idxList.at(i);
+    auto val2 = gepidx2->idxList.at(i);
+    if (val1 == nullptr or val2 == nullptr) continue;
+    auto type1 = gepidx1->idxTypes.at(val1);
+    auto type2 = gepidx2->idxTypes.at(val2);
     int outputDepInfo = isTwoIdxPossiblySame(val1, val2, type1, type2, lp, idv);
     res = res | outputDepInfo;
   }
@@ -222,7 +246,12 @@ int DependenceAnalysis::isTwoIdxPossiblySame(ir::Value* val1,
                                              ir::Loop* lp,
                                              ir::IndVar* idv) {
   if (val1 == nullptr or val2 == nullptr or lp == nullptr or idv == nullptr) {
-    std::cerr << "isIPSame(nullptr) ";
+    std::cerr << "isIPSame(";
+    if (val1 == nullptr) std::cerr << "val1 ";
+    if (val2 == nullptr) std::cerr << "val2 ";
+    if (lp == nullptr) std::cerr << "lp ";
+    if (idv == nullptr) std::cerr << "idv ";
+    std::cerr << "is nullptr) ";
     return 0;
   }
   std::cerr << "isIPSame(" << lp->header()->name() << ") ";

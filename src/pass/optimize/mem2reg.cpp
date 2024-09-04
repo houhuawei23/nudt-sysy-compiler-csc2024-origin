@@ -177,7 +177,7 @@ bool Mem2Reg::is_promoted(AllocaInst* alloca) {
 // }
 void Mem2Reg::insertphi() {
   // 遍历所有alloca，对于每个alloca，在所有定义块的支配边界中插入phi指令
-  std::set<BasicBlock*> Phiset;
+  std::unordered_set<BasicBlock*> Phiset;
   std::vector<BasicBlock*> W;
 
   BasicBlock* x;
@@ -211,10 +211,12 @@ void Mem2Reg::insertphi() {
 void Mem2Reg::rename(Function* F) {
   // rename:填充phi指令内容
   std::vector<Instruction*> instRemovelist;
-  std::stack<std::pair<BasicBlock*, std::map<AllocaInst*, Value*>>> Worklist;
-  std::set<BasicBlock*> VisitedSet;
+  // std::stack<std::pair<BasicBlock*, std::map<AllocaInst*, Value*>>> Worklist;
+  std::stack<std::pair<BasicBlock*, std::unordered_map<AllocaInst*, Value*>>> Worklist;
+  std::unordered_set<BasicBlock*> VisitedSet;
   BasicBlock *SuccBB, *BB;
-  std::map<AllocaInst*, Value*> Incommings;
+  // std::map<AllocaInst*, Value*> Incommings;
+  std::unordered_map<AllocaInst*, Value*> Incommings;
   Instruction* Inst;
   Worklist.push({F->entry(), {}});  // 用栈来做dfs
   for (AllocaInst* alloca : Allocas) {
@@ -395,6 +397,7 @@ void Mem2Reg::run(Function* F, TopAnalysisInfoManager* tp) {
   if (not F->entry())
     return;
   domctx = tp->getDomTree(F);
+  // std::cerr << "after domtree\n";
   Allocas.clear();
   DefsBlock.clear();
   UsesBlock.clear();

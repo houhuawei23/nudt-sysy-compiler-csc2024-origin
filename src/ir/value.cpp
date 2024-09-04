@@ -64,7 +64,7 @@ Value* Value::addComment(const_str_ref comment) {
 /* return as value */
 Value* User::operand(size_t index) const {
   assert(index < mOperands.size());
-  return mOperands[index]->value();
+  return mOperands.at(index)->value();
 }
 
 void User::addOperand(Value* value) {
@@ -84,10 +84,10 @@ void User::unuse_allvalue() {
   }
 }
 void User::delete_operands(size_t index) {
-  mOperands[index]->value()->uses().remove(mOperands[index]);
+  mOperands.at(index)->value()->uses().remove(mOperands.at(index));
   mOperands.erase(mOperands.begin() + index);
   for (size_t idx = index + 1; idx < mOperands.size(); idx++)
-    mOperands[idx]->set_index(idx);
+    mOperands.at(idx)->set_index(idx);
   refresh_operand_index();
 }
 void User::refresh_operand_index() {
@@ -102,11 +102,11 @@ void User::setOperand(size_t index, Value* value) {
     std::cerr << "index=" << index << ", but mOperands max size=" << mOperands.size() << std::endl;
     assert(index < mOperands.size());
   }
-  auto oldVal = mOperands[index]->value();
-  oldVal->uses().remove(mOperands[index]);
+  auto oldVal = mOperands.at(index)->value();
+  oldVal->uses().remove(mOperands.at(index));
   auto newUse = new Use(index, this, value);
-  mOperands[index] = newUse;
-  value->uses().emplace_back(mOperands[index]);
+  mOperands.at(index) = newUse;
+  value->uses().emplace_back(mOperands.at(index));
 }
 
 }  // namespace ir

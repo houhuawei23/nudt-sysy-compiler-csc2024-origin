@@ -30,16 +30,16 @@ void aggressiveG2L::run(ir::Module* md,TopAnalysisInfoManager* tp){
     cgctx=tp->getCallGraph();
     isFuncInsertBB.clear();
     //1. 分析读写情况;
-    std::unordered_map<ir::GlobalVariable*,std::set<ir::Function*>>funcGvRead;
-    std::unordered_map<ir::GlobalVariable*,std::set<ir::Function*>>funcGvWrite;
-    std::set<ir::GlobalVariable*>readAndWriteGvs;
-    std::set<ir::GlobalVariable*>readOnlyGvs;
-    std::set<ir::GlobalVariable*>writeOnlyGvs;
-    std::set<ir::GlobalVariable*>noUseGvs;
+    std::unordered_map<ir::GlobalVariable*,std::unordered_set<ir::Function*>>funcGvRead;
+    std::unordered_map<ir::GlobalVariable*,std::unordered_set<ir::Function*>>funcGvWrite;
+    std::unordered_set<ir::GlobalVariable*>readAndWriteGvs;
+    std::unordered_set<ir::GlobalVariable*>readOnlyGvs;
+    std::unordered_set<ir::GlobalVariable*>writeOnlyGvs;
+    std::unordered_set<ir::GlobalVariable*>noUseGvs;
     for(auto gv:md->globalVars()){
         if(gv->isArray())continue;
-        funcGvRead[gv]=std::set<ir::Function*>();
-        funcGvWrite[gv]=std::set<ir::Function*>();
+        funcGvRead[gv]=std::unordered_set<ir::Function*>();
+        funcGvWrite[gv]=std::unordered_set<ir::Function*>();
     }
     sectx=tp->getSideEffectInfo();
     for(auto func:md->funcs()){
@@ -68,7 +68,7 @@ void aggressiveG2L::run(ir::Module* md,TopAnalysisInfoManager* tp){
     for(auto ROGv:readOnlyGvs)replaceReadOnlyGv(ROGv);
     for(auto WOGv:writeOnlyGvs)deleteWriteOnlyGv(WOGv);
     // 处理cond 3
-    std::set<ir::GlobalVariable*>multipleRWGvs;
+    std::unordered_set<ir::GlobalVariable*>multipleRWGvs;
     for(auto rwGv:readAndWriteGvs){
         auto& readfnset=funcGvRead[rwGv];
         auto& writefnset=funcGvWrite[rwGv];
@@ -87,7 +87,7 @@ void aggressiveG2L::run(ir::Module* md,TopAnalysisInfoManager* tp){
             }
         }
         else{//cond c
-            std::set<ir::Function*>readAndWrite;
+            std::unordered_set<ir::Function*>readAndWrite;
             for(auto func:md->funcs()){
                 if(sectx->funcDirectReadGvs(func).count(rwGv) or sectx->funcDirectWriteGvs(func).count(rwGv))
                     readAndWrite.insert(func);

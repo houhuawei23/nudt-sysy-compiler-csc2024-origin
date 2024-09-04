@@ -118,9 +118,10 @@ static const auto commonOptPasses =
 static const auto loopOptPasses = std::vector<std::string>{"loopsimplify", "gcm", "gvn", "licm"};
 
 static const auto parallelPasses = std::vector<std::string>{
-  "loopsimplify",    "gcm",        "gvn",          "licm",     "markpara",
-  "LoopInterChange", "inline",     "loopsimplify", "parallel",  // "ParallelBodyExtract",
-  "inline",          "simplifycfg"};
+  "loopsimplify", "gcm", "gvn", "licm",
+  // "markpara",
+  "LoopInterChange", "inline", "loopsimplify", "parallel",  // "ParallelBodyExtract",
+  "inline", "simplifycfg"};
 
 static const auto interProceduralPasses = std::vector<std::string>{
   "inline", "tco", "cache", "inline",  // cant parallel
@@ -159,8 +160,8 @@ auto collectPasses(OptLevel level) {
   // O1
   std::vector<std::string> clcPasses;
   clcPasses.insert(clcPasses.end(), commonOptPasses.begin(), commonOptPasses.end());
-  // clcPasses.insert(clcPasses.end(), loopOptPasses.begin(), loopOptPasses.end());
-  // clcPasses.insert(clcPasses.end(), commonOptPasses.begin(), commonOptPasses.end());
+  clcPasses.insert(clcPasses.end(), loopOptPasses.begin(), loopOptPasses.end());
+  clcPasses.insert(clcPasses.end(), commonOptPasses.begin(), commonOptPasses.end());
 
   std::vector<std::string> passes;
 

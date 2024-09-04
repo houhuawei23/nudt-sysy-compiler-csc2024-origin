@@ -59,7 +59,7 @@ class InterferenceGraph final {
 public: /* Get Function */
   auto& adj(RegNum u) {
     assert(isVirtualReg(u));
-    return mAdj[u];
+    return mAdj[u];  // create map pair if key not exits
   }
 
 public: /* About Degree Function */

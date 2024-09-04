@@ -1,8 +1,8 @@
 #include "pass/optimize/ADCE.hpp"
 
 static std::queue<ir::Instruction*> workList;
-static std::map<ir::BasicBlock*, bool> liveBB;
-static std::map<ir::Instruction*, bool> liveInst;
+static std::unordered_map<ir::BasicBlock*, bool> liveBB;
+static std::unordered_map<ir::Instruction*, bool> liveInst;
 
 namespace pass {
 

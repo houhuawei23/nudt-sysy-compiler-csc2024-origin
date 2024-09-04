@@ -39,7 +39,7 @@ void Reg2Mem::run(Function* func, TopAnalysisInfoManager* tp) {
   //     entry->emplace_lastbutone_inst(alloca);
   // }
   for (auto BB : phiblocks) {
-    std::map<BasicBlock*, BasicBlock*> repalceBBmap;
+    std::unordered_map<BasicBlock*, BasicBlock*> repalceBBmap;
     for (PhiInst* phiinst : bbphismap[BB]) {
       // AllocaInst* variable = phiweb[phiinst];
       // assert(variable!=nullptr&&"nullptr val");

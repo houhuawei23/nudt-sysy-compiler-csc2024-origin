@@ -348,11 +348,11 @@ public:  // get function
   uint32_t opcode() const { return mOpcode; }
   auto operand(int idx) const {
     assert(idx < max_operand_num);
-    return mOperands[idx];
+    return mOperands.at(idx);
   }
   MIROperand& operand(int idx) {
     assert(idx < max_operand_num);
-    return mOperands[idx];
+    return mOperands.at(idx);
   }
 
 public:  // set function

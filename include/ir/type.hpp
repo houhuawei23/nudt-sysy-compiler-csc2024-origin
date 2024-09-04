@@ -33,10 +33,12 @@ class Type {
 protected:
   BasicTypeRank mBtype;
   size_t mSize;
+
 public:
   static constexpr auto arenaSource = utils::Arena::Source::IR;
-  Type(BasicTypeRank btype, size_t size=4) : mBtype(btype), mSize(size) {}
+  Type(BasicTypeRank btype, size_t size = 4) : mBtype(btype), mSize(size) {}
   virtual ~Type() = default;
+
 public:  // static method for construct Type instance
   static Type* void_type();
 
@@ -50,8 +52,9 @@ public:  // static method for construct Type instance
   static Type* TypeLabel();
   static Type* TypeUndefine();
   static Type* TypePointer(Type* baseType);
-  static Type* TypeArray(Type* baseType, std::vector<size_t> dims, size_t capacity=1);
+  static Type* TypeArray(Type* baseType, std::vector<size_t> dims, size_t capacity = 1);
   static Type* TypeFunction(Type* ret_type, const type_ptr_vector& param_types);
+
 public:  // check function
   bool is(Type* type) const;
   bool isnot(Type* type) const;
@@ -60,9 +63,7 @@ public:  // check function
   bool isBool() const;
   bool isInt32() const;
   bool isInt64() const;
-  bool isInt() const {
-    return BasicTypeRank::INT1 <= mBtype and mBtype <= BasicTypeRank::INT64;
-  }
+  bool isInt() const { return BasicTypeRank::INT1 <= mBtype and mBtype <= BasicTypeRank::INT64; }
 
   bool isFloat32() const;
   bool isDouble() const;
@@ -75,18 +76,22 @@ public:  // check function
   bool isPointer() const;
   bool isArray() const;
   bool isFunction() const;
+
 public:  // get function
   auto btype() const { return mBtype; }
   auto size() const { return mSize; }
+
 public:  // utils function
   virtual void print(std::ostream& os) const;
-  template <typename T> T* as() {
+  template <typename T>
+  T* as() {
     static_assert(std::is_base_of_v<Type, T>);
     auto ptr = dynamic_cast<T*>(this);
     assert(ptr);
     return ptr;
   }
-  template <typename T> const T* dynCast() const {
+  template <typename T>
+  const T* dynCast() const {
     static_assert(std::is_base_of_v<Type, T>);
     return dynamic_cast<const T*>(this);
   }
@@ -98,9 +103,11 @@ SYSYC_ARENA_TRAIT(Type, IR);
 /* PointerType */
 class PointerType : public Type {
   Type* mBaseType;
+
 public:
   PointerType(Type* baseType) : Type(BasicTypeRank::POINTER, 8), mBaseType(baseType) {}
   static PointerType* gen(Type* baseType);
+
 public:  // get function
   auto baseType() const { return mBaseType; }
   void print(std::ostream& os) const override;
@@ -114,13 +121,18 @@ protected:
   Type* mBaseType;            // int or float
 public:
   // capacity: by words
-  ArrayType(Type* baseType, std::vector<size_t> dims, size_t capacity=1)
+  ArrayType(Type* baseType, std::vector<size_t> dims, size_t capacity = 1)
     : Type(BasicTypeRank::ARRAY, capacity * 4), mBaseType(baseType), mDims(dims) {}
+
 public:  // generate function
-  static ArrayType* gen(Type* baseType, std::vector<size_t> dims, size_t capacity=1);
+  static ArrayType* gen(Type* baseType, std::vector<size_t> dims, size_t capacity = 1);
+
 public:  // get function
   auto dims_cnt() const { return mDims.size(); }
-  auto dim(size_t index) const { return mDims[index]; }
+  auto dim(size_t index) const {
+    assert(index < mDims.size());
+    return mDims.at(index);
+  }
   auto& dims() const { return mDims; }
   auto baseType() const { return mBaseType; }
   void print(std::ostream& os) const override;
@@ -132,11 +144,14 @@ class FunctionType : public Type {
 protected:
   Type* mRetType;
   std::vector<Type*> mArgTypes;
+
 public:
-  FunctionType(Type* ret_type, const type_ptr_vector& arg_types={})
+  FunctionType(Type* ret_type, const type_ptr_vector& arg_types = {})
     : Type(BasicTypeRank::FUNCTION, 8), mRetType(ret_type), mArgTypes(arg_types) {}
+
 public:  // generate function
   static FunctionType* gen(Type* ret_type, const type_ptr_vector& arg_types);
+
 public:  // get function
   auto retType() const { return mRetType; }
   auto& argTypes() const { return mArgTypes; }

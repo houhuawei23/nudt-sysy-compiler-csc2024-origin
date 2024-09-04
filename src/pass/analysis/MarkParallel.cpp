@@ -183,7 +183,7 @@ bool markParallel::isFuncParallel(ir::Loop* lp,ir::CallInst* callinst){
     //读取的几个部分：数组，只会读取arg数组和全局数组，分别使用副作用来判断
     for(auto arrArg:sectx->funcArgSet(func)){
         auto arrArgIdx=arrArg->index();
-        auto arrRArg=callinst->rargs()[arrArgIdx]->value();
+        auto arrRArg=callinst->rargs().at(arrArgIdx)->value();
         readLocs.insert(getBaseAddr(arrRArg));//getBaseAddr;
     }
     for(auto readGv:sectx->funcReadGlobals(func)){

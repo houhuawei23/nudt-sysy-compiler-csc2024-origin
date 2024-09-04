@@ -28,7 +28,7 @@ public:
                  Module* parent = nullptr)
     : User(Type::TypePointer(base_type), vGLOBAL_VAR, name), mModule(parent), mIsConst(is_const) {
     //
-    if(base_type->isArray()) {
+    if (base_type->isArray()) {
       mIsArray = true;
     }
     mIsInit = false;
@@ -100,13 +100,16 @@ public:  // get function
     }
   }
   auto init_cnt() const { return mInitValues.size(); }
-  auto init(size_t index) const { return mInitValues[index]; }
+  auto init(size_t index) const { return mInitValues.at(index); }
 
   Type* baseType() const {
     assert(dyn_cast<PointerType>(type()) && "type error");
     return dyn_cast<PointerType>(type())->baseType();
   }
-  auto scalarValue() const { return mInitValues[0]; }
+  auto scalarValue() const {
+    assert(mInitValues.size() == 1 && "scalar value error");
+    return mInitValues.at(0);
+  }
 
 public:
   void print_ArrayInit(std::ostream& os,

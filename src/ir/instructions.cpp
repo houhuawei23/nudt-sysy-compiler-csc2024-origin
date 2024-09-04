@@ -357,10 +357,10 @@ void GetElementPtrInst::print(std::ostream& os) const {
 
     const auto dimensions = cur_dims_cnt();
     for (size_t i = 0; i < dimensions; i++) {
-      size_t value = cur_dims()[i];
+      size_t value = mCurDims.at(i);
       os << "[" << value << " x ";
     }
-    if (_id == 1)
+    if (mId == 1)
       os << *(dyn_cast<ir::ArrayType>(baseType())->baseType());
     else
       os << *(baseType());
@@ -369,10 +369,10 @@ void GetElementPtrInst::print(std::ostream& os) const {
     os << ", ";
 
     for (size_t i = 0; i < dimensions; i++) {
-      size_t value = cur_dims()[i];
+      size_t value = mCurDims.at(i);
       os << "[" << value << " x ";
     }
-    if (_id == 1)
+    if (mId == 1)
       os << *(dyn_cast<ir::ArrayType>(baseType())->baseType());
     else
       os << *(baseType());
@@ -449,7 +449,7 @@ BasicBlock* PhiInst::getbbfromVal(Value* val) {
 
 Value* PhiInst::getvalfromBB(BasicBlock* bb) {
   refreshMap();
-  if (mbbToVal.count(bb)) return mbbToVal[bb];
+  if (mbbToVal.count(bb)) return mbbToVal.at(bb);
   // assert(false && "can't find match value!");
   return nullptr;
 }
@@ -482,16 +482,16 @@ void PhiInst::delBlock(BasicBlock* bb) {
 void PhiInst::replaceBlock(BasicBlock* newBB, size_t k) {
   assert(k < mSize);
   refreshMap();
-  auto val = mbbToVal[getBlock(k)];
+  auto val = mbbToVal.at(getBlock(k));
   mbbToVal.erase(getBlock(k));
   setOperand(2 * k + 1, newBB);
-  mbbToVal[newBB] = val;
+  mbbToVal.emplace(newBB, val);
 }
 
 void PhiInst::replaceoldtonew(BasicBlock* oldbb, BasicBlock* newbb) {
   refreshMap();
   assert(mbbToVal.count(oldbb));
-  auto val = mbbToVal[oldbb];
+  auto val = mbbToVal.at(oldbb);
   delBlock(oldbb);
   addIncoming(val, newbb);
 }
@@ -502,7 +502,8 @@ void PhiInst::refreshMap() {
     // auto block =  getBlock(i);
     // auto value = getValue(i);
     // std::cerr << "i: " << i  << " " <<  block->name() << " " << value->name() << std::endl;
-    mbbToVal[getBlock(i)] = getValue(i);
+    // mbbToVal[getBlock(i)] = getValue(i);
+    mbbToVal.emplace(getBlock(i), getValue(i));
   }
 }
 

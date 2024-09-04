@@ -131,8 +131,8 @@ void Function::print(std::ostream& os) const {
   } else {
     os << "declare " << *return_type << " @" << name() << "(";
     auto t = type();
-    if (auto TypeFunction = dyn_cast<FunctionType>(t)) {
-      auto args_types = TypeFunction->argTypes();
+    if (auto funcType = t->dynCast<FunctionType>()) {
+      auto args_types = funcType->argTypes();
       if (args_types.size() > 0) {
         auto last_iter = args_types.end() - 1;
         for (auto iter = args_types.begin(); iter != last_iter; ++iter) {
@@ -172,7 +172,7 @@ void Function::rename() {
     blockIdx++;
     for (auto inst : bb->insts()) {
       if (inst->isNoName()) continue;
-      auto callpt = dyn_cast<CallInst>(inst);
+      auto callpt = inst->dynCast<CallInst>();
       if (callpt and callpt->isVoid()) continue;
       inst->setvarname();
     }
@@ -181,22 +181,17 @@ void Function::rename() {
 
 // func_copy
 Function* Function::copy_func() {
-  std::unordered_map<Value*, Value*> ValueCopy;
+  std::unordered_map<Value*, Value*> valueMap;
   // copy global
   for (auto gvalue : mModule->globalVars()) {
-    // if (dyn_cast<ConstantValue>(gvalue) && !gvalue->type()->isPointer()) {
-    //     ValueCopy[gvalue] = gvalue;  //??
-    // } else {
-    //     ValueCopy[gvalue] = gvalue;
-    // }
-    ValueCopy[gvalue] = gvalue;
+    valueMap.emplace(gvalue, gvalue);
   }
   // copy func
   auto copyfunc = utils::make<Function>(type(), name() + "_copy", mModule);
   // copy args
   for (auto arg : mArguments) {
     Value* copyarg = copyfunc->new_arg(arg->type(), "");
-    ValueCopy[arg] = copyarg;
+    valueMap.emplace(arg, copyarg);
   }
   // copy block
   for (auto bb : mBlocks) {
@@ -206,23 +201,24 @@ Function* Function::copy_func() {
     } else if (copyfunc->exit() == nullptr) {
       copyfunc->setExit(copybb);
     }
-    ValueCopy[bb] = copybb;
+    // valueMap[bb] = copybb;
+    valueMap.emplace(bb, copybb);
   }
 
   // copy bb's pred and succ
   for (auto BB : mBlocks) {
-    auto copyBB = dyn_cast<BasicBlock>(ValueCopy[BB]);
+    auto copyBB = valueMap.at(BB)->dynCast<BasicBlock>();
     for (auto pred : BB->pre_blocks()) {
-      copyBB->pre_blocks().emplace_back(dyn_cast<BasicBlock>(ValueCopy[pred]));
+      copyBB->pre_blocks().emplace_back(valueMap.at(pred)->dynCast<BasicBlock>());
     }
     for (auto succ : BB->next_blocks()) {
-      copyBB->next_blocks().emplace_back(dyn_cast<BasicBlock>(ValueCopy[succ]));
+      copyBB->next_blocks().emplace_back(valueMap.at(succ)->dynCast<BasicBlock>());
     }
   }
   // if cant find, return itself
   auto getValue = [&](Value* val) -> Value* {
-    if (auto c = dyn_cast<ConstantValue>(val)) return c;
-    if(auto iter = ValueCopy.find(val); iter != ValueCopy.end()) return iter->second;
+    if (val->isa<ConstantValue>()) return val;
+    if (auto iter = valueMap.find(val); iter != valueMap.end()) return iter->second;
     return val;
   };
 
@@ -232,21 +228,21 @@ Function* Function::copy_func() {
   BasicBlock::BasicBlockDfs(mEntry, [&](BasicBlock* bb) -> bool {
     if (vis.count(bb)) return true;
     vis.insert(bb);
-    auto bbCpy = dyn_cast<BasicBlock>(ValueCopy[bb]);
+    auto bbCpy = valueMap.at(bb)->dynCast<BasicBlock>();
     for (auto inst : bb->insts()) {
       auto copyinst = inst->copy(getValue);
       copyinst->setBlock(bbCpy);
-      ValueCopy[inst] = copyinst;
+      valueMap.emplace(inst, copyinst);
       bbCpy->emplace_back_inst(copyinst);
-      if (auto phi = dyn_cast<PhiInst>(inst)) phis.emplace_back(phi);
+      if (auto phi = inst->dynCast<PhiInst>()) phis.emplace_back(phi);
     }
     return false;
   });
   for (auto phi : phis) {
-    auto copyphi = dyn_cast<PhiInst>(ValueCopy[phi]);
+    auto copyphi = valueMap.at(phi)->dynCast<PhiInst>();
     for (size_t i = 0; i < phi->getsize(); i++) {
       auto phivalue = getValue(phi->getValue(i));
-      auto phibb = dyn_cast<BasicBlock>(getValue(phi->getBlock(i)));
+      auto phibb = valueMap.at(phi->getBlock(i))->dynCast<BasicBlock>();
       copyphi->addIncoming(phivalue, phibb);
     }
   }

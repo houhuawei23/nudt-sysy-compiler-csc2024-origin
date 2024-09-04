@@ -158,7 +158,7 @@ bool irCheck::runPhiTest(ir::Function* func) {
 bool irCheck::runCFGTest(ir::Function* func) {
   std::unordered_map<ir::BasicBlock*, int> bbPreSize;
   for (auto bb : func->blocks())
-    bbPreSize[bb] = 0;
+    bbPreSize.emplace(bb, 0);
   bool isPass = true;
   // check succ
   for (auto bb : func->blocks()) {
@@ -189,10 +189,10 @@ bool irCheck::runCFGTest(ir::Function* func) {
     }
   }
   for (auto bb : func->blocks()) {
-    if (bb->pre_blocks().size() != bbPreSize[bb]) {
+    if (bb->pre_blocks().size() != bbPreSize.at(bb)) {
       cerr << "Block " << bb->name() << " got invalid preBlock size!" << endl;
       std::cerr << "pre.size() = " << bb->pre_blocks().size()
-                << ", bbPreSize[bb] = " << bbPreSize[bb] << std::endl;
+                << ", bbPreSize.at(bb) = " << bbPreSize.at(bb) << std::endl;
       for (auto bbpre : bb->pre_blocks()) {
         std::cerr << bbpre->name() << " ";
       }

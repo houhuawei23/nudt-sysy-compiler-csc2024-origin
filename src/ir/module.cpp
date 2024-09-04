@@ -35,17 +35,17 @@ void Module::delFunction(ir::Function* func) {
   assert(findFunction(func->name()) != nullptr && "delete unexisted function!");
   mFuncTable.erase(func->name());
   mFunctions.erase(std::find(mFunctions.begin(), mFunctions.end(), func));
-  for (auto bbiter=func->blocks().begin();bbiter!=func->blocks().end();) {
-    auto bb=*bbiter;
+  for (auto bbiter = func->blocks().begin(); bbiter != func->blocks().end();) {
+    auto bb = *bbiter;
     bbiter++;
-    for(auto institer=bb->insts().begin();institer!=bb->insts().end();) {
-      auto inst=*institer;
+    for (auto institer = bb->insts().begin(); institer != bb->insts().end();) {
+      auto inst = *institer;
       institer++;
       bb->force_delete_inst(inst);
     }
   }
-  for (auto bbiter=func->blocks().begin();bbiter!=func->blocks().end();) {
-    auto bb=*bbiter;
+  for (auto bbiter = func->blocks().begin(); bbiter != func->blocks().end();) {
+    auto bb = *bbiter;
     bbiter++;
     func->forceDelBlock(bb);
   }
@@ -100,8 +100,9 @@ bool Module::verify(std::ostream& os) const {
 }
 
 GlobalVariable* Module::findGlobalVariable(const_str_ref name) {
-  if (mGlobalVariableTable.count(name) == 0)
-    return nullptr;
-  return mGlobalVariableTable[name];
+  // if (mGlobalVariableTable.count(name) == 0)
+  //   return nullptr;
+  // return mGlobalVariableTable.at(name);
+  return mGlobalVariableTable[name];  // create nullptr if not found
 }
 }  // namespace ir

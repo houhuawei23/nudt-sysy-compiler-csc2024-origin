@@ -167,7 +167,7 @@ ArrayType* ArrayType::gen(Type* baseType, std::vector<size_t> dims, size_t capac
 
 void ArrayType::print(std::ostream& os) const {
   for (size_t i = 0; i < mDims.size(); i++) {
-    size_t value = mDims[i];
+    size_t value = mDims.at(i);
     os << "[" << value << " x ";
   }
   mBaseType->print(os);
@@ -181,7 +181,7 @@ bool ArrayType::isSame(Type* rhs) const {
           mDims.size() == rhs->as<ArrayType>()->dims().size()))
     return false;
   for (size_t idx = 0; idx < mDims.size(); idx++) {
-    if (mDims[idx] != rhs->as<ArrayType>()->dims()[idx]) return false;
+    if (mDims.at(idx) != rhs->as<ArrayType>()->dims().at(idx)) return false;
   }
   return true;
 }
@@ -210,7 +210,7 @@ bool FunctionType::isSame(Type* rhs) const {
           mArgTypes.size() == rhs->as<FunctionType>()->argTypes().size()))
     return false;
   for (size_t idx = 0; idx < mArgTypes.size(); idx++) {
-    if (not mArgTypes[idx]->isSame(rhs->as<FunctionType>()->argTypes()[idx])) return false;
+    if (not mArgTypes.at(idx)->isSame(rhs->as<FunctionType>()->argTypes().at(idx))) return false;
   }
   return true;
 }

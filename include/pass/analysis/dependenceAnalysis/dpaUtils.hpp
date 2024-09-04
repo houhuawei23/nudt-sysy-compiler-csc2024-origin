@@ -27,7 +27,7 @@ enum DependenceType {
 };
 struct GepIdx {
   std::vector<ir::Value*> idxList;
-  std::map<ir::Value*, IdxType> idxTypes;
+  std::unordered_map<ir::Value*, IdxType> idxTypes;
 };
 class LoopDependenceInfo {
 private:
@@ -38,18 +38,18 @@ private:
   bool hasSideEffectFunction;      // 后期使用副作用来细化
   // for baseaddr
   std::set<ir::Value*> baseAddrs;                     // 存储该循环中用到的基址
-  std::map<ir::Value*, bool> baseAddrIsRead;          // 当前基址是否读
-  std::map<ir::Value*, bool> baseAddrIsWrite;         // 当前基址是否写
+  std::unordered_map<ir::Value*, bool> baseAddrIsRead;          // 当前基址是否读
+  std::unordered_map<ir::Value*, bool> baseAddrIsWrite;         // 当前基址是否写
   bool isBaseAddrPossiblySame;                        // 基址别名可能
-  std::map<ir::Value*, bool> baseAddrIsCrossIterDep;  // 当前子地址是否有跨循环依赖
+  std::unordered_map<ir::Value*, bool> baseAddrIsCrossIterDep;  // 当前子地址是否有跨循环依赖
   // for subAddr
-  std::map<ir::Value*, std::set<ir::GetElementPtrInst*>> baseAddrToSubAddrs;  // 子地址和基地址映射
-  std::map<ir::GetElementPtrInst*, GepIdx*> subAddrToGepIdx;  // 保存gep的Idx信息
-  std::map<ir::GetElementPtrInst*, bool> subAddrIsRead;       // 当前子地址是否读
-  std::map<ir::GetElementPtrInst*, bool> subAddrIsWrite;      // 当前子地址是否写
+  std::unordered_map<ir::Value*, std::set<ir::GetElementPtrInst*>> baseAddrToSubAddrs;  // 子地址和基地址映射
+  std::unordered_map<ir::GetElementPtrInst*, GepIdx*> subAddrToGepIdx;  // 保存gep的Idx信息
+  std::unordered_map<ir::GetElementPtrInst*, bool> subAddrIsRead;       // 当前子地址是否读
+  std::unordered_map<ir::GetElementPtrInst*, bool> subAddrIsWrite;      // 当前子地址是否写
 
   // for readwrite
-  std::map<ir::GetElementPtrInst*, std::set<ir::Instruction*>> subAddrToInst;  // 子地址到存取语句
+  std::unordered_map<ir::GetElementPtrInst*, std::set<ir::Instruction*>> subAddrToInst;  // 子地址到存取语句
   std::set<ir::Instruction*> memInsts;  // 在当前这个循环中进行了存取的语句
 
 public:

@@ -411,14 +411,14 @@ public:  // utils function
  */
 class GetElementPtrInst : public Instruction {
 protected:
-  size_t _id = 0;
-  std::vector<size_t> _cur_dims = {};
+  size_t mId = 0;
+  std::vector<size_t> mCurDims = {};
 
 public:
   //! 1. Pointer <result> = getelementptr <type>, <type>* <ptrval>, i32 <idx>
   GetElementPtrInst(Type* base_type, Value* ptr, Value* idx, BasicBlock* parent = nullptr)
     : Instruction(vGETELEMENTPTR, Type::TypePointer(base_type), parent) {
-    _id = 0;
+    mId = 0;
     addOperand(ptr);
     addOperand(idx);
   }
@@ -431,8 +431,8 @@ public:
                     std::vector<size_t> cur_dims,
                     BasicBlock* parent = nullptr)
     : Instruction(vGETELEMENTPTR, Type::TypePointer(Type::TypeArray(base_type, dims)), parent),
-      _cur_dims(cur_dims) {
-    _id = 1;
+      mCurDims(cur_dims) {
+    mId = 1;
     addOperand(ptr);
     addOperand(idx);
   }
@@ -443,8 +443,8 @@ public:
                     Value* idx,
                     std::vector<size_t> cur_dims,
                     BasicBlock* parent = nullptr)
-    : Instruction(vGETELEMENTPTR, Type::TypePointer(base_type), parent), _cur_dims(cur_dims) {
-    _id = 2;
+    : Instruction(vGETELEMENTPTR, Type::TypePointer(base_type), parent), mCurDims(cur_dims) {
+    mId = 2;
     addOperand(ptr);
     addOperand(idx);
   }
@@ -452,16 +452,16 @@ public:
 public:  // get function
   auto value() const { return operand(0); }
   auto index() const { return operand(1); }
-  auto getid() const { return _id; }
+  auto getid() const { return mId; }
   Type* baseType() const {
     assert(dyn_cast<PointerType>(type()) && "type error");
     return dyn_cast<PointerType>(type())->baseType();
   }
-  auto cur_dims_cnt() const { return _cur_dims.size(); }
-  auto cur_dims() const { return _cur_dims; }
+  auto cur_dims_cnt() const { return mCurDims.size(); }
+  auto cur_dims() const { return mCurDims; }
 
 public:  // check function
-  bool is_arrayInst() const { return _id != 0; }
+  bool is_arrayInst() const { return mId != 0; }
 
 public:  // utils function
   static bool classof(const Value* v) { return v->valueId() == vGETELEMENTPTR; }
@@ -482,9 +482,9 @@ public:
     : Instruction(vPHI, type, parent), mSize(vals.size()) {
     assert(vals.size() == bbs.size() and "number of vals and bbs in phi must be equal!");
     for (size_t i = 0; i < mSize; i++) {
-      addOperand(vals[i]);
-      addOperand(bbs[i]);
-      mbbToVal[bbs[i]] = vals[i];
+      addOperand(vals.at(i));
+      addOperand(bbs.at(i));
+      mbbToVal[bbs.at(i)] = vals.at(i);
     }
   }
   auto getValue(size_t k) const { return operand(2 * k); }
