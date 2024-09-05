@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.19)
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -g")
 
 # Compiler flags
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
@@ -75,7 +75,7 @@ find_package(Python3 REQUIRED)
 
 set(SUBMIT_DIR ${CMAKE_CURRENT_BINARY_DIR}/submit)
 
-add_custom_target(submit ALL
+add_custom_target(submit 
   COMMAND ${CMAKE_COMMAND} -E rm -rf ${SUBMIT_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${SUBMIT_DIR}
   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/submit/CMakeLists.txt ${SUBMIT_DIR}/CMakeLists.txt

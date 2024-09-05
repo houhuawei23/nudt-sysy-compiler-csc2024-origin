@@ -1,5 +1,5 @@
 #include "ir/ir.hpp"
-#include "pass/analysisinfo.hpp"
+#include "pass/AnalysisInfo.hpp"
 #include "pass/analysis/dom.hpp"
 #include "pass/analysis/pdom.hpp"
 #include "pass/analysis/callgraph.hpp"
@@ -25,11 +25,70 @@ void TopAnalysisInfoManager::initialize() {
   }
 }
 
+bool DomTree::dominate(BasicBlock* bb1, BasicBlock* bb2) {
+  if (bb1 == bb2) return true;
+  auto bbIdom = miDom[bb2];
+  while (bbIdom != nullptr) {
+    if (bbIdom == bb1) return true;
+    bbIdom = miDom[bbIdom];
+  }
+  return false;
+}
+void DomTree::BFSDomTreeInfoRefresh() {
+  std::queue<BasicBlock*> bbqueue;
+  std::unordered_map<BasicBlock*, bool> vis;
+  for (auto bb : passUnit->blocks())
+    vis[bb] = false;
+
+  mBFSDomTreeVector.clear();
+  bbqueue.push(passUnit->entry());
+
+  while (!bbqueue.empty()) {
+    auto bb = bbqueue.front();
+    bbqueue.pop();
+    if (!vis[bb]) {
+      mBFSDomTreeVector.push_back(bb);
+      vis[bb] = true;
+      for (auto bbDomSon : mDomSon[bb])
+        bbqueue.push(bbDomSon);
+    }
+  }
+}
+void DomTree::DFSDomTreeInfoRefresh() {
+  std::stack<BasicBlock*> bbstack;
+  std::unordered_map<BasicBlock*, bool> vis;
+  for (auto bb : passUnit->blocks())
+    vis[bb] = false;
+
+  mDFSDomTreeVector.clear();
+  bbstack.push(passUnit->entry());
+
+  while (!bbstack.empty()) {
+    auto bb = bbstack.top();
+    bbstack.pop();
+    if (!vis[bb]) {
+      mDFSDomTreeVector.push_back(bb);
+      vis[bb] = true;
+      for (auto bbDomSon : mDomSon[bb])
+        bbstack.push(bbDomSon);
+    }
+  }
+}
 void DomTree::refresh() {
   using namespace pass;
   auto dip = DomInfoAnalysis();
   dip.run(passUnit, topManager);
   setOn();
+}
+
+bool PDomTree::pdominate(BasicBlock* bb1, BasicBlock* bb2) {
+  if (bb1 == bb2) return true;
+  auto bbIdom = mipDom[bb2];
+  while (bbIdom != nullptr) {
+    if (bbIdom == bb1) return true;
+    bbIdom = mipDom[bbIdom];
+  }
+  return false;
 }
 
 void PDomTree::refresh() {
@@ -49,22 +108,35 @@ void LoopInfo::refresh() {
 }
 void LoopInfo::print(std::ostream& os) const {
   os << "Loop Info:\n";
-  for (auto loop : _loops) {
-    std::cerr << "level: " << _looplevel.at(loop->header()) << std::endl;
+  for (auto loop : mLoops) {
+    std::cerr << "level: " << mLoopLevel.at(loop->header()) << std::endl;
     loop->print(os);
   }
   std::cerr << std::endl;
 }
 // looplevel small to big
 std::vector<ir::Loop*> LoopInfo::sortedLoops(bool reverse) {
-  auto loops = _loops;
+  auto loops = mLoops;
   std::sort(loops.begin(), loops.end(), [&](Loop* lhs, Loop* rhs) {
-    return _looplevel.at(lhs->header()) < _looplevel.at(rhs->header());
+    return mLoopLevel.at(lhs->header()) < mLoopLevel.at(rhs->header());
   });
   if (reverse) std::reverse(loops.begin(), loops.end());
   return std::move(loops);
 }
 
+Loop* LoopInfo::getinnermostLoop(BasicBlock* bb) {  // 返回最内层的循环
+  Loop* innermost = nullptr;
+  for (auto L : mLoops) {
+    if (L->contains(bb)) {
+      if (innermost == nullptr)
+        innermost = L;
+      else {
+        if (mLoopLevel[L->header()] < mLoopLevel[innermost->header()]) innermost = L;
+      }
+    }
+  }
+  return innermost;
+}
 void CallGraph::refresh() {
   using namespace pass;
   auto cgb = CallGraphBuild();

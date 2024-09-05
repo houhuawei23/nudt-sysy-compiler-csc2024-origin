@@ -1,5 +1,5 @@
 #pragma once
-#include "pass/analysisinfo.hpp"
+#include "pass/AnalysisInfo.hpp"
 #include "mir/MIR.hpp"
 #include "mir/target.hpp"
 #include "mir/iselinfo.hpp"

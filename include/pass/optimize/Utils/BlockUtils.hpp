@@ -1,6 +1,6 @@
 #pragma once
 #include "ir/ir.hpp"
-#include "pass/analysisinfo.hpp"
+#include "pass/AnalysisInfo.hpp"
 #include <functional>
 
 using namespace ir;

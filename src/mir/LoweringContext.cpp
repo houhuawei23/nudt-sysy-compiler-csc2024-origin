@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <string_view>
 #include "pass/pass.hpp"
-#include "pass/analysisinfo.hpp"
+#include "pass/AnalysisInfo.hpp"
 #include "pass/analysis/dom.hpp"
 #include "mir/MIR.hpp"
 #include "mir/lowering.hpp"
