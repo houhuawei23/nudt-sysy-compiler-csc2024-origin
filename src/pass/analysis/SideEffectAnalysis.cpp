@@ -210,11 +210,14 @@ bool SideEffectAnalysisContext::propogateSideEffect(ir::Module* md) {
         auto pointerArgIdx = pointerArg->index();
         auto pointerRArg = calleeInst->rargs().at(pointerArgIdx);
         auto pointerRArgBaseAddr = getBaseAddr(pointerRArg->value());
-        if (pointerRArgBaseAddr == nullptr and not sectx->getPotentialSideEffect(func)) {
-          sectx->setPotentialSideEffect(func, true);
-          isChange = true;
+        if (pointerRArgBaseAddr == nullptr) {
+          if (not sectx->getPotentialSideEffect(func)) {
+            sectx->setPotentialSideEffect(func, true);
+            isChange = true;
+          }
           continue;
         }
+
         if (pointerRArgBaseAddr->dynCast<ir::AllocaInst>()) continue;
         if (auto gv = pointerRArgBaseAddr->dynCast<ir::GlobalVariable>()) {
           if (sectx->getArgRead(pointerArg)) {

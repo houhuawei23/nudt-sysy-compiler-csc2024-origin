@@ -42,7 +42,7 @@ bool checkLoopParallel(Loop* loop,
   if (indVar->beginValue()->isa<ConstantValue>() and indVar->endValue()->isa<ConstantValue>()) {
     const auto begin = indVar->beginValue()->dynCast<ConstantValue>()->i32();
     const auto end = indVar->endValue()->dynCast<ConstantValue>()->i32();
-    if (end - begin < 100) {
+    if (std::abs(end - begin) < 200) {
       // std::cerr << "loop too small: " << end - begin << std::endl;
       return false;
     }

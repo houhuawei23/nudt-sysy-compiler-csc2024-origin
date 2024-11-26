@@ -63,7 +63,7 @@ def compile_project(source_path, target_path):
         compile_cmd += f" && cd {out_classes_path} && {' && '.join([f'jar xf {lib}' for lib in libs])} && jar --create --file {target_jar} --main-class Compiler -C {out_classes_path} ."
     
     elif is_cpp_project:
-        compile_cmd_header = "clang++ -std=c++20 -O2 -lm -L/extlibs -I/extlibs -lantlr4-runtime -lpthread"
+        compile_cmd_header = "clang++ -std=c++20 -O2 -g -lm -L/extlibs -I/extlibs -lantlr4-runtime -lpthread"
         compile_cmd = f"{compile_cmd_header} {' '.join(['-I' + dir for dir in linked_dirs])} -o {target_path} {' '.join(cpp_files)} "
         # compile_cmd += "-L/usr/local/lib/ -I/usr/local/include/antlr4-runtime/ -lm -lantlr4-runtime"
 
