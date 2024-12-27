@@ -8,7 +8,15 @@
 
 Contest Official repository: [CSC-Compiler](https://gitlab.eduxiji.net/csc1/nscscc)
 
-开发人员  (按拼音):侯华玮 简泽鑫 汤翔晟 杨俯众
+Contributors 开发者:
+
+[侯华玮](https://github.com/houhuawei23), [汤翔晟](https://github.com/TernaryExplorer), [杨俯众](https://gitee.com/westme10n), [简泽鑫](https://github.com/xinchen-jzx)
+
+<a href="https://github.com/houhuawei23/nudt-sysy-compiler-csc2024-origin/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=houhuawei23/nudt-sysy-compiler-csc2024-origin" />
+</a>
+
+Made with [contributors-img](https://github.com/lacolaco/contributors-img)
 
 ## 项目基本结构和介绍
 
